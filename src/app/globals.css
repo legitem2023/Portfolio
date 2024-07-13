@@ -17,17 +17,43 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background-color: #f1f1f1;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+.Main{
+  display:grid;
+  grid-template-columns: 20% 80%;
+  background-color: aquamarine;
+}
+.Menu{
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(0, 163, 136);
+  height:100vh;
+}
+.MenuItem a{
+  color:#000;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 10% auto;
+  align-items: center;
+  border-bottom: solid 1px #fff;
+}
+.Menu div:hover{
+  transition: ease 0.5s;
+  cursor: pointer;
+  color:#fff;
+  background-color: rgb(1, 139, 116);
+}
+.ProfileIcon{
+  display: flex;
+  justify-content: center;
+}
+.ProfileIcon svg{
+  width:200px;
+  height: 200px;
+}
+.center_body{
+  font-size: 40px;
+  padding:50px;
 }
