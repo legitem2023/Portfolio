@@ -2,7 +2,7 @@ import React from 'react'
 
 const Information = () => {
   return (
-    <div>Information</div>
+    <div className='Main_child' id='Information'>Information</div>
   )
 }
 

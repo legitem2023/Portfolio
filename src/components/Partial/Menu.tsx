@@ -1,56 +1,34 @@
 
+'use client'
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
-
-import React from 'react'
-
+import MenuJson from './Menu.json'
+import React, { useEffect } from 'react'
+import { useRouter } from 'next/navigation';
 const Menu = () => {
-    const Menu = [
-        {
-            "Name":"About",
-            "Link":"./About",
-            "Icon":"mdi:about-circle-outline"
-        }
-        ,
-        {
-            "Name":"Information",
-            "Link":"./Information",
-            "Icon":"mdi:information-outline"
-        },
-        {
-            "Name":"Skills",
-            "Link":"./Skills",
-            "Icon":"game-icons:skills"
-        },
-        {
-            "Name":"Educations",
-            "Link":"./Educations",
-            "Icon":"fluent-mdl2:education"
-        },
-        {
-            "Name":"Projects",
-            "Link":"./Projects",
-            "Icon":"grommet-icons:projects"
-        },
-        {
-            "Name":"Work Expiriences",
-            "Link":"./Expiriences",
-            "Icon":"mdi:work-outline"
-        },
-        {
-            "Name":"Contact",
-            "Link":"./Contact",
-            "Icon":"ic:sharp-phone"
-        }
-]
+    const router = useRouter();
+
+
   return (
     <div className='Menu'>
+        <div className='blurBackGroundUniversal'></div>
+        <div className='divide_menu '>
         <div className='ProfileIcon'><Icon icon="healthicons:ui-user-profile" /></div>
-        {Menu.map((item:any,i:number)=>(
-            <div key={i} className='MenuItem'>
-                <div><Link href={item.Link}><Icon icon={item.Icon}/><code>{item.Name}</code></Link></div>
+        <div>
+        {MenuJson.map((item:any,i:number)=>(
+            <div key={i} className='MenuItem' >
+                <a href={`http://localhost:3000/#`+item.Link}>
+                    <div className='MenuItemLabel'><Icon icon={item.Icon}/>
+                        <code className='closeMOB'>{item.Name}</code>
+                    </div>
+                </a>
             </div>
         ))}
+        </div>
+
+        <div></div>
+        </div>
+
     </div>
   )
 }

@@ -1,11 +1,12 @@
-import Head from "@/components/Partial/Head";
 import Main from "@/components/Partial/Main";
 import Menu from "@/components/Partial/Menu";
-import Image from "next/image";
-
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 export default function Home() {
+
+
   return (
-      <div className="Main">
+      <div className="Parent">
         <Menu/>
         <Main/>
       </div>

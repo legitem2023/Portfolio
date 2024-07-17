@@ -15,23 +15,131 @@
     --background-end-rgb: 0, 0, 0;
   }
 }
-
-body {
-  background-color: #f1f1f1;
+html {
+  scroll-behavior: smooth;
+  transition: ease 0.5s;
 }
-
-.Main{
+body {
+  background-color: rgb(0, 71, 48);
+  overflow:hidden;
+  transition: ease 0.5s;
+}
+.Head{
+  grid-column: 1 / span 2;
+  height:100px;
+  background-color: red;
+}
+.BackGroundImage{
+  height:100vh;
+  width:100vw;
+  background: url('../../public/BackGround.png');
+  top:0px;
+  left:0px;
+  margin:auto;
+  position: absolute;
+  z-index: -1;
+}
+.skillThumb{
+  display:grid;
+  grid-template-columns: 32% 32% 32%;
+  width:40vw;
+  grid-gap:5%;
+}
+.skillThumb div{
+  box-shadow: 0.5px 0.5px 3px #000;
+  padding:5px;
+  background-color: #f1f1f1;
+  opacity:1px;
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows:80% 10% 10%;
+  border:solid 10px #c0c0c0;
+}
+.skillThumb img{ 
+  width:100%;
+  height:auto;
+}
+.blurBackGroundUniversal{
+  width:100%;
+  height:100%;
+  backdrop-filter: blur(2px);
+  background: linear-gradient(-45deg,  
+  rgba(204, 229, 215 ,0.7) 0%,
+  rgba(168, 219, 194,0.7) 17%,
+  rgba(96, 196, 164,0.7) 35%,
+  rgba(58, 193, 153,0.7) 51%,
+  rgba(66, 214, 179,0.7) 59%,
+  rgba(76, 239, 207,0.7) 71%,
+  rgba(58, 193, 150,0.7) 84%,
+  rgba(38, 137, 102,0.7) 100%);
+  position: absolute;
+}
+.About_main{
+  z-index:9;
+  color:#000;
+  background-color: #009c60;
+  font-size: 25px;
+  margin:5px;
+  padding:10px;
+  border-radius: 10px;
+}
+.Parent{
   display:grid;
   grid-template-columns: 20% 80%;
-  background-color: aquamarine;
+  overflow:hidden;
+  height: 100vh;
+  transition: ease 0.5s;
+}
+.Main{
+  display:block;
+  width:99.5%;
+  height: 100vh;
+  position: relative;
+  overflow: auto;
+  transition: ease 0.5s;
+  margin-left:5px;
+  margin-right:5px;
 }
 .Menu{
   display: flex;
   flex-direction: column;
-  background-color: rgb(0, 163, 136);
-  height:100vh;
+  height:auto;
+  box-shadow: 0.5px 0.5px 3px #000;
+  position: relative;
 }
-.MenuItem a{
+.Main_child{
+  height:100vh;
+  position: relative;
+  backdrop-filter: blur(2px);
+  background: linear-gradient(-45deg,  
+  rgba(204, 229, 215 ,0.7) 0%,
+  rgba(168, 219, 194,0.7) 17%,
+  rgba(96, 196, 164,0.7) 35%,
+  rgba(58, 193, 153,0.7) 51%,
+  rgba(66, 214, 179,0.7) 59%,
+  rgba(76, 239, 207,0.7) 71%,
+  rgba(58, 193, 150,0.7) 84%,
+  rgba(38, 137, 102,0.7) 100%);
+  padding:10px;
+  transition: ease 0.5s;
+  animation: gradientAnimation 10s ease infinite;
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.MenuItem{
+  cursor: pointer;
+}
+.MenuItem .MenuItemLabel{
   color:#000;
   padding: 10px;
   display: grid;
@@ -39,11 +147,22 @@ body {
   align-items: center;
   border-bottom: solid 1px #fff;
 }
-.Menu div:hover{
+.MenuItem .MenuItemLabel:hover{
   transition: ease 0.5s;
   cursor: pointer;
   color:#fff;
   background-color: rgb(1, 139, 116);
+}
+.MenuMain{
+  filter: blur(5px);
+  opacity:0.5;
+}
+.divide_menu{
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-rows: 30% 40% 30%;
+  height: 100vh;
+  z-index:1;
 }
 .ProfileIcon{
   display: flex;
@@ -54,6 +173,26 @@ body {
   height: 200px;
 }
 .center_body{
-  font-size: 40px;
+  /* font-size: 40px; */
   padding:50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+}
+.center_body_contact{
+  padding:10px;
+  display: flex;
+
+}
+@media only screen and (max-width: 600px){
+  .closeMOB{
+    display: none;
+  }
+  .MenuItem a{
+    grid-template-columns: 100% 0%;
+    display: grid;
+    text-align: center;
+  }
 }
