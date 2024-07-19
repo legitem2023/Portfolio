@@ -3,7 +3,7 @@ import React from 'react'
 const Projects = () => {
   return (
     <div className='Main_child' id='Projects'>
-        <div>Created Project's</div>
+        <div>Created Projects</div>
         <ul>
             <li>https://www.hokei.com/</li>
             <li>https://areel3d.com/</li>

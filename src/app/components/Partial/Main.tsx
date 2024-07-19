@@ -9,6 +9,7 @@ import Projects from '../Projects'
 import { useRouter } from 'next/navigation'
 
 const Main = () => {
+  
   return (
     <div className='Main'>
       <About/>

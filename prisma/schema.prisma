@@ -23,4 +23,12 @@ model Skills {
   id    Int    @id @default(autoincrement())
   Image String?
   Name String?
+  Level String?
 } 
+
+model Projects {
+  id Int @id @default(autoincrement())
+  Image String?
+  Name String?
+  Link String?
+}
