@@ -3,12 +3,6 @@
         "Name":"About",
         "Link":"About",
         "Icon":"mdi:about-circle-outline"
-    }
-    ,
-    {
-        "Name":"Information",
-        "Link":"Information",
-        "Icon":"mdi:information-outline"
     },
     {
         "Name":"Skills",
@@ -16,19 +10,9 @@
         "Icon":"game-icons:skills"
     },
     {
-        "Name":"Educations",
-        "Link":"Educations",
-        "Icon":"fluent-mdl2:education"
-    },
-    {
         "Name":"Projects",
         "Link":"Projects",
         "Icon":"grommet-icons:projects"
-    },
-    {
-        "Name":"Work Expiriences",
-        "Link":"Expiriences",
-        "Icon":"mdi:work-outline"
     },
     {
         "Name":"Contact",

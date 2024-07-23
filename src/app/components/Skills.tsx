@@ -1,3 +1,4 @@
+import { Icon } from '@iconify/react/dist/iconify.js';
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 
@@ -23,7 +24,10 @@ const Skills = () => {
 
   return (
     <div className='Main_child' id='Skills'>
-      List of my Skills
+      <div className='center_body'>
+      <div className='FullStack'>
+              <Icon icon="oui:editor-code-block" /><code>Skills</code><Icon icon="oui:editor-code-block" />
+      </div>
         <div className='skillThumb'>
           {useSkills.map((skill:any,i:number)=>(
             <div className='skillThumbData' key={i}>
@@ -36,6 +40,7 @@ const Skills = () => {
             </div>
           ))}
         </div>
+      </div>
     </div>
   )
 }

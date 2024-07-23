@@ -1,0 +1,10 @@
+@media only screen and ( max-width : 1080px){
+    .skillThumb{
+        width:100%;
+        grid-gap:1.5%;    
+        grid-template-columns:49% 49%;
+    }
+    .Main {
+        width: 88.8vw;
+    }
+    }

@@ -1,0 +1,44 @@
+@media only screen and ( max-width : 1080px){
+.ProfileIcon{
+    display: none;
+}
+.skillThumb{
+    width:100%;
+    grid-gap:1.5%;    
+}
+.Menu{
+    width:10vw;
+}
+.Main{
+    left:10.5vw;
+    width:87.8vw;
+}
+.closeMOB{
+    display: none;
+}
+.MenuItem {
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+}
+.MenuItemLabel{
+    grid-template-columns: 100% 0%!important;
+    text-align: center;
+    font-size: 25px;
+    justify-content: center;
+    align-items: center!important;
+    padding:5px!important;
+}
+.center_body{
+    font-size: 20px;
+    padding:10px!important;
+    border: solid 20px transparent!important;
+}
+.Main_child{
+    padding:0px;
+}
+.skillThumbData{
+    border:solid 5px #c0c0c0;
+    height: auto!important;
+}
+}

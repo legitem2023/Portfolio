@@ -1,11 +1,35 @@
+import { Icon } from '@iconify/react/dist/iconify.js'
 import React from 'react'
 
 const Contact = () => {
   return (
         <div className='Main_child' id='Contact'>
-            <p>
-            Hey there! Im Robert Marquez, a passionate fullstack web developer with a knack for crafting elegant and efficient digital solutions. With over 5 years of experience in the field, I thrive on bringing ideas to life through clean, maintainable code and intuitive user interfaces.
-            </p>
+          <div className='center_body'>
+          <div className='FullStack'>
+              <Icon icon="oui:editor-code-block" /><code>Contact</code><Icon icon="oui:editor-code-block" />
+          </div>
+          <div className='center_body_contact'>
+          <div>
+              <input type='text' placeholder='Fullname'/>
+            </div>
+            <div>
+              <input type='text' placeholder='Email Address'/>
+            </div>
+            <div>
+              <input type='text' placeholder='Contact No.'/>
+            </div>
+            <div>
+              <textarea placeholder='More Details'></textarea>
+            </div>
+            <div>
+              <input type='file'/>
+            </div>
+            <br></br>
+            <div>
+            <button className='MenuButton'><Icon icon='ic:sharp-phone'/>Apply</button>
+            </div>
+          </div>
+          </div>
         </div>
   )
 }

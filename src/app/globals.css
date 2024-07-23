@@ -20,40 +20,121 @@ html {
   transition: ease 0.5s;
 }
 body {
-  background-color: rgb(85, 85, 85);
+  background-color: rgb(0, 0, 0);
   transition: ease 0.5s;
+}
+.Loading {
+  width: 100%;
+  height: 100%;
+  z-index: 99999999;
+  background-color: rgba(11, 95, 41, 0.5);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.progress {
+  width: 100%;
+  height: 100%;
+  z-index: 99999999;
+  background-color: rgba(11, 95, 41, 0.5);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.MenuButton{
+  background: linear-gradient(0deg, rgba(204, 229, 215, 0.7) 0%, rgba(168, 219, 194, 0.7) 17%, rgba(96, 196, 164, 0.7) 35%, rgba(58, 193, 153, 0.7) 51%, rgba(66, 214, 179, 0.7) 59%, rgba(76, 239, 207, 0.7) 71%, rgba(58, 193, 150, 0.7) 84%, rgba(38, 137, 102, 0.7) 100%);
+  padding:10px;
+  /* bottom:0px;
+  left:0px; */
+  font-size: 20px;
+  position: absolute;
+  width:150px;
+  box-shadow:inset 0.5px 0.5px 5px #000;
+  border-radius: 5px;
+  display: flex;
+  justify-content: center;
+  text-shadow: 0.5px 0.5px 2px;
+  align-items: center;
+  transition: ease 0.5s;
+}
+.MenuButton:hover{
+  box-shadow:inset 0.5px 0.5px 1px #000;
+}
+.MenuButton:active{
+  box-shadow:inset 0.5px 0.5px 15px #000;
 }
 .Head{
   grid-column: 1 / span 2;
   height:100px;
   background-color: red;
 }
-/* .BackGroundImage{
+.BackGroundImage{
   height:100vh;
-  width:100vw;
-  background: url('../../public/BackGround.png');
+  width:80vw;
+  background: url('https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/Portfolio/Projects/Me_2.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: 100% auto;
+  top:0px;
+  right:0px;
+  margin:auto;
+  position: fixed;
+  z-index: -1;
+}
+.center_body{
+  padding:20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  font-size:30px;
+  color:#004128;
+  text-shadow: 0.1px 0.1px 3px #000;
+  /* min-height: 100vh; */
+  height: auto;
+}
+.FullStack{
+  font-size: 50px;
+  font-weight: 500;
+  position: relative;
   top:0px;
   left:0px;
-  margin:auto;
-  position: absolute;
-  z-index: -1;
-} */
+  min-width:100%;
+  width:auto;
+  color:#000;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg,  #b3dbc8 0%,#83c6a6 17%,#51ad80 33%,#008c6b 67%,#005645 83%,#00231d 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  box-shadow: inset 0.5px 0.5px 3px #000;
+}
+.AboutData{
+  height: auto;
+  min-height: 100%;
+}
 .skillThumb{
   display:grid;
-  grid-template-columns: 32% 32% 32%;
-  width:40vw;
-  grid-gap:5%;
+  grid-template-columns:auto auto auto;
+  width:80%;
+  position: relative;
+  grid-gap:1%;
+  margin:10px;
 }
 .skillThumbData{
   box-shadow: 0.5px 0.5px 3px #000;
   padding:5px;
-  background-color: #f1f1f1;
+  background-color: rgba(0,0,0,0.5);
   opacity:1px;
   display: grid;
   grid-template-columns: 100%;
-  grid-template-rows:80% 10% 10%;
-  border:solid 10px #c0c0c0;
-  height: 220px;
+  grid-template-rows:auto auto 20px;
+  border:solid 10px transparent;
+  border-radius: 10px;
+  height: auto!important;
 }
 .skillThumb img{ 
   width:100%;
@@ -90,10 +171,10 @@ body {
   height: auto;
   overflow: hidden;
 }
-.Main{
-  display:block;
-  left:20vw;
-  width:79vw;
+.Main {
+  display: block;
+  left: 19.7vw;
+  width: 79.3vw;
   height: auto;
   position: relative;
   transition: ease 0.5s;
@@ -106,9 +187,10 @@ body {
   position: fixed;
 }
 .Main_child{
-  height:100vh;
+  min-height:100vh;
+  height: auto;
   position: relative;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(5px);
   background: linear-gradient(-45deg,  
   rgba(204, 229, 215 ,0.7) 0%,
   rgba(168, 219, 194,0.7) 17%,
@@ -121,7 +203,8 @@ body {
   padding:10px;
   transition: ease 0.5s;
   animation: gradientAnimation 10s ease infinite;
-}
+  margin-bottom: 10px;
+} 
 
 @keyframes gradientAnimation {
   0% {
@@ -157,6 +240,8 @@ body {
 }
 .ProgressContainer{
   position: relative;
+  max-height: 20x;
+  min-height: 20px;
   height: 100%;
   background-color: rgb(192, 192, 192);
   padding:0px!important;
@@ -176,11 +261,17 @@ body {
   left:0px;
   position: absolute;
   height: 100%;
-  background-color:blue!important;
+  background-color:transparent!important;
   color:#fff;
   padding:0px!important;
   border: solid 0px transparent!important;
   box-shadow: inset 0px 0px 0px transparent!important;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width:100%;
+  font-size: 16px;
 }
 .divide_menu{
   display: grid;
@@ -200,23 +291,45 @@ body {
   border-radius: 100%;
   box-shadow: inset 0.5px 0.5px 5px #000;
 }
-.center_body{
+
+.center_body_contact{
   padding:50px;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  font-size:30px;
-  color:#004128;
-  text-shadow: 0.1px 0.1px 3px #000;
-  height: 100%;
+  flex-direction: column;
   box-shadow: inset 0.5px 0.5px 3px rgb(0, 39, 0);
   border:solid 50px transparent;
+  /* height: 98vh; */
 }
-.center_body_contact{
+
+.ProjName{
+  font-size: 20px;
+}
+.center_body_contact div{
   padding:10px;
   display: flex;
-
+  flex-direction: column;
+  width:30vw;
+}
+.center_body_contact div input{
+  padding:5px;
+  outline: 0;
+}
+.center_body_contact div textarea{
+  padding:5px;
+  height:150px;
+  outline: 0;
+}
+.MainCanvas{
+  width:70vw;
+  height:40vw;
+  position: absolute;
+  z-index: -1px;
+}
+.MainCanvas div{
+  width:70vw;
+  height:40vw;
+  position: absolute;
+  z-index: 1px;
 }
 @media only screen and (max-width: 600px){
   .closeMOB{
