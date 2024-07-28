@@ -1,16 +1,14 @@
 
 'use client'
 import { Icon } from '@iconify/react';
-import Link from 'next/link';
 import MenuJson from './Menu.json'
-import React, { useEffect } from 'react'
-import { useRouter } from 'next/navigation';
+import React from 'react'
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+
 const Menu = () => {
-    const router = useRouter();
-
-
-  return (
+    const pathname = usePathname();
+    return (
     <div className='Menu'>
         <div className='blurBackGroundUniversal'></div>
         <div className='divide_menu '>
@@ -18,7 +16,7 @@ const Menu = () => {
         <div>
         {MenuJson.map((item:any,i:number)=>(
             <div key={i} className='MenuItem' >
-                <a href={window.location.pathname+`#`+item.Link}>
+                <a href={pathname+`#`+item.Link}>
                     <div className='MenuItemLabel'><Icon icon={item.Icon}/>
                         <code className='closeMOB'>{item.Name}</code>
                     </div>

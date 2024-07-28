@@ -9,11 +9,8 @@ const Threejs = () => {
     console.log()
   const Manager = new Three();
   const sceneRef: any = useRef();
-  
   let model: any
-  
   useEffect(() => {
-  
      const Element = sceneRef;
      const raycaster = new THREE.Raycaster();
      const mouse = new THREE.Vector2();
@@ -54,7 +51,6 @@ const Threejs = () => {
      scene.add(light.A, light.B, light.C, light.D, light.E, light.F, light.G, light.H, light.I, light.J, light.K, light.L, light.M, light.light);
   
      Manager.Loadmodel(`https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/model_houses/HouseLuxury.glb`, camera, scene);
-    //  Manager.GroundLoadmodel(`https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/model_houses/serene_suburban_landscape_with_trees.glb`, camera, scene);
      
      const geometry = new THREE.CircleGeometry(150, 150);
   
@@ -76,8 +72,6 @@ const Threejs = () => {
      plane.receiveShadow = true;
      scene.add(plane);
      let isTweening = false;
-  
-  
   
      const onMouseClick = (event: any) => {
          // Convert mouse coordinates to normalized device coordinates
@@ -110,9 +104,7 @@ const Threejs = () => {
      }
   
      window.addEventListener('dblclick', onMouseClick, false);
-  
-  
-  
+
      renderer.setAnimationLoop((time: any) => {
          TWEEN.update();
          controls.update();
@@ -161,9 +153,6 @@ const Threejs = () => {
       </div>  
     </div>
   </div>
-    
-
-   
   )
 }
 
