@@ -27,11 +27,11 @@ const Skills = () => {
       <div className='center_body'>
       <div className='FullStack'>
               <Icon icon="oui:editor-code-block" /><code>Skills</code><Icon icon="oui:editor-code-block" />
-      </div>
+              </div>
         <div className='skillThumb'>
           {useSkills.map((skill:any,i:number)=>(
             <div className='skillThumbData' key={i}>
-              <Image src={skill.Image} width='100' height='100' alt='1'/>
+              <Image src={skill.Image} width='200' height='100' alt='1'/>
               <code>{skill.Name}</code>
               <code className='ProgressContainer'>
                 <div className='Progress' style={{width:skill.Level}}></div>

@@ -5,7 +5,7 @@ import { DRACOLoader } from 'three/examples/jsm/Addons.js';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 import Router, { useRouter } from 'next/router';
 
-class Threejs {
+class Three {
     public scene() {
         return new THREE.Scene()
     }
@@ -14,23 +14,24 @@ class Threejs {
             preserveDrawingBuffer: true,
             canvas: canvas,
             antialias: true,
-            alpha: false,
+            alpha: true,
             precision: 'highp',
         });
+        
         // renderer.autoClear = false;
         // renderer.clear();
         // renderer.clearDepth();
-        renderer.setClearColor(0xffffff);
+        // renderer.setClearColor(0xffffff);
         renderer.setSize(width, height);
-        renderer.setPixelRatio(window.devicePixelRatio || 1);
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.toneMapping = THREE.ReinhardToneMapping;
+        // renderer.setPixelRatio(window.devicePixelRatio || 1);
+        // renderer.shadowMap.enabled = true;
+        // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // renderer.toneMapping = THREE.ReinhardToneMapping;
         return renderer;
     }
     public threeCamera(width: any, height: any) {
         const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 1000);
-        camera.position.set(0, 0, 0);
+        camera.position.set(0, 10, -70);
         return camera;
     }
     public HDRLighting(path: string) {
@@ -108,8 +109,8 @@ class Threejs {
         return { A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, N1, O1, P1, Q1, N2, O2, P2, Q2, light };
     }
     public Loadmodel(path: any, camera: any, scene: any) {
+        let model:any;
         const manager = new THREE.LoadingManager();
-
         manager.onStart = function (url, itemsLoaded, itemsTotal) {
             const loadingElement = document.getElementById('Loading') as HTMLDivElement;
             loadingElement.style.display = 'flex';
@@ -117,6 +118,8 @@ class Threejs {
         manager.onLoad = function () {
             const loadingElement = document.getElementById('Loading') as HTMLDivElement;
             loadingElement.style.display = 'none';
+            const Element = document.getElementById('progress') as HTMLDivElement; // You're missing a declaration for 'Element'
+            Element.style.display = 'none';
         };
         manager.onProgress = function (url, itemsLoaded, itemsTotal) {
             const loadingElement = document.getElementById('Loading') as HTMLDivElement;
@@ -133,16 +136,14 @@ class Threejs {
         const dracoLoader = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/').setDecoderConfig({ type: 'js' });
         loader.setDRACOLoader(dracoLoader);
         loader.load(path, (gltf: any) => {
-            let model = gltf.scene;
-            model.position.set(0, -0.5, 0);
+            model = gltf.scene;
+            // model.position.set(0, -0.5, 0);
             if (!model) return;
             var box = new THREE.Box3().setFromObject(model);
             var center = box.getCenter(new THREE.Vector3());
             var size = box.getSize(new THREE.Vector3());
             var maxDim = Math.max(size.x, size.y, size.z);
             var fov = camera.fov * (Math.PI / 180);
-            var cameraZ = Math.abs((maxDim / 2) / Math.tan(fov / 2));
-            camera.position.set(center.x, center.y, cameraZ * 1);
             model.castShadow = true;
             model.receiveShadow = true;
             model.traverse((child: any) => {
@@ -163,6 +164,66 @@ class Threejs {
                     loadingElement.innerText = 'Loading...';
                 }
             });
+       
+    }
+    public GroundLoadmodel(path: any, camera: any, scene: any) {
+        let model:any;
+        const manager = new THREE.LoadingManager();
+        manager.onStart = function (url, itemsLoaded, itemsTotal) {
+            const loadingElement = document.getElementById('Loading') as HTMLDivElement;
+            loadingElement.style.display = 'flex';
+        };
+        manager.onLoad = function () {
+            const loadingElement = document.getElementById('Loading') as HTMLDivElement;
+            loadingElement.style.display = 'none';
+            const Element = document.getElementById('progress') as HTMLDivElement; // You're missing a declaration for 'Element'
+            Element.style.display = 'none';
+        };
+        manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+            const loadingElement = document.getElementById('Loading') as HTMLDivElement;
+            loadingElement.style.display = 'flex';
+            const Element = document.getElementById('progress') as HTMLDivElement; // You're missing a declaration for 'Element'
+            const percentComplete = ((itemsLoaded / itemsTotal) * 100).toFixed(0);
+            Element.innerText = `Progress: ${percentComplete}%`;
+        };
+        manager.onError = function (url) {
+            const loadingElement = document.getElementById('Loading') as HTMLDivElement;
+            loadingElement.style.display = 'flex';
+        };
+        const loader = new GLTFLoader(manager);
+        const dracoLoader = new DRACOLoader().setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/').setDecoderConfig({ type: 'js' });
+        loader.setDRACOLoader(dracoLoader);
+        loader.load(path, (gltf: any) => {
+            model = gltf.scene;
+            // model.position.set(0, -0.5, 0);
+            if (!model) return;
+            var box = new THREE.Box3().setFromObject(model);
+            var center = box.getCenter(new THREE.Vector3());
+            var size = box.getSize(new THREE.Vector3());
+            var maxDim = Math.max(size.x, size.y, size.z);
+            var fov = camera.fov * (Math.PI / 180);
+            model.castShadow = true;
+            model.receiveShadow = true;
+            model.traverse((child: any) => {
+                if (child.isMesh) {
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            })
+            model.position.set(0,-285,0)
+            scene.add(model);
+        },
+            // onProgress callback
+            function (xhr: any) {
+                const loadingElement = document.getElementById('progress') as HTMLDivElement;
+                if (xhr.lengthComputable) {
+                    const percentComplete = xhr.loaded / xhr.total * 100;
+                    loadingElement.innerText = `Downloading: ${Math.round(percentComplete)}%`;
+                } else {
+                    loadingElement.innerText = 'Loading...';
+                }
+            });
+            return model;
     }
     public orbitControl(camera: any, renderer: any) {
         const controls = new OrbitControls(camera, renderer.domElement);
@@ -179,4 +240,4 @@ class Threejs {
         controls.update();
     };
 }
-export default Threejs
+export default Three

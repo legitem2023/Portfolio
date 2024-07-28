@@ -1,6 +1,7 @@
 'use client'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import React, { useEffect, useRef } from 'react'
+import Threejs from './Threejs'
 const About = () => {
 
   return (
@@ -9,15 +10,17 @@ const About = () => {
               <div className='FullStack'>
               <Icon icon="oui:editor-code-block" /><code>About</code><Icon icon="oui:editor-code-block" />
               </div>
-            <div className='AboutData'>
+            <div className='AboutData'>     
+              <div>
+
             Hey there! 
-            <p>Im Robert Marquez</p> 
-            <p>
+            Im Robert Marquez
+            
             a passionate fullstack web developer with a knack for crafting elegant and efficient digital solutions. With over 5 years of experience in the field, I thrive on bringing ideas to life through clean, maintainable code and intuitive user interfaces.
-            </p>
-            <br></br>
-            <br></br>
-            <button className='MenuButton'><Icon icon='ic:sharp-phone'/>Contact</button>
+
+            {/* <button className='MenuButton'><Icon icon='ic:sharp-phone'/>Contact</button>                */}
+              </div>         
+              <div></div>
             </div>
           </div>
         </div>
