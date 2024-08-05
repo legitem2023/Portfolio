@@ -3,9 +3,9 @@ import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
 
 const Skills = () => {
-  const [useSkills,setSkills] = useState([]);
+  const [useSkills, setSkills] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     async function fetchSkills() {
       try {
         const response = await fetch('/api/skills');
@@ -20,22 +20,22 @@ const Skills = () => {
     }
 
     fetchSkills();
-  },[])
+  }, [])
 
   return (
     <div className='Main_child' id='Skills'>
       <div className='center_body'>
-      <div className='FullStack'>
-              <Icon icon="oui:editor-code-block" /><code>Skills</code><Icon icon="oui:editor-code-block" />
-              </div>
+        <div className='FullStack'>
+          <Icon icon="game-icons:skills" /><code>Skills</code>
+        </div>
         <div className='skillThumb'>
-          {useSkills.map((skill:any,i:number)=>(
+          {useSkills.map((skill: any, i: number) => (
             <div className='skillThumbData' key={i}>
-              <Image src={skill.Image} width='200' height='100' alt='1'/>
+              <Image src={skill.Image} width='200' height='100' alt='1' />
               <code>{skill.Name}</code>
               <code className='ProgressContainer'>
-                <div className='Progress' style={{width:skill.Level}}></div>
-                <div className='ProgressLabel'>{skill.Level}</div>  
+                <div className='Progress' style={{ width: skill.Level }}></div>
+                <div className='ProgressLabel'>{skill.Level}</div>
               </code>
             </div>
           ))}

@@ -11,22 +11,11 @@ class Three {
     }
     public renderer(canvas: any, width: any, height: any) {
         const renderer = new THREE.WebGLRenderer({
-            preserveDrawingBuffer: true,
             canvas: canvas,
             antialias: true,
             alpha: true,
-            precision: 'highp',
         });
-        
-        // renderer.autoClear = false;
-        // renderer.clear();
-        // renderer.clearDepth();
-        // renderer.setClearColor(0xffffff);
-        renderer.setSize(width, height);
-        // renderer.setPixelRatio(window.devicePixelRatio || 1);
-        // renderer.shadowMap.enabled = true;
-        // renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        // renderer.toneMapping = THREE.ReinhardToneMapping;
+
         return renderer;
     }
     public threeCamera(width: any, height: any) {
@@ -109,7 +98,7 @@ class Three {
         return { A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, N1, O1, P1, Q1, N2, O2, P2, Q2, light };
     }
     public Loadmodel(path: any, camera: any, scene: any) {
-        let model:any;
+        let model: any;
         const manager = new THREE.LoadingManager();
         manager.onStart = function (url, itemsLoaded, itemsTotal) {
             const loadingElement = document.getElementById('Loading') as HTMLDivElement;
@@ -164,10 +153,10 @@ class Three {
                     loadingElement.innerText = 'Loading...';
                 }
             });
-       
+
     }
     public GroundLoadmodel(path: any, camera: any, scene: any) {
-        let model:any;
+        let model: any;
         const manager = new THREE.LoadingManager();
         manager.onStart = function (url, itemsLoaded, itemsTotal) {
             const loadingElement = document.getElementById('Loading') as HTMLDivElement;
@@ -210,7 +199,7 @@ class Three {
                     child.receiveShadow = true;
                 }
             })
-            model.position.set(0,-285,0)
+            model.position.set(0, -285, 0)
             scene.add(model);
         },
             // onProgress callback
@@ -223,7 +212,7 @@ class Three {
                     loadingElement.innerText = 'Loading...';
                 }
             });
-            return model;
+        return model;
     }
     public orbitControl(camera: any, renderer: any) {
         const controls = new OrbitControls(camera, renderer.domElement);

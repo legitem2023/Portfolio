@@ -3,9 +3,9 @@ import Image from 'next/image';
 import React, { useEffect, useState } from 'react'
 
 const Projects = () => {
-  const [useProject,setProject] = useState([]);
+  const [useProject, setProject] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     async function fetchProjects() {
       try {
         const response = await fetch('/api/Projects');
@@ -20,25 +20,25 @@ const Projects = () => {
     }
 
     fetchProjects();
-  },[])
+  }, [])
 
   return (
     <div className='Main_child' id='Projects'>
-          <div className='center_body'>
-              <div className='FullStack'>
-                  <Icon icon="oui:editor-code-block" /><code>Projects</code><Icon icon="oui:editor-code-block" />
-              </div>
-              <div className='skillThumb'>
-              {useProject.map((skill:any,i:number)=>(
-                  <div className='skillThumbData' key={i}>
-                    <a href={skill.Link}><Image src={skill.Image} width='300' height='200' alt='1'/></a>
-                    <code className='ProjName'>{skill.Name}</code>
-                    <code className='ProjName'>{skill.Language}</code>
-                    <code className='ProjName'><a href={skill.Link}>Visit</a></code>
-                  </div>
-                ))}
-              </div>
-          </div>
+      <div className='center_body'>
+        <div className='FullStack'>
+          <Icon icon="grommet-icons:projects" /><code>Projects</code>
+        </div>
+        <div className='skillThumb'>
+          {useProject.map((skill: any, i: number) => (
+            <div className='skillThumbData' key={i}>
+              <a href={skill.Link}><Image src={skill.Image} width='300' height='200' alt='1' /></a>
+              <code className='ProjName'>{skill.Name}</code>
+              <code className='ProjName'>{skill.Language}</code>
+              <code className='ProjName'><a href={skill.Link}>Visit</a></code>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

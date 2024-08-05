@@ -1,22 +1,27 @@
 [
     {
-        "Name":"About",
-        "Link":"About",
-        "Icon":"mdi:about-circle-outline"
+        "Name": "Home",
+        "Link": "Nav",
+        "Icon": "ic:baseline-home"
     },
     {
-        "Name":"Skills",
-        "Link":"Skills",
-        "Icon":"game-icons:skills"
+        "Name": "About",
+        "Link": "About",
+        "Icon": "mdi:about-circle-outline"
     },
     {
-        "Name":"Projects",
-        "Link":"Projects",
-        "Icon":"grommet-icons:projects"
+        "Name": "Skills",
+        "Link": "Skills",
+        "Icon": "game-icons:skills"
     },
     {
-        "Name":"Contact",
-        "Link":"Contact",
-        "Icon":"ic:sharp-phone"
+        "Name": "Projects",
+        "Link": "Projects",
+        "Icon": "grommet-icons:projects"
+    },
+    {
+        "Name": "Contact",
+        "Link": "Contact",
+        "Icon": "ic:sharp-phone"
     }
 ]
