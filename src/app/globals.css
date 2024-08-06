@@ -164,7 +164,12 @@ body {
   height: auto;
   min-height: 100%;
   display: grid;
-  /* grid-template-columns: 50% 50%; */
+  grid-template-columns: 50% 50%;
+  background-image: url('/Me_.png');
+  background-repeat: no-repeat;
+  background-position: 100% 0%;
+  background-size: auto 100%;
+  opacity: 0.4;
 }
 
 .AboutData div {

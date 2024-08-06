@@ -34,7 +34,6 @@ const Projects = () => {
               <a href={skill.Link}><Image src={skill.Image} width='300' height='200' alt='1' /></a>
               <code className='ProjName'>{skill.Name}</code>
               <code className='ProjName'>{skill.Language}</code>
-              <code className='ProjName'><a href={skill.Link}>Visit</a></code>
             </div>
           ))}
         </div>
