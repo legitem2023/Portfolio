@@ -126,7 +126,7 @@ class Three {
         loader.setDRACOLoader(dracoLoader);
         loader.load(path, (gltf: any) => {
             model = gltf.scene;
-            // model.position.set(0, -0.5, 0);
+            model.scale.set(2.2,2.2,2.2);
             if (!model) return;
             var box = new THREE.Box3().setFromObject(model);
             var center = box.getCenter(new THREE.Vector3());

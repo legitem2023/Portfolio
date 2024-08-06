@@ -12,7 +12,7 @@ const Main = () => {
 
   return (
     <div className='Main'>
-      <Threejs/>
+      {/* <Threejs/> */}
       <About/>
       <Skills/>
       <Projects/>

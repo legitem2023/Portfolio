@@ -13,7 +13,7 @@ const Menu = () => {
             <div className='blurBackGroundUniversal'></div>
             <div className='divide_menu '>
                 {/* <div className='ProfileIcon'><Image src="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/Portfolio/Projects/Me.png" height='300' width='300' alt='1'/></div> */}
-                <div>
+                <div className='MenuItemCont'>
                     {MenuJson.map((item: any, i: number) => (
                         <div key={i} className='MenuItem' >
                             <a href={pathname + `#` + item.Link}>
@@ -24,8 +24,6 @@ const Menu = () => {
                         </div>
                     ))}
                 </div>
-
-                <div></div>
             </div>
 
         </div>
