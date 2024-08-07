@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Malegroth';
+  src: url('malegroth-font/MalegrothRegular-w1ygz.otf') format('otf');
+  font-weight: normal;
+  font-style: normal;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -24,6 +31,12 @@ html {
 body {
   background-color: rgb(0, 0, 0);
   transition: ease 0.5s;
+  -webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+-o-user-select: none;
+user-select: none;
 }
 
 .Loading {
@@ -59,7 +72,7 @@ body {
 }
 
 .MenuButton {
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(35, 46, 41, 0.7) 17%, rgba(29, 59, 50, 0.7) 35%, rgba(18, 59, 47, 0.7) 51%, rgba(16, 53, 44, 0.7) 59%, rgba(21, 68, 59, 0.7) 71%, rgba(16, 54, 42, 0.7) 84%, rgba(14, 49, 37, 0.7) 100%);
+  background: rgb(0, 201, 43);
   padding: 10px;
   font-size: 20px;
   position: absolute;
@@ -176,6 +189,7 @@ body {
   text-shadow: 0.5px 0.5px 3px #ffffff;
 }
 .AboutTextName{
+  font-family: 'Malegroth';
   font-size:40px;
   width:100%;
 }
