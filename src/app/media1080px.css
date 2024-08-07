@@ -1,38 +1,66 @@
 @media only screen and ( max-width : 1080px){
 .ProfileIcon{
-    display: none;
+    /* display: none; */
 }
+.AboutBackGround{
+    background-image: url('/FadedMe.png');
+    background-repeat: no-repeat;
+    background-position: 100% 100%;
+    background-size: 100% auto;
+    opacity: 0.4;
+    display: none!important;
+}
+.AboutData {
+    height: auto;
+    min-height: 100%;
+    display: grid;
+    grid-template-columns:100%;
+    background-image: url('/FadedMe.png');
+    background-repeat: no-repeat;
+    background-position: 100% 50%;
+    background-size: 100% auto;
+}
+  
 .skillThumb{
     width:100%;
     grid-gap:1.5%;    
 }
 .Menu{
-    width:10vw;
+    width:100vw;
+    z-index:99!important;
+    left:-100vw;
+    top:8vh;
 }
 .Main{
-    left:10.5vw;
-    width:87.8vw;
+    left: 0vw;
+    right: 0vw;
+    margin: auto;
+    width: 98.5vw;
 }
 .closeMOB{
-    display: none;
+    text-align: left;
 }
 .MenuItem {
     cursor: pointer;
     display: flex;
-    justify-content: center;
+    justify-content: left;
 }
 .MenuItemLabel{
-    grid-template-columns: 100% 0%!important;
+    grid-template-columns: 10% 90%!important;
     text-align: center;
     font-size: 25px;
     justify-content: center;
     align-items: center!important;
     padding:5px!important;
+    width:100vw;
+}
+.MenuItemCont{
+    margin-top:0vh;
 }
 .center_body{
     font-size: 20px;
     padding:10px!important;
-    border: solid 20px transparent!important;
+    border: solid 0px transparent!important;
 }
 .Main_child{
     padding:0px;
@@ -41,4 +69,10 @@
     border:solid 5px #c0c0c0;
     height: auto!important;
 }
+.AboutData {
+    grid-template-columns:100%;
+  }
+  .AboutData div{
+    margin:10vw;
+  }
 }

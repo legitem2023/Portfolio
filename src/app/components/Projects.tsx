@@ -31,7 +31,7 @@ const Projects = () => {
         <div className='skillThumb'>
           {useProject.map((skill: any, i: number) => (
             <div className='skillThumbData' key={i}>
-              <a href={skill.Link}><Image src={skill.Image} width='300' height='200' alt='1' /></a>
+              <a href={skill.Link} target="_blank"><Image src={skill.Image} width='300' height='200' alt='1' /></a>
               <code className='ProjName'>{skill.Name}</code>
               <code className='ProjName'>{skill.Language}</code>
             </div>

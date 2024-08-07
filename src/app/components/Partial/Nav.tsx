@@ -1,10 +1,19 @@
+'use client'
+import { Icon } from '@iconify/react/dist/iconify.js'
 import Image from 'next/image'
 import React from 'react'
-
+import ToggleComponent from './toggleComponent'
+import { useRouter } from 'next/navigation'
 const Nav = () => {
+    const router = useRouter();
     return (
         <div className='Nav' id='Nav'>
-            <div className='ProfileIcon'><Image src="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/Portfolio/Projects/Me.png" height='300' width='300' alt='1' /></div>
+            <ToggleComponent/>
+            <div className='NavIconLink'>
+                <div><Icon icon="bi:line" onClick={()=>router.push('/')}/></div>
+                <div><Icon icon="bi:messenger" onClick={()=>router.push('/')}/></div>
+                <div><Icon icon="bi:telegram" onClick={()=>router.push('/')}/></div>
+            </div>
         </div>
     )
 }

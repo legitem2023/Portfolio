@@ -31,7 +31,8 @@ const Skills = () => {
         <div className='skillThumb'>
           {useSkills.map((skill: any, i: number) => (
             <div className='skillThumbData' key={i}>
-              <Image src={skill.Image} width='200' height='200' alt='1' />
+              <Image src={skill.Image} width='200' height='200' alt='1' /> 
+
               <code className='skillName'>{skill.Name}</code>
               <code className='ProgressContainer'>
                 <div className={`ProgressLabel`} style={{width:skill.Level}}>{skill.Level}</div>
