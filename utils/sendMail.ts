@@ -6,7 +6,7 @@ dotenv.config();
 
 // Define the transporter object using SMTP transport
 const transporter = nodemailer.createTransport({
-  host: 'digitaloutofhome2019.gmail.com',
+  host: '54.95.240.249',
   port: 587,
   secure: false,
   auth: {
