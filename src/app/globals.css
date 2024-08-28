@@ -203,6 +203,24 @@ user-select: none;
   height: 35vw;
   border-radius: 100%;
 }
+.DLME{
+  position: absolute;
+  left:0px;
+  right:0px;
+  top:10vh;
+  margin: auto;
+  font-size: 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.DLME a{
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
 .NavIconLink{
   right:0px;
   top:0px;

@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <video autoPlay muted loop id="background-video">
-          <source src="https://static.vecteezy.com/system/resources/previews/002/019/901/mp4/matrix-digital-background-free-video.mp4" type="video/mp4"/>
+          <source src="./matrix-digital-background-free-video.mp4" type="video/mp4"/>
         </video>
         <div className="BackGroundImage"></div>
         {children}

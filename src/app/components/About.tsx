@@ -11,8 +11,10 @@ const About = () => {
           <Icon icon="mdi:about-circle-outline" /><code>About</code>
         </div>
         <div className='AboutData'>
-          
-          <div>
+          <div className='DLME'>
+            <a href='./CV.pdf' download={true}><Icon icon="teenyicons:pdf-solid" /> Download CV</a>
+          </div>
+          <div> 
 
             <div className='AboutTextName'>Hey there!
             Im Robert Marquez

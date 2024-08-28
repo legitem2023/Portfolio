@@ -11,8 +11,8 @@ const Nav = () => {
         <div className='Nav' id='Nav'>
             <ToggleComponent/>
             <div className='NavIconLink'>
-                <Link href="https://t.me/RobertMarquez" target='_blank'><Icon icon="bi:line" onClick={()=>router.push('/')}/></Link>
-                <Link href="https://t.me/RobertMarquez" target='_blank'><Icon icon="bi:messenger" onClick={()=>router.push('/')}/></Link>
+                <Link href="https://line.me/ti/p/RuxBmA_Q5X" target='_blank'><Icon icon="bi:line" onClick={()=>router.push('/')}/></Link>
+                <Link href="https://m.me/robert.marquez.9404362" target='_blank'><Icon icon="bi:messenger" onClick={()=>router.push('/')}/></Link>
                 <Link href="https://t.me/RobertMarquez" target='_blank'><Icon icon="bi:telegram" /></Link>
             </div>
         </div>
