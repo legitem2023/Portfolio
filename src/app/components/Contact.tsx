@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react/dist/iconify.js';
+import Link from 'next/link';
 import React, { useState } from 'react';
 
 const Contact = () => {
@@ -30,9 +31,8 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { fullname, email, contactNo, details } = formData;
-
     try {
-      const response = await fetch('/api/sendMail', {
+      const response = await fetch('/api/SendMail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -58,7 +58,7 @@ const Contact = () => {
           <Icon icon="ic:sharp-phone" /><code>Contact</code>
         </div>
         <div className='center_body_contact'>
-          <form onSubmit={handleSubmit}>
+          {/* <form onSubmit={handleSubmit}>
             <div>
               <input
                 type='text'
@@ -101,11 +101,14 @@ const Contact = () => {
               />
             </div>
             <br />
-            <div>
-              <button type='submit' className='MenuButton'>Send</button>
+          </form> */}
+            <div className='AlternativeContact'>
+            <Link href="https://line.me/ti/p/RuxBmA_Q5X" target='_blank'><Icon icon="bi:line"/></Link>
+            <Link href="https://m.me/robert.marquez.9404362" target='_blank'><Icon icon="bi:messenger"/></Link>
+            <Link href="https://t.me/RobertMarquez" target='_blank'><Icon icon="bi:telegram" /></Link>
             </div>
-          </form>
-        </div>
+          </div>
+
       </div>
     </div>
   );

@@ -1,23 +1,18 @@
-// pages/api/sendMail.ts
-import type { NextApiRequest, NextApiResponse } from 'next';
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  host: 'smtp.example.com', // Replace with your SMTP server
-  port: 587, // Replace with the appropriate port
-  secure: false, // Set to true if you are using SSL/TTLS
+  service: 'yahoo',
   auth: {
-    user: process.env.EMAIL_USER, // Replace with your email
-    pass: process.env.EMAIL_PASS // Replace with your email password
+    user: process.env.YAHOO_EMAIL_USER, // Replace with your Yahoo email in the .env file
+    pass: process.env.YAHOO_EMAIL_PASS // Replace with your Yahoo email password in the .env file
   }
 });
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req, res) {
   if (req.method === 'POST') {
     const { fullname, email, contactNo, details } = req.body;
-
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.YAHOO_EMAIL_USER, // Ensure this matches the Yahoo email used in the transporter
       to: 'digitaloutofhome2019@gmail.com',
       subject: 'From Portfolio Message',
       text: `Fullname: ${fullname}\nEmail: ${email}\nContact No.: ${contactNo}\nDetails: ${details}`,
@@ -28,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <p>Details: ${details}</p>
       `
     };
-
+    transporter
     try {
       await transporter.sendMail(mailOptions);
       res.status(200).json({ message: 'Email sent successfully!' });
