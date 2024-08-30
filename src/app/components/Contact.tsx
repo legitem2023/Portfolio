@@ -77,6 +77,10 @@ const Contact = () => {
           theme: "light",
           transition: Bounce,
           });
+          if (loading.current) {
+            loading.current.disabled = false;
+            loading.current.textContent = 'Send'
+          }
       }
     } catch (error) {
       console.error('Error sending email:', error);
@@ -91,6 +95,10 @@ const Contact = () => {
         theme: "light",
         transition: Bounce,
         });
+        if (loading.current) {
+          loading.current.disabled = false;
+          loading.current.textContent = 'Send'
+        }
     }
   };
 
