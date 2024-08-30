@@ -17,6 +17,7 @@
     "nodemailer": "^6.9.14",
     "react": "^18",
     "react-dom": "^18",
+    "react-toastify": "^10.0.5",
     "three": "^0.166.1",
     "zustand": "^4.5.4"
   },

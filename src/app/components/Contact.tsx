@@ -1,8 +1,10 @@
 import { Icon } from '@iconify/react/dist/iconify.js';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { Bounce, toast } from 'react-toastify';
 
 const Contact = () => {
+  const loading = useRef<HTMLButtonElement | null>(null);
   const [formData, setFormData] = useState({
     fullname: '',
     email: '',
@@ -30,9 +32,15 @@ const Contact = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading.current) {
+       // Disable the button during submission
+      loading.current.disabled = true;
+      loading.current.textContent = 'Sending...'; // Optionally, update the button text    
+    }
+
     const { fullname, email, contactNo, details } = formData;
     try {
-      const response = await fetch('/api/SendMail/', {
+      const response = await fetch('/api/SendMail', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -41,13 +49,48 @@ const Contact = () => {
       });
 
       if (response.ok) {
-        alert('Email sent successfully!');
+        toast.success('Email sent successfully!', {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+          });
+          if (loading.current) {
+            loading.current.disabled = false;
+            loading.current.textContent = 'Send'
+          }
+      
       } else {
-        alert('Failed to send email.');
+        toast.warning('Failed to send email.', {
+          position: "top-center",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+          transition: Bounce,
+          });
       }
     } catch (error) {
       console.error('Error sending email:', error);
-      alert('Failed to send email.');
+      toast.error('Failed to send email.', {
+        position: "top-center",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+        transition: Bounce,
+        });
     }
   };
 
@@ -58,7 +101,7 @@ const Contact = () => {
           <Icon icon="ic:sharp-phone" /><code>Contact</code>
         </div>
         <div className='center_body_contact'>
-          {/* <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}>
             <div>
               <input
                 type='text'
@@ -95,20 +138,15 @@ const Contact = () => {
               />
             </div>
             <div>
-              <input
-                type='file'
-                onChange={handleFileChange}
-              />
+              <button type='submit' ref={loading} className='MenuButton'>Send</button>
             </div>
-            <br />
-          </form> */}
-            <div className='AlternativeContact'>
+          </form>
+          {/* <div className='AlternativeContact'>
             <Link href="https://line.me/ti/p/RuxBmA_Q5X" target='_blank'><Icon icon="bi:line"/></Link>
             <Link href="https://m.me/robert.marquez.9404362" target='_blank'><Icon icon="bi:messenger"/></Link>
             <Link href="https://t.me/RobertMarquez" target='_blank'><Icon icon="bi:telegram" /></Link>
-            </div>
-          </div>
-
+            </div> */}
+        </div>
       </div>
     </div>
   );

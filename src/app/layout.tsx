@@ -3,7 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import "./media1080px.css"
 import "./media600px.css"
-
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function RootLayout({
         </video>
         <div className="BackGroundImage"></div>
         {children}
+        <ToastContainer />
         </body>
     </html>
   );

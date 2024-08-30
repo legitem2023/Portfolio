@@ -2,13 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: 'Malegroth';
-  src: url('malegroth-font/MalegrothRegular-w1ygz.otf') format('otf');
-  font-weight: normal;
-  font-style: normal;
-}
-
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -517,30 +510,7 @@ user-select: none;
   font-size: 40px;
   margin-left:5vw;
 }
-/* 
-@media only screen and (max-width: 640px) {
-  .closeMOB {
-    display: none;
-  }
 
-  .MenuItem a {
-    grid-template-columns: 100% 0%;
-    display: grid;
-    text-align: center;
-  }
-}
-
-@media only screen and (max-width: 640px) {
-  .closeMOB {
-    display: none;
-  }
-
-  .MenuItem a {
-    grid-template-columns: 100% 0%;
-    display: grid;
-    text-align: center;
-  }
-} */
  .AlternativeContact{
   display: flex;
   flex-direction: row!important;
