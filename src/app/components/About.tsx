@@ -12,7 +12,7 @@ const About = () => {
         </div>
         <div className='AboutData'>
           <div className='DLME'>
-            <a href='./CV.pdf' download={true}><Icon icon="teenyicons:pdf-solid" /> Download CV</a>
+            <a href='./CV_Robert_Marquez.pdf' download={true}><Icon icon="teenyicons:pdf-solid" /> Download CV</a>
           </div>
           <div> 
 
