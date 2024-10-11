@@ -8,7 +8,9 @@
     .Main {
         width: 100vw;
     }
-
+    .NavIcon{
+        display: block;
+    }
     .center_body {
         border: solid 2px transparent !important;
         padding: 2px !important;

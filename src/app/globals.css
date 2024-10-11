@@ -509,8 +509,22 @@ user-select: none;
   height: 100%;
   font-size: 40px;
   margin-left:5vw;
+  display: none;
 }
-
+.cover{
+  width:100vw;
+  height:100vh;
+  margin:0px;
+  position:fixed;
+  left:0px;
+  top:0px;
+  background-color: rgba(0, 141, 0, 0.322);
+  background-image: url("https://eshop.wieland-electric.com/static/com.wieland.context.default/img/spinner.gif");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 75px 75px;
+  z-index:99999;
+}
  .AlternativeContact{
   display: flex;
   flex-direction: row!important;

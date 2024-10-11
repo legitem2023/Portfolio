@@ -1,13 +1,17 @@
 import { Icon } from '@iconify/react/dist/iconify.js';
 import Image from 'next/image'
 import React, { useEffect, useState } from 'react'
+import Loading from './Partial/Loading';
 
 const Skills = () => {
   const [useSkills, setSkills] = useState([]);
+  const [loading, setLoading] = useState<boolean>(true); // State to handle loading
 
   useEffect(() => {
     async function fetchSkills() {
       try {
+        setLoading(true); // Start loading
+
         const response = await fetch('/api/skills');
         if (!response.ok) {
           throw new Error('Network response was not ok');
@@ -16,6 +20,8 @@ const Skills = () => {
         setSkills(data);
       } catch (error) {
         console.error('Failed to fetch skills:', error);
+      }finally {
+        setLoading(false); // Stop loading after success or error
       }
     }
 
@@ -24,6 +30,7 @@ const Skills = () => {
 
   return (
     <div className='Main_child' id='Skills'>
+            {loading?<Loading/>:""}
       <div className='center_body'>
         <div className='FullStack'>
           <Icon icon="game-icons:skills" /><code>Skills</code>

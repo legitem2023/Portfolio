@@ -2,6 +2,9 @@
 .ProfileIcon{
     /* display: none; */
 }
+.NavIcon{
+    display: block;
+}
 .AboutBackGround{
     background-image: url('/FadedMe.png');
     background-repeat: no-repeat;
