@@ -14,7 +14,7 @@ export default function Home() {
 // pages/index.tsx
 import LuxuryTabs from '../components/ui/LuxuryTabs';
 import ProductCard from '../components/ui/ProductCard';
-import { Product } from '../types';
+import { Product } from '../../../types';
 
 const LuxuryEcommercePage: React.FC = () => {
   // Sample product data
