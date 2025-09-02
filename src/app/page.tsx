@@ -1,4 +1,5 @@
 // pages/index.tsx
+'use client';
 import LuxuryTabs from './components/ui/LuxuryTabs';
 import ProductCard from './components/ui/ProductCard';
 import { Product, Tab } from '../../types';
