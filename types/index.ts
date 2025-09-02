@@ -4,15 +4,19 @@ export interface Product {
   name: string;
   price: number;
   image: string;
-  images?: string[]; // Add this for multiple images
+  images?: string[];
   category: string;
   rating: number;
   description: string;
-  longDescription?: string; // Add this for detailed description
-  features?: string[]; // Add this for product features
-  stock?: number; // Add this for inventory
-  colors?: string[]; // Add this for color options
-  sizes?: string[]; // Add this for size options
+  longDescription?: string;
+  features?: string[];
+  stock?: number;
+  colors?: string[];
+  sizes?: string[];
+}
+
+export interface ProductCardProps {
+  product: Product;
 }
 
 export interface Tab {
@@ -26,6 +30,7 @@ export interface LuxuryTabsProps {
   tabs: Tab[];
   defaultTab?: string;
 }
+
 
 export interface ProductCardProps {
   product: Product;
