@@ -303,14 +303,14 @@ const ProductDetailPage = () => {
 
               {/* Stock Information */}
               <div className="text-sm text-gray-600">
-                {product.stock > 5 ? (
-                  <span className="text-green-600">In stock ({product.stock} available)</span>
-                ) : product.stock > 0 ? (
-                  <span className="text-orange-500">Low stock ({product.stock} left)</span>
-                ) : (
-                  <span className="text-red-600">Out of stock</span>
-                )}
-              </div>
+  {(product.stock ?? 0) > 5 ? (
+    <span className="text-green-600">In stock ({product.stock} available)</span>
+  ) : (product.stock ?? 0) > 0 ? (
+    <span className="text-orange-500">Low stock ({product.stock} left)</span>
+  ) : (
+    <span className="text-red-600">Out of stock</span>
+  )}
+</div>
             </div>
           </div>
         </div>
