@@ -4,10 +4,15 @@ export interface Product {
   name: string;
   price: number;
   image: string;
+  images?: string[]; // Add this for multiple images
   category: string;
   rating: number;
-  description?: string;
-  // Add any additional product properties you need
+  description: string;
+  longDescription?: string; // Add this for detailed description
+  features?: string[]; // Add this for product features
+  stock?: number; // Add this for inventory
+  colors?: string[]; // Add this for color options
+  sizes?: string[]; // Add this for size options
 }
 
 export interface Tab {
