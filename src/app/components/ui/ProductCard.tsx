@@ -1,4 +1,5 @@
 // components/ui/ProductCard.tsx
+'use client';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Product, ProductCardProps } from '../../../../types';
