@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
-import { Product } from '../../types';
+import { Product } from '../../../types';
 
 const ProductDetailPage = () => {
   const router = useRouter();
