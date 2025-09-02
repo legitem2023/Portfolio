@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Tab, LuxuryTabsProps } from '../../types';
+import { Tab, LuxuryTabsProps } from '../../../../types';
 
 const LuxuryTabs: React.FC<LuxuryTabsProps> = ({ tabs, defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id);
