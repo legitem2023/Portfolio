@@ -1,6 +1,7 @@
+// pages/index.tsx
 import LuxuryTabs from './components/ui/LuxuryTabs';
 import ProductCard from './components/ui/ProductCard';
-import { Product } from '../../types';
+import { Product, Tab } from '../../types';
 
 const LuxuryEcommercePage: React.FC = () => {
   // Sample product data
@@ -10,41 +11,94 @@ const LuxuryEcommercePage: React.FC = () => {
       name: 'Premium Leather Handbag',
       price: 299,
       image: '/images/handbag.jpg',
+      images: ['/images/handbag.jpg', '/images/handbag-2.jpg', '/images/handbag-3.jpg'],
       category: 'Accessories',
       rating: 4.8,
-      description: 'Handcrafted genuine leather handbag with gold accents'
+      description: 'Handcrafted genuine leather handbag with gold accents',
+      longDescription: 'This exquisite handbag is crafted from the finest genuine leather, featuring meticulous stitching and luxurious gold hardware.',
+      features: ['Genuine leather', 'Gold hardware', 'Adjustable strap', 'Multiple compartments'],
+      stock: 15,
+      colors: ['Black', 'Brown', 'Burgundy'],
+      sizes: ['One Size']
     },
     {
       id: '2',
       name: 'Luxury Watch',
       price: 1250,
       image: '/images/watch.jpg',
+      images: ['/images/watch.jpg', '/images/watch-2.jpg', '/images/watch-3.jpg'],
       category: 'Accessories',
       rating: 4.9,
-      description: 'Swiss automatic movement with diamond markers'
+      description: 'Swiss automatic movement with diamond markers',
+      longDescription: 'Experience precision and elegance with our Swiss-made automatic timepiece.',
+      features: ['Swiss automatic movement', 'Sapphire crystal', 'Diamond markers', 'Water resistant'],
+      stock: 8,
+      colors: ['Silver', 'Gold', 'Rose Gold'],
+      sizes: ['Standard']
     },
     {
       id: '3', 
       name: 'Cashmere Scarf',
       price: 189,
       image: '/images/scarf.jpg',
+      images: ['/images/scarf.jpg', '/images/scarf-2.jpg', '/images/scarf-3.jpg'],
       category: 'Accessories',
       rating: 4.7,
-      description: '100% pure cashmere with heritage pattern'
+      description: '100% pure cashmere with heritage pattern',
+      longDescription: 'Wrap yourself in luxury with our 100% pure cashmere scarf.',
+      features: ['100% pure cashmere', 'Heritage pattern', 'Lightweight warmth', 'Hand-finished edges'],
+      stock: 22,
+      colors: ['Cream', 'Navy', 'Burgundy', 'Grey'],
+      sizes: ['One Size']
+    },
+    {
+      id: '4',
+      name: 'Designer Sunglasses',
+      price: 350,
+      image: '/images/sunglasses.jpg',
+      category: 'Accessories',
+      rating: 4.6,
+      description: 'Polarized lenses with premium acetate frames',
+      stock: 12,
+      colors: ['Black', 'Tortoise', 'Clear'],
+      sizes: ['One Size']
     }
   ];
 
   const newArrivals: Product[] = [
-    // New arrival products
+    {
+      id: '5',
+      name: 'Silk Evening Dress',
+      price: 450,
+      image: '/images/dress.jpg',
+      category: 'Clothing',
+      rating: 4.9,
+      description: 'Elegant silk dress with hand-embellished details',
+      stock: 6,
+      colors: ['Black', 'Navy', 'Emerald'],
+      sizes: ['XS', 'S', 'M', 'L']
+    },
+    {
+      id: '6',
+      name: 'Italian Leather Shoes',
+      price: 380,
+      image: '/images/shoes.jpg',
+      category: 'Footwear',
+      rating: 4.7,
+      description: 'Handcrafted leather shoes with cushioned insoles',
+      stock: 10,
+      colors: ['Brown', 'Black', 'Oxblood'],
+      sizes: ['7', '8', '9', '10', '11']
+    }
   ];
 
-  const tabs = [
+  const tabs: Tab[] = [
     {
       id: 'featured',
       label: 'Featured',
       content: (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {featuredProducts.map((product) => (
+          {featuredProducts.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
@@ -55,7 +109,7 @@ const LuxuryEcommercePage: React.FC = () => {
       label: 'New Arrivals',
       content: (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {newArrivals.map((product) => (
+          {newArrivals.map((product: Product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
