@@ -22,8 +22,8 @@ export interface ProductCardProps {
 export interface Tab {
   id: string;
   label: string;
-  content: React.ReactNode;
-  icon?: React.ReactNode;
+  content: React.ReactElement;
+  icon?: React.ReactElement;
 }
 
 export interface LuxuryTabsProps {
