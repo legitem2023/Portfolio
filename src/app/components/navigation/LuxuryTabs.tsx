@@ -5,10 +5,10 @@ import { useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, EffectFade } from 'swiper/modules';
 import LuxuryTab from './LuxuryTab';
-import FAQ from '../content/FAQ';
-import ContactUs from '../content/ContactUs';
-import TermsOfService from '../content/TermsOfService';
-import PrivacyPolicy from '../content/PrivacyPolicy';
+import FAQ from './content/FAQ';
+import ContactUs from '..l/content/ContactUs';
+import TermsOfService from './content/TermsOfService';
+import PrivacyPolicy from './content/PrivacyPolicy';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
