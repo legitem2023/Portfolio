@@ -3,10 +3,8 @@
 
 import { useState } from 'react';
 import { Tab, LuxuryTabsProps } from '../../../../types';
-
 const LuxuryTabs: React.FC<LuxuryTabsProps> = ({ tabs, defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id);
-
   return (
     <div className="w-full">
       {/* Desktop Tabs - Looks like navigation but functions as tabs */}
