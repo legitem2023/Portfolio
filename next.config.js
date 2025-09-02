@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable the experimental app directory (required for Next.js 13+)
+  experimental: {
+    appDir: true,
+  },
+  
+  // Image optimization configuration
   images: {
     remotePatterns: [
       {
@@ -12,16 +18,21 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**', // Allows all other HTTPS domains [citation:2]
+        hostname: '**', // Allows all other HTTPS domains 
       },
     ],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+  
+  // React configuration
   reactStrictMode: true,
-  poweredByHeader: false, // Security enhancement [citation:9]
+  
+  // Compress responses
   compress: true,
+  
+  // Security headers
   async headers() {
     return [
       {
@@ -43,6 +54,12 @@ const nextConfig = {
       }
     ]
   },
+  
+  // Remove the X-Powered-By header for security
+  poweredByHeader: false,
+  
+  // Enable SWC minification (faster builds)
+  swcMinify: true,
 }
 
 module.exports = nextConfig
