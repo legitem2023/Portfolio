@@ -1,17 +1,3 @@
-
-/*import Main from "./components/Partial/Main";
-import Menu from "./components/Partial/Menu";
-import Nav from "./components/Partial/Nav";
-export default function Home() {
-  return (
-    <div className="Parent">
-      <Nav />
-      <Menu />
-      <Main />
-    </div>
-  );
-}*/
-// pages/index.tsx
 import LuxuryTabs from '../components/ui/LuxuryTabs';
 import ProductCard from '../components/ui/ProductCard';
 import { Product } from '../../../types';
