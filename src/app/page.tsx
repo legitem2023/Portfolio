@@ -1,7 +1,7 @@
 // app/page.jsx
 'use client'
-import MainLayout from './components/layout/MainLayout';
+import DeluxeNavbar from './components/DeluxeNavbar';
 
 export default function Home() {
-  return <MainLayout />;
+  return <DeluxeNavbar/>;
 }
