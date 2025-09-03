@@ -83,7 +83,7 @@ const DeluxeNavTabs: React.FC = () => {
                 <span className="text-rose-700 text-xl">❤️</span>
               </div>
               <div>
-                <h4 className="font-medium">Valentine's Special</h4>
+                <h4 className="font-medium">Valentines Special</h4>
                 <p className="text-sm text-rose-700">Buy one, get one 50% off</p>
               </div>
             </div>
