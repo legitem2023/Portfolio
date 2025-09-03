@@ -1,5 +1,6 @@
 // components/ProductThumbnails.tsx
-import React from 'react';
+import React, { useState } from 'react';
+
 import QuickViewModal from './QuickViewModal';
 export interface Product {
   id: number;
