@@ -1,7 +1,14 @@
-// components/DeluxeNavbar.jsx
+// components/DeluxeNavbar.tsx
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+
+interface NavItem {
+  name: string;
+  href: string;
+  subItems?: NavItem[];
+  highlight?: boolean;
+}
 
 const DeluxeNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,14 +25,14 @@ const DeluxeNavbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
-  const navigationItems = [
+  const navigationItems: NavItem[] = [
     { name: 'Home', href: '/' },
     { name: 'New Arrivals', href: '/new' },
     { name: 'Categories', href: '/categories', subItems: [
