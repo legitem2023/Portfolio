@@ -1,3 +1,4 @@
+'use client';
 // components/DeluxeNavTabs.tsx
 import React, { useState } from 'react';
 
