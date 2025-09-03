@@ -1,7 +1,7 @@
 // components/DeluxeNavbar.tsx
+'use client';
+
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 interface NavItem {
   name: string;
@@ -15,12 +15,16 @@ const DeluxeNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartItems, setCartItems] = useState(3);
   const [searchQuery, setSearchQuery] = useState('');
-  const router = useRouter();
+  const [activePath, setActivePath] = useState('/');
 
   useEffect(() => {
+    // Set active path based on current URL (client-side only)
+    setActivePath(window.location.pathname);
+    
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -28,7 +32,8 @@ const DeluxeNavbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+      // Client-side navigation instead of router.push
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery)}`;
     }
   };
 
@@ -45,6 +50,10 @@ const DeluxeNavbar = () => {
     { name: 'Blog', href: '/blog' },
   ];
 
+  const handleNavigation = (href: string) => {
+    window.location.href = href;
+  };
+
   return (
     <>
       {/* Top Announcement Bar */}
@@ -59,9 +68,9 @@ const DeluxeNavbar = () => {
             {/* Logo and Mobile Menu Button */}
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Link href="/">
-                  <span className="text-2xl font-bold text-indigo-600 cursor-pointer">LUXE</span>
-                </Link>
+                <a href="/" className="text-2xl font-bold text-indigo-600">
+                  LUXE
+                </a>
               </div>
               
               {/* Desktop Navigation */}
@@ -69,22 +78,25 @@ const DeluxeNavbar = () => {
                 <div className="flex items-center space-x-4">
                   {navigationItems.map((item) => (
                     <div key={item.name} className="relative group">
-                      <Link href={item.href}>
-                        <span className={`px-3 py-2 rounded-md text-sm font-medium cursor-pointer transition-colors ${router.pathname === item.href ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600'} ${item.highlight ? 'text-red-500 font-semibold' : ''}`}>
-                          {item.name}
-                        </span>
-                      </Link>
+                      <a
+                        href={item.href}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${activePath === item.href ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600'} ${item.highlight ? 'text-red-500 font-semibold' : ''}`}
+                      >
+                        {item.name}
+                      </a>
                       
                       {/* Dropdown for items with subItems */}
                       {item.subItems && (
                         <div className="absolute left-0 mt-1 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
                           <div className="py-1">
                             {item.subItems.map((subItem) => (
-                              <Link key={subItem.name} href={subItem.href}>
-                                <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 cursor-pointer">
-                                  {subItem.name}
-                                </span>
-                              </Link>
+                              <a
+                                key={subItem.name}
+                                href={subItem.href}
+                                className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600"
+                              >
+                                {subItem.name}
+                              </a>
                             ))}
                           </div>
                         </div>
@@ -116,35 +128,31 @@ const DeluxeNavbar = () => {
             {/* Right Icons */}
             <div className="flex items-center">
               {/* Wishlist */}
-              <Link href="/wishlist">
-                <div className="ml-4 relative cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-              </Link>
+              <a href="/wishlist" className="ml-4 relative">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </a>
               
               {/* Cart */}
-              <Link href="/cart">
-                <div className="ml-4 relative cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  {cartItems > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {cartItems}
-                    </span>
-                  )}
-                </div>
-              </Link>
+              <a href="/cart" className="ml-4 relative">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {cartItems > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-indigo-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {cartItems}
+                  </span>
+                )}
+              </a>
               
               {/* User Account */}
               <div className="ml-4 relative">
-                <button className="flex items-center text-sm rounded-full focus:outline-none">
+                <a href="/account" className="flex items-center text-sm rounded-full focus:outline-none">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                </button>
+                </a>
               </div>
               
               {/* Mobile menu button */}
@@ -203,21 +211,24 @@ const DeluxeNavbar = () => {
             
             {navigationItems.map((item) => (
               <div key={item.name}>
-                <Link href={item.href}>
-                  <span className={`block px-3 py-2 rounded-md text-base font-medium cursor-pointer ${router.pathname === item.href ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600'} ${item.highlight ? 'text-red-500 font-semibold' : ''}`}>
-                    {item.name}
-                  </span>
-                </Link>
+                <a
+                  href={item.href}
+                  className={`block px-3 py-2 rounded-md text-base font-medium ${activePath === item.href ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700 hover:text-indigo-600'} ${item.highlight ? 'text-red-500 font-semibold' : ''}`}
+                >
+                  {item.name}
+                </a>
                 
                 {/* Mobile sub-items */}
                 {item.subItems && (
                   <div className="pl-6">
                     {item.subItems.map((subItem) => (
-                      <Link key={subItem.name} href={subItem.href}>
-                        <span className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-indigo-600 cursor-pointer">
-                          {subItem.name}
-                        </span>
-                      </Link>
+                      <a
+                        key={subItem.name}
+                        href={subItem.href}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-600 hover:text-indigo-600"
+                      >
+                        {subItem.name}
+                      </a>
                     ))}
                   </div>
                 )}
@@ -225,21 +236,15 @@ const DeluxeNavbar = () => {
             ))}
             
             <div className="pt-4 pb-2 border-t border-gray-200">
-              <Link href="/wishlist">
-                <span className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 cursor-pointer">
-                  Wishlist
-                </span>
-              </Link>
-              <Link href="/cart">
-                <span className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 cursor-pointer">
-                  Shopping Cart ({cartItems})
-                </span>
-              </Link>
-              <Link href="/account">
-                <span className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600 cursor-pointer">
-                  My Account
-                </span>
-              </Link>
+              <a href="/wishlist" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600">
+                Wishlist
+              </a>
+              <a href="/cart" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600">
+                Shopping Cart ({cartItems})
+              </a>
+              <a href="/account" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-indigo-600">
+                My Account
+              </a>
             </div>
           </div>
         </div>
