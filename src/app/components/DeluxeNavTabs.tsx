@@ -1,7 +1,7 @@
 'use client';
 // components/DeluxeNavTabs.tsx
 import React, { useState } from 'react';
-
+import ProductsTab from './ProductsTab';
 interface Tab {
   id: string;
   label: string;
@@ -42,17 +42,7 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Products',
       icon: '🛍️',
       content: (
-        <div className="p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Our Collections</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {['Clothing', 'Accessories', 'Footwear', 'Jewelry', 'Beauty', 'Home', 'Electronics', 'Gifts'].map((category) => (
-              <div key={category} className="text-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-all duration-300 cursor-pointer border border-gray-200">
-                <div className="text-2xl mb-2">{getCategoryIcon(category)}</div>
-                <p className="text-sm font-medium">{category}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ProductsTab/>
       ),
     },
     {
