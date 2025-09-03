@@ -1,6 +1,6 @@
 // components/ProductThumbnails.tsx
 import React from 'react';
-
+import QuickViewModal from './QuickViewModal';
 export interface Product {
   id: number;
   name: string;
@@ -25,7 +25,21 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({
   products, 
   columns = 4 
 }) => {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+
+  const handleQuickView = (product: Product) => {
+    setSelectedProduct(product);
+    setIsQuickViewOpen(true);
+  };
+
+  const handleCloseQuickView = () => {
+    setIsQuickViewOpen(false);
+    // Don't clear selectedProduct immediately to allow for smooth closing animation
+    setTimeout(() => setSelectedProduct(null), 300);
+  };
   return (
+    <>
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-6`}>
       {products.map((product) => (
         <div key={product.id} className="group relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
@@ -58,7 +72,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({
             
             {/* Quick View Button */}
             <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-              <button className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-gray-900 font-medium px-4 py-2 rounded-md">
+              <button onClick={()=>handleQuickView(product)} className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-gray-900 font-medium px-4 py-2 rounded-md">
                 Quick View
               </button>
             </div>
@@ -135,6 +149,13 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({
         </div>
       ))}
     </div>
+       {/* Quick View Modal */}
+      <QuickViewModal 
+        product={selectedProduct} 
+        isOpen={isQuickViewOpen} 
+        onClose={handleCloseQuickView} 
+      />
+        </>
   );
 };
 
