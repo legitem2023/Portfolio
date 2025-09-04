@@ -185,8 +185,7 @@ const DeluxeNavTabs: React.FC = () => {
               : 'border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-400'
               }`}
           >
-            <span className="mr-2">{tab.icon}</span>
-            {tab.label}
+            <span>{tab.icon}</span>
           </button>
         ))}
       </div>
