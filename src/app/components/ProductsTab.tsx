@@ -6,7 +6,7 @@ const ProductsTab: React.FC = () => {
   const products = generateSampleProducts(100);
   
   return (
-    <div className="p-1 bg-white rounded-lg shadow-lg">
+    <div className="p-2 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-semibold">Our Products</h3>
         <div className="flex space-x-2">
