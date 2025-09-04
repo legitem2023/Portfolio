@@ -16,7 +16,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
-
+import MessagesTab from './MessagesTab';
 interface Tab {
   id: string;
   label: string;
@@ -153,6 +153,14 @@ const DeluxeNavTabs: React.FC = () => {
             </div>
           </div>
         </div>
+      ),
+    },
+    {
+      id: 'Messages',
+      label: 'Messages',
+      icon: <Gift size={18} />,
+      content: (
+        <MessagesTab/>
       ),
     },
   ];
