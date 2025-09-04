@@ -7,10 +7,10 @@ import {
   Star, 
   Gift,
   Shirt,
-  Handbag,
+  Briefcase,  // Replaced Handbag
   Footprints,
   Gem,
-  Lipstick,
+  Heart,      // Replaced Lipstick
   House,
   Smartphone,
   Sparkles
@@ -161,10 +161,10 @@ const DeluxeNavTabs: React.FC = () => {
   function getCategoryIcon(category: string): React.ReactNode {
     const icons: Record<string, React.ReactNode> = {
       'Clothing': <Shirt size={16} />,
-      'Accessories': <Handbag size={16} />,
+      'Accessories': <Briefcase size={16} />,  // Updated from Handbag
       'Footwear': <Footprints size={16} />,
       'Jewelry': <Gem size={16} />,
-      'Beauty': <Lipstick size={16} />,
+      'Beauty': <Heart size={16} />,           // Updated from Lipstick
       'Home': <House size={16} />,
       'Electronics': <Smartphone size={16} />,
       'Gifts': <Gift size={16} />,
