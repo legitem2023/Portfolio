@@ -1,11 +1,26 @@
 'use client';
-// components/DeluxeNavTabs.tsx
 import React, { useState } from 'react';
+import { 
+  Home, 
+  ShoppingBag, 
+  Target, 
+  Star, 
+  Gift,
+  Shirt,
+  Handbag,
+  Footprints,
+  Gem,
+  Lipstick,
+  House,
+  Smartphone,
+  Sparkles
+} from 'lucide-react';
 import ProductsTab from './ProductsTab';
+
 interface Tab {
   id: string;
   label: string;
-  icon: string;
+  icon: React.ReactNode;
   content: React.ReactNode;
 }
 
@@ -16,7 +31,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'home',
       label: 'Home',
-      icon: '🏠',
+      icon: <Home size={18} />,
       content: (
         <div className="p-6 bg-white rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold mb-4">Welcome to LuxeShop</h3>
@@ -40,7 +55,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'products',
       label: 'Products',
-      icon: '🛍️',
+      icon: <ShoppingBag size={18} />,
       content: (
         <ProductsTab/>
       ),
@@ -48,7 +63,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'deals',
       label: 'Exclusive Deals',
-      icon: '🎯',
+      icon: <Target size={18} />,
       content: (
         <div className="p-6 bg-white rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold mb-4">Special Offers</h3>
@@ -62,7 +77,7 @@ const DeluxeNavTabs: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border border-amber-300 rounded-lg p-4 bg-amber-50 flex items-center">
               <div className="bg-amber-100 p-3 rounded-full mr-4">
-                <span className="text-amber-700 text-xl">✨</span>
+                <Sparkles className="text-amber-700" size={20} />
               </div>
               <div>
                 <h4 className="font-medium">New Customer Discount</h4>
@@ -71,7 +86,7 @@ const DeluxeNavTabs: React.FC = () => {
             </div>
             <div className="border border-rose-300 rounded-lg p-4 bg-rose-50 flex items-center">
               <div className="bg-rose-100 p-3 rounded-full mr-4">
-                <span className="text-rose-700 text-xl">❤️</span>
+                <Gift className="text-rose-700" size={20} />
               </div>
               <div>
                 <h4 className="font-medium">Valentines Special</h4>
@@ -85,7 +100,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'brands',
       label: 'Luxe Brands',
-      icon: '⭐',
+      icon: <Star size={18} />,
       content: (
         <div className="p-6 bg-white rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold mb-4">Featured Brands</h3>
@@ -103,28 +118,36 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'services',
       label: 'Services',
-      icon: '🎁',
+      icon: <Gift size={18} />,
       content: (
         <div className="p-6 bg-white rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold mb-4">Premium Services</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="text-2xl mb-3">🎁</div>
+              <div className="mb-3">
+                <Gift size={24} className="text-amber-600" />
+              </div>
               <h4 className="font-semibold mb-2">Gift Wrapping</h4>
               <p className="text-sm text-gray-600">Elegant gift wrapping with personalized message.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="text-2xl mb-3">🚚</div>
+              <div className="mb-3">
+                <ShoppingBag size={24} className="text-blue-600" />
+              </div>
               <h4 className="font-semibold mb-2">Express Delivery</h4>
               <p className="text-sm text-gray-600">Next-day delivery available for all orders.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="text-2xl mb-3">↩️</div>
+              <div className="mb-3">
+                <Target size={24} className="text-green-600" />
+              </div>
               <h4 className="font-semibold mb-2">Easy Returns</h4>
               <p className="text-sm text-gray-600">30-day return policy for all items.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="text-2xl mb-3">👑</div>
+              <div className="mb-3">
+                <Star size={24} className="text-purple-600" />
+              </div>
               <h4 className="font-semibold mb-2">VIP Membership</h4>
               <p className="text-sm text-gray-600">Exclusive benefits and early access to sales.</p>
             </div>
@@ -134,18 +157,19 @@ const DeluxeNavTabs: React.FC = () => {
     },
   ];
 
-  function getCategoryIcon(category: string): string {
-    const icons: Record<string, string> = {
-      'Clothing': '👕',
-      'Accessories': '👜',
-      'Footwear': '👠',
-      'Jewelry': '💎',
-      'Beauty': '💄',
-      'Home': '🏠',
-      'Electronics': '📱',
-      'Gifts': '🎁',
+  // If you're using getCategoryIcon in ProductsTab, you might need to update it there too
+  function getCategoryIcon(category: string): React.ReactNode {
+    const icons: Record<string, React.ReactNode> = {
+      'Clothing': <Shirt size={16} />,
+      'Accessories': <Handbag size={16} />,
+      'Footwear': <Footprints size={16} />,
+      'Jewelry': <Gem size={16} />,
+      'Beauty': <Lipstick size={16} />,
+      'Home': <House size={16} />,
+      'Electronics': <Smartphone size={16} />,
+      'Gifts': <Gift size={16} />,
     };
-    return icons[category] || '⭐';
+    return icons[category] || <Star size={16} />;
   }
 
   return (
@@ -161,7 +185,8 @@ const DeluxeNavTabs: React.FC = () => {
               : 'border-transparent text-gray-600 hover:text-amber-600 hover:border-amber-400'
               }`}
           >
-            <span className="text-lg">{tab.icon}</span>
+            <span className="mr-2">{tab.icon}</span>
+            {tab.label}
           </button>
         ))}
       </div>
