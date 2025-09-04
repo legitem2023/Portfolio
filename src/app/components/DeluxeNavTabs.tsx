@@ -13,7 +13,8 @@ import {
   Heart,      // Replaced Lipstick
   House,
   Smartphone,
-  Sparkles
+  Sparkles,
+  MessageCircle
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
@@ -158,7 +159,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'Messages',
       label: 'Messages',
-      icon: <Gift size={18} />,
+      icon: <MessageCircle size={18} />,
       content: (
         <MessagesTab/>
       ),
