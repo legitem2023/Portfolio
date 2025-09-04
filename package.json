@@ -21,7 +21,7 @@
     "lucide-react": "^0.525.0",
     "graphql-yoga": "^3.0.0",
     "graphql": "^16.0.0",
-    "@prisma/client": "latest",
+    "@prisma/client": "latest"
   },
   "devDependencies": {
     "tailwindcss": "^3.3.5",
