@@ -41,7 +41,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({
   };
   return (
     <>
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns} gap-6`}>
+    <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6`}>
       {products.map((product) => (
         <div key={product.id} className="group relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
           {/* Sale/New Badge */}
