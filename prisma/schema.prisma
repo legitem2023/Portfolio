@@ -1,35 +1,403 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
+// User Management
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
+  email         String         @unique
+  password      String
+  firstName     String
+  lastName      String
+  avatar        String?
+  phone         String?
+  emailVerified Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  role          Role           @default(CUSTOMER)
+  
+  // Relationships
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+  cart          CartItem[]
+  payments      Payment[]
+  messagesSent  Message[]      @relation("MessageSender")
+  messagesReceived Message[]   @relation("MessageRecipient")
+  supportTickets SupportTicket[]
+  notifications Notification[]
+  
+  // Indexes for better query performance
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
 }
 
-model Skills {
-  id    Int    @id @default(autoincrement())
-  Image String?
-  Name String?
-  Level String?
-} 
+// Address Management
+model Address {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  type        AddressType
+  street      String
+  city        String
+  state       String
+  zipCode     String
+  country     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[]
+  
+  @@index([userId])
+  @@map("addresses")
+}
 
-model Projects {
-  id Int @id @default(autoincrement())
-  Image String?
-  Name String?
-  Link String?
-  Language String?
+// Product Catalog - Optimized for MongoDB
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  price       Float
+  salePrice   Float?
+  sku         String   @unique
+  stock       Int      @default(0)
+  images      String[] // URLs to product images
+  categoryId  String   @db.ObjectId
+  brand       String?
+  weight      Float?
+  dimensions  String?
+  isActive    Boolean  @default(true)
+  featured    Boolean  @default(false)
+  tags        String[] // For better search and filtering
+  attributes  Json?    // Flexible attributes for different product types
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variants    ProductVariant[]
+  orders      OrderItem[]
+  reviews     Review[]
+  wishlist    WishlistItem[]
+  cart        CartItem[]
+  
+  // Indexes for better query performance
+  @@index([categoryId])
+  @@index([price])
+  @@index([brand])
+  @@index([isActive])
+  @@index([featured])
+  @@index([createdAt])
+  @@fulltext([name, description, tags]) // Full-text search
+  @@map("products")
+}
+
+model ProductVariant {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String   @db.ObjectId
+  name        String   // e.g., "Color", "Size"
+  options     String[] // e.g., ["Red", "Blue", "Green"]
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  image       String?
+  parentId    String?  @db.ObjectId
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  
+  // Index for hierarchical queries
+  @@index([parentId])
+  @@map("categories")
+}
+
+// Order Management
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  orderNumber String   @unique
+  status      OrderStatus
+  total       Float
+  subtotal    Float
+  tax         Float    @default(0)
+  shipping    Float    @default(0)
+  discount    Float    @default(0)
+  addressId   String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     Address  @relation(fields: [addressId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+  
+  // Indexes for better query performance
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String   @db.ObjectId
+  productId   String   @db.ObjectId
+  quantity    Int
+  price       Float    // Price at time of purchase
+  variantInfo String?  // JSON string of selected variants
+  
+  // Relationships
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// Shopping Cart
+model CartItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  productId   String   @db.ObjectId
+  quantity    Int      @default(1)
+  variantInfo String?  // JSON string of selected variants
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@index([userId])
+  @@map("cart_items")
+}
+
+// Wishlist
+model WishlistItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  productId   String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlist_items")
+}
+
+// Payment Processing
+model Payment {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String      @db.ObjectId
+  userId      String      @db.ObjectId
+  amount      Float
+  method      PaymentMethod
+  status      PaymentStatus
+  transactionId String?   // ID from payment processor
+  details     String?     // Additional payment details as JSON
+  createdAt   DateTime    @default(now())
+  
+  // Relationships
+  order       Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user        User  @relation(fields: [userId], references: [id])
+  
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@map("payments")
+}
+
+// Reviews and Ratings
+model Review {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  productId   String   @db.ObjectId
+  rating      Int      // 1-5 stars
+  title       String?
+  comment     String?
+  isApproved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isApproved])
+  @@map("reviews")
+}
+
+// Messaging System
+model Message {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId    String   @db.ObjectId
+  recipientId String   @db.ObjectId
+  subject     String?
+  body        String
+  isRead      Boolean  @default(false)
+  parentId    String?  @db.ObjectId // For message threads
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  parent      Message? @relation("MessageThread", fields: [parentId], references: [id])
+  replies     Message[] @relation("MessageThread")
+  
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([parentId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+model SupportTicket {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String       @db.ObjectId
+  subject     String
+  description String
+  status      TicketStatus @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  assignedTo  String?      @db.ObjectId // Admin user ID
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  
+  // Relationships
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses   TicketResponse[]
+  
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketResponse {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId    String   @db.ObjectId
+  userId      String   @db.ObjectId
+  message     String
+  isInternal  Boolean  @default(false) // If true, only staff can see
+  createdAt   DateTime @default(now())
+  
+  // Relationships
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user        User          @relation(fields: [userId], references: [id])
+  
+  @@index([ticketId])
+  @@index([userId])
+  @@index([isInternal])
+  @@map("ticket_responses")
+}
+
+// Notifications
+model Notification {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String         @db.ObjectId
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean        @default(false)
+  link        String?        // URL to relevant page
+  createdAt   DateTime       @default(now())
+  
+  // Relationships
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// Enums
+enum Role {
+  ADMIN
+  CUSTOMER
+  SUPPORT
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+  COD // Cash on delivery
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  PAYMENT_CONFIRMATION
+  SHIPMENT
+  PROMOTIONAL
+  SUPPORT
 }
