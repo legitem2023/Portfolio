@@ -162,7 +162,6 @@ const DeluxeNavTabs: React.FC = () => {
               }`}
           >
             <span className="mr-2 text-lg">{tab.icon}</span>
-            {tab.label}
           </button>
         ))}
       </div>
