@@ -2,13 +2,14 @@
 import React from 'react';
 import Image from 'next/image';
 
+// In your DeluxeMessageCard component, modify the interface:
 interface Message {
   id: string;
   sender: string;
   avatar?: string;
   timestamp: string;
   content: string;
-  status?: 'delivered' | 'read' | 'sending';
+  status?: string; // Change from specific union to string
   isOwnMessage?: boolean;
 }
 
