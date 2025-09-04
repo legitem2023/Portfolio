@@ -14,10 +14,13 @@ import {
   House,
   Smartphone,
   Sparkles,
-  MessageCircle
+  MessageCircle,
+  ShoppingCart
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
+import CartTab from './CartTab';
+
 interface Tab {
   id: string;
   label: string;
@@ -162,6 +165,13 @@ const DeluxeNavTabs: React.FC = () => {
       icon: <MessageCircle size={18} />,
       content: (
         <MessagesTab/>
+      ),
+    },{
+      id: 'Cart',
+      label: 'Cart',
+      icon: <ShoppingCart size={18} />,
+      content: (
+        <CartTab/>
       ),
     },
   ];
