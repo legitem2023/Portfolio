@@ -302,7 +302,7 @@ const CartReviewStep: React.FC<{
       <div className="mt-8 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
         <div className="flex items-center">
           <Gift size={20} className="text-emerald-600 mr-2" />
-          <span className="font-medium text-emerald-700">Congratulations! You've qualified for free shipping</span>
+          <span className="font-medium text-emerald-700">Congratulations! Youve qualified for free shipping</span>
         </div>
       </div>
     </div>
