@@ -1,6 +1,6 @@
 // Example usage in a shopping cart page
 import React, { useState } from 'react';
-import DeluxeCartCard from '../components/DeluxeCartCard';
+import DeluxeCartCard from './DeluxeCartCard';
 
 const CartTab = () => {
   const [cartItems, setCartItems] = useState([
