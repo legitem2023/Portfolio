@@ -31,7 +31,7 @@ const ProductsTab: React.FC = () => {
         </div>
       </div>
       
-      <ProductThumbnails products={products} columns={4} />
+      <ProductThumbnails products={products} />
       
       <div className="mt-8 flex justify-center">
         <button className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-6 rounded-md">
