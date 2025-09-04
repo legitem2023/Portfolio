@@ -42,9 +42,9 @@ const MessagesTab = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Social Feed</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Messages</h1>
         {sampleMessages.map(message => (
           <DeluxeMessageCard 
             key={message.id} 
