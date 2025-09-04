@@ -30,6 +30,13 @@ const MessagesTab: React.FC = () => {
     }
   ]);
 
+
+ // Add a type validation function
+function isValidMessageStatus(status: string): status is 'delivered' | 'read' | 'sending' {
+  return ['delivered', 'read', 'sending'].includes(status);
+}
+
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-gray-800 bg-opacity-40 backdrop-blur-lg rounded-3xl shadow-2xl border border-gray-700 border-opacity-50 overflow-hidden">
@@ -41,13 +48,20 @@ const MessagesTab: React.FC = () => {
         
         {/* Chat body */}
         <div className="p-4 space-y-6 bg-gradient-to-b from-gray-900 to-gray-800 max-h-[60vh] overflow-y-auto">
-          {messages.map((message) => (
-            <DeluxeMessageCard 
-              key={message.id} 
-              message={message} 
-              className="mb-4"
-            />
-          ))}
+
+{messages.map((message) => {
+  if (message.status && !isValidMessageStatus(message.status)) {
+    // Handle invalid status or set a default
+    message.status = 'delivered';
+  }
+  return (
+    <DeluxeMessageCard 
+      key={message.id} 
+      message={message} 
+      className="mb-4"
+    />
+  );
+})}
         </div>
         
         {/* Input area */}
