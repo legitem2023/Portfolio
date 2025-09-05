@@ -42,10 +42,19 @@ export const resolvers = {
       });
     },
 
-    createProduct: async (_: any, { name, description, price, sku }: any) => {
-      return prisma.product.create({
-        data: { name, description, price, sku },
-      });
+    createProduct: async (_: any, {id, name, description, price, sku }: any) => {
+    const product = await prisma.product.create({
+        data: {
+          name,
+          description,
+          price,
+          sku,
+          category: {
+            connect: { id: id }, // Prisma will link it automatically
+          },
+        },
+});
+
     },
 
     createOrder: async (_: any, { userId, addressId, items }: any) => {

@@ -271,7 +271,7 @@ export const typeDefs = gql`
 
   type Mutation {
     createUser(email: String!, password: String!, firstName: String!, lastName: String!): User!
-    createProduct(name: String!, description: String!, price: Float!, sku: String!): Product!
+    createProduct(id: String, name: String!, description: String!, price: Float!, sku: String!): Product!
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Order!
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
   }
