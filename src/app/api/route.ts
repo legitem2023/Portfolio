@@ -1,7 +1,7 @@
 // app/api/graphql/route.ts
 import { createYoga } from "graphql-yoga";
-import { typeDefs } from "@/graphql/typeDefs";
-import { resolvers } from "@/graphql/resolvers";
+import { typeDefs } from "../../graphql/typeDefs";
+import { resolvers } from "../../graphql/resolvers";
 
 const { handleRequest } = createYoga({
   schema: {
