@@ -157,53 +157,6 @@ const DeluxeHomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Top Announcement Bar */}
-      <div className="bg-gray-900 text-white py-2 text-center text-sm">
-        <p>Free express shipping on all orders over $200 | <span className="font-semibold">Shop now</span></p>
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="text-2xl font-bold text-gray-900">LUXE</div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
-              <a href="#" className="text-gray-700 hover:text-purple-600 font-medium">New Arrivals</a>
-              <a href="#" className="text-gray-700 hover:text-purple-600 font-medium">Collections</a>
-              <a href="#" className="text-gray-700 hover:text-purple-600 font-medium">Categories</a>
-              <a href="#" className="text-gray-700 hover:text-purple-600 font-medium">Brands</a>
-              <a href="#" className="text-gray-700 hover:text-purple-600 font-medium">Sale</a>
-            </nav>
-
-            {/* Right Icons */}
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-600 hover:text-purple-600">
-                <Search size={20} />
-              </button>
-              <button className="text-gray-600 hover:text-purple-600">
-                <Heart size={20} />
-              </button>
-              <button className="text-gray-600 hover:text-purple-600 relative">
-                <ShoppingBag size={20} />
-                <span className="absolute -top-2 -right-2 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-              </button>
-              <button className="text-gray-600 hover:text-purple-600">
-                <User size={20} />
-              </button>
-              <button 
-                className="md:hidden text-gray-600"
-                onClick={() => setIsMenuOpen(true)}
-              >
-                <Menu size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-50">
