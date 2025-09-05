@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 const EcommercePage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-0">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
       <div className="text-center p-4">
         
         <Image
