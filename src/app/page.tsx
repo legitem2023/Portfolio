@@ -21,7 +21,6 @@ const EcommercePage: React.FC = () => {
               alt="home1"
               height="80"
               width="160"
-              fill
               className="h-90 w-auto"
             />
       </div>
