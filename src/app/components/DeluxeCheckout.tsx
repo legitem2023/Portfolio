@@ -131,12 +131,7 @@ const DeluxeCheckout: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
-          <p className="text-gray-600 mt-2">Complete your purchase with confidence</p>
-        </div>
-
+        
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <div className="lg:w-2/3">
