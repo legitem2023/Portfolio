@@ -1,6 +1,7 @@
 // Example usage in a shopping cart page
 import React, { useState } from 'react';
 import DeluxeCartCard from './DeluxeCartCard';
+import DeluxeCheckout from './DeluxeCheckout';
 
 const CartTab = () => {
   const [cartItems, setCartItems] = useState([
@@ -67,7 +68,7 @@ const CartTab = () => {
             />
           ))}
         </div>
-        
+        <DeluxeCheckout/>
         {/* Cart Summary */}
         <div className="mt-8 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
