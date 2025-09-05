@@ -19,6 +19,8 @@ const EcommercePage: React.FC = () => {
         <Image
               src={`https://new-client-legitem.vercel.app/image/Crowd.svg`}
               alt="home1"
+              height="80"
+              width="160"
               fill
               className="h-90 w-auto"
             />
