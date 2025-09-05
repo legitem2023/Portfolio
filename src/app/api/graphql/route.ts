@@ -12,7 +12,7 @@ const { handleRequest } = createYoga({
   schema,
   graphqlEndpoint: "/api/graphql",
   fetchAPI: { Response },
-  graphiql: false, // disable here
+  graphiql: true, // disable here
 });
 
 export { handleRequest as GET, handleRequest as POST };
