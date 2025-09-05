@@ -13,27 +13,28 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
+    "@prisma/client": "latest",
+    "@tailwindcss/line-clamp": "^0.4.0",
+    "graphql": "^16.0.0",
+    "graphql-tag": "^2.12.6",
+    "graphql-yoga": "^3.0.0",
+    "lucide-react": "^0.525.0",
     "next": "13.5.6",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "@tailwindcss/line-clamp": "^0.4.0",
-    "swiper": "^11.1.9",
-    "lucide-react": "^0.525.0",
-    "graphql-yoga": "^3.0.0",
-    "graphql": "^16.0.0",
-    "@prisma/client": "latest"
+    "swiper": "^11.1.9"
   },
   "devDependencies": {
-    "tailwindcss": "^3.3.5",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "typescript": "^5.2.2",
+    "@types/node": "^20.8.10",
     "@types/react": "^18.2.31",
     "@types/react-dom": "^18.2.14",
-    "@types/node": "^20.8.10",
+    "autoprefixer": "^10.4.16",
     "eslint": "^8.52.0",
     "eslint-config-next": "13.5.6",
-    "prisma": "latest"
+    "postcss": "^8.4.31",
+    "prisma": "latest",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2"
   },
   "engines": {
     "node": ">=18.0.0"
