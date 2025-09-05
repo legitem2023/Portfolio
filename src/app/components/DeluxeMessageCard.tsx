@@ -1,5 +1,5 @@
 // components/DeluxeMessageCard.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 
 interface Message {
@@ -25,6 +25,10 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   message, 
   className = '' 
 }) => {
+  const [avatarError, setAvatarError] = useState(false);
+  const [postImageError, setPostImageError] = useState(false);
+  const [commentAvatarError, setCommentAvatarError] = useState(false);
+
   const {
     sender,
     avatar,
@@ -38,17 +42,20 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     postImage
   } = message;
 
+  const FALLBACK_IMAGE = 'https://new-client-legitem.vercel.app/Thumbnail.png';
+
   return (
     <div className={`max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden mb-6 ${className}`}>
       {/* Card Header */}
       <div className="flex items-center p-4 border-b border-gray-200">
         <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden mr-3 relative">
-          {avatar ? (
+          {avatar && !avatarError ? (
             <Image
               src={avatar}
               alt={sender}
               fill
               className="object-cover"
+              onError={() => setAvatarError(true)}
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
@@ -77,10 +84,11 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         {postImage && (
           <div className="relative h-80 md:h-96 w-full mb-3 rounded-lg overflow-hidden">
             <Image
-              src={postImage}
+              src={postImageError ? FALLBACK_IMAGE : postImage}
               alt="Post image"
               fill
               className="object-cover"
+              onError={() => setPostImageError(true)}
             />
           </div>
         )}
@@ -125,12 +133,13 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         {/* Comment Input */}
         <div className="flex items-center mt-3">
           <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden mr-2 relative">
-            {avatar ? (
+            {avatar && !commentAvatarError ? (
               <Image
                 src={avatar}
                 alt={sender}
                 fill
                 className="object-cover"
+                onError={() => setCommentAvatarError(true)}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
