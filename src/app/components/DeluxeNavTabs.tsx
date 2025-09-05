@@ -186,7 +186,7 @@ const DeluxeNavTabs: React.FC = () => {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center px-5 py-3 text-md font-large whitespace-nowrap transition-all duration-300 border-b-4 ${activeTab === tab.id
               ? 'border-amber-600 text-amber-700 bg-gradient-to-t from-amber-50 to-white'
-              : 'border-rose-600 text-gray-800 hover:text-amber-600 hover:border-amber-400'
+              : 'border-orange-600 text-stone-800 hover:text-amber-600 hover:border-amber-400'
               }`}
           >
             <span>{tab.icon}</span>
