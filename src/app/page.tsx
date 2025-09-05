@@ -1,6 +1,7 @@
 // pages/index.tsx (or wherever you want to use the component)
 import React from 'react';
 import DeluxeNavTabs from './components/DeluxeNavTabs';
+import Image from 'next/image';
 import { 
   Phone,
   Mail,
@@ -14,8 +15,13 @@ const EcommercePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-0">
       <div className="text-center p-4">
-        <h1 className="text-4xl font-bold text-gray-800 mb-2">E-Crowd</h1>
-        <p className="text-gray-600">Premium E-commerce Experience</p>
+        
+        <Image
+              src={`https://new-client-legitem.vercel.app/image/Crowd.svg`}
+              alt="home1"
+              fill
+              class="h-20 w-auto"
+            />
       </div>
       <DeluxeNavTabs />
       
