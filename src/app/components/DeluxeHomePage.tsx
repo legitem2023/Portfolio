@@ -389,7 +389,7 @@ const DeluxeHomePage: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                  <p className="text-gray-600 mb-6 italic">"{testimonial.comment}"</p>
+                  <p className="text-gray-600 mb-6 italic">{testimonial.comment}</p>
                   <div className="flex items-center">
                     <img 
                       src={testimonial.avatar} 
