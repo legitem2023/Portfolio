@@ -6,7 +6,23 @@ import CartReviewStep from './CartReviewStep';
 import ShippingStep from './ShippingStep';
 import PaymentStep from './PaymentStep';
 import ConfirmationStep from './ConfirmationStep';
-
+//import React, { useState } from 'react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  CreditCard, 
+  Truck, 
+  CheckCircle,
+  Lock,
+  Shield,
+  Gift,
+  MapPin,
+  User,
+  Mail,
+  Phone,
+  Home,
+  Navigation
+} from 'lucide-react';
 export interface CartItem {
   id: string;
   name: string;
