@@ -20,7 +20,7 @@ import {
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
 import CartTab from './CartTab';
-
+import DeluxeHomePage from './DeluxeHomePage';
 interface Tab {
   id: string;
   label: string;
@@ -37,23 +37,7 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Home',
       icon: <Home size={18} />,
       content: (
-        <div className="p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Welcome to LuxeShop</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-lg border border-amber-200">
-              <h4 className="font-medium text-amber-800">New Arrivals</h4>
-              <p className="text-sm text-amber-600">Discover our latest collection</p>
-            </div>
-            <div className="bg-gradient-to-r from-rose-50 to-rose-100 p-4 rounded-lg border border-rose-200">
-              <h4 className="font-medium text-rose-800">Summer Sale</h4>
-              <p className="text-sm text-rose-600">Up to 70% off selected items</p>
-            </div>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-800">Premium Members</h4>
-              <p className="text-sm text-blue-600">Exclusive benefits await</p>
-            </div>
-          </div>
-        </div>
+        <DeluxeHomePage/>
       ),
     },
     {
