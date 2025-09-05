@@ -15,7 +15,8 @@ import {
   Smartphone,
   Sparkles,
   MessageCircle,
-  ShoppingCart
+  ShoppingCart,
+  Tags
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
@@ -43,7 +44,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'products',
       label: 'Products',
-      icon: <ShoppingBag size={18} />,
+      icon: <Tags size={18} />,
       content: (
         <ProductsTab/>
       ),
