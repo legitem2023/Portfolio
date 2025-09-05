@@ -21,7 +21,7 @@ const EcommercePage: React.FC = () => {
               alt="home1"
               height="80"
               width="160"
-              className="h-90 w-auto"
+              className="h-50 w-auto"
             />
       </div>
       <DeluxeNavTabs />
