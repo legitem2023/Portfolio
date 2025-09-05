@@ -20,7 +20,7 @@ const EcommercePage: React.FC = () => {
               src={`https://new-client-legitem.vercel.app/image/Crowd.svg`}
               alt="home1"
               fill
-              class="h-20 w-auto"
+              className="h-20 w-auto"
             />
       </div>
       <DeluxeNavTabs />
