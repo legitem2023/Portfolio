@@ -359,28 +359,6 @@ const DeluxeHomePage: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* Newsletter */}
-        <section className="py-16 px-4 bg-gray-900 text-white">
-          <div className="container mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Join Our Exclusive List</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto mb-8">Subscribe to receive updates on new collections, special offers, and insider events.</p>
-            
-            <form className="max-w-md mx-auto flex flex-col sm:flex-row gap-4">
-              <input 
-                type="email" 
-                placeholder="Your email address"
-                className="flex-1 px-4 py-3 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <button 
-                type="submit"
-                className="bg-purple-600 px-6 py-3 rounded-full font-medium hover:bg-purple-700 transition-colors"
-              >
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </section>
       </main>
     </div>
   );
