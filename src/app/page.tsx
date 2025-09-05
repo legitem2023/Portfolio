@@ -1,7 +1,15 @@
 // pages/index.tsx (or wherever you want to use the component)
 import React from 'react';
 import DeluxeNavTabs from './components/DeluxeNavTabs';
-
+import { 
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube
+} from 'lucide-react';
 const EcommercePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-100 to-gray-200 p-0">
