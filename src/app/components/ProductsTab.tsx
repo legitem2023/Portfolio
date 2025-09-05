@@ -8,7 +8,6 @@ const ProductsTab: React.FC = () => {
   return (
     <div className="p-2 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold">Our Products</h3>
         <div className="flex space-x-2">
           <select className="border border-gray-300 rounded-md px-3 py-2 text-sm">
             <option>All Categories</option>
