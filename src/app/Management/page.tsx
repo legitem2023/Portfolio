@@ -1,6 +1,8 @@
 "use client";
 import { useState } from 'react';
 import Head from 'next/head';
+import { GETCATEGORY } from '../components/graphql/query';
+import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
@@ -9,7 +11,7 @@ import { Product, Category, NewProduct, NewCategory } from './types/types';
 
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('categories');
-  
+  const { data:categoryData,loading:categoryLoading} = useQuery(GETCATEGORY);
 // With actual data:
 const [products, setProducts] = useState<Product[]>([
   { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, salePrice: 179.99, sku: "WH1000XM4", stock: 45, category: "Electronics", brand: "Sony", status: "Active" },
@@ -17,11 +19,18 @@ const [products, setProducts] = useState<Product[]>([
   { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, sku: "CM4500", stock: 0, category: "Appliances", brand: "KitchenAid", status: "Inactive" },
 ]);
 
-const [categories, setCategories] = useState<Category[]>([
-  { id: 1, name: "Electronics", description: "Electronic devices and accessories", productCount: 24, status: "Active" },
-  { id: 2, name: "Clothing", description: "Men's and women's apparel", productCount: 56, status: "Active" },
-  { id: 3, name: "Home & Kitchen", description: "Home appliances and kitchenware", productCount: 32, status: "Active" },
-]);
+if(categoryLoading) return "Category Loading";
+const [categories, setCategories] = useState<Category[]>(
+  categoryData.categories.map((data:any)=>{
+    return {
+      id:data.id,
+      name:data.name,
+      description:data.description,
+      productCount:"",
+      status:data.status
+    }
+  })
+  );
 
 const [newProduct, setNewProduct] = useState<NewProduct>({
   name: "",
