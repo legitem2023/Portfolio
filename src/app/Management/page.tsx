@@ -9,11 +9,45 @@ import { Product, Category, NewProduct, NewCategory } from './types';
 
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('products');
-  const [products, setProducts] = useState<Product[]>([...]);
-  const [categories, setCategories] = useState<Category[]>([...]);
-  const [newProduct, setNewProduct] = useState<NewProduct>({...});
-  const [newCategory, setNewCategory] = useState<NewCategory>({...});
+  
+// With actual data:
+const [products, setProducts] = useState<Product[]>([
+  { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, salePrice: 179.99, sku: "WH1000XM4", stock: 45, category: "Electronics", brand: "Sony", status: "Active" },
+  { id: 2, name: "Running Shoes", description: "Lightweight running shoes with cushioning", price: 129.99, sku: "RS2023", stock: 23, category: "Footwear", brand: "Nike", status: "Active" },
+  { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, sku: "CM4500", stock: 0, category: "Appliances", brand: "KitchenAid", status: "Inactive" },
+]);
 
+const [categories, setCategories] = useState<Category[]>([
+  { id: 1, name: "Electronics", description: "Electronic devices and accessories", productCount: 24, status: "Active" },
+  { id: 2, name: "Clothing", description: "Men's and women's apparel", productCount: 56, status: "Active" },
+  { id: 3, name: "Home & Kitchen", description: "Home appliances and kitchenware", productCount: 32, status: "Active" },
+]);
+
+const [newProduct, setNewProduct] = useState<NewProduct>({
+  name: "",
+  description: "",
+  price: "",
+  salePrice: "",
+  sku: "",
+  stock: "",
+  categoryId: "",
+  brand: "",
+  isActive: true,
+  featured: false
+});
+
+const [newCategory, setNewCategory] = useState<NewCategory>({
+  name: "",
+  description: "",
+  parentId: "",
+  isActive: true
+});
+
+
+
+
+
+  
   const handleProductSubmit = (e: React.FormEvent) => {...};
   const handleCategorySubmit = (e: React.FormEvent) => {...};
 
