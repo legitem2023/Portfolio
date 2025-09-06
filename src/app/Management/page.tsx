@@ -36,7 +36,7 @@ useEffect(()=>{
   });
   
   setCategories(categoriesData);
-},[categoriesData])
+},[categoryData])
   
 const [newProduct, setNewProduct] = useState<NewProduct>({
   name: "",
