@@ -1,5 +1,6 @@
 import { NewCategory, Category } from '../types/types';
-
+import { useMutation } from "@apollo/client";
+import { INSERTCATEGORY } from "../../components/graphql/mutation";
 interface CategoryFormProps {
   newCategory: NewCategory;
   setNewCategory: (category: NewCategory) => void;
