@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ApolloWrapper } from './components/ApolloWrapper';
 import { Inter } from "next/font/google";
+import LoadEruda from "./LoadEruda";
 import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <LoadEruda/>
         <div className="BackGroundImage"></div>
         <ApolloWrapper>{children}</ApolloWrapper>
         </body>
