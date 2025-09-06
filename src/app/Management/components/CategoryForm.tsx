@@ -1,19 +1,56 @@
-import { NewCategory, Category } from '../types/types';
 import { useMutation } from "@apollo/client";
 import { INSERTCATEGORY } from "../../components/graphql/mutation";
+import { NewCategory, Category } from '../types/types';
+
 interface CategoryFormProps {
   newCategory: NewCategory;
   setNewCategory: (category: NewCategory) => void;
   categories: Category[];
-  handleSubmit: (e: React.FormEvent) => void;
+  onCategoryAdded?: () => void; // Optional callback for when category is added
 }
 
 export default function CategoryForm({
   newCategory,
   setNewCategory,
   categories,
-  handleSubmit
+  onCategoryAdded
 }: CategoryFormProps) {
+  const [insertCategory, { loading, error }] = useMutation(INSERTCATEGORY);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const result = await insertCategory({
+        variables: {
+          name: newCategory.name,
+          description: newCategory.description,
+          status: newCategory.isActive
+          // Note: If your mutation supports parentId, add it here:
+          // parentId: newCategory.parentId || null
+        }
+      });
+      
+      // Reset form after successful submission
+      setNewCategory({ 
+        name: '', 
+        description: '', 
+        isActive: true, 
+        parentId: '' 
+      });
+      
+      // Notify parent component if needed
+      if (onCategoryAdded) {
+        onCategoryAdded();
+      }
+      
+      console.log("Category created successfully:", result);
+      
+    } catch (err) {
+      console.error("Error creating category:", err);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="mb-4">
@@ -64,10 +101,17 @@ export default function CategoryForm({
       
       <button
         type="submit"
-        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+        disabled={loading}
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50"
       >
-        Add Category
+        {loading ? 'Adding Category...' : 'Add Category'}
       </button>
+      
+      {error && (
+        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-md">
+          Error: {error.message}
+        </div>
+      )}
     </form>
   );
 }
