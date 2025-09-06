@@ -12,7 +12,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
 });
 
 const httpLink = new HttpLink({
-  uri: "/api/graphql";,
+  uri: "/api/graphql",
   credentials: 'include',
 });
 
