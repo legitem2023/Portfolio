@@ -131,14 +131,14 @@ export const resolvers = {
       });
     },
     createCategory: async (_:any, { name,description,status }: any) => {
-      const response = prisma.category.create({
+      const response = await prisma.category.create({
         data:{
           name,
           description,
           isActive:status
         }
       })
-      if(response){
+      if(response) {
         return {
           statusText:'Successful!'
         }
