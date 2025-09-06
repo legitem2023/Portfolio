@@ -8,18 +8,37 @@ export const resolvers = {
     user: (_: any, { id }: { id: string }) =>
       prisma.user.findUnique({ where: { id } }),
 
-    products: (_: any, { search }: { search?: string }) =>
-      search
-        ? prisma.product.findMany({
-            where: {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { description: { contains: search, mode: "insensitive" } },
-                { tags: { has: search } },
-              ],
-            },
-          })
-        : prisma.product.findMany(),
+    products: async (
+  _: any,
+  {
+    search,
+    cursor,
+    limit = 10,
+  }: { search?: string; cursor?: string; limit?: number }
+) => {
+  const where = search
+    ? {
+        OR: [
+          { name: { contains: search, mode: "insensitive" } },
+          { description: { contains: search, mode: "insensitive" } },
+          { tags: { has: search } },
+        ],
+      }
+    : {};
+
+  const products = await prisma.product.findMany({
+    where,
+    take: limit + 1, // fetch one extra to check if more pages exist
+    skip: cursor ? 1 : 0, // skip cursor itself
+    cursor: cursor ? { id: cursor } : undefined,
+    orderBy: { id: "asc" },
+  });
+
+  return {
+    items: products.slice(0, limit), // return only requested
+    nextCursor: products.length > limit ? products[limit].id : null,
+  };
+},
 
     product: (_: any, { id }: { id: string }) =>
       prisma.product.findUnique({ where: { id } }),
