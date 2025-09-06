@@ -44,13 +44,60 @@ const [newCategory, setNewCategory] = useState<NewCategory>({
 });
 
 
+// With the actual function implementations:
+const handleProductSubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  const category = categories.find(c => c.id === parseInt(newProduct.categoryId));
+  
+  const product: Product = {
+    id: products.length + 1,
+    name: newProduct.name,
+    description: newProduct.description,
+    price: parseFloat(newProduct.price),
+    salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+    sku: newProduct.sku,
+    stock: parseInt(newProduct.stock),
+    category: category?.name || "Uncategorized",
+    brand: newProduct.brand || undefined,
+    status: newProduct.isActive ? "Active" : "Inactive"
+  };
+  
+  setProducts([...products, product]);
+  setNewProduct({
+    name: "",
+    description: "",
+    price: "",
+    salePrice: "",
+    sku: "",
+    stock: "",
+    categoryId: "",
+    brand: "",
+    isActive: true,
+    featured: false
+  });
+};
 
-
+const handleCategorySubmit = (e: React.FormEvent) => {
+  e.preventDefault();
+  const category: Category = {
+    id: categories.length + 1,
+    name: newCategory.name,
+    description: newCategory.description || undefined,
+    productCount: 0,
+    status: newCategory.isActive ? "Active" : "Inactive",
+    parentId: newCategory.parentId ? parseInt(newCategory.parentId) : undefined
+  };
+  
+  setCategories([...categories, category]);
+  setNewCategory({
+    name: "",
+    description: "",
+    parentId: "",
+    isActive: true
+  });
+};
 
   
-  const handleProductSubmit = (e: React.FormEvent) => {...};
-  const handleCategorySubmit = (e: React.FormEvent) => {...};
-
   const renderContent = () => {
     switch(activeTab) {
       case 'products':
