@@ -1,8 +1,20 @@
 // Example usage in your products tab
+'use client';
+import { useQuery } from '@apollo/client';
+import { GETPRODUCTS } from './graphql/query';
 import React from 'react';
 import ProductThumbnails, { generateSampleProducts } from '../components/ProductThumbnails';
 
 const ProductsTab: React.FC = () => {
+  const {data,loading} = useQuery(GETPRODUCTS,{
+    variables:{
+       search:'',
+       cursor:'',
+       limit:10,
+    }
+  })
+  if (loading) return 'Loading...';
+  console.log(data);
   const products = generateSampleProducts(100);
   
   return (
