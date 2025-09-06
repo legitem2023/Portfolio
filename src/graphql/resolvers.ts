@@ -99,7 +99,9 @@ export const resolvers = {
     product: (_: any, { id }: { id: string }) =>
       prisma.product.findUnique({ where: { id } }),
 
-    categories: () => prisma.category.findMany(),
+    categories: async (_:any,args:any) => {
+      return prisma.category.findMany();
+    },
 
     orders: (_: any, { userId }: { userId: string }) =>
       prisma.order.findMany({ where: { userId } }),
