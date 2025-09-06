@@ -130,7 +130,20 @@ export const resolvers = {
         },
       });
     },
-
+    createCategory: async (_:any, { name,description,status }: any) => {
+      const response = prisma.category.create({
+        data:{
+          name,
+          description,
+          status
+        }
+      })
+      if(response){
+        return {
+          statusText:'Successful!'
+        }
+      }
+    },
     createOrder: async (_: any, { userId, addressId, items }: any) => {
       return prisma.order.create({
         data: {
