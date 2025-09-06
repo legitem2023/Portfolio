@@ -8,28 +8,75 @@ export const resolvers = {
     user: (_: any, { id }: { id: string }) =>
       prisma.user.findUnique({ where: { id } }),
 
-    products: async (
+// Updated products resolver with optimizations for large datasets
+products: async (
   _: any,
-  { search, cursor, limit = 10 }: { search?: string; cursor?: string; limit?: number }
+  { search, cursor, limit = 12, category, sortBy }: { 
+    search?: string; 
+    cursor?: string; 
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+  }
 ) => {
-  // Build where clause conditionally
-  const where = search
-    ? {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' as const } },
-          { description: { contains: search, mode: 'insensitive' as const } },
-          { tags: { has: search } },
-        ],
-      }
-    : {};
-
   try {
+    // Build where clause conditionally with indexed fields only
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' as const } },
+        { description: { contains: search, mode: 'insensitive' as const } },
+        { tags: { has: search } },
+      ];
+    }
+    
+    if (category && category !== 'All Categories') {
+      where.category = category;
+    }
+    
+    // Determine sorting - use indexed fields for better performance
+    let orderBy: any = { id: 'asc' };
+    if (sortBy) {
+      switch(sortBy) {
+        case 'Newest':
+          orderBy = { createdAt: 'desc' };
+          break;
+        case 'Price: Low to High':
+          orderBy = { price: 'asc' };
+          break;
+        case 'Price: High to Low':
+          orderBy = { price: 'desc' };
+          break;
+        case 'Highest Rated':
+          orderBy = { rating: 'desc' };
+          break;
+        default:
+          orderBy = { featured: 'desc', id: 'asc' };
+      }
+    }
+
     const products = await prisma.product.findMany({
       where,
       take: limit + 1,  // Get one extra to check for next page
       skip: cursor ? 1 : 0,  // Skip cursor if provided
       cursor: cursor ? { id: cursor } : undefined,
-      orderBy: { id: 'asc' },
+      orderBy,
+      // Only select necessary fields to reduce data transfer
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        salePrice: true,
+        images: true,
+        category: true,
+        rating: true,
+        reviewCount: true,
+        featured: true,
+        isActive: true,
+        stock: true,
+        // Skip heavy fields like description unless needed
+      },
     });
 
     const hasMore = products.length > limit;
@@ -41,6 +88,7 @@ export const resolvers = {
       hasMore,
     };
   } catch (error) {
+    console.error('Failed to fetch products:', error);
     throw new Error('Failed to fetch products');
   }
 },
