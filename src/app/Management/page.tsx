@@ -37,7 +37,7 @@ export default function ManagementDashboard() {
     isActive: true
   });
 
-  const handleProductSubmit = (e) => {
+  const handleProductSubmit = (e:any) => {
     e.preventDefault();
     const product = {
       id: products.length + 1,
