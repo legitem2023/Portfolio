@@ -19,9 +19,9 @@ export default function CategoryForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(typeof newCategory.name);
-    console.log(typeof newCategory.description);
-    console.log(typeof newCategory.isActive);
+    console.log(newCategory.name);
+    console.log(newCategory.description);
+    console.log(newCategory.isActive);
 
     try {
       const result = await insertCategory({
