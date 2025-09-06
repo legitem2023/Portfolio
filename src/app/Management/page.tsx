@@ -1,32 +1,421 @@
 // pages/index.js
-'use client';
+"use client";
 import { useState } from 'react';
 import Head from 'next/head';
 
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('products');
+  const [products, setProducts] = useState([
+    { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, stock: 45, category: "Electronics", sku: "WH1000XM4", status: "Active" },
+    { id: 2, name: "Running Shoes", description: "Lightweight running shoes with cushioning", price: 129.99, stock: 23, category: "Footwear", sku: "RS2023", status: "Active" },
+    { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, stock: 0, category: "Appliances", sku: "CM4500", status: "Inactive" },
+  ]);
+  
+  const [categories, setCategories] = useState([
+    { id: 1, name: "Electronics", description: "Electronic devices and accessories", productCount: 24, status: "Active" },
+    { id: 2, name: "Clothing", description: "Men's and women's apparel", productCount: 56, status: "Active" },
+    { id: 3, name: "Home & Kitchen", description: "Home appliances and kitchenware", productCount: 32, status: "Active" },
+  ]);
+  
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    description: "",
+    price: "",
+    salePrice: "",
+    sku: "",
+    stock: "",
+    categoryId: "",
+    brand: "",
+    isActive: true,
+    featured: false
+  });
+  
+  const [newCategory, setNewCategory] = useState({
+    name: "",
+    description: "",
+    parentId: "",
+    isActive: true
+  });
 
-  // Mock data for demonstration
-  const dashboardStats = {
-    totalUsers: 1245,
-    totalOrders: 367,
-    totalRevenue: 28490,
-    pendingTickets: 12
+  const handleProductSubmit = (e) => {
+    e.preventDefault();
+    const product = {
+      id: products.length + 1,
+      ...newProduct,
+      price: parseFloat(newProduct.price),
+      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : null,
+      stock: parseInt(newProduct.stock),
+      category: categories.find(c => c.id == newProduct.categoryId)?.name || "Uncategorized"
+    };
+    setProducts([...products, product]);
+    setNewProduct({
+      name: "",
+      description: "",
+      price: "",
+      salePrice: "",
+      sku: "",
+      stock: "",
+      categoryId: "",
+      brand: "",
+      isActive: true,
+      featured: false
+    });
   };
 
-  const recentOrders = [
-    { id: 'ORD-001', customer: 'John Doe', date: '2023-05-15', amount: 129.99, status: 'Delivered' },
-    { id: 'ORD-002', customer: 'Jane Smith', date: '2023-05-14', amount: 89.99, status: 'Processing' },
-    { id: 'ORD-003', customer: 'Robert Johnson', date: '2023-05-14', amount: 249.99, status: 'Shipped' },
-    { id: 'ORD-004', customer: 'Sarah Williams', date: '2023-05-13', amount: 59.99, status: 'Pending' }
-  ];
+  const handleCategorySubmit = (e) => {
+    e.preventDefault();
+    const category = {
+      id: categories.length + 1,
+      ...newCategory,
+      productCount: 0
+    };
+    setCategories([...categories, category]);
+    setNewCategory({
+      name: "",
+      description: "",
+      parentId: "",
+      isActive: true
+    });
+  };
 
-  const recentTickets = [
-    { id: 'TKT-001', customer: 'Mike Brown', subject: 'Product not working', priority: 'High', status: 'Open' },
-    { id: 'TKT-002', customer: 'Emily Davis', subject: 'Shipping delay', priority: 'Medium', status: 'In Progress' },
-    { id: 'TKT-003', customer: 'Thomas Wilson', subject: 'Refund request', priority: 'High', status: 'Open' }
-  ];
+  const renderProductsTab = () => (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Product Management</h2>
+        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+          + Add New Product
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Product
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {products.map((product) => (
+                  <tr key={product.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center">
+                          <span className="text-gray-600 text-sm">Img</span>
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                          <div className="text-sm text-gray-500">{product.sku}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${product.price}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {product.stock} units
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${product.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {product.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                      <button className="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Product</h3>
+          <form onSubmit={handleProductSubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                rows="3"
+                value={newProduct.description}
+                onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+                required
+              ></textarea>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Sale Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newProduct.salePrice}
+                  onChange={(e) => setNewProduct({...newProduct, salePrice: e.target.value})}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newProduct.sku}
+                  onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+                <input
+                  type="number"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={newProduct.stock}
+                  onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={newProduct.categoryId}
+                onChange={(e) => setNewProduct({...newProduct, categoryId: e.target.value})}
+                required
+              >
+                <option value="">Select a category</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={newProduct.brand}
+                onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
+              />
+            </div>
+            
+            <div className="flex items-center mb-4">
+              <input
+                type="checkbox"
+                id="isActive"
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                checked={newProduct.isActive}
+                onChange={(e) => setNewProduct({...newProduct, isActive: e.target.checked})}
+              />
+              <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Active Product</label>
+            </div>
+            
+            <div className="flex items-center mb-6">
+              <input
+                type="checkbox"
+                id="featured"
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                checked={newProduct.featured}
+                onChange={(e) => setNewProduct({...newProduct, featured: e.target.checked})}
+              />
+              <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">Featured Product</label>
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+            >
+              Add Product
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCategoriesTab = () => (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Category Management</h2>
+        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+          + Add New Category
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Category Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Products
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {categories.map((category) => (
+                  <tr key={category.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {category.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {category.description}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {category.productCount} products
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${category.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {category.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                      <button className="text-red-600 hover:text-red-900">Delete</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-white shadow-md rounded-lg p-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Category</h3>
+          <form onSubmit={handleCategorySubmit}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={newCategory.name}
+                onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
+                required
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                rows="3"
+                value={newCategory.description}
+                onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
+              ></textarea>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Parent Category (Optional)</label>
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={newCategory.parentId}
+                onChange={(e) => setNewCategory({...newCategory, parentId: e.target.value})}
+              >
+                <option value="">None (Top-level category)</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>{category.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-center mb-6">
+              <input
+                type="checkbox"
+                id="catActive"
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                checked={newCategory.isActive}
+                onChange={(e) => setNewCategory({...newCategory, isActive: e.target.checked})}
+              />
+              <label htmlFor="catActive" className="ml-2 block text-sm text-gray-700">Active Category</label>
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+            >
+              Add Category
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'dashboard':
+        return <div className="p-6">Dashboard Content</div>;
+      case 'products':
+        return renderProductsTab();
+      case 'categories':
+        return renderCategoriesTab();
+      case 'users':
+        return <div className="p-6">Users Management</div>;
+      case 'orders':
+        return <div className="p-6">Orders Management</div>;
+      case 'support':
+        return <div className="p-6">Support Tickets</div>;
+      default:
+        return renderProductsTab();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -115,6 +504,16 @@ export default function ManagementDashboard() {
                 </button>
 
                 <button
+                  onClick={() => setActiveTab('categories')}
+                  className={`${activeTab === 'categories' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full`}
+                >
+                  <svg className="text-gray-500 mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  Categories
+                </button>
+
+                <button
                   onClick={() => setActiveTab('orders')}
                   className={`${activeTab === 'orders' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full`}
                 >
@@ -133,16 +532,6 @@ export default function ManagementDashboard() {
                   </svg>
                   Support Tickets
                 </button>
-
-                <button
-                  onClick={() => setActiveTab('analytics')}
-                  className={`${activeTab === 'analytics' ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'} group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full`}
-                >
-                  <svg className="text-gray-500 mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Analytics
-                </button>
               </nav>
             </div>
           </div>
@@ -151,213 +540,10 @@ export default function ManagementDashboard() {
         {/* Main content */}
         <div className="md:pl-64 flex flex-col flex-1">
           <main className="flex-1">
-            <div className="py-6">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-              </div>
-
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                {/* Stats */}
-                <div className="mt-8">
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                      <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 bg-indigo-500 rounded-md p-3">
-                            <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">Total Users</dt>
-                              <dd>
-                                <div className="text-lg font-medium text-gray-900">{dashboardStats.totalUsers}</div>
-                              </dd>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                      <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 bg-green-500 rounded-md p-3">
-                            <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
-                              <dd>
-                                <div className="text-lg font-medium text-gray-900">{dashboardStats.totalOrders}</div>
-                              </dd>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                      <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 bg-yellow-500 rounded-md p-3">
-                            <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
-                              <dd>
-                                <div className="text-lg font-medium text-gray-900">${dashboardStats.totalRevenue.toLocaleString()}</div>
-                              </dd>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-white overflow-hidden shadow rounded-lg">
-                      <div className="px-4 py-5 sm:p-6">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 bg-red-500 rounded-md p-3">
-                            <svg className="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                          </div>
-                          <div className="ml-5 w-0 flex-1">
-                            <dl>
-                              <dt className="text-sm font-medium text-gray-500 truncate">Pending Tickets</dt>
-                              <dd>
-                                <div className="text-lg font-medium text-gray-900">{dashboardStats.pendingTickets}</div>
-                              </dd>
-                            </dl>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recent Orders */}
-                <div className="mt-8">
-                  <h2 className="text-lg font-medium text-gray-900">Recent Orders</h2>
-                  <div className="mt-4 shadow-sm overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Order ID
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Customer
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Date
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Amount
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {recentOrders.map((order) => (
-                          <tr key={order.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {order.id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {order.customer}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {order.date}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              ${order.amount}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
-                                  order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' : 
-                                  order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' : 
-                                  'bg-gray-100 text-gray-800'}`}>
-                                {order.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Recent Support Tickets */}
-                <div className="mt-8">
-                  <h2 className="text-lg font-medium text-gray-900">Recent Support Tickets</h2>
-                  <div className="mt-4 shadow-sm overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Ticket ID
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Customer
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Subject
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Priority
-                          </th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {recentTickets.map((ticket) => (
-                          <tr key={ticket.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {ticket.id}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {ticket.customer}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {ticket.subject}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${ticket.priority === 'High' ? 'bg-red-100 text-red-800' : 
-                                  'bg-yellow-100 text-yellow-800'}`}>
-                                {ticket.priority}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                ${ticket.status === 'Open' ? 'bg-red-100 text-red-800' : 
-                                  'bg-blue-100 text-blue-800'}`}>
-                                {ticket.status}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {renderContent()}
           </main>
         </div>
       </div>
     </div>
   );
-}
+                }
