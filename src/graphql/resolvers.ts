@@ -8,87 +8,93 @@ export const resolvers = {
     user: (_: any, { id }: { id: string }) =>
       prisma.user.findUnique({ where: { id } }),
 
-// Updated products resolver with optimizations for large datasets
-products: async (
-  _: any,
-  { search, cursor, limit = 12, category, sortBy }: { 
-    search?: string; 
-    cursor?: string; 
-    limit?: number;
-    category?: string;
-    sortBy?: string;
-  }
-) => {
-  try {
-    // Build where clause conditionally with indexed fields only
-    const where: any = {};
-    
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' as const } },
-        { description: { contains: search, mode: 'insensitive' as const } },
-        { tags: { has: search } },
-      ];
-    }
-    
-    if (category && category !== 'All Categories') {
-      where.category = category;
-    }
-    
-    // Determine sorting - use indexed fields for better performance
-    let orderBy: any = { id: 'asc' };
-    if (sortBy) {
-      switch(sortBy) {
-        case 'Newest':
-          orderBy = { createdAt: 'desc' };
-          break;
-        case 'Price: Low to High':
-          orderBy = { price: 'asc' };
-          break;
-        case 'Price: High to Low':
-          orderBy = { price: 'desc' };
-          break;
-        case 'Highest Rated':
-          orderBy = { rating: 'desc' };
-          break;
-        default:
-          orderBy = { featured: 'desc', id: 'asc' };
+    // Updated products resolver with optimizations for large datasets
+    products: async (
+      _: any,
+      {
+        search,
+        cursor,
+        limit = 12,
+        category,
+        sortBy,
+      }: {
+        search?: string;
+        cursor?: string;
+        limit?: number;
+        category?: string;
+        sortBy?: string;
       }
-    }
+    ) => {
+      try {
+        // Build where clause conditionally with indexed fields only
+        const where: any = {};
 
-    const products = await prisma.product.findMany({
-      where,
-      take: limit + 1,  // Get one extra to check for next page
-      skip: cursor ? 1 : 0,  // Skip cursor if provided
-      cursor: cursor ? { id: cursor } : undefined,
-      orderBy,
-      // Only select necessary fields to reduce data transfer
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        images: true,
-        category: true,
-        featured: true,
-        isActive: true,
-        stock: true,
-        // Skip heavy fields like description unless needed
-      },
-    });
+        if (search) {
+          where.OR = [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { description: { contains: search, mode: "insensitive" as const } },
+            { tags: { has: search } },
+          ];
+        }
 
-    const hasMore = products.length > limit;
-    const items = hasMore ? products.slice(0, -1) : products;
+        if (category && category !== "All Categories") {
+          where.category = category;
+        }
 
-    return {
-      items,
-      nextCursor: hasMore ? products[products.length - 1].id : null,
-      hasMore,
-    };
-  } catch (error) {
-    console.error('Failed to fetch products:', error);
-    throw new Error('Failed to fetch products');
-  }
-},
+        // Determine sorting - use indexed fields for better performance
+        let orderBy: any = { id: "asc" };
+        if (sortBy) {
+          switch (sortBy) {
+            case "Newest":
+              orderBy = { createdAt: "desc" };
+              break;
+            case "Price: Low to High":
+              orderBy = { price: "asc" };
+              break;
+            case "Price: High to Low":
+              orderBy = { price: "desc" };
+              break;
+            case "Highest Rated":
+              orderBy = { rating: "desc" };
+              break;
+            default:
+              orderBy = { featured: "desc", id: "asc" };
+          }
+        }
+
+        const products = await prisma.product.findMany({
+          where,
+          take: limit + 1, // Get one extra to check for next page
+          skip: cursor ? 1 : 0, // Skip cursor if provided
+          cursor: cursor ? { id: cursor } : undefined,
+          orderBy,
+          // Only select necessary fields to reduce data transfer
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            images: true,
+            category: true,
+            featured: true,
+            isActive: true,
+            stock: true,
+            // Skip heavy fields like description unless needed
+          },
+        });
+
+        const hasMore = products.length > limit;
+        const items = hasMore ? products.slice(0, -1) : products;
+
+        return {
+          items,
+          nextCursor: hasMore ? products[products.length - 1].id : null,
+          hasMore,
+        };
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+        throw new Error("Failed to fetch products");
+      }
+    },
 
     product: (_: any, { id }: { id: string }) =>
       prisma.product.findUnique({ where: { id } }),
@@ -111,8 +117,8 @@ products: async (
       });
     },
 
-    createProduct: async (_: any, {id, name, description, price, sku }: any) => {
-    const product = await prisma.product.create({
+    createProduct: async (_: any, { id, name, description, price, sku }: any) => {
+      const product = await prisma.product.create({
         data: {
           name,
           description,
@@ -122,8 +128,7 @@ products: async (
             connect: { id: id }, // Prisma will link it automatically
           },
         },
-});
-
+      });
     },
 
     createOrder: async (_: any, { userId, addressId, items }: any) => {
