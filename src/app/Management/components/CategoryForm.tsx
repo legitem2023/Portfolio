@@ -27,7 +27,7 @@ export default function CategoryForm({
       const result = await insertCategory({
         variables: {
           name: newCategory.name,
-          description: newCategory.description,
+          description: newCategory.description || "",
           status: newCategory.isActive
           // Note: If your mutation supports parentId, add it here:
           // parentId: newCategory.parentId || null
