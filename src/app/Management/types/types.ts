@@ -39,4 +39,3 @@ export interface NewCategory {
   parentId: string;
   isActive: boolean;
 }
-
