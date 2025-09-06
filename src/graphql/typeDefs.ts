@@ -267,7 +267,7 @@ export const typeDefs = gql`
   type Query {
     users: [User!]
     user(id: ID!): User
-    products(search: String, cursor:String, limit:Int):ProductHaslimit
+    products(search: String, cursor:String, limit:Int,category:String,sortBy:String):ProductHaslimit
     product(id: ID!): Product
     categories: [Category!]
     orders(userId: ID!): [Order!]
