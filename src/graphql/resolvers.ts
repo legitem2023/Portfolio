@@ -10,17 +10,13 @@ export const resolvers = {
 
     products: async (
   _: any,
-  {
-    search,
-    cursor,
-    limit = 10,
-  }: { search?: string; cursor?: string; limit?: number }
+  { search, cursor, limit = 10 }: { search?: string; cursor?: string; limit?: number }
 ) => {
-  const where = search
+  const where: Prisma.ProductWhereInput = search
     ? {
         OR: [
-          { name: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
+          { name: { contains: search, mode: "insensitive" as Prisma.QueryMode } },
+          { description: { contains: search, mode: "insensitive" as Prisma.QueryMode } },
           { tags: { has: search } },
         ],
       }
@@ -28,15 +24,18 @@ export const resolvers = {
 
   const products = await prisma.product.findMany({
     where,
-    take: limit + 1, // fetch one extra to check if more pages exist
-    skip: cursor ? 1 : 0, // skip cursor itself
+    take: limit + 1,
+    skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
     orderBy: { id: "asc" },
   });
 
+  const hasMore = products.length > limit;
+
   return {
-    items: products.slice(0, limit), // return only requested
-    nextCursor: products.length > limit ? products[limit].id : null,
+    items: products.slice(0, limit),
+    nextCursor: hasMore ? products[limit].id : null,
+    hasMore,
   };
 },
 
