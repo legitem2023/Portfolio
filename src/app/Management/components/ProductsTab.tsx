@@ -1,4 +1,4 @@
-import { Product, Category, NewProduct } from './types';
+import { Product, Category, NewProduct } from '../types/types';
 import ProductTable from './ProductTable';
 import ProductForm from './ProductForm';
 
