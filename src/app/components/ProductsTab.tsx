@@ -127,11 +127,11 @@ const ProductsTab: React.FC = () => {
           </select>
         </div>
         
+        
+      </div>
         <div className="text-sm text-gray-500">
           {products.length} {products.length === 1 ? 'product' : 'products'} shown
         </div>
-      </div>
-      
       {products.length > 0 ? (
         <>
           <ProductThumbnails products={products} />
