@@ -1,15 +1,9 @@
-// app/components/ApolloWrapper.tsx
 'use client';
 
 import { ApolloLink, HttpLink, from } from '@apollo/client';
-import { 
-  ApolloNextAppProvider, 
-  ApolloClient, 
-  InMemoryCache 
-} from '@apollo/experimental-nextjs-app-support';
+import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 
-// This component will only be used on the client side
 function makeClient() {
   const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors)
@@ -33,9 +27,11 @@ function makeClient() {
 }
 
 export function ApolloWrapper({ children }: React.PropsWithChildren) {
+  const client = makeClient();
+
   return (
-    <ApolloNextAppProvider makeClient={makeClient}>
+    <ApolloProvider client={client}>
       {children}
-    </ApolloNextAppProvider>
+    </ApolloProvider>
   );
 }
