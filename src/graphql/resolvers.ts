@@ -12,31 +12,37 @@ export const resolvers = {
   _: any,
   { search, cursor, limit = 10 }: { search?: string; cursor?: string; limit?: number }
 ) => {
-  const where: Prisma.ProductWhereInput = search
+  // Build where clause conditionally
+  const where = search
     ? {
         OR: [
-          { name: { contains: search, mode: "insensitive" as Prisma.QueryMode } },
-          { description: { contains: search, mode: "insensitive" as Prisma.QueryMode } },
+          { name: { contains: search, mode: 'insensitive' as const } },
+          { description: { contains: search, mode: 'insensitive' as const } },
           { tags: { has: search } },
         ],
       }
     : {};
 
-  const products = await prisma.product.findMany({
-    where,
-    take: limit + 1,
-    skip: cursor ? 1 : 0,
-    cursor: cursor ? { id: cursor } : undefined,
-    orderBy: { id: "asc" },
-  });
+  try {
+    const products = await prisma.product.findMany({
+      where,
+      take: limit + 1,  // Get one extra to check for next page
+      skip: cursor ? 1 : 0,  // Skip cursor if provided
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy: { id: 'asc' },
+    });
 
-  const hasMore = products.length > limit;
+    const hasMore = products.length > limit;
+    const items = hasMore ? products.slice(0, -1) : products;
 
-  return {
-    items: products.slice(0, limit),
-    nextCursor: hasMore ? products[limit].id : null,
-    hasMore,
-  };
+    return {
+      items,
+      nextCursor: hasMore ? products[products.length - 1].id : null,
+      hasMore,
+    };
+  } catch (error) {
+    throw new Error('Failed to fetch products');
+  }
 },
 
     product: (_: any, { id }: { id: string }) =>
