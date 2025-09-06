@@ -67,7 +67,6 @@ products: async (
         id: true,
         name: true,
         price: true,
-        salePrice: true,
         images: true,
         category: true,
         featured: true,
