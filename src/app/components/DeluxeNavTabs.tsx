@@ -179,7 +179,7 @@ const DeluxeNavTabs: React.FC = () => {
   return (
     <div className="w-full max-w-6xl mx-auto font-sans">
       {/* Tab Navigation */}
-      <div className="flex overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white">
+      <div className="flex justify-center overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white">
         {tabs.map((tab) => (
           <button
             key={tab.id}
