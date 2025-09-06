@@ -1,23 +1,66 @@
-// pages/index.js
-"use client";
 import { useState } from 'react';
 import Head from 'next/head';
 
+// Define TypeScript interfaces
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  salePrice?: number;
+  sku: string;
+  stock: number;
+  category: string;
+  brand?: string;
+  status: 'Active' | 'Inactive';
+}
+
+interface Category {
+  id: number;
+  name: string;
+  description?: string;
+  productCount: number;
+  status: 'Active' | 'Inactive';
+  parentId?: number;
+}
+
+interface NewProduct {
+  name: string;
+  description: string;
+  price: string;
+  salePrice: string;
+  sku: string;
+  stock: string;
+  categoryId: string;
+  brand: string;
+  isActive: boolean;
+  featured: boolean;
+}
+
+interface NewCategory {
+  name: string;
+  description: string;
+  parentId: string;
+  isActive: boolean;
+}
+
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState('products');
-  const [products, setProducts] = useState([
-    { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, stock: 45, category: "Electronics", sku: "WH1000XM4", status: "Active" },
-    { id: 2, name: "Running Shoes", description: "Lightweight running shoes with cushioning", price: 129.99, stock: 23, category: "Footwear", sku: "RS2023", status: "Active" },
-    { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, stock: 0, category: "Appliances", sku: "CM4500", status: "Inactive" },
+  const [activeTab, setActiveTab] = useState<string>('products');
+  
+  // Initialize with sample data
+  const [products, setProducts] = useState<Product[]>([
+    { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, salePrice: 179.99, sku: "WH1000XM4", stock: 45, category: "Electronics", brand: "Sony", status: "Active" },
+    { id: 2, name: "Running Shoes", description: "Lightweight running shoes with cushioning", price: 129.99, sku: "RS2023", stock: 23, category: "Footwear", brand: "Nike", status: "Active" },
+    { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, sku: "CM4500", stock: 0, category: "Appliances", brand: "KitchenAid", status: "Inactive" },
   ]);
   
-  const [categories, setCategories] = useState([
+  const [categories, setCategories] = useState<Category[]>([
     { id: 1, name: "Electronics", description: "Electronic devices and accessories", productCount: 24, status: "Active" },
     { id: 2, name: "Clothing", description: "Men's and women's apparel", productCount: 56, status: "Active" },
     { id: 3, name: "Home & Kitchen", description: "Home appliances and kitchenware", productCount: 32, status: "Active" },
   ]);
   
-  const [newProduct, setNewProduct] = useState({
+  const [newProduct, setNewProduct] = useState<NewProduct>({
     name: "",
     description: "",
     price: "",
@@ -30,23 +73,30 @@ export default function ManagementDashboard() {
     featured: false
   });
   
-  const [newCategory, setNewCategory] = useState({
+  const [newCategory, setNewCategory] = useState<NewCategory>({
     name: "",
     description: "",
     parentId: "",
     isActive: true
   });
 
-  const handleProductSubmit = (e:any) => {
+  const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const product = {
+    const category = categories.find(c => c.id === parseInt(newProduct.categoryId));
+    
+    const product: Product = {
       id: products.length + 1,
-      ...newProduct,
+      name: newProduct.name,
+      description: newProduct.description,
       price: parseFloat(newProduct.price),
-      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : null,
+      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+      sku: newProduct.sku,
       stock: parseInt(newProduct.stock),
-      category: categories.find(c => c.id == newProduct.categoryId)?.name || "Uncategorized"
+      category: category?.name || "Uncategorized",
+      brand: newProduct.brand || undefined,
+      status: newProduct.isActive ? "Active" : "Inactive"
     };
+    
     setProducts([...products, product]);
     setNewProduct({
       name: "",
@@ -62,13 +112,17 @@ export default function ManagementDashboard() {
     });
   };
 
-  const handleCategorySubmit = (e) => {
+  const handleCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const category = {
+    const category: Category = {
       id: categories.length + 1,
-      ...newCategory,
-      productCount: 0
+      name: newCategory.name,
+      description: newCategory.description || undefined,
+      productCount: 0,
+      status: newCategory.isActive ? "Active" : "Inactive",
+      parentId: newCategory.parentId ? parseInt(newCategory.parentId) : undefined
     };
+    
     setCategories([...categories, category]);
     setNewCategory({
       name: "",
@@ -125,7 +179,7 @@ export default function ManagementDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${product.price}
+                      ${product.price}{product.salePrice && <span className="ml-2 text-red-500 line-through">${product.salePrice}</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {product.stock} units
@@ -164,7 +218,7 @@ export default function ManagementDashboard() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows="3"
+                rows={3}
                 value={newProduct.description}
                 onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
                 required
@@ -316,7 +370,7 @@ export default function ManagementDashboard() {
                       {category.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
-                      {category.description}
+                      {category.description || "No description"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {category.productCount} products
@@ -355,7 +409,7 @@ export default function ManagementDashboard() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                rows="3"
+                rows={3}
                 value={newCategory.description}
                 onChange={(e) => setNewCategory({...newCategory, description: e.target.value})}
               ></textarea>
@@ -546,4 +600,4 @@ export default function ManagementDashboard() {
       </div>
     </div>
   );
-                }
+}
