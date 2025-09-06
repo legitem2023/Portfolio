@@ -1,4 +1,4 @@
-import { Category, NewCategory } from './types';
+import { Category, NewCategory } from '../types/types';
 import CategoryTable from './CategoryTable';
 import CategoryForm from './CategoryForm';
 
