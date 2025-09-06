@@ -15,7 +15,7 @@ const ProductsTab: React.FC = () => {
   })
   if (loading) return 'Loading...';
   console.log(data);
-  const products = generateSampleProducts(100);
+  const products = generateSampleProducts(1000000);
   
   return (
     <div className="p-2 bg-white rounded-lg shadow-lg">
