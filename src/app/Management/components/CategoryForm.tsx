@@ -1,4 +1,4 @@
-import { NewCategory, Category } from './types/types';
+import { NewCategory, Category } from '../types/types';
 
 interface CategoryFormProps {
   newCategory: NewCategory;
