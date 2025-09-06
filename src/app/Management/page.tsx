@@ -19,9 +19,9 @@ const [products, setProducts] = useState<Product[]>([
   { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, sku: "CM4500", stock: 0, category: "Appliances", brand: "KitchenAid", status: "Inactive" },
 ]);
 
-if(categoryLoading) return "Category Loading";
+//if(categoryLoading) return "Category Loading";
 const [categories, setCategories] = useState<Category[]>(
-  categoryData.categories.map((data:any)=>{
+  categoryData?.categories?.map((data:any)=>{
     return {
       id:data.id,
       name:data.name,
