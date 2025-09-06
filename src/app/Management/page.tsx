@@ -8,7 +8,7 @@ import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState<string>('products');
+  const [activeTab, setActiveTab] = useState<string>('categories');
   
 // With actual data:
 const [products, setProducts] = useState<Product[]>([
