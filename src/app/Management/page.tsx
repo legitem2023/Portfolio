@@ -20,8 +20,10 @@ const [products, setProducts] = useState<Product[]>([
 ]);
 
 //if(categoryLoading) return "Category Loading";
-  console.log(categoryData);
-const [categories, setCategories] = useState<Category[]>([]
+  
+  const categoriesData = categoryData?.categories;
+  console.log(categoriesData);
+  const [categories, setCategories] = useState<Category[]>([]
  /* categoryData?.categories?.map((data:any)=>{
     return {
       id:data.id,
