@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import Head from 'next/head';
 import { GETCATEGORY } from '../components/graphql/query';
 import { useQuery } from '@apollo/client';
@@ -21,6 +21,10 @@ const [products, setProducts] = useState<Product[]>([
 
 //if(categoryLoading) return "Category Loading";
   
+  
+const [categories, setCategories] = useState<Category[]>([]);
+
+useEffect(()=>{
   const categoriesData = categoryData?.categories?.map((data:any)=>{
     return {
       id:data.id,
@@ -30,19 +34,10 @@ const [products, setProducts] = useState<Product[]>([
       status:data.isActive
     }
   });
-  console.log(categoriesData);
-  const [categories, setCategories] = useState<Category[]>(categoriesData
- /* categoryData?.categories?.map((data:any)=>{
-    return {
-      id:data.id,
-      name:data.name,
-      description:data.description,
-      productCount:"",
-      status:data.status
-    }
-  })*/
-  );
-
+  
+  setCategories(categoriesData);
+},[categoriesData])
+  
 const [newProduct, setNewProduct] = useState<NewProduct>({
   name: "",
   description: "",
