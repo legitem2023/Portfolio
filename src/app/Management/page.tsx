@@ -27,11 +27,11 @@ const [products, setProducts] = useState<Product[]>([
       name:data.name,
       description:data.description,
       productCount:"",
-      status:data.status
+      status:data.isActive
     }
   });
   console.log(categoriesData);
-  const [categories, setCategories] = useState<Category[]>([]
+  const [categories, setCategories] = useState<Category[]>(categoriesData
  /* categoryData?.categories?.map((data:any)=>{
     return {
       id:data.id,
