@@ -35,7 +35,7 @@ export default function CategoriesTab({
             newCategory={newCategory}
             setNewCategory={setNewCategory}
             categories={categories}
-            handleSubmit={handleCategorySubmit}
+            onCategoryAdded={handleCategorySubmit}
           />
         </div>
       </div>
