@@ -70,7 +70,6 @@ products: async (
         salePrice: true,
         images: true,
         category: true,
-        reviewCount: true,
         featured: true,
         isActive: true,
         stock: true,
