@@ -5,7 +5,7 @@ import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
 import CategoriesTab from './components/CategoriesTab';
-import { Product, Category, NewProduct, NewCategory } from './types';
+import { Product, Category, NewProduct, NewCategory } from './types/types';
 
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('products');
