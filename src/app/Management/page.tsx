@@ -20,8 +20,9 @@ const [products, setProducts] = useState<Product[]>([
 ]);
 
 //if(categoryLoading) return "Category Loading";
-const [categories, setCategories] = useState<Category[]>(
-  categoryData?.categories?.map((data:any)=>{
+  console.log(categoryData);
+const [categories, setCategories] = useState<Category[]>([]
+ /* categoryData?.categories?.map((data:any)=>{
     return {
       id:data.id,
       name:data.name,
@@ -29,7 +30,7 @@ const [categories, setCategories] = useState<Category[]>(
       productCount:"",
       status:data.status
     }
-  })
+  })*/
   );
 
 const [newProduct, setNewProduct] = useState<NewProduct>({
