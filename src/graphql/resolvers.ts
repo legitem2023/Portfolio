@@ -135,7 +135,7 @@ export const resolvers = {
         data:{
           name,
           description,
-          status
+          isActive:status
         }
       })
       if(response){
