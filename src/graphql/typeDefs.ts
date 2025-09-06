@@ -258,11 +258,16 @@ export const typeDefs = gql`
     user: User!
   }
 
+  type ProductHaslimit {
+    items:[Product]
+    nextCursor: String,
+    hasMore:Boolean!
+  }
   # ================= Queries & Mutations =================
   type Query {
     users: [User!]
     user(id: ID!): User
-    products(search: String, cursor:String, limit:Int): [Product!]
+    products(search: String, cursor:String, limit:Int):ProductHaslimit
     product(id: ID!): Product
     categories: [Category!]
     orders(userId: ID!): [Order!]
