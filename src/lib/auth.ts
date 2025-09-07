@@ -210,7 +210,7 @@ cookies: {
   events: {
     async signOut({ token, session }) {
       console.log("User signed out");
-      
+      /*
       try {
         if (token?.serverToken) {
           console.log("Calling server logout endpoint");
@@ -229,7 +229,7 @@ cookies: {
         
       } catch (error) {
         console.error("Error during logout:", error);
-      }
+      }*/
     },
   },
 
