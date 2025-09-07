@@ -1,17 +1,29 @@
-// pages/login.js
+// pages/login.tsx
 "use client";
-import { useState } from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import Head from 'next/head';
 
 export default function LuxuryLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     // Handle login logic here
     console.log('Logging in with:', { email, password, rememberMe });
+  };
+
+  const handleEmailChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setEmail(e.target.value);
+  };
+
+  const handlePasswordChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setPassword(e.target.value);
+  };
+
+  const handleRememberMeChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    setRememberMe(e.target.checked);
   };
 
   return (
@@ -64,7 +76,7 @@ export default function LuxuryLogin() {
                     className="bg-gray-700 border border-gray-600 text-amber-50 rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 p-3"
                     placeholder="Enter your email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={handleEmailChange}
                   />
                 </div>
               </div>
@@ -89,7 +101,7 @@ export default function LuxuryLogin() {
                     className="bg-gray-700 border border-gray-600 text-amber-50 rounded-lg focus:ring-amber-500 focus:border-amber-500 block w-full pl-10 p-3"
                     placeholder="Enter your password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={handlePasswordChange}
                   />
                 </div>
               </div>
@@ -104,7 +116,7 @@ export default function LuxuryLogin() {
                   type="checkbox"
                   className="h-4 w-4 text-amber-500 focus:ring-amber-500 border-gray-600 rounded bg-gray-700"
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={handleRememberMeChange}
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                   Remember me
@@ -142,4 +154,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-                    }
+                  }
