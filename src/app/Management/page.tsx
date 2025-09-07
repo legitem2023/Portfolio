@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { GETCATEGORY } from '../components/graphql/query';
+import { GETCATEGORY, MANAGEMENTPRODUCTS } from '../components/graphql/query';
 import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
@@ -12,12 +12,9 @@ import { Product, Category, NewProduct, NewCategory } from './types/types';
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('categories');
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+  const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS);
   
-  const [products, setProducts] = useState<Product[]>([
-    { id: 1, name: "Wireless Headphones", description: "Noise-cancelling wireless headphones", price: 199.99, salePrice: 179.99, sku: "WH1000XM4", stock: 45, category: "Electronics", brand: "Sony", status: "Active" },
-    { id: 2, name: "Running Shoes", description: "Lightweight running shoes with cushioning", price: 129.99, sku: "RS2023", stock: 23, category: "Footwear", brand: "Nike", status: "Active" },
-    { id: 3, name: "Coffee Maker", description: "Programmable coffee maker with thermal carafe", price: 89.99, sku: "CM4500", stock: 0, category: "Appliances", brand: "KitchenAid", status: "Inactive" },
-  ]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -32,7 +29,24 @@ export default function ManagementDashboard() {
       }));
       setCategories(categoriesData);
     }
-  }, [categoryData]);
+
+   if (productData?.getProducts) {
+     const productsData = productData.getProducts.map((data:any)=>{
+           id: 1, 
+           name: "Wireless Headphones", 
+           description: "Noise-cancelling wireless headphones", 
+           price: 199.99,
+           salePrice: 179.99, 
+           sku: "WH1000XM4", 
+           stock: 45,
+           category: "Electronics",
+           brand: "Sony",
+           status: "Active"
+     })
+   setProducts(productsData);
+   }
+    
+  }, [categoryData,productData]);
 
   const [newProduct, setNewProduct] = useState<NewProduct>({
     name: "",
@@ -128,7 +142,7 @@ export default function ManagementDashboard() {
     }
   };
 
-  if (categoryLoading) return <div>Category Loading...</div>;
+  if (categoryLoading && productLoading) return <div>Category Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-100">
