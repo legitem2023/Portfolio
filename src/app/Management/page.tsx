@@ -10,7 +10,7 @@ import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState<string>('categories');
+  const [activeTab, setActiveTab] = useState<string>('products');
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS);
   
