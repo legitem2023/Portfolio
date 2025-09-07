@@ -89,7 +89,7 @@ export const authOptions: NextAuthOptions = {
   ],
 
   secret:
-    process.env.NEXTAUTH_SECRET?.length >= 32
+    (process.env.NEXTAUTH_SECRET || "").length >= 32
       ? process.env.NEXTAUTH_SECRET
       : Buffer.from(
           process.env.NEXTAUTH_SECRET ||
