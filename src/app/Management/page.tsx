@@ -33,15 +33,15 @@ export default function ManagementDashboard() {
    if (productData?.getProducts) {
      const productsData = productData.getProducts.map((data:any)=> ({
            id: 1, 
-           name: "Wireless Headphones", 
-           description: "Noise-cancelling wireless headphones", 
-           price: 199.99,
-           salePrice: 179.99, 
-           sku: "WH1000XM4", 
-           stock: 45,
-           category: "Electronics",
-           brand: "Sony",
-           status: "Active"
+           name: data.name, 
+           description: data.description, 
+           price: data.price,
+           salePrice: data.salePrice, 
+           sku: data.sku, 
+           stock: data.stock,
+           category: data.categoryId,
+           brand: data.brand,
+           status: data.isActive
      }))
    setProducts(productsData);
    }
