@@ -52,7 +52,7 @@ export default function LuxuryLogin() {
         </div>
         
         <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
+          <div className="max-w-2xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
             {/* Logo and Header */}
             <div>
               <div className="flex justify-center">
