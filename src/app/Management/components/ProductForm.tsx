@@ -1,3 +1,6 @@
+import { useMutation } from "@apollo/client";
+import { INSERTPRODUCT } from "../../components/graphql/mutation";
+
 import { NewProduct, Category } from '../types/types';
 
 interface ProductFormProps {
