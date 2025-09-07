@@ -31,7 +31,7 @@ export default function ManagementDashboard() {
     }
 
    if (productData?.getProducts) {
-     const productsData = productData.getProducts.map((data:any)=>{
+     const productsData = productData.getProducts.map((data:any)=> ({
            id: 1, 
            name: "Wireless Headphones", 
            description: "Noise-cancelling wireless headphones", 
@@ -42,7 +42,7 @@ export default function ManagementDashboard() {
            category: "Electronics",
            brand: "Sony",
            status: "Active"
-     })
+     }))
    setProducts(productsData);
    }
     
