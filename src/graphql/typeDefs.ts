@@ -279,8 +279,26 @@ export const typeDefs = gql`
   type Response {
      statusText: String
   }
- 
+  type Result {
+     token: String
+     statusText: String
+  }
+input LoginInput {
+  email: String
+  password: String
+}
+
+input FacebookLoginInput {
+  idToken: String!
+}
+
+input GoogleLoginInput {
+  idToken: String!
+}
   type Mutation {
+    login(input: LoginInput): Result
+    loginWithGoogle(input: GoogleLoginInput): Result
+    loginWithFacebook(input: FacebookLoginInput): Result
     createUser(email: String!, password: String!, firstName: String!, lastName: String!): User!
     createProduct(id: String, name: String!, description: String!, price: Float!,salePrice: Float!, sku: String!): Response!
     createCategory(name:String!,description:String!,status:Boolean):Response!
