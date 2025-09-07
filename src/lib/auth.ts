@@ -4,7 +4,7 @@ import { NextAuthOptions } from "next-auth";
 import { NextResponse } from "next/server";
 import { gql, ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { cookies } from "next/headers";
-import { LOGOUT_MUTATION, FBLOGIN, LOGIN } from "@/components/graphql/mutation"; // Changed to LOGIN
+import { LOGOUT_MUTATION, FBLOGIN, LOGIN } from "../app/components/graphql/mutation"; // Changed to LOGIN
 
 const client = new ApolloClient({
   link: new HttpLink({
