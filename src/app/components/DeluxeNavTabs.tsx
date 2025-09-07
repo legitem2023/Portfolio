@@ -92,7 +92,10 @@ const DeluxeNavTabs: React.FC = () => {
           <h3 className="text-xl font-semibold mb-4">Featured Brands</h3>
           <div className="flex flex-wrap gap-4">
             {['Gucci', 'Prada', 'Hermès', 'Tiffany', 'Rolex', 'Dior', 'Chanel', 'Louis Vuitton'].map((brand) => (
-              <div key={brand} className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+              <div
+                key={brand}
+                className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"
+              >
                 <div className="font-medium mb-2">{brand}</div>
                 <div className="text-xs text-gray-500">Exclusive collection</div>
               </div>
@@ -171,6 +174,7 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto font-sans">
+      {/* Tab Navigation */}
       <div className="flex justify-center overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white">
         {tabs.map((tab) => (
           <button
@@ -186,6 +190,21 @@ const DeluxeNavTabs: React.FC = () => {
           </button>
         ))}
       </div>
+
+      {/* Tab Content */}
+      <div className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden">
+        {tabs.find((tab) => tab.id === activeTab)?.content}
+      </div>
+
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
