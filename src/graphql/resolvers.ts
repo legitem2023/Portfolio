@@ -127,13 +127,14 @@ export const resolvers = {
       });
     },
 
-    createProduct: async (_: any, { id, name, description, price, sku }: any) => {
+    createProduct: async (_: any, { id, name, description, price, salePrice, sku }: any) => {
       const product = await prisma.product.create({
         data: {
           name,
           description,
           price,
           sku,
+          salePrice,
           category: {
             connect: { id: id }, // Prisma will link it automatically
           },
