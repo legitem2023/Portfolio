@@ -7,14 +7,14 @@ interface ProductFormProps {
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
   categories: Category[];
-  handleSubmit: (e: React.FormEvent) => void;
+  onProductAdded: (e: React.FormEvent) => void;
 }
 
 export default function ProductForm({
   newProduct,
   setNewProduct,
   categories,
-  handleSubmit
+  onProductAdded
 }: ProductFormProps) {
   return (
     <form onSubmit={handleSubmit}>
