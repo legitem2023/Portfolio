@@ -1,13 +1,14 @@
+"use client";
 import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
-
 import { NewProduct, Category } from '../types/types';
+import { useState } from 'react';
 
 interface ProductFormProps {
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
   categories: Category[];
-  onProductAdded: (e: React.FormEvent) => void;
+  onProductAdded: () => void;
 }
 
 export default function ProductForm({
@@ -16,8 +17,69 @@ export default function ProductForm({
   categories,
   onProductAdded
 }: ProductFormProps) {
+  const [insertProduct, { loading, error }] = useMutation(INSERTPRODUCT);
+  const [successMessage, setSuccessMessage] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { data } = await insertProduct({
+        variables: {
+          name: newProduct.name,
+          description: newProduct.description,
+          price: parseFloat(newProduct.price),
+          salePrice: parseFloat(newProduct.salePrice || '0'),
+          sku: newProduct.sku,
+          // Note: Add these fields to your mutation if needed
+          // categoryId: newProduct.categoryId,
+          // stock: parseInt(newProduct.stock),
+          // brand: newProduct.brand,
+          // isActive: newProduct.isActive,
+          // featured: newProduct.featured
+        }
+      });
+
+      if (data.createProduct.statusText === 'Success') {
+        setSuccessMessage('Product added successfully!');
+        // Reset form
+        setNewProduct({
+          name: '',
+          description: '',
+          price: '',
+          salePrice: '',
+          sku: '',
+          categoryId: '',
+          stock: '',
+          brand: '',
+          isActive: false,
+          featured: false
+        });
+        onProductAdded();
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(''), 3000);
+      }
+    } catch (err) {
+      console.error('Error adding product:', err);
+      // Error is already handled by the error variable from useMutation
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit}>
+      {error && (
+        <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
+          Error: {error.message}
+        </div>
+      )}
+      
+      {successMessage && (
+        <div className="text-green-500 mb-4 p-2 bg-green-100 rounded-md">
+          {successMessage}
+        </div>
+      )}
+      
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
         <input
@@ -46,6 +108,7 @@ export default function ProductForm({
           <input
             type="number"
             step="0.01"
+            min="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             value={newProduct.price}
             onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
@@ -57,6 +120,7 @@ export default function ProductForm({
           <input
             type="number"
             step="0.01"
+            min="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             value={newProduct.salePrice}
             onChange={(e) => setNewProduct({...newProduct, salePrice: e.target.value})}
@@ -79,6 +143,7 @@ export default function ProductForm({
           <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
           <input
             type="number"
+            min="0"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             value={newProduct.stock}
             onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
@@ -136,11 +201,11 @@ export default function ProductForm({
       
       <button
         type="submit"
-        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"
+        disabled={loading}
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Add Product
+        {loading ? 'Adding Product...' : 'Add Product'}
       </button>
     </form>
   );
-}
-
+    }
