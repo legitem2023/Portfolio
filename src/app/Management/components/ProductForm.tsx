@@ -144,7 +144,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { INSERTPRODUCT } from '../../components/graphql/mutation';
 
-const ProductForm = ({ categories, onProductAdded }) => {
+const ProductForm = ({ categories, onProductAdded }:any) => {
   const [createProduct, { loading, error }] = useMutation(INSERTPRODUCT);
   const [showSkuHelp, setShowSkuHelp] = useState(false);
   const [formData, setFormData] = useState({
