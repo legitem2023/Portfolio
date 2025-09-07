@@ -107,6 +107,10 @@ export const resolvers = {
       prisma.order.findMany({ where: { userId } }),
 
     supportTickets: () => prisma.supportTicket.findMany(),
+    getProducts: async (_:any,_args:any) => {
+       const products = await prisma.product.findMany();
+      return products;
+    }
   },
 
   Mutation: {
