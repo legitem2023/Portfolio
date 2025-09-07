@@ -235,7 +235,7 @@ export default function LuxurySignup() {
             <div className="text-center">
               <p className="text-sm text-gray-400">
                 Already have an account?{' '}
-                <Link href="/login" className="font-medium text-amber-400 hover:text-amber-300 transition-colors">
+                <Link href="/Login" className="font-medium text-amber-400 hover:text-amber-300 transition-colors">
                   Sign in
                 </Link>
               </p>
