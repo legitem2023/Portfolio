@@ -332,8 +332,8 @@ model Notification {
 // Enums
 enum Role {
   ADMIN
-  CUSTOMER
-  SUPPORT
+  MANAGER
+  USER
 }
 
 enum AddressType {
