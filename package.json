@@ -37,6 +37,8 @@
     "@types/react": "^18.2.31",
     "@types/react-dom": "^18.2.14",
     "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
+    "@types/jsonwebtoken": "^9.0.5",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.52.0",
     "eslint-config-next": "13.5.6",
