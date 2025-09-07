@@ -176,7 +176,7 @@ let user = await prisma.user.findUnique({
 if (!user) {
   user = await prisma.user.create({
     data: {
-      name: fbUser.name,
+      firstName: fbUser.name,
       email: fbUser.email,
       phone: '', // Facebook doesn't provide it
       password: '', // Use empty or a random placeholder
