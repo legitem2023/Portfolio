@@ -142,7 +142,7 @@ export default function ProductForm({
 }*/
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { INSERTPRODUCT } from '../../components/graphql/mutations';
+import { INSERTPRODUCT } from '../../components/graphql/mutation';
 
 const ProductForm = ({ categories, onProductAdded }) => {
   const [createProduct, { loading, error }] = useMutation(INSERTPRODUCT);
