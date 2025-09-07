@@ -1,12 +1,35 @@
 'use client';
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { useMutation } from '@apollo/client';
 import { INSERTPRODUCT } from '../../components/graphql/mutation';
 
-const ProductForm = ({ categories, onProductAdded }:any) => {
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface ProductFormData {
+  name: string;
+  description: string;
+  price: string;
+  salePrice: string;
+  sku: string;
+  stock: string;
+  categoryId: string;
+  brand: string;
+  isActive: boolean;
+  featured: boolean;
+}
+
+interface ProductFormProps {
+  categories: Category[];
+  onProductAdded: () => void;
+}
+
+const ProductForm = ({ categories, onProductAdded }: ProductFormProps) => {
   const [createProduct, { loading, error }] = useMutation(INSERTPRODUCT);
   const [showSkuHelp, setShowSkuHelp] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     description: '',
     price: '',
@@ -19,15 +42,17 @@ const ProductForm = ({ categories, onProductAdded }:any) => {
     featured: false
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const { data } = await createProduct({
