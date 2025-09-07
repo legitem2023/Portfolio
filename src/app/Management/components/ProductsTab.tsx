@@ -37,7 +37,9 @@ export default function ProductsTab({
             newProduct={newProduct}
             setNewProduct={setNewProduct}
             categories={categories}
-            handleSubmit={handleProductSubmit}
+            onProductAdded={() =>{
+              console.log("trial");
+            }}
           />
         </div>
       </div>
