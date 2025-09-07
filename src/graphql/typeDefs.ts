@@ -272,6 +272,7 @@ export const typeDefs = gql`
     categories: [Category!]
     orders(userId: ID!): [Order!]
     supportTickets: [SupportTicket!]
+    getProducts:[Product!];
   }
 
   type Response {
