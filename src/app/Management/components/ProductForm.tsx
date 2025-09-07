@@ -31,6 +31,7 @@ export default function ProductForm({
           price: parseFloat(newProduct.price),
           salePrice: parseFloat(newProduct.salePrice || '0'),
           sku: newProduct.sku,
+          id: newProduct.categoryId
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
           // stock: parseInt(newProduct.stock),
