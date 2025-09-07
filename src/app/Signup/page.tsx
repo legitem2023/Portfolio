@@ -1,11 +1,21 @@
-// pages/signup.js
+// pages/signup.tsx
 "use client";
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 
+interface FormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  agreeToTerms: boolean;
+  subscribe: boolean;
+}
+
 export default function LuxurySignup() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
@@ -15,7 +25,7 @@ export default function LuxurySignup() {
     subscribe: true
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -23,7 +33,7 @@ export default function LuxurySignup() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Handle signup logic here
     console.log('Signing up with:', formData);
