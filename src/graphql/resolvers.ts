@@ -181,7 +181,7 @@ if (!user) {
       phone: '', // Facebook doesn't provide it
       password: '', // Use empty or a random placeholder
       image: avatarUrl,
-      role:'Sender'
+      role:'USER'
     },
   });
 }
