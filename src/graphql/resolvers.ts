@@ -128,7 +128,7 @@ export const resolvers = {
       throw new Error('User not found');
     }
    
-    const isValid = await comparePassword(password, user.passwordHash || '');
+    const isValid = await comparePassword(password, user.password || '');
 
     if (!isValid) {
       throw new Error('Invalid credentials');
@@ -138,11 +138,11 @@ export const resolvers = {
     // Use JOSE to create encrypted token (JWE)
     const token = await new EncryptJWT({
       userId: user.id,
-      phoneNumber: user.phoneNumber,
+      phone: user.phone,
       email: user.email,
-      name: user.name,
+      name: user.firstName,
       role:user.role,
-      image:user.image
+      image:user.avatar
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
@@ -178,8 +178,8 @@ if (!user) {
     data: {
       name: fbUser.name,
       email: fbUser.email,
-      phoneNumber: '', // Facebook doesn't provide it
-      passwordHash: '', // Use empty or a random placeholder
+      phone: '', // Facebook doesn't provide it
+      password: '', // Use empty or a random placeholder
       image: avatarUrl,
       role:'Sender'
     },
@@ -192,9 +192,9 @@ if (!user) {
     const token = await new EncryptJWT({
       userId: user.id,
       email: user.email,
-      name: user.name,
+      name: user.firstName,
       role:user.role,
-      image:user.image
+      image:user.avatar
     })
       .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
       .setIssuedAt()
