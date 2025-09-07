@@ -180,7 +180,7 @@ if (!user) {
       email: fbUser.email,
       phone: '', // Facebook doesn't provide it
       password: '', // Use empty or a random placeholder
-      image: avatarUrl,
+      avatar: avatarUrl,
       role:'USER'
     },
   });
