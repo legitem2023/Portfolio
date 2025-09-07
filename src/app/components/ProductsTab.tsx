@@ -83,7 +83,7 @@ const ProductsTab: React.FC = () => {
 
   const products = data?.products?.items || [];
   const hasMore = data?.products?.hasMore || false;
-
+console.log(products);
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
