@@ -75,7 +75,7 @@ const DeluxeNavTabs: React.FC = () => {
                 <Gift className="text-gold" size={24} />
               </div>
               <div>
-                <h4 className="font-medium text-white">Valentine's Collection</h4>
+                <h4 className="font-medium text-white">Valentines Collection</h4>
                 <p className="text-sm text-gold">Buy one, get one 50% off</p>
               </div>
             </div>
