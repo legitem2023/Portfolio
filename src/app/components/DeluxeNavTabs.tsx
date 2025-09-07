@@ -180,7 +180,7 @@ const DeluxeNavTabs: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center px-5 py-3 text-md font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
+            className={`flex items-center px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
               activeTab === tab.id
                 ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
                 : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
