@@ -40,7 +40,6 @@ export default function LuxurySignup() {
     // Handle signup logic here
     console.log('Signing up with:', formData);
   };
-
   return (
     <>
       <Head>
