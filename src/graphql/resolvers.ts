@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
-
+import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { EncryptJWT, jwtDecrypt } from 'jose';
 const prisma = new PrismaClient();
 
 export const resolvers = {
@@ -118,6 +121,91 @@ export const resolvers = {
   },
 
   Mutation: {
+    login: async (_: any, args: any) => {
+    const { email, password } = args.input;
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+   
+    const isValid = await comparePassword(password, user.passwordHash || '');
+
+    if (!isValid) {
+      throw new Error('Invalid credentials');
+    }
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
+    // Use JOSE to create encrypted token (JWE)
+    const token = await new EncryptJWT({
+      userId: user.id,
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      name: user.name,
+      role:user.role,
+      image:user.image
+    })
+      .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .encrypt(secret);
+
+    return {
+      statusText: 'success',
+      token
+    };
+    },
+loginWithFacebook: async (_: any, args: any) => {
+    const { idToken } = args.input;
+
+// 1. Verify the token with Facebook Graph API
+const fbRes = await fetch(
+  `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${idToken}`
+);
+const fbUser = await fbRes.json();
+if (!fbUser || !fbUser.id) {
+  throw new Error('Invalid Facebook token');
+}
+
+const avatarUrl = fbUser.picture?.data?.url ?? '';
+
+// 2. Find or create user in your DB
+let user = await prisma.user.findUnique({
+  where: { email: fbUser.email },
+});
+
+if (!user) {
+  user = await prisma.user.create({
+    data: {
+      name: fbUser.name,
+      email: fbUser.email,
+      phoneNumber: '', // Facebook doesn't provide it
+      passwordHash: '', // Use empty or a random placeholder
+      image: avatarUrl,
+      role:'Sender'
+    },
+  });
+}
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
+
+    // 3. Return encrypted JWT
+    const token = await new EncryptJWT({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      role:user.role,
+      image:user.image
+    })
+      .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .encrypt(secret);
+
+    return {
+      statusText: 'success',
+      token
+    };
+    },
     createUser: async (
       _: any,
       { email, password, firstName, lastName }: any
