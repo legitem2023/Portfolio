@@ -133,7 +133,7 @@ const handleCategorySubmit = (e: React.FormEvent) => {
       // ... other cases
     }
   };
-
+if(categoryLoading) return "Category Loading...";
   return (
     <div className="min-h-screen bg-gray-100">
       <Head>
