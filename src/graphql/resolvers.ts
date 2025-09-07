@@ -177,6 +177,7 @@ if (!user) {
   user = await prisma.user.create({
     data: {
       firstName: fbUser.name,
+      lastName:'',
       email: fbUser.email,
       phone: '', // Facebook doesn't provide it
       password: '', // Use empty or a random placeholder
