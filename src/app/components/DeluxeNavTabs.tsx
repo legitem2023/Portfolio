@@ -1,5 +1,4 @@
 'use client';
-
 import React, { useState } from 'react';
 import {
   Home,
@@ -8,10 +7,10 @@ import {
   Star,
   Gift,
   Shirt,
-  Briefcase, // Replaced Handbag
+  Briefcase,
   Footprints,
   Gem,
-  Heart, // Replaced Lipstick
+  Heart,
   House,
   Smartphone,
   Sparkles,
@@ -19,7 +18,6 @@ import {
   ShoppingCart,
   Tags,
 } from 'lucide-react';
-
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
 import CartTab from './CartTab';
@@ -59,10 +57,7 @@ const DeluxeNavTabs: React.FC = () => {
             <h4 className="font-bold text-lg">Flash Sale</h4>
             <p className="text-sm">Ends in: 02:45:33</p>
             <div className="w-full bg-white bg-opacity-30 rounded-full h-2 mt-2">
-              <div
-                className="bg-amber-400 h-2 rounded-full"
-                style={{ width: '30%' }}
-              ></div>
+              <div className="bg-amber-400 h-2 rounded-full" style={{ width: '30%' }}></div>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -96,20 +91,8 @@ const DeluxeNavTabs: React.FC = () => {
         <div className="p-6 bg-white rounded-lg shadow-lg">
           <h3 className="text-xl font-semibold mb-4">Featured Brands</h3>
           <div className="flex flex-wrap gap-4">
-            {[
-              'Gucci',
-              'Prada',
-              'Hermès',
-              'Tiffany',
-              'Rolex',
-              'Dior',
-              'Chanel',
-              'Louis Vuitton',
-            ].map((brand) => (
-              <div
-                key={brand}
-                className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"
-              >
+            {['Gucci', 'Prada', 'Hermès', 'Tiffany', 'Rolex', 'Dior', 'Chanel', 'Louis Vuitton'].map((brand) => (
+              <div key={brand} className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
                 <div className="font-medium mb-2">{brand}</div>
                 <div className="text-xs text-gray-500">Exclusive collection</div>
               </div>
@@ -131,36 +114,28 @@ const DeluxeNavTabs: React.FC = () => {
                 <Gift size={24} className="text-amber-600" />
               </div>
               <h4 className="font-semibold mb-2">Gift Wrapping</h4>
-              <p className="text-sm text-gray-600">
-                Elegant gift wrapping with personalized message.
-              </p>
+              <p className="text-sm text-gray-600">Elegant gift wrapping with personalized message.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
               <div className="mb-3">
                 <ShoppingBag size={24} className="text-blue-600" />
               </div>
               <h4 className="font-semibold mb-2">Express Delivery</h4>
-              <p className="text-sm text-gray-600">
-                Next-day delivery available for all orders.
-              </p>
+              <p className="text-sm text-gray-600">Next-day delivery available for all orders.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
               <div className="mb-3">
                 <Target size={24} className="text-green-600" />
               </div>
               <h4 className="font-semibold mb-2">Easy Returns</h4>
-              <p className="text-sm text-gray-600">
-                30-day return policy for all items.
-              </p>
+              <p className="text-sm text-gray-600">30-day return policy for all items.</p>
             </div>
             <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
               <div className="mb-3">
                 <Star size={24} className="text-purple-600" />
               </div>
               <h4 className="font-semibold mb-2">VIP Membership</h4>
-              <p className="text-sm text-gray-600">
-                Exclusive benefits and early access to sales.
-              </p>
+              <p className="text-sm text-gray-600">Exclusive benefits and early access to sales.</p>
             </div>
           </div>
         </div>
@@ -180,14 +155,13 @@ const DeluxeNavTabs: React.FC = () => {
     },
   ];
 
-  // If you're using getCategoryIcon in ProductsTab, you might need to update it there too
   function getCategoryIcon(category: string): React.ReactNode {
     const icons: Record<string, React.ReactNode> = {
       Clothing: <Shirt size={16} />,
-      Accessories: <Briefcase size={16} />, // Updated from Handbag
+      Accessories: <Briefcase size={16} />,
       Footwear: <Footprints size={16} />,
       Jewelry: <Gem size={16} />,
-      Beauty: <Heart size={16} />, // Updated from Lipstick
+      Beauty: <Heart size={16} />,
       Home: <House size={16} />,
       Electronics: <Smartphone size={16} />,
       Gifts: <Gift size={16} />,
@@ -197,16 +171,16 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto font-sans">
-      {/* Tab Navigation */}
       <div className="flex justify-center overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={flex items-center px-5 py-3 text-md font-large whitespace-nowrap transition-all duration-300 border-b-4 ${activeTab === tab.id
-              ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
-              : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
-            }}
+            className={`flex items-center px-5 py-3 text-md font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
+              activeTab === tab.id
+                ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
+                : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
+            }`}
           >
             <span>{tab.icon}</span>
           </button>
