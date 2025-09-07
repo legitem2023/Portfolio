@@ -7,8 +7,8 @@ export const typeDefs = gql`
   # ================= Enums =================
   enum Role {
     ADMIN
-    CUSTOMER
-    SUPPORT
+    MANAGER
+    USER
   }
 
   enum AddressType {
