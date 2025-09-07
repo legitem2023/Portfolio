@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { comparePassword, encryptPassword, generateTrackingNumber } from '../script/script.js';
+import { comparePassword, encryptPassword, generateTrackingNumber } from '../../utils/script';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { EncryptJWT, jwtDecrypt } from 'jose';
