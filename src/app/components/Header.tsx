@@ -16,7 +16,7 @@ const Header: React.FC = () => {
             alt="Logo"
             height={80}
             width={160}
-            className="h-10 w-20 mx-auto"
+            className="h-15 w-25 mx-auto"
           />
         </div>
       </div>
