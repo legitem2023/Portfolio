@@ -86,7 +86,9 @@ export const resolvers = {
             dimensions:true,
             createdAt:true,
             updatedAt:true,
-            description:true
+            description:true,
+            tags:true,
+            sku:true
             // Skip heavy fields like description unless needed
           },
         });
