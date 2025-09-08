@@ -17,7 +17,7 @@ const EcommercePage: React.FC = () => {
       <div className="text-center p-4">
         
         <Image
-              src={`https://new-client-legitem.vercel.app/image/Crowd.svg`}
+              src={`/Dlogo.svg`}
               alt="home1"
               height="80"
               width="160"
