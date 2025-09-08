@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 const Header: React.FC = () => {
   return (
-    <header className="relative bg-gray-900 overflow-hidden">
+    <header className="relative bg-[url(`/Circuit.svg`)] bg-fill overflow-hidden">
       {/* Circuit Board Background */}
       <div className="absolute inset-0 z-0 opacity-40">
         {/* Base PCB with green substrate */}
