@@ -5,7 +5,7 @@ import Image from 'next/image';
 
 const Header: React.FC = () => {
   return (
-    <header className="relative bg-[url(/Circuit.svg)] bg-fill overflow-hidden">
+    <header className="relative bg-[url('/Circuit.svg')] bg-fill overflow-hidden">
 
 
       {/* Content */}
