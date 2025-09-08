@@ -84,7 +84,6 @@ export const resolvers = {
             brand:true,
             weight:true,
             dimensions:true,
-            isActive:true,
             createdAt,
             updatedAt,
             description
