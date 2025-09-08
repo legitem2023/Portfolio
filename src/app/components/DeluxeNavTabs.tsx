@@ -14,7 +14,7 @@ import {
   House,
   Smartphone,
   Sparkles,
-  MessageCircle,
+  MessageSquareText,
   ShoppingCart,
   Tags,
 } from 'lucide-react';
@@ -107,7 +107,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 'Messages',
       label: 'Messages',
-      icon: <MessageCircle size={18} />,
+      icon: <MessageSquareText size={18} />,
       content: <MessagesTab />,
     },
     {
