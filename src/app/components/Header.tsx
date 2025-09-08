@@ -5,11 +5,11 @@ import Image from 'next/image';
 
 const Header: React.FC = () => {
   return (
-    <header className="relative bg-[url(/Circuit.svg)] bg-fixed bg-center overflow-hidden">
+    <header className="relative overflow-hidden">
 
 
       {/* Content */}
-      <div className="relative z-10 text-center p-8">
+      <div className="relative z-10 text-center p-4">
         <div className="inline-block">
           <Image
             src="/Dlogo.svg"
