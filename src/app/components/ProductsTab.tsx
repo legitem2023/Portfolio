@@ -90,7 +90,7 @@ console.log(products);
         <input 
           type="text" 
           placeholder="Search..." 
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm w-64"
+          className="border border-gray-300 rounded-md px-3 py-2 text-sm w-64 sm:w-full"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
