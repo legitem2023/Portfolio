@@ -9,14 +9,14 @@ const Header: React.FC = () => {
 
 
       {/* Content */}
-      <div className="relative z-10 text-center p-4">
+      <div className="relative z-10 text-center p-2">
         <div className="inline-block">
           <Image
             src="/Dlogo.svg"
             alt="Logo"
             height={80}
             width={160}
-            className="h-20 w-40 mx-auto"
+            className="h-10 w-20 mx-auto"
           />
         </div>
       </div>
