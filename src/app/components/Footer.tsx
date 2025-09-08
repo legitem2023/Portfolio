@@ -15,9 +15,7 @@ const Footer = () => {
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
-            <h3 className="text-xl font-bold mb-4">LUXE</h3>
-            <p className="text-gray-400 mb-4">Elevating your style with premium quality and exceptional design.</p>
-            <div className="flex space-x-4">
+<div className="flex space-x-4">
               <a href="#" className="text-indigo-600 hover:text-white">
                 <Facebook size={20} />
               </a>
