@@ -81,6 +81,13 @@ export const resolvers = {
             featured: true,
             isActive: true,
             stock: true,
+            brand:true,
+            weight:true,
+            dimensions:true,
+            isActive:true,
+            createdAt,
+            updatedAt,
+            description
             // Skip heavy fields like description unless needed
           },
         });
