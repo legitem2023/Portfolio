@@ -105,46 +105,6 @@ const DeluxeNavTabs: React.FC = () => {
       ),
     },
     {
-      id: 'services',
-      label: 'Services',
-      icon: <Gift size={18} />,
-      content: (
-        <div className="p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Premium Services</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-3">
-                <Gift size={24} className="text-amber-600" />
-              </div>
-              <h4 className="font-semibold mb-2">Gift Wrapping</h4>
-              <p className="text-sm text-gray-600">Elegant gift wrapping with personalized message.</p>
-            </div>
-            <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-3">
-                <ShoppingBag size={24} className="text-blue-600" />
-              </div>
-              <h4 className="font-semibold mb-2">Express Delivery</h4>
-              <p className="text-sm text-gray-600">Next-day delivery available for all orders.</p>
-            </div>
-            <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-3">
-                <Target size={24} className="text-green-600" />
-              </div>
-              <h4 className="font-semibold mb-2">Easy Returns</h4>
-              <p className="text-sm text-gray-600">30-day return policy for all items.</p>
-            </div>
-            <div className="bg-gradient-to-br from-gray-50 to-white p-5 rounded-xl border border-gray-200 shadow-sm">
-              <div className="mb-3">
-                <Star size={24} className="text-purple-600" />
-              </div>
-              <h4 className="font-semibold mb-2">VIP Membership</h4>
-              <p className="text-sm text-gray-600">Exclusive benefits and early access to sales.</p>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
       id: 'Messages',
       label: 'Messages',
       icon: <MessageCircle size={18} />,
