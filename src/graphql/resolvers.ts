@@ -84,9 +84,9 @@ export const resolvers = {
             brand:true,
             weight:true,
             dimensions:true,
-            createdAt,
-            updatedAt,
-            description
+            createdAt:true,
+            updatedAt:true,
+            description:true
             // Skip heavy fields like description unless needed
           },
         });
