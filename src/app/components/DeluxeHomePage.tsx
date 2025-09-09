@@ -2,6 +2,7 @@
 "use client";
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
 import { useQuery } from '@apollo/client';
+import { Product, Category, NewProduct, NewCategory } from './Management/types/types';
 
 import React, { useState,useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -32,7 +33,7 @@ import {
 
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
 useEffect(() => {
