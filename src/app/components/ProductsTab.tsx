@@ -34,7 +34,7 @@ const ProductsTab: React.FC = () => {
     }
     
   }, [categoryData]);
-
+console.log(categoryFilter,"****");
   
   // Debounce search input
   useEffect(() => {
