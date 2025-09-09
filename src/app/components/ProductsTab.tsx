@@ -53,7 +53,7 @@ const ProductsTab: React.FC = () => {
     search: debouncedSearch,
     cursor: '',
     limit: 12,
-    category: categoryFilter, // Empty string becomes undefined
+    category: categoryFilter || undefined, // Empty string becomes undefined
     sortBy: sortBy.replace('Sort by: ', '')
   };
 
