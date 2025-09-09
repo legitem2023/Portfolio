@@ -103,15 +103,15 @@ console.log(products);
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
           >
-            <option>All Categories</option>
-            <option>Clothing</option>
-            <option>Accessories</option>
-            <option>Footwear</option>
-            <option>Jewelry</option>
-            <option>Beauty</option>
-            <option>Home</option>
-            <option>Electronics</option>
-            <option>Gifts</option>
+            <option value="All Categories">All Categories</option>
+            <option value="Clothing">Clothing</option>
+            <option value="Accessories">Accessories</option>
+            <option value="Footwear">Footwear</option>
+            <option value="Jewelry">Jewelry</option>
+            <option value="Beauty">Beauty</option>
+            <option value="Home">Home</option>
+            <option value="Electronics">Electronics</option>
+            <option value="Gifts">Gifts</option>
           </select>
           
           <select 
