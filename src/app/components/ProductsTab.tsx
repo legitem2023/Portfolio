@@ -1,9 +1,9 @@
 'use client';
 import { useQuery } from '@apollo/client';
-import { GETPRODUCTS } from './graphql/query';
+import { GETPRODUCTS, MANAGEMENTPRODUCTSGET, CATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
-
+import { Product, Category, NewProduct, NewCategory } from '../Management/types/types';
 interface ProductsResponse {
   products: {
     items: any[];
@@ -18,7 +18,27 @@ const ProductsTab: React.FC = () => {
   const [sortBy, setSortBy] = useState('Sort by: Featured');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+  const [categories, setCategories] = useState<Category[]>([]);
 
+  useEffect(() => {
+    if (categoryData?.categories) {
+      const categoriesData = categoryData.categories.map((data: any) => ({
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        productCount: 0, // Changed from empty string to number
+        status: data.isActive ? "Active" : "Inactive" // Convert boolean to string
+      }));
+      setCategories(categoriesData);
+    }
+
+   
+   }
+    
+  }, [categoryData]);
+
+  
   // Debounce search input
   useEffect(() => {
     const timerId = setTimeout(() => {
@@ -98,21 +118,16 @@ console.log(products);
       
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-2">
-          <select 
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="All Categories">All Categories</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Accessories">Accessories</option>
-            <option value="Footwear">Footwear</option>
-            <option value="Jewelry">Jewelry</option>
-            <option value="Beauty">Beauty</option>
-            <option value="Home">Home</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Gifts">Gifts</option>
-          </select>
+          <select
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          value={newCategory.parentId}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+        >
+          <option value="">All Category</option>
+          {categories.map(category => (
+            <option key={category.id} value={category.id}>{category.name}</option>
+          ))}
+        </select>
           
           <select 
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
