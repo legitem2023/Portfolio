@@ -2,7 +2,7 @@
 "use client";
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
 import { useQuery } from '@apollo/client';
-import { Product, Category, NewProduct, NewCategory } from '../Management/types/types';
+import { Category } from './types/types';
 
 import React, { useState,useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
