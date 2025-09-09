@@ -117,7 +117,7 @@ console.log(products);
         <div className="flex space-x-2">
           <select
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={newCategory.parentId}
+          value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
         >
           <option value="">All Category</option>
