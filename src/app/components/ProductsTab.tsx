@@ -4,7 +4,7 @@ import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, Category, NewProduct, NewCategory } from '../Management/types/types';
-
+import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
 interface ProductsResponse {
   products: {
     items: any[];
@@ -92,13 +92,7 @@ const ProductsTab: React.FC = () => {
     }
   }, [data, fetchMore]);
 
-  if (loading && isInitialLoad) return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-amber-500"></div>
-      </div>
-    </div>
-  );
+
 
   if (error) return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
@@ -154,7 +148,7 @@ const ProductsTab: React.FC = () => {
         {products.length} {products.length === 1 ? 'product' : 'products'} shown  
       </div>  
       
-      {products.length > 0 ? (  
+      {loading && isInitialLoad?(<ProductThumbnailsShimmer count={5}/>):products.length > 0 ? (  
         <>  
           <ProductThumbnails products={products} />  
             
