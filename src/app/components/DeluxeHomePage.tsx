@@ -36,22 +36,24 @@ const DeluxeHomePage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+
 useEffect(() => {
-    if (categoryData?.categories) {
-      const categoriesData = categoryData.categories.map((data: any) => ({
-        id: data.id,
-        name: data.name,
-        image: data.image!==""|| data.image!==null?data.image:'/NoImage.svg',
-        items:data.items // Convert boolean to string
-      }));
-      setCategories(categoriesData);
-    }},[categoryData]);
+  if (categoryData?.categories) {
+    const categoriesData = categoryData.categories.map((data: any) => ({
+      id: data.id,
+      name: data.name,
+      image: data.image ? data.image : '/NoImage.svg',
+      items: data.items,
+    }));
+    setCategories(categoriesData);
+  }
+}, [categoryData]);
+  
   // Hero carousel data
   const heroSlides = [
     {
       id: 1,
-      title: "Elevate Your Style",
-      subtitle: "Discover the latest collection of luxury fashion",
+      title: "Elevbtitle: "Discover the latest collection of luxury fashion",
       image: "/api/placeholder/1200/600",
       cta: "Shop Now",
       bgColor: "bg-gradient-to-r from-purple-900 to-indigo-800"
