@@ -41,7 +41,7 @@ export const resolvers = {
         }
 
         if (category && category !== "All Categories") {
-          where.category = category;
+          where.categoryId = category;
         }
 
         // Determine sorting - use indexed fields for better performance
