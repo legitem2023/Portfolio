@@ -41,7 +41,7 @@ useEffect(() => {
       const categoriesData = categoryData.categories.map((data: any) => ({
         id: data.id,
         name: data.name,
-        image: data.image,
+        image: data.image===""|| data.image===null?data.image:'/NoImage.svg',
         items:data.items // Convert boolean to string
       }));
       setCategories(categoriesData);
