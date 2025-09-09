@@ -271,7 +271,7 @@ useEffect(() => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuredProducts.map((product) => (
+              {productLoading?(<CategoryShimmer count={3} />):products.map((product) => (
                 <div key={product.id} className="bg-white rounded-2xl shadow-md overflow-hidden group">
                   <div className="relative overflow-hidden">
                     <img 
