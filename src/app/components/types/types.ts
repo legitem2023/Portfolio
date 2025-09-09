@@ -12,6 +12,6 @@ export interface Product {
   price: number, 
   image: string,
   rating:number,
-  reviews:string,
+  reviews:number,
   isNew:boolean
 }
