@@ -32,9 +32,6 @@ const ProductsTab: React.FC = () => {
       }));
       setCategories(categoriesData);
     }
-
-   
-   }
     
   }, [categoryData]);
 
