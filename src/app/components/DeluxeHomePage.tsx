@@ -44,7 +44,7 @@ useEffect(() => {
         items:data.items // Convert boolean to string
       }));
       setCategories(categoriesData);
-    }
+    }},[categoryData]);
   // Hero carousel data
   const heroSlides = [
     {
