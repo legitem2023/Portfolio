@@ -1,10 +1,11 @@
 'use client';
-import { useQuery } from '@apollo/client';
+import { useQuery, NetworkStatus } from '@apollo/client';
 import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
-import { Product, Category, NewProduct, NewCategory } from '../Management/types/types';
+import { Product, Category } from '../Management/types/types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
+
 interface ProductsResponse {
   products: {
     items: any[];
@@ -18,8 +19,8 @@ const ProductsTab: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortBy, setSortBy] = useState('Sort by: Featured');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   
+  // Get categories
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -40,7 +41,6 @@ const ProductsTab: React.FC = () => {
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setIsInitialLoad(false);
     }, 500);
 
     return () => {  
@@ -48,26 +48,25 @@ const ProductsTab: React.FC = () => {
     };
   }, [searchTerm]);
 
-  // Fixed query variables - category is now properly handled
-  const queryVariables = {
+  // Memoize query variables to prevent unnecessary re-renders
+  const queryVariables = React.useMemo(() => ({
     search: debouncedSearch,
     cursor: '',
     limit: 12,
-    category: categoryFilter || undefined, // Empty string becomes undefined
+    category: categoryFilter || undefined,
     sortBy: sortBy.replace('Sort by: ', '')
-  };
+  }), [debouncedSearch, categoryFilter, sortBy]);
 
-  const { data, loading, error, fetchMore, refetch } = useQuery(GETPRODUCTS, {
+  // Use networkStatus to track loading states
+  const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery(GETPRODUCTS, {
     variables: queryVariables,
     notifyOnNetworkStatusChange: true,
   });
 
-  // Refetch when category filter changes
-  useEffect(() => {
-    if (!isInitialLoad) {
-      refetch();
-    }
-  }, [categoryFilter, refetch, isInitialLoad]);
+  // Check if we're currently refetching due to variable changes
+  const isRefetching = networkStatus === NetworkStatus.refetch;
+  // Check if we're fetching more products (pagination)
+  const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
   const handleLoadMore = useCallback(() => {
     if (data?.products?.hasMore) {
@@ -92,8 +91,6 @@ const ProductsTab: React.FC = () => {
     }
   }, [data, fetchMore]);
 
-
-
   if (error) return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="text-red-600 text-center py-8">
@@ -104,6 +101,9 @@ const ProductsTab: React.FC = () => {
 
   const products = data?.products?.items || [];
   const hasMore = data?.products?.hasMore || false;
+
+  // Show loading shimmer during initial load OR when filters are changing
+  const showLoadingShimmer = loading && !isFetchingMore;
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
@@ -124,7 +124,7 @@ const ProductsTab: React.FC = () => {
             value={categoryFilter}  
             onChange={(e) => setCategoryFilter(e.target.value)}  
           >  
-            <option value="undefined">All Categories</option>  
+            <option value="">All Categories</option>  
             {categories.map(category => (  
               <option key={category.id} value={category.id}>{category.name}</option>  
             ))}  
@@ -144,11 +144,13 @@ const ProductsTab: React.FC = () => {
         </div>  
       </div>  
       
-      <div className="text-sm text-gray-500">  
-        {products.length} {products.length === 1 ? 'product' : 'products'} shown  
+      <div className="text-sm text-gray-500 mb-4">  
+        {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
       </div>  
       
-      {loading && isInitialLoad?(<ProductThumbnailsShimmer count={5}/>):products.length > 0 ? (  
+      {showLoadingShimmer ? (
+        <ProductThumbnailsShimmer count={5}/>
+      ) : products.length > 0 ? (  
         <>  
           <ProductThumbnails products={products} />  
             
@@ -156,10 +158,10 @@ const ProductsTab: React.FC = () => {
             <div className="mt-8 flex justify-center">  
               <button   
                 onClick={handleLoadMore}  
-                disabled={loading}  
+                disabled={isFetchingMore}  
                 className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-6 rounded-md disabled:opacity-50"  
               >  
-                {loading ? 'Loading...' : 'Load More Products'}  
+                {isFetchingMore ? 'Loading...' : 'Load More Products'}  
               </button>  
             </div>  
           )}  
