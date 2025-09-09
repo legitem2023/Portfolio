@@ -3,7 +3,7 @@
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
 import { useQuery } from '@apollo/client';
 import { Category } from './types/types';
-
+import CategoryShimmer from './CategoryShimmer';
 import React, { useState,useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
@@ -144,8 +144,7 @@ useEffect(() => {
       rating: 4
     }
   ];
-  if (categoryLoading) return <div>Loading...</div>;
-
+  
   return (
     <div className="min-h-screen bg-white">
       {/* Mobile Menu */}
@@ -225,7 +224,7 @@ useEffect(() => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {categories.map((category) => (
+              {categoryLoading?(<CategoryShimmer count={3} />):categories.map((category) => (
                 <div key={category.id} className="group relative overflow-hidden rounded-2xl shadow-lg">
                   <img 
                     src={category.image} 
