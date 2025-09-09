@@ -34,8 +34,10 @@ import {
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+  const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS);
 
 useEffect(() => {
   if (categoryData?.categories) {
@@ -46,6 +48,19 @@ useEffect(() => {
       items: data.items,
     }));
     setCategories(categoriesData);
+  }
+  if (productData?.getProducts) {
+     const productsData = productData.getProducts.map((data:any)=> ({
+           id: 1, 
+           name: data.name,
+           originalPrice: data.price,
+           price: data.salePrice, 
+           image: data.avatar,
+           rating:0,
+           reviews:4,
+           isNew:false
+     }))
+   setProducts(productsData);
   }
 }, [categoryData]);
   
