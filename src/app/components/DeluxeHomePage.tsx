@@ -53,7 +53,8 @@ useEffect(() => {
   const heroSlides = [
     {
       id: 1,
-      title: "Elevbtitle: "Discover the latest collection of luxury fashion",
+      title: "Elevate",
+      subtitle: "Discover the latest collection of luxury fashion",
       image: "/api/placeholder/1200/600",
       cta: "Shop Now",
       bgColor: "bg-gradient-to-r from-purple-900 to-indigo-800"
