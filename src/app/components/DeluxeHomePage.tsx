@@ -1,5 +1,8 @@
 // components/DeluxeHomePage.tsx
-import React, { useState } from 'react';
+import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
+import { useQuery } from '@apollo/client';
+
+import React, { useState,useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -28,7 +31,19 @@ import {
 
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [categories, setCategories] = useState([]);
 
+  const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+useEffect(() => {
+    if (categoryData?.categories) {
+      const categoriesData = categoryData.categories.map((data: any) => ({
+        id: data.id,
+        name: data.name,
+        image: data.image,
+        items:data.items // Convert boolean to string
+      }));
+      setCategories(categoriesData);
+    }
   // Hero carousel data
   const heroSlides = [
     {
@@ -57,33 +72,6 @@ const DeluxeHomePage: React.FC = () => {
     }
   ];
 
-  // Featured categories
-  const categories = [
-    {
-      id: 1,
-      name: "Luxury Handbags",
-      image: "/api/placeholder/400/400",
-      items: "24 products"
-    },
-    {
-      id: 2,
-      name: "Designer Apparel",
-      image: "/api/placeholder/400/400",
-      items: "32 products"
-    },
-    {
-      id: 3,
-      name: "Premium Watches",
-      image: "/api/placeholder/400/400",
-      items: "18 products"
-    },
-    {
-      id: 4,
-      name: "Fine Jewelry",
-      image: "/api/placeholder/400/400",
-      items: "27 products"
-    }
-  ];
 
   // Featured products
   const featuredProducts = [
@@ -154,6 +142,7 @@ const DeluxeHomePage: React.FC = () => {
       rating: 4
     }
   ];
+  if (categoryLoading) return <div>Loading...</div>;
 
   return (
     <div className="min-h-screen bg-white">
