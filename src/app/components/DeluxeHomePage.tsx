@@ -1,4 +1,5 @@
 // components/DeluxeHomePage.tsx
+"use client";
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
 import { useQuery } from '@apollo/client';
 
