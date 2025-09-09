@@ -14,6 +14,7 @@ export interface Product {
 export interface Category {
   id: number;
   name: string;
+  image:string;
   description?: string;
   productCount: number;
   status: 'Active' | 'Inactive';
