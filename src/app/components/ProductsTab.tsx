@@ -53,7 +53,7 @@ const ProductsTab: React.FC = () => {
     search: debouncedSearch,
     cursor: '',
     limit: 12,
-    category: categoryFilter || undefined, // Empty string becomes undefined
+    category: categoryFilter, // Empty string becomes undefined
     sortBy: sortBy.replace('Sort by: ', '')
   };
 
@@ -130,7 +130,7 @@ const ProductsTab: React.FC = () => {
             value={categoryFilter}  
             onChange={(e) => setCategoryFilter(e.target.value)}  
           >  
-            <option value="">All Categories</option>  
+            <option value="undefined">All Categories</option>  
             {categories.map(category => (  
               <option key={category.id} value={category.id}>{category.name}</option>  
             ))}  
