@@ -1,6 +1,7 @@
 // components/ProductThumbnails.tsx
 import React, { useState } from 'react';
 import QuickViewModal from './QuickViewModal';
+import Image from 'next/image';
 
 export interface Product {
   id: number;
@@ -61,8 +62,10 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
             
             {/* Product Image */}
             <div className="relative overflow-hidden h-48 bg-gray-100">
-              <img 
-                src={product.image} 
+              <Image
+                height="100"
+                width="100"
+                src={product.image || '/NoImage.svg} 
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
