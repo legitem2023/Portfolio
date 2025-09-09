@@ -40,8 +40,8 @@ query GetCategories {
 }
 `
 export const GETPRODUCTS = gql`
-query GetProducts($search: String, $cursor: String, $limit: Int) {
-   products(search: $search, cursor: $cursor, limit: $limit) {
+query GetProducts($search: String, $cursor: String, $limit: Int,$category:String,$sortBy:String) {
+   products(search: $search, cursor: $cursor, limit: $limit, category: $category, sortBy: $sortBy) {
      items { id
              name
              description
