@@ -1,6 +1,6 @@
 'use client';
 import { useQuery } from '@apollo/client';
-import { GETPRODUCTS, CATEGORY } from './graphql/query';
+import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, Category, NewProduct, NewCategory } from '../Management/types/types';
