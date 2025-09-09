@@ -39,7 +39,7 @@ export const resolvers = {
             { tags: { has: search } },
           ];
         }
-
+       console.log(search,cursor,limit,category, sortBy);
         if (category && category !== "All Categories") {
           where.categoryId = category;
         }
