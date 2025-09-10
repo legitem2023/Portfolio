@@ -26,6 +26,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const [selectedColor, setSelectedColor] = useState('');
   const [selectedSize, setSelectedSize] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Check if device is mobile
   useEffect(() => {
@@ -41,8 +43,21 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     };
   }, []);
 
+  // Handle animation states
   useEffect(() => {
     if (isOpen) {
+      setIsVisible(true);
+      // Small delay to allow CSS transitions to work properly
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+      // Wait for animation to complete before hiding
+      setTimeout(() => setIsVisible(false), 300);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isVisible) {
       document.body.style.overflow = 'hidden';
       // Reset selections when product changes
       setSelectedImage(0);
@@ -56,7 +71,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, product]);
+  }, [isVisible, product]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -65,14 +80,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       }
     };
 
-    if (isOpen) {
+    if (isVisible) {
       window.addEventListener('keydown', handleEscape);
     }
 
     return () => {
       window.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isVisible, onClose]);
 
   const handleOverlayClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -83,14 +98,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-  if (!isOpen || !product) return null;
+  if (!isVisible && !isOpen) return null;
 
   // Generate additional images for the gallery
   const additionalImages = [
-    product.image,
-    `https://picsum.photos/400/500?random=${product.id + 100}`,
-    `https://picsum.photos/400/500?random=${product.id + 200}`,
-    `https://picsum.photos/400/500?random=${product.id + 300}`,
+    product?.image || 'https://picsum.photos/400/500',
+    `https://picsum.photos/400/500?random=${(product?.id || 1) + 100}`,
+    `https://picsum.photos/400/500?random=${(product?.id || 1) + 200}`,
+    `https://picsum.photos/400/500?random=${(product?.id || 1) + 300}`,
   ];
 
   // Sample sizes
@@ -98,15 +113,20 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm"
+      className={`fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
+        isAnimating ? 'opacity-100' : 'opacity-0'
+      }`}
       onClick={handleOverlayClick}
     >
       <div 
         className={`
           relative bg-white w-full md:max-w-4xl md:rounded-2xl md:max-h-[90vh] 
           h-[80vh] overflow-y-auto no-scrollbar rounded-t-2xl
-          transition-transform duration-3000 ease-out
-          ${isMobile ? (isOpen ? 'translate-y-0' : 'translate-y-full') : ''}
+          transition-transform duration-300 ease-out
+          ${isMobile 
+            ? (isAnimating ? 'translate-y-0' : 'translate-y-full') 
+            : (isAnimating ? 'scale-100' : 'scale-95 opacity-0')
+          }
         `}
       >
         {/* Drag handle for mobile */}
@@ -132,12 +152,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             <div className="relative h-60 md:h-80 bg-gray-100 rounded-lg overflow-hidden">
               <img
                 src={additionalImages[selectedImage]}
-                alt={product.name}
+                alt={product?.name || 'Product'}
                 className="w-full h-full object-cover"
               />
               
               {/* Sale/New Badge */}
-              {(product.onSale || product.isNew) && (
+              {(product?.onSale || product?.isNew) && (
                 <div className="absolute top-3 left-3 flex space-x-2">
                   {product.onSale && (
                     <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
@@ -159,7 +179,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 >
                   <img
                     src={image}
-                    alt={`${product.name} view ${index + 1}`}
+                    alt={`${product?.name || 'Product'} view ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </button>
@@ -169,7 +189,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
           {/* Product Details */}
           <div className="py-2 md:py-4">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{product.name}</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{product?.name || 'Product Name'}</h2>
             
             {/* Rating */}
             <div className="flex items-center mb-3 md:mb-4">
@@ -177,7 +197,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 {[1, 2, 3, 4, 5].map((star) => (
                   <svg
                     key={star}
-                    className={`w-4 h-4 md:w-5 md:h-5 ${star <= Math.round(product.rating) ? 'text-amber-400' : 'text-gray-300'}`}
+                    className={`w-4 h-4 md:w-5 md:h-5 ${star <= Math.round(product?.rating || 0) ? 'text-amber-400' : 'text-gray-300'}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -185,17 +205,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                   </svg>
                 ))}
               </div>
-              <span className="ml-2 text-xs md:text-sm text-gray-600">({product.reviewCount} reviews)</span>
+              <span className="ml-2 text-xs md:text-sm text-gray-600">({product?.reviewCount || 0} reviews)</span>
             </div>
 
             {/* Price */}
             <div className="mb-4 md:mb-6">
               <div className="flex items-center space-x-2">
-                <span className="text-xl md:text-2xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
-                {product.originalPrice && product.originalPrice > product.price && (
+                <span className="text-xl md:text-2xl font-bold text-gray-900">${product?.price.toFixed(2) || '0.00'}</span>
+                {product?.originalPrice && product.originalPrice > (product.price || 0) && (
                   <span className="text-lg text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
                 )}
-                {product.onSale && (
+                {product?.onSale && (
                   <span className="px-2 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-md">
                     Save ${(product.originalPrice! - product.price).toFixed(2)}
                   </span>
@@ -209,7 +229,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             </p>
 
             {/* Color Selection */}
-            {product.colors && product.colors.length > 0 && (
+            {product?.colors && product.colors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Color: {selectedColor}</h3>
                 <div className="flex space-x-2">
