@@ -21,7 +21,7 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="relative overflow-hidden">
+    <header className="relative">
       {/* Content */}
       <div className="relative z-10 flex items-center justify-between p-2">
         <div>
