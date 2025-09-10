@@ -65,7 +65,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               <Image
                 height="100"
                 width="100"
-                src={product.image || '/NoImage.svg'} 
+                src={product.image || '/NoImage.png'} 
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
