@@ -95,7 +95,7 @@ const Header: React.FC = () => {
       </div>
 
       {/* Glassmorphism Stats Bar */}
-      <div className="relative z-0 -mt-4 mx-4">
+      {/*<div className="relative z-0 -mt-4 mx-4">
         <div className="bg-white bg-opacity-70 backdrop-blur-lg rounded-lg shadow-lg p-3 flex flex-wrap justify-center md:justify-between items-center space-x-4 md:space-x-6 text-sm text-gray-700 border border-white border-opacity-50">
           <div className="flex items-center">
             <div className="bg-blue-100 bg-opacity-50 p-2 rounded-full mr-2">
@@ -143,7 +143,7 @@ const Header: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div>*/}
     </header>
   );
 };
