@@ -142,7 +142,7 @@ useEffect(() => {
       name: "Emma Johnson",
       role: "Fashion Influencer",
       comment: "The quality of their products is exceptional. Every piece feels luxurious and lasts for years.",
-      avatar: "/api/placeholder/80/80",
+      avatar: "/NoImage.webp",
       rating: 5
     },
     {
@@ -150,7 +150,7 @@ useEffect(() => {
       name: "Michael Reynolds",
       role: "Lifestyle Blogger",
       comment: "Their customer service is as premium as their products. Always a pleasure to shop here.",
-      avatar: "/api/placeholder/80/80",
+      avatar: "/NoImage.webp",
       rating: 5
     },
     {
@@ -158,7 +158,7 @@ useEffect(() => {
       name: "Sophia Williams",
       role: "Interior Designer",
       comment: "I always find unique, high-quality pieces that become conversation starters.",
-      avatar: "/api/placeholder/80/80",
+      avatar: "/NoImage.webp",
       rating: 4
     }
   ];
