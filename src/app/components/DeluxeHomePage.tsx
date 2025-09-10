@@ -44,7 +44,7 @@ useEffect(() => {
     const categoriesData = categoryData.categories.map((data: any) => ({
       id: data.id,
       name: data.name,
-      image: data.image ? data.image : '/NoImage.svg',
+      image: data.image ? data.image : '/NoImage.webp',
       items: data.items,
     }));
     setCategories(categoriesData);
