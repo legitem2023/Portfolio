@@ -245,7 +245,7 @@ useEffect(() => {
               {categoryLoading?(<CategoryShimmer count={3} />):categories.map((category) => (
                 <div key={category.id} className="group relative overflow-hidden rounded-2xl shadow-lg">
                   <img 
-                    src={category.image} 
+                    src={category.image ? category.image : '/NoImage.webp'} 
                     alt={category.name}
                     className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
                   />
