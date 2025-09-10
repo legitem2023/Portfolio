@@ -93,47 +93,6 @@ useEffect(() => {
 ];
 
 
-  // Featured products
-  const featuredProducts = [
-    {
-      id: 1,
-      name: "Designer Leather Handbag",
-      price: 349.99,
-      originalPrice: 449.99,
-      image: "/api/placeholder/300/300",
-      rating: 4.8,
-      reviews: 142,
-      isNew: true
-    },
-    {
-      id: 2,
-      name: "Premium Silk Blouse",
-      price: 129.99,
-      image: "/api/placeholder/300/300",
-      rating: 4.5,
-      reviews: 87,
-      isNew: false
-    },
-    {
-      id: 3,
-      name: "Luxury Gold Watch",
-      price: 899.99,
-      originalPrice: 1099.99,
-      image: "/api/placeholder/300/300",
-      rating: 4.9,
-      reviews: 205,
-      isNew: false
-    },
-    {
-      id: 4,
-      name: "Diamond Stud Earrings",
-      price: 599.99,
-      image: "/api/placeholder/300/300",
-      rating: 4.7,
-      reviews: 93,
-      isNew: true
-    }
-  ];
 
   // Testimonials
   const testimonials = [
@@ -275,7 +234,7 @@ useEffect(() => {
                 <div key={product.id} className="bg-white rounded-2xl shadow-md overflow-hidden group">
                   <div className="relative overflow-hidden">
                     <img 
-                      src={product.image} 
+                      src={product.image || '/NoImage.webp'} 
                       alt={product.name}
                       className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
                     />
