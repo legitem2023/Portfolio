@@ -105,7 +105,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         className={`
           relative bg-white w-full md:max-w-4xl md:rounded-2xl md:max-h-[90vh] 
           h-[80vh] overflow-y-auto no-scrollbar rounded-t-2xl
-          transition-transform duration-300 ease-out
+          transition-transform duration-3000 ease-out
           ${isMobile ? (isOpen ? 'translate-y-0' : 'translate-y-full') : ''}
         `}
       >
