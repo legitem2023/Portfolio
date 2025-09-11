@@ -3,7 +3,8 @@
 import React from 'react';
 
 const CategoryShimmer: React.FC<{ count?: number }> = ({ count = 4 }) => {
-  return 
+  return (
+    <>
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="group relative overflow-hidden rounded-2xl shadow-lg bg-white">
           {/* Image placeholder */}
@@ -53,8 +54,8 @@ const CategoryShimmer: React.FC<{ count?: number }> = ({ count = 4 }) => {
           height: 100%;
         }
       `}</style>
-    
-}
+    </>
+  );
 };
 
 export default CategoryShimmer;
