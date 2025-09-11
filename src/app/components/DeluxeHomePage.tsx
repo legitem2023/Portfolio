@@ -62,7 +62,7 @@ useEffect(() => {
      }))
    setProducts(productsData);
   }
-}, [categoryData]);
+}, [categoryData,productData]);
   
   // Hero carousel data
   const heroSlides = [
