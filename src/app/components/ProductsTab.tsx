@@ -1,7 +1,7 @@
 'use client';
 import { useQuery, NetworkStatus } from '@apollo/client';
 import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, Category } from '../Management/types/types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
@@ -19,6 +19,8 @@ const ProductsTab: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortBy, setSortBy] = useState('Sort by: Featured');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const observer = useRef<IntersectionObserver | null>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   
   // Get categories
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
@@ -69,7 +71,7 @@ const ProductsTab: React.FC = () => {
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
   const handleLoadMore = useCallback(() => {
-    if (data?.products?.hasMore) {
+    if (data?.products?.hasMore && !isFetchingMore) {
       fetchMore({
         variables: {
           cursor: data.products.nextCursor,
@@ -89,7 +91,32 @@ const ProductsTab: React.FC = () => {
         },  
       });  
     }
-  }, [data, fetchMore]);
+  }, [data, fetchMore, isFetchingMore]);
+
+  // Infinite scroll setup
+  useEffect(() => {
+    if (isFetchingMore || !hasMore) return;
+
+    if (observer.current) {
+      observer.current.disconnect();
+    }
+
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        handleLoadMore();
+      }
+    });
+
+    if (sentinelRef.current) {
+      observer.current.observe(sentinelRef.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [handleLoadMore, isFetchingMore, hasMore]);
 
   if (error) return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
@@ -154,17 +181,14 @@ const ProductsTab: React.FC = () => {
         <>  
           <ProductThumbnails products={products} />  
             
-          {hasMore && (  
-            <div className="mt-8 flex justify-center">  
-              <button   
-                onClick={handleLoadMore}  
-                disabled={isFetchingMore}  
-                className="bg-amber-600 hover:bg-amber-700 text-white font-medium py-2 px-6 rounded-md disabled:opacity-50"  
-              >  
-                {isFetchingMore ? 'Loading...' : 'Load More Products'}  
-              </button>  
-            </div>  
-          )}  
+          {/* Sentinel element for infinite scroll */}
+          <div ref={sentinelRef} className="h-10" />
+          
+          {isFetchingMore && (
+            <div className="mt-8 flex justify-center">
+              <ProductThumbnailsShimmer count={3} />
+            </div>
+          )}
         </>  
       ) : (  
         <div className="text-center py-12 text-gray-500">  
