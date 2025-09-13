@@ -378,28 +378,6 @@ const DeluxeNavTabs: React.FC = () => {
     <div className="w-full max-w-6xl mx-auto font-sans z-10">
       {/* Tab Navigation with Slider */}
       <div className="relative flex items-center mb-1 bg-gradient-to-t from-violet-50 to-white z-20">
-        {/* Left Arrow */}
-        {showLeftArrow && (
-          <button
-            onClick={scrollLeftHandler}
-            className="absolute left-0 z-30 p-2 bg-white rounded-full shadow-md hover:bg-violet-50"
-            aria-label="Scroll left"
-          >
-            <ChevronLeft size={20} className="text-violet-600" />
-          </button>
-        )}
-
-        {/* Right Arrow */}
-        {showRightArrow && (
-          <button
-            onClick={scrollRightHandler}
-            className="absolute right-0 z-30 p-2 bg-white rounded-full shadow-md hover:bg-violet-50"
-            aria-label="Scroll right"
-          >
-            <ChevronRight size={20} className="text-violet-600" />
-          </button>
-        )}
-
         {/* Tabs Container */}
         <div
           ref={tabsContainerRef}
