@@ -93,7 +93,8 @@ const Header: React.FC = () => {
           )}
         </div>
       </div>
-
+       <div className="w-full m-2 bg-[rgba(0,0,0,0.5)] h-[45px]">
+       </div>
       {/* Glassmorphism Stats Bar */}
       {/*<div className="relative z-0 -mt-4 mx-4">
         <div className="bg-white bg-opacity-70 backdrop-blur-lg rounded-lg shadow-lg p-3 flex flex-wrap justify-center md:justify-between items-center space-x-4 md:space-x-6 text-sm text-gray-700 border border-white border-opacity-50">
