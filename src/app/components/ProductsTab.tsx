@@ -70,8 +70,11 @@ const ProductsTab: React.FC = () => {
   // Check if we're fetching more products (pagination)
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
+  const products = data?.products?.items || [];
+  const hasMore = data?.products?.hasMore || false;
+
   const handleLoadMore = useCallback(() => {
-    if (data?.products?.hasMore && !isFetchingMore) {
+    if (hasMore && !isFetchingMore) {
       fetchMore({
         variables: {
           cursor: data.products.nextCursor,
@@ -91,7 +94,7 @@ const ProductsTab: React.FC = () => {
         },  
       });  
     }
-  }, [data, fetchMore, isFetchingMore]);
+  }, [data, fetchMore, isFetchingMore, hasMore]);
 
   // Infinite scroll setup
   useEffect(() => {
@@ -125,9 +128,6 @@ const ProductsTab: React.FC = () => {
       </div>
     </div>
   );
-
-  const products = data?.products?.items || [];
-  const hasMore = data?.products?.hasMore || false;
 
   // Show loading shimmer during initial load OR when filters are changing
   const showLoadingShimmer = loading && !isFetchingMore;
