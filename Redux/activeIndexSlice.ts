@@ -6,7 +6,7 @@ interface ActiveIndexState {
 }
 
 const initialState: ActiveIndexState = {
-  value: 0,
+  value: 1,
 };
 
 export const activeIndexSlice = createSlice({
@@ -17,7 +17,7 @@ export const activeIndexSlice = createSlice({
       state.value = action.payload;
     },
     resetActiveIndex: (state) => {
-      state.value = 0;
+      state.value = 1;
     },
   },
 });
