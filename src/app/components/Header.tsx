@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-
+import VisitorCounter from './VisitorCounter';
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -86,8 +86,7 @@ const Header: React.FC = () => {
         </div>
 
       </div>
-        <div className="w-full max-w-[calc(100%-1rem)] mx-2 box-border rounded-md bg-[rgba(255,225,253,0.5)] h-[45px] shadow-sm">
-        </div>
+        <VisitorCounter/>
   
     </div>
   );
