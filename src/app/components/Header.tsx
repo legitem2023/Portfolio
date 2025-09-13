@@ -21,9 +21,9 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative bg-white bg-opacity-90 backdrop-blur-sm shadow-sm">
+    <div className="relative bg-white bg-opacity-90 backdrop-blur-sm shadow-sm p-2">
       {/* Main Header Content */}
-      <div className="relative z-10 flex items-center justify-between p-4 ">
+      <div className="relative z-10 flex items-center justify-between p-2">
         <div>
           <Image
             src="/Dlogo.svg"
@@ -86,7 +86,7 @@ const Header: React.FC = () => {
         </div>
 
       </div>
-        <div className="w-full box-border m-2 rounded-md bg-[rgba(255,255,255,0.5)] h-[45px] shadow-lg">
+        <div className="w-[100%] box-border m-2 rounded-md bg-[rgba(255,225,253,0.5)] h-[45px] shadow-sm">
         </div>
   
     </div>
