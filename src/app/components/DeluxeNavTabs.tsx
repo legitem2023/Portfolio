@@ -1,6 +1,8 @@
 'use client';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+
 import {
   Home,
   ShoppingBag,
@@ -32,7 +34,6 @@ interface Tab {
 }
 
 const DeluxeNavTabs: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('home');
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   const dispatch = useDispatch();
   const tabs: Tab[] = [
@@ -141,7 +142,7 @@ const DeluxeNavTabs: React.FC = () => {
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => dispatch(setActiveIndex(tab.id))}
             className={`flex items-center px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
               activeIndex === tab.id
                 ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
