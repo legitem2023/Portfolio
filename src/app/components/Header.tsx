@@ -21,9 +21,9 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative">
+    <div className="relative bg-white bg-opacity-90 backdrop-blur-sm shadow-sm">
       {/* Main Header Content */}
-      <div className="relative z-10 flex items-center justify-between p-4 bg-white bg-opacity-90 backdrop-blur-sm shadow-sm">
+      <div className="relative z-10 flex items-center justify-between p-4 ">
         <div>
           <Image
             src="/Dlogo.svg"
@@ -33,15 +33,7 @@ const Header: React.FC = () => {
             className="h-10 w-20"
           />
         </div>
-        
-        {/* Navigation Links */}
-        <nav className="hidden md:flex space-x-8">
-          <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors">Home</Link>
-          <Link href="/products" className="text-gray-700 hover:text-blue-600 transition-colors">Products</Link>
-          <Link href="/deals" className="text-gray-700 hover:text-blue-600 transition-colors">Deals</Link>
-          <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</Link>
-        </nav>
-        
+           
         {/* Dropdown Container */}
         <div className="relative" ref={dropdownRef}>
           {/* Dropdown Trigger */}
@@ -92,10 +84,10 @@ const Header: React.FC = () => {
             </div>
           )}
         </div>
-         <div className="w-full m-2 rounded-md bg-[rgba(0,0,0,0.5)] h-[45px]">
-         </div>
+
       </div>
-       
+        <div className="w-full m-2 rounded-md bg-[rgba(0,0,0,0.5)] h-[45px]">
+        </div>  
       {/* Glassmorphism Stats Bar */}
       {/*<div className="relative z-0 -mt-4 mx-4">
         <div className="bg-white bg-opacity-70 backdrop-blur-lg rounded-lg shadow-lg p-3 flex flex-wrap justify-center md:justify-between items-center space-x-4 md:space-x-6 text-sm text-gray-700 border border-white border-opacity-50">
