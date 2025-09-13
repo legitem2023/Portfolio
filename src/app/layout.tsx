@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import ReduxWrapper from "./components/ApolloProvider/ReduxWrapper"; 
 import { ApolloWrapper } from './components/ApolloWrapper';
 import { Inter } from "next/font/google";
 import LoadEruda from "./LoadEruda";
@@ -19,8 +20,10 @@ export default function RootLayout({
       <body className={inter.className}>
         <LoadEruda/>
         <div className="BackGroundImage"></div>
-        <ApolloWrapper>{children}</ApolloWrapper>
-        </body>
+        <ReduxWrapper>
+          <ApolloWrapper>{children}</ApolloWrapper>
+        </ReduxWrapper>
+      </body>
     </html>
   );
 }
