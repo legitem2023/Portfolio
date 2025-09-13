@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Home,
   ShoppingBag,
@@ -32,22 +33,23 @@ interface Tab {
 
 const DeluxeNavTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('home');
-
+  const activeIndex = useSelector((state: any) => state.activeIndex.value);
+  const dispatch = useDispatch();
   const tabs: Tab[] = [
     {
-      id: 'home',
+      id: 1,
       label: 'Home',
       icon: <Home size={18} />,
       content: <DeluxeHomePage />,
     },
     {
-      id: 'products',
+      id: 2,
       label: 'Products',
       icon: <Tags size={18} />,
       content: <ProductsTab />,
     },
     {
-      id: 'deals',
+      id: 3,
       label: 'Exclusive Deals',
       icon: <Target size={18} />,
       content: (
@@ -84,7 +86,7 @@ const DeluxeNavTabs: React.FC = () => {
       ),
     },
     {
-      id: 'brands',
+      id:4,
       label: 'Luxe Brands',
       icon: <Star size={18} />,
       content: (
@@ -105,13 +107,13 @@ const DeluxeNavTabs: React.FC = () => {
       ),
     },
     {
-      id: 'Messages',
+      id: 5,
       label: 'Messages',
       icon: <MessageSquareText size={18} />,
       content: <MessagesTab />,
     },
     {
-      id: 'Cart',
+      id: 6,
       label: 'Cart',
       icon: <ShoppingCart size={18} />,
       content: <CartTab />,
@@ -141,7 +143,7 @@ const DeluxeNavTabs: React.FC = () => {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
-              activeTab === tab.id
+              activeIndex === tab.id
                 ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
                 : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
             }`}
@@ -153,7 +155,7 @@ const DeluxeNavTabs: React.FC = () => {
 
       {/* Tab Content */}
       <div className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden">
-        {tabs.find((tab) => tab.id === activeTab)?.content}
+        {tabs.find((tab) => tab.id === activeIndex)?.content}
       </div>
 
       <style jsx>{`
