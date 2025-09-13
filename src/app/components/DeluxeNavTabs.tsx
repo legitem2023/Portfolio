@@ -27,7 +27,7 @@ import CartTab from './CartTab';
 import DeluxeHomePage from './DeluxeHomePage';
 
 interface Tab {
-  id: string;
+  id: number;
   label: string;
   icon: React.ReactNode;
   content: React.ReactNode;
