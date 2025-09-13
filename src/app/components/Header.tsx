@@ -86,8 +86,8 @@ const Header: React.FC = () => {
         </div>
 
       </div>
-        <div className="w-[100%] m-2 rounded-md bg-[rgba(255,255,255,0.5)] h-[45px] border-box shadow-md">
-        </div>  
+        <div className="w-full box-border m-2 rounded-md bg-[rgba(255,255,255,0.5)] h-[45px] shadow-lg">
+        </div>
   
     </div>
   );
