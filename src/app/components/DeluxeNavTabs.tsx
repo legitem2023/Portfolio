@@ -300,22 +300,148 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Cart',
       icon: <ShoppingCart size={18} />,
       content: <CartTab />,
+'use client';
+import React, { useState, useRef, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+
+import {
+  Home,
+  ShoppingBag,
+  Target,
+  Star,
+  Gift,
+  Shirt,
+  Briefcase,
+  Footprints,
+  Gem,
+  Heart,
+  House,
+  Smartphone,
+  Sparkles,
+  MessageSquareText,
+  ShoppingCart,
+  Tags,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import ProductsTab from './ProductsTab';
+import MessagesTab from './MessagesTab';
+import CartTab from './CartTab';
+import DeluxeHomePage from './DeluxeHomePage';
+
+interface Tab {
+  id: number;
+  label: string;
+  icon: React.ReactNode;
+  content: React.ReactNode;
+}
+
+const DeluxeNavTabs: React.FC = () => {
+  const activeIndex = useSelector((state: any) => state.activeIndex.value);
+  const dispatch = useDispatch();
+  const [transitionDirection, setTransitionDirection] = useState<'left' | 'right' | ''>('');
+  const [previousIndex, setPreviousIndex] = useState(activeIndex);
+  const contentRef = useRef<HTMLDivElement>(null);
+  
+  const tabs: Tab[] = [
+    {
+      id: 1,
+      label: 'Home',
+      icon: <Home size={18} />,
+      content: <DeluxeHomePage />,
+    },
+    {
+      id: 2,
+      label: 'Products',
+      icon: <Tags size={18} />,
+      content: <ProductsTab />,
+    },
+    {
+      id: 3,
+      label: 'Exclusive Deals',
+      icon: <Target size={18} />,
+      content: (
+        <div className="p-6 bg-white rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Special Offers</h3>
+          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 rounded-xl mb-4 shadow-lg">
+            <h4 className="font-bold text-lg">Flash Sale</h4>
+            <p className="text-sm">Ends in: 02:45:33</p>
+            <div className="w-full bg-white bg-opacity-30 rounded-full h-2 mt-2">
+              <div className="bg-amber-400 h-2 rounded-full" style={{ width: '30%' }}></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border border-amber-300 rounded-lg p-4 bg-amber-50 flex items-center">
+              <div className="bg-amber-100 p-3 rounded-full mr-4">
+                <Sparkles className="text-amber-700" size={20} />
+              </div>
+              <div>
+                <h4 className="font-medium">New Customer Discount</h4>
+                <p className="text-sm text-amber-700">15% off your first order</p>
+              </div>
+            </div>
+            <div className="border border-rose-300 rounded-lg p-4 bg-rose-50 flex items-center">
+              <div className="bg-rose-100 p-3 rounded-full mr-4">
+                <Gift className="text-rose-700" size={20} />
+              </div>
+              <div>
+                <h4 className="font-medium">Valentines Special</h4>
+                <p className="text-sm text-rose-700">Buy one, get one 50% off</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      id:4,
+      label: 'Luxe Brands',
+      icon: <Star size={18} />,
+      content: (
+        <div className="p-6 bg-white rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Featured Brands</h3>
+          <div className="flex flex-wrap gap-4">
+            {['Gucci', 'Prada', 'Hermès', 'Tiffany', 'Rolex', 'Dior', 'Chanel', 'Louis Vuitton'].map((brand) => (
+              <div
+                key={brand}
+                className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"
+              >
+                <div className="font-medium mb-2">{brand}</div>
+                <div className="text-xs text-gray-500">Exclusive collection</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: 5,
+      label: 'Messages',
+      icon: <MessageSquareText size={18} />,
+      content: <MessagesTab />,
+    },
+    {
+      id: 6,
+      label: 'Cart',
+      icon: <ShoppingCart size={18} />,
+      content: <CartTab />,
     },
   ];
 
   // Handle tab click with animation
   const handleTabClick = (tabId: number) => {
-    // Determine slide direction
     const currentIndex = tabs.findIndex(tab => tab.id === activeIndex);
     const newIndex = tabs.findIndex(tab => tab.id === tabId);
     
+    // Determine animation direction
     if (newIndex > currentIndex) {
-      setSlideDirection('left');
+      setTransitionDirection('left');
     } else if (newIndex < currentIndex) {
-      setSlideDirection('right');
+      setTransitionDirection('right');
     }
     
-    setPrevIndex(activeIndex);
+    setPreviousIndex(activeIndex);
     dispatch(setActiveIndex(tabId));
   };
 
@@ -378,6 +504,28 @@ const DeluxeNavTabs: React.FC = () => {
     <div className="w-full max-w-6xl mx-auto font-sans z-10">
       {/* Tab Navigation with Slider */}
       <div className="relative flex items-center mb-1 bg-gradient-to-t from-violet-50 to-white z-20">
+        {/* Left Arrow */}
+        {showLeftArrow && (
+          <button
+            onClick={scrollLeftHandler}
+            className="absolute left-0 z-30 p-2 bg-white rounded-full shadow-md hover:bg-violet-50"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft size={20} className="text-violet-600" />
+          </button>
+        )}
+
+        {/* Right Arrow */}
+        {showRightArrow && (
+          <button
+            onClick={scrollRightHandler}
+            className="absolute right-0 z-30 p-2 bg-white rounded-full shadow-md hover:bg-violet-50"
+            aria-label="Scroll right"
+          >
+            <ChevronRight size={20} className="text-violet-600" />
+          </button>
+        )}
+
         {/* Tabs Container */}
         <div
           ref={tabsContainerRef}
@@ -403,27 +551,23 @@ const DeluxeNavTabs: React.FC = () => {
       {/* Tab Content with Slide Animation */}
       <div 
         ref={contentRef}
-        className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden relative"
-        style={{ height: '500px' }} // Set a fixed height for smooth animation
+        className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden relative min-h-[500px]"
       >
         {tabs.map((tab) => (
           <div
             key={tab.id}
             className={`absolute top-0 left-0 w-full h-full transition-transform duration-300 ease-in-out ${
               activeIndex === tab.id
-                ? slideDirection === 'left'
-                  ? 'animate-slide-in-left'
-                  : slideDirection === 'right'
-                  ? 'animate-slide-in-right'
-                  : ''
-                : prevIndex === tab.id
-                ? slideDirection === 'left'
-                  ? 'animate-slide-out-left'
-                  : slideDirection === 'right'
-                  ? 'animate-slide-out-right'
-                  : ''
-                : 'hidden'
+                ? 'translate-x-0'
+                : previousIndex === tab.id
+                  ? transitionDirection === 'left'
+                    ? '-translate-x-full'
+                    : 'translate-x-full'
+                  : 'translate-x-full opacity-0'
             }`}
+            style={{
+              display: activeIndex === tab.id || previousIndex === tab.id ? 'block' : 'none',
+            }}
           >
             {tab.content}
           </div>
@@ -437,42 +581,6 @@ const DeluxeNavTabs: React.FC = () => {
         }
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
-        }
-        
-        @keyframes slideInLeft {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-        
-        @keyframes slideOutLeft {
-          from { transform: translateX(0); }
-          to { transform: translateX(-100%); }
-        }
-        
-        @keyframes slideInRight {
-          from { transform: translateX(-100%); }
-          to { transform: translateX(0); }
-        }
-        
-        @keyframes slideOutRight {
-          from { transform: translateX(0); }
-          to { transform: translateX(100%); }
-        }
-        
-        .animate-slide-in-left {
-          animation: slideInLeft 0.3s forwards;
-        }
-        
-        .animate-slide-out-left {
-          animation: slideOutLeft 0.3s forwards;
-        }
-        
-        .animate-slide-in-right {
-          animation: slideInRight 0.3s forwards;
-        }
-        
-        .animate-slide-out-right {
-          animation: slideOutRight 0.3s forwards;
         }
       `}</style>
     </div>
