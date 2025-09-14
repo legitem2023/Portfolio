@@ -449,11 +449,4 @@ export const typeDefs = gql`
     quantity: Int!
     price: Float!
   }
-
-  # ================= Subscriptions =================
-  type Subscription {
-    postCreated: Post!
-    commentAdded(postId: ID!): Comment!
-    likeAdded(postId: ID): Like!
-  }
 `;
