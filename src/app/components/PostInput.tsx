@@ -1,29 +1,45 @@
-import { useState, useRef } from 'react';
-import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH } from 'react-icons/fa';
+import { useState, useRef, useEffect } from 'react';
+import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
 
+interface User {
+  id: string;
+  name: string;
+  avatar: string;
+}
+
 interface PostInputProps {
-  user: {
-    name: string;
-    avatar: string;
-  };
-  onPostSubmit?: (content: string) => void;
+  user: User;
+  onPostSubmit?: (content: string, images: string[]) => void;
   placeholder?: string;
+  friends?: User[]; // For tagging functionality
 }
 
 const PostInput: React.FC<PostInputProps> = ({ 
   user, 
   onPostSubmit, 
-  placeholder = "What's on your mind?" 
+  placeholder = "What's on your mind?",
+  friends = []
 }) => {
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [images, setImages] = useState<string[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showTagging, setShowTagging] = useState(false);
+  const [tagSearch, setTagSearch] = useState('');
+  const [taggedUsers, setTaggedUsers] = useState<User[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sample emojis for the emoji picker
+  const emojis = ['😀', '😂', '😍', '🥰', '😎', '🤩', '🥳', '😭', '😡', '👍', '❤️', '🔥', '👏', '🎉'];
 
   const handleSubmit = () => {
-    if (content.trim() && onPostSubmit) {
-      onPostSubmit(content);
+    if ((content.trim() || images.length > 0) && onPostSubmit) {
+      onPostSubmit(content, images);
       setContent('');
+      setImages([]);
+      setTaggedUsers([]);
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
@@ -47,6 +63,47 @@ const PostInput: React.FC<PostInputProps> = ({
     }
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          newImages.push(event.target.result as string);
+          if (newImages.length === files.length) {
+            setImages(prev => [...prev, ...newImages]);
+          }
+        }
+      };
+      reader.readAsDataURL(files[i]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addEmoji = (emoji: string) => {
+    setContent(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleTagUser = (user: User) => {
+    if (!taggedUsers.some(u => u.id === user.id)) {
+      setTaggedUsers(prev => [...prev, user]);
+      setContent(prev => prev + ` @${user.name}`);
+    }
+    setShowTagging(false);
+    setTagSearch('');
+  };
+
+  const filteredFriends = friends.filter(friend => 
+    friend.name.toLowerCase().includes(tagSearch.toLowerCase())
+  );
+
   return (
     <div className="post-input-container">
       <div className="post-input-card">
@@ -66,7 +123,7 @@ const PostInput: React.FC<PostInputProps> = ({
             value={content}
             onChange={handleTextareaChange}
             onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             className="post-textarea"
@@ -74,28 +131,105 @@ const PostInput: React.FC<PostInputProps> = ({
           />
         </div>
         
-        {content && (
-          <div className="post-preview">
-            <p>{content}</p>
+        {showTagging && (
+          <div className="tagging-container">
+            <input
+              type="text"
+              placeholder="Search friends to tag..."
+              value={tagSearch}
+              onChange={(e) => setTagSearch(e.target.value)}
+              className="tag-search-input"
+            />
+            <div className="tagging-results">
+              {filteredFriends.map(friend => (
+                <div 
+                  key={friend.id} 
+                  className="tagging-result-item"
+                  onClick={() => handleTagUser(friend)}
+                >
+                  <img src={friend.avatar} alt={friend.name} className="tagging-avatar" />
+                  <span>{friend.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {images.length > 0 && (
+          <div className="image-preview-container">
+            {images.map((img, index) => (
+              <div key={index} className="image-preview">
+                <img src={img} alt={`Preview ${index}`} />
+                <button className="remove-image-btn" onClick={() => removeImage(index)}>
+                  <FaTimes />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {showEmojiPicker && (
+          <div className="emoji-picker">
+            {emojis.map((emoji, index) => (
+              <button 
+                key={index} 
+                className="emoji-btn"
+                onClick={() => addEmoji(emoji)}
+              >
+                {emoji}
+              </button>
+            ))}
           </div>
         )}
         
         <div className="add-to-post">
           <span className="add-to-post-label">Add to your post</span>
           <div className="add-to-post-options">
-            <button className="post-option-btn" aria-label="Photo/Video">
+            <button 
+              className="post-option-btn" 
+              aria-label="Photo/Video"
+              onClick={() => fileInputRef.current?.click()}
+            >
               <FaPhotoVideo className="photo-icon" />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                multiple
+                style={{ display: 'none' }}
+              />
             </button>
-            <button className="post-option-btn" aria-label="Feeling/Activity">
+            
+            <button 
+              className="post-option-btn" 
+              aria-label="Feeling/Activity"
+              onClick={() => setShowEmojiPicker(prev => !prev)}
+            >
               <FaSmile className="smile-icon" />
             </button>
-            <button className="post-option-btn" aria-label="Tag People">
+            
+            <button 
+              className="post-option-btn" 
+              aria-label="Tag People"
+              onClick={() => setShowTagging(prev => !prev)}
+            >
               <FaUserTag className="tag-icon" />
             </button>
-            <button className="post-option-btn" aria-label="Check In">
+            
+            <button 
+              className="post-option-btn" 
+              aria-label="Check In"
+              onClick={() => alert("Location feature would open here")}
+            >
               <FaMapMarkerAlt className="location-icon" />
             </button>
-            <button className="post-option-btn" aria-label="More Options">
+            
+            <button 
+              className="post-option-btn" 
+              aria-label="More Options"
+              onClick={() => alert("More options would appear here")}
+            >
               <FaEllipsisH className="more-icon" />
             </button>
           </div>
@@ -104,8 +238,8 @@ const PostInput: React.FC<PostInputProps> = ({
         <div className="post-actions">
           <button 
             onClick={handleSubmit}
-            disabled={!content.trim()}
-            className={`post-btn ${content.trim() ? 'active' : ''}`}
+            disabled={!content.trim() && images.length === 0}
+            className={`post-btn ${(content.trim() || images.length > 0) ? 'active' : ''}`}
           >
             Post
           </button>
@@ -203,18 +337,107 @@ const PostInput: React.FC<PostInputProps> = ({
           color: #8a8d91;
         }
         
-        .post-preview {
-          background: #f0f2f5;
+        .tagging-container {
+          border: 1px solid #e4e6eb;
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 12px;
+          background: white;
         }
         
-        .post-preview p {
-          margin: 0;
-          color: #050505;
-          white-space: pre-wrap;
-          word-break: break-word;
+        .tag-search-input {
+          width: 100%;
+          padding: 8px;
+          border: 1px solid #dddfe2;
+          border-radius: 4px;
+          margin-bottom: 8px;
+          font-size: 14px;
+        }
+        
+        .tagging-results {
+          max-height: 150px;
+          overflow-y: auto;
+        }
+        
+        .tagging-result-item {
+          display: flex;
+          align-items: center;
+          padding: 8px;
+          cursor: pointer;
+          border-radius: 4px;
+        }
+        
+        .tagging-result-item:hover {
+          background-color: #f0f2f5;
+        }
+        
+        .tagging-avatar {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          object-fit: cover;
+          margin-right: 10px;
+        }
+        
+        .image-preview-container {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+          margin-bottom: 12px;
+        }
+        
+        .image-preview {
+          position: relative;
+          border-radius: 8px;
+          overflow: hidden;
+          aspect-ratio: 1;
+        }
+        
+        .image-preview img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        
+        .remove-image-btn {
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          background: rgba(0, 0, 0, 0.6);
+          border: none;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          cursor: pointer;
+        }
+        
+        .emoji-picker {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 4px;
+          padding: 8px;
+          border: 1px solid #e4e6eb;
+          border-radius: 8px;
+          margin-bottom: 12px;
+          background: white;
+        }
+        
+        .emoji-btn {
+          background: none;
+          border: none;
+          font-size: 24px;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: background-color 0.2s;
+        }
+        
+        .emoji-btn:hover {
+          background-color: #f0f2f5;
         }
         
         .add-to-post {
@@ -250,6 +473,7 @@ const PostInput: React.FC<PostInputProps> = ({
           justify-content: center;
           transition: background-color 0.2s;
           color: #65676b;
+          position: relative;
         }
         
         .post-option-btn:hover {
