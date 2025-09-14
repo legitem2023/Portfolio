@@ -1,7 +1,7 @@
 // Example usage in a page or component
 import React from 'react';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
-
+import PostInput from './PostInput';
 const MessagesTab = () => {
   const sampleMessages = [
     {
@@ -44,6 +44,14 @@ const MessagesTab = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
+        <PostInput
+        user={{
+          name: "John Doe",
+          avatar: "/path/to/avatar.jpg"
+        }}
+        onPostSubmit={handlePostSubmit}
+        placeholder="What's on your mind?"
+      />
          {sampleMessages.map(message => (
           <DeluxeMessageCard 
             key={message.id} 
