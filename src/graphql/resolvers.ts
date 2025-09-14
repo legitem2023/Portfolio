@@ -138,7 +138,7 @@ export const resolvers = {
     },
 
     // Social media queries
-    posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
+  posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -245,10 +245,10 @@ export const resolvers = {
       return {
         posts: posts.map(post => ({
           ...post,
-          taggedUsers: post.taggedUsers.map(tu => tu.user),
-          isLikedByMe: post.likes.length > 0,
-          likeCount: post._count.likes,
-          commentCount: post._count.comments
+          taggedUsers: post.taggedUsers?.map(tu => tu.user) || [],
+          isLikedByMe: post.likes?.length > 0 || false,
+          likeCount: post._count?.likes || 0,
+          commentCount: post._count?.comments || 0
         })),
         totalCount,
         hasNextPage: totalCount > page * limit
