@@ -4,11 +4,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
-import { withFilter } from 'apollo-server-express';
-import { PubSub } from 'graphql-subscriptions';
 
 const prisma = new PrismaClient();
-const pubsub = new PubSub();
 
 // Utility function for authentication
 const getUserId = (context: any, required = true): string => {
@@ -144,7 +141,7 @@ export const resolvers = {
     },
 
     // Social media queries
-    posts: async (_, { page, limit, userId, followingOnly }, context) => {
+    posts: async (_, { page = 1, limit = 10, userId, followingOnly = false }, context) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -346,7 +343,7 @@ export const resolvers = {
       };
     },
     
-    comments: async (_, { postId, page, limit }, context) => {
+    comments: async (_, { postId, page = 1, limit = 10 }, context) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -386,7 +383,7 @@ export const resolvers = {
       };
     },
     
-    userFeed: async (_, { page, limit }, context) => {
+    userFeed: async (_, { page = 1, limit = 10 }, context) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -513,7 +510,7 @@ export const resolvers = {
       return following.map(f => f.following);
     },
     
-    searchUsers: async (_, { query, page, limit }, context) => {
+    searchUsers: async (_, { query, page = 1, limit = 10 }, context) => {
       getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -562,8 +559,7 @@ export const resolvers = {
         throw new Error('Invalid credentials');
       }
 
-      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
-      // Use JOSE to create encrypted token (JWE)
+      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
       const token = await new EncryptJWT({
         userId: user.id,
         phone: user.phone,
@@ -586,7 +582,6 @@ export const resolvers = {
     loginWithFacebook: async (_: any, args: any) => {
       const { idToken } = args.input;
 
-      // 1. Verify the token with Facebook Graph API
       const fbRes = await fetch(
         `https://graph.facebook.com/me?fields=id,name,email,picture&access_token=${idToken}`
       );
@@ -597,7 +592,6 @@ export const resolvers = {
 
       const avatarUrl = fbUser.picture?.data?.url ?? '';
 
-      // 2. Find or create user in your DB
       let user = await prisma.user.findUnique({
         where: { email: fbUser.email },
       });
@@ -608,17 +602,15 @@ export const resolvers = {
             firstName: fbUser.name,
             lastName: '',
             email: fbUser.email,
-            phone: '', // Facebook doesn't provide it
-            password: '', // Use empty or a random placeholder
+            phone: '',
+            password: '',
             avatar: avatarUrl,
             role: 'USER'
           },
         });
       }
 
-      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
-
-      // 3. Return encrypted JWT
+      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
       const token = await new EncryptJWT({
         userId: user.id,
         email: user.email,
@@ -655,10 +647,11 @@ export const resolvers = {
           sku,
           salePrice,
           category: {
-            connect: { id: id }, // Prisma will link it automatically
+            connect: { id: id },
           },
         },
       });
+      return { statusText: 'Product created successfully!' };
     },
     
     createCategory: async (_: any, { name, description, status }: any) => {
@@ -668,12 +661,13 @@ export const resolvers = {
           description,
           isActive: status
         }
-      })
+      });
       if (response) {
         return {
           statusText: 'Successful!'
-        }
+        };
       }
+      throw new Error('Failed to create category');
     },
     
     createOrder: async (_: any, { userId, addressId, items }: any) => {
@@ -718,7 +712,7 @@ export const resolvers = {
           content: input.content,
           background: input.background,
           images: input.images || [],
-          privacy: input.privacy,
+          privacy: input.privacy || 'PUBLIC',
           userId: currentUserId,
           taggedUsers: {
             create: input.taggedUsers?.map(userId => ({ userId })) || []
@@ -739,17 +733,6 @@ export const resolvers = {
               likes: true
             }
           }
-        }
-      });
-      
-      // Publish to subscription
-      context.pubsub.publish('POST_CREATED', {
-        postCreated: {
-          ...post,
-          taggedUsers: post.taggedUsers.map(tu => tu.user),
-          isLikedByMe: false,
-          likeCount: 0,
-          commentCount: 0
         }
       });
       
@@ -880,15 +863,6 @@ export const resolvers = {
         }
       });
       
-      // Publish to subscription
-      context.pubsub.publish('COMMENT_ADDED', {
-        commentAdded: {
-          ...comment,
-          isLikedByMe: false,
-          likeCount: 0
-        }
-      });
-      
       return {
         ...comment,
         isLikedByMe: false,
@@ -1002,11 +976,6 @@ export const resolvers = {
             }
           }
         }
-      });
-      
-      // Publish to subscription
-      context.pubsub.publish('LIKE_ADDED', {
-        likeAdded: like
       });
       
       return like;
@@ -1283,46 +1252,6 @@ export const resolvers = {
         likeCount: updatedPost._count.likes,
         commentCount: updatedPost._count.comments
       };
-    }
-  },
-
-  Subscription: {
-    postCreated: {
-      subscribe: withFilter(
-        (_, __, { pubsub }) => pubsub.asyncIterator('POST_CREATED'),
-        (payload, variables, { userId }) => {
-          // Only send notifications to users who follow the post author
-          // or if the post is public
-          return (
-            payload.postCreated.privacy === 'PUBLIC' ||
-            payload.postCreated.user.followers.some(f => f.id === userId)
-          );
-        }
-      )
-    },
-    
-    commentAdded: {
-      subscribe: withFilter(
-        (_, __, { pubsub }) => pubsub.asyncIterator('COMMENT_ADDED'),
-        (payload, variables) => {
-          // Only send notifications for comments on the specified post
-          return payload.commentAdded.postId === variables.postId;
-        }
-      )
-    },
-    
-    likeAdded: {
-      subscribe: withFilter(
-        (_, __, { pubsub }) => pubsub.asyncIterator('LIKE_ADDED'),
-        (payload, variables) => {
-          // If postId is specified, only send notifications for likes on that post
-          if (variables.postId) {
-            return payload.likeAdded.postId === variables.postId;
-          }
-          // Otherwise, send all like notifications
-          return true;
-        }
-      )
     }
   },
 
