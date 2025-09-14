@@ -10,22 +10,18 @@
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "force-install": "rimraf node_modules package-lock.json && npm install --force"
   },
   "dependencies": {
     "@prisma/client": "latest",
     "@tailwindcss/line-clamp": "^0.4.0",
     "@graphql-tools/schema": "^10.0.0",
     "@apollo/client": "^3.8.0",
-
     "@apollo/server": "^4.9.5",
-    
     "apollo-link-context": "^1.0.20",
     "apollo-link-http": "^1.5.17",
     "apollo-server-express": "^3.12.1",
-
-
-    
     "@apollo/experimental-nextjs-app-support": "^0.5.2",
     "graphql": "^16.0.0",
     "graphql-tag": "^2.12.6",
@@ -64,7 +60,8 @@
     "postcss": "^8.4.31",
     "prisma": "latest",
     "tailwindcss": "^3.3.5",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "rimraf": "^5.0.5"
   },
   "engines": {
     "node": ">=18.0.0"
