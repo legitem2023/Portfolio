@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes } from 'react-icons/fa';
+import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes, FaPaintBrush } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
 
 interface User {
@@ -10,9 +10,9 @@ interface User {
 
 interface PostInputProps {
   user: User;
-  onPostSubmit?: (content: string, images: string[]) => void;
+  onPostSubmit?: (content: string, images: string[], background?: string) => void;
   placeholder?: string;
-  friends?: User[]; // For tagging functionality
+  friends?: User[];
 }
 
 const PostInput: React.FC<PostInputProps> = ({ 
@@ -26,20 +26,38 @@ const PostInput: React.FC<PostInputProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showTagging, setShowTagging] = useState(false);
+  const [showBackgrounds, setShowBackgrounds] = useState(false);
   const [tagSearch, setTagSearch] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<User[]>([]);
+  const [selectedBackground, setSelectedBackground] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sample emojis for the emoji picker
   const emojis = ['😀', '😂', '😍', '🥰', '😎', '🤩', '🥳', '😭', '😡', '👍', '❤️', '🔥', '👏', '🎉'];
 
+  // Background options (colors and gradients)
+  const backgroundOptions = [
+    { id: 'default', value: null, label: 'Default', color: '#ffffff' },
+    { id: 'blue', value: 'linear-gradient(135deg, #3498db, #2c3e50)', label: 'Blue Gradient' },
+    { id: 'purple', value: 'linear-gradient(135deg, #9b59b6, #34495e)', label: 'Purple Gradient' },
+    { id: 'red', value: 'linear-gradient(135deg, #e74c3c, #c0392b)', label: 'Red Gradient' },
+    { id: 'green', value: 'linear-gradient(135deg, #2ecc71, #27ae60)', label: 'Green Gradient' },
+    { id: 'orange', value: 'linear-gradient(135deg, #e67e22, #d35400)', label: 'Orange Gradient' },
+    { id: 'yellow', value: 'linear-gradient(135deg, #f1c40f, #f39c12)', label: 'Yellow Gradient' },
+    { id: 'solid-blue', value: '#3498db', label: 'Solid Blue' },
+    { id: 'solid-purple', value: '#9b59b6', label: 'Solid Purple' },
+    { id: 'solid-red', value: '#e74c3c', label: 'Solid Red' },
+    { id: 'solid-green', value: '#2ecc71', label: 'Solid Green' },
+  ];
+
   const handleSubmit = () => {
     if ((content.trim() || images.length > 0) && onPostSubmit) {
-      onPostSubmit(content, images);
+      onPostSubmit(content, images, selectedBackground || undefined);
       setContent('');
       setImages([]);
       setTaggedUsers([]);
+      setSelectedBackground(null);
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
@@ -66,6 +84,9 @@ const PostInput: React.FC<PostInputProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
+
+    // Reset background if user uploads images (Facebook behavior)
+    setSelectedBackground(null);
 
     const newImages: string[] = [];
     for (let i = 0; i < files.length; i++) {
@@ -100,9 +121,38 @@ const PostInput: React.FC<PostInputProps> = ({
     setTagSearch('');
   };
 
+  const handleBackgroundSelect = (background: string | null) => {
+    setSelectedBackground(background);
+    setShowBackgrounds(false);
+    
+    // If user selects a background, clear any images (Facebook behavior)
+    if (background) {
+      setImages([]);
+    }
+  };
+
   const filteredFriends = friends.filter(friend => 
     friend.name.toLowerCase().includes(tagSearch.toLowerCase())
   );
+
+  // Determine text color based on background
+  const getTextColor = () => {
+    if (!selectedBackground) return '#050505';
+    
+    // For solid colors
+    if (selectedBackground.startsWith('#')) {
+      // Simple brightness calculation
+      const hex = selectedBackground.replace('#', '');
+      const r = parseInt(hex.substr(0, 2), 16);
+      const g = parseInt(hex.substr(2, 2), 16);
+      const b = parseInt(hex.substr(4, 2), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness > 128 ? '#050505' : '#ffffff';
+    }
+    
+    // For gradients, assume they're dark
+    return '#ffffff';
+  };
 
   return (
     <div className="post-input-container">
@@ -117,7 +167,13 @@ const PostInput: React.FC<PostInputProps> = ({
           </button>
         </div>
         
-        <div className={`input-container ${isFocused ? 'focused' : ''}`}>
+        <div 
+          className={`input-container ${isFocused ? 'focused' : ''} ${selectedBackground ? 'has-background' : ''}`}
+          style={{ 
+            background: selectedBackground || undefined,
+            border: selectedBackground ? 'none' : undefined
+          }}
+        >
           <textarea
             ref={textareaRef}
             value={content}
@@ -128,6 +184,10 @@ const PostInput: React.FC<PostInputProps> = ({
             placeholder={placeholder}
             className="post-textarea"
             rows={1}
+            style={{ 
+              color: getTextColor(),
+              background: 'transparent'
+            }}
           />
         </div>
         
@@ -149,6 +209,25 @@ const PostInput: React.FC<PostInputProps> = ({
                 >
                   <img src={friend.avatar} alt={friend.name} className="tagging-avatar" />
                   <span>{friend.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {showBackgrounds && (
+          <div className="backgrounds-container">
+            <h4>Select a background</h4>
+            <div className="background-options">
+              {backgroundOptions.map(bg => (
+                <div
+                  key={bg.id}
+                  className={`background-option ${selectedBackground === bg.value ? 'selected' : ''}`}
+                  style={{ background: bg.value || '#ffffff' }}
+                  onClick={() => handleBackgroundSelect(bg.value)}
+                  title={bg.label}
+                >
+                  {bg.value === null && <span>Default</span>}
                 </div>
               ))}
             </div>
@@ -199,6 +278,14 @@ const PostInput: React.FC<PostInputProps> = ({
                 multiple
                 style={{ display: 'none' }}
               />
+            </button>
+            
+            <button 
+              className="post-option-btn" 
+              aria-label="Backgrounds"
+              onClick={() => setShowBackgrounds(prev => !prev)}
+            >
+              <FaPaintBrush className="background-icon" />
             </button>
             
             <button 
@@ -312,7 +399,14 @@ const PostInput: React.FC<PostInputProps> = ({
           border-radius: 8px;
           padding: 12px;
           margin-bottom: 12px;
-          transition: border-color 0.2s, box-shadow 0.2s;
+          transition: all 0.2s;
+          min-height: 120px;
+          display: flex;
+          align-items: flex-start;
+        }
+        
+        .input-container.has-background {
+          min-height: 200px;
         }
         
         .input-container.focused {
@@ -327,10 +421,10 @@ const PostInput: React.FC<PostInputProps> = ({
           outline: none;
           font-size: 18px;
           line-height: 1.4;
-          color: #050505;
           min-height: 40px;
           max-height: 150px;
           font-family: inherit;
+          font-weight: 500;
         }
         
         .post-textarea::placeholder {
@@ -377,6 +471,53 @@ const PostInput: React.FC<PostInputProps> = ({
           border-radius: 50%;
           object-fit: cover;
           margin-right: 10px;
+        }
+        
+        .backgrounds-container {
+          border: 1px solid #e4e6eb;
+          border-radius: 8px;
+          padding: 12px;
+          margin-bottom: 12px;
+          background: white;
+        }
+        
+        .backgrounds-container h4 {
+          margin: 0 0 12px 0;
+          color: #050505;
+          font-size: 16px;
+        }
+        
+        .background-options {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+        }
+        
+        .background-option {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border: 2px solid transparent;
+          transition: transform 0.2s, border-color 0.2s;
+        }
+        
+        .background-option:hover {
+          transform: scale(1.1);
+        }
+        
+        .background-option.selected {
+          border-color: #1877f2;
+          transform: scale(1.1);
+        }
+        
+        .background-option span {
+          font-size: 10px;
+          font-weight: bold;
+          color: #000;
         }
         
         .image-preview-container {
@@ -482,6 +623,10 @@ const PostInput: React.FC<PostInputProps> = ({
         
         .photo-icon {
           color: #41b35d;
+        }
+        
+        .background-icon {
+          color: #9b59b6;
         }
         
         .smile-icon {
