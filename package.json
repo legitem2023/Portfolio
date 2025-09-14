@@ -4,15 +4,16 @@
   "description": "Luxury e-commerce application with responsive design",
   "private": true,
   "scripts": {
-    "dev": "prisma generate && prisma db push && next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:push": "prisma db push",
-    "prisma:studio": "prisma studio",
-    "force-install": "rimraf node_modules package-lock.json && npm install --force"
-  },
+  "postinstall": "npm install --legacy-peer-deps",
+  "dev": "prisma generate && prisma db push && next dev",
+  "build": "prisma generate && next build",
+  "start": "next start",
+  "lint": "next lint",
+  "prisma:generate": "prisma generate",
+  "prisma:push": "prisma db push",
+  "prisma:studio": "prisma studio",
+  "force-install": "rimraf node_modules package-lock.json && npm install --force"
+},
   "dependencies": {
     "@prisma/client": "latest",
     "@tailwindcss/line-clamp": "^0.4.0",
