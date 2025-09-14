@@ -300,12 +300,12 @@ export const resolvers = {
       });
       
       if (!post) {
-        throw new UserInputError('Post not found');
+        //throw new UserInputError('Post not found');
       }
       
       if (post.userId !== currentUserId) {
         if (post.privacy === 'ONLY_ME') {
-          throw new ForbiddenError('You do not have permission to view this post');
+         // throw new ForbiddenError('You do not have permission to view this post');
         }
         
         if (post.privacy === 'FRIENDS') {
@@ -317,7 +317,7 @@ export const resolvers = {
           });
           
           if (!isFriend) {
-            throw new ForbiddenError('You do not have permission to view this post');
+            //throw new ForbiddenError('You do not have permission to view this post');
           }
         }
       }
