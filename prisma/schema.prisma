@@ -1,4 +1,5 @@
 // schema.prisma
+/*
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["fullTextIndex"]
@@ -392,4 +393,502 @@ enum NotificationType {
   SHIPMENT
   PROMOTIONAL
   SUPPORT
+}
+*/
+// schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["fullTextIndex"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// User Management
+model User {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  email           String           @unique
+  password        String
+  firstName       String
+  lastName        String
+  avatar          String?
+  phone           String?
+  emailVerified   Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  role            Role             @default(USER)
+  bio             String?          // Added for social features
+  website         String?          // Added for social features
+
+  // Relationships
+  addresses       Address[]
+  orders          Order[]
+  reviews         Review[]
+  wishlist        WishlistItem[]
+  cart            CartItem[]
+  payments        Payment[]
+  messagesSent    Message[]        @relation("MessageSender")
+  messagesReceived Message[]       @relation("MessageRecipient")
+  supportTickets  SupportTicket[]
+  notifications   Notification[]
+  ticketResponses TicketResponse[]
+  
+  // Social features (NEW)
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  followers       Follow[]         @relation("Follower")
+  following       Follow[]         @relation("Following")
+  taggedPosts     Post[]           @relation("TaggedUsers")
+
+  // Indexes
+  @@index([createdAt])
+  @@map("users")
+}
+
+// Social Media Models (NEW)
+model Post {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String          @db.ObjectId
+  content         String
+  background      String?         // For styled posts (gradients, colors)
+  images          String[]        // Array of image URLs
+  taggedUsers     User[]          @relation("TaggedUsers")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  privacy         PrivacySetting  @default(PUBLIC)
+
+  // Relationships
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments        Comment[]
+  likes           Like[]
+
+  // Indexes
+  @@index([userId])
+  @@index([createdAt])
+  @@fulltext([content])
+  @@map("posts")
+}
+
+model Comment {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String          @db.ObjectId
+  userId          String          @db.ObjectId
+  content         String
+  parentId        String?         @db.ObjectId // For nested comments
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relationships
+  post            Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id])
+  replies         Comment[]       @relation("CommentReplies")
+  likes           Like[]
+
+  // Indexes
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model Like {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  postId          String?         @db.ObjectId
+  commentId       String?         @db.ObjectId
+  userId          String          @db.ObjectId
+  createdAt       DateTime        @default(now())
+
+  // Relationships
+  post            Post?           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment         Comment?        @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure a like is for either a post or comment, not both
+  @@unique([userId, postId, commentId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
+  @@map("likes")
+}
+
+model Follow {
+  id              String          @id @default(auto()) @map("_id") @db.ObjectId
+  followerId      String          @db.ObjectId
+  followingId     String          @db.ObjectId
+  createdAt       DateTime        @default(now())
+
+  // Relationships
+  follower        User            @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following       User            @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  // Ensure unique follow relationships
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// Existing models below (unchanged except for the User relation additions above)
+// Address Management
+model Address {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  type        AddressType
+  street      String
+  city        String
+  state       String
+  zipCode     String
+  country     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders      Order[]
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+// Product Catalog
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  price       Float
+  salePrice   Float?
+  sku         String   @unique
+  stock       Int      @default(0)
+  images      String[]
+  categoryId  String   @db.ObjectId
+  brand       String?
+  weight      Float?
+  dimensions  String?
+  isActive    Boolean  @default(true)
+  featured    Boolean  @default(false)
+  tags        String[]
+  attributes  Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  variants    ProductVariant[]
+  orders      OrderItem[]
+  reviews     Review[]
+  wishlist    WishlistItem[]
+  cart        CartItem[]
+
+  @@index([categoryId])
+  @@index([price])
+  @@index([brand])
+  @@index([isActive])
+  @@index([featured])
+  @@index([createdAt])
+  @@fulltext([name, description, tags])
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  name      String
+  options   String[]
+  createdAt DateTime @default(now())
+
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model Category {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  description String?
+  image     String?
+  parentId  String?    @db.ObjectId
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+// Order Management
+model Order {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  orderNumber String   @unique
+  status      OrderStatus
+  total       Float
+  subtotal    Float
+  tax         Float    @default(0)
+  shipping    Float    @default(0)
+  discount    Float    @default(0)
+  addressId   String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     Address  @relation(fields: [addressId], references: [id])
+  items       OrderItem[]
+  payments    Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId     String   @db.ObjectId
+  productId   String   @db.ObjectId
+  quantity    Int
+  price       Float
+  variantInfo String?
+
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+// Cart
+model CartItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  productId   String   @db.ObjectId
+  quantity    Int      @default(1)
+  variantInfo String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@map("cart_items")
+}
+
+// Wishlist
+model WishlistItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@map("wishlist_items")
+}
+
+// Payments
+model Payment {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  orderId       String        @db.ObjectId
+  userId        String        @db.ObjectId
+  amount        Float
+  method        PaymentMethod
+  status        PaymentStatus
+  transactionId String?
+  details       String?
+  createdAt     DateTime      @default(now())
+
+  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User  @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
+  @@map("payments")
+}
+
+// Reviews
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  productId String   @db.ObjectId
+  rating    Int
+  title     String?
+  comment   String?
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isApproved])
+  @@map("reviews")
+}
+
+// Messaging
+model Message {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId    String   @db.ObjectId
+  recipientId String   @db.ObjectId
+  subject     String?
+  body        String
+  isRead      Boolean  @default(false)
+  parentId    String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  replies     Message[] @relation("MessageThread")
+
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([parentId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("messages")
+}
+
+// Support
+model SupportTicket {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String         @db.ObjectId
+  subject     String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  assignedTo  String?        @db.ObjectId
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  responses   TicketResponse[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+model TicketResponse {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  ticketId  String        @db.ObjectId
+  userId    String        @db.ObjectId
+  message   String
+  isInternal Boolean      @default(false)
+  createdAt DateTime      @default(now())
+
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id])
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([isInternal])
+  @@map("ticket_responses")
+}
+
+// Notifications
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model TrackingCounter {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  date      DateTime @unique
+  counter   Int
+}
+
+// Enums
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum AddressType {
+  BILLING
+  SHIPPING
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  PAYPAL
+  STRIPE
+  BANK_TRANSFER
+  COD
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  PAYMENT_CONFIRMATION
+  SHIPMENT
+  PROMOTIONAL
+  SUPPORT
+  SOCIAL // NEW: For social notifications
+}
+
+// NEW Enums for Social Features
+enum PrivacySetting {
+  PUBLIC
+  FRIENDS
+  ONLY_ME
 }
