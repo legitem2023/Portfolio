@@ -303,16 +303,16 @@ export const resolvers = {
        // throw new UserInputError('Post not found');
       }
       
-      if (post.userId !== currentUserId) {
-        if (post.privacy === 'ONLY_ME') {
+      if (post?.userId !== currentUserId) {
+        if (post?.privacy === 'ONLY_ME') {
        //   throw new ForbiddenError('You do not have permission to view this post');
         }
         
-        if (post.privacy === 'FRIENDS') {
+        if (post?.privacy === 'FRIENDS') {
           const isFriend = await prisma.follow.findFirst({
             where: {
               followerId: currentUserId,
-              followingId: post.userId
+              followingId: post?.userId
             }
           });
           
