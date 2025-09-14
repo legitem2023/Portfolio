@@ -3,12 +3,12 @@ import { comparePassword, encryptPassword, generateTrackingNumber } from '../../
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { EncryptJWT, jwtDecrypt } from 'jose';
-import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
+//import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 
 const prisma = new PrismaClient();
 
 // Utility function for authentication
-const getUserId = (context: any, required = true): string => {
+/*const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
   
   if (required && !userId) {
@@ -17,7 +17,7 @@ const getUserId = (context: any, required = true): string => {
   
   return userId;
 };
-
+*/
 export const resolvers = {
   Query: {
     users: () => prisma.user.findMany(),
