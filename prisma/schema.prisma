@@ -477,4 +477,12 @@ enum NotificationType {
   SHIPMENT
   PROMOTIONAL
   SUPPORT
+  SOCIAL // NEW: For social notifications
+}
+
+// NEW Enums for Social Features
+enum PrivacySetting {
+  PUBLIC
+  FRIENDS
+  ONLY_ME
 }
