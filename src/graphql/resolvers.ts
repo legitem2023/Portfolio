@@ -138,7 +138,7 @@ export const resolvers = {
     },
 
     // Social media queries
-    posts: async (_, { page = 1, limit = 10, userId, followingOnly = false }, context) => {
+    posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -255,7 +255,7 @@ export const resolvers = {
       };
     },
     
-    post: async (_, { id }, context) => {
+    post: async (_: any, { id }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const post = await prisma.post.findUnique({
@@ -336,7 +336,7 @@ export const resolvers = {
       };
     },
     
-    comments: async (_, { postId, page = 1, limit = 10 }, context) => {
+    comments: async (_: any, { postId, page = 1, limit = 10 }: any, context: any) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -376,7 +376,7 @@ export const resolvers = {
       };
     },
     
-    userFeed: async (_, { page = 1, limit = 10 }, context) => {
+    userFeed: async (_: any, { page = 1, limit = 10 }: any, context: any) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -452,7 +452,7 @@ export const resolvers = {
       };
     },
     
-    userLikes: async (_, { userId }, context) => {
+    userLikes: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
       
       return prisma.like.findMany({
@@ -476,7 +476,7 @@ export const resolvers = {
       });
     },
     
-    followers: async (_, { userId }, context) => {
+    followers: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
       
       const followers = await prisma.follow.findMany({
@@ -489,7 +489,7 @@ export const resolvers = {
       return followers.map(f => f.follower);
     },
     
-    following: async (_, { userId }, context) => {
+    following: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
       
       const following = await prisma.follow.findMany({
@@ -502,7 +502,7 @@ export const resolvers = {
       return following.map(f => f.following);
     },
     
-    searchUsers: async (_, { query, page = 1, limit = 10 }, context) => {
+    searchUsers: async (_: any, { query, page = 1, limit = 10 }: any, context: any) => {
       getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -697,7 +697,7 @@ export const resolvers = {
     },
 
     // Social media mutations
-    createPost: async (_, { input }, context) => {
+    createPost: async (_: any, { input }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const post = await prisma.post.create({
@@ -708,7 +708,7 @@ export const resolvers = {
           privacy: input.privacy || 'PUBLIC',
           userId: currentUserId,
           taggedUsers: {
-            create: input.taggedUsers?.map(userId => ({ userId })) || []
+            create: input.taggedUsers?.map((userId: any) => ({ userId })) || []
           }
         },
         include: {
@@ -731,14 +731,14 @@ export const resolvers = {
       
       return {
         ...post,
-        taggedUsers: post.taggedUsers.map(tu => tu.user),
+        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
         isLikedByMe: false,
         likeCount: 0,
         commentCount: 0
       };
     },
     
-    updatePost: async (_, { id, input }, context) => {
+    updatePost: async (_: any, { id, input }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const existingPost = await prisma.post.findUnique({
@@ -766,7 +766,7 @@ export const resolvers = {
           images: input.images,
           privacy: input.privacy,
           taggedUsers: {
-            create: input.taggedUsers?.map(userId => ({ userId })) || []
+            create: input.taggedUsers?.map((userId: any) => ({ userId })) || []
           }
         },
         include: {
@@ -797,14 +797,14 @@ export const resolvers = {
       
       return {
         ...post,
-        taggedUsers: post.taggedUsers.map(tu => tu.user),
+        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
         isLikedByMe: post.likes.length > 0,
         likeCount: post._count.likes,
         commentCount: post._count.comments
       };
     },
     
-    deletePost: async (_, { id }, context) => {
+    deletePost: async (_: any, { id }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const existingPost = await prisma.post.findUnique({
@@ -827,7 +827,7 @@ export const resolvers = {
       return true;
     },
     
-    createComment: async (_, { input }, context) => {
+    createComment: async (_: any, { input }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const comment = await prisma.comment.create({
@@ -860,7 +860,7 @@ export const resolvers = {
       };
     },
     
-    updateComment: async (_, { id, input }, context) => {
+    updateComment: async (_: any, { id, input }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const existingComment = await prisma.comment.findUnique({
@@ -904,7 +904,7 @@ export const resolvers = {
       };
     },
     
-    deleteComment: async (_, { id }, context) => {
+    deleteComment: async (_: any, { id }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const existingComment = await prisma.comment.findUnique({
@@ -927,7 +927,7 @@ export const resolvers = {
       return true;
     },
     
-    likePost: async (_, { postId }, context) => {
+    likePost: async (_: any, { postId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const post = await prisma.post.findUnique({
@@ -967,7 +967,7 @@ export const resolvers = {
       return like;
     },
     
-    unlikePost: async (_, { postId }, context) => {
+    unlikePost: async (_: any, { postId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const like = await prisma.like.findFirst({
@@ -988,7 +988,7 @@ export const resolvers = {
       return true;
     },
     
-    likeComment: async (_, { commentId }, context) => {
+    likeComment: async (_: any, { commentId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const comment = await prisma.comment.findUnique({
@@ -1029,7 +1029,7 @@ export const resolvers = {
       return like;
     },
     
-    unlikeComment: async (_, { commentId }, context) => {
+    unlikeComment: async (_: any, { commentId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const like = await prisma.like.findFirst({
@@ -1050,7 +1050,7 @@ export const resolvers = {
       return true;
     },
     
-    followUser: async (_, { userId }, context) => {
+    followUser: async (_: any, { userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       if (userId === currentUserId) {
@@ -1090,7 +1090,7 @@ export const resolvers = {
       return follow;
     },
     
-    unfollowUser: async (_, { userId }, context) => {
+    unfollowUser: async (_: any, { userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const follow = await prisma.follow.findFirst({
@@ -1111,7 +1111,7 @@ export const resolvers = {
       return true;
     },
     
-    tagUsersInPost: async (_, { postId, userIds }, context) => {
+    tagUsersInPost: async (_: any, { postId, userIds }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const post = await prisma.post.findUnique({
@@ -1128,7 +1128,7 @@ export const resolvers = {
       }
       
       await prisma.postTaggedUser.createMany({
-        data: userIds.map(userId => ({
+        data: userIds.map((userId: any) => ({
           postId,
           userId
         })),
@@ -1165,14 +1165,14 @@ export const resolvers = {
       
       return {
         ...updatedPost,
-        taggedUsers: updatedPost.taggedUsers.map(tu => tu.user),
+        taggedUsers: updatedPost.taggedUsers.map((tu: any) => tu.user),
         isLikedByMe: updatedPost.likes.length > 0,
         likeCount: updatedPost._count.likes,
         commentCount: updatedPost._count.comments
       };
     },
     
-    removeTagFromPost: async (_, { postId, userId }, context) => {
+    removeTagFromPost: async (_: any, { postId, userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
       const post = await prisma.post.findUnique({
@@ -1225,7 +1225,7 @@ export const resolvers = {
       
       return {
         ...updatedPost,
-        taggedUsers: updatedPost.taggedUsers.map(tu => tu.user),
+        taggedUsers: updatedPost.taggedUsers.map((tu: any) => tu.user),
         isLikedByMe: updatedPost.likes.length > 0,
         likeCount: updatedPost._count.likes,
         commentCount: updatedPost._count.comments
@@ -1235,7 +1235,7 @@ export const resolvers = {
 
   // Extend the User type with social fields
   User: {
-    posts: async (parent, _, context) => {
+    posts: async (parent: any, _: any, context: any) => {
       const currentUserId = getUserId(context, false);
       
       let whereClause: any = { userId: parent.id };
@@ -1294,14 +1294,14 @@ export const resolvers = {
       
       return posts.map(post => ({
         ...post,
-        taggedUsers: post.taggedUsers.map(tu => tu.user),
+        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
         isLikedByMe: post.likes.length > 0,
         likeCount: post._count.likes,
         commentCount: post._count.comments
       }));
     },
     
-    followers: async (parent) => {
+    followers: async (parent: any) => {
       const followers = await prisma.follow.findMany({
         where: { followingId: parent.id },
         include: {
@@ -1312,7 +1312,7 @@ export const resolvers = {
       return followers.map(f => f.follower);
     },
     
-    following: async (parent) => {
+    following: async (parent: any) => {
       const following = await prisma.follow.findMany({
         where: { followerId: parent.id },
         include: {
@@ -1323,19 +1323,19 @@ export const resolvers = {
       return following.map(f => f.following);
     },
     
-    followerCount: async (parent) => {
+    followerCount: async (parent: any) => {
       return prisma.follow.count({
         where: { followingId: parent.id }
       });
     },
     
-    followingCount: async (parent) => {
+    followingCount: async (parent: any) => {
       return prisma.follow.count({
         where: { followerId: parent.id }
       });
     },
     
-    isFollowing: async (parent, _, context) => {
+    isFollowing: async (parent: any, _: any, context: any) => {
       const currentUserId = getUserId(context, false);
       
       if (!currentUserId || currentUserId === parent.id) {
