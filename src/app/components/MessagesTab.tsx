@@ -53,6 +53,7 @@ const handlePostSubmit = (content: string) => {
       <div className="max-w-2xl mx-auto">
         <PostInput
         user={{
+          id:1,
           name: "John Doe",
           avatar: "/path/to/avatar.jpg"
         }}
