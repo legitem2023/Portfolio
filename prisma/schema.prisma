@@ -22,8 +22,6 @@ model User {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   role            Role             @default(USER)
-  bio             String?          // Added for social features
-  website         String?          // Added for social features
 
   // Relationships
   addresses       Address[]
@@ -38,13 +36,13 @@ model User {
   notifications   Notification[]
   ticketResponses TicketResponse[]
   
-  // Social features (NEW)
+  // Social features (NEW) - Using explicit relations for MongoDB
   posts           Post[]
   comments        Comment[]
   likes           Like[]
   followers       Follow[]         @relation("Follower")
   following       Follow[]         @relation("Following")
-  taggedPosts     Post[]           @relation("TaggedUsers")
+  taggedPosts     PostTaggedUser[] // Changed to explicit relation
 
   // Indexes
   @@index([createdAt])
@@ -56,9 +54,8 @@ model Post {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   userId          String          @db.ObjectId
   content         String
-  background      String?         // For styled posts (gradients, colors)
-  images          String[]        // Array of image URLs
-  taggedUsers     User[]          @relation("TaggedUsers")
+  background      String?
+  images          String[]
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   privacy         PrivacySetting  @default(PUBLIC)
@@ -67,6 +64,7 @@ model Post {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments        Comment[]
   likes           Like[]
+  taggedUsers     PostTaggedUser[] // Changed to explicit relation
 
   // Indexes
   @@index([userId])
@@ -75,19 +73,31 @@ model Post {
   @@map("posts")
 }
 
+// Explicit many-to-many for tagged users (required for MongoDB)
+model PostTaggedUser {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  userId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([postId, userId])
+  @@map("post_tagged_users")
+}
+
 model Comment {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   postId          String          @db.ObjectId
   userId          String          @db.ObjectId
   content         String
-  parentId        String?         @db.ObjectId // For nested comments
+  parentId        String?         @db.ObjectId
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   // Relationships
   post            Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id])
+  parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies         Comment[]       @relation("CommentReplies")
   likes           Like[]
 
@@ -135,7 +145,6 @@ model Follow {
   @@map("follows")
 }
 
-// Existing models below (unchanged except for the User relation additions above)
 // Address Management
 model Address {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -486,7 +495,7 @@ enum NotificationType {
   SHIPMENT
   PROMOTIONAL
   SUPPORT
-  SOCIAL // NEW: For social notifications
+  SOCIAL
 }
 
 // NEW Enums for Social Features
