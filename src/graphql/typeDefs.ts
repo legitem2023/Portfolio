@@ -62,6 +62,13 @@ export const typeDefs = gql`
     SUPPORT
   }
 
+  # ================= Social Media Enums =================
+  enum PrivacySetting {
+    PUBLIC
+    FRIENDS
+    ONLY_ME
+  }
+
   # ================= Models =================
   type User {
     id: ID!
@@ -86,6 +93,14 @@ export const typeDefs = gql`
     supportTickets: [SupportTicket!]
     notifications: [Notification!]
     ticketResponses: [TicketResponse!]
+    
+    # Social media fields
+    posts: [Post!]!
+    followers: [User!]!
+    following: [User!]!
+    followerCount: Int!
+    followingCount: Int!
+    isFollowing: Boolean!
   }
 
   type Address {
@@ -259,56 +274,186 @@ export const typeDefs = gql`
     user: User!
   }
 
-  type ProductHaslimit {
-    items:[Product]
-    nextCursor: String,
-    hasMore:Boolean!
+  # ================= Social Media Types =================
+  type Post {
+    id: ID!
+    user: User!
+    content: String!
+    background: String
+    images: [String!]!
+    taggedUsers: [User!]!
+    comments: [Comment!]!
+    likes: [Like!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    privacy: PrivacySetting!
+    commentCount: Int!
+    likeCount: Int!
+    isLikedByMe: Boolean!
   }
+
+  type Comment {
+    id: ID!
+    post: Post!
+    user: User!
+    content: String!
+    parent: Comment
+    replies: [Comment!]!
+    likes: [Like!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+    likeCount: Int!
+    isLikedByMe: Boolean!
+  }
+
+  type Like {
+    id: ID!
+    user: User!
+    post: Post
+    comment: Comment
+    createdAt: DateTime!
+  }
+
+  type Follow {
+    id: ID!
+    follower: User!
+    following: User!
+    createdAt: DateTime!
+  }
+
+  # Feed types
+  type PostFeed {
+    posts: [Post!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
+  }
+
+  type CommentFeed {
+    comments: [Comment!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
+  }
+
+  type UserSearchResult {
+    users: [User!]!
+    totalCount: Int!
+    hasNextPage: Boolean!
+  }
+
+  type ProductHaslimit {
+    items: [Product]
+    nextCursor: String
+    hasMore: Boolean!
+  }
+
   # ================= Queries & Mutations =================
   type Query {
     users: [User!]
     user(id: ID!): User
-    products(search: String, cursor:String, limit:Int,category:String,sortBy:String):ProductHaslimit
+    products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
     product(id: ID!): Product
     categories: [Category!]
     orders(userId: ID!): [Order!]
     supportTickets: [SupportTicket!]
-    getProducts:[Product!]
+    getProducts: [Product!]
+    
+    # Social media queries
+    posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed!
+    post(id: ID!): Post
+    comments(postId: ID!, page: Int, limit: Int): CommentFeed!
+    userFeed(page: Int, limit: Int): PostFeed!
+    userLikes(userId: ID!): [Like]!
+    followers(userId: ID!): [User]!
+    following(userId: ID!): [User]!
+    searchUsers(query: String!, page: Int, limit: Int): UserSearchResult!
   }
 
   type Response {
-     statusText: String
+    statusText: String
   }
+  
   type Result {
-     token: String
-     statusText: String
+    token: String
+    statusText: String
   }
-input LoginInput {
-  email: String
-  password: String
-}
 
-input FacebookLoginInput {
-  idToken: String!
-}
+  input LoginInput {
+    email: String
+    password: String
+  }
 
-input GoogleLoginInput {
-  idToken: String!
-}
+  input FacebookLoginInput {
+    idToken: String!
+  }
+
+  input GoogleLoginInput {
+    idToken: String!
+  }
+
+  # Social media input types
+  input CreatePostInput {
+    content: String!
+    background: String
+    images: [String!]
+    taggedUsers: [ID!]
+    privacy: PrivacySetting
+  }
+
+  input UpdatePostInput {
+    content: String
+    background: String
+    images: [String!]
+    taggedUsers: [ID!]
+    privacy: PrivacySetting
+  }
+
+  input CreateCommentInput {
+    postId: ID!
+    content: String!
+    parentId: ID
+  }
+
+  input UpdateCommentInput {
+    content: String!
+  }
+
   type Mutation {
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
     createUser(email: String!, password: String!, firstName: String!, lastName: String!): User!
-    createProduct(id: String, name: String!, description: String!, price: Float!,salePrice: Float!, sku: String!): Response!
-    createCategory(name:String!,description:String!,status:Boolean):Response!
+    createProduct(id: String, name: String!, description: String!, price: Float!, salePrice: Float!, sku: String!): Response!
+    createCategory(name: String!, description: String!, status: Boolean): Response!
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Order!
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
+    
+    # Social media mutations
+    createPost(input: CreatePostInput!): Post!
+    updatePost(id: ID!, input: UpdatePostInput!): Post!
+    deletePost(id: ID!): Boolean!
+    createComment(input: CreateCommentInput!): Comment!
+    updateComment(id: ID!, input: UpdateCommentInput!): Comment!
+    deleteComment(id: ID!): Boolean!
+    likePost(postId: ID!): Like!
+    unlikePost(postId: ID!): Boolean!
+    likeComment(commentId: ID!): Like!
+    unlikeComment(commentId: ID!): Boolean!
+    followUser(userId: ID!): Follow!
+    unfollowUser(userId: ID!): Boolean!
+    tagUsersInPost(postId: ID!, userIds: [ID!]!): Post!
+    removeTagFromPost(postId: ID!, userId: ID!): Post!
   }
 
   input OrderItemInput {
     productId: ID!
     quantity: Int!
     price: Float!
+  }
+
+  # ================= Subscriptions =================
+  type Subscription {
+    postCreated: Post!
+    commentAdded(postId: ID!): Comment!
+    likeAdded(postId: ID): Like!
   }
 `;
