@@ -324,11 +324,11 @@ export const resolvers = {
       
       return {
         ...post,
-        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
-        isLikedByMe: (post.likes?.length || 0) > 0,
-        likeCount: post._count?.likes || 0,
-        commentCount: post._count?.comments || 0,
-        comments: post.comments?.map((comment: any) => ({
+        taggedUsers: post?.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (post?.likes?.length || 0) > 0,
+        likeCount: post?._count?.likes || 0,
+        commentCount: post?._count?.comments || 0,
+        comments: post?.comments?.map((comment: any) => ({
           ...comment,
           isLikedByMe: (comment.likes?.length || 0) > 0,
           likeCount: comment._count?.likes || 0
