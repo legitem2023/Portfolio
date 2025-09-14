@@ -22,6 +22,8 @@ model User {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   role            Role             @default(USER)
+  bio             String?          // Added for social features
+  website         String?          // Added for social features
 
   // Relationships
   addresses       Address[]
@@ -34,7 +36,15 @@ model User {
   messagesReceived Message[]       @relation("MessageRecipient")
   supportTickets  SupportTicket[]
   notifications   Notification[]
-  ticketResponses TicketResponse[] // ✅ Added back-relation
+  ticketResponses TicketResponse[]
+  
+  // Social features (NEW)
+  posts           Post[]
+  comments        Comment[]
+  likes           Like[]
+  followers       Follow[]         @relation("Follower")
+  following       Follow[]         @relation("Following")
+  taggedPosts     Post[]           @relation("TaggedUsers")
 
   // Indexes
   @@index([createdAt])
@@ -125,7 +135,7 @@ model Follow {
   @@map("follows")
 }
 
-
+// Existing models below (unchanged except for the User relation additions above)
 // Address Management
 model Address {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -206,7 +216,7 @@ model Category {
   isActive  Boolean    @default(true)
   createdAt DateTime   @default(now())
 
-  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction) // ✅ Fixed self-relation
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryHierarchy")
   products  Product[]
 
@@ -343,7 +353,7 @@ model Message {
 
   sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
-  parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction) // ✅ Fixed
+  parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies     Message[] @relation("MessageThread")
 
   @@index([senderId])
@@ -413,7 +423,6 @@ model Notification {
   @@index([createdAt])
   @@map("notifications")
 }
-
 
 model TrackingCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
