@@ -7,16 +7,16 @@ import { EncryptJWT } from 'jose';
 const prisma = new PrismaClient();
 
 // Utility function for authentication
-/*const getUserId = (context: any, required = true): string => {
+const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
   
   if (required && !userId) {
-    throw new AuthenticationError('Authentication required');
+  //  throw new AuthenticationError('Authentication required');
   }
   
   return userId;
 };
-*/
+
 export const resolvers = {
   Query: {
     // Existing e-commerce queries
