@@ -7,16 +7,16 @@ import { EncryptJWT } from 'jose';
 const prisma = new PrismaClient();
 
 // Utility function for authentication
-const getUserId = (context: any, required = true): string => {
+/*const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
   
   if (required && !userId) {
-   // throw new AuthenticationError('Authentication required');
+    throw new AuthenticationError('Authentication required');
   }
   
   return userId;
 };
-
+*/
 export const resolvers = {
   Query: {
     // Existing e-commerce queries
@@ -138,7 +138,7 @@ export const resolvers = {
     },
 
     // Social media queries
-  posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
+    posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
@@ -245,8 +245,8 @@ export const resolvers = {
       return {
         posts: posts.map(post => ({
           ...post,
-          taggedUsers: post.taggedUsers?.map(tu => tu.user) || [],
-          isLikedByMe: post.likes?.length > 0 || false,
+          taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+          isLikedByMe: (post.likes?.length || 0) > 0,
           likeCount: post._count?.likes || 0,
           commentCount: post._count?.comments || 0
         })),
@@ -300,39 +300,39 @@ export const resolvers = {
       });
       
       if (!post) {
-        //throw new UserInputError('Post not found');
+       // throw new UserInputError('Post not found');
       }
       
-      if (post?.userId !== currentUserId) {
-        if (post?.privacy === 'ONLY_ME') {
-         // throw new ForbiddenError('You do not have permission to view this post');
+      if (post.userId !== currentUserId) {
+        if (post.privacy === 'ONLY_ME') {
+       //   throw new ForbiddenError('You do not have permission to view this post');
         }
         
-        if (post?.privacy === 'FRIENDS') {
+        if (post.privacy === 'FRIENDS') {
           const isFriend = await prisma.follow.findFirst({
             where: {
               followerId: currentUserId,
-              followingId: post?.userId
+              followingId: post.userId
             }
           });
           
           if (!isFriend) {
-            //throw new ForbiddenError('You do not have permission to view this post');
+         //   throw new ForbiddenError('You do not have permission to view this post');
           }
         }
       }
       
       return {
         ...post,
-        taggedUsers: post?.taggedUsers?.map(tu => tu.user),
-        isLikedByMe: post?.likes?.length > 0,
-        likeCount: post?._count?.likes,
-        commentCount: post?._count?.comments,
-        comments: post?.comments?.map(comment => ({
+        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (post.likes?.length || 0) > 0,
+        likeCount: post._count?.likes || 0,
+        commentCount: post._count?.comments || 0,
+        comments: post.comments?.map((comment: any) => ({
           ...comment,
-          isLikedByMe: comment.likes?.length > 0,
-          likeCount: comment._count?.likes
-        }))
+          isLikedByMe: (comment.likes?.length || 0) > 0,
+          likeCount: comment._count?.likes || 0
+        })) || []
       };
     },
     
@@ -368,8 +368,8 @@ export const resolvers = {
       return {
         comments: comments.map(comment => ({
           ...comment,
-        isLikedByMe: comment.likes.length > 0,
-          likeCount: comment._count.likes
+          isLikedByMe: (comment.likes?.length || 0) > 0,
+          likeCount: comment._count?.likes || 0
         })),
         totalCount,
         hasNextPage: totalCount > page * limit
@@ -442,10 +442,10 @@ export const resolvers = {
       return {
         posts: posts.map(post => ({
           ...post,
-          taggedUsers: post.taggedUsers.map(tu => tu.user),
-          isLikedByMe: post.likes.length > 0,
-          likeCount: post._count.likes,
-          commentCount: post._count.comments
+          taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+          isLikedByMe: (post.likes?.length || 0) > 0,
+          likeCount: post._count?.likes || 0,
+          commentCount: post._count?.comments || 0
         })),
         totalCount,
         hasNextPage: totalCount > page * limit
@@ -731,7 +731,7 @@ export const resolvers = {
       
       return {
         ...post,
-        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
+        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
         isLikedByMe: false,
         likeCount: 0,
         commentCount: 0
@@ -797,10 +797,10 @@ export const resolvers = {
       
       return {
         ...post,
-        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
-        isLikedByMe: post.likes.length > 0,
-        likeCount: post._count.likes,
-        commentCount: post._count.comments
+        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (post.likes?.length || 0) > 0,
+        likeCount: post._count?.likes || 0,
+        commentCount: post._count?.comments || 0
       };
     },
     
@@ -899,8 +899,8 @@ export const resolvers = {
       
       return {
         ...comment,
-        isLikedByMe: comment.likes.length > 0,
-        likeCount: comment._count.likes
+        isLikedByMe: (comment.likes?.length || 0) > 0,
+        likeCount: comment._count?.likes || 0
       };
     },
     
@@ -1165,10 +1165,10 @@ export const resolvers = {
       
       return {
         ...updatedPost,
-        taggedUsers: updatedPost.taggedUsers.map((tu: any) => tu.user),
-        isLikedByMe: updatedPost.likes.length > 0,
-        likeCount: updatedPost._count.likes,
-        commentCount: updatedPost._count.comments
+        taggedUsers: updatedPost?.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (updatedPost?.likes?.length || 0) > 0,
+        likeCount: updatedPost?._count?.likes || 0,
+        commentCount: updatedPost?._count?.comments || 0
       };
     },
     
@@ -1225,10 +1225,10 @@ export const resolvers = {
       
       return {
         ...updatedPost,
-        taggedUsers: updatedPost.taggedUsers.map((tu: any) => tu.user),
-        isLikedByMe: updatedPost.likes.length > 0,
-        likeCount: updatedPost._count.likes,
-        commentCount: updatedPost._count.comments
+        taggedUsers: updatedPost?.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (updatedPost?.likes?.length || 0) > 0,
+        likeCount: updatedPost?._count?.likes || 0,
+        commentCount: updatedPost?._count?.comments || 0
       };
     }
   },
@@ -1294,10 +1294,10 @@ export const resolvers = {
       
       return posts.map(post => ({
         ...post,
-        taggedUsers: post.taggedUsers.map((tu: any) => tu.user),
-        isLikedByMe: post.likes.length > 0,
-        likeCount: post._count.likes,
-        commentCount: post._count.comments
+        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+        isLikedByMe: (post.likes?.length || 0) > 0,
+        likeCount: post._count?.likes || 0,
+        commentCount: post._count?.comments || 0
       }));
     },
     
