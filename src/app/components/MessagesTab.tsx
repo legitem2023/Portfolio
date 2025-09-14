@@ -41,6 +41,13 @@ const MessagesTab = () => {
     }
   ];
 
+const handlePostSubmit = (content: string) => {
+    console.log('New post:', content);
+    // Add your post submission logic here
+  };
+
+
+  
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
