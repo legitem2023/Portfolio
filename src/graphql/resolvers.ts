@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-import { comparePassword, encryptPassword, generateTrackingNumber } from '../../utils/script';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { EncryptJWT, jwtDecrypt } from 'jose';
+// resolvers.ts
+import { PrismaClient, PrivacySetting } from "@prisma/client";
+import { comparePassword } from '../../utils/script';
+import { EncryptJWT } from 'jose';
 //import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 
 const prisma = new PrismaClient();
@@ -20,11 +19,12 @@ const prisma = new PrismaClient();
 */
 export const resolvers = {
   Query: {
+    // Existing e-commerce queries
     users: () => prisma.user.findMany(),
+    
     user: (_: any, { id }: { id: string }) =>
       prisma.user.findUnique({ where: { id } }),
 
-    // Updated products resolver with optimizations for large datasets
     products: async (
       _: any,
       {
@@ -42,7 +42,6 @@ export const resolvers = {
       }
     ) => {
       try {
-        // Build where clause conditionally with indexed fields only
         const where: any = {};
 
         if (search) {
@@ -52,13 +51,12 @@ export const resolvers = {
             { tags: { has: search } },
           ];
         }
-        console.log(search, cursor, limit, category, sortBy);
+
         if (category && category !== "All Categories") {
           where.categoryId = category;
         }
 
-        // Determine sorting - use indexed fields for better performance
-        let orderBy: any = [{ id: "asc" }]; // default as array
+        let orderBy: any = [{ id: "asc" }];
         if (sortBy) {
           switch (sortBy) {
             case "Newest":
@@ -80,11 +78,10 @@ export const resolvers = {
 
         const products = await prisma.product.findMany({
           where,
-          take: limit + 1, // Get one extra to check for next page
-          skip: cursor ? 1 : 0, // Skip cursor if provided
+          take: limit + 1,
+          skip: cursor ? 1 : 0,
           cursor: cursor ? { id: cursor } : undefined,
           orderBy,
-          // Only select necessary fields to reduce data transfer
           select: {
             id: true,
             name: true,
@@ -102,7 +99,6 @@ export const resolvers = {
             description: true,
             tags: true,
             sku: true,
-            // Skip heavy fields like description unless needed
           },
         });
 
@@ -123,7 +119,7 @@ export const resolvers = {
     product: (_: any, { id }: { id: string }) =>
       prisma.product.findUnique({ where: { id } }),
 
-    categories: async (_: any, args: any) => {
+    categories: async () => {
       return prisma.category.findMany();
     },
 
@@ -131,7 +127,8 @@ export const resolvers = {
       prisma.order.findMany({ where: { userId } }),
 
     supportTickets: () => prisma.supportTicket.findMany(),
-    getProducts: async (_: any, _args: any) => {
+    
+    getProducts: async () => {
       const products = await prisma.product.findMany({
         include: {
           category: true
@@ -150,7 +147,6 @@ export const resolvers = {
       if (userId) {
         whereClause.userId = userId;
         
-        // For specific user, respect privacy settings
         if (userId !== currentUserId) {
           whereClause.OR = [
             { privacy: 'PUBLIC' },
@@ -171,7 +167,6 @@ export const resolvers = {
           ];
         }
       } else if (followingOnly) {
-        // Get posts from users the current user follows
         whereClause = {
           user: {
             followers: {
@@ -186,7 +181,6 @@ export const resolvers = {
           ]
         };
       } else {
-        // Global feed - only public posts and posts from friends
         whereClause = {
           OR: [
             { privacy: 'PUBLIC' },
@@ -309,7 +303,6 @@ export const resolvers = {
         throw new UserInputError('Post not found');
       }
       
-      // Check privacy settings
       if (post.userId !== currentUserId) {
         if (post.privacy === 'ONLY_ME') {
           throw new ForbiddenError('You do not have permission to view this post');
@@ -375,7 +368,7 @@ export const resolvers = {
       return {
         comments: comments.map(comment => ({
           ...comment,
-          isLikedByMe: comment.likes.length > 0,
+        isLikedByMe: comment.likes.length > 0,
           likeCount: comment._count.likes
         })),
         totalCount,
@@ -387,7 +380,6 @@ export const resolvers = {
       const currentUserId = getUserId(context);
       const skip = (page - 1) * limit;
       
-      // Get posts from users the current user follows and their own posts
       const whereClause = {
         OR: [
           { userId: currentUserId },
@@ -546,6 +538,7 @@ export const resolvers = {
   },
 
   Mutation: {
+    // Existing e-commerce mutations
     login: async (_: any, args: any) => {
       const { email, password } = args.input;
       const user = await prisma.user.findUnique({ where: { email } });
@@ -639,7 +632,7 @@ export const resolvers = {
     },
 
     createProduct: async (_: any, { id, name, description, price, salePrice, sku }: any) => {
-      const product = await prisma.product.create({
+      await prisma.product.create({
         data: {
           name,
           description,
@@ -748,7 +741,6 @@ export const resolvers = {
     updatePost: async (_, { id, input }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if post exists and user owns it
       const existingPost = await prisma.post.findUnique({
         where: { id },
         select: { userId: true }
@@ -762,7 +754,6 @@ export const resolvers = {
         throw new ForbiddenError('You can only update your own posts');
       }
       
-      // First, remove all existing tags
       await prisma.postTaggedUser.deleteMany({
         where: { postId: id }
       });
@@ -816,7 +807,6 @@ export const resolvers = {
     deletePost: async (_, { id }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if post exists and user owns it
       const existingPost = await prisma.post.findUnique({
         where: { id },
         select: { userId: true }
@@ -873,7 +863,6 @@ export const resolvers = {
     updateComment: async (_, { id, input }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if comment exists and user owns it
       const existingComment = await prisma.comment.findUnique({
         where: { id },
         select: { userId: true }
@@ -918,7 +907,6 @@ export const resolvers = {
     deleteComment: async (_, { id }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if comment exists and user owns it
       const existingComment = await prisma.comment.findUnique({
         where: { id },
         select: { userId: true }
@@ -942,7 +930,6 @@ export const resolvers = {
     likePost: async (_, { postId }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if post exists
       const post = await prisma.post.findUnique({
         where: { id: postId }
       });
@@ -951,7 +938,6 @@ export const resolvers = {
         throw new UserInputError('Post not found');
       }
       
-      // Check if user already liked the post
       const existingLike = await prisma.like.findFirst({
         where: {
           postId,
@@ -1005,7 +991,6 @@ export const resolvers = {
     likeComment: async (_, { commentId }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if comment exists
       const comment = await prisma.comment.findUnique({
         where: { id: commentId }
       });
@@ -1014,7 +999,6 @@ export const resolvers = {
         throw new UserInputError('Comment not found');
       }
       
-      // Check if user already liked the comment
       const existingLike = await prisma.like.findFirst({
         where: {
           commentId,
@@ -1073,7 +1057,6 @@ export const resolvers = {
         throw new UserInputError('You cannot follow yourself');
       }
       
-      // Check if user exists
       const user = await prisma.user.findUnique({
         where: { id: userId }
       });
@@ -1082,7 +1065,6 @@ export const resolvers = {
         throw new UserInputError('User not found');
       }
       
-      // Check if already following
       const existingFollow = await prisma.follow.findFirst({
         where: {
           followerId: currentUserId,
@@ -1132,7 +1114,6 @@ export const resolvers = {
     tagUsersInPost: async (_, { postId, userIds }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if post exists and user owns it
       const post = await prisma.post.findUnique({
         where: { id: postId },
         select: { userId: true }
@@ -1146,7 +1127,6 @@ export const resolvers = {
         throw new ForbiddenError('You can only tag users in your own posts');
       }
       
-      // Create new tagged user relationships
       await prisma.postTaggedUser.createMany({
         data: userIds.map(userId => ({
           postId,
@@ -1195,7 +1175,6 @@ export const resolvers = {
     removeTagFromPost: async (_, { postId, userId }, context) => {
       const currentUserId = getUserId(context);
       
-      // Check if post exists and user owns it
       const post = await prisma.post.findUnique({
         where: { id: postId },
         select: { userId: true }
@@ -1209,7 +1188,6 @@ export const resolvers = {
         throw new ForbiddenError('You can only modify tags in your own posts');
       }
       
-      // Remove the tagged user relationship
       await prisma.postTaggedUser.deleteMany({
         where: {
           postId,
@@ -1262,7 +1240,6 @@ export const resolvers = {
       
       let whereClause: any = { userId: parent.id };
       
-      // Respect privacy settings if viewing another user's posts
       if (currentUserId !== parent.id) {
         whereClause.OR = [
           { privacy: 'PUBLIC' },
