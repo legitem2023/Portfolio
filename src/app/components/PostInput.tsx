@@ -14,7 +14,7 @@ interface User {
 
 interface PostInputProps {
   user: User;
-  onPostSubmit?: (content: string, images: string[], background?: string, taggedUsers: string[] ) => void;
+  onPostSubmit?: (content: string, images: string[], taggedUsers: string[], background?: string ) => void;
   placeholder?: string;
   friends?: User[];
 }
