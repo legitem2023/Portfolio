@@ -30,6 +30,7 @@ const MessagesTab = () => {
           taggedUsers: taggedUsers.map(user => user.id),
           privacy: 'PUBLIC' // Default privacy setting
         };
+    
     const result = await createPost({
             variables: { input },
             update: (cache, { data }) => {
@@ -38,7 +39,7 @@ const MessagesTab = () => {
                 // Optional: Update the cache with the new post
               }
             }
-  };
+          });
 
   const loadMore = () => {
     fetchMore({
