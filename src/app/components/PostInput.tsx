@@ -95,7 +95,7 @@ const PostInput: React.FC<PostInputProps> = ({
           }
         } else {
           // Use the custom onSubmit handler if provided
-          onPostSubmit(content, images, selectedBackground || undefined);
+          onPostSubmit(content, images, selectedBackground, taggedUsers);
           setContent('');
           setImages([]);
           setTaggedUsers([]);
