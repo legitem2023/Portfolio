@@ -183,7 +183,7 @@ export const resolvers = {
       } else {
         whereClause = {
           OR: [
-            { privacy: PrivacySettingPUBLIC' },
+            { privacy: PrivacySetting.PUBLIC },
             {
               AND: [
                 { privacy: PrivacySetting.FRIENDS },
