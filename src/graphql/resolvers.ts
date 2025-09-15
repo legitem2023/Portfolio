@@ -377,80 +377,80 @@ export const resolvers = {
     },
     
     userFeed: async (_: any, { page = 1, limit = 10 }: any, context: any) => {
-      const currentUserId = getUserId(context);
-      const skip = (page - 1) * limit;
-      
-      const whereClause = {
-        OR: [
-          { userId: currentUserId },
-          {
-            user: {
-              followers: {
-                some: {
-                  followerId: currentUserId
-                }
-              }
-            },
-            OR: [
-              { privacy: 'PUBLIC' },
-              { privacy: 'FRIENDS' }
-            ]
-          }
-        ]
-      };
-      
-      const [posts, totalCount] = await Promise.all([
-        prisma.post.findMany({
-          where: whereClause,
-          skip,
-          take: limit,
-          include: {
-            user: true,
-            taggedUsers: {
-              include: {
-                user: true
-              }
-            },
-            comments: {
-              take: 2,
-              include: {
-                user: true
-              },
-              orderBy: {
-                createdAt: 'desc'
-              }
-            },
-            likes: {
-              where: {
-                userId: currentUserId
-              }
-            },
-            _count: {
-              select: {
-                comments: true,
-                likes: true
-              }
+  const currentUserId = getUserId(context);
+  const skip = (page - 1) * limit;
+  
+  const whereClause = {
+    OR: [
+      { userId: currentUserId },
+      {
+        user: {
+          followers: {
+            some: {
+              followerId: currentUserId
             }
+          }
+        },
+        OR: [
+          { privacy: PrivacySetting.PUBLIC },
+          { privacy: PrivacySetting.FRIENDS }
+        ]
+      }
+    ]
+  };
+  
+  const [posts, totalCount] = await Promise.all([
+    prisma.post.findMany({
+      where: whereClause,
+      skip,
+      take: limit,
+      include: {
+        user: true,
+        taggedUsers: {
+          include: {
+            user: true
+          }
+        },
+        comments: {
+          take: 2,
+          include: {
+            user: true
           },
           orderBy: {
             createdAt: 'desc'
           }
-        }),
-        prisma.post.count({ where: whereClause })
-      ]);
-      
-      return {
-        posts: posts.map(post => ({
-          ...post,
-          taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
-          isLikedByMe: (post.likes?.length || 0) > 0,
-          likeCount: post._count?.likes || 0,
-          commentCount: post._count?.comments || 0
-        })),
-        totalCount,
-        hasNextPage: totalCount > page * limit
-      };
-    },
+        },
+        likes: {
+          where: {
+            userId: currentUserId
+          }
+        },
+        _count: {
+          select: {
+            comments: true,
+            likes: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    }),
+    prisma.post.count({ where: whereClause })
+  ]);
+  
+  return {
+    posts: posts.map(post => ({
+      ...post,
+      taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+      isLikedByMe: (post.likes?.length || 0) > 0,
+      likeCount: post._count?.likes || 0,
+      commentCount: post._count?.comments || 0
+    })),
+    totalCount,
+    hasNextPage: totalCount > page * limit
+  };
+},
     
     userLikes: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
