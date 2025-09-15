@@ -982,7 +982,7 @@ export const resolvers = {
       }
       
       await prisma.like.delete({
-        where: { id: like.id }
+        where: { id: like?.id }
       });
       
       return true;
@@ -1123,7 +1123,7 @@ export const resolvers = {
      //   throw new UserInputError('Post not found');
       }
       
-      if (post.userId !== currentUserId) {
+      if (post?.userId !== currentUserId) {
       //  throw new ForbiddenError('You can only tag users in your own posts');
       }
       
