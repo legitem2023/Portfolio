@@ -14,8 +14,8 @@ const MessagesTab = () => {
     fetchPolicy: 'cache-and-network'
   });
 
-  const handlePostSubmit = (content: string) => {
-    console.log('New post:', content);
+  const handlePostSubmit = (content: string, images:any, selectedBackground:any ) => {
+    console.log('New post:', content,images,selectedBackground);
     // Add your post submission logic here
     // After successful post creation, you might want to refetch the feed
   };
