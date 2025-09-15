@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery,useMutation } from '@apollo/client';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
+import DeluxeMessageCardLoading from './DeluxeMessageCardLoading';
 import PostInput from './PostInput';
 import { GET_USER_FEED } from './graphql/query'; // Adjust the import path
 import { CREATE_POST } from './graphql/mutation';
@@ -58,7 +59,7 @@ const MessagesTab = () => {
     setPage(page + 1);
   };
 
-  if (usersfeedloading && page === 1) return <div>Loading...</div>;
+  if (usersfeedloading && page === 1) return <DeluxeMessageCardLoading/>;
   if (usersfeederror) return <div>Error: {usersfeederror.message}</div>;
 
   const formatDate = (dateString: string) => {
