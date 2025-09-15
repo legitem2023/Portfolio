@@ -19,7 +19,7 @@ const MessagesTab = () => {
       console.log(e);
     }
   });
-  const handlePostSubmit = (content: string, images:any, selectedBackground:any,taggedUsers:any ) => {
+  const handlePostSubmit = async (content: string, images:any, selectedBackground:any,taggedUsers:any ) => {
     console.log('New post:', content,images,selectedBackground);
     // Add your post submission logic here
     // After successful post creation, you might want to refetch the feed
