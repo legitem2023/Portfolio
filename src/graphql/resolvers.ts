@@ -149,10 +149,10 @@ export const resolvers = {
         
         if (userId !== currentUserId) {
           whereClause.OR = [
-            { privacy: 'PUBLIC' },
+            { privacy: PrivacySetting.PUBLIC },
             {
               AND: [
-                { privacy: 'FRIENDS' },
+                { privacy: PrivacySetting.FRIENDS },
                 {
                   user: {
                     followers: {
@@ -183,10 +183,10 @@ export const resolvers = {
       } else {
         whereClause = {
           OR: [
-            { privacy: 'PUBLIC' },
+            { privacy: PrivacySettingPUBLIC' },
             {
               AND: [
-                { privacy: 'FRIENDS' },
+                { privacy: PrivacySetting.FRIENDS },
                 {
                   user: {
                     followers: {
