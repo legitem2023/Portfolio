@@ -750,7 +750,7 @@ export const resolvers = {
       //  throw new UserInputError('Post not found');
       }
       
-      if (existingPost.userId !== currentUserId) {
+      if (existingPost?.userId !== currentUserId) {
       //  throw new ForbiddenError('You can only update your own posts');
       }
       
@@ -816,7 +816,7 @@ export const resolvers = {
       //  throw new UserInputError('Post not found');
       }
       
-      if (existingPost.userId !== currentUserId) {
+      if (existingPost?.userId !== currentUserId) {
      //   throw new ForbiddenError('You can only delete your own posts');
       }
       
@@ -872,7 +872,7 @@ export const resolvers = {
       //  throw new UserInputError('Comment not found');
       }
       
-      if (existingComment.userId !== currentUserId) {
+      if (existingComment?.userId !== currentUserId) {
       //  throw new ForbiddenError('You can only update your own comments');
       }
       
@@ -916,7 +916,7 @@ export const resolvers = {
        // throw new UserInputError('Comment not found');
       }
       
-      if (existingComment.userId !== currentUserId) {
+      if (existingComment?.userId !== currentUserId) {
       //  throw new ForbiddenError('You can only delete your own comments');
       }
       
@@ -1054,7 +1054,7 @@ export const resolvers = {
       const currentUserId = getUserId(context);
       
       if (userId === currentUserId) {
-        throw new UserInputError('You cannot follow yourself');
+        //throw new UserInputError('You cannot follow yourself');
       }
       
       const user = await prisma.user.findUnique({
