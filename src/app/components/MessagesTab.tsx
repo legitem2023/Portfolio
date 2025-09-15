@@ -20,17 +20,15 @@ const MessagesTab = () => {
     }
   });
   const handlePostSubmit = async (content: string, images:any, selectedBackground:any,taggedUsers:any ) => {
-    console.log('New post:', content,images,selectedBackground);
-    // Add your post submission logic here
-    // After successful post creation, you might want to refetch the feed
-   const input = {
+       const input = {
           content: content.trim(),
           background: selectedBackground || undefined,
           images: images.length > 0 ? images : undefined,
           taggedUsers: taggedUsers.map((user:any) => user.id),
           privacy: 'PUBLIC' // Default privacy setting
         };
-    
+    console.log('New post:', input);
+   
     const result = await createPost({
             variables: { input },
             update: (cache, { data }) => {
