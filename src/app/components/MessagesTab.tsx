@@ -1,72 +1,93 @@
-// Example usage in a page or component
-import React from 'react';
+'use client';
+import React, { useState } from 'react';
+import { useQuery } from '@apollo/client';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
 import PostInput from './PostInput';
-const MessagesTab = () => {
-  const sampleMessages = [
-    {
-      id: '1',
-      sender: 'Jane Smith',
-      avatar: '/path/to/avatar1.jpg',
-      timestamp: '2 hours ago',
-      content: 'Just visited the most amazing art exhibition! The contemporary pieces were mind-blowing. Definitely recommend checking it out if you\'re in town! 🎨',
-      likes: 245,
-      comments: 32,
-      shares: 12,
-      postImage: '/path/to/exhibition.jpg',
-      isOwnMessage: false
-    },
-    {
-      id: '2',
-      sender: 'John Doe',
-      avatar: '/path/to/avatar2.jpg',
-      timestamp: '5 hours ago',
-      content: 'My new project is finally live! After months of hard work, our team has launched the new eco-friendly product line. So proud of what we\'ve accomplished! 🌱',
-      likes: 512,
-      comments: 47,
-      shares: 28,
-      isOwnMessage: true,
-      status: 'read'
-    },
-    {
-      id: '3',
-      sender: 'Travel Enthusiast',
-      timestamp: '1 day ago',
-      content: 'The view from the mountain peak was absolutely worth the 5-hour hike! Nature never ceases to amaze me. 🏔️',
-      likes: 892,
-      comments: 63,
-      shares: 41,
-      postImage: '/path/to/mountain.jpg',
-      isOwnMessage: false
-    }
-  ];
+import { GET_USER_FEED } from './graphql/query'; // Adjust the import path
 
-const handlePostSubmit = (content: string) => {
+const MessagesTab = () => {
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data, loading, error, fetchMore } = useQuery(GET_USER_FEED, {
+    variables: { page, limit },
+    fetchPolicy: 'cache-and-network'
+  });
+
+  const handlePostSubmit = (content: string) => {
     console.log('New post:', content);
     // Add your post submission logic here
+    // After successful post creation, you might want to refetch the feed
   };
 
+  const loadMore = () => {
+    fetchMore({
+      variables: {
+        page: page + 1,
+        limit,
+      },
+      updateQuery: (prev, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prev;
+        return {
+          userFeed: {
+            ...fetchMoreResult.userFeed,
+            posts: [...prev.userFeed.posts, ...fetchMoreResult.userFeed.posts],
+          },
+        };
+      },
+    });
+    setPage(page + 1);
+  };
 
-  
+  if (loading && page === 1) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  const formatDate = (dateString: string) => {
+    // Implement your date formatting logic here
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
         <PostInput
-        user={{
-          id:"1",
-          name: "John Doe",
-          avatar: "/path/to/avatar.jpg"
-        }}
-        onPostSubmit={handlePostSubmit}
-        placeholder="What's on your mind?"
-      />
-         {sampleMessages.map(message => (
+          user={{
+            id: "1",
+            name: "John Doe",
+            avatar: "/path/to/avatar.jpg"
+          }}
+          onPostSubmit={handlePostSubmit}
+          placeholder="What's on your mind?"
+        />
+        
+        {data?.userFeed?.posts.map(post => (
           <DeluxeMessageCard 
-            key={message.id} 
-            message={message} 
+            key={post.id} 
+            message={{
+              id: post.id,
+              sender: `${post.user.firstName} ${post.user.lastName}`,
+              avatar: post.user.avatar || '/path/to/default-avatar.jpg',
+              timestamp: formatDate(post.createdAt),
+              content: post.content,
+              likes: post.likeCount,
+              comments: post.commentCount,
+              shares: 0, // You might need to add this field to your schema
+              postImage: post.images && post.images.length > 0 ? post.images[0] : undefined,
+              isOwnMessage: post.user.id === "current-user-id" // You need to get the current user ID
+            }} 
             className="mb-6"
           />
         ))}
+        
+        {data?.userFeed?.hasNextPage && (
+          <button 
+            onClick={loadMore}
+            className="load-more-btn"
+            disabled={loading}
+          >
+            {loading ? 'Loading...' : 'Load More'}
+          </button>
+        )}
       </div>
     </div>
   );
