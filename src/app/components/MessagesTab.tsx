@@ -4,6 +4,7 @@ import { useQuery } from '@apollo/client';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
 import PostInput from './PostInput';
 import { GET_USER_FEED } from './graphql/query'; // Adjust the import path
+import { CREATE_POST } from './graphql/mutation';
 
 const MessagesTab = () => {
   const [page, setPage] = useState(1);
@@ -13,11 +14,30 @@ const MessagesTab = () => {
     variables: { page, limit },
     fetchPolicy: 'cache-and-network'
   });
-
-  const handlePostSubmit = (content: string, images:any, selectedBackground:any ) => {
+  const [createPost, { loading, error }] = useMutation(CREATE_POST,{
+    onCompleted:(e:any) =>{
+      console.log(e);
+    }
+  });
+  const handlePostSubmit = (content: string, images:any, selectedBackground:any,taggedUsers:any ) => {
     console.log('New post:', content,images,selectedBackground);
     // Add your post submission logic here
     // After successful post creation, you might want to refetch the feed
+   const input = {
+          content: content.trim(),
+          background: selectedBackground || undefined,
+          images: images.length > 0 ? images : undefined,
+          taggedUsers: taggedUsers.map(user => user.id),
+          privacy: 'PUBLIC' // Default privacy setting
+        };
+    const result = await createPost({
+            variables: { input },
+            update: (cache, { data }) => {
+              // Handle cache update if needed
+              if (data?.createPost) {
+                // Optional: Update the cache with the new post
+              }
+            }
   };
 
   const loadMore = () => {
