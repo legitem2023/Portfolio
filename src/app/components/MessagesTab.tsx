@@ -40,7 +40,7 @@ const MessagesTab = () => {
               }
             }
           });
-
+  }
   const loadMore = () => {
     fetchMore({
       variables: {
