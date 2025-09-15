@@ -1183,7 +1183,7 @@ export const resolvers = {
      //   throw new UserInputError('Post not found');
       }
       
-      if (post.userId !== currentUserId) {
+      if (post?.userId !== currentUserId) {
      //   throw new ForbiddenError('You can only modify tags in your own posts');
       }
       
