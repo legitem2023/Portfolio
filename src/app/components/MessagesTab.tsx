@@ -10,7 +10,7 @@ const MessagesTab = () => {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data, loading, error, fetchMore } = useQuery(GET_USER_FEED, {
+  const { data, loading:usersfeedloading, error:usersfeederror, fetchMore } = useQuery(GET_USER_FEED, {
     variables: { page, limit },
     fetchPolicy: 'cache-and-network'
   });
@@ -60,8 +60,8 @@ const MessagesTab = () => {
     setPage(page + 1);
   };
 
-  if (loading && page === 1) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (usersfeedloading && page === 1) return <div>Loading...</div>;
+  if (usersfeederror) return <div>Error: {usersfeederror.message}</div>;
 
   const formatDate = (dateString: string) => {
     // Implement your date formatting logic here
