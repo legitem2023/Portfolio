@@ -1044,7 +1044,7 @@ export const resolvers = {
       }
       
       await prisma.like.delete({
-        where: { id: like.id }
+        where: { id: like?.id }
       });
       
       return true;
