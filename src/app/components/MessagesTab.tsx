@@ -24,7 +24,7 @@ const MessagesTab = () => {
           content: content.trim(),
           background: selectedBackground || undefined,
           images: images.length > 0 ? images : undefined,
-          taggedUsers: taggedUsers?.map((user:any) => user.id),
+          taggedUsers: taggedUsers,
           privacy: 'PUBLIC' // Default privacy setting
         };
     console.log('New post:', input);
