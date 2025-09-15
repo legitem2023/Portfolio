@@ -20,7 +20,7 @@ const MessagesTab = () => {
       console.log(e);
     }
   });
-  const handlePostSubmit = async (content: string, images:any, selectedBackground:any,taggedUsers:any ) => {
+  const handlePostSubmit = async (content: string, images:any, taggedUsers:any , selectedBackground:any) => {
        const input = {
           content: content.trim(),
           background: selectedBackground || undefined,
