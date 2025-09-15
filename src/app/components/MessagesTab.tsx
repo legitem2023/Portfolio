@@ -1,6 +1,6 @@
 'use client';
 import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery,useMutation } from '@apollo/client';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
 import PostInput from './PostInput';
 import { GET_USER_FEED } from './graphql/query'; // Adjust the import path
