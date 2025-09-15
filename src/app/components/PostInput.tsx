@@ -2,33 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes, FaPaintBrush } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
-
+import { CREATE_POST } from './graphql/mutation';
 // Define the GraphQL mutation
-export const CREATE_POST = gql`
-  mutation CreatePost($input: CreatePostInput!) {
-    createPost(input: $input) {
-      id
-      content
-      background
-      images
-      createdAt
-      user {
-        id
-        firstName
-        lastName
-        avatar
-      }
-      taggedUsers {
-        id
-        firstName
-        lastName
-      }
-      commentCount
-      likeCount
-      isLikedByMe
-    }
-  }
-`;
+
 
 interface User {
   id: string;
