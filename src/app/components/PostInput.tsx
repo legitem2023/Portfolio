@@ -1,6 +1,34 @@
 import { useState, useRef, useEffect } from 'react';
+import { useMutation } from '@apollo/client';
 import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes, FaPaintBrush } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
+
+// Define the GraphQL mutation
+export const CREATE_POST = gql`
+  mutation CreatePost($input: CreatePostInput!) {
+    createPost(input: $input) {
+      id
+      content
+      background
+      images
+      createdAt
+      user {
+        id
+        firstName
+        lastName
+        avatar
+      }
+      taggedUsers {
+        id
+        firstName
+        lastName
+      }
+      commentCount
+      likeCount
+      isLikedByMe
+    }
+  }
+`;
 
 interface User {
   id: string;
@@ -21,6 +49,7 @@ const PostInput: React.FC<PostInputProps> = ({
   placeholder = "What's on your mind?",
   friends = []
 }) => {
+  const [createPost, { loading, error }] = useMutation(CREATE_POST);
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -51,15 +80,53 @@ const PostInput: React.FC<PostInputProps> = ({
     { id: 'solid-green', value: '#2ecc71', label: 'Solid Green' },
   ];
 
-  const handleSubmit = () => {
-    if ((content.trim() || images.length > 0) && onPostSubmit) {
-      onPostSubmit(content, images, selectedBackground || undefined);
-      setContent('');
-      setImages([]);
-      setTaggedUsers([]);
-      setSelectedBackground(null);
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+  const handleSubmit = async () => {
+    if ((content.trim() || images.length > 0)) {
+      try {
+        const input = {
+          content: content.trim(),
+          background: selectedBackground || undefined,
+          images: images.length > 0 ? images : undefined,
+          taggedUsers: taggedUsers.map(user => user.id),
+          privacy: 'PUBLIC' // Default privacy setting
+        };
+
+        // Use the mutation if no custom onSubmit handler is provided
+        if (!onPostSubmit) {
+          const result = await createPost({
+            variables: { input },
+            update: (cache, { data }) => {
+              // Handle cache update if needed
+              if (data?.createPost) {
+                // Optional: Update the cache with the new post
+              }
+            }
+          });
+          
+          // Reset form after successful submission
+          if (result.data) {
+            setContent('');
+            setImages([]);
+            setTaggedUsers([]);
+            setSelectedBackground(null);
+            if (textareaRef.current) {
+              textareaRef.current.style.height = 'auto';
+            }
+          }
+        } else {
+          // Use the custom onSubmit handler if provided
+          onPostSubmit(content, images, selectedBackground || undefined);
+          setContent('');
+          setImages([]);
+          setTaggedUsers([]);
+          setSelectedBackground(null);
+          if (textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+          }
+        }
+      } catch (err) {
+        console.error('Error creating post:', err);
+        // Handle error (show notification, etc.)
       }
     }
   };
@@ -325,12 +392,18 @@ const PostInput: React.FC<PostInputProps> = ({
         <div className="post-actions">
           <button 
             onClick={handleSubmit}
-            disabled={!content.trim() && images.length === 0}
-            className={`post-btn ${(content.trim() || images.length > 0) ? 'active' : ''}`}
+            disabled={(!content.trim() && images.length === 0) || loading}
+            className={`post-btn ${(content.trim() || images.length > 0) && !loading ? 'active' : ''}`}
           >
-            Post
+            {loading ? 'Posting...' : 'Post'}
           </button>
         </div>
+
+        {error && (
+          <div className="error-message">
+            Error creating post: {error.message}
+          </div>
+        )}
       </div>
       
       <style jsx>{`
@@ -669,6 +742,15 @@ const PostInput: React.FC<PostInputProps> = ({
         
         .post-btn.active:hover {
           background-color: #166fe5;
+        }
+        
+        .error-message {
+          color: #f3425f;
+          margin-top: 12px;
+          padding: 8px;
+          background-color: #ffe6e6;
+          border-radius: 4px;
+          font-size: 14px;
         }
       `}</style>
     </div>
