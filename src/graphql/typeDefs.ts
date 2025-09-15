@@ -392,6 +392,7 @@ export const typeDefs = gql`
 
   # Social media input types
   input CreatePostInput {
+    userId:String!
     content: String!
     background: String
     images: [String!]
