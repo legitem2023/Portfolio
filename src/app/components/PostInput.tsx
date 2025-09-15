@@ -25,7 +25,11 @@ const PostInput: React.FC<PostInputProps> = ({
   placeholder = "What's on your mind?",
   friends = []
 }) => {
-  const [createPost, { loading, error }] = useMutation(CREATE_POST);
+  const [createPost, { loading, error }] = useMutation(CREATE_POST,{
+    onCompleted:(e:any) =>{
+      console.log(e);
+    }
+  });
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [images, setImages] = useState<string[]>([]);
