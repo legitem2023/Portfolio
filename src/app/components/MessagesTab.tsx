@@ -60,7 +60,7 @@ const MessagesTab = () => {
           placeholder="What's on your mind?"
         />
         
-        {data?.userFeed?.posts.map(post => (
+        {data?.userFeed?.posts.map((post:any) => (
           <DeluxeMessageCard 
             key={post.id} 
             message={{
