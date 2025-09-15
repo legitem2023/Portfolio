@@ -1105,7 +1105,7 @@ export const resolvers = {
       }
       
       await prisma.follow.delete({
-        where: { id: follow.id }
+        where: { id: follow?.id }
       });
       
       return true;
@@ -1242,10 +1242,10 @@ export const resolvers = {
       
       if (currentUserId !== parent.id) {
         whereClause.OR = [
-          { privacy: 'PUBLIC' },
+          { privacy: PrivacySetting.PUBLIC },
           {
             AND: [
-              { privacy: 'FRIENDS' },
+              { privacy: PrivacySetting.FRIENDS },
               {
                 user: {
                   followers: {
@@ -1303,7 +1303,7 @@ export const resolvers = {
     
     followers: async (parent: any) => {
       const followers = await prisma.follow.findMany({
-        where: { followingId: parent.id },
+        where: { followingId: parent?.id },
         include: {
           follower: true
         }
@@ -1314,7 +1314,7 @@ export const resolvers = {
     
     following: async (parent: any) => {
       const following = await prisma.follow.findMany({
-        where: { followerId: parent.id },
+        where: { followerId: parent?.id },
         include: {
           following: true
         }
@@ -1325,13 +1325,13 @@ export const resolvers = {
     
     followerCount: async (parent: any) => {
       return prisma.follow.count({
-        where: { followingId: parent.id }
+        where: { followingId: parent?.id }
       });
     },
     
     followingCount: async (parent: any) => {
       return prisma.follow.count({
-        where: { followerId: parent.id }
+        where: { followerId: parent?.id }
       });
     },
     
