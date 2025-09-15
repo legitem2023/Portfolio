@@ -26,7 +26,8 @@ const MessagesTab = () => {
           background: selectedBackground || undefined,
           images: images.length > 0 ? images : undefined,
           taggedUsers: taggedUsers,
-          privacy: 'PUBLIC' // Default privacy setting
+          privacy: 'PUBLIC', // Default privacy setting
+          userId:"099ffffhytfdfjj"
         };
     console.log('New post:', input);
    
