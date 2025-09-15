@@ -1131,8 +1131,7 @@ export const resolvers = {
         data: userIds.map((userId: any) => ({
           postId,
           userId
-        })),
-        skipDuplicates: true
+        }))
       });
       
       const updatedPost = await prisma.post.findUnique({
