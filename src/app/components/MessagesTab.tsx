@@ -165,7 +165,7 @@ const MessagesTab = () => {
               user: post.user,
               isOwnMessage: post.user.id === userId
             }} 
-            className="mb-6"
+            className="mb-2"
           />
         ))}
         
