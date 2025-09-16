@@ -260,10 +260,10 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden mr-3 relative">
-            {(avatar || user?.image) && !avatarError ? (
+            {(avatar) && !avatarError ? (
               <Image
-                src={avatar || user?.image || '/NoImage.webp'}
-                alt={sender || user?.name || 'User'}
+                src={avatar || '/NoImage.webp'}
+                alt={sender || 'User'}
                 fill
                 className="object-cover"
                 onError={() => setAvatarError(true)}
