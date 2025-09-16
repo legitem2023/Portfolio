@@ -41,7 +41,7 @@ useEffect(() => {
     getRole();
   }, []);
   const { data, loading:usersfeedloading, error:usersfeederror, fetchMore } = useQuery(GET_USER_FEED, {
-    variables: { page, limit },
+    variables: { page, limit, userId },
     fetchPolicy: 'cache-and-network'
   });
   const [createPost, { loading, error }] = useMutation(CREATE_POST,{
@@ -74,6 +74,7 @@ useEffect(() => {
       variables: {
         page: page + 1,
         limit,
+        userId:userId
       },
       updateQuery: (prev, { fetchMoreResult }) => {
         if (!fetchMoreResult) return prev;
