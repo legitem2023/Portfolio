@@ -270,13 +270,13 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
-                {(sender || user?.name || 'U').charAt(0)}
+                {(sender || 'U').charAt(0)}
               </div>
             )}
           </div>
           
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-800">{sender || user?.name || 'Unknown User'}</h3>
+            <h3 className="font-semibold text-gray-800">{sender || 'Unknown User'}</h3>
             <p className="text-xs text-gray-500">{formatDate(timestamp)}</p>
           </div>
           
