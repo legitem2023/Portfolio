@@ -747,7 +747,7 @@ const isValid = await comparePassword(password, user?.password || "");
           background: input.background,
           images: input.images || [],
           privacy: input.privacy || 'PUBLIC',
-          userId: currentUserId,
+          userId: input.userId,
           taggedUsers: {
             create: input.taggedUsers?.map((userId: any) => ({ userId })) || []
           }
