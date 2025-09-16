@@ -622,12 +622,17 @@ export const resolvers = {
       };
     },
     
-    createUser: async (
-      _: any,
-      { email, password, firstName, lastName }: any
-    ) => {
+    createUser: async (_: any,{ email, password, firstName, lastName }:any) => {
+      
+      const passwordHash = await encryptPassword(password, 10);
+
       return prisma.user.create({
-        data: { email, password, firstName, lastName },
+        data: { 
+          email: email,
+          password: passwordHash, 
+          firstName: firstName, 
+          lastName: lastName
+        },
       });
     },
 
