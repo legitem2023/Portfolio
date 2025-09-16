@@ -391,13 +391,13 @@ const PostInput: React.FC<PostInputProps> = ({
         .post-input-container {
           width: 100%;
           max-width: 680px;
-          margin-bottom:2px;
+          margin-bottom:4px;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
         
         .post-input-card {
           background: #ffffff;
-          border-radius: 12px;
+          border-radius: 0px;
           box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
           padding: 16px;
           transition: box-shadow 0.3s ease;
