@@ -29,7 +29,7 @@ const MessagesTab = () => {
           privacy: 'PUBLIC', // Default privacy setting
           userId:"099ffffhytfdfjj"
         };
-    console.log('New post:', input);
+    
    
     const result = await createPost({
             variables: { input },
@@ -75,7 +75,7 @@ console.log(data?.userFeed);
           user={{
             id: "1",
             name: "John Doe",
-            avatar: "/path/to/avatar.jpg"
+            avatar: "/path/to/avatar.jpg" || "/NoImage.webp"
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
