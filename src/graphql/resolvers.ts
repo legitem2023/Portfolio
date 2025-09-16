@@ -554,7 +554,7 @@ export const resolvers = {
       //throw new ApolloError("User not found.", "USER_NOT_FOUND");
     }
 
-    if (!user.password) {
+    if (!user?.password) {
      console.log("User has no password");
       //throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
     }
