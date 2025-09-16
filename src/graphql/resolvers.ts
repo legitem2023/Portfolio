@@ -376,18 +376,18 @@ export const resolvers = {
       };
     },
     
-    userFeed: async (_: any, { page = 1, limit = 10 }: any, context: any) => {
+    userFeed: async (_: any, { page = 1, limit = 10 , userId = ""}: any, context: any) => {
   const currentUserId = getUserId(context);
   const skip = (page - 1) * limit;
   
   const whereClause = {
     OR: [
-      { userId: currentUserId },
+      { userId: userId },
       {
         user: {
           followers: {
             some: {
-              followerId: currentUserId
+              followerId: userId
             }
           }
         },
@@ -422,7 +422,7 @@ export const resolvers = {
         },
         likes: {
           where: {
-            userId: currentUserId
+            userId: userId
           }
         },
         _count: {
