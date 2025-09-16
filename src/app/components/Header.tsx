@@ -7,7 +7,27 @@ import VisitorCounter from './VisitorCounter';
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-
+useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include' // Important: includes cookies
+        });
+        
+        if (response.status === 401) {
+          // Handle unauthorized access
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        console.log(token);
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
