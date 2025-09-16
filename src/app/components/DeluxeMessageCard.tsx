@@ -6,6 +6,9 @@ interface User {
   id: string;
   name: string;
   avatar?: string;
+  email?: string;
+  phone?: string | null;
+  role?: string;
 }
 
 interface Comment {
@@ -28,6 +31,20 @@ interface Share {
   timestamp: string;
 }
 
+interface Post {
+  id: string;
+  background: string | null;
+  commentCount: number;
+  content: string;
+  createdAt: string;
+  images: string[];
+  isLikedByMe: boolean;
+  likeCount: number;
+  privacy: string;
+  taggedUsers: User[];
+  user: User;
+}
+
 interface Message {
   id: string;
   sender: string;
@@ -43,6 +60,13 @@ interface Message {
   likesList?: Like[];
   commentsList?: Comment[];
   sharesList?: Share[];
+  // New fields to match GraphQL response
+  background?: string | null;
+  images?: string[];
+  isLikedByMe?: boolean;
+  privacy?: string;
+  taggedUsers?: User[];
+  user?: User;
 }
 
 interface DeluxeMessageCardProps {
@@ -75,7 +99,14 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     postImage,
     likesList = [],
     commentsList = [],
-    sharesList = []
+    sharesList = [],
+    // New fields
+    background,
+    images = [],
+    isLikedByMe = false,
+    privacy,
+    taggedUsers = [],
+    user
   } = message;
 
   const FALLBACK_IMAGE = 'https://new-client-legitem.vercel.app/Thumbnail.png';
@@ -87,7 +118,19 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   const closeModal = () => {
     setModalOpen(false);
-    setTimeout(() => setModalType(null), 300); // Wait for animation to complete
+    setTimeout(() => setModalType(null), 300);
+  };
+
+  // Format date to readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const renderModalContent = () => {
@@ -139,7 +182,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                       <div className="w-10 h-10 rounded-full overflow-hidden mr-3 relative flex-shrink-0">
                         {comment.user.avatar ? (
                           <Image
-                            src={comment.user.avatar || '/NoImage.webp' }
+                            src={comment.user.avatar || '/NoImage.webp'}
                             alt={comment.user.name}
                             fill
                             className="object-cover"
@@ -182,7 +225,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                     <div className="w-10 h-10 rounded-full overflow-hidden mr-3 relative">
                       {share.user.avatar ? (
                         <Image
-                          src={share.user.avatar || '/NoImage.webp' }
+                          src={share.user.avatar || '/NoImage.webp'}
                           alt={share.user.name}
                           fill
                           className="object-cover"
@@ -217,24 +260,24 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden mr-3 relative">
-            {avatar && !avatarError ? (
+            {(avatar || user?.image) && !avatarError ? (
               <Image
-                src={avatar || '/NoImage.webp'}
-                alt={sender}
+                src={avatar || user?.image || '/NoImage.webp'}
+                alt={sender || user?.name || 'User'}
                 fill
                 className="object-cover"
                 onError={() => setAvatarError(true)}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold">
-                {sender.charAt(0)}
+                {(sender || user?.name || 'U').charAt(0)}
               </div>
             )}
           </div>
           
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-800">{sender}</h3>
-            <p className="text-xs text-gray-500">{timestamp}</p>
+            <h3 className="font-semibold text-gray-800">{sender || user?.name || 'Unknown User'}</h3>
+            <p className="text-xs text-gray-500">{formatDate(timestamp)}</p>
           </div>
           
           <button className="text-gray-500 hover:text-gray-700">
@@ -244,12 +287,32 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           </button>
         </div>
         
-        {/* Message Content */}
-        <div className="p-4">
-          <p className="text-gray-800 mb-3">{content}</p>
+        {/* Message Content with optional background gradient */}
+        <div 
+          className="p-4"
+          style={background ? { background: background, color: 'white' } : {}}
+        >
+          <p className="mb-3">{content}</p>
           
-          {/* Post Image (if any) */}
-          {postImage && (
+          {/* Post Images (if any) */}
+          {images && images.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+              {images.map((img, index) => (
+                <div key={index} className="relative h-64 w-full rounded-lg overflow-hidden">
+                  <Image
+                    src={img}
+                    alt={`Post image ${index + 1}`}
+                    fill
+                    className="object-cover"
+                    onError={() => setPostImageError(true)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          
+          {/* Single Post Image (if any) for backward compatibility */}
+          {postImage && !images?.length && (
             <div className="relative h-80 md:h-96 w-full mb-3 rounded-lg overflow-hidden">
               <Image
                 src={postImageError ? FALLBACK_IMAGE : postImage}
@@ -258,6 +321,33 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                 className="object-cover"
                 onError={() => setPostImageError(true)}
               />
+            </div>
+          )}
+          
+          {/* Tagged Users */}
+          {taggedUsers && taggedUsers.length > 0 && (
+            <div className="mb-3 text-sm">
+              <span className="text-gray-500">With: </span>
+              {taggedUsers.map((user, index) => (
+                <span key={user.id} className="font-medium">
+                  {user.name}
+                  {index < taggedUsers.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </div>
+          )}
+          
+          {/* Privacy Setting */}
+          {privacy && (
+            <div className="mb-3 text-sm text-gray-500 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {privacy === 'PUBLIC' ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                )}
+              </svg>
+              {privacy.charAt(0) + privacy.slice(1).toLowerCase()}
             </div>
           )}
           
@@ -293,11 +383,11 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           
           {/* Action Buttons */}
           <div className="flex justify-between border-t border-b border-gray-200 py-2">
-            <button className="flex items-center justify-center flex-1 text-gray-500 hover:text-gray-700 py-1">
+            <button className={`flex items-center justify-center flex-1 py-1 ${isLikedByMe ? 'text-blue-500' : 'text-gray-500 hover:text-gray-700'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              Like
+              {isLikedByMe ? 'Liked' : 'Like'}
             </button>
             <button 
               className="flex items-center justify-center flex-1 text-gray-500 hover:text-gray-700 py-1"
@@ -332,7 +422,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-blue-400 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
-                  {sender.charAt(0)}
+                  {(sender || 'U').charAt(0)}
                 </div>
               )}
             </div>
