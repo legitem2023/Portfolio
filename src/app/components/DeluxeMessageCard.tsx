@@ -139,7 +139,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                       <div className="w-10 h-10 rounded-full overflow-hidden mr-3 relative flex-shrink-0">
                         {comment.user.avatar ? (
                           <Image
-                            src={comment.user.avatar}
+                            src={comment.user.avatar || '/NoImage.webp' }
                             alt={comment.user.name}
                             fill
                             className="object-cover"
@@ -182,7 +182,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                     <div className="w-10 h-10 rounded-full overflow-hidden mr-3 relative">
                       {share.user.avatar ? (
                         <Image
-                          src={share.user.avatar}
+                          src={share.user.avatar || '/NoImage.webp' }
                           alt={share.user.name}
                           fill
                           className="object-cover"
@@ -219,7 +219,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden mr-3 relative">
             {avatar && !avatarError ? (
               <Image
-                src={avatar}
+                src={avatar || '/NoImage.webp'}
                 alt={sender}
                 fill
                 className="object-cover"
