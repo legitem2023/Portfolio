@@ -256,7 +256,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   return (
     <>
-      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-2 ${className}`}>
+      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <div className="flex-shrink-0 h-10 w-10 rounded-full overflow-hidden mr-3 relative">
