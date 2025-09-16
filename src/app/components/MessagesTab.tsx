@@ -6,11 +6,41 @@ import DeluxeMessageCardLoading from './DeluxeMessageCardLoading';
 import PostInput from './PostInput';
 import { GET_USER_FEED } from './graphql/query'; // Adjust the import path
 import { CREATE_POST } from './graphql/mutation';
+import { decryptToken } from '../../../utils/decryptToken';
 
 const MessagesTab = () => {
   const [page, setPage] = useState(1);
+  const [userId,setUserId] = useState("");
+  const [name,setName] = useState("");
+  const [avatar, setAvatar] = useState("");
   const limit = 10;
+useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include' // Important: includes cookies
+        });
+        
+        if (response.status === 401) {
+          // Handle unauthorized access
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
+        const payload = await decryptToken(token, secret.toString());
+        setUserId(payload.userId);
+        setName(payload.name);
+        setAvatar(payload.image);
+        console.log(payload);
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
   const { data, loading:usersfeedloading, error:usersfeederror, fetchMore } = useQuery(GET_USER_FEED, {
     variables: { page, limit },
     fetchPolicy: 'cache-and-network'
@@ -73,9 +103,9 @@ console.log(data?.userFeed);
       <div className="max-w-2xl mx-auto">
         <PostInput
           user={{
-            id: "1",
-            name: "John Doe",
-            avatar: "/NoImage.webp"
+            id: userId,
+            name:name,
+            avatar: avatar || "/NoImage.webp"
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
