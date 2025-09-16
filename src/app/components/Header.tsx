@@ -23,9 +23,9 @@ useEffect(() => {
         
         const data = await response.json();
         const token = data?.user;
-        const secret = process.env.NEXT_PUBLIC_JWT_SECRET;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
-        const payload = await decryptToken(token, secret);
+        const payload = await decryptToken(token, secret.toString());
 
         console.log(payload);
       } catch (err) {
