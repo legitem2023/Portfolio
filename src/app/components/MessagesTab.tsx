@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery,useMutation } from '@apollo/client';
 import DeluxeMessageCard from '../components/DeluxeMessageCard';
 import DeluxeMessageCardLoading from './DeluxeMessageCardLoading';
