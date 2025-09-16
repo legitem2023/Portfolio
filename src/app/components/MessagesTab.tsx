@@ -34,7 +34,6 @@ useEffect(() => {
         setUserId(payload.userId);
         setName(payload.name);
         setAvatar(payload.image);
-        console.log(payload);
       } catch (err) {
         console.error('Error getting role:', err);
       }
@@ -60,7 +59,6 @@ useEffect(() => {
           userId: userId
         };
     
-   console.log(input);
     const result = await createPost({
             variables: { input },
             update: (cache, { data }) => {
@@ -70,7 +68,7 @@ useEffect(() => {
               }
             }
           });
-  }
+        }
   const loadMore = () => {
     fetchMore({
       variables: {
@@ -97,7 +95,7 @@ useEffect(() => {
     // Implement your date formatting logic here
     return new Date(dateString).toLocaleDateString();
   };
-
+console.log(data);
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
