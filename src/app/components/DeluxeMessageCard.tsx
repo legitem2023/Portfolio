@@ -408,7 +408,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           </div>
           
           {/* Comment Input */}
-          <div className="flex items-center mt-3">
+          <div className="flex items-center m-3">
             <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden mr-2 relative">
               {avatar && !commentAvatarError ? (
                 <Image
