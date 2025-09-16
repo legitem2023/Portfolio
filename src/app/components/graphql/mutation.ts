@@ -232,3 +232,16 @@ export const REMOVE_TAG_FROM_POST = gql`
     }
   }
 `;
+
+export const CREATEUSER = gql`
+mutation CreateUser {
+  createUser(
+    email: "user@example.com",
+    password: "securepassword123",
+    firstName: "John",
+    lastName: "Doe"
+  ) {
+    statusText
+  }
+}
+`
