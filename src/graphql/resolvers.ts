@@ -571,12 +571,12 @@ const isValid = await comparePassword(password, user?.password || "");
     let token;
     try {
       token = await new EncryptJWT({
-        userId: user.id,
-        phone: user.phone,
-        email: user.email,
-        name: user.firstName,
-        role: user.role,
-        image: user.avatar
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar
       })
         .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
         .setIssuedAt()
