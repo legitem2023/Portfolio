@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import VisitorCounter from './VisitorCounter';
+import { decryptToken } from '../../../utils/decryptToken';
+
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -21,7 +23,11 @@ useEffect(() => {
         
         const data = await response.json();
         const token = data?.user;
-        console.log(token);
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET;
+
+        const payload = await decryptToken(token, secret);
+
+        console.log(payload);
       } catch (err) {
         console.error('Error getting role:', err);
       }
