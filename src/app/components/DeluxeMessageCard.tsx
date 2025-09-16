@@ -289,9 +289,9 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         
         {/* Message Content with optional background gradient */}
         <div 
-          className="p-4"
-        >
-          <p className="mb-3" style={background ? { background: background, color: 'white' } : {}}>{content}</p>
+          className="p-0"
+        >    
+          <div className="mb-3 p-2" style={background ? { background: background, color: 'white' } : {}}>{content}</div>
           {/* Post Images (if any) */}
           {images && images.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
