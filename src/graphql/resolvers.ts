@@ -544,23 +544,26 @@ export const resolvers = {
     const { email, password } = args.input || {};
 
     if (!email || !password) {
-      throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
+      console.log("Bad User Inputs");//throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      throw new ApolloError("User not found.", "USER_NOT_FOUND");
+      console.log("User not found");
+      //throw new ApolloError("User not found.", "USER_NOT_FOUND");
     }
 
     if (!user.password) {
-      throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
+     console.log("User has no password");
+      //throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
     }
 
     const isValid = await comparePassword(password, user.password);
 
     if (!isValid) {
-      throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
+      console.log("Invalid password");
+      //throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
     }
 
     const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
