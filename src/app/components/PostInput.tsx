@@ -207,7 +207,7 @@ const PostInput: React.FC<PostInputProps> = ({
       <div className="post-input-card">
         <div className="post-input-header">
           <div className="user-info">
-            <img src={user.avatar} alt={user.name} className="user-avatar" />
+            <img src={user.avatar || '/NoImage.webp'} alt={user.name} className="user-avatar" />
             <span className="user-name">{user.name}</span>
           </div>
           <button className="more-options-btn">
