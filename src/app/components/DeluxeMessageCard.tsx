@@ -337,7 +337,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           
           {/* Privacy Setting */}
           {privacy && (
-            <div className="mb-3 text-sm text-gray-500 flex items-center">
+            <div className="m-3 text-sm text-gray-500 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {privacy === 'PUBLIC' ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -350,7 +350,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           )}
           
           {/* Engagement Metrics */}
-          <div className="flex justify-between text-sm text-gray-500 mb-3">
+          <div className="flex justify-between text-sm text-gray-500 m-3">
             <div 
               className="flex items-center cursor-pointer hover:text-gray-700"
               onClick={() => openModal('likes')}
