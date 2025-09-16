@@ -542,7 +542,7 @@ export const resolvers = {
     login: async (_: any, args: any) => {
   try {
     const { email, password } = args.input || {};
-
+    console.log(email,password);
     if (!email || !password) {
       console.log("Bad User Inputs");//throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
     }
