@@ -559,7 +559,7 @@ export const resolvers = {
       //throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
     }
 
-    const isValid = await comparePassword(password, user.password);
+    const isValid = await comparePassword(password, user?.password);
 
     if (!isValid) {
       console.log("Invalid password");
