@@ -16,7 +16,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
 <div className="flex space-x-4">
-              <a href="#" className="text-indigo-600 hover:text-white">
+              <a href="#" className="text-blue-600 hover:text-white">
                 <Facebook size={20} />
               </a>
               <a href="#" className="text-indigo-600 hover:text-white">
@@ -25,7 +25,7 @@ const Footer = () => {
               <a href="#" className="text-indigo-600 hover:text-white">
                 <Twitter size={20} />
               </a>
-              <a href="#" className="text-indigo-600 hover:text-white">
+              <a href="#" className="text-rose-600 hover:text-white">
                 <Youtube size={20} />
               </a>
             </div>
