@@ -57,7 +57,7 @@ useEffect(() => {
           images: images.length > 0 ? images : undefined,
           taggedUsers: taggedUsers,
           privacy: 'PUBLIC', // Default privacy setting
-          userId:"099ffffhytfdfjj"
+          userId: userId
         };
     
    
