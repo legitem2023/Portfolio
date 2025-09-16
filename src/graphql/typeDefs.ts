@@ -422,7 +422,7 @@ export const typeDefs = gql`
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
-    createUser(email: String!, password: String!, firstName: String!, lastName: String!): User!
+    createUser(email: String!, password: String!, firstName: String!, lastName: String!): Result
     createProduct(id: String, name: String!, description: String!, price: Float!, salePrice: Float!, sku: String!): Response!
     createCategory(name: String!, description: String!, status: Boolean): Response!
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Order!
