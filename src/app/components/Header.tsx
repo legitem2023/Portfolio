@@ -41,7 +41,7 @@ useEffect(() => {
   }, []);
 
   return (
-    <div className="relative bg-white bg-opacity-90 backdrop-blur-sm shadow-sm p-2">
+    <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2">
       {/* Main Header Content */}
       <div className="relative z-10 flex items-center justify-between p-2">
         <div>
