@@ -584,7 +584,7 @@ const isValid = await comparePassword(password, user?.password || "");
         .encrypt(secret);
     } catch (err) {
       console.error('Token encryption error:', err);
-      throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
+     // throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
     }
 
     return {
@@ -594,12 +594,6 @@ const isValid = await comparePassword(password, user?.password || "");
 
   } catch (err) {
     console.error('Login resolver error:', err);
-
-    if (err instanceof ApolloError) {
-      throw err;
-    } else {
-      throw new ApolloError("Unexpected login error.", "INTERNAL_SERVER_ERROR");
-    }
   }
 },
     
