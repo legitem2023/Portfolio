@@ -106,7 +106,7 @@ useEffect(() => {
         </div>
 
       </div>
-        <VisitorCounter/>
+      {/*<VisitorCounter/>*/}
   
     </div>
   );
