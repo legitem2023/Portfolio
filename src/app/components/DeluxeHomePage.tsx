@@ -1,6 +1,6 @@
 // components/DeluxeHomePage.tsx
 "use client";
-import { GETCATEGORY, MANAGEMENTPRODUCTS } from './graphql/query';
+import { GETCATEGORY, MANAGEMENTPRODUCTS, USERS } from './graphql/query';
 import { useQuery } from '@apollo/client';
 import { Category, Product } from './types/types';
 import CategoryShimmer from './CategoryShimmer';
@@ -38,8 +38,10 @@ const DeluxeHomePage: React.FC = () => {
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS);
+  const { data: userData, loading: userLoading } = useQuery(USERS);
 
 useEffect(() => {
+  console.log(userData);
   if (categoryData?.categories) {
     const categoriesData = categoryData.categories.map((data: any) => ({
       id: data.id,
@@ -62,7 +64,7 @@ useEffect(() => {
      }))
    setProducts(productsData);
   }
-}, [categoryData,productData]);
+}, [categoryData,productData,userData]);
   
   // Hero carousel data
   const heroSlides = [
