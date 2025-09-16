@@ -542,13 +542,13 @@ export const resolvers = {
     login: async (_: any, args: any) => {
   try {
     const { email, password } = args.input || {};
-    console.log(email,password);
+    
     if (!email || !password) {
       console.log("Bad User Inputs");//throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
-
+    console.log(user);
     if (!user) {
       console.log("User not found");
       //throw new ApolloError("User not found.", "USER_NOT_FOUND");
