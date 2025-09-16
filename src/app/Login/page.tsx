@@ -1,11 +1,13 @@
 // pages/login.tsx
 "use client";
 import { useState, ChangeEvent, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
 import { signIn } from 'next-auth/react'; 
+
 interface FormData {
   email: string;
   password: string;
@@ -18,6 +20,8 @@ export default function LuxuryLogin() {
     password: '',
     rememberMe: false
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -27,36 +31,43 @@ export default function LuxuryLogin() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+    
     if (!formData.email || !formData.password) {
-      //showToast('Please enter email and password.', 'error')
-      return
+      // showToast('Please enter email and password.', 'error')
+      return;
     }
+    
+    setIsLoading(true);
     
     try {
       // Use NextAuth's signIn function with credentials
       const result = await signIn('credentials', {
-        email:formData.email,
-        password:formData.password,
+        email: formData.email,
+        password: formData.password,
         redirect: false, // Don't redirect automatically
-      })
-     console.log(result);
+      });
+     
+      console.log(result);
+      
       if (result?.error) {
-        //showToast('Login failed: ' + result.error, 'error')
-        //console.error('Login error:', result.error)
+        // showToast('Login failed: ' + result.error, 'error')
+        console.error('Login error:', result.error);
       } else {
-        //showToast('Login successful', 'success')
-       // dispatch(setActiveIndex(1))
-        // Redirect or reload as needed
-       // window.location.reload()
+        // showToast('Login successful', 'success')
+        // Use router.push instead of window.location.reload for SPA navigation
+        router.push('/'); // Redirect to home page or dashboard
+        // Alternatively, you can refresh the session without full page reload
+        // router.refresh();
       }
     } catch (err) {
-     // console.error('Login failed:', err)
-     // showToast('Login failed', 'error')
+      console.error('Login failed:', err);
+      // showToast('Login failed', 'error')
     } finally {
-     // setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -120,6 +131,7 @@ export default function LuxuryLogin() {
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={handleChange}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -145,6 +157,7 @@ export default function LuxuryLogin() {
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleChange}
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -160,6 +173,7 @@ export default function LuxuryLogin() {
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     checked={formData.rememberMe}
                     onChange={handleChange}
+                    disabled={isLoading}
                   />
                   <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
                     Remember me
@@ -177,9 +191,10 @@ export default function LuxuryLogin() {
               <div>
                 <button
                   type="submit"
-                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-lg shadow-indigo-500/20"
+                  disabled={isLoading}
+                  className={`group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-lg shadow-indigo-500/20 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  Sign in
+                  {isLoading ? 'Signing in...' : 'Sign in'}
                 </button>
               </div>
               
@@ -208,7 +223,8 @@ export default function LuxuryLogin() {
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={isLoading}
+                className={`w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path fillRule="evenodd" d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm.91 15.58c-2.06 0-3.13-.93-3.32-2.43h.08c.22.84 1.08 1.28 2.16 1.28 1.17 0 2.05-.52 2.05-1.43 0-.83-.59-1.27-1.91-1.27H9.17V9.75h1.12c1.25 0 1.87-.44 1.87-1.26 0-.76-.65-1.18-1.77-1.18-1.06 0-1.88.47-1.98 1.26H7.32c.1-1.67 1.47-2.58 3.22-2.58 1.9 0 3.13.91 3.13 2.23 0 .85-.42 1.48-1.17 1.79v.09c.88.16 1.42.87 1.42 1.87 0 1.57-1.36 2.47-3.01 2.47z" clipRule="evenodd" />
@@ -217,7 +233,8 @@ export default function LuxuryLogin() {
               </button>
               <button
                 type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                disabled={isLoading}
+                className={`w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
                   <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
@@ -232,4 +249,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-}
+                      }
