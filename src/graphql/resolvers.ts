@@ -606,6 +606,7 @@ export const resolvers = {
       const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
       const token = await new EncryptJWT({
         userId: user.id,
+        phone: user.phone,
         email: user.email,
         name: user.firstName,
         role: user.role,
