@@ -60,7 +60,7 @@ useEffect(() => {
           userId: userId
         };
     
-   
+   console.log(input);
     const result = await createPost({
             variables: { input },
             update: (cache, { data }) => {
@@ -97,7 +97,7 @@ useEffect(() => {
     // Implement your date formatting logic here
     return new Date(dateString).toLocaleDateString();
   };
-console.log(data?.userFeed);
+
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
