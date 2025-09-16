@@ -361,7 +361,7 @@ export const typeDefs = gql`
     posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed!
     post(id: ID!): Post
     comments(postId: ID!, page: Int, limit: Int): CommentFeed!
-    userFeed(page: Int, limit: Int): PostFeed!
+    userFeed(page: Int, limit: Int, userId: String): PostFeed!
     userLikes(userId: ID!): [Like]!
     followers(userId: ID!): [User]!
     following(userId: ID!): [User]!
