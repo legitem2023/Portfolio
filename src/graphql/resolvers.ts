@@ -626,7 +626,7 @@ export const resolvers = {
       
       const passwordHash = await encryptPassword(password, 10);
 
-      return prisma.user.create({
+      const result = await prisma.user.create({
         data: { 
           email: email,
           password: passwordHash, 
@@ -634,6 +634,13 @@ export const resolvers = {
           lastName: lastName
         },
       });
+
+      if(result) {
+        return {
+          statusText:"Account Successfully Created."
+        }
+      }
+      
     },
 
     createProduct: async (_: any, { id, name, description, price, salePrice, sku }: any) => {
