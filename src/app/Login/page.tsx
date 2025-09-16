@@ -28,7 +28,7 @@ export default function LuxuryLogin() {
   };
 
   const handleSubmit = async () => {
-    if (!email || !password) {
+    if (!formData.email || !formData.password) {
       //showToast('Please enter email and password.', 'error')
       return
     }
