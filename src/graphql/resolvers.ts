@@ -547,7 +547,10 @@ export const resolvers = {
       console.log("Bad User Inputs");//throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ 
+      where: { email:email } 
+    });
+    
     console.log(user);
     if (!user) {
       console.log("User not found");
