@@ -40,7 +40,7 @@ export default function LuxuryLogin() {
         password:formData.password,
         redirect: false, // Don't redirect automatically
       })
-
+     console.log(result);
       if (result?.error) {
         //showToast('Login failed: ' + result.error, 'error')
         //console.error('Login error:', result.error)
