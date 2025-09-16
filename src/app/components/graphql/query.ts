@@ -91,8 +91,8 @@ query GetProducts($search: String, $cursor: String, $limit: Int, $category: Stri
 
 // Get user feed with posts
 export const GET_USER_FEED = gql`
-  query GetUserFeed($page: Int, $limit: Int) {
-    userFeed(page: $page, limit: $limit) {
+  query GetUserFeed($page: Int, $limit: Int, $userId: String) {
+    userFeed(page: $page, limit: $limit, userId: $userId) {
       posts {
         id
         content
