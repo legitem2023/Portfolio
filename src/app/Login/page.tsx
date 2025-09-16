@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
-
+import { signIn } from 'next-auth/react'; 
 interface FormData {
   email: string;
   password: string;
@@ -27,11 +27,36 @@ export default function LuxuryLogin() {
     }));
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    // Handle login logic here
-    console.log('Logging in with:', formData);
-  };
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      //showToast('Please enter email and password.', 'error')
+      return
+    }
+    
+    try {
+      // Use NextAuth's signIn function with credentials
+      const result = await signIn('credentials', {
+        email:formData.email,
+        password:formData.password,
+        redirect: false, // Don't redirect automatically
+      })
+
+      if (result?.error) {
+        //showToast('Login failed: ' + result.error, 'error')
+        //console.error('Login error:', result.error)
+      } else {
+        //showToast('Login successful', 'success')
+       // dispatch(setActiveIndex(1))
+        // Redirect or reload as needed
+       // window.location.reload()
+      }
+    } catch (err) {
+     // console.error('Login failed:', err)
+     // showToast('Login failed', 'error')
+    } finally {
+     // setLoading(false)
+    }
+  }
 
   return (
     <>
