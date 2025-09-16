@@ -540,20 +540,34 @@ export const resolvers = {
   Mutation: {
     // Existing e-commerce mutations
     login: async (_: any, args: any) => {
-      const { email, password } = args.input;
-      const user = await prisma.user.findUnique({ where: { email } });
-      if (!user) {
-        throw new Error('User not found');
-      }
-    
-      const isValid = await comparePassword(password, user.password || '');
+  try {
+    const { email, password } = args.input || {};
 
-      if (!isValid) {
-        throw new Error('Invalid credentials');
-      }
+    if (!email || !password) {
+      throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
+    }
 
-      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
-      const token = await new EncryptJWT({
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      throw new ApolloError("User not found.", "USER_NOT_FOUND");
+    }
+
+    if (!user.password) {
+      throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
+    }
+
+    const isValid = await comparePassword(password, user.password);
+
+    if (!isValid) {
+      throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
+    }
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+
+    let token;
+    try {
+      token = await new EncryptJWT({
         userId: user.id,
         phone: user.phone,
         email: user.email,
@@ -565,12 +579,26 @@ export const resolvers = {
         .setIssuedAt()
         .setExpirationTime('7d')
         .encrypt(secret);
+    } catch (err) {
+      console.error('Token encryption error:', err);
+      throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
+    }
 
-      return {
-        statusText: 'success',
-        token
-      };
-    },
+    return {
+      statusText: "success",
+      token
+    };
+
+  } catch (err) {
+    console.error('Login resolver error:', err);
+
+    if (err instanceof ApolloError) {
+      throw err;
+    } else {
+      throw new ApolloError("Unexpected login error.", "INTERNAL_SERVER_ERROR");
+    }
+  }
+},
     
     loginWithFacebook: async (_: any, args: any) => {
       const { idToken } = args.input;
