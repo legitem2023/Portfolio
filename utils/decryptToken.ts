@@ -21,7 +21,6 @@ export async function decryptToken(token: string, secretString: string): Promise
 
   try {
     const { payload } = await jwtDecrypt(token, secret);
-    
     return payload;
   } catch (err: any) {
     console.error('Decryption failed:', err.message);
@@ -32,28 +31,25 @@ export async function decryptToken(token: string, secretString: string): Promise
 export const capitalize = (str: string): string => {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-}
+};
 
-export const formatDate = (timestamp: string | number) => {
-  const date = new Date(Number(timestamp)); // convert string or number to Date
+export const formatDate = (timestamp: string | number): string => {
+  const date = new Date(Number(timestamp));
   if (isNaN(date.getTime())) return "Invalid date";
 
   const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // zero-based
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const year = date.getFullYear();
 
   return `${day}-${month}-${year}`;
 };
 
-
-// utils/timeAgo.js
-
 /**
  * Calculates how many minutes ago or from now the given timestamp is.
- * @param {number} timestamp - The timestamp in milliseconds (Unix time).
- * @returns {string} - A human-readable string like "10 minutes ago" or "5 minutes from now".
+ * @param timestamp - The timestamp in milliseconds (Unix time)
+ * @returns A human-readable string like "10 minutes ago" or "5 minutes from now"
  */
-export function getMinutesAgo(timestamp) {
+export function getMinutesAgo(timestamp: number): string {
   const now = Date.now();
   const diffInMs = now - timestamp;
   const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
@@ -67,15 +63,13 @@ export function getMinutesAgo(timestamp) {
   }
 }
 
-// utils/minutesFromNow.js
-
 /**
  * Calculates how many minutes from now the given timestamp is.
  * If the timestamp is in the past, returns 0.
- * @param {number} timestamp - Future timestamp in milliseconds (Unix time).
- * @returns {number} - Minutes from now.
+ * @param timestamp - Future timestamp in milliseconds (Unix time)
+ * @returns Minutes from now
  */
-export function getMinutesFromNow(timestamp) {
+export function getMinutesFromNow(timestamp: number): number {
   const now = Date.now();
   const diffInMs = timestamp - now;
 
