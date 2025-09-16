@@ -8,7 +8,7 @@ import { FBLOGIN, LOGIN } from "../app/components/graphql/mutation"; // Changed 
 
 const client = new ApolloClient({
   link: new HttpLink({
-    uri: process.env.NEXT_PUBLIC_SERVER_LINK!,
+    uri: process.env.NEXT_PUBLIC_SERVER_LINK,
     credentials: "include",
   }),
   cache: new InMemoryCache(),
