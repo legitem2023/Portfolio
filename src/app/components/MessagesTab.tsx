@@ -75,7 +75,7 @@ console.log(data?.userFeed);
           user={{
             id: "1",
             name: "John Doe",
-            avatar: "/path/to/avatar.jpg" || "/NoImage.webp"
+            avatar: "/path/to/avatar.jpg"
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
