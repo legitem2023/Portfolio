@@ -2,6 +2,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import UserProfile from '../components/UserProfile';
+import { decryptToken } from '../../../utils/decryptToken';
 
 export default function ProfilePage() {
   const [userId, setUserId] = useState("");
