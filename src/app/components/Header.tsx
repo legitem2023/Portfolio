@@ -5,11 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import VisitorCounter from './VisitorCounter';
 import { decryptToken } from '../../../utils/decryptToken';
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-useEffect(() => {
+  const dispatch= useDispatch();
+  useEffect(() => {
     const getRole = async () => {
       try {
         const response = await fetch('/api/protected', {
@@ -78,35 +81,38 @@ useEffect(() => {
           {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 border border-gray-200">
-              <Link
+              <div
                 href="/Profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                onClick={() => setIsDropdownOpen(false)}
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  dispatch(setActiveIndex(7));
+                }}
               >
                 <i className="fas fa-user mr-2 text-gray-400"></i>Your Profile
-              </Link>
-              <Link
+              </div>
+              <div
                 href="/Settings"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-cog mr-2 text-gray-400"></i>Settings
-              </Link>
-              <Link
+              </div>
+              <div
                 href="/Orders"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-shopping-bag mr-2 text-gray-400"></i>Orders
-              </Link>
+              </div>
               <div className="border-t border-gray-100 my-1"></div>
-              <Link
+              <div
                 href="/logout"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-sign-out-alt mr-2 text-gray-400"></i>Sign out
-              </Link>
+              </div>
             </div>
           )}
         </div>
