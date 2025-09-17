@@ -82,7 +82,6 @@ const Header: React.FC = () => {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 border border-gray-200">
               <div
-                href="/Profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
                   setIsDropdownOpen(false);
@@ -92,14 +91,12 @@ const Header: React.FC = () => {
                 <i className="fas fa-user mr-2 text-gray-400"></i>Your Profile
               </div>
               <div
-                href="/Settings"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-cog mr-2 text-gray-400"></i>Settings
               </div>
               <div
-                href="/Orders"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
@@ -107,7 +104,6 @@ const Header: React.FC = () => {
               </div>
               <div className="border-t border-gray-100 my-1"></div>
               <div
-                href="/logout"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
