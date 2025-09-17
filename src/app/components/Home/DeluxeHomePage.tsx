@@ -47,30 +47,46 @@ const DeluxeHomePage: React.FC = () => {
   // Hero carousel data
   const heroSlides = [
     {
-      id: 1,
-      title: "Elevate",
-      subtitle: "Discover the latest collection of luxury fashion",
-      image: "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?w=1200&h=600&fit=crop",
-      cta: "Shop Now",
-      bgColor: "bg-gradient-to-r from-purple-900 to-indigo-800"
+      "id": 1,
+      "title": "Elevate",
+      "subtitle": "Discover the latest collection of luxury fashion",
+      "image": "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?w=1200&h=600&fit=crop",
+      "cta": "Shop Now",
+      "bgColor": "bg-gradient-to-r from-purple-900 to-indigo-800"
     },
     {
-      id: 2,
-      title: "Summer Collection",
-      subtitle: "Exquisite pieces for the warmest season",
-      image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1200&h=600&fit=crop",
-      cta: "Explore Collection",
-      bgColor: "bg-gradient-to-r from-amber-800 to-orange-700"
+      "id": 2,
+      "title": "Summer Collection",
+      "subtitle": "Exquisite pieces for the warmest season",
+      "image": "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=1200&h=600&fit=crop",
+      "cta": "Explore Collection",
+      "bgColor": "bg-gradient-to-r from-amber-800 to-orange-700"
     },
     {
-      id: 3,
-      title: "Limited Edition",
-      subtitle: "Unique items crafted with precision and care",
-      image: "https://images.unsplash.com/photo-1542060748-10c28b62716f?w=1200&h=600&fit=crop",
-      cta: "View Items",
-      bgColor: "bg-gradient-to-r from-emerald-800 to-teal-700"
+      "id": 3,
+      "title": "Limited Edition",
+      "subtitle": "Unique items crafted with precision and care",
+      "image": "https://images.unsplash.com/photo-1542060748-10c28b62716f?w=1200&h=600&fit=crop",
+      "cta": "View Items",
+      "bgColor": "bg-gradient-to-r from-emerald-800 to-teal-700"
+    },
+    {
+      "id": 4,
+      "title": "Autumn Essentials",
+      "subtitle": "Cozy and stylish pieces for the fall season",
+      "image": "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=600&fit=crop",
+      "cta": "Discover Essentials",
+      "bgColor": "bg-gradient-to-r from-rose-900 to-pink-700"
+    },
+    {
+      "id": 5,
+      "title": "Winter Collection",
+      "subtitle": "Stay warm and fashionable this winter",
+      "image": "https://images.unsplash.com/photo-1556906781-2f0520405b71?w=1200&h=600&fit=crop",
+      "cta": "Browse Winter",
+      "bgColor": "bg-gradient-to-r from-blue-900 to-cyan-700"
     }
-  ];
+  ]
 
   // Testimonials
   const testimonials = [
