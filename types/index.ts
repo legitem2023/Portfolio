@@ -1,4 +1,25 @@
 // types/index.ts
+// types/index.ts
+export interface Post {
+  id: string;
+  content: string;
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  privacy: string;
+}
+
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+  followerCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+  posts: Post[];
+}
+
 export interface Product {
   id: string;
   name: string;
