@@ -5,6 +5,7 @@ import { useQuery } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from './graphql/query';
 import { Post, User } from '../../../types';
+import UserProfileShimmer from './UserProfileShimmer';
 
 const UserProfile = ({ userId }: { userId: string }) => {
   const { data, loading, error } = useQuery(GET_USER_PROFILE, {
@@ -12,13 +13,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   });
 
   if (loading) return (
-    <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-      <div className="flex items-center">
-        <div className="h-2 w-2 bg-blue-500 rounded-full mr-1 animate-bounce"></div>
-        <div className="h-2 w-2 bg-blue-500 rounded-full mr-1 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-        <div className="h-2 w-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-      </div>
-    </div>
+    <UserProfileShimmer/>
   );
   
   if (error) return (
