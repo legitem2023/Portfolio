@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+import UserProfile from './UserProfile';
+import { decryptToken } from '../../../utils/decryptToken';
 
 import {
   Home,
@@ -36,6 +38,38 @@ interface Tab {
 const DeluxeNavTabs: React.FC = () => {
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   const dispatch = useDispatch();
+  const [userId, setUserId] = useState("");
+  const [name, setName] = useState("");
+  const [avatar, setAvatar] = useState("");
+  
+  
+  useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include'
+        });
+        
+        if (response.status === 401) {
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+
+        const payload = await decryptToken(token, secret.toString());
+        setUserId(payload.userId);
+        setName(payload.name);
+        setAvatar(payload.image || "/NoImage.webp");
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
+  
+  
   const tabs: Tab[] = [
     {
       id: 1,
@@ -118,6 +152,12 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Cart',
       icon: <ShoppingCart size={18} />,
       content: <CartTab />,
+    },
+    {
+      id: 7,
+      label: 'Profile',
+      icon: <ShoppingCart size={18} />,
+      content: <UserProfile userId={userId} />
     },
   ];
 
