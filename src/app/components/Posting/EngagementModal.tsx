@@ -1,6 +1,7 @@
 // components/EngagementModal.tsx
 import React from 'react';
 import UserAvatar from './UserAvatar';
+import CommentInput from './CommentInput';
 
 interface Like {
   id: string;
@@ -41,6 +42,11 @@ interface EngagementModalProps {
   likes?: Like[];
   comments?: Comment[];
   shares?: Share[];
+  
+  userAvatar?: string;
+  userName: string;
+  placeholder?: string;
+  onSubmit: (comment: string) => void;
 }
 
 const EngagementModal: React.FC<EngagementModalProps> = ({
@@ -49,7 +55,12 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   type,
   likes = [],
   comments = [],
-  shares = []
+  shares = [],
+  userAvatar,
+  userName,
+  placeholder,
+  onSubmit
+
 }) => {
   const renderContent = () => {
     switch (type) {
@@ -103,6 +114,12 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
                 <p className="text-gray-500 text-center py-4">No comments yet</p>
               )}
             </div>
+            <CommentInput
+            userAvatar={avatar}
+            userName={sender || 'User'}
+            onSubmit={handleCommentSubmit}
+            className="m-3"
+          />
           </div>
         );
       
