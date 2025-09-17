@@ -115,9 +115,9 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
               )}
             </div>
             <CommentInput
-            userAvatar={avatar}
-            userName={sender || 'User'}
-            onSubmit={handleCommentSubmit}
+            userAvatar={userAvatar}
+            userName={userName}
+            onSubmit={onSubmit}
             className="m-3"
           />
           </div>
