@@ -243,6 +243,9 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         likes={likesList}
         comments={commentsList}
         shares={sharesList}
+        userAvatar={avatar}
+        userName={sender || 'User'}
+        onSubmit={handleCommentSubmit}
       />
     </>
   );
