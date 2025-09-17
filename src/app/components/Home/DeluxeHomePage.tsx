@@ -20,7 +20,6 @@ const DeluxeHomePage: React.FC = () => {
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
   useEffect(() => {
-    console.log(userData);
     if (categoryData?.categories) {
       const categoriesData = categoryData.categories.map((data: any) => ({
         id: data.id,
