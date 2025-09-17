@@ -32,7 +32,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Cover Photo */}
-      <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-blue-400 to-blue-600 relative">
+      <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm relative">
         <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
         
         {/* Profile Picture */}
