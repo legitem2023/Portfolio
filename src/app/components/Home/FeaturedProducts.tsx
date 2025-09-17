@@ -1,8 +1,8 @@
 // components/FeaturedProducts.tsx
 import React from 'react';
 import { Heart, Star } from 'lucide-react';
-import { Product } from './types/types';
-import CategoryShimmer from './CategoryShimmer';
+import { Product } from '../types/types';
+import CategoryShimmer from '../CategoryShimmer';
 
 interface FeaturedProductsProps {
   products: Product[];
