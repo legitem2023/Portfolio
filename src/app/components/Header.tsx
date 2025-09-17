@@ -79,21 +79,21 @@ useEffect(() => {
           {isDropdownOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 border border-gray-200">
               <Link
-                href="/profile"
+                href="/Profile"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-user mr-2 text-gray-400"></i>Your Profile
               </Link>
               <Link
-                href="/settings"
+                href="/Settings"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-cog mr-2 text-gray-400"></i>Settings
               </Link>
               <Link
-                href="/orders"
+                href="/Orders"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
