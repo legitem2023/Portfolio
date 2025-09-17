@@ -45,14 +45,14 @@ const DeluxeHomePage: React.FC = () => {
   }, [categoryData, productData, userData]);
 
   // Hero carousel data
-  const heroSlides = [
+  const heroSlides =  [
     {
       "id": 1,
-      "title": "Elevate",
-      "subtitle": "Discover the latest collection of luxury fashion",
-      "image": "https://images.unsplash.com/photo-1521335629791-ce4aec67dd47?w=1200&h=600&fit=crop",
-      "cta": "Shop Now",
-      "bgColor": "bg-gradient-to-r from-purple-900 to-indigo-800"
+      "title": "New Arrivals",
+      "subtitle": "Be the first to discover our latest collection",
+      "image": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&h=600&fit=crop",
+      "cta": "Shop New Arrivals",
+      "bgColor": "bg-gradient-to-r from-fuchsia-900 to-purple-800"
     },
     {
       "id": 2,
