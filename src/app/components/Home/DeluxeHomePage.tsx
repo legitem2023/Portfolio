@@ -1,6 +1,6 @@
 // components/DeluxeHomePage.tsx
 "use client";
-import { GETCATEGORY, MANAGEMENTPRODUCTS, USERS } from './graphql/query';
+import { GETCATEGORY, MANAGEMENTPRODUCTS, USERS } from '../graphql/query';
 import { useQuery } from '@apollo/client';
 import { Category, Product } from './types/types';
 import React, { useState, useEffect } from 'react';
