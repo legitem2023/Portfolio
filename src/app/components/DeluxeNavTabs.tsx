@@ -21,6 +21,7 @@ import {
   Sparkles,
   MessageSquareText,
   ShoppingCart,
+  Users,
   Tags,
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
@@ -144,7 +145,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 5,
       label: 'Messages',
-      icon: <MessageSquareText size={18} />,
+      icon: <Users size={18} />,
       content: <MessagesTab />,
     },
     {
