@@ -26,7 +26,7 @@ import {
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
 import CartTab from './CartTab';
-import DeluxeHomePage from './DeluxeHomePage';
+import DeluxeHomePage from './Home/DeluxeHomePage';
 
 interface Tab {
   id: number;
