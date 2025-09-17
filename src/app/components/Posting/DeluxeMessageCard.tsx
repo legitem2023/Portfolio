@@ -8,6 +8,79 @@ import ActionButtons from './ActionButtons';
 import CommentInput from './CommentInput';
 
 // ... keep your existing interfaces ...
+interface User {
+  id: string;
+  name: string;
+  avatar?: string;
+  email?: string;
+  phone?: string | null;
+  role?: string;
+}
+
+interface Comment {
+  id: string;
+  user: User;
+  content: string;
+  timestamp: string;
+  likes: number;
+}
+
+interface Like {
+  id: string;
+  user: User;
+  timestamp: string;
+}
+
+interface Share {
+  id: string;
+  user: User;
+  timestamp: string;
+}
+
+interface Post {
+  id: string;
+  background: string | null;
+  commentCount: number;
+  content: string;
+  createdAt: string;
+  images: string[];
+  isLikedByMe: boolean;
+  likeCount: number;
+  privacy: string;
+  taggedUsers: User[];
+  user: User;
+}
+
+interface Message {
+  id: string;
+  sender: string;
+  avatar?: string;
+  timestamp: string;
+  content: string;
+  status?: string;
+  isOwnMessage?: boolean;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  postImage?: string;
+  likesList?: Like[];
+  commentsList?: Comment[];
+  sharesList?: Share[];
+  // New fields to match GraphQL response
+  background?: string | null;
+  images?: string[];
+  isLikedByMe?: boolean;
+  privacy?: string;
+  taggedUsers?: User[];
+  user?: User;
+}
+
+interface DeluxeMessageCardProps {
+  message: Message;
+  className?: string;
+}
+
+type ModalType = 'likes' | 'comments' | 'shares' | null;
 
 const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({ 
   message, 
