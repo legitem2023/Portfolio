@@ -3,7 +3,10 @@ import React from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
+import'swiper/css'; 
+import'swiper/css/navigation'; 
+import'swiper/css/pagination'; 
+import'swiper/css/effect-fade';
 interface HeroSlide {
   id: number;
   title: string;
