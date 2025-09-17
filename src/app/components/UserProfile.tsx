@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { GET_USER_PROFILE } from './graphql/query';
 import { Post, User } from '../../../types';
 import UserProfileShimmer from './UserProfileShimmer';
+import UserProfileShimmerRed from './UserProfileShimmerRed';
+
 
 const UserProfile = ({ userId }: { userId: string }) => {
   const { data, loading, error } = useQuery(GET_USER_PROFILE, {
@@ -17,9 +19,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   );
   
   if (error) return (
-    <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-700 max-w-4xl mx-auto my-4">
-      Error: {error.message}
-    </div>
+    <UserProfileShimmerRed/>
   );
 
   const user: User = data.user;
