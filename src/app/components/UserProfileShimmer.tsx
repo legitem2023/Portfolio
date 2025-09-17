@@ -1,100 +1,62 @@
 // components/UserProfileShimmer.tsx
+'use client';
+
 const UserProfileShimmer = () => {
   return (
-    <div className="bg-gray-50 min-h-screen max-w-2xl mx-auto">
+    <div className="bg-gray-50 min-h-screen max-w-2xl">
       {/* Cover Photo Shimmer */}
-      <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-violet-100 to-indigo-100 relative overflow-hidden">
-        <div className="shimmer-overlay"></div>
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
-      </div>
-      
-      <div className="px-4 sm:px-6 md:px-8">
+      <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse relative">
+        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent"></div>
+        
         {/* Profile Picture Shimmer */}
-        <div className="relative -mt-16 mb-4">
-          <div className="w-32 h-32 rounded-full bg-gray-300 border-4 border-white mx-auto overflow-hidden relative">
-            <div className="shimmer-overlay"></div>
-          </div>
+        <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
+          <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
         </div>
-        
-        {/* User Name Shimmer */}
-        <div className="h-8 bg-gray-300 rounded-md w-3/5 mx-auto mb-4 overflow-hidden relative">
-          <div className="shimmer-overlay"></div>
-        </div>
-        
-        {/* User Bio Shimmer */}
-        <div className="space-y-3 mb-6">
-          <div className="h-4 bg-gray-300 rounded w-full overflow-hidden relative">
-            <div className="shimmer-overlay"></div>
-          </div>
-          <div className="h-4 bg-gray-300 rounded w-5/6 overflow-hidden relative">
-            <div className="shimmer-overlay"></div>
-          </div>
-          <div className="h-4 bg-gray-300 rounded w-4/6 overflow-hidden relative">
-            <div className="shimmer-overlay"></div>
-          </div>
-        </div>
-        
-        {/* Stats Shimmer */}
-        <div className="flex justify-center space-x-8 mb-6">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="text-center">
-              <div className="h-6 bg-gray-300 rounded w-12 mx-auto mb-2 overflow-hidden relative">
-                <div className="shimmer-overlay"></div>
-              </div>
-              <div className="h-4 bg-gray-300 rounded w-16 mx-auto overflow-hidden relative">
-                <div className="shimmer-overlay"></div>
-              </div>
+      </div>
+
+      {/* Profile Info Shimmer */}
+      <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="w-full md:w-auto">
+            <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-48 mb-2"></div>
+            <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-32"></div>
+            
+            <div className="flex gap-4 md:gap-6 mt-4">
+              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-16"></div>
+              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-20"></div>
+              <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-20"></div>
             </div>
-          ))}
+          </div>
+          
+          <div className="flex gap-2 mt-4 md:mt-0 w-full md:w-auto justify-start md:justify-end">
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-24"></div>
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-28"></div>
+            <div className="h-10 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-10"></div>
+          </div>
         </div>
         
-        {/* Tab Navigation Shimmer */}
-        <div className="flex border-b border-gray-200 mb-6">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="mr-8 pb-3">
-              <div className="h-6 bg-gray-300 rounded w-16 overflow-hidden relative">
-                <div className="shimmer-overlay"></div>
+        {/* Tabs Navigation Shimmer */}
+        <div className="mt-6 border-t border-gray-300 flex overflow-x-auto scrollbar-hide">
+          <div className="flex space-x-4 md:space-x-8 min-w-max">
+            {[1, 2, 3, 4].map((item) => (
+              <div key={item} className="px-3 py-3 md:px-4 md:py-3 flex items-center">
+                <div className="h-5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-md animate-pulse w-16"></div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        
-        {/* Content Grid Shimmer */}
-        <div className="grid grid-cols-3 gap-4">
+      </div>
+
+      {/* Posts Grid Shimmer */}
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {[1, 2, 3, 4, 5, 6].map((item) => (
-            <div key={item} className="aspect-square bg-gray-300 rounded-md overflow-hidden relative">
-              <div className="shimmer-overlay"></div>
+            <div key={item} className="relative group cursor-pointer rounded-lg overflow-hidden shadow-md">
+              <div className="aspect-square relative overflow-hidden bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse"></div>
             </div>
           ))}
         </div>
       </div>
-      
-      {/* Shimmer Animation Styles */}
-      <style jsx>{`
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-        
-        .shimmer-overlay {
-          position: absolute;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.3) 50%,
-            rgba(255, 255, 255, 0) 100%
-          );
-          animation: shimmer 1.5s infinite;
-        }
-      `}</style>
     </div>
   );
 };
