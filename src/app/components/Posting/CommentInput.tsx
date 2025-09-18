@@ -28,7 +28,7 @@ const CommentInput: React.FC<CommentInputProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className={`flex items-center ${className}`}>
+    <form onSubmit={handleSubmit} className={`flex items-center ${className} b-0 fixed`}>
       <UserAvatar src={userAvatar} alt={userName} size="sm" className="mr-2" />
       <div className="flex-1 bg-gray-100 rounded-full py-2 px-4">
         <input 
