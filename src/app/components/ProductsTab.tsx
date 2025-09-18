@@ -184,11 +184,9 @@ const ProductsTab: React.FC = () => {
           {/* Sentinel element for infinite scroll */}
           <div ref={sentinelRef} className="h-10" />
           
-          {isFetchingMore && (
-            <div className="mt-8 flex justify-center">
-              <ProductThumbnailsShimmer count={3} />
-            </div>
-          )}
+      {isFetchingMore && (
+        <ProductThumbnailsShimmer count={3} />     
+      )}
         </>  
       ) : (  
         <div className="text-center py-12 text-gray-500">  
