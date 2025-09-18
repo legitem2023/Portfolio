@@ -90,7 +90,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         return (
           <div className="p-4">
             <h3 className="font-semibold text-lg mb-4">Comments</h3>
-            <div className="space-y-4">
+            <div className="space-y-4 h-[100%] bg-indigo-200">
               {comments.length > 0 ? (
                 comments.map(comment => (
                   <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-0">
