@@ -182,7 +182,7 @@ const ProductsTab: React.FC = () => {
           <ProductThumbnails products={products} />  
             
           {/* Sentinel element for infinite scroll */}
-          <div ref={sentinelRef}/>
+          <div ref={sentinelRef} className="h-2" />
           
       {isFetchingMore && (
         <ProductThumbnailsShimmer count={3} />     
