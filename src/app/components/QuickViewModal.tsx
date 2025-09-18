@@ -1,5 +1,7 @@
 // components/QuickViewModal.tsx
 import React, { useEffect, useState, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../../../Redux/cartSlice';
 
 interface Product {
   id: number;
@@ -12,15 +14,19 @@ interface Product {
   colors?: string[];
   onSale?: boolean;
   isNew?: boolean;
+  description?: string;
+  productCode?: string;
+  category: string;
 }
 
 interface QuickViewModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  onAddToCart?: (product: Product, options: { color: string; size: string; quantity: number }) => void;
 }
 
-const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose }) => {
+const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose, onAddToCart }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('');
@@ -28,6 +34,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const [isMobile, setIsMobile] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const dispatch = useDispatch();
 
   // Check if device is mobile
   useEffect(() => {
@@ -63,7 +70,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       setSelectedImage(0);
       setQuantity(1);
       setSelectedColor(product?.colors?.[0] || '');
-      setSelectedSize('');
+      setSelectedSize('M'); // Set default size
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -97,6 +104,41 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+
+  const handleAddToCartClick = () => {
+    if (!product) return;
+    
+    const cartItem = {
+      id: product.id.toString(),
+      name: product.name,
+      description: product.description || '',
+      price: product.price,
+      quantity: quantity,
+      image: product.image,
+      productCode: product.productCode || `PC-${product.id}`,
+      color: selectedColor || (product.colors && product.colors.length > 0 ? product.colors[0] : 'Default'),
+      size: selectedSize || 'M',
+      category: product.category,
+      rating: product.rating
+    };
+    
+    dispatch(addToCart(cartItem));
+    
+    // Also call the onAddToCart prop if provided
+    if (onAddToCart) {
+      onAddToCart(product, {
+        color: selectedColor,
+        size: selectedSize,
+        quantity: quantity
+      });
+    }
+    
+    // Optional: Show a success message or notification
+    // You can implement a toast notification here
+    
+    // Close the modal after adding to cart
+    onClose();
+  };
 
   if (!isVisible && !isOpen) return null;
 
@@ -225,7 +267,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
             {/* Description */}
             <p className="text-gray-700 text-sm md:text-base mb-4 md:mb-6">
-              This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.
+              {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
             </p>
 
             {/* Color Selection */}
@@ -288,7 +330,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
             {/* Action Buttons */}
             <div className="flex space-x-3 md:space-x-4 mb-4 md:mb-0">
-              <button className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base">
+              <button 
+                onClick={handleAddToCartClick}
+                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base"
+              >
                 Add to Cart
               </button>
               <button className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100">
