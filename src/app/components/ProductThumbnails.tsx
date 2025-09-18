@@ -1,5 +1,7 @@
 // components/ProductThumbnails.tsx
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 
@@ -16,6 +18,7 @@ export interface Product {
   isNew?: boolean;
   isFeatured?: boolean;
   colors?: string[];
+  description?: string;
 }
 
 interface ProductThumbnailsProps {
@@ -25,6 +28,7 @@ interface ProductThumbnailsProps {
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const dispatch = useDispatch();
 
   const handleQuickView = (product: Product) => {
     setSelectedProduct(product);
@@ -34,6 +38,22 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const handleCloseQuickView = () => {
     setIsQuickViewOpen(false);
     setTimeout(() => setSelectedProduct(null), 300);
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.image,
+      description: product.description || ''
+    };
+    
+    dispatch(addToCart(cartItem));
+    
+    // Optional: Show a notification or toast message
+    // You can implement a toast notification system here
   };
 
   return (
@@ -123,7 +143,10 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                 </div>
                 
                 {/* Add to Cart Button */}
-                <button className="bg-amber-600 hover:bg-amber-700 text-white p-1.5 sm:p-2 rounded-full transition-colors">
+                <button 
+                  className="bg-amber-600 hover:bg-amber-700 text-white p-1.5 sm:p-2 rounded-full transition-colors"
+                  onClick={() => handleAddToCart(product)}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
@@ -158,6 +181,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         product={selectedProduct} 
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
+        onAddToCart={handleAddToCart}
       />
     </>
   );
@@ -237,7 +261,8 @@ export const generateSampleProducts = (count: number = 100): Product[] => {
       onSale: Math.random() > 0.7,
       isNew: Math.random() > 0.8,
       isFeatured: Math.random() > 0.9,
-      colors: productColors
+      colors: productColors,
+      description: `This premium ${name.toLowerCase()} is crafted with attention to detail and made from the finest materials. Perfect for those who appreciate quality and style.`
     };
   });
 };
