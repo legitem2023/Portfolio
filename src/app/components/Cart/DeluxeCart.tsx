@@ -27,14 +27,14 @@ const DeluxeCart = () => {
   const cartItems = useSelector((state:any) => state.cart.cartItems);
   const dispatch = useDispatch();
   
-  const subtotal = cartItems.reduce((total, item) => 
+  const subtotal = cartItems.reduce((total:any, item:any) => 
     total + (item.price * item.quantity), 0
   );
   const shippingCost = subtotal > 0 ? 5.99 : 0;
   const tax = subtotal * 0.08;
   const total = subtotal + shippingCost + tax;
   
-  const handleQuantityChange = (id, quantity) => {
+  const handleQuantityChange = (id:any, quantity:any) => {
     if (quantity === 0) {
       dispatch(removeFromCart({ id }));
     } else {
@@ -46,12 +46,12 @@ const DeluxeCart = () => {
     setCurrentStage('shipping');
   };
   
-  const handleShippingSubmit = (e) => {
+  const handleShippingSubmit = (e:any) => {
     e.preventDefault();
     setCurrentStage('payment');
   };
   
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = (e:any) => {
     e.preventDefault();
     setCurrentStage('confirmation');
   };
