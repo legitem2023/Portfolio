@@ -1,5 +1,5 @@
 // components/DeluxeCart.jsx
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   addToCart, 
@@ -8,33 +8,97 @@ import {
   changeQuantity 
 } from '../../../../Redux/cartSlice';
 
+interface CartItem {
+  id: string | number;
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  image: string;
+}
+
+interface ShippingInfo {
+  fullName: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  country: string;
+}
+
+interface PaymentInfo {
+  cardNumber: string;
+  cardHolder: string;
+  expiryDate: string;
+  cvv: string;
+}
+
+interface CartStageProps {
+  cartItems: CartItem[];
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  onQuantityChange: (id: string | number, quantity: number) => void;
+  onCheckout: () => void;
+}
+
+interface ShippingStageProps {
+  shippingInfo: ShippingInfo;
+  setShippingInfo: (info: ShippingInfo) => void;
+  onSubmit: (e: FormEvent) => void;
+  onBack: () => void;
+}
+
+interface PaymentStageProps {
+  paymentInfo: PaymentInfo;
+  setPaymentInfo: (info: PaymentInfo) => void;
+  onSubmit: (e: FormEvent) => void;
+  onBack: () => void;
+}
+
+interface ConfirmationStageProps {
+  cartItems: CartItem[];
+  shippingInfo: ShippingInfo;
+  paymentInfo: PaymentInfo;
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  onPlaceOrder: () => void;
+  onBack: () => void;
+}
+
+interface CompletedStageProps {
+  onContinueShopping: () => void;
+}
+
 const DeluxeCart = () => {
-  const [currentStage, setCurrentStage] = useState('cart');
-  const [shippingInfo, setShippingInfo] = useState({
+  const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
+  const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     fullName: '',
     address: '',
     city: '',
     zipCode: '',
     country: ''
   });
-  const [paymentInfo, setPaymentInfo] = useState({
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
     cvv: ''
   });
   
-  const cartItems = useSelector((state:any) => state.cart.cartItems);
+  const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
   
-  const subtotal = cartItems.reduce((total:any, item:any) => 
+  const subtotal = cartItems.reduce((total: number, item: CartItem) => 
     total + (item.price * item.quantity), 0
   );
   const shippingCost = subtotal > 0 ? 5.99 : 0;
   const tax = subtotal * 0.08;
   const total = subtotal + shippingCost + tax;
   
-  const handleQuantityChange = (id:any, quantity:any) => {
+  const handleQuantityChange = (id: string | number, quantity: number) => {
     if (quantity === 0) {
       dispatch(removeFromCart({ id }));
     } else {
@@ -46,12 +110,12 @@ const DeluxeCart = () => {
     setCurrentStage('shipping');
   };
   
-  const handleShippingSubmit = (e:any) => {
+  const handleShippingSubmit = (e: FormEvent) => {
     e.preventDefault();
     setCurrentStage('payment');
   };
   
-  const handlePaymentSubmit = (e:any) => {
+  const handlePaymentSubmit = (e: FormEvent) => {
     e.preventDefault();
     setCurrentStage('confirmation');
   };
@@ -142,7 +206,7 @@ const DeluxeCart = () => {
 };
 
 // Cart Stage Component
-const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }) => {
+const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
       <div className="cart-empty">
@@ -192,7 +256,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
         </div>
         <div className="summary-row">
           <span>Shipping</span>
-          <span>${shippingCost.toFixed(2)}</span>
+          <span>${sh shippingCost.toFixed(2)}</span>
         </div>
         <div className="summary-row">
           <span>Tax</span>
@@ -212,8 +276,8 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
 };
 
 // Shipping Stage Component
-const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }) => {
-  const handleChange = (e) => {
+const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: ShippingStageProps) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setShippingInfo({
       ...shippingInfo,
       [e.target.name]: e.target.value
@@ -305,8 +369,8 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }) => {
 };
 
 // Payment Stage Component
-const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }) => {
-  const handleChange = (e) => {
+const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: PaymentStageProps) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setPaymentInfo({
       ...paymentInfo,
       [e.target.name]: e.target.value
@@ -393,7 +457,7 @@ const ConfirmationStage = ({
   total, 
   onPlaceOrder, 
   onBack 
-}) => {
+}: ConfirmationStageProps) => {
   return (
     <div className="confirmation-stage">
       <h2>Order Confirmation</h2>
@@ -466,7 +530,7 @@ const ConfirmationStage = ({
 };
 
 // Completed Stage Component
-const CompletedStage = ({ onContinueShopping }) => {
+const CompletedStage = ({ onContinueShopping }: CompletedStageProps) => {
   return (
     <div className="completed-stage">
       <div className="completed-icon">
