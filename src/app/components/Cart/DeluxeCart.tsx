@@ -14,7 +14,7 @@ import PaymentStage from './PaymentStage';
 import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 
-export interface const CartItem {
+export interface CartItem {
   id: string | number;
   name: string;
   description: string;
@@ -23,7 +23,7 @@ export interface const CartItem {
   image: string;
 }
 
-export interface const ShippingInfo {
+export interface ShippingInfo {
   fullName: string;
   address: string;
   city: string;
@@ -31,7 +31,7 @@ export interface const ShippingInfo {
   country: string;
 }
 
-export interface const PaymentInfo {
+export interface PaymentInfo {
   cardNumber: string;
   cardHolder: string;
   expiryDate: string;
