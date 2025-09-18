@@ -1,5 +1,5 @@
 // components/EngagementModal.tsx
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import UserAvatar from './UserAvatar';
 import CommentInput from './CommentInput';
 
@@ -60,13 +60,23 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   userName,
   placeholder,
   onSubmit
-
 }) => {
+  const commentInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen && type === 'comments' && commentInputRef.current) {
+      // Small timeout to ensure the modal is fully rendered before focusing
+      setTimeout(() => {
+        commentInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen, type]);
+
   const renderContent = () => {
     switch (type) {
       case 'likes':
         return (
-          <div className="p-4">
+          <div className="p-4 pb-20"> {/* Added padding at bottom for fixed input */}
             <h3 className="font-semibold text-lg mb-4">Likes</h3>
             <div className="space-y-3">
               {likes.length > 0 ? (
@@ -88,44 +98,51 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       
       case 'comments':
         return (
-          <div className="p-4">
-            <h3 className="font-semibold text-lg mb-4">Comments</h3>
-            <div className="space-y-4 h-[100%] bg-indigo-200">
-              {comments.length > 0 ? (
-                comments.map(comment => (
-                  <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-0">
-                    <div className="flex items-start">
-                      <UserAvatar src={comment.user.avatar} alt={comment.user.name} size="sm" className="mr-3 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <p className="font-medium">{comment.user.name}</p>
-                          <p className="text-xs text-gray-500">{comment.timestamp}</p>
-                        </div>
-                        <p className="text-gray-800 mt-1">{comment.content}</p>
-                        <div className="flex items-center mt-2 text-sm text-gray-500">
-                          <button className="mr-3 hover:text-blue-500">Like ({comment.likes})</button>
-                          <button className="hover:text-blue-500">Reply</button>
+          <>
+            <div className="p-4 pb-20"> {/* Added padding at bottom for fixed input */}
+              <h3 className="font-semibold text-lg mb-4">Comments</h3>
+              <div className="space-y-4">
+                {comments.length > 0 ? (
+                  comments.map(comment => (
+                    <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-0">
+                      <div className="flex items-start">
+                        <UserAvatar src={comment.user.avatar} alt={comment.user.name} size="sm" className="mr-3 flex-shrink-0" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <p className="font-medium">{comment.user.name}</p>
+                            <p className="text-xs text-gray-500">{comment.timestamp}</p>
+                          </div>
+                          <p className="text-gray-800 mt-1">{comment.content}</p>
+                          <div className="flex items-center mt-2 text-sm text-gray-500">
+                            <button className="mr-3 hover:text-blue-500">Like ({comment.likes})</button>
+                            <button className="hover:text-blue-500">Reply</button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-gray-500 text-center py-4">No comments yet</p>
-              )}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No comments yet</p>
+                )}
+              </div>
             </div>
-            <CommentInput
-            userAvatar={userAvatar}
-            userName={userName}
-            onSubmit={onSubmit}
-            className="m-3"
-          />
-          </div>
+            
+            {/* Fixed CommentInput at bottom */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3">
+              <CommentInput
+                ref={commentInputRef}
+                userAvatar={userAvatar}
+                userName={userName}
+                onSubmit={onSubmit}
+                placeholder={placeholder}
+              />
+            </div>
+          </>
         );
       
       case 'shares':
         return (
-          <div className="p-4">
+          <div className="p-4 pb-20"> {/* Added padding at bottom for fixed input */}
             <h3 className="font-semibold text-lg mb-4">Shares</h3>
             <div className="space-y-3">
               {shares.length > 0 ? (
@@ -162,10 +179,10 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg transform transition-transform duration-300 ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
         style={{ maxHeight: '80vh' }}
       >
-        <div className="sticky top-0 bg-white flex justify-center py-3 rounded-t-2xl border-b border-gray-200">
+        <div className="sticky top-0 bg-white flex justify-center py-3 rounded-t-2xl border-b border-gray-200 z-10">
           <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
         </div>
-        <div className="overflow-y-auto" style={{ minHeight: '75vh',maxHeight: '90vh' }}>
+        <div className="overflow-y-auto" style={{ minHeight: '75vh', maxHeight: '90vh' }}>
           {renderContent()}
         </div>
       </div>
