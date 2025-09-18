@@ -6,7 +6,7 @@ import {
   removeFromCart, 
   clearCart, 
   changeQuantity 
-} from '../store/cartSlice';
+} from '../../../../Redux/cartSlice';
 
 const DeluxeCart = () => {
   const [currentStage, setCurrentStage] = useState('cart');
