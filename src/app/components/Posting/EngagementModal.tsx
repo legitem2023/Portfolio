@@ -165,7 +165,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         <div className="sticky top-0 bg-white flex justify-center py-3 rounded-t-2xl border-b border-gray-200">
           <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
         </div>
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(80vh - 50px)' }}>
+        <div className="overflow-y-auto" style={{ minHeight: '75vh',maxHeight: '90vh' }}>
           {renderContent()}
         </div>
       </div>
