@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
-import CartTab from './CartTab';
+import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
 
 interface Tab {
@@ -152,7 +152,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 6,
       label: 'Cart',
       icon: <ShoppingCart size={18} />,
-      content: <CartTab />,
+      content: <DeluxeCart />,
     },
     {
       id: 7,
