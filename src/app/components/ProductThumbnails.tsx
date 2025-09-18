@@ -1,7 +1,7 @@
 // components/ProductThumbnails.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../../../../Redux/cartSlice';
+import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 
