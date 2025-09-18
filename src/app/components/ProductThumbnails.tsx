@@ -185,12 +185,12 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       </div>
       
       {/* Quick View Modal */}
-      <QuickViewModal 
+      {/* <QuickViewModal 
         product={selectedProduct} 
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={handleAddToCart}
-      />
+      />*/}
     </>
   );
 };
