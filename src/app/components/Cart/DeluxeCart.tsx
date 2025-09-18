@@ -256,7 +256,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
         </div>
         <div className="summary-row">
           <span>Shipping</span>
-          <span>${sh shippingCost.toFixed(2)}</span>
+          <span>${shippingCost.toFixed(2)}</span>
         </div>
         <div className="summary-row">
           <span>Tax</span>
