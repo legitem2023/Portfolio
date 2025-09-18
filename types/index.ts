@@ -1,5 +1,17 @@
 // types/index.ts
 // types/index.ts
+export interface CartItem {
+    id: string; // You can change this to number if IDs are numeric
+    productCode: string;
+    image:string;
+    name: string;
+    color:string;
+    size:string;
+    price: number;
+    quantity: number;
+  }
+  
+
 export interface Post {
   id: string;
   content: string;
