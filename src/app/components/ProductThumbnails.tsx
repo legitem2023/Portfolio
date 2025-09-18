@@ -1,7 +1,7 @@
 // components/ProductThumbnails.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../../../Redux/cartSlice';
+import { addToCart } from '../../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 
@@ -19,6 +19,8 @@ export interface Product {
   isFeatured?: boolean;
   colors?: string[];
   description?: string;
+  productCode?: string;
+  size?: string;
 }
 
 interface ProductThumbnailsProps {
@@ -44,10 +46,16 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     const cartItem = {
       id: product.id,
       name: product.name,
+      description: product.description || '',
       price: product.price,
       quantity: 1,
       image: product.image,
-      description: product.description || ''
+      // Adding the missing properties with default values
+      productCode: product.productCode || `PC-${product.id}`,
+      color: product.colors && product.colors.length > 0 ? product.colors[0] : 'Default',
+      size: product.size || 'M',
+      category: product.category,
+      rating: product.rating
     };
     
     dispatch(addToCart(cartItem));
@@ -262,7 +270,9 @@ export const generateSampleProducts = (count: number = 100): Product[] => {
       isNew: Math.random() > 0.8,
       isFeatured: Math.random() > 0.9,
       colors: productColors,
-      description: `This premium ${name.toLowerCase()} is crafted with attention to detail and made from the finest materials. Perfect for those who appreciate quality and style.`
+      description: `This premium ${name.toLowerCase()} is crafted with attention to detail and made from the finest materials. Perfect for those who appreciate quality and style.`,
+      productCode: `PC-${i + 1}`,
+      size: ['S', 'M', 'L', 'XL'][Math.floor(Math.random() * 4)]
     };
   });
 };
