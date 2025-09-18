@@ -217,14 +217,6 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
             onComment={() => openModal('comments')}
             onShare={() => openModal('shares')}
           />
-          
-          {/* Comment Input */}
-          <CommentInput
-            userAvatar={avatar}
-            userName={sender || 'User'}
-            onSubmit={handleCommentSubmit}
-            className="m-3"
-          />
         </div>
         
         {/* Message Status for own messages */}
