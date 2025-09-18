@@ -98,7 +98,7 @@ const DeluxeCart = () => {
   const tax = subtotal * 0.08;
   const total = subtotal + shippingCost + tax;
   
-  const handleQuantityChange = (id: string | number, quantity: number) => {
+  const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity === 0) {
       dispatch(removeFromCart({ id }));
     } else {
