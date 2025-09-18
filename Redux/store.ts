@@ -3,19 +3,29 @@ import { configureStore } from '@reduxjs/toolkit';
 import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 import activeIndexReducer from './activeIndexSlice';
-// Persist configuration for activeIndex only
+import cartReducer from './cartSlice'; // Import your cart reducer
+
+// Persist configuration for activeIndex
 const activeIndexPersistConfig = {
   key: 'activeIndex',
   storage
 };
 
-// Only persist the activeIndex reducer
+// Persist configuration for cart
+const cartPersistConfig = {
+  key: 'cart',
+  storage
+};
+
+// Create persisted reducers
 const persistedActiveIndexReducer = persistReducer(activeIndexPersistConfig, activeIndexReducer);
+const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
 
 // Configure store
 export const store = configureStore({
   reducer: {
-    activeIndex: persistedActiveIndexReducer, // Only this one is persisted 
+    activeIndex: persistedActiveIndexReducer,
+    cart: persistedCartReducer, // Add the cart reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
