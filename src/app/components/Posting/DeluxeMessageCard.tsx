@@ -231,6 +231,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
       {/* Engagement Modal */}
       <EngagementModal
+        userId={id}
         isOpen={modalOpen}
         onClose={closeModal}
         type={modalType}
