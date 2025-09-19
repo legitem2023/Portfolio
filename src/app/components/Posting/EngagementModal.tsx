@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import UserAvatar from './UserAvatar';
 import CommentInput from './CommentInput';
 import { CommentList } from './CommentList';
+import { CommentSystem } from './CommentSystem';
 interface Like {
   id: string;
   user: {
@@ -67,7 +68,14 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
-
+  const [useCurrentUser,setCurrentUser] = useState(
+    {
+    id: '',
+    firstName: '',
+    lastName: '',
+    avatar: '',
+  };
+  )
   useEffect(() => {
     if (isOpen && type === 'comments' && commentInputRef.current) {
       // Small timeout to ensure the modal is fully rendered before focusing
@@ -112,6 +120,41 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
     }
   }, [keyboardVisible]);
 
+  useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include' // Important: includes cookies
+        });
+        
+        if (response.status === 401) {
+          // Handle unauthorized access
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+
+        const payload = await decryptToken(token, secret.toString());
+        setCurrentUser({
+            id: payload.userId,
+            firstName: payload.name,
+            lastName: '',
+            avatar: payload.image,  
+        })
+        console.log(payload);
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
+
+
+
+
+  
   const renderContent = () => {
     switch (type) {
       case 'likes':
@@ -138,9 +181,12 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       
       case 'comments':
         return (
-          <>               
-            <CommentList postId={userId}/>
-            {/* Sticky CommentInput at bottom */}
+          <>  
+            <CommentSystem 
+              postId={userId} 
+              currentUser={useCurrentUser} 
+            />
+            {/* <CommentList postId={userId}/>
             <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
               <CommentInput
                 ref={commentInputRef}
@@ -151,7 +197,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
                 onFocus={() => setInputFocused(true)}
                 onBlur={() => setInputFocused(false)}
               />
-            </div>
+            </div>*/}
           </>
         );
       
