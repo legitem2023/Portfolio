@@ -19,6 +19,7 @@ const ProductsTab: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortBy, setSortBy] = useState('Sort by: Featured');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [itemsToFetch, setItemsToFetch] = useState(12); // Track how many items to fetch
   const observer = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   
@@ -75,8 +76,12 @@ const ProductsTab: React.FC = () => {
 
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isFetchingMore) {
+      // Set the number of items we expect to fetch
+      setItemsToFetch(queryVariables.limit);
+      
       fetchMore({
         variables: {
+          ...queryVariables,
           cursor: data.products.nextCursor,
         },
         updateQuery: (prev: ProductsResponse, { fetchMoreResult }) => {
@@ -94,7 +99,7 @@ const ProductsTab: React.FC = () => {
         },  
       });  
     }
-  }, [data, fetchMore, isFetchingMore, hasMore]);
+  }, [data, fetchMore, isFetchingMore, hasMore, queryVariables]);
 
   // Infinite scroll setup
   useEffect(() => {
@@ -176,7 +181,7 @@ const ProductsTab: React.FC = () => {
       </div>  
       
       {showLoadingShimmer ? (
-        <ProductThumbnailsShimmer count={5}/>
+        <ProductThumbnailsShimmer count={queryVariables.limit}/>
       ) : products.length > 0 ? (  
         <>  
           <ProductThumbnails products={products} />  
@@ -184,9 +189,9 @@ const ProductsTab: React.FC = () => {
           {/* Sentinel element for infinite scroll */}
           <div ref={sentinelRef} className="h-2" />
           
-      {isFetchingMore && (
-        <ProductThumbnailsShimmer count={3} />     
-      )}
+          {isFetchingMore && (
+            <ProductThumbnailsShimmer count={itemsToFetch} />     
+          )}
         </>  
       ) : (  
         <div className="text-center py-12 text-gray-500">  
