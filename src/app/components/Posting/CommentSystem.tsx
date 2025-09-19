@@ -9,7 +9,7 @@ interface User {
   lastName: string;
   avatar: string;
 }
-
+ 
 interface Comment {
   id: string;
   content: string;
