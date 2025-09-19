@@ -70,14 +70,8 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   const modalContentRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [inputFocused, setInputFocused] = useState(false);
-  const [useCurrentUser,setCurrentUser] = useState(
-    {
-    id: '',
-    firstName: '',
-    lastName: '',
-    avatar: ''
-  }
-  )
+  const [useCurrentUser,setCurrentUser] = useState({id: '',firstName: '',lastName: '',avatar: ''})
+  const [showComments, setShowComments] = useState(false);
   useEffect(() => {
     if (isOpen && type === 'comments' && commentInputRef.current) {
       // Small timeout to ensure the modal is fully rendered before focusing
@@ -184,10 +178,13 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       case 'comments':
         return (
           <>  
-            <CommentSystem 
-              postId={userId} 
-              currentUser={useCurrentUser} 
-            />
+            {showComments && (
+  <CommentSystem 
+    postId={userId} 
+    currentUser={useCurrentUser} 
+    onClose={() => setShowComments(false)}
+  />
+)}
             {/* <CommentList postId={userId}/>
             <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
               <CommentInput
