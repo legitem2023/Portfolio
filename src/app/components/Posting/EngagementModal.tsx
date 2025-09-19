@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import UserAvatar from './UserAvatar';
 import CommentInput from './CommentInput';
-import CommentList from './CommentList';
+import { CommentList } from './CommentList';
 interface Like {
   id: string;
   user: {
