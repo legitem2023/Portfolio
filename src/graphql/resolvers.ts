@@ -875,7 +875,7 @@ const isValid = await comparePassword(password, user?.password || "");
         data: {
           content: input.content,
           postId: input.postId,
-          userId: currentUserId,
+          userId: input.userId,
           parentId: input.parentId
         },
         include: {
@@ -883,7 +883,7 @@ const isValid = await comparePassword(password, user?.password || "");
           post: true,
           likes: {
             where: {
-              userId: currentUserId
+              userId: input.userId
             }
           },
           _count: {
