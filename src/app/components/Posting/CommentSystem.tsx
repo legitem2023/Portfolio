@@ -45,8 +45,9 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
   const [currentPage, setCurrentPage] = useState(1);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
-  const [isInputFocused, setIsInputFocused] = useState(false);
-  
+  const inputContainerRef = useRef<HTMLDivElement>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
   const { data, loading, error, fetchMore } = useQuery<CommentsData, CommentsVars>(
     GET_COMMENTS,
     {
@@ -83,6 +84,33 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
       }
     }
   });
+
+  // Handle keyboard visibility
+  useEffect(() => {
+    const handleFocusIn = () => {
+      setIsKeyboardVisible(true);
+    };
+
+    const handleFocusOut = () => {
+      setIsKeyboardVisible(false);
+    };
+
+    // Add event listeners
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
+  // Scroll to bottom when new comments are added
+  useEffect(() => {
+    if (commentsContainerRef.current && data?.comments.comments) {
+      commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
+    }
+  }, [data?.comments.comments]);
 
   const loadMore = () => {
     fetchMore({
@@ -129,13 +157,6 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
       console.error("Failed to create comment:", err);
     }
   };
-
-  // Scroll to bottom when new comments are added
-  useEffect(() => {
-    if (commentsContainerRef.current && data?.comments.comments) {
-      commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
-    }
-  }, [data?.comments.comments]);
 
   if (error) return (
     <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 my-4">
@@ -226,9 +247,12 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
         )}
       </div>
 
-      {/* Comment Input - Fixed at bottom */}
-      <div className={`p-4 border-t border-gray-200 bg-white ${isInputFocused ? 'sticky bottom-0' : ''}`}>
-        <div className="flex gap-3">
+      {/* Comment Input - Fixed at bottom but moves with keyboard */}
+      <div 
+        ref={inputContainerRef}
+        className={`p-4 border-t border-gray-200 bg-white transition-all duration-300 ${isKeyboardVisible ? 'fixed bottom-0 left-0 right-0 z-10' : 'sticky bottom-0'}`}
+      >
+        <div className="flex gap-3 max-w-2xl mx-auto">
           <img 
             src={currentUser.avatar || '/NoImage.webp'} 
             alt={`${currentUser.firstName} ${currentUser.lastName}`}
@@ -251,8 +275,6 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
                 placeholder="Write a comment..."
                 className="flex-1 bg-transparent border-none outline-none py-2 text-gray-700"
                 disabled={creatingComment}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
               />
               <button 
                 type="submit"
