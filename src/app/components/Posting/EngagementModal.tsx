@@ -36,6 +36,7 @@ interface Share {
 }
 
 interface EngagementModalProps {
+  userId:string;
   isOpen: boolean;
   onClose: () => void;
   type: 'likes' | 'comments' | 'shares' | null;
@@ -50,6 +51,7 @@ interface EngagementModalProps {
 }
 
 const EngagementModal: React.FC<EngagementModalProps> = ({
+  userId,
   isOpen,
   onClose,
   type,
@@ -137,7 +139,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       case 'comments':
         return (
           <>               
-            <CommentList postId="your-post-id-here" />
+            <CommentList postId={userId}/>
             {/* Sticky CommentInput at bottom */}
             <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
               <CommentInput
