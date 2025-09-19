@@ -74,7 +74,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
     firstName: '',
     lastName: '',
     avatar: ''
-  };
+  }
   )
   useEffect(() => {
     if (isOpen && type === 'comments' && commentInputRef.current) {
