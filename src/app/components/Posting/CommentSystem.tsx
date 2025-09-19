@@ -37,7 +37,7 @@ interface CommentsVars {
 interface CommentListProps {
   postId: string;
   currentUser: User;
-  isOpen: boolean; // Add this prop to know when the modal is open
+  isOpen: boolean;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -138,7 +138,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
     }
   }, [isOpen, data?.comments.comments, hasScrolledToBottom]);
 
-  // Scroll to bottom function
+  // Scroll to bottom function for the comments container
   const scrollToBottom = () => {
     if (commentsContainerRef.current) {
       commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
@@ -303,11 +303,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         }}
       >
         <div className="flex gap-3 max-w-2xl mx-auto">
-          <img 
-            src={currentUser.avatar || '/NoImage.webp'} 
-            alt={`${currentUser.firstName} ${currentUser.lastName}`}
-            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-          />
+          
           
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
             <form 
