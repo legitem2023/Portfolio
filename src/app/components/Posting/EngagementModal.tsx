@@ -182,7 +182,6 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   <CommentSystem 
     postId={userId} 
     currentUser={useCurrentUser} 
-    onClose={() => setShowComments(false)}
   />
             {/* <CommentList postId={userId}/>
             <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
