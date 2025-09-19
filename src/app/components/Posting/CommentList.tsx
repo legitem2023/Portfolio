@@ -2,6 +2,36 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { GET_COMMENTS } from '../graphql/query';
 
+// Define TypeScript interfaces
+interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatar: string;
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: User;
+  likeCount: number;
+  isLikedByMe: boolean;
+}
+
+interface CommentsData {
+  comments: {
+    comments: Comment[];
+    totalCount: number;
+    hasNextPage: boolean;
+  };
+}
+
+interface CommentsVars {
+  postId: string;
+  page?: number;
+  limit?: number;
+}
 
 interface CommentListProps {
   postId: string;
@@ -12,14 +42,17 @@ const DEFAULT_PAGE_SIZE = 10;
 export const CommentList: React.FC<CommentListProps> = ({ postId }) => {
   const [currentPage, setCurrentPage] = useState(1);
   
-  const { data, loading, error, fetchMore } = useQuery(GET_COMMENTS, {
-    variables: {
-      postId,
-      page: 1,
-      limit: DEFAULT_PAGE_SIZE
-    },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, loading, error, fetchMore } = useQuery<CommentsData, CommentsVars>(
+    GET_COMMENTS,
+    {
+      variables: {
+        postId,
+        page: 1,
+        limit: DEFAULT_PAGE_SIZE
+      },
+      notifyOnNetworkStatusChange: true,
+    }
+  );
 
   const loadMore = () => {
     fetchMore({
@@ -48,10 +81,11 @@ export const CommentList: React.FC<CommentListProps> = ({ postId }) => {
   
   const comments = data?.comments.comments || [];
   const hasNextPage = data?.comments.hasNextPage || false;
+  const totalCount = data?.comments.totalCount || 0;
 
   return (
     <div className="comment-section">
-      <h3>Comments ({data?.comments.totalCount || 0})</h3>
+      <h3>Comments ({totalCount})</h3>
       
       {comments.map(comment => (
         <div key={comment.id} className="comment">
