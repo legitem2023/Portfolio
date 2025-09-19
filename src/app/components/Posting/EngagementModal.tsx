@@ -4,6 +4,8 @@ import UserAvatar from './UserAvatar';
 import CommentInput from './CommentInput';
 import { CommentList } from './CommentList';
 import { CommentSystem } from './CommentSystem';
+import { decryptToken } from '../../../../utils/decryptToken';
+
 interface Like {
   id: string;
   user: {
