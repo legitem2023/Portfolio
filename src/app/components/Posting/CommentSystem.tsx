@@ -143,7 +143,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
       <div className="mb-6">
         <div className="flex gap-3">
           <img 
-            src={currentUser.avatar} 
+            src={currentUser.avatar || '/NoImage.webp'} 
             alt={`${currentUser.firstName} ${currentUser.lastName}`}
             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
           />
@@ -184,7 +184,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
           <div key={comment.id} className="border-b border-gray-100 pb-5 last:border-0 last:pb-0">
             <div className="flex gap-3">
               <img 
-                src={comment.user.avatar} 
+                src={comment.user.avatar || '/NoImage.webp' } 
                 alt={`${comment.user.firstName} ${comment.user.lastName}`}
                 className="w-10 h-10 rounded-full object-cover flex-shrink-0"
               />
