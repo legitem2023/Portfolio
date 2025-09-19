@@ -84,7 +84,7 @@ if (error) return <div className="error-message">Error loading comments: {error.
   const totalCount = data?.comments.totalCount || 0;
 
   return (
-    <div className="comment-section">
+    <div className="comment-section h-[80%]">
       <h3>Comments ({totalCount})</h3>
       
       {comments.map(comment => (
