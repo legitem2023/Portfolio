@@ -1,3 +1,4 @@
+import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import { CartItem } from './DeluxeCart';
 
 interface CartStageProps {
@@ -14,8 +15,8 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-5xl text-amber-500 mb-4">
-          <i className="fas fa-shopping-cart"></i>
+        <div className="text-amber-500 mb-4 flex justify-center">
+          <ShoppingCart size={48} />
         </div>
         <h2 className="text-2xl font-serif font-bold text-amber-900 mb-2">Your cart is empty</h2>
         <p className="text-amber-700">Add some items to your cart to continue shopping</p>
@@ -40,14 +41,14 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                 onClick={() => onQuantityChange(item.id, item.quantity - 1)}
                 className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
               >
-                <i className="fas fa-minus text-xs"></i>
+                <Minus size={12} />
               </button>
               <span className="font-medium text-indigo-900 w-6 text-center">{item.quantity}</span>
               <button 
                 onClick={() => onQuantityChange(item.id, item.quantity + 1)}
                 className="w-8 h-8 rounded-full bg-amber-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
               >
-                <i className="fas fa-plus text-xs"></i>
+                <Plus size={12} />
               </button>
             </div>
             <div className="font-semibold text-indigo-900 min-w-[80px] text-right px-4">
@@ -57,7 +58,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               className="text-indigo-600 hover:text-amber-800 transition-colors p-2"
               onClick={() => onQuantityChange(item.id, 0)}
             >
-              <i className="fas fa-trash"></i>
+              <Trash2 size={16} />
             </button>
           </div>
         ))}
