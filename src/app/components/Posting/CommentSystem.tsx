@@ -37,15 +37,17 @@ interface CommentsVars {
 interface CommentListProps {
   postId: string;
   currentUser: User;
+  onClose: () => void;
 }
 
 const DEFAULT_PAGE_SIZE = 10;
 
-export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser }) => {
+export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser, onClose }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const commentInputRef = useRef<HTMLInputElement>(null);
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
+  const [commentText, setCommentText] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
   
   const { data, loading, error, fetchMore } = useQuery<CommentsData, CommentsVars>(
     GET_COMMENTS,
@@ -84,35 +86,24 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
     }
   });
 
-  // Detect keyboard visibility on mobile
+  // Auto-scroll to bottom when new comment is added
   useEffect(() => {
-    const handleFocusIn = () => {
-      setIsKeyboardVisible(true);
-      // Scroll to bottom when keyboard appears to show the input field
-      setTimeout(() => {
-        if (commentsContainerRef.current) {
-          commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
-        }
-      }, 300);
-    };
-
-    const handleFocusOut = () => {
-      setIsKeyboardVisible(false);
-    };
-
-    const inputElement = commentInputRef.current;
-    if (inputElement) {
-      inputElement.addEventListener('focusin', handleFocusIn);
-      inputElement.addEventListener('focusout', handleFocusOut);
+    if (commentsContainerRef.current) {
+      commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
     }
+  }, [data?.comments.comments]);
 
-    return () => {
-      if (inputElement) {
-        inputElement.removeEventListener('focusin', handleFocusIn);
-        inputElement.removeEventListener('focusout', handleFocusOut);
+  // Handle keyboard visibility
+  useEffect(() => {
+    const handleResize = () => {
+      if (isInputFocused && commentsContainerRef.current) {
+        commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
       }
     };
-  }, []);
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isInputFocused]);
 
   const loadMore = () => {
     fetchMore({
@@ -137,19 +128,21 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
     setCurrentPage(prev => prev + 1);
   };
 
-  const handleSubmitComment = async (content: string) => {
-    if (!content.trim()) return;
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
     
     try {
       await createComment({
         variables: {
           input: {
             postId,
-            content,
+            content: commentText,
             userId: currentUser.id
           }
         }
       });
+      setCommentText('');
     } catch (err) {
       console.error("Failed to create comment:", err);
     }
@@ -167,27 +160,36 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
   const totalCount = data?.comments.totalCount || 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 max-w-2xl mx-auto flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-gray-800">Comments ({totalCount})</h3>
+    <div className="fixed inset-0 bg-white z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <h3 className="text-xl font-semibold text-gray-800">Comments</h3>
+        <button 
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
       
-      {/* Comments List - Scrollable area */}
+      {/* Comments List */}
       <div 
         ref={commentsContainerRef}
-        className="flex-1 overflow-y-auto space-y-5 mb-4"
-        style={{ maxHeight: '60vh' }}
+        className="flex-1 overflow-y-auto p-4"
+        style={{ paddingBottom: isInputFocused ? '80px' : '0' }}
       >
-        {comments.map(comment => (
-          <div key={comment.id} className="border-b border-gray-100 pb-5 last:border-0 last:pb-0">
-            <div className="flex gap-3">
+        <div className="space-y-4">
+          {comments.map(comment => (
+            <div key={comment.id} className="flex gap-3">
               <img 
                 src={comment.user.avatar || '/NoImage.webp'} 
                 alt={`${comment.user.firstName} ${comment.user.lastName}`}
                 className="w-10 h-10 rounded-full object-cover flex-shrink-0"
               />
               
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 bg-gray-100 rounded-2xl p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-gray-900">
                     {comment.user.firstName} {comment.user.lastName}
@@ -199,24 +201,19 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
                 
                 <p className="text-gray-700 mb-2">{comment.content}</p>
                 
-                <div className="flex items-center">
-                  <button className={`flex items-center gap-1 text-sm ${comment.isLikedByMe ? 'text-rose-500' : 'text-gray-500'} hover:text-rose-600 transition-colors`}>
-                    {comment.isLikedByMe ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    )}
-                    <span>{comment.likeCount}</span>
+                <div className="flex items-center gap-4 text-sm text-gray-500">
+                  <button className={`flex items-center gap-1 ${comment.isLikedByMe ? 'text-blue-600' : ''}`}>
+                    Like
                   </button>
+                  <button className="flex items-center gap-1">
+                    Reply
+                  </button>
+                  <span>{comment.likeCount} likes</span>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         {loading && (
           <div className="flex justify-center py-8">
@@ -229,7 +226,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
             <button 
               onClick={loadMore}
               disabled={loading}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
             >
               {loading ? (
                 <>
@@ -253,43 +250,42 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
         )}
       </div>
       
-      {/* Comment Input - Position changes based on keyboard visibility */}
-      <div className={`${isKeyboardVisible ? 'order-first' : 'order-last'} transition-all duration-300 pt-4 border-t border-gray-100`}>
-        <div className="flex gap-3">
+      {/* Comment Input - Fixed at bottom */}
+      <div className="border-t border-gray-200 bg-white p-4">
+        <form onSubmit={handleSubmitComment} className="flex gap-3">
           <img 
             src={currentUser.avatar || '/NoImage.webp'} 
             alt={`${currentUser.firstName} ${currentUser.lastName}`}
             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
           />
           
-          <div className="flex-1 bg-gray-50 rounded-2xl px-4 py-2">
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (commentInputRef.current) {
-                  handleSubmitComment(commentInputRef.current.value);
-                  commentInputRef.current.value = '';
-                }
+          <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2 flex items-center">
+            <textarea
+              ref={commentInputRef}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Write a comment..."
+              className="flex-1 bg-transparent border-none outline-none py-1 text-gray-700 resize-none"
+              disabled={creatingComment}
+              rows={1}
+              style={{ maxHeight: '100px' }}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setIsInputFocused(false)}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${Math.min(target.scrollHeight, 100)}px`;
               }}
-              className="flex items-center gap-2"
+            />
+            <button 
+              type="submit"
+              disabled={creatingComment || !commentText.trim()}
+              className="text-blue-500 font-semibold px-3 py-1 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ml-2"
             >
-              <input
-                ref={commentInputRef}
-                type="text"
-                placeholder="Write a comment..."
-                className="flex-1 bg-transparent border-none outline-none py-2 text-gray-700"
-                disabled={creatingComment}
-              />
-              <button 
-                type="submit"
-                disabled={creatingComment}
-                className="text-blue-500 font-semibold px-3 py-1 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {creatingComment ? 'Posting...' : 'Post'}
-              </button>
-            </form>
+              {creatingComment ? 'Posting...' : 'Post'}
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );
