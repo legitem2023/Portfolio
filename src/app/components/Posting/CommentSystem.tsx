@@ -37,16 +37,19 @@ interface CommentsVars {
 interface CommentListProps {
   postId: string;
   currentUser: User;
+  isOpen: boolean; // Add this prop to know when the modal is open
 }
 
 const DEFAULT_PAGE_SIZE = 10;
 
-export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser }) => {
+export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser, isOpen }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
   const { data, loading, error, fetchMore } = useQuery<CommentsData, CommentsVars>(
     GET_COMMENTS,
@@ -87,30 +90,60 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
 
   // Handle keyboard visibility
   useEffect(() => {
-    const handleFocusIn = () => {
-      setIsKeyboardVisible(true);
-    };
-
-    const handleFocusOut = () => {
-      setIsKeyboardVisible(false);
+    const handleResize = () => {
+      // Check if visualViewport API is available (mobile browsers)
+      if (window.visualViewport) {
+        const visualViewport = window.visualViewport;
+        const windowHeight = window.innerHeight;
+        const keyboardHeight = windowHeight - visualViewport.height;
+        
+        if (keyboardHeight > 100) {
+          setIsKeyboardVisible(true);
+          setKeyboardHeight(keyboardHeight);
+          
+          // Scroll to bottom when keyboard appears
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+        } else {
+          setIsKeyboardVisible(false);
+          setKeyboardHeight(0);
+        }
+      }
     };
 
     // Add event listeners
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+    }
+
+    // Initial check
+    handleResize();
 
     return () => {
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
     };
   }, []);
 
-  // Scroll to bottom when new comments are added
+  // Scroll to bottom when modal opens or new comments are added
   useEffect(() => {
-    if (commentsContainerRef.current && data?.comments.comments) {
+    if (isOpen && commentsContainerRef.current && data?.comments.comments) {
+      // Only scroll if we haven't already scrolled to bottom or if new comments were added
+      if (!hasScrolledToBottom || data.comments.comments.length > 0) {
+        scrollToBottom();
+        setHasScrolledToBottom(true);
+      }
+    }
+  }, [isOpen, data?.comments.comments, hasScrolledToBottom]);
+
+  // Scroll to bottom function
+  const scrollToBottom = () => {
+    if (commentsContainerRef.current) {
       commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
     }
-  }, [data?.comments.comments]);
+  };
 
   const loadMore = () => {
     fetchMore({
@@ -153,6 +186,11 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
       if (commentInputRef.current) {
         commentInputRef.current.value = '';
       }
+      
+      // Scroll to bottom after submitting a comment
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     } catch (err) {
       console.error("Failed to create comment:", err);
     }
@@ -179,7 +217,11 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
       <div 
         ref={commentsContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
+        style={{ 
+          maxHeight: isKeyboardVisible 
+            ? `calc(100vh - 200px - ${keyboardHeight}px)` 
+            : 'calc(100vh - 200px)'
+        }}
       >
         {comments.length === 0 && !loading && (
           <div className="text-center py-10 text-gray-500">
@@ -247,13 +289,26 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
         )}
       </div>
 
-      {/* Comment Input - Fixed at bottom but moves with keyboard */}
+      {/* Comment Input - Always visible above keyboard */}
       <div 
         ref={inputContainerRef}
-        className={`p-4 border-t border-gray-200 bg-white transition-all duration-300 ${isKeyboardVisible ? 'fixed bottom-0 left-0 right-0 z-10' : 'sticky bottom-0'}`}
+        className="p-4 border-t border-gray-200 bg-white"
+        style={{
+          position: isKeyboardVisible ? 'fixed' : 'static',
+          bottom: isKeyboardVisible ? '0' : 'auto',
+          left: isKeyboardVisible ? '0' : 'auto',
+          right: isKeyboardVisible ? '0' : 'auto',
+          zIndex: isKeyboardVisible ? 1000 : 'auto',
+          paddingBottom: isKeyboardVisible ? `calc(1rem + env(safe-area-inset-bottom))` : '1rem'
+        }}
       >
         <div className="flex gap-3 max-w-2xl mx-auto">
-
+          <img 
+            src={currentUser.avatar || '/NoImage.webp'} 
+            alt={`${currentUser.firstName} ${currentUser.lastName}`}
+            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+          />
+          
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
             <form 
               onSubmit={(e) => {
