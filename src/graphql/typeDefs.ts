@@ -409,6 +409,7 @@ export const typeDefs = gql`
   }
 
   input CreateCommentInput {
+    userId:String!
     postId: ID!
     content: String!
     parentId: ID
