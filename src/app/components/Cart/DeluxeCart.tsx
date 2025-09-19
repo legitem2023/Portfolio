@@ -101,7 +101,7 @@ const DeluxeCart = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
-        <div className="flex justify-between relative mb-12">
+        <div className="flex justify-between relative mb-12 bg-red-600">
           <div className="absolute top-5 left-0 right-0 h-0.5 bg-indigo-200 z-0"></div>
           
           {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
@@ -115,7 +115,7 @@ const DeluxeCart = () => {
                   {index + 1}
                 </div>
                 <span className={`mt-2 text-sm font-medium ${isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'}`}>
-                 *** {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                 {stage.charAt(0).toUpperCase() + stage.slice(1)}
                 </span>
               </div>
             );
