@@ -90,6 +90,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const [modalType, setModalType] = useState<ModalType>(null);
 
   const {
+    id,
     sender,
     avatar,
     timestamp,
@@ -114,6 +115,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const openModal = (type: ModalType) => {
     setModalType(type);
     setModalOpen(true);
+    console.log(id);
   };
 
   const closeModal = () => {
