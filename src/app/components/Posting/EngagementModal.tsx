@@ -73,7 +73,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
     id: '',
     firstName: '',
     lastName: '',
-    avatar: '',
+    avatar: ''
   };
   )
   useEffect(() => {
@@ -141,7 +141,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
             id: payload.userId,
             firstName: payload.name,
             lastName: '',
-            avatar: payload.image,  
+            avatar: payload.image 
         })
         console.log(payload);
       } catch (err) {
