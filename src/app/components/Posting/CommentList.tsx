@@ -77,52 +77,97 @@ export const CommentList: React.FC<CommentListProps> = ({ postId }) => {
     setCurrentPage(prev => prev + 1);
   };
 
-if (error) return <div className="error-message">Error loading comments: {error.message}</div>;
+  if (error) return (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 my-4">
+      <p className="font-medium">Error loading comments</p>
+      <p className="text-sm">{error.message}</p>
+    </div>
+  );
     
   const comments = data?.comments.comments || [];
   const hasNextPage = data?.comments.hasNextPage || false;
   const totalCount = data?.comments.totalCount || 0;
 
   return (
-    <div className="comment-section h-[80%]">
-      <h3>Comments ({totalCount})</h3>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-semibold text-gray-800">Comments ({totalCount})</h3>
+      </div>
       
-      {comments.map(comment => (
-        <div key={comment.id} className="comment">
-          <div className="comment-header">
-            <img 
-              src={comment.user.avatar} 
-              alt={`${comment.user.firstName} ${comment.user.lastName}`}
-              className="avatar"
-            />
-            <div className="user-info">
-              <span>{comment.user.firstName} {comment.user.lastName}</span>
-              <span className="comment-date">
-                {new Date(comment.createdAt).toLocaleString()}
-              </span>
+      <div className="space-y-5">
+        {comments.map(comment => (
+          <div key={comment.id} className="border-b border-gray-100 pb-5 last:border-0 last:pb-0">
+            <div className="flex gap-3">
+              <img 
+                src={comment.user.avatar} 
+                alt={`${comment.user.firstName} ${comment.user.lastName}`}
+                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              />
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium text-gray-900">
+                    {comment.user.firstName} {comment.user.lastName}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {new Date(comment.createdAt).toLocaleString()}
+                  </span>
+                </div>
+                
+                <p className="text-gray-700 mb-2">{comment.content}</p>
+                
+                <div className="flex items-center">
+                  <button className={`flex items-center gap-1 text-sm ${comment.isLikedByMe ? 'text-rose-500' : 'text-gray-500'} hover:text-rose-600 transition-colors`}>
+                    {comment.isLikedByMe ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                    )}
+                    <span>{comment.likeCount}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-          
-          <p className="comment-content">{comment.content}</p>
-          
-          <div className="comment-actions">
-            <button className="like-button">
-              {comment.isLikedByMe ? '❤️' : '🤍'} {comment.likeCount}
-            </button>
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
-      {loading && <div>Loading comments...</div>}
+      {loading && (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+        </div>
+      )}
       
       {hasNextPage && (
-        <button 
-          onClick={loadMore}
-          disabled={loading}
-          className="load-more-btn"
-        >
-          {loading ? 'Loading...' : 'Load More'}
-        </button>
+        <div className="mt-6 flex justify-center">
+          <button 
+            onClick={loadMore}
+            disabled={loading}
+            className="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                Loading...
+              </>
+            ) : (
+              'Load More Comments'
+            )}
+          </button>
+        </div>
+      )}
+
+      {comments.length === 0 && !loading && (
+        <div className="text-center py-10 text-gray-500">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          <p>No comments yet. Be the first to share your thoughts!</p>
+        </div>
       )}
     </div>
   );
