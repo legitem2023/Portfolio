@@ -101,26 +101,26 @@ const DeluxeCart = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Progress Bar */}
-        <div className="flex justify-between relative mb-12 bg-red-600">
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-indigo-200 z-0"></div>
-          
-          {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
-            const stageIndex = ['cart', 'shipping', 'payment', 'confirmation'].indexOf(currentStage);
-            const isCompleted = index < stageIndex;
-            const isActive = index === stageIndex;
-            
-            return (
-              <div key={stage} className="flex flex-col items-center relative z-10">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isActive ? 'bg-indigo-500 border-indigo-500 text-white' : isCompleted ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-indigo-300 text-indigo-300'}`}>
-                  {index + 1}
-                </div>
-                <span className={`mt-2 text-sm font-medium ${isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'}`}>
-                 {stage.charAt(0).toUpperCase() + stage.slice(1)}
-                </span>
-              </div>
-            );
-          })}
+<div className="flex justify-between relative mb-12">
+  <div className="absolute top-5 left-5 right-5 h-0.5 bg-indigo-200 z-0"></div>
+  
+  {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
+    const stageIndex = ['cart', 'shipping', 'payment', 'confirmation'].indexOf(currentStage);
+    const isCompleted = index < stageIndex;
+    const isActive = index === stageIndex;
+    
+    return (
+      <div key={stage} className="flex flex-col items-center relative z-10">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isActive ? 'bg-indigo-500 border-indigo-500 text-white' : isCompleted ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-indigo-300 text-indigo-300'}`}>
+          {index + 1}
         </div>
+        <span className={`mt-2 text-sm font-medium ${isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'}`}>
+          {stage.charAt(0).toUpperCase() + stage.slice(1)}
+        </span>
+      </div>
+    );
+  })}
+</div>
         
         {/* Content */}
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
