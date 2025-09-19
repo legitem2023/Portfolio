@@ -77,7 +77,7 @@ export const CommentList: React.FC<CommentListProps> = ({ postId }) => {
     setCurrentPage(prev => prev + 1);
   };
 
-  if (error) return <div>Error loading comments{error}</div>;
+  if (error) return error;
   
   const comments = data?.comments.comments || [];
   const hasNextPage = data?.comments.hasNextPage || false;
