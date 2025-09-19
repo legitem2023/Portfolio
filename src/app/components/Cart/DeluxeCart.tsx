@@ -115,7 +115,7 @@ const DeluxeCart = () => {
                   {index + 1}
                 </div>
                 <span className={`mt-2 text-sm font-medium ${isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'}`}>
-                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                 *** {stage.charAt(0).toUpperCase() + stage.slice(1)}
                 </span>
               </div>
             );
