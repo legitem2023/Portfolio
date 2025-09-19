@@ -253,12 +253,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
         className={`p-4 border-t border-gray-200 bg-white transition-all duration-300 ${isKeyboardVisible ? 'fixed bottom-0 left-0 right-0 z-10' : 'sticky bottom-0'}`}
       >
         <div className="flex gap-3 max-w-2xl mx-auto">
-          <img 
-            src={currentUser.avatar || '/NoImage.webp'} 
-            alt={`${currentUser.firstName} ${currentUser.lastName}`}
-            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-          />
-          
+
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
             <form 
               onSubmit={(e) => {
