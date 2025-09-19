@@ -1,5 +1,5 @@
 'use client';
-import React, { useState,useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
@@ -43,7 +43,6 @@ const DeluxeNavTabs: React.FC = () => {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   
-  
   useEffect(() => {
     const getRole = async () => {
       try {
@@ -69,7 +68,6 @@ const DeluxeNavTabs: React.FC = () => {
     };
     getRole();
   }, []);
-  
   
   const tabs: Tab[] = [
     {
@@ -177,14 +175,14 @@ const DeluxeNavTabs: React.FC = () => {
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto font-sans z-10">
+    <div className="w-full md:max-w-2xl mx-auto font-sans z-10">
       
-      <div className="flex justify-center overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white z-20">
+      <div className="flex justify-between md:justify-center overflow-x-auto hide-scrollbar mb-1 bg-gradient-to-t from-violet-50 to-white z-20">
         {tabs.slice(0,6).map((tab) => (
           <button
             key={tab.id}
             onClick={() => dispatch(setActiveIndex(tab.id))}
-            className={`flex items-center px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
+            className={`flex-1 md:flex-none flex items-center justify-center px-2 md:px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
               activeIndex === tab.id
                 ? 'border-indigo-800 text-indigo-800 bg-gradient-to-t from-indigo-50 to-white'
                 : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
