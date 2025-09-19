@@ -112,7 +112,8 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser 
         variables: {
           input: {
             postId,
-            content
+            content,
+            userId:currentUser.id
           }
         }
       });
