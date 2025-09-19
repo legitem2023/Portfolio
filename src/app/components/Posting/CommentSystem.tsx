@@ -47,7 +47,6 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
   const commentInputRef = useRef<HTMLTextAreaElement>(null);
   const commentsContainerRef = useRef<HTMLDivElement>(null);
   const [commentText, setCommentText] = useState('');
-  const [isInputFocused, setIsInputFocused] = useState(false);
   
   const { data, loading, error, fetchMore } = useQuery<CommentsData, CommentsVars>(
     GET_COMMENTS,
@@ -92,18 +91,6 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
       commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
     }
   }, [data?.comments.comments]);
-
-  // Handle keyboard visibility
-  useEffect(() => {
-    const handleResize = () => {
-      if (isInputFocused && commentsContainerRef.current) {
-        commentsContainerRef.current.scrollTop = commentsContainerRef.current.scrollHeight;
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [isInputFocused]);
 
   const loadMore = () => {
     fetchMore({
@@ -165,8 +152,8 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
   const totalCount = data?.comments.totalCount || 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-2xl h-[80vh] flex flex-col">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="text-xl font-semibold text-gray-800">Comments</h3>
@@ -274,8 +261,6 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
                 disabled={creatingComment}
                 rows={1}
                 style={{ maxHeight: '100px' }}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
                   target.style.height = 'auto';
