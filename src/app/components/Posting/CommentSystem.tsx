@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_COMMENTS } from '../graphql/query';
 import { CREATE_COMMENT } from '../graphql/mutation';
-
 // Define TypeScript interfaces
 interface User {
   id: string;
