@@ -208,15 +208,17 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
   const totalCount = data?.comments.totalCount || 0;
 
   return (
-    <div className="flex flex-col h-[90vh] bg-white rounded-xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
+    <div 
+      ref={commentsContainerRef}
+      className="flex overflow-y-auto flex-col h-[90vh] bg-white rounded-xl shadow-sm border border-gray-200 max-w-2xl mx-auto">
       <div className="p-4 border-b border-gray-200">
         <h3 className="text-xl font-semibold text-gray-800">Comments ({totalCount})</h3>
       </div>
       
       {/* Comments List with fixed height and scrolling */}
       <div 
-        ref={commentsContainerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-4">
+        
+        className="flex-1 p-4 space-y-4">
         {comments.length === 0 && !loading && (
           <div className="text-center py-10 text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
