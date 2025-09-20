@@ -210,7 +210,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
   return (
     <div 
       ref={commentsContainerRef}
-      className="flex flex-col h-[90vh] bg-white shadow-sm border border-gray-200 max-w-2xl mx-auto">
+      className="flex flex-col bg-white shadow-sm border border-gray-200 max-w-2xl mx-auto">
       <div className="p-6 border-b border-gray-200">
         <h3 className="text-xl font-semibold text-gray-800">Comments ({totalCount})</h3>
       </div>
