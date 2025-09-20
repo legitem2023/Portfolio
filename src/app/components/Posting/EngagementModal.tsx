@@ -1,8 +1,6 @@
 // components/EngagementModal.tsx
 import React, { useEffect, useRef, useState } from 'react';
 import UserAvatar from './UserAvatar';
-import CommentInput from './CommentInput';
-import { CommentList } from './CommentList';
 import { CommentSystem } from './CommentSystem';
 import { decryptToken } from '../../../../utils/decryptToken';
 
@@ -67,14 +65,12 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   onSubmit
 }) => {
   const commentInputRef = useRef<HTMLInputElement>(null);
-  const modalContentRef = useRef<HTMLDivElement>(null);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [inputFocused, setInputFocused] = useState(false);
-  const [useCurrentUser,setCurrentUser] = useState({id: '',firstName: '',lastName: '',avatar: ''})
-  const [showComments, setShowComments] = useState(false);
+  const [useCurrentUser, setCurrentUser] = useState({id: '',firstName: '',lastName: '',avatar: ''})
+
   useEffect(() => {
     if (isOpen && type === 'comments' && commentInputRef.current) {
-      // Small timeout to ensure the modal is fully rendered before focusing
       setTimeout(() => {
         commentInputRef.current?.focus();
       }, 100);
@@ -85,12 +81,24 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   useEffect(() => {
     const handleResize = () => {
       if (window.visualViewport) {
-        // Check if viewport height changed significantly (indicating keyboard)
         const viewportHeight = window.visualViewport.height;
         const windowHeight = window.innerHeight;
-        const keyboardThreshold = 300; // Keyboard is usually at least 300px tall
+        const keyboardThreshold = 300;
         
-        setKeyboardVisible(windowHeight - viewportHeight > keyboardThreshold);
+        const isKeyboardVisible = windowHeight - viewportHeight > keyboardThreshold;
+        setKeyboardVisible(isKeyboardVisible);
+
+        // Scroll to bottom when keyboard appears
+        if (isKeyboardVisible && modalBodyRef.current) {
+          setTimeout(() => {
+            if (modalBodyRef.current) {
+              modalBodyRef.current.scrollTo({
+                top: modalBodyRef.current.scrollHeight,
+                behavior: 'smooth'
+              });
+            }
+          }, 150);
+        }
       }
     };
 
@@ -105,26 +113,14 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
     };
   }, []);
 
-  // Scroll to bottom when keyboard appears
-  useEffect(() => {
-    if (keyboardVisible && modalContentRef.current) {
-      setTimeout(() => {
-        if (modalContentRef.current) {
-          modalContentRef.current.scrollTop = modalContentRef.current.scrollHeight;
-        }
-      }, 100);
-    }
-  }, [keyboardVisible]);
-
   useEffect(() => {
     const getRole = async () => {
       try {
         const response = await fetch('/api/protected', {
-          credentials: 'include' // Important: includes cookies
+          credentials: 'include'
         });
         
         if (response.status === 401) {
-          // Handle unauthorized access
           throw new Error('Unauthorized');
         }
         
@@ -138,24 +134,22 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
             firstName: payload.name,
             lastName: '',
             avatar: payload.image 
-        })
-        console.log(payload);
+        });
       } catch (err) {
         console.error('Error getting role:', err);
       }
     };
-    getRole();
-  }, []);
+    
+    if (isOpen) {
+      getRole();
+    }
+  }, [isOpen]);
 
-
-
-
-  
   const renderContent = () => {
     switch (type) {
       case 'likes':
         return (
-          <div className="p-4 pb-20"> {/* Added padding at bottom for fixed input */}
+          <div className="p-4 pb-20">
             <h3 className="font-semibold text-lg mb-4">Likes</h3>
             <div className="space-y-3">
               {likes.length > 0 ? (
@@ -177,21 +171,16 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       
       case 'comments':
         return (
-          <>  
-          
-<CommentSystem 
-                 postId={userId} 
-                 currentUser={useCurrentUser} 
-                 isOpen={showComments}/>
-            {/* <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
-              
-            </div>*/}
-          </>
+          <CommentSystem 
+            postId={userId} 
+            currentUser={useCurrentUser} 
+            isOpen={isOpen && type === 'comments'}
+          />
         );
       
       case 'shares':
         return (
-          <div className="p-4 pb-20"> {/* Added padding at bottom for fixed input */}
+          <div className="p-4 pb-20">
             <h3 className="font-semibold text-lg mb-4">Shares</h3>
             <div className="space-y-3">
               {shares.length > 0 ? (
@@ -224,14 +213,14 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         className="modal-overlay"
         onClick={onClose}
       ></div>
-      <div 
-        className="modal-content"
-        ref={modalContentRef}
-      >
+      <div className="modal-content">
         <div className="modal-drag-handle">
           <div className="drag-indicator"></div>
         </div>
-        <div className="modal-body">
+        <div 
+          className="modal-body"
+          ref={modalBodyRef}
+        >
           {renderContent()}
         </div>
       </div>
@@ -280,6 +269,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         .engagement-modal.keyboard-open .modal-content {
           max-height: 100vh;
           border-radius: 0;
+          height: 100vh;
         }
         
         .modal-drag-handle {
@@ -305,27 +295,16 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           flex: 1;
           overflow-y: auto;
           position: relative;
+          -webkit-overflow-scrolling: touch;
         }
         
-        .sticky-comment-input {
-          position: sticky;
-          bottom: 0;
-          background: white;
-          border-top: 1px solid #e5e7eb;
-          padding: 0.75rem;
-          z-index: 10;
-          transition: transform 0.3s;
-          overflow:hidden;
+        .engagement-modal.keyboard-open .modal-body {
+          padding-bottom: 50vh;
         }
-        
-        /* Adjust for mobile keyboards */
+
         @media (max-width: 768px) {
           .engagement-modal.keyboard-open .modal-content {
-            height: 80vh;
-          }
-          
-          .engagement-modal.keyboard-open .sticky-comment-input {
-            padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+            height: 100vh;
           }
         }
       `}</style>
