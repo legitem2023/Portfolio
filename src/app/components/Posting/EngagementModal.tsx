@@ -66,8 +66,8 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
 }) => {
   const commentInputRef = useRef<HTMLInputElement>(null);
   const modalBodyRef = useRef<HTMLDivElement>(null);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [useCurrentUser, setCurrentUser] = useState({id: '',firstName: '',lastName: '',avatar: ''})
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     if (isOpen && type === 'comments' && commentInputRef.current) {
@@ -77,41 +77,19 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
     }
   }, [isOpen, type]);
 
-  // Handle keyboard visibility on mobile
+  // Handle scroll to bottom when input is focused
   useEffect(() => {
-    const handleResize = () => {
-      if (window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        const windowHeight = window.innerHeight;
-        const keyboardThreshold = 300;
-        
-        const isKeyboardVisible = windowHeight - viewportHeight > keyboardThreshold;
-        setKeyboardVisible(isKeyboardVisible);
-
-        // Scroll to bottom when keyboard appears
-        if (isKeyboardVisible && modalBodyRef.current) {
-          setTimeout(() => {
-            if (modalBodyRef.current) {
-              modalBodyRef.current.scrollTo({
-                top: modalBodyRef.current.scrollHeight,
-                behavior: 'smooth'
-              });
-            }
-          }, 150);
+    if (isInputFocused && modalBodyRef.current) {
+      setTimeout(() => {
+        if (modalBodyRef.current) {
+          modalBodyRef.current.scrollTo({
+            top: modalBodyRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
         }
-      }
-    };
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
+      }, 300);
     }
-
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, []);
+  }, [isInputFocused]);
 
   useEffect(() => {
     const getRole = async () => {
@@ -175,6 +153,8 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
             postId={userId} 
             currentUser={useCurrentUser} 
             isOpen={isOpen && type === 'comments'}
+            onInputFocusChange={setIsInputFocused}
+            inputRef={commentInputRef}
           />
         );
       
@@ -206,9 +186,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
   };
 
   return (
-    <div 
-      className={`engagement-modal ${isOpen ? 'open' : ''} ${keyboardVisible ? 'keyboard-open' : ''}`}
-    >
+    <div className={`engagement-modal ${isOpen ? 'open' : ''}`}>
       <div 
         className="modal-overlay"
         onClick={onClose}
@@ -266,12 +244,6 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           transform: translateY(0);
         }
         
-        .engagement-modal.keyboard-open .modal-content {
-          max-height: 100vh;
-          border-radius: 0;
-          height: 100vh;
-        }
-        
         .modal-drag-handle {
           position: sticky;
           top: 0;
@@ -297,14 +269,10 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           position: relative;
           -webkit-overflow-scrolling: touch;
         }
-        
-        .engagement-modal.keyboard-open .modal-body {
-          padding-bottom: 50vh;
-        }
 
         @media (max-width: 768px) {
-          .engagement-modal.keyboard-open .modal-content {
-            height: 100vh;
+          .engagement-modal.open .modal-content {
+            max-height: 85vh;
           }
         }
       `}</style>
