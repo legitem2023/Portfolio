@@ -179,13 +179,13 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         return (
           <>  
           
-
-            <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
-              <CommentSystem 
+<CommentSystem 
                  postId={userId} 
                  currentUser={useCurrentUser} 
                  isOpen={showComments}/>
-            </div>
+            {/* <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
+              
+            </div>*/}
           </>
         );
       
