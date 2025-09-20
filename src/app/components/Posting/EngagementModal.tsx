@@ -315,6 +315,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           padding: 0.75rem;
           z-index: 10;
           transition: transform 0.3s;
+          overflow:hidden;
         }
         
         /* Adjust for mobile keyboards */
