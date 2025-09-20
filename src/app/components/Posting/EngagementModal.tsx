@@ -74,12 +74,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       setTimeout(() => {
         commentInputRef.current?.focus();
       }, 100);
-    }
-  }, [isOpen, type]);
 
-  // Handle scroll to bottom when input is focused
-  useEffect(() => {
-    if (isInputFocused && modalBodyRef.current) {
       setTimeout(() => {
         if (modalBodyRef.current) {
           modalBodyRef.current.scrollTo({
@@ -88,8 +83,11 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           });
         }
       }, 300);
+      
     }
-  }, [isInputFocused]);
+  }, [isOpen, type]);
+
+
 
   useEffect(() => {
     const getRole = async () => {
