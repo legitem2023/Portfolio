@@ -75,14 +75,14 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         commentInputRef.current?.focus();
       }, 100);
 
-      setTimeout(() => {
-        if (modalBodyRef.current) {
-          modalBodyRef.current.scrollTo({
-            bottom: modalBodyRef.current.scrollHeight,
-            behavior: 'smooth'
-          });
-        }
-      }, 300);
+setTimeout(() => {
+  if (modalBodyRef.current) {
+    modalBodyRef.current.scrollTo({
+      top: modalBodyRef.current.scrollHeight,
+      behavior: 'smooth'
+    });
+  }
+}, 300);
       
     }
   }, [isOpen, type]);
