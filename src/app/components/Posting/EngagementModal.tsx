@@ -151,8 +151,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
             postId={userId} 
             currentUser={useCurrentUser} 
             isOpen={isOpen && type === 'comments'}
-            onInputFocusChange={setIsInputFocused}
-            inputRef={commentInputRef}
+            
           />
         );
       
