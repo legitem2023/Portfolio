@@ -78,7 +78,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
       setTimeout(() => {
         if (modalBodyRef.current) {
           modalBodyRef.current.scrollTo({
-            top: modalBodyRef.current.scrollHeight,
+            bottom: modalBodyRef.current.scrollHeight,
             behavior: 'smooth'
           });
         }
