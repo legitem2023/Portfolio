@@ -268,7 +268,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
           box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
           transform: translateY(100%);
           transition: transform 0.3s;
-          max-height: 85vh;
+          max-height: 80vh;
           display: flex;
           flex-direction: column;
         }
@@ -320,7 +320,7 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         /* Adjust for mobile keyboards */
         @media (max-width: 768px) {
           .engagement-modal.keyboard-open .modal-content {
-            height: 100vh;
+            height: 80vh;
           }
           
           .engagement-modal.keyboard-open .sticky-comment-input {
