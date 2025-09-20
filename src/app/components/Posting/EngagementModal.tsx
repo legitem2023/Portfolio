@@ -179,23 +179,13 @@ const EngagementModal: React.FC<EngagementModalProps> = ({
         return (
           <>  
           
-  <CommentSystem 
-    postId={userId} 
-    currentUser={useCurrentUser} 
-    isOpen={showComments}
-  />
-            {/* <CommentList postId={userId}/>
+
             <div className={`sticky-comment-input ${keyboardVisible ? 'keyboard-visible' : ''}`}>
-              <CommentInput
-                ref={commentInputRef}
-                userAvatar={userAvatar}
-                userName={userName}
-                onSubmit={onSubmit}
-                placeholder={placeholder}
-                onFocus={() => setInputFocused(true)}
-                onBlur={() => setInputFocused(false)}
-              />
-            </div>*/}
+              <CommentSystem 
+                 postId={userId} 
+                 currentUser={useCurrentUser} 
+                 isOpen={showComments}/>
+            </div>
           </>
         );
       
