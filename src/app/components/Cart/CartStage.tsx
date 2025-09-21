@@ -30,7 +30,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
       <div className="mb-8">
         {cartItems.map(item => (
           <div key={item.id} className="flex flex-col sm:flex-row items-center py-5 border-b border-indigo-50 hover:bg-indigo-50 transition-all duration-200 rounded-lg px-2 sm:px-4">
-            <img src={item.image} alt={item.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-indigo-200 shadow-sm mb-3 sm:mb-0" />
+            <img src={item.image || '/NoImage.webp'} alt={item.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-indigo-200 shadow-sm mb-3 sm:mb-0" />
             <div className="flex-1 px-2 sm:px-4 py-2 text-center sm:text-left w-full sm:w-auto">
               <h3 className="font-serif font-semibold text-lg text-indigo-900 mb-1">{item.name}</h3>
               <p className="text-indigo-600 text-sm hidden sm:block">{item.description}</p>
