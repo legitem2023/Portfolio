@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
+import { showToast } from '../../../utils/toastify'
 
 export interface Product {
   id: number;
@@ -60,6 +61,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     
     dispatch(addToCart(cartItem));
     
+    showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
     // You can implement a toast notification system here
   };
