@@ -18,8 +18,8 @@ const AnimatedCrowd = ({
   return (
     <div
       className={clsx(
-        "relative w-[100%] overflow-hidden aspect-[3/1]",
-        "bg-gradient-to-b from-green-950 via-green-800 to-green-700",
+        "relative w-[100%] overflow-hidden",
+        "bg-gradient-to-b from-violet-950 via-violet-800 to-violet-700",
         className
       )}
     >
@@ -56,7 +56,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-emerald-800 to-emerald-700"
+        buildingTone="from-indigo-800 to-indigo-700"
         heights={[30, 40, 35, 45]}
         detailLevel="far"
       />
@@ -65,7 +65,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-100 to-indigo-50"
+        buildingTone="from-indigo-800 to-indigo-900"
         heights={[50, 60, 55, 65]}
         detailLevel="mid"
       />
@@ -74,7 +74,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-150 to-indigo-100"
+        buildingTone="from-indigo-950 to-indigo-900"
         heights={[60, 75, 65, 90]}
         hasAntennas
         detailLevel="near"
