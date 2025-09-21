@@ -18,7 +18,7 @@ const AnimatedCrowd = ({
   return (
     <div
       className={clsx(
-        "relative w-[100%] overflow-hidden aspect-[3/1]",
+        "relative w-[100%] overflow-hidden aspect-[3/1] absolute",
         "bg-gradient-to-b from-indigo-300 via-indigo-200 to-violet-100",
         className
       )}
@@ -326,8 +326,8 @@ function BuildingsRow({
                   className={clsx(
                     "h-1.5 w-1.5",
                     Math.random() > 0.6
-                      ? "bg-yellow-500 opacity-100 shadow-[0_0_2px_rgba(255,255,200,0.9)]"
-                      : "bg-emerald-900"
+                      ? "bg-gray-500 opacity-100 shadow-[0_0_2px_rgba(255,255,200,0.9)]"
+                      : "bg-black-900"
                   )}
                 />
               ))}
