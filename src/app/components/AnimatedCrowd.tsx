@@ -19,7 +19,7 @@ const AnimatedCrowd = ({
     <div
       className={clsx(
         "relative w-[100%] overflow-hidden aspect-[3/1] sm:aspect-[9/1] fixed l-0 r-0 m-auto",
-        "bg-gradient-to-b from-indigo-300 via-indigo-200 to-violet-100",
+        "bg-gradient-to-b from-sky-300 via-sky-200 to-indigo-100",
         className
       )}
     >
@@ -44,7 +44,7 @@ const AnimatedCrowd = ({
 
       {/* GLOWING MOON */}
       <div className="absolute top-6 right-6 w-12 h-12">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-100 to-amber-300"></div>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-50 to-amber-100"></div>
         <div
           className="absolute inset-0 rounded-full bg-zinc-200/30 animate-ping"
           style={{ animationDuration: "5s" }}
