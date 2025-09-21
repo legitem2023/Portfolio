@@ -348,8 +348,8 @@ function BuildingsRow({
 function Tree() {
   return (
     <div className="relative w-1 h-6">
-      <div className="absolute bottom-0 left-2.5 w-2 h-3 bg-gradient-to-b from-amber-900 to-amber-950"></div>
-      <div className="absolute bottom-1.5 left-0 w-6 h-6 rounded-full bg-gradient-to-b from-lime-700 to-lime-900"></div>
+      <div className="absolute bottom-0 left-3 w-2 h-3 bg-gradient-to-l from-amber-900 to-amber-950"></div>
+      <div className="absolute bottom-1.5 left-0 w-6 h-6 rounded-full bg-gradient-to-l from-lime-700 to-lime-900"></div>
     </div>
   );
 }
