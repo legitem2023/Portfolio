@@ -109,7 +109,7 @@ const AnimatedCrowd = ({
       </div>
 
       {/* Ground */}
-      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-indigo-950 to-black" />
+      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-zinc-700 to-zinc-900" />
 
       {/* Content overlay */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
