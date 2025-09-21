@@ -56,7 +56,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-800 to-indigo-700"
+        buildingTone="from-indigo-700 to-indigo-600"
         heights={[30, 40, 35, 45]}
         detailLevel="far"
       />
@@ -65,7 +65,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-800 to-indigo-900"
+        buildingTone="from-indigo-700 to-indigo-800"
         heights={[50, 60, 55, 65]}
         detailLevel="mid"
       />
@@ -74,7 +74,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-950 to-indigo-900"
+        buildingTone="from-indigo-800 to-indigo-900"
         heights={[60, 75, 65, 90]}
         hasAntennas
         detailLevel="near"
@@ -348,8 +348,8 @@ function BuildingsRow({
 function Tree() {
   return (
     <div className="relative w-1 h-6">
-      <div className="absolute bottom-0 left-1 w-0.5 h-1.5 bg-lime-650"></div>
-      <div className="absolute bottom-1.5 left-0 w-3 h-3 rounded-full bg-lime-650"></div>
+      <div className="absolute bottom-0 left-1 w-0.5 h-1.5 bg-lime-700"></div>
+      <div className="absolute bottom-1.5 left-0 w-3 h-3 rounded-full bg-lime-700"></div>
     </div>
   );
 }
