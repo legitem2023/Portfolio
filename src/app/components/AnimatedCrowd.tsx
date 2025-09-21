@@ -96,20 +96,6 @@ const AnimatedCrowd = ({
             <TreeRow side="left" />
           </div>
         </div>
-        {/* Right trees */}
-        <div
-          className={clsx(
-            "absolute left-0 top-0 w-full",
-            "animate-[scrollX_5s_linear_infinite] will-change-transform transform-gpu"
-          )}
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          <div className="flex w-[300%]">
-            <TreeRow side="right" />
-            <TreeRow side="right" />
-            <TreeRow side="right" />
-          </div>
-        </div>
       </div>
 
       
