@@ -326,8 +326,8 @@ function BuildingsRow({
                   className={clsx(
                     "h-1.5 w-1.5",
                     Math.random() > 0.6
-                      ? "bg-gray-500 opacity-100 shadow-[0_0_2px_rgba(255,255,200,0.9)]"
-                      : "bg-black-900"
+                      ? "bg-gray-300 opacity-100 shadow-[0_0_2px_rgba(255,255,200,0.9)]"
+                      : "bg-gray-900"
                   )}
                 />
               ))}
