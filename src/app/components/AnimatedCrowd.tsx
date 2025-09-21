@@ -90,7 +90,7 @@ const AnimatedCrowd = ({
           )}
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="flex w-[300%]">
+          <div className="flex w-[1000%]">
             <TreeRow side="left" />
             <TreeRow side="left" />
             <TreeRow side="left" />
