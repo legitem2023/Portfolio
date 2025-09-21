@@ -19,7 +19,7 @@ const AnimatedCrowd = ({
     <div
       className={clsx(
         "relative w-[100%] overflow-hidden aspect-[3/1]",
-        "bg-gradient-to-b from-violet-150 via-violet-100 to-violet-50",
+        "bg-gradient-to-b from-indigo-150 via-indigo-100 to-violet-50",
         className
       )}
     >
@@ -44,7 +44,7 @@ const AnimatedCrowd = ({
 
       {/* GLOWING MOON */}
       <div className="absolute top-6 right-6 w-12 h-12">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-zinc-100 to-zinc-300"></div>
+        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-100 to-amber-300"></div>
         <div
           className="absolute inset-0 rounded-full bg-zinc-200/30 animate-ping"
           style={{ animationDuration: "5s" }}
@@ -112,10 +112,7 @@ const AnimatedCrowd = ({
         </div>
       </div>
 
-      {/* Delivery Truck - Positioned at 45% left */}
-      <div className="absolute bottom-4 left-[25%] z-10">
-        <DeliveryTruck className="h-16 w-16" />
-      </div>
+      
 
       {/* Motorcycle - Animated to overtake the truck */}
       <div 
@@ -129,7 +126,7 @@ const AnimatedCrowd = ({
       </div>
 
       {/* Ground */}
-      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-green-950 to-black" />
+      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-indigo-950 to-black" />
 
       {/* Content overlay */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -351,8 +348,8 @@ function BuildingsRow({
 function Tree() {
   return (
     <div className="relative w-1 h-6">
-      <div className="absolute bottom-0 left-1 w-0.5 h-1.5 bg-lime-950"></div>
-      <div className="absolute bottom-1.5 left-0 w-3 h-3 rounded-full bg-lime-950"></div>
+      <div className="absolute bottom-0 left-1 w-0.5 h-1.5 bg-lime-650"></div>
+      <div className="absolute bottom-1.5 left-0 w-3 h-3 rounded-full bg-lime-650"></div>
     </div>
   );
 }
