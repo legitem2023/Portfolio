@@ -19,7 +19,7 @@ const AnimatedCrowd = ({
     <div
       className={clsx(
         "relative w-[100%] overflow-hidden aspect-[3/1]",
-        "bg-gradient-to-b from-violet-950 via-violet-800 to-violet-700",
+        "bg-gradient-to-b from-violet-150 via-violet-100 to-violet-50",
         className
       )}
     >
