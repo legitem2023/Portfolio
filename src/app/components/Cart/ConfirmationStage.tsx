@@ -57,170 +57,165 @@ const ConfirmationStage = ({
   const paymentDisplay = getPaymentMethodDisplay();
 
   return (
-    <div>
-      <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-6 pb-2 border-b border-indigo-100">
-        Order Confirmation
-      </h2>
-      
-      {/* Success Alert */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-              <span className="text-green-600 font-bold text-lg">✓</span>
-            </div>
-          </div>
-          <div className="ml-3">
-            <h3 className="text-green-800 font-semibold">Ready to place your order!</h3>
-            <p className="text-green-700 text-sm mt-1">
-              Please review your order details below before confirming.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Order Summary */}
-        <div className="lg:col-span-2 bg-white border border-indigo-200 rounded-xl shadow-sm">
-          <div className="p-6 border-b border-indigo-100">
-            <h3 className="font-serif font-semibold text-lg text-indigo-900">Order Items</h3>
-          </div>
-          <div className="p-6">
-            {cartItems.map(item => (
-              <div key={item.id} className="flex items-center py-4 border-b border-indigo-100 last:border-0">
-                <img 
-                  src={item.image || '/NoImage.webp'} 
-                  alt={item.name} 
-                  className="w-16 h-16 object-cover rounded-lg border border-indigo-200" 
-                />
-                <div className="ml-4 flex-1">
-                  <h4 className="font-medium text-indigo-900">{item.name}</h4>
-                  <p className="text-indigo-600 text-sm mt-1 line-clamp-2">{item.description}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-indigo-700 text-sm">Qty: {item.quantity}</span>
-                  </div>
-                </div>
-                <div className="font-semibold text-indigo-900 text-lg ml-4">
-                  ${(item.price * item.quantity).toFixed(2)}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+    <div className="bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-8">Order Confirmation</h2>
         
-        {/* Order Details Sidebar */}
-        <div className="space-y-6">
-          {/* Shipping Information */}
-          <div className="bg-white border border-indigo-200 rounded-xl shadow-sm">
-            <div className="p-6 border-b border-indigo-100">
-              <h3 className="font-serif font-semibold text-lg text-indigo-900 flex items-center">
-                <span className="mr-2">🚚</span>
-                Shipping Address
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="text-indigo-800 space-y-2">
-                <p className="font-medium">{shippingInfo.fullName}</p>
-                <p className="text-sm">{shippingInfo.address}</p>
-                <p className="text-sm">{shippingInfo.city}, {shippingInfo.zipCode}</p>
-                <p className="text-sm">{shippingInfo.country}</p>
+        {/* Success Alert */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-green-600 font-bold text-sm">✓</span>
               </div>
             </div>
-          </div>
-          
-          {/* Payment Information */}
-          <div className="bg-white border border-indigo-200 rounded-xl shadow-sm">
-            <div className="p-6 border-b border-indigo-100">
-              <h3 className="font-serif font-semibold text-lg text-indigo-900 flex items-center">
-                <span className="mr-2">{paymentDisplay.icon}</span>
-                Payment Method
-              </h3>
+            <div className="ml-3">
+              <h3 className="text-green-800 font-semibold text-sm">Ready to place your order!</h3>
+              <p className="text-green-700 text-xs mt-1">
+                Please review your order details below before confirming.
+              </p>
             </div>
-            <div className="p-6">
-              <div className="text-indigo-800 space-y-2">
-                <p className="font-medium">{paymentDisplay.method}</p>
-                <p className="text-sm">{paymentDisplay.details}</p>
+          </div>
+        </div>
+
+        <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
+          {/* Order Items Section */}
+          <section aria-labelledby="cart-heading" className="lg:col-span-7">
+            <h2 id="cart-heading" className="sr-only">Items in your order</h2>
+            
+            <ul role="list" className="border-t border-b border-gray-200 divide-y divide-gray-200">
+              {cartItems.map((item) => (
+                <li key={item.id} className="flex py-6 sm:py-10">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={item.image || '/NoImage.webp'}
+                      alt={item.name}
+                      className="w-24 h-24 rounded-lg object-center object-cover sm:w-32 sm:h-32 border border-gray-200"
+                    />
+                  </div>
+
+                  <div className="ml-4 flex-1 flex flex-col justify-between sm:ml-6">
+                    <div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
+                      <div>
+                        <div className="flex justify-between">
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {item.name}
+                          </h3>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                        <p className="mt-1 text-sm font-medium text-gray-900">${item.price.toFixed(2)} each</p>
+                      </div>
+
+                      <div className="mt-4 sm:mt-0 sm:pr-9">
+                        <div className="absolute top-0 right-0">
+                          <span className="text-sm font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-500">
+                          <span className="font-medium">Qty: {item.quantity}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          {/* Order Summary */}
+          <section
+            aria-labelledby="summary-heading"
+            className="mt-16 bg-gray-50 rounded-lg px-4 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5"
+          >
+            <h2 id="summary-heading" className="text-lg font-medium text-gray-900">Order summary</h2>
+
+            <dl className="mt-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <dt className="text-sm text-gray-600">Subtotal</dt>
+                <dd className="text-sm font-medium text-gray-900">${subtotal.toFixed(2)}</dd>
+              </div>
+              <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
+                <dt className="text-sm text-gray-600">Shipping</dt>
+                <dd className="text-sm font-medium text-gray-900">${shippingCost.toFixed(2)}</dd>
+              </div>
+              <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
+                <dt className="text-sm text-gray-600">Tax</dt>
+                <dd className="text-sm font-medium text-gray-900">${tax.toFixed(2)}</dd>
+              </div>
+              <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
+                <dt className="text-base font-medium text-gray-900">Order total</dt>
+                <dd className="text-base font-medium text-gray-900">${total.toFixed(2)}</dd>
+              </div>
+            </dl>
+
+            {/* Shipping Information */}
+            <div className="mt-8 border-t border-gray-200 pt-8">
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Shipping address</h3>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p className="font-medium text-gray-900">{shippingInfo.fullName}</p>
+                <p>{shippingInfo.address}</p>
+                <p>{shippingInfo.city}, {shippingInfo.zipCode}</p>
+                <p>{shippingInfo.country}</p>
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Payment method</h3>
+              <div className="text-sm text-gray-600">
+                <p className="font-medium text-gray-900">{paymentDisplay.method}</p>
+                <p className="mt-1">{paymentDisplay.details}</p>
                 {paymentInfo.method === 'bank' && paymentInfo.accountName && (
-                  <p className="text-sm">Account: {paymentInfo.accountName}</p>
+                  <p className="mt-1">Account: {paymentInfo.accountName}</p>
                 )}
                 {paymentInfo.method === 'cod' && (
                   <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-md">
                     <p className="text-yellow-700 text-xs">
-                      Please have exact amount ready for the delivery personnel.
+                      Please have exact amount ready for delivery.
                     </p>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-          
-          {/* Order Total */}
-          <div className="bg-white border border-indigo-200 rounded-xl shadow-sm">
-            <div className="p-6 border-b border-indigo-100">
-              <h3 className="font-serif font-semibold text-lg text-indigo-900">Order Total</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-indigo-700">
-                  <span>Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                  <span>${subtotal.toFixed(2)}</span>
+
+            {/* Important Notice */}
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <span className="text-blue-500 text-sm">ℹ️</span>
                 </div>
-                <div className="flex justify-between text-indigo-700">
-                  <span>Shipping</span>
-                  <span>${shippingCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-indigo-700">
-                  <span>Tax</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
-                <div className="border-t border-indigo-200 pt-3 mt-2">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span className="text-indigo-900">Total</span>
-                    <span className="text-indigo-700">${total.toFixed(2)}</span>
-                  </div>
+                <div className="ml-2">
+                  <p className="text-xs text-gray-600">
+                    <strong>Important:</strong> By placing this order, you agree to our terms and conditions. 
+                    {paymentInfo.method === 'cod' ? ' Pay upon delivery.' : ' Payment processed immediately.'}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
-      
-      {/* Important Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start">
-          <div className="flex-shrink-0 mt-0.5">
-            <span className="text-blue-500 text-lg">ℹ️</span>
-          </div>
-          <div className="ml-3">
-            <p className="text-blue-800 text-sm">
-              <strong>Important:</strong> By placing this order, you agree to our terms and conditions. 
-              {paymentInfo.method === 'cod' ? ' You will pay the exact amount upon delivery.' : ' Your payment will be processed immediately.'}
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center pt-4 border-t border-indigo-100">
-        <button 
-          className="px-8 py-3 border border-indigo-300 text-indigo-700 rounded-lg font-medium hover:bg-indigo-50 transition-colors flex items-center space-x-2"
-          onClick={onBack}
-        >
-          <span>←</span>
-          <span>Back to Payment</span>
-        </button>
-        
-        <div className="text-right">
-          <div className="text-sm text-indigo-600 mb-2">
-            Order Total: <span className="font-bold text-lg text-indigo-700">${total.toFixed(2)}</span>
-          </div>
-          <button 
-            className="px-8 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg flex items-center space-x-2"
-            onClick={onPlaceOrder}
+
+        {/* Action Buttons */}
+        <div className="mt-8 flex justify-between border-t border-gray-200 pt-8">
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 flex items-center"
           >
-            <span>✅</span>
-            <span>Place Order</span>
+            <span aria-hidden="true">←</span>
+            <span className="ml-2">Back to payment</span>
           </button>
+          
+          <div className="text-right">
+            <div className="text-sm text-gray-600 mb-2">
+              Total: <span className="font-bold text-lg text-gray-900">${total.toFixed(2)}</span>
+            </div>
+            <button
+              onClick={onPlaceOrder}
+              className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto"
+            >
+              Place order
+            </button>
+          </div>
         </div>
       </div>
     </div>
