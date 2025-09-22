@@ -25,110 +25,104 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
   }
   
   return (
-    <div className="px-4 sm:px-0">
-      <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-6">Your Shopping Cart</h2>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Cart Items Section */}
-        <div className="lg:col-span-2 space-y-4">
-          {cartItems.map(item => (
-            <div key={item.id} className="flex flex-col sm:flex-row items-center bg-white border border-indigo-100 rounded-lg shadow-sm hover:shadow-md transition-shadow p-4">
-              {/* Image */}
-              <div className="flex-shrink-0 mb-4 sm:mb-0 sm:mr-4">
-                <img 
-                  src={item.image || '/NoImage.webp'} 
-                  alt={item.name} 
-                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg"
-                />
-              </div>
-              
-              {/* Product Info */}
-              <div className="flex-1 text-center sm:text-left mb-4 sm:mb-0 sm:mr-4">
-                <h3 className="font-serif font-semibold text-lg text-indigo-900 mb-1">{item.name}</h3>
-                <p className="text-indigo-600 text-sm mb-2 line-clamp-2">{item.description}</p>
-                <div className="text-indigo-700 font-medium">${item.price.toFixed(2)}</div>
-              </div>
-              
-              {/* Quantity Controls and Actions */}
-              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
-                {/* Quantity Controls */}
-                <div className="flex items-center space-x-3">
-                  <button 
-                    onClick={() => onQuantityChange(item.id, item.quantity - 1)}
-                    className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center hover:bg-indigo-100 transition-colors border border-indigo-200"
-                    aria-label="Decrease quantity"
-                  >
-                    <Minus size={16} />
-                  </button>
-                  <span className="font-medium text-indigo-900 w-8 text-center">{item.quantity}</span>
-                  <button 
-                    onClick={() => onQuantityChange(item.id, item.quantity + 1)}
-                    className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center hover:bg-indigo-100 transition-colors border border-indigo-200"
-                    aria-label="Increase quantity"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-                
-                {/* Price and Remove */}
-                <div className="flex items-center space-x-4">
-                  <div className="font-semibold text-indigo-900 text-lg">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </div>
-                  <button 
-                    className="text-indigo-400 hover:text-indigo-600 transition-colors p-2 hover:bg-indigo-50 rounded-lg"
-                    onClick={() => onQuantityChange(item.id, 0)}
-                    aria-label="Remove item"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+    <div className="bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-8">Shopping Cart</h2>
         
-        {/* Order Summary */}
-        <div className="lg:col-span-1">
-          <div className="bg-white border border-indigo-100 rounded-lg shadow-sm p-6 sticky top-4">
-            <h3 className="text-xl font-serif font-bold text-indigo-900 mb-4">Order Summary</h3>
-            
-            <div className="space-y-3 mb-6">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-indigo-700">Subtotal ({cartItems.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
-                <span className="font-medium text-indigo-900">${subtotal.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center py-2">
-                <span className="text-indigo-700">Shipping</span>
-                <span className="font-medium text-indigo-900">${shippingCost.toFixed(2)}</span>
-              </div>
-              
-              <div className="flex justify-between items-center py-2">
-                <span className="text-indigo-700">Tax</span>
-                <span className="font-medium text-indigo-900">${tax.toFixed(2)}</span>
-              </div>
-              
-              <div className="border-t border-indigo-100 pt-3 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold text-indigo-900">Total</span>
-                  <span className="text-lg font-bold text-indigo-700">${total.toFixed(2)}</span>
+        <div className="flow-root">
+          <ul role="list" className="-my-6 divide-y divide-gray-200">
+            {cartItems.map((item) => (
+              <li key={item.id} className="flex py-6">
+                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                  <img
+                    src={item.image || '/NoImage.webp'}
+                    alt={item.name}
+                    className="h-full w-full object-cover object-center"
+                  />
                 </div>
-              </div>
-            </div>
-            
-            <button 
-              className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg focus:ring-2 focus:ring-indigo-300 focus:outline-none"
+
+                <div className="ml-4 flex flex-1 flex-col">
+                  <div>
+                    <div className="flex justify-between text-base font-medium text-gray-900">
+                      <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
+                      <p className="ml-4 text-indigo-700">${(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                    <p className="mt-1 text-sm text-indigo-600">{item.description}</p>
+                  </div>
+                  <div className="flex flex-1 items-end justify-between text-sm">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-indigo-700">Qty</span>
+                      <div className="flex items-center border border-gray-300 rounded-md">
+                        <button
+                          onClick={() => onQuantityChange(item.id, item.quantity - 1)}
+                          className="h-8 w-8 flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-l-md transition-colors"
+                        >
+                          <Minus size={14} />
+                        </button>
+                        <span className="h-8 w-8 flex items-center justify-center text-gray-900 font-medium">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+                          className="h-8 w-8 flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-r-md transition-colors"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex">
+                      <button
+                        onClick={() => onQuantityChange(item.id, 0)}
+                        type="button"
+                        className="font-medium text-indigo-600 hover:text-indigo-500 flex items-center space-x-1"
+                      >
+                        <Trash2 size={16} />
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
+          <div className="flex justify-between text-base font-medium text-gray-900">
+            <p className="text-indigo-900">Subtotal</p>
+            <p className="text-indigo-700">${subtotal.toFixed(2)}</p>
+          </div>
+          <div className="flex justify-between text-sm text-gray-600 mt-1">
+            <p>Shipping</p>
+            <p>${shippingCost.toFixed(2)}</p>
+          </div>
+          <div className="flex justify-between text-sm text-gray-600 mt-1">
+            <p>Tax</p>
+            <p>${tax.toFixed(2)}</p>
+          </div>
+          <p className="mt-4 text-sm text-gray-500">
+            Shipping and taxes calculated at checkout.
+          </p>
+          <div className="mt-6">
+            <button
               onClick={onCheckout}
+              className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Proceed to Checkout
+              Checkout
             </button>
-            
-            <div className="mt-4 text-center">
-              <p className="text-sm text-indigo-600">
-                or <a href="#" className="text-indigo-500 hover:text-indigo-700 underline">continue shopping</a>
-              </p>
-            </div>
+          </div>
+          <div className="mt-6 flex justify-center text-sm text-center text-gray-500">
+            <p>
+              or{' '}
+              <button
+                type="button"
+                className="text-indigo-600 font-medium hover:text-indigo-500"
+              >
+                Continue Shopping
+                <span aria-hidden="true"> &rarr;</span>
+              </button>
+            </p>
           </div>
         </div>
       </div>
