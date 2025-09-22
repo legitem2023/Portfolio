@@ -78,7 +78,6 @@ const ConfirmationStage = ({
             <h3 className="font-serif font-semibold text-lg text-indigo-900 mb-3 pb-2 border-b border-indigo-200">Payment Information</h3>
             <div className="text-indigo-800">
               <p className="mb-1">Card ending in ****{paymentInfo.cardNumber.slice(-4)}</p>
-              <p>Expires: {paymentInfo.expiryDate}</p>
             </div>
           </div>
         </div>
