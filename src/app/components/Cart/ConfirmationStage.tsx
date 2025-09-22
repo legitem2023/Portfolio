@@ -98,7 +98,6 @@ const ConfirmationStage = ({
                   <p className="text-indigo-600 text-sm mt-1 line-clamp-2">{item.description}</p>
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-indigo-700 text-sm">Qty: {item.quantity}</span>
-                    <span className="text-indigo-700 font-medium">${item.price.toFixed(2)} each</span>
                   </div>
                 </div>
                 <div className="font-semibold text-indigo-900 text-lg ml-4">
