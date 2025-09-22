@@ -55,7 +55,7 @@ const Header: React.FC = () => {
         <AnimatedCrowd/>
       <div className="z-20 flex items-center justify-between p-2">
       
-        <div>
+        <div className="z-20">
           <Image
             src="/Dlogo.svg"
             alt="Logo"
@@ -66,7 +66,7 @@ const Header: React.FC = () => {
         </div>
            
       
-        <div className="" ref={dropdownRef}>
+        <div className="z-20" ref={dropdownRef}>
           
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
