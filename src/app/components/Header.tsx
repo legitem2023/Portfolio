@@ -66,7 +66,7 @@ const Header: React.FC = () => {
         </div>
            
     
-        <div className="z-20 h-[100%] flex items-center" ref={dropdownRef}>
+        <div className="z-20 h-[100%] items-center" ref={dropdownRef}>
           
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
