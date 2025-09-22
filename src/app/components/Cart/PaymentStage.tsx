@@ -84,7 +84,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
             type="submit" 
             className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md"
           >
-            Continue to Review
+            Continue
           </button>
         </div>
       </form>
