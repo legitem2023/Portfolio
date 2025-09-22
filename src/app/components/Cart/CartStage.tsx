@@ -26,7 +26,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
   
   return (
     <div className="bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-2 lg:px-3">
+      <div className="max-w-7xl mx-auto px-2 sm:px-2 lg:px-3">
         <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-8">Shopping Cart</h2>
         
         <div className="flow-root">
