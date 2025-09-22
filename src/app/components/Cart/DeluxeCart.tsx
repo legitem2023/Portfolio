@@ -60,7 +60,7 @@ const DeluxeCart = () => {
     gcashNumber:'',
     bankName:'',
     accountNumber:'',
-    accountName?:'',
+    accountName:'',
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
