@@ -50,7 +50,7 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2">
+    <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2 aspect-[3/1] sm:aspect-[9/1]">
       
         <AnimatedCrowd/>
       <div className="z-10 flex items-center justify-between p-2">
