@@ -105,7 +105,7 @@ const AnimatedCrowd = ({
           animation: 'overtake 8s infinite linear'
         }}
       >
-        <EmojioneMotorcycle className="h-14 w-14 transform scale-x-[-1]" />
+        <EmojioneMotorcycle className="h-14 w-14 transform scale-x-[-1] z-10" />
       </div>
 
       {/* Ground */}
