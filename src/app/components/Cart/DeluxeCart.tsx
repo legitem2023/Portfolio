@@ -56,6 +56,11 @@ const DeluxeCart = () => {
     country: ''
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    method:'',
+    gcashNumber:'',
+    bankName:'',
+    accountNumber:'',
+    accountName?:'',
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
