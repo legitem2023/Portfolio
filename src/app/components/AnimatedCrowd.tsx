@@ -19,11 +19,11 @@ const AnimatedCrowd = ({
     <div
       className={clsx(
         "z-10 absolute inset-x-0 top-0 mx-auto w-[100%] overflow-hidden aspect-[4/1] sm:aspect-[9/1]",
-        "bg-gradient-to-b from-indigo-700 via-violet-400 to-purple-200",
+        "bg-gradient-to-b from-blue-950 via-indigo-600 to-violet-300",
         className
       )}
     >
-      <div className="absolute inset-0 bg-white/10 backdrop-blur-sm z-30"></div>
+      {/*<div className="absolute inset-0 bg-white/10 backdrop-blur-sm z-30"></div>*/}
       {/* STAR FIELD */}
       <div className="absolute inset-0">
         {Array.from({ length: 40 }).map((_, i) => (
