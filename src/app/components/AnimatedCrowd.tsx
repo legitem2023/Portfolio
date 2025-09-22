@@ -18,7 +18,7 @@ const AnimatedCrowd = ({
   return (
     <div
       className={clsx(
-        "z-10 absolute inset-x-0 top-0 mx-auto w-[100%] overflow-hidden aspect-[3/1] sm:aspect-[9/1]",
+        "z-10 absolute inset-x-0 top-0 mx-auto w-[100%] overflow-hidden aspect-[4/1] sm:aspect-[9/1]",
         "bg-gradient-to-b from-sky-300 via-sky-200 to-indigo-100",
         className
       )}
