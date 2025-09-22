@@ -66,7 +66,7 @@ const Header: React.FC = () => {
         </div>
            
       
-        <div className="relative" ref={dropdownRef}>
+        <div className="" ref={dropdownRef}>
           
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
