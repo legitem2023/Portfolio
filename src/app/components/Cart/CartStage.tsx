@@ -78,7 +78,6 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                         className="font-medium text-indigo-600 hover:text-indigo-500 flex items-center space-x-1"
                       >
                         <Trash2 size={16} />
-                        <span>Remove</span>
                       </button>
                     </div>
                   </div>
