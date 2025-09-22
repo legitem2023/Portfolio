@@ -99,7 +99,7 @@ const AnimatedCrowd = ({
 
       {/* Motorcycle - Animated to overtake the truck */}
       <div 
-        className="absolute animate-overtake z20"
+        className="absolute animate-overtake z-10"
         style={{ 
           bottom: '0.7rem',
           animation: 'overtake 8s infinite linear'
