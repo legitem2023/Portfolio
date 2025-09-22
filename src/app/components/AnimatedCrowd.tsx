@@ -57,7 +57,7 @@ const AnimatedCrowd = ({
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
         buildingTone="from-zinc-500 to-zinc-600"
-        heights={[30, 40, 35, 45]}
+        heights={[20, 30, 45, 55]}
         detailLevel="far"
       />
 
@@ -66,7 +66,7 @@ const AnimatedCrowd = ({
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
         buildingTone="from-blue-600 to-blue-700"
-        heights={[50, 60, 55, 65]}
+        heights={[30, 50, 65, 75]}
         detailLevel="mid"
       />
 
@@ -75,7 +75,7 @@ const AnimatedCrowd = ({
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
         buildingTone="from-blue-700 to-blue-800"
-        heights={[60, 75, 65, 90]}
+        heights={[40, 65, 55, 70]}
         hasAntennas
         detailLevel="near"
       />
