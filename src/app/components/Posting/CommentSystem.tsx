@@ -88,42 +88,47 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
     }
   });
 
-  // Handle keyboard visibility
+  // Handle keyboard visibility with visualViewport API
   useEffect(() => {
+    if (!window.visualViewport) return;
+    
+    const visualViewport = window.visualViewport;
+    let timeoutId: NodeJS.Timeout;
+    
     const handleResize = () => {
-      // Check if visualViewport API is available (mobile browsers)
-      if (window.visualViewport) {
-        const visualViewport = window.visualViewport;
-        const windowHeight = window.innerHeight;
-        const keyboardHeight = windowHeight - visualViewport.height;
+      // Clear any existing timeout
+      clearTimeout(timeoutId);
+      
+      const windowHeight = window.innerHeight;
+      const viewportHeight = visualViewport.height;
+      const newKeyboardHeight = windowHeight - viewportHeight;
+      
+      // Consider keyboard visible if it takes more than 100px
+      if (newKeyboardHeight > 100) {
+        setIsKeyboardVisible(true);
+        setKeyboardHeight(newKeyboardHeight);
         
-        if (keyboardHeight > 100) {
-          setIsKeyboardVisible(true);
-          setKeyboardHeight(keyboardHeight);
-          
-          // Scroll to bottom when keyboard appears
-          setTimeout(() => {
-            scrollToBottom();
-          }, 100);
-        } else {
-          setIsKeyboardVisible(false);
-          setKeyboardHeight(0);
-        }
+        // Scroll to bottom when keyboard appears with a slight delay
+        timeoutId = setTimeout(() => {
+          scrollToBottom();
+        }, 150);
+      } else {
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
       }
     };
 
     // Add event listeners
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-    }
-
+    visualViewport.addEventListener('resize', handleResize);
+    visualViewport.addEventListener('scroll', handleResize);
+    
     // Initial check
     handleResize();
 
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
+      clearTimeout(timeoutId);
+      visualViewport.removeEventListener('resize', handleResize);
+      visualViewport.removeEventListener('scroll', handleResize);
     };
   }, []);
 
@@ -217,8 +222,9 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
       
       {/* Comments List with fixed height and scrolling */}
       <div 
-        
-        className="flex-1 p-4 space-y-4">
+        className="flex-1 p-4 space-y-4 overflow-y-auto"
+        style={{ maxHeight: 'calc(100vh - 200px)' }}
+      >
         {comments.length === 0 && !loading && (
           <div className="text-center py-10 text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -285,13 +291,13 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         )}
       </div>
 
-      {/* Comment Input - Always visible above keyboard */}
+      {/* Comment Input - Fixed at bottom, adjusts with keyboard */}
       <div 
         ref={inputContainerRef}
         className="p-4 border-t border-gray-200 bg-white"
         style={{
-          position: isKeyboardVisible ? 'fixed' : 'fixed',
-          bottom: isKeyboardVisible ? '55vh' : '0px',
+          position: isKeyboardVisible ? 'fixed' : 'static',
+          bottom: isKeyboardVisible ? `${keyboardHeight}px` : 'auto',
           left: isKeyboardVisible ? '0' : 'auto',
           right: isKeyboardVisible ? '0' : 'auto',
           zIndex: isKeyboardVisible ? 1000 : 'auto',
@@ -299,7 +305,11 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         }}
       >
         <div className="flex gap-3 max-w-2xl mx-auto">
-          
+          <img 
+            src={currentUser.avatar || '/NoImage.webp'} 
+            alt={`${currentUser.firstName} ${currentUser.lastName}`}
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          />
           
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
             <form 
