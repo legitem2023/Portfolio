@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
 import DeluxeMessageCard from './DeluxeMessageCard';
-import { GET_POST } from '../graphql/queries'; // Adjust path as needed
+import { GET_POST } from '../graphql/query'; // Adjust path as needed
 
 interface PostDetailProps {
   postId: string;
