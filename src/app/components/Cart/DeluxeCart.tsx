@@ -32,7 +32,7 @@ export interface ShippingInfo {
 }
 
 export interface PaymentInfo {
-  method: 'gcash' | 'bank' | 'cod';
+  method?: string;
   // For GCash
   gcashNumber?: string;
   // For Bank Transfer
