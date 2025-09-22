@@ -232,6 +232,7 @@ setTimeout(() => {
           box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
           transform: translateY(100%);
           transition: transform 0.3s;
+          height:70vh;
           max-height: 80vh;
           display: flex;
           flex-direction: column;
