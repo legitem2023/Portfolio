@@ -302,9 +302,9 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
           paddingBottom: isKeyboardVisible ? `calc(1rem + env(safe-area-inset-bottom))` : '1rem'
         }}
       >
-        <div className="flex gap-3 max-w-2xl mx-auto">
+        <div className="flex gap-3 max-w-2xl mx-auto w-full">
            
-          <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
+          <div className="flex-1 bg-gray-100 rounded-md px-4 py-2 w-full">
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
