@@ -99,7 +99,7 @@ const AnimatedCrowd = ({
 
       {/* Motorcycle - Animated to overtake the truck */}
       <div 
-        className="absolute animate-overtake z-20"
+        className="absolute animate-overtake z20"
         style={{ 
           bottom: '0.7rem',
           animation: 'overtake 8s infinite linear'
@@ -120,6 +120,9 @@ const AnimatedCrowd = ({
 
       {/* Keyframes */}
       <style jsx global>{`
+        .z20{
+          z-index:20;
+        }
         @keyframes scrollX {
           0% {
             transform: translateX(0);
