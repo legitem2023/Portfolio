@@ -299,7 +299,8 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
           left: isKeyboardVisible ? '0' : 'auto',
           right: isKeyboardVisible ? '0' : 'auto',
           zIndex: isKeyboardVisible ? 1000 : 'auto',
-          paddingBottom: isKeyboardVisible ? `calc(1rem + env(safe-area-inset-bottom))` : '1rem'
+          paddingBottom: isKeyboardVisible ? `calc(1rem + env(safe-area-inset-bottom))` : '1rem',
+          width:'100%'
         }}
       >
         <div className="flex gap-3 max-w-2xl mx-auto w-full">
