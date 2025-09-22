@@ -92,13 +92,13 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: Ship
             className="px-6 py-3 border border-indigo-300 text-indigo-700 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
             onClick={onBack}
           >
-            Back to Cart
+            Back
           </button>
           <button 
             type="submit" 
             className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md"
           >
-            Continue to Payment
+            Continue
           </button>
         </div>
       </form>
