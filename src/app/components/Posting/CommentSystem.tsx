@@ -291,7 +291,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         className="p-4 border-t border-gray-200 bg-white"
         style={{
           position: isKeyboardVisible ? 'fixed' : 'static',
-          bottom: isKeyboardVisible ? '50vh' : 'auto',
+          bottom: isKeyboardVisible ? '48vh' : 'auto',
           left: isKeyboardVisible ? '0' : 'auto',
           right: isKeyboardVisible ? '0' : 'auto',
           zIndex: isKeyboardVisible ? 1000 : 'auto',
