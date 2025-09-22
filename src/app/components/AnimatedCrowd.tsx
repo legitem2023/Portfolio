@@ -65,7 +65,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-violet-600 to-violet-700"
+        buildingTone="from-indigo-600 to-indigo-700"
         heights={[30, 50, 65, 75]}
         detailLevel="mid"
       />
@@ -74,7 +74,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-violet-700 to-violet-800"
+        buildingTone="from-indigo-700 to-indigo-800"
         heights={[40, 65, 55, 70]}
         hasAntennas
         detailLevel="near"
