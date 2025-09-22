@@ -222,9 +222,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
       
       {/* Comments List with fixed height and scrolling */}
       <div 
-        className="flex-1 p-4 space-y-4 overflow-y-auto"
-        style={{ maxHeight: 'calc(100vh - 200px)' }}
-      >
+        className="flex-1 p-4 space-y-4 overflow-y-auto">
         {comments.length === 0 && !loading && (
           <div className="text-center py-10 text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -296,8 +294,8 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         ref={inputContainerRef}
         className="p-4 border-t border-gray-200 bg-white"
         style={{
-          position: isKeyboardVisible ? 'fixed' : 'static',
-          bottom: isKeyboardVisible ? `${keyboardHeight}px` : 'auto',
+          position: isKeyboardVisible ? 'fixed' : 'fixed',
+          bottom: isKeyboardVisible ? `${keyboardHeight}px` : '0px',
           left: isKeyboardVisible ? '0' : 'auto',
           right: isKeyboardVisible ? '0' : 'auto',
           zIndex: isKeyboardVisible ? 1000 : 'auto',
