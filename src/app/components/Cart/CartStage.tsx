@@ -39,35 +39,21 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               />
             </div>
             
-            {/* Column 2: Content in rows */}
+            {/* Column 2: Main content and actions stacked vertically */}
             <div className="flex-1 min-w-0">
-              {/* Row 1: Name and Remove button */}
-              <div className="flex justify-between items-start mb-1">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-serif font-semibold text-sm sm:text-lg text-indigo-900 truncate pr-2">{item.name}</h3>
-                  <p className="text-indigo-600 text-xs sm:text-sm hidden sm:block mt-1">{item.description}</p>
+              {/* Top row: Name and basic info */}
+              <div className="mb-2">
+                <h3 className="font-serif font-semibold text-sm sm:text-lg text-indigo-900 truncate">{item.name}</h3>
+                <p className="text-indigo-600 text-xs sm:text-sm hidden sm:block mt-1">{item.description}</p>
+                <p className="text-indigo-600 text-xs sm:hidden line-clamp-1 mt-1">{item.description}</p>
+                <div className="text-indigo-700 font-medium text-sm sm:text-base mt-1">
+                  ${item.price.toFixed(2)} each
                 </div>
-                <button 
-                  className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 flex-shrink-0 mt-0.5"
-                  onClick={() => onQuantityChange(item.id, 0)}
-                  aria-label="Remove item"
-                >
-                  <Trash2 size={14} className="sm:size-4" />
-                </button>
               </div>
               
-              {/* Row 2: Description (mobile only) */}
-              <div className="sm:hidden mb-2">
-                <p className="text-indigo-600 text-xs line-clamp-2">{item.description}</p>
-              </div>
-              
-              {/* Row 3: Price per item */}
-              <div className="text-indigo-700 font-medium text-sm sm:text-base mb-2">
-                ${item.price.toFixed(2)} each
-              </div>
-              
-              {/* Row 4: Quantity controls and total price */}
+              {/* Bottom row: Two columns for quantity controls and remove+subtotal */}
               <div className="flex items-center justify-between">
+                {/* Left column: Quantity controls */}
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button 
                     onClick={() => onQuantityChange(item.id, item.quantity - 1)}
@@ -86,8 +72,18 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                   </button>
                 </div>
                 
-                <div className="font-semibold text-indigo-900 text-sm sm:text-base text-right">
-                  ${(item.price * item.quantity).toFixed(2)}
+                {/* Right column: Remove button and subtotal stacked vertically */}
+                <div className="flex flex-col items-end space-y-1">
+                  <button 
+                    className="text-indigo-600 hover:text-indigo-800 transition-colors p-1"
+                    onClick={() => onQuantityChange(item.id, 0)}
+                    aria-label="Remove item"
+                  >
+                    <Trash2 size={14} className="sm:size-4" />
+                  </button>
+                  <div className="font-semibold text-indigo-900 text-sm sm:text-base">
+                    ${(item.price * item.quantity).toFixed(2)}
+                  </div>
                 </div>
               </div>
             </div>
