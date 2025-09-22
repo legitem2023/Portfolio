@@ -303,12 +303,7 @@ export const CommentSystem: React.FC<CommentListProps> = ({ postId, currentUser,
         }}
       >
         <div className="flex gap-3 max-w-2xl mx-auto">
-          <img 
-            src={currentUser.avatar || '/NoImage.webp'} 
-            alt={`${currentUser.firstName} ${currentUser.lastName}`}
-            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-          />
-          
+           
           <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2">
             <form 
               onSubmit={(e) => {
