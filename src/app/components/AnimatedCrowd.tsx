@@ -299,7 +299,7 @@ function BuildingsRow({
               "relative w-10 rounded-t-sm bg-gradient-to-b shadow-md overflow-hidden",
               buildingTone
             )}
-            style={{ height: `${h}%` }}
+            style={{ height: `${h}px` }}
           >
             <div className="absolute inset-0 grid grid-cols-3 gap-1 p-1">
               {Array.from({ length: Math.floor(h / 12) * 3 }).map((_, w) => (
