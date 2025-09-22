@@ -70,7 +70,7 @@ const Header: React.FC = () => {
           
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center text-sm focus:outline-none"
+            className="flex items-center text-sm focus:outline-none inset-y-0 my-auto"
           >
             
             <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
