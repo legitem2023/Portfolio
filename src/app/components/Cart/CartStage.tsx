@@ -26,70 +26,84 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
   
   return (
     <div className="px-2 sm:px-0">
-      <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-6 pb-2 border-b border-indigo-100">Your Shopping Cart</h2>
-      <div className="mb-8">
+      <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-4 sm:mb-6 pb-2 border-b border-indigo-100">Your Shopping Cart</h2>
+      <div className="mb-6 sm:mb-8">
         {cartItems.map(item => (
-          <div key={item.id} className="flex flex-col sm:flex-row items-center py-5 border-b border-indigo-50 hover:bg-indigo-50 transition-all duration-200 rounded-lg px-2 sm:px-4">
-            <img src={item.image || '/NoImage.webp'} alt={item.name} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border border-indigo-200 shadow-sm mb-3 sm:mb-0" />
-            <div className="flex-1 px-2 sm:px-4 py-2 text-center sm:text-left w-full sm:w-auto">
-              <h3 className="font-serif font-semibold text-lg text-indigo-900 mb-1">{item.name}</h3>
-              <p className="text-indigo-600 text-sm hidden sm:block">{item.description}</p>
-              <p className="text-indigo-600 text-xs sm:hidden line-clamp-2 mb-1">{item.description}</p>
-              <div className="text-indigo-700 font-medium mt-1">${item.price.toFixed(2)}</div>
+          <div key={item.id} className="flex items-center py-3 sm:py-5 border-b border-indigo-50 hover:bg-indigo-50 transition-all duration-200 rounded-lg px-2 sm:px-4">
+            {/* Image - Smaller on mobile */}
+            <img 
+              src={item.image || '/NoImage.webp'} 
+              alt={item.name} 
+              className="w-12 h-12 sm:w-24 sm:h-24 object-cover rounded-lg border border-indigo-200 shadow-sm flex-shrink-0" 
+            />
+            
+            {/* Product Info - Compressed on mobile */}
+            <div className="flex-1 min-w-0 ml-2 sm:ml-4 py-1">
+              <h3 className="font-serif font-semibold text-sm sm:text-lg text-indigo-900 truncate">{item.name}</h3>
+              <p className="text-indigo-600 text-xs sm:text-sm hidden sm:block">{item.description}</p>
+              <p className="text-indigo-600 text-xs sm:hidden line-clamp-1 mb-1">{item.description}</p>
+              <div className="text-indigo-700 font-medium text-sm sm:text-base">${item.price.toFixed(2)}</div>
             </div>
-            <div className="flex items-center justify-between sm:justify-center w-full sm:w-auto my-3 sm:my-0">
-              <div className="flex items-center space-x-3">
+            
+            {/* Quantity Controls - Compressed on mobile */}
+            <div className="flex items-center space-x-1 sm:space-x-3 ml-2 sm:ml-4 flex-shrink-0">
+              <div className="flex items-center space-x-1 sm:space-x-3">
                 <button 
                   onClick={() => onQuantityChange(item.id, item.quantity - 1)}
-                  className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
                   aria-label="Decrease quantity"
                 >
-                  <Minus size={12} />
+                  <Minus size={10} className="sm:size-3" />
                 </button>
-                <span className="font-medium text-indigo-900 w-6 text-center">{item.quantity}</span>
+                <span className="font-medium text-indigo-900 text-sm sm:text-base w-4 sm:w-6 text-center">{item.quantity}</span>
                 <button 
                   onClick={() => onQuantityChange(item.id, item.quantity + 1)}
-                  className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
+                  className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center hover:bg-indigo-200 transition-colors"
                   aria-label="Increase quantity"
                 >
-                  <Plus size={12} />
+                  <Plus size={10} className="sm:size-3" />
                 </button>
               </div>
-              <div className="font-semibold text-indigo-900 text-sm sm:text-base sm:min-w-[80px] sm:text-right px-2 sm:px-4">
+              
+              {/* Total Price - Smaller on mobile */}
+              <div className="font-semibold text-indigo-900 text-xs sm:text-base min-w-[60px] sm:min-w-[80px] text-right px-1 sm:px-2">
                 ${(item.price * item.quantity).toFixed(2)}
               </div>
+              
+              {/* Remove Button - Smaller on mobile */}
               <button 
-                className="text-indigo-600 hover:text-indigo-800 transition-colors p-2"
+                className="text-indigo-600 hover:text-indigo-800 transition-colors p-1 sm:p-2 ml-1"
                 onClick={() => onQuantityChange(item.id, 0)}
                 aria-label="Remove item"
               >
-                <Trash2 size={16} />
+                <Trash2 size={14} className="sm:size-4" />
               </button>
             </div>
           </div>
         ))}
       </div>
       
-      <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 border border-indigo-200">
-        <div className="flex justify-between py-2 border-b border-indigo-100">
-          <span className="text-indigo-700">Subtotal</span>
-          <span className="font-medium text-indigo-900">${subtotal.toFixed(2)}</span>
+      {/* Summary Section - Adjusted spacing for mobile */}
+      <div className="bg-indigo-50 rounded-xl p-3 sm:p-6 border border-indigo-200">
+        <div className="flex justify-between py-1 sm:py-2 border-b border-indigo-100">
+          <span className="text-indigo-700 text-sm sm:text-base">Subtotal</span>
+          <span className="font-medium text-indigo-900 text-sm sm:text-base">${subtotal.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between py-2 border-b border-indigo-100">
-          <span className="text-indigo-700">Shipping</span>
-          <span className="font-medium text-indigo-900">${shippingCost.toFixed(2)}</span>
+        <div className="flex justify-between py-1 sm:py-2 border-b border-indigo-100">
+          <span className="text-indigo-700 text-sm sm:text-base">Shipping</span>
+          <span className="font-medium text-indigo-900 text-sm sm:text-base">${shippingCost.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between py-2 border-b border-indigo-100">
-          <span className="text-indigo-700">Tax</span>
-          <span className="font-medium text-indigo-900">${tax.toFixed(2)}</span>
+        <div className="flex justify-between py-1 sm:py-2 border-b border-indigo-100">
+          <span className="text-indigo-700 text-sm sm:text-base">Tax</span>
+          <span className="font-medium text-indigo-900 text-sm sm:text-base">${tax.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between py-3 font-bold text-lg">
+        <div className="flex justify-between py-2 sm:py-3 font-bold text-lg">
           <span className="text-indigo-900">Total</span>
           <span className="text-indigo-700">${total.toFixed(2)}</span>
         </div>
         
         <button 
-          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-3 rounded-lg font-semibold mt-4 hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white py-3 rounded-lg font-semibold mt-3 sm:mt-4 hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm sm:text-base"
           onClick={onCheckout}
         >
           Proceed to Checkout
