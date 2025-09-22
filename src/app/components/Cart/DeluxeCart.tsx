@@ -32,10 +32,18 @@ export interface ShippingInfo {
 }
 
 export interface PaymentInfo {
-  cardNumber: string;
-  cardHolder: string;
-  expiryDate: string;
-  cvv: string;
+  method: 'gcash' | 'bank' | 'cod';
+  // For GCash
+  gcashNumber?: string;
+  // For Bank Transfer
+  bankName?: string;
+  accountNumber?: string;
+  accountName?: string;
+  // For Credit Card (optional, if you want to keep it)
+  cardNumber?: string;
+  cardHolder?: string;
+  expiryDate?: string;
+  cvv?: string;
 }
 
 const DeluxeCart = () => {
