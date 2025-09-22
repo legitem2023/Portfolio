@@ -56,22 +56,22 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-center text-indigo-600">
                 <Phone size={16} className="mr-2" />
-                <span>+1 (555) 123-4567</span>
+                <span>+639153392813</span>
               </li>
               <li className="flex items-center text-indigo-600">
                 <Mail size={16} className="mr-2" />
-                <span>info@luxe.com</span>
+                <span>DigitalCrowd2025.com</span>
               </li>
               <li className="flex items-center text-indigo-600">
                 <MapPin size={16} className="mr-2" />
-                <span>123 Luxury Ave, New York, NY</span>
+                <span>Taytay, Rizal</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 pt-8 text-center text-indigo-400">
-          <p>© {new Date().getFullYear()} LUXE. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Digital Crowd. All rights reserved.</p>
         </div>
       </div>
     </footer>
