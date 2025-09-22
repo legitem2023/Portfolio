@@ -23,7 +23,7 @@ const AnimatedCrowd = ({
         className
       )}
     >
-      <div className="absolute inset-0 bg-white/50 backdrop-blur-xs z-30"></div>
+      <div className="absolute inset-0 bg-white/20 backdrop-blur-sm z-30"></div>
       {/* STAR FIELD */}
       <div className="absolute inset-0">
         {Array.from({ length: 40 }).map((_, i) => (
