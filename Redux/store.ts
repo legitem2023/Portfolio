@@ -4,10 +4,15 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from 'redux-persist/lib/storage'; // defaults to localStorage for web
 import activeIndexReducer from './activeIndexSlice';
 import cartReducer from './cartSlice'; // Import your cart reducer
-
+import activePostIdReducer from './activePostIdSlice';
 // Persist configuration for activeIndex
 const activeIndexPersistConfig = {
   key: 'activeIndex',
+  storage
+};
+
+const activePostPersistConfig = {
+  key: 'activePost',
   storage
 };
 
@@ -20,12 +25,14 @@ const cartPersistConfig = {
 // Create persisted reducers
 const persistedActiveIndexReducer = persistReducer(activeIndexPersistConfig, activeIndexReducer);
 const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
+const persistedPostId = persistReducer(activePostPersistConfig, activePostIdReducer);
 
 // Configure store
 export const store = configureStore({
   reducer: {
     activeIndex: persistedActiveIndexReducer,
     cart: persistedCartReducer, // Add the cart reducer
+    postId:persistedPostId
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
