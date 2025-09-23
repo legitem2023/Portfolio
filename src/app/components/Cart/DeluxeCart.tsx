@@ -27,6 +27,7 @@ export interface ShippingInfo {
 
 
 export interface CartItem {
+  userId: string;
   id: string | number;
   name: string;
   description: string;
