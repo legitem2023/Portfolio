@@ -147,7 +147,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
  }
   return (
     <>
-      <div onClick={navigate} className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
