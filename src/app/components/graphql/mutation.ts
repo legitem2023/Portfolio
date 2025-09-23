@@ -245,3 +245,24 @@ mutation CreateUser {
   }
 }
 `
+
+const CREATE_ORDER = gql`
+  mutation CreateOrder($userId: ID!, $addressId: ID!, $items: [OrderItemInput!]!) {
+    createOrder(userId: $userId, addressId: $addressId, items: $items) {
+      id
+      orderNumber
+      status
+      total
+      subtotal
+      userId
+      addressId
+      items {
+        productId
+        quantity
+        price
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
