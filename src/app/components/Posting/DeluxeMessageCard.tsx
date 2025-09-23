@@ -8,6 +8,8 @@ import EngagementMetrics from './EngagementMetrics';
 import ActionButtons from './ActionButtons';
 import CommentInput from './CommentInput';
 import { setActivePostId } from '../../../../Redux/activePostIdSlice';
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+
 // ... keep your existing interfaces ...
 interface User {
   id: string;
@@ -142,7 +144,10 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   return (
     <>
-      <div onClick={()=> dispatch(setActivePostId(id)) } className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div onClick={()=> {
+         dispatch(setActivePostId(id));
+         dispatch(setActiveIndex(8));
+                         }} className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
