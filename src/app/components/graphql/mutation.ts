@@ -246,7 +246,7 @@ mutation CreateUser {
 }
 `
 
-const CREATE_ORDER = gql`
+export const CREATE_ORDER = gql`
   mutation CreateOrder($userId: ID!, $addressId: ID!, $items: [OrderItemInput!]!) {
     createOrder(userId: $userId, addressId: $addressId, items: $items) {
       id
