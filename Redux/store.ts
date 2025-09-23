@@ -12,7 +12,7 @@ const activeIndexPersistConfig = {
 };
 
 const activePostPersistConfig = {
-  key: 'activePost',
+  key: 'activePostId',
   storage
 };
 
@@ -32,7 +32,7 @@ export const store = configureStore({
   reducer: {
     activeIndex: persistedActiveIndexReducer,
     cart: persistedCartReducer, // Add the cart reducer
-    activePost:persistedPostIdReducer
+    activePostId:persistedPostIdReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
