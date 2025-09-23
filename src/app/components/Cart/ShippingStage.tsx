@@ -65,6 +65,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: Ship
   const handleAddressSelect = (address: any) => {
     setSelectedAddressId(address.id);
     setShippingInfo({
+      addressId:address.id,
       fullName: address.fullName,
       address: address.address,
       city: address.city,
@@ -76,6 +77,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: Ship
   const handleUseNewAddress = () => {
     setSelectedAddressId(null);
     setShippingInfo({
+      addressId:"",
       fullName: "",
       address: "",
       city: "",
