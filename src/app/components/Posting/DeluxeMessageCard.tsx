@@ -142,12 +142,12 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     console.log('New comment:', comment);
   };
  const navigate = () => {
-   //dispatch(setActivePostId(id));
-   //dispatch(setActiveIndex(8));
+   dispatch(setActivePostId(id));
+   dispatch(setActiveIndex(8));
  }
   return (
     <>
-      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div onClick={navigate} className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
