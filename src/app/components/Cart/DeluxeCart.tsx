@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
   addToCart, 
@@ -76,7 +76,33 @@ const DeluxeCart = () => {
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
-  
+    const [userId, setUserId] = useState("");
+
+  useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include' // Important: includes cookies
+        });
+        
+        if (response.status === 401) {
+          // Handle unauthorized access
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+
+        const payload = await decryptToken(token, secret.toString());
+        setUserId(payload.userId);
+        console.log(payload);
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
   const subtotal = cartItems.reduce((total: number, item: CartItem) => 
     total + (item.price * item.quantity), 0
   );
@@ -176,6 +202,7 @@ const DeluxeCart = () => {
           
           {currentStage === 'confirmation' && (
             <ConfirmationStage 
+              userId={userId}
               cartItems={cartItems}
               shippingInfo={shippingInfo}
               paymentInfo={paymentInfo}
