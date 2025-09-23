@@ -25,14 +25,14 @@ const cartPersistConfig = {
 // Create persisted reducers
 const persistedActiveIndexReducer = persistReducer(activeIndexPersistConfig, activeIndexReducer);
 const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
-const persistedPostId = persistReducer(activePostPersistConfig, activePostIdReducer);
+const persistedPostIdReducer = persistReducer(activePostPersistConfig, activePostIdReducer);
 
 // Configure store
 export const store = configureStore({
   reducer: {
     activeIndex: persistedActiveIndexReducer,
     cart: persistedCartReducer, // Add the cart reducer
-    postId:persistedPostId
+    postId:persistedPostIdReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
