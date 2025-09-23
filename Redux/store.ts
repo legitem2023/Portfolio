@@ -32,7 +32,7 @@ export const store = configureStore({
   reducer: {
     activeIndex: persistedActiveIndexReducer,
     cart: persistedCartReducer, // Add the cart reducer
-    postId:persistedPostIdReducer
+    activePost:persistedPostIdReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
