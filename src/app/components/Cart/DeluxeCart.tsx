@@ -14,6 +14,18 @@ import PaymentStage from './PaymentStage';
 import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 
+
+// Update your ShippingInfo interface to include addressId
+export interface ShippingInfo {
+  addressId: string; // Add this field
+  fullName: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  country: string;
+}
+
+
 export interface CartItem {
   id: string | number;
   name: string;
@@ -23,13 +35,6 @@ export interface CartItem {
   image: string;
 }
 
-export interface ShippingInfo {
-  fullName: string;
-  address: string;
-  city: string;
-  zipCode: string;
-  country: string;
-}
 
 export interface PaymentInfo {
   method?: string;
