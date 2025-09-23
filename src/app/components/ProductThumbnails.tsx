@@ -45,6 +45,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
 
   const handleAddToCart = (product: Product) => {
     const cartItem = {
+      userId:"",
       id: product.id.toString(),
       name: product.name,
       description: product.description || '',
