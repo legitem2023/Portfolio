@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from '@apollo/client';
 import DeluxeMessageCard from './DeluxeMessageCard';
 import { GET_POST } from '../graphql/query'; // Adjust path as needed
+import DeluxeMessageCardLoading from '../DeluxeMessageCardLoading';
 
 interface PostDetailProps {
   postId: string;
@@ -13,7 +14,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ postId }) => {
     variables: { id: postId },
   });
 
-  if (loading) return <div>Loading post...</div>;
+  if (loading) return <DeluxeMessageCardLoading/>;
   if (error) return <div>Error loading post: {error.message}</div>;
   if (!data?.post) return <div>Post not found</div>;
 
