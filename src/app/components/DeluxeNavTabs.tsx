@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
 import { decryptToken } from '../../../utils/decryptToken';
-
+import PostDetail from './Posting/PostDetail';
 import {
   Home,
   ShoppingBag,
@@ -38,6 +38,7 @@ interface Tab {
 
 const DeluxeNavTabs: React.FC = () => {
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
+  const activePostId = useSelector((state: any) => state.activePostId.value);
   const dispatch = useDispatch();
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
@@ -158,6 +159,12 @@ const DeluxeNavTabs: React.FC = () => {
       icon: <ShoppingCart size={18} />,
       content: <UserProfile userId={userId} />
     },
+    {
+      id: 8,
+      label: 'Post',
+      icon: <ShoppingCart size={18} />,
+      content: <PostDetail postId={activePostId} />
+    }
   ];
 
   function getCategoryIcon(category: string): React.ReactNode {
