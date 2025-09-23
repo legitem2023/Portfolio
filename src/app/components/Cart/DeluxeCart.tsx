@@ -54,6 +54,7 @@ export interface PaymentInfo {
 const DeluxeCart = () => {
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
+    addressId:'',
     fullName: '',
     address: '',
     city: '',
