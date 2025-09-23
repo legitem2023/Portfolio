@@ -1,4 +1,27 @@
+'use client';
+import { useMutation } from '@apollo/client';
 import { CartItem, ShippingInfo, PaymentInfo } from './DeluxeCart';
+import { CREATE_ORDER } from '../graphql/mutation'; 
+
+// Update your ShippingInfo interface to include addressId
+interface ShippingInfo {
+  addressId: string; // Add this field
+  fullName: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  country: string;
+}
+
+// Update CartItem to ensure it has an id that can be used as productId
+interface CartItem {
+  id: string; // This should be the product ID
+  name: string;
+  description: string;
+  price: number;
+  quantity: number;
+  image?: string;
+}
 
 interface ConfirmationStageProps {
   cartItems: CartItem[];
@@ -10,6 +33,7 @@ interface ConfirmationStageProps {
   total: number;
   onPlaceOrder: () => void;
   onBack: () => void;
+  userId: string; // Add userId to props
 }
 
 const ConfirmationStage = ({ 
@@ -21,9 +45,12 @@ const ConfirmationStage = ({
   tax, 
   total, 
   onPlaceOrder, 
-  onBack 
+  onBack,
+  userId // Receive userId from props
 }: ConfirmationStageProps) => {
-  
+  // Use the mutation hook
+  const [createOrder, { loading, error }] = useMutation(CREATE_ORDER);
+
   // Format payment method for display
   const getPaymentMethodDisplay = () => {
     switch (paymentInfo.method) {
@@ -54,6 +81,37 @@ const ConfirmationStage = ({
     }
   };
 
+  // Enhanced place order function that uses the mutation
+  const handlePlaceOrder = async () => {
+    try {
+      // Transform cart items to match OrderItemInput format
+      const orderItems = cartItems.map(item => ({
+        productId: item.id, // Assuming item.id is the product ID
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      // Execute the mutation
+      const result = await createOrder({
+        variables: {
+          userId: userId,
+          addressId: shippingInfo.addressId, // You'll need to add addressId to your ShippingInfo interface
+          items: orderItems
+        }
+      });
+
+      // Handle successful order creation
+      if (result.data?.createOrder) {
+        console.log('Order created successfully:', result.data.createOrder);
+        // You might want to pass the order data to the parent component
+        onPlaceOrder(); // Call the original onPlaceOrder callback
+      }
+    } catch (err) {
+      console.error('Error creating order:', err);
+      // Handle error (show error message to user, etc.)
+    }
+  };
+
   const paymentDisplay = getPaymentMethodDisplay();
 
   return (
@@ -61,6 +119,25 @@ const ConfirmationStage = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-serif font-bold text-indigo-900 mb-8">Order Confirmation</h2>
         
+        {/* Error Alert */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <div className="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                  <span className="text-red-600 font-bold text-sm">!</span>
+                </div>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-red-800 font-semibold text-sm">Order Error</h3>
+                <p className="text-red-700 text-xs mt-1">
+                  There was a problem placing your order. Please try again.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success Alert */}
         <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
           <div className="flex items-center">
@@ -199,7 +276,8 @@ const ConfirmationStage = ({
           <button
             type="button"
             onClick={onBack}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 flex items-center"
+            disabled={loading}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 flex items-center disabled:opacity-50"
           >
             <span aria-hidden="true">←</span>
             <span className="ml-2">Back to payment</span>
@@ -210,10 +288,11 @@ const ConfirmationStage = ({
               Total: <span className="font-bold text-lg text-gray-900">${total.toFixed(2)}</span>
             </div>
             <button
-              onClick={onPlaceOrder}
-              className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:w-auto"
+              onClick={handlePlaceOrder}
+              disabled={loading}
+              className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed sm:w-auto"
             >
-              Place order
+              {loading ? 'Placing Order...' : 'Place Order'}
             </button>
           </div>
         </div>
