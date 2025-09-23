@@ -109,6 +109,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     if (!product) return;
     
     const cartItem = {
+      userId:"",
       id: product.id.toString(),
       name: product.name,
       description: product.description || '',
