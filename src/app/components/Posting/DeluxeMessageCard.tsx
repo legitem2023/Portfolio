@@ -1,12 +1,13 @@
 // components/DeluxeMessageCard.tsx
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import UserAvatar from './UserAvatar';
 import EngagementModal from './EngagementModal';
 import PostImages from './PostImages';
 import EngagementMetrics from './EngagementMetrics';
 import ActionButtons from './ActionButtons';
 import CommentInput from './CommentInput';
-
+import { setActivePostId } from '../../../../Redux/activePostIdSlice';
 // ... keep your existing interfaces ...
 interface User {
   id: string;
@@ -88,7 +89,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(null);
-
+  const dispatch = useDispatch();
   const {
     id,
     sender,
@@ -141,7 +142,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   return (
     <>
-      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div onClick={()=> dispatch(setActivePostId(id)) } className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
