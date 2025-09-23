@@ -3,25 +3,6 @@ import { useMutation } from '@apollo/client';
 import { CartItem, ShippingInfo, PaymentInfo } from './DeluxeCart';
 import { CREATE_ORDER } from '../graphql/mutation'; 
 
-// Update your ShippingInfo interface to include addressId
-interface ShippingInfo {
-  addressId: string; // Add this field
-  fullName: string;
-  address: string;
-  city: string;
-  zipCode: string;
-  country: string;
-}
-
-// Update CartItem to ensure it has an id that can be used as productId
-interface CartItem {
-  id: string; // This should be the product ID
-  name: string;
-  description: string;
-  price: number;
-  quantity: number;
-  image?: string;
-}
 
 interface ConfirmationStageProps {
   cartItems: CartItem[];
