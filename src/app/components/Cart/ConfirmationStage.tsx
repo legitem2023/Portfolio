@@ -71,7 +71,13 @@ const ConfirmationStage = ({
         quantity: item.quantity,
         price: item.price
       }));
-console.table(orderItems);
+      const OrderParams = {
+        userId: userId,
+        addressId: shippingInfo.addressId, // You'll need to add addressId to your ShippingInfo interface
+        items: orderItems
+      }
+      
+      console.table(OrderParams);
       // Execute the mutation
 /*      const result = await createOrder({
         variables: {
