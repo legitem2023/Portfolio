@@ -82,11 +82,11 @@ console.table(orderItems);
       });
 */
       // Handle successful order creation
-      if (result.data?.createOrder) {
+   /*   if (result.data?.createOrder) {
         console.log('Order created successfully:', result.data.createOrder);
         // You might want to pass the order data to the parent component
         onPlaceOrder(); // Call the original onPlaceOrder callback
-      }
+      }*/
     } catch (err) {
       console.error('Error creating order:', err);
       // Handle error (show error message to user, etc.)
