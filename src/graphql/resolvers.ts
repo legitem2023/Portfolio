@@ -705,7 +705,7 @@ const isValid = await comparePassword(password, user?.password || "");
     },
     
     createOrder: async (_: any, { userId, addressId, items }: any) => {
-      const response = return prisma.order.create({
+      const response = await prisma.order.create({
         data: {
           userId,
           addressId,
