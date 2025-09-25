@@ -20,7 +20,11 @@ const getUserId = (context: any, required = true): string => {
 export const resolvers = {
   Query: {
     // Existing e-commerce queries
-    users: () => prisma.user.findMany(),
+    users: () => prisma.user.findMany({
+      include : {
+        addresses:true
+      }
+    }),
     
     user: (_: any, { id }: { id: string }) =>
       prisma.user.findUnique({ where: { id } }),
