@@ -20,7 +20,7 @@ const getUserId = (context: any, required = true): string => {
 export const resolvers = {
   Query: {
     // Existing e-commerce queries
-    users: async () => return await prisma.user.findMany({
+    users: async () => await prisma.user.findMany({
       include : {
         addresses:true
       }
