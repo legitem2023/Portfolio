@@ -5,6 +5,7 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
 import { decryptToken } from '../../../utils/decryptToken';
 import PostDetail from './Posting/PostDetail';
+import PMTab from './PMTab';
 import {
   Home,
   ShoppingBag,
@@ -164,7 +165,13 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Post',
       icon: <ShoppingCart size={18} />,
       content: <PostDetail postId={activePostId} />
-    }
+    },
+    {
+      id: 9,
+      label: 'PM',
+      icon: <ShoppingCart size={18} />,
+      content: <PMTab/>
+        }
   ];
 
   function getCategoryIcon(category: string): React.ReactNode {
