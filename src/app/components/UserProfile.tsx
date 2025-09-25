@@ -9,7 +9,7 @@ import UserProfileShimmer from './UserProfileShimmer';
 import UserProfileShimmerRed from './UserProfileShimmerRed';
 import ProfileTabs from './ProfileTabs';
 import { useState } from 'react';
-
+import TabContent from './TabContent';
 const UserProfile = ({ userId }: { userId: string }) => {
   const { data, loading, error } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
