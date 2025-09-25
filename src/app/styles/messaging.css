@@ -1,0 +1,56 @@
+/* messaging.css */
+.bg-lavender-100 {
+  background-color: #f4f0ff;
+}
+
+.bg-purple-25 {
+  background-color: #faf9ff;
+}
+
+.text-lavender-800 {
+  color: #6d28d9;
+}
+
+/* Custom scrollbar for messaging */
+.messages-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.messages-scrollbar::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 10px;
+}
+
+.messages-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
+}
+
+/* Message bubble animations */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-bubble {
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+/* Gradient backgrounds */
+.gradient-lavender {
+  background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+}
+
+.gradient-light {
+  background: linear-gradient(135deg, #f4f0ff 0%, #e0e7ff 100%);
+}
