@@ -1,5 +1,12 @@
-// types/index.ts
-// types/index.ts
+
+export interface TabConfig {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+
+
 export interface CartItem {
     userId: string;
     id: string; // You can change this to number if IDs are numeric
