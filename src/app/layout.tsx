@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Inter } from "next/font/google";
 import LoadEruda from "./LoadEruda";
 import "./globals.css";
+import "./styles/messaging.css";
 const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Robert Marquez",
