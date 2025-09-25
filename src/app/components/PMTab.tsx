@@ -34,6 +34,8 @@ const PMTab = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Mock users for demonstration
@@ -42,7 +44,25 @@ const PMTab = () => {
     { id: "2", name: "Mike Chen", avatar: "/avatars/mike.jpg", email: "mike@example.com" },
     { id: "3", name: "Emma Wilson", avatar: "/avatars/emma.jpg", email: "emma@example.com" },
     { id: "4", name: "Alex Rivera", avatar: "/avatars/alex.jpg", email: "alex@example.com" },
+    { id: "5", name: "Jordan Taylor", avatar: "/avatars/jordan.jpg", email: "jordan@example.com" },
+    { id: "6", name: "Casey Smith", avatar: "/avatars/casey.jpg", email: "casey@example.com" },
   ];
+
+  // Check if mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const getRole = async () => {
@@ -91,7 +111,7 @@ const PMTab = () => {
           sender: name,
           avatar: avatar,
           timestamp: new Date(Date.now() - 180000).toISOString(),
-          content: "Going great! Just finished the UI components. What do you think?",
+          content: "Going great! Just finished the responsive UI components. What do you think?",
           likes: 3,
           comments: 0,
           isLikedByMe: true,
@@ -103,12 +123,24 @@ const PMTab = () => {
           sender: "Sarah Johnson",
           avatar: "/avatars/sarah.jpg",
           timestamp: new Date(Date.now() - 60000).toISOString(),
-          content: "The lavender theme looks absolutely stunning! ✨",
+          content: "The lavender theme looks absolutely stunning on mobile! ✨ And the responsive design is perfect!",
           likes: 5,
           comments: 2,
           isLikedByMe: false,
           images: [],
           isOwnMessage: false
+        },
+        {
+          id: "4",
+          sender: name,
+          avatar: avatar,
+          timestamp: new Date(Date.now() - 30000).toISOString(),
+          content: "Thanks! I made sure it works perfectly on all devices. The mobile experience was my top priority! 📱",
+          likes: 3,
+          comments: 1,
+          isLikedByMe: true,
+          images: [],
+          isOwnMessage: true
         }
       ];
       setMessages(mockMessages);
@@ -151,6 +183,19 @@ const PMTab = () => {
     }
   };
 
+  const handleUserSelect = (user: User) => {
+    setSelectedUser(user);
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleBackToContacts = () => {
+    if (isMobile) {
+      setIsSidebarOpen(true);
+    }
+  };
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -158,53 +203,105 @@ const PMTab = () => {
     });
   };
 
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+  };
+
+  // Group messages by date
+  const groupMessagesByDate = () => {
+    const groups: { [key: string]: Message[] } = {};
+    
+    messages.forEach(message => {
+      const date = formatDate(message.timestamp);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(message);
+    });
+    
+    return groups;
+  };
+
+  const messageGroups = groupMessagesByDate();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
-      <div className="max-w-6xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className="flex h-[80vh]">
-          {/* Sidebar */}
-          <div className="w-1/3 bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200">
-            <div className="p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              <h1 className="text-2xl font-bold">Messages</h1>
-              <p className="text-purple-200">Chat with your connections</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-4 safe-area-inset-bottom">
+      <div className="max-w-6xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl overflow-hidden h-[calc(100vh-1rem)] md:h-[80vh]">
+        <div className="flex h-full">
+          {/* Sidebar/Contacts List */}
+          <div className={`
+            absolute md:relative z-20 w-full md:w-1/3 lg:w-1/4
+            bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
+            transform transition-transform duration-300 ease-in-out h-full
+            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          `}>
+            <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
+                  <p className="text-purple-200 text-sm hidden md:block">Chat with your connections</p>
+                </div>
+                <button 
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="md:hidden p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
             
-            <div className="p-4">
-              <div className="relative mb-4">
+            <div className="p-3 md:p-4">
+              <div className="relative">
                 <input
                   type="text"
                   placeholder="Search conversations..."
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+                  className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
                 />
-                <svg className="absolute left-3 top-3.5 h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
             </div>
 
-            <div className="overflow-y-auto h-[calc(80vh-140px)]">
+            <div className="overflow-y-auto h-[calc(100%-120px)] md:h-[calc(100%-140px)] messages-scrollbar">
               {mockUsers.map((user) => (
                 <div
                   key={user.id}
-                  className={`flex items-center p-4 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
+                  className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
                     selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
                   }`}
-                  onClick={() => setSelectedUser(user)}
+                  onClick={() => handleUserSelect(user)}
                 >
-                  <div className="relative">
+                  <div className="relative flex-shrink-0">
                     <img
                       src={user.avatar || "/NoImage.webp"}
                       alt={user.name}
-                      className="w-12 h-12 rounded-2xl object-cover border-2 border-purple-200"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                     />
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-2 border-white rounded-full"></div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-400 border-2 border-white rounded-full"></div>
                   </div>
-                  <div className="ml-4 flex-1">
+                  <div className="ml-3 flex-1 min-w-0">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-purple-900">{user.name}</h3>
-                      <span className="text-xs text-purple-400">2 min ago</span>
+                      <h3 className="font-semibold text-purple-900 text-sm md:text-base truncate">{user.name}</h3>
+                      <span className="text-xs text-purple-400 whitespace-nowrap ml-2">2 min ago</span>
                     </div>
-                    <p className="text-sm text-purple-600 truncate">Looking forward to our meeting!</p>
+                    <p className="text-xs md:text-sm text-purple-600 truncate">Looking forward to our meeting!</p>
                   </div>
                 </div>
               ))}
@@ -212,134 +309,224 @@ const PMTab = () => {
           </div>
 
           {/* Chat Area */}
-          <div className="w-2/3 flex flex-col">
+          <div className={`
+            absolute md:relative z-10 w-full md:w-2/3 lg:w-3/4 flex flex-col h-full
+            bg-white transform transition-transform duration-300 ease-in-out
+            ${isSidebarOpen ? 'translate-x-full md:translate-x-0' : 'translate-x-0'}
+          `}>
             {/* Chat Header */}
-            {selectedUser && (
-              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4">
+            {selectedUser ? (
+              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-3 md:p-4">
                 <div className="flex items-center">
+                  <button 
+                    onClick={handleBackToContacts}
+                    className="md:hidden mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
                   <img
                     src={selectedUser.avatar || "/NoImage.webp"}
                     alt={selectedUser.name}
-                    className="w-10 h-10 rounded-2xl object-cover border-2 border-purple-200"
+                    className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                   />
                   <div className="ml-3">
-                    <h2 className="font-bold text-purple-900">{selectedUser.name}</h2>
-                    <p className="text-sm text-purple-500">Online • Last seen recently</p>
+                    <h2 className="font-bold text-purple-900 text-sm md:text-base">{selectedUser.name}</h2>
+                    <p className="text-xs md:text-sm text-purple-500">Online • Last seen recently</p>
                   </div>
+                  <div className="ml-auto flex space-x-2">
+                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </button>
+                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4">
+                <div className="flex items-center justify-center h-10">
+                  <p className="text-purple-600">Select a conversation to start messaging</p>
                 </div>
               </div>
             )}
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-purple-25">
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`flex max-w-xs lg:max-w-md xl:max-w-lg 2xl:max-w-xl ${
-                      message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                    }`}>
-                      <img
-                        src={message.avatar}
-                        alt={message.sender}
-                        className="w-8 h-8 rounded-full object-cover border-2 border-purple-200"
-                      />
-                      <div className={`mx-3 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
-                        <div className={`inline-block rounded-3xl p-4 shadow-lg ${
-                          message.isOwnMessage
-                            ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
-                            : 'bg-white text-purple-900 border border-purple-100 rounded-bl-none'
-                        }`}>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        </div>
-                        <div className="flex items-center mt-1 space-x-2 text-xs">
-                          <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
-                            {formatTime(message.timestamp)}
-                          </span>
-                          {message.isOwnMessage && (
-                            <svg className="w-4 h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
+            <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-gradient-to-b from-white to-purple-25 messages-scrollbar">
+              {selectedUser ? (
+                <div className="space-y-3 md:space-y-4">
+                  {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                    <div key={date}>
+                      <div className="flex justify-center my-4">
+                        <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium">
+                          {date}
+                        </span>
                       </div>
+                      {dateMessages.map((message) => (
+                        <div
+                          key={message.id}
+                          className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
+                            message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                          }`}>
+                            <img
+                              src={message.avatar}
+                              alt={message.sender}
+                              className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0"
+                            />
+                            <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
+                              <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg ${
+                                message.isOwnMessage
+                                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
+                                  : 'bg-white text-purple-900 border border-purple-100 rounded-bl-none'
+                              }`}>
+                                <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
+                              </div>
+                              <div className="flex items-center mt-1 space-x-2 text-xs">
+                                <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
+                                  {formatTime(message.timestamp)}
+                                </span>
+                                {message.isOwnMessage && (
+                                  <svg className="w-3 h-3 md:w-4 md:h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  ))}
+                  <div ref={messagesEndRef} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-purple-400">
+                    <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <p className="text-lg font-medium">Select a conversation to start messaging</p>
+                    <p className="text-sm mt-2">Choose from your contacts on the left</p>
                   </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-purple-200 p-4 bg-white">
-              <div className="flex space-x-3">
-                <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
-                  <textarea
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message..."
-                    className="w-full px-4 py-3 bg-transparent focus:outline-none resize-none rounded-2xl"
-                    rows={1}
-                  />
-                </div>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-                >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
-              </div>
-              <div className="flex justify-between items-center mt-2 px-2">
-                <div className="flex space-x-2">
-                  <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+            {selectedUser && (
+              <div className="border-t border-purple-200 p-3 md:p-4 bg-white safe-area-inset-bottom">
+                <div className="flex space-x-2 md:space-x-3">
+                  <button 
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="md:hidden p-2 text-purple-400 hover:text-purple-600 transition-colors flex-shrink-0"
+                  >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                   </button>
-                  <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <div className="flex-1 bg-purple-50 rounded-xl md:rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+                    <textarea
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Type your message..."
+                      className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base bg-transparent focus:outline-none resize-none rounded-xl md:rounded-2xl min-h-[40px] max-h-[120px]"
+                      rows={1}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!newMessage.trim()}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-2 md:p-3 rounded-xl md:rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex-shrink-0"
+                  >
+                    <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   </button>
                 </div>
-                <div className="text-xs text-purple-400">
-                  Press Enter to send • Shift+Enter for new line
+                <div className="flex justify-between items-center mt-2 px-1">
+                  <div className="flex space-x-1 md:space-x-2">
+                    <button className="p-1 md:p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </button>
+                    <button className="p-1 md:p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="text-xs text-purple-400 hidden md:block">
+                    Press Enter to send • Shift+Enter for new line
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Mobile Floating Action Button */}
+      {!isSidebarOpen && !selectedUser && isMobile && (
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="fixed bottom-6 right-6 z-30 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 md:hidden"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+        </button>
+      )}
+
       {/* Custom Styles */}
-      <style jsx>{`
-        .bg-lavender-100 { background-color: #f4f0ff; }
-        .bg-purple-25 { background-color: #faf9ff; }
-        .text-lavender-800 { color: #6d28d9; }
-        
-        /* Scrollbar Styling */
-        .overflow-y-auto::-webkit-scrollbar {
-          width: 6px;
+      <style jsx global>{`
+        /* Safe area insets for modern mobile devices */
+        .safe-area-inset-bottom {
+          padding-bottom: env(safe-area-inset-bottom);
         }
         
-        .overflow-y-auto::-webkit-scrollbar-track {
+        /* Custom scrollbar */
+        .messages-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        
+        .messages-scrollbar::-webkit-scrollbar-track {
           background: #f1f1f1;
           border-radius: 10px;
         }
         
-        .overflow-y-auto::-webkit-scrollbar-thumb {
+        .messages-scrollbar::-webkit-scrollbar-thumb {
           background: #c4b5fd;
           border-radius: 10px;
         }
         
-        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        .messages-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #a78bfa;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+          .messages-scrollbar::-webkit-scrollbar {
+            width: 3px;
+          }
+        }
+
+        /* Custom colors */
+        .bg-lavender-100 {
+          background-color: #f4f0ff;
+        }
+
+        .bg-purple-25 {
+          background-color: #faf9ff;
         }
       `}</style>
     </div>
