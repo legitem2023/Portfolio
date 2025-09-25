@@ -105,6 +105,15 @@ const Header: React.FC = () => {
               </div>
               <div
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                onClick={() => {
+                  setIsDropdownOpen(false);
+                  dispatch(setActiveIndex(9));
+                }}
+              >
+                <i className="fas fa-messages mr-2 text-gray-400"></i>Messages
+              </div>
+              <div
+                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => setIsDropdownOpen(false)}
               >
                 <i className="fas fa-cog mr-2 text-gray-400"></i>Settings
