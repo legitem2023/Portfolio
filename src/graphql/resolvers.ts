@@ -696,6 +696,77 @@ const isValid = await comparePassword(password, user?.password || "");
       return { statusText: 'Product created successfully!' };
     },
     
+    createVariant: async (_parent: any,{ input }: { input: any },_context: any) => {
+            try {
+                // Validate required fields
+                if (!input.name || input.stock === undefined) {
+                    return {
+                        success: false,
+                        message: 'Name and stock are required fields'
+                    };
+                }
+
+                // Check if product exists when productId is provided
+                if (input.productId) {
+                    const productExists = await prisma.product.findUnique({
+                        where: { id: input.productId }
+                    });
+
+                    if (!productExists) {
+                        return {
+                            success: false,
+                            message: 'Product not found'
+                        };
+                    }
+                }
+
+                // Check for duplicate SKU
+                if (input.sku) {
+                    const existingVariant = await prisma.productVariant.findUnique({
+                        where: { sku: input.sku }
+                    });
+
+                    if (existingVariant) {
+                        return {
+                            success: false,
+                            message: 'SKU must be unique'
+                        };
+                    }
+                }
+
+                // Create the variant
+                const variant = await prisma.productVariant.create({
+                    data: {
+                        name: input.name,
+                        productId: input.productId,
+                        sku: input.sku || `SKU-${Date.now()}`, // Generate SKU if not provided
+                        color: input.color,
+                        size: input.size,
+                        price: input.price,
+                        salePrice: input.salePrice,
+                        stock: input.stock,
+                        images: [], // Default empty array
+                        options: [], // Default empty array
+                        isActive: true
+                    }
+                });
+
+                return {
+                    success: true,
+                    message: 'Product variant created successfully',
+                    // You might want to return the created variant ID as well
+                    // variantId: variant.id
+                };
+
+            } catch (error) {
+                console.error('Error creating product variant:', error);
+                return {
+                    success: false,
+                    message: 'Failed to create product variant'
+                };
+            }
+    },
+
     createCategory: async (_: any, { name, description, status }: any) => {
       const response = await prisma.category.create({
         data: {
@@ -1386,76 +1457,6 @@ const isValid = await comparePassword(password, user?.password || "");
       return prisma.follow.count({
         where: { followerId: parent?.id }
       });
-    },
-    createVariant: async (_parent: any,{ input }: { input: any },_context: any) => {
-            try {
-                // Validate required fields
-                if (!input.name || input.stock === undefined) {
-                    return {
-                        success: false,
-                        message: 'Name and stock are required fields'
-                    };
-                }
-
-                // Check if product exists when productId is provided
-                if (input.productId) {
-                    const productExists = await prisma.product.findUnique({
-                        where: { id: input.productId }
-                    });
-
-                    if (!productExists) {
-                        return {
-                            success: false,
-                            message: 'Product not found'
-                        };
-                    }
-                }
-
-                // Check for duplicate SKU
-                if (input.sku) {
-                    const existingVariant = await prisma.productVariant.findUnique({
-                        where: { sku: input.sku }
-                    });
-
-                    if (existingVariant) {
-                        return {
-                            success: false,
-                            message: 'SKU must be unique'
-                        };
-                    }
-                }
-
-                // Create the variant
-                const variant = await prisma.productVariant.create({
-                    data: {
-                        name: input.name,
-                        productId: input.productId,
-                        sku: input.sku || `SKU-${Date.now()}`, // Generate SKU if not provided
-                        color: input.color,
-                        size: input.size,
-                        price: input.price,
-                        salePrice: input.salePrice,
-                        stock: input.stock,
-                        images: [], // Default empty array
-                        options: [], // Default empty array
-                        isActive: true
-                    }
-                });
-
-                return {
-                    success: true,
-                    message: 'Product variant created successfully',
-                    // You might want to return the created variant ID as well
-                    // variantId: variant.id
-                };
-
-            } catch (error) {
-                console.error('Error creating product variant:', error);
-                return {
-                    success: false,
-                    message: 'Failed to create product variant'
-                };
-            }
     },
     isFollowing: async (parent: any, _: any, context: any) => {
       const currentUserId = getUserId(context, false);
