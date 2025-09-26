@@ -43,6 +43,7 @@ export default function ManagementDashboard() {
            brand: data.brand,
            status: data.isActive
      }))
+     console.log(productsData);
    setProducts(productsData);
    }
     
