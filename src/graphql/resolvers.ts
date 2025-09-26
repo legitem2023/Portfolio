@@ -135,7 +135,8 @@ export const resolvers = {
     getProducts: async () => {
       const products = await prisma.product.findMany({
         include: {
-          category: true
+          category: true,
+          variants:true
         }
       });
       return products;
