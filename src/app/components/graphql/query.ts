@@ -34,20 +34,7 @@ query GetProducts {
         category {
             id    
         }
-        variants {
-          id
-          name
-          options
-          createdAt
-          productId
-          sku
-          color
-          size
-          price
-          salePrice
-          stock
-          images
-        }
+        
         brand
         weight
         dimensions
