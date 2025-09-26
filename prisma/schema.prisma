@@ -25,6 +25,7 @@ model User {
 
   // Relationships
   addresses       Address[]
+  products        Product[]
   orders          Order[]
   reviews         Review[]
   wishlist        WishlistItem[]
@@ -185,8 +186,11 @@ model Product {
   attributes  Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  userId    String   @db.ObjectId
 
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   variants    ProductVariant[]
   orders      OrderItem[]
   reviews     Review[]
