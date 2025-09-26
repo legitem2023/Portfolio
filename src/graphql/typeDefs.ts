@@ -137,7 +137,7 @@ export const typeDefs = gql`
     attributes: Json
     createdAt: DateTime!
     updatedAt: DateTime!
-    variants: [ProductVariant!]
+    variants: [ProductVariant]
     orders: [OrderItem!]
     reviews: [Review!]
     wishlist: [WishlistItem!]
