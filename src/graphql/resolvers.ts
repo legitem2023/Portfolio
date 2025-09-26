@@ -1387,12 +1387,7 @@ const isValid = await comparePassword(password, user?.password || "");
         where: { followerId: parent?.id }
       });
     },
-    createVariant: async (
-            _parent: any,
-            { input }: { input: any },
-            _context: any,
-            _info: GraphQLResolveInfo
-        ): Promise<Result> => {
+    createVariant: async (_parent: any,{ input }: { input: any },_context: any) => {
             try {
                 // Validate required fields
                 if (!input.name || input.stock === undefined) {
