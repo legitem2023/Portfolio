@@ -685,6 +685,9 @@ const isValid = await comparePassword(password, user?.password || "");
           sku,
           salePrice,
           supplierId,
+          supplier: {
+            connect: { id: supplierId }
+          },
           category: {
             connect: { id: id },
           },
