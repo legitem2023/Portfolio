@@ -701,8 +701,8 @@ const isValid = await comparePassword(password, user?.password || "");
                 // Validate required fields
                 if (!input.name || input.stock === undefined) {
                     return {
-                        success: false,
-                        message: 'Name and stock are required fields'
+                      
+                        statusText: 'Name and stock are required fields'
                     };
                 }
 
@@ -714,8 +714,7 @@ const isValid = await comparePassword(password, user?.password || "");
 
                     if (!productExists) {
                         return {
-                            success: false,
-                            message: 'Product not found'
+                            statusText: 'Product not found'
                         };
                     }
                 }
@@ -728,8 +727,7 @@ const isValid = await comparePassword(password, user?.password || "");
 
                     if (existingVariant) {
                         return {
-                            success: false,
-                            message: 'SKU must be unique'
+                            statusText: 'SKU must be unique'
                         };
                     }
                 }
@@ -752,17 +750,13 @@ const isValid = await comparePassword(password, user?.password || "");
                 });
 
                 return {
-                    success: true,
-                    message: 'Product variant created successfully',
-                    // You might want to return the created variant ID as well
-                    // variantId: variant.id
+                    statusText:'Successful'
                 };
 
             } catch (error) {
                 console.error('Error creating product variant:', error);
                 return {
-                    success: false,
-                    message: 'Failed to create product variant'
+                    statusText:'Product creation Failed!'
                 };
             }
     },
