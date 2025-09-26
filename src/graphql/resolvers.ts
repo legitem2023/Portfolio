@@ -1389,7 +1389,7 @@ const isValid = await comparePassword(password, user?.password || "");
     },
     createVariant: async (
             _parent: any,
-            { input }: { input: ProductVariantInput },
+            { input }: { input: any },
             _context: any,
             _info: GraphQLResolveInfo
         ): Promise<Result> => {
