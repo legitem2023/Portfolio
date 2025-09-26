@@ -133,14 +133,15 @@ export const resolvers = {
     supportTickets: () => prisma.supportTicket.findMany(),
     
     getProducts: async () => {
-      const products = await prisma.product.findMany({
-        include: {
-          category: true,
-          variants:true
-        }
-      });
-      return products;
-    },
+  const products = await prisma.product.findMany({
+    include: {
+      category: true,
+      variants: true,
+      supplier: true, // include the supplier relation
+    }
+  });
+  return products;
+},
 
     // Social media queries
     posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
