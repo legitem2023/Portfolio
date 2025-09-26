@@ -129,6 +129,7 @@ export const typeDefs = gql`
     category: Category!
     brand: String
     weight: Float
+    supplier : User!
     dimensions: String
     isActive: Boolean!
     featured: Boolean!
@@ -424,7 +425,7 @@ export const typeDefs = gql`
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
     createUser(email: String!, password: String!, firstName: String!, lastName: String!): Result
-    createProduct(id: String, name: String!, description: String!, price: Float!, salePrice: Float!, sku: String!): Response!
+    createProduct(id: String, name: String!, description: String!, price: Float!, salePrice: Float!, sku: String!, supplierId: String!): Response!
     createCategory(name: String!, description: String!, status: Boolean): Response!
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Result
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
