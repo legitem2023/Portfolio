@@ -29,7 +29,7 @@ export default function ManagementDashboard() {
       }));
       setCategories(categoriesData);
     }
-
+console.log(productsData);
    if (productData?.getProducts) {
      const productsData = productData.getProducts.map((data:any)=> ({
            id: 1, 
@@ -45,7 +45,7 @@ export default function ManagementDashboard() {
      }))
      
    setProducts(productsData);
-     console.log(productsData);
+     
    }
     
   }, [categoryData,productData]);
