@@ -228,7 +228,7 @@ model ProductVariant {
   @@index([productId])
   @@index([color])
   @@index([size])
-  @@index([sku])
+  
   @@index([isActive])
   @@map("product_variants")
 }
