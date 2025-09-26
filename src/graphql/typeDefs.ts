@@ -150,6 +150,14 @@ export const typeDefs = gql`
     options: [String!]!
     createdAt: DateTime!
     product: Product!
+    productId:  String
+    sku  : String
+    color : String
+    size  : String
+    price : Float
+    salePrice: Float
+    stock : Int!
+    images: [String!]!
   }
 
   type Category {
@@ -429,6 +437,8 @@ export const typeDefs = gql`
     createCategory(name: String!, description: String!, status: Boolean): Response!
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Result
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
+
+    createVariant(input: ProductVariant): Result
     
     # Social media mutations
     createPost(input: CreatePostInput!): Post!
@@ -446,6 +456,19 @@ export const typeDefs = gql`
     tagUsersInPost(postId: ID!, userIds: [ID!]!): Post!
     removeTagFromPost(postId: ID!, userId: ID!): Post!
   }
+
+input ProductVariant {
+    name: String!
+    productId: String
+    sku  : String
+    color : String
+    size  : String
+    price : Float
+    salePrice: Float
+    stock : Int!
+  }
+
+
 
   input OrderItemInput {
     productId: ID!
