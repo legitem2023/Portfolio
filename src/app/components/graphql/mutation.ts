@@ -23,7 +23,13 @@ export const INSERTPRODUCT = gql`
     }  
   }
 `
-
+export const CREATE_VARIANT_MUTATION = gql`
+  mutation CreateVariant($input: ProductVariantInput!) {
+    createVariant(input: $input) {
+      statusText
+    }
+  }
+`;
 export const INSERTCATEGORY = gql`
   mutation InsertCategory($name: String!, $description: String!, $status: Boolean!) {
     createCategory(description: $description, name: $name, status: $status) {
