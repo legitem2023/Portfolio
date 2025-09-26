@@ -438,7 +438,7 @@ export const typeDefs = gql`
     createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Result
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
 
-    createVariant(input: ProductVariant): Result
+    createVariant(input: ProductVariantInput): Result
     
     # Social media mutations
     createPost(input: CreatePostInput!): Post!
@@ -457,7 +457,7 @@ export const typeDefs = gql`
     removeTagFromPost(postId: ID!, userId: ID!): Post!
   }
 
-input ProductVariant {
+input ProductVariantInput {
     name: String!
     productId: String
     sku  : String
