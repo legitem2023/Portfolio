@@ -208,15 +208,28 @@ model Product {
 }
 
 model ProductVariant {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId String   @db.ObjectId
-  name      String
-  options   String[]
-  createdAt DateTime @default(now())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId   String   @db.ObjectId
+  name        String
+  sku         String   @unique  // Variant-specific SKU
+  color       String?           // Color option
+  size        String?           // Size option
+  price       Float?            // Optional: override product price
+  salePrice   Float?            // Optional: variant-specific sale price
+  stock       Int      @default(0) // Variant-specific stock
+  weight      Float?            // Variant-specific weight
+  images      String[]          // Variant-specific images
+  isActive    Boolean  @default(true)
+  options     String[]          // Keep for additional options
+  createdAt   DateTime @default(now())
 
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
+  @@index([color])
+  @@index([size])
+  @@index([sku])
+  @@index([isActive])
   @@map("product_variants")
 }
 
