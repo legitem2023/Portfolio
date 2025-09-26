@@ -29,7 +29,7 @@ export default function ManagementDashboard() {
       }));
       setCategories(categoriesData);
     }
-console.log(productsData);
+console.log(productData);
    if (productData?.getProducts) {
      const productsData = productData.getProducts.map((data:any)=> ({
            id: 1, 
