@@ -64,7 +64,7 @@ useEffect(() => {
 console.log(productData);
    if (productData?.getProducts) {
      const productsData = productData.getProducts.map((data:any)=> ({
-           id: 1, 
+           id: data.id, 
            name: data.name, 
            description: data.description, 
            price: data.price,
