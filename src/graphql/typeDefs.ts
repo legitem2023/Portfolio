@@ -129,6 +129,7 @@ export const typeDefs = gql`
     category: Category!
     brand: String
     weight: Float
+    supplierId: String
     supplier : User
     dimensions: String
     isActive: Boolean!
