@@ -364,7 +364,7 @@ export const typeDefs = gql`
     categories: [Category!]
     orders(userId: ID!): [Order!]
     supportTickets: [SupportTicket!]
-    getProducts: [Product]
+    getProducts(userId: ID!): [Product]
     
     # Social media queries
     posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed!
