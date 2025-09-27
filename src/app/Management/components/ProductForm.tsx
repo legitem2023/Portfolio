@@ -57,7 +57,8 @@ export default function ProductForm({
           stock: '',
           brand: '',
           isActive: false,
-          featured: false
+          featured: false,
+          variants: []
         });
         onProductAdded();
         
