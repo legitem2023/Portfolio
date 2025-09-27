@@ -109,7 +109,7 @@ console.log(productData);
     const category = categories.find(c => c.id === parseInt(newProduct.categoryId));
     
     const product: Product = {
-      id: products.id,
+      id: newProduct.id,
       name: newProduct.name,
       variants: newProduct.variants,
       description: newProduct.description,
