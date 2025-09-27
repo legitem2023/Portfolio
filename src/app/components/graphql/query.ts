@@ -28,6 +28,7 @@ query GetProducts($userId: ID!) {
         description
         price
         salePrice
+        supplierId
         sku
         stock
         images
