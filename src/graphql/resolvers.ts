@@ -136,7 +136,7 @@ export const resolvers = {
     const userId = args.userId;
       const products = await prisma.product.findMany({
         where: {
-          supplierId: "68c8c1765038c47a4b9ef519"
+          supplierId: "68c8c1765038c47a4b9ef519" 
         },
         include: {
           category: true,
