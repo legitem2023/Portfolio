@@ -21,8 +21,8 @@ query GetUsers {
 
 
 export const MANAGEMENTPRODUCTS = gql`
-query GetProducts {
-  getProducts {
+query GetProducts($userId: ID!) {
+  getProducts(userId:$userId)   {
         id
         name
         description
