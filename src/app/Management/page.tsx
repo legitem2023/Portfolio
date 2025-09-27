@@ -73,7 +73,8 @@ console.log(productData);
            stock: data.stock,
            category: data.categoryId,
            brand: data.brand,
-           status: data.isActive
+           status: data.isActive,
+           variants: data.variants
      }))
      
    setProducts(productsData);
@@ -92,7 +93,8 @@ console.log(productData);
     categoryId: "",
     brand: "",
     isActive: true,
-    featured: false
+    featured: false,
+    variants: [],
   });
 
   const [newCategory, setNewCategory] = useState<NewCategory>({
@@ -109,6 +111,7 @@ console.log(productData);
     const product: Product = {
       id: products.length + 1,
       name: newProduct.name,
+      variants: newProduct.variants,
       description: newProduct.description,
       price: parseFloat(newProduct.price),
       salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
@@ -123,6 +126,7 @@ console.log(productData);
     setNewProduct({
       name: "",
       description: "",
+      variants:[],
       price: "",
       salePrice: "",
       sku: "",
