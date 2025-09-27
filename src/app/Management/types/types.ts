@@ -1,3 +1,15 @@
+export interface Variant {
+    id: string;
+    name: string;
+    createdAt: string;
+    sku: string;
+    color: string;
+    size: string;
+    price: number;
+    salePrice?: number;
+    stock: number;
+}
+
 export interface Product {
   id: number;
   name: string;
@@ -9,6 +21,7 @@ export interface Product {
   category: string;
   brand?: string;
   status: 'Active' | 'Inactive';
+  variants: Variant[]
 }
 
 export interface Category {
