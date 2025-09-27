@@ -12,6 +12,7 @@ interface ProductsTabProps {
 }
 
 export default function ProductsTab({
+  supplierId,
   products,
   categories,
   newProduct,
