@@ -8,16 +8,48 @@ import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
 import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
+import { decryptToken } from '../../../utils/decryptToken';
 
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('products');
+  const [userId, setUserId] = useState("");
+
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
-  const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS);
+  
   
   const [products, setProducts] = useState<Product[]>([]);
 
   const [categories, setCategories] = useState<Category[]>([]);
+useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include'
+        });
+        
+        if (response.status === 401) {
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
+        const payload = await decryptToken(token, secret.toString());
+        setUserId(payload.userId);
+        
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
+  const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS,{
+    variables :{
+      userId:userId
+    }
+  });
+  
   useEffect(() => {
     if (categoryData?.categories) {
       const categoriesData = categoryData.categories.map((data: any) => ({
