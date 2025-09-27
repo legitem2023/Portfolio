@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
+import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
 
 interface ProductTableProps {
   products: Product[];
@@ -166,6 +168,8 @@ function VariantButton({ variants, onClick }: { variants?: Variant[]; onClick: (
 
 // Variants Modal Component
 function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose: () => void; product: Product | null }) {
+  const [showAddForm, setShowAddForm] = useState(false);
+
   if (!isOpen || !product) return null;
 
   return (
@@ -194,7 +198,29 @@ function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose:
           </button>
         </div>
 
-        {/* Content */}
+        {/* Add Variant Button */}
+        <div className="p-4 border-b border-gray-200">
+          <button
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add New Variant</span>
+          </button>
+        </div>
+
+        {/* Add Variant Form */}
+        {showAddForm && (
+          <AddVariantForm 
+            productId={product.id} 
+            onSuccess={() => setShowAddForm(false)}
+            onCancel={() => setShowAddForm(false)}
+          />
+        )}
+
+        {/* Variants List */}
         <div className="h-full overflow-y-auto">
           {product.variants && product.variants.length > 0 ? (
             <div className="p-4 space-y-4">
@@ -208,6 +234,7 @@ function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose:
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <p className="mt-2">No variants available</p>
+              <p className="text-sm mt-1">Click "Add New Variant" to create one</p>
             </div>
           )}
         </div>
@@ -216,7 +243,212 @@ function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose:
   );
 }
 
-// Variant Card Component
+// Add Variant Form Component
+function AddVariantForm({ productId, onSuccess, onCancel }: { 
+  productId: string; 
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    sku: '',
+    color: '',
+    size: '',
+    price: '',
+    salePrice: '',
+    stock: ''
+  });
+
+  const [createVariant, { loading, error }] = useMutation(CREATE_VARIANT_MUTATION, {
+    onCompleted: () => {
+      onSuccess();
+      // Reset form
+      setFormData({
+        name: '',
+        sku: '',
+        color: '',
+        size: '',
+        price: '',
+        salePrice: '',
+        stock: ''
+      });
+    },
+    refetchQueries: ['GetProducts'] // Assuming you have a query to refetch products
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const input = {
+      name: formData.name,
+      productId,
+      sku: formData.sku || undefined,
+      color: formData.color || undefined,
+      size: formData.size || undefined,
+      price: formData.price ? parseFloat(formData.price) : undefined,
+      salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
+      stock: parseInt(formData.stock) || 0
+    };
+
+    createVariant({ variables: { input } });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <h3 className="text-lg font-medium text-gray-900 mb-3">Add New Variant</h3>
+      
+      {error && (
+        <div className="mb-3 p-2 bg-red-100 text-red-700 text-sm rounded">
+          Error: {error.message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Variant name"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sku" className="block text-sm font-medium text-gray-700">
+              SKU
+            </label>
+            <input
+              type="text"
+              id="sku"
+              name="sku"
+              value={formData.sku}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="SKU code"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="color" className="block text-sm font-medium text-gray-700">
+              Color
+            </label>
+            <input
+              type="text"
+              id="color"
+              name="color"
+              value={formData.color}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Color"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="size" className="block text-sm font-medium text-gray-700">
+              Size
+            </label>
+            <input
+              type="text"
+              id="size"
+              name="size"
+              value={formData.size}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Size"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+              Price ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
+              Sale Price ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              id="salePrice"
+              name="salePrice"
+              value={formData.salePrice}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+            Stock *
+          </label>
+          <input
+            type="number"
+            id="stock"
+            name="stock"
+            required
+            value={formData.stock}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            placeholder="0"
+          />
+        </div>
+
+        <div className="flex space-x-3 pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors"
+          >
+            {loading ? 'Creating...' : 'Create Variant'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// Variant Card Component (same as before)
 function VariantCard({ variant }: { variant: Variant }) {
   return (
     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -293,4 +525,4 @@ function ActionButtons() {
       </button>
     </div>
   );
-            }
+        }
