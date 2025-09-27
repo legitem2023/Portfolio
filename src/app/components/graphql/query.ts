@@ -67,6 +67,7 @@ query GetProducts($search: String, $cursor: String, $limit: Int, $category: Stri
              description
              price
              salePrice
+             supplierId
              sku
              stock
              images
