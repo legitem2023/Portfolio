@@ -161,7 +161,7 @@ function VariantButton({ variants, onClick }: { variants?: Variant[]; onClick: (
       onClick={onClick}
       className="text-indigo-600 hover:text-indigo-900 text-sm font-medium underline"
     >
-      {variantCount} variant{variantCount !== 1 ? 's' : ''}
+      Open New {variantCount} variant{variantCount !== 1 ? 's' : ''}
     </button>
   );
 }
