@@ -85,6 +85,17 @@ query GetProducts($search: String, $cursor: String, $limit: Int, $category: Stri
              category {
                     id
              }
+             variants {
+                 id
+                 name
+                 createdAt
+                 sku
+                 color
+                 size
+                 price
+                 salePrice
+                 stock
+             }
              brand
              weight
              dimensions
