@@ -5,6 +5,7 @@ import { NewProduct, Category } from '../types/types';
 import { useState } from 'react';
 
 interface ProductFormProps {
+  supplierId: String;
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
   categories: Category[];
@@ -12,6 +13,7 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({
+  supplierId,
   newProduct,
   setNewProduct,
   categories,
@@ -31,7 +33,8 @@ export default function ProductForm({
           price: parseFloat(newProduct.price),
           salePrice: parseFloat(newProduct.salePrice || '0'),
           sku: newProduct.sku,
-          id: newProduct.categoryId
+          id: newProduct.categoryId,
+          supplierId:supplierId
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
           // stock: parseInt(newProduct.stock),
