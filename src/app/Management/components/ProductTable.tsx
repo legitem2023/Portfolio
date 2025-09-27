@@ -289,8 +289,8 @@ function AddVariantForm({ productId, onSuccess, onCancel }: {
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
       stock: parseInt(formData.stock) || 0
     };
-console.log(input);
-   // createVariant({ variables: { input } });
+//console.log(input);
+    createVariant({ variables: { input } });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
