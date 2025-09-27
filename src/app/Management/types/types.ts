@@ -44,6 +44,7 @@ export interface NewProduct {
   brand: string;
   isActive: boolean;
   featured: boolean;
+  variants: Variant[]
 }
 
 export interface NewCategory {
