@@ -103,6 +103,7 @@ export const resolvers = {
             description: true,
             tags: true,
             sku: true,
+            supplierId: true
           },
         });
 
