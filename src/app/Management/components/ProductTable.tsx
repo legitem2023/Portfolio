@@ -152,9 +152,9 @@ function MobileProductCard({ product, onViewVariants }: { product: Product; onVi
 function VariantButton({ variants, onClick }: { variants?: Variant[]; onClick: () => void }) {
   const variantCount = variants?.length || 0;
   
-  if (variantCount === 0) {
+/*  if (variantCount === 0) {
     return <span className="text-sm text-gray-400">No variants</span>;
-  }
+  }*/
 
   return (
     <button
