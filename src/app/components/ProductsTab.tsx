@@ -136,7 +136,7 @@ const ProductsTab: React.FC = () => {
 
   // Show loading shimmer during initial load OR when filters are changing
   const showLoadingShimmer = loading && !isFetchingMore;
-
+console.log(products,"<====");
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
