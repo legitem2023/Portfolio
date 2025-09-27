@@ -171,7 +171,7 @@ function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose:
   const [showAddForm, setShowAddForm] = useState(false);
 
   if (!isOpen || !product) return null;
-
+console.log(product);
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
