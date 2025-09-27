@@ -186,7 +186,7 @@ model Product {
   attributes  Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  supplierId    String @default("68c8c1765038c47a4b9ef519")  @db.ObjectId
+  supplierId    String  @db.ObjectId
 
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   supplier        User     @relation(fields: [supplierId], references: [id], onDelete: Cascade)
