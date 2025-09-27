@@ -158,6 +158,7 @@ console.log(productData);
     switch(activeTab) {
       case 'products':
         return <ProductsTab 
+          supplierId={userId}
           products={products} 
           categories={categories}
           newProduct={newProduct}
