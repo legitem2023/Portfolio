@@ -3,6 +3,7 @@ import ProductTable from './ProductTable';
 import ProductForm from './ProductForm';
 
 interface ProductsTabProps {
+  supplierId: String;
   products: Product[];
   categories: Category[];
   newProduct: NewProduct;
@@ -34,6 +35,7 @@ export default function ProductsTab({
         <div className="bg-white shadow-md rounded-lg p-6">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Product</h3>
           <ProductForm
+            supplierId={supplierId}
             newProduct={newProduct}
             setNewProduct={setNewProduct}
             categories={categories}
