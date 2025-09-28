@@ -103,11 +103,22 @@ export const resolvers = {
             description: true,
             tags: true,
             sku: true,
-            supplierId: true
+            supplierId: true,
+            variants: {
+              select:{
+                name: true,
+                createdAt: true,
+                sku  : true,
+                color : true,
+                size  : true,
+                price : true,
+                salePrice: true,
+                stock : true,
+                images: true
+              }
+            }
           },
-          include: {
-            variants:true
-          }
+          
         });
 
         const hasMore = products.length > limit;
