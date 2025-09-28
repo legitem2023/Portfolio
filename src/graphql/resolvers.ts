@@ -105,6 +105,9 @@ export const resolvers = {
             sku: true,
             supplierId: true
           },
+          include {
+            variants:true
+          }
         });
 
         const hasMore = products.length > limit;
