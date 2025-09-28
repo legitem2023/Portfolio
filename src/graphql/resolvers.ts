@@ -105,7 +105,7 @@ export const resolvers = {
             sku: true,
             supplierId: true
           },
-          include {
+          include: {
             variants:true
           }
         });
