@@ -17,7 +17,14 @@ interface Product {
   description?: string;
   productCode?: string;
   category: string;
-  variants: any[]; // Keep as any[] to match your existing structure
+  variants: {
+    id: number;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
 }
 
 interface QuickViewModalProps {
@@ -37,13 +44,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const [isAnimating, setIsAnimating] = useState(false);
   const dispatch = useDispatch();
 
+  // Get all variants
+  const variants = product?.variants || [];
+
   // Get unique sizes and colors with filtering logic
-  const { uniqueSizes, uniqueColors, availableSizes, availableColors } = useMemo(() => {
-    const variants = product?.variants || [];
-    
-    // Get all unique sizes and colors
-    const allSizes = [...new Set(variants.map((item: any) => item.size))].filter(Boolean);
-    const allColors = [...new Set(variants.map((item: any) => item.color))].filter(Boolean);
+  const { uniqueSizes, uniqueColors, availableSizes, availableColors, filteredVariants } = useMemo(() => {
+    const allSizes = [...new Set(variants.map(item => item.size))];
+    const allColors = [...new Set(variants.map(item => item.color))];
 
     // Filter available options based on current selections
     let availableSizes = allSizes;
@@ -51,51 +58,46 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
     if (selectedColor) {
       availableSizes = [...new Set(variants
-        .filter((item: any) => item.color === selectedColor)
-        .map((item: any) => item.size)
-      )].filter(Boolean);
+        .filter(item => item.color === selectedColor)
+        .map(item => item.size)
+      )];
     }
 
     if (selectedSize) {
       availableColors = [...new Set(variants
-        .filter((item: any) => item.size === selectedSize)
-        .map((item: any) => item.color)
-      )].filter(Boolean);
+        .filter(item => item.size === selectedSize)
+        .map(item => item.color)
+      )];
     }
+
+    // Get filtered variants for display
+    const filteredVariants = variants.filter(variant => {
+      const colorMatch = !selectedColor || variant.color === selectedColor;
+      const sizeMatch = !selectedSize || variant.size === selectedSize;
+      return colorMatch && sizeMatch;
+    });
 
     return {
       uniqueSizes: allSizes,
       uniqueColors: allColors,
       availableSizes,
-      availableColors
+      availableColors,
+      filteredVariants
     };
-  }, [product?.variants, selectedColor, selectedSize]);
+  }, [variants, selectedColor, selectedSize]);
 
   // Auto-select first available option when filters change
   useEffect(() => {
-    if (availableColors.length > 0 && (!selectedColor || !availableColors.includes(selectedColor))) {
+    if (availableColors.length > 0 && !availableColors.includes(selectedColor)) {
       setSelectedColor(availableColors[0]);
     }
   }, [availableColors, selectedColor]);
 
   useEffect(() => {
-    if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
+    if (availableSizes.length > 0 && !availableSizes.includes(selectedSize)) {
       setSelectedSize(availableSizes[0]);
     }
   }, [availableSizes, selectedSize]);
-
-  // Initialize selections when product changes
-  useEffect(() => {
-    if (product) {
-      // Set default selections from available options
-      if (uniqueColors.length > 0 && !selectedColor) {
-        setSelectedColor(uniqueColors[0]);
-      }
-      if (uniqueSizes.length > 0 && !selectedSize) {
-        setSelectedSize(uniqueSizes[0]);
-      }
-    }
-  }, [product, uniqueColors, uniqueSizes]);
 
   // Check if device is mobile
   useEffect(() => {
@@ -122,6 +124,22 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     }
   }, [isOpen]);
 
+  // Initialize selections when product changes
+  useEffect(() => {
+    if (isVisible && product) {
+      setSelectedImage(0);
+      setQuantity(1);
+      
+      // Set default selections from available options
+      if (uniqueColors.length > 0 && !selectedColor) {
+        setSelectedColor(uniqueColors[0]);
+      }
+      if (uniqueSizes.length > 0 && !selectedSize) {
+        setSelectedSize(uniqueSizes[0]);
+      }
+    }
+  }, [isVisible, product, uniqueColors, uniqueSizes]);
+
   useEffect(() => {
     if (isVisible) {
       document.body.style.overflow = 'hidden';
@@ -132,7 +150,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isVisible]);
+  }, [isVisible, product]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -159,10 +177,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-  // Get images for display - using original logic
-  const additionalImages = useMemo(() => {
-    return product?.variants?.map((item: any) => item.images || '/NoImage.webp') || ['/NoImage.webp'];
-  }, [product?.variants]);
+  // Get images for selected variant or all variants
+  const getDisplayImages = useMemo(() => {
+    if (selectedColor && selectedSize) {
+      const selectedVariant = variants.find(v => 
+        v.color === selectedColor && v.size === selectedSize
+      );
+      return selectedVariant?.images || [product?.image || '/NoImage.webp'];
+    }
+    return product?.variants?.map((item: any) => item.images?.[0] || '/NoImage.webp') || [product?.image || '/NoImage.webp'];
+  }, [variants, selectedColor, selectedSize, product]);
 
   const handleAddToCartClick = () => {
     if (!product) return;
@@ -174,10 +198,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       description: product.description || '',
       price: product.price,
       quantity: quantity,
-      image: product.image,
+      image: getDisplayImages[0],
       productCode: product.productCode || `PC-${product.id}`,
-      color: selectedColor || (product.colors && product.colors.length > 0 ? product.colors[0] : 'Default'),
-      size: selectedSize || 'M',
+      color: selectedColor,
+      size: selectedSize,
       category: product.category,
       rating: product.rating
     };
@@ -237,7 +261,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           <div className="space-y-4">
             <div className="relative h-60 md:h-80 bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={additionalImages[selectedImage]}
+                src={getDisplayImages[selectedImage]}
                 alt={product?.name || 'Product'}
                 className="w-full h-full object-cover"
               />
@@ -257,7 +281,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             
             {/* Thumbnail Gallery */}
             <div className="grid grid-cols-4 gap-2">
-              {additionalImages.map((image, index) => (
+              {getDisplayImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -327,7 +351,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                       key={index}
                       onClick={() => setSelectedColor(color)}
                       className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 ${selectedColor === color ? 'border-amber-500 ring-2 ring-amber-200' : 'border-gray-300'} mb-2`}
-                      style={{ backgroundColor: color.toLowerCase() }}
+                      style={{ backgroundColor: color }}
                       aria-label={`Color: ${color}`}
                       title={color}
                     />
@@ -361,6 +385,20 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               </div>
             )}
 
+            {/* Selected Variant Info */}
+            {selectedColor && selectedSize && filteredVariants.length > 0 && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-sm text-green-800">
+                  <strong>Selected:</strong> {selectedColor} - {selectedSize}
+                  {filteredVariants[0].stock !== undefined && (
+                    <span className="ml-2">
+                      ({filteredVariants[0].stock} in stock)
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* Quantity Selector */}
             <div className="mb-4 md:mb-6">
               <h3 className="text-sm font-medium text-gray-900 mb-2">Quantity</h3>
@@ -389,9 +427,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             <div className="flex space-x-3 md:space-x-4 mb-4 md:mb-0">
               <button 
                 onClick={handleAddToCartClick}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base"
+                disabled={!selectedColor || !selectedSize}
+                className={`flex-1 font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base ${
+                  !selectedColor || !selectedSize
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-amber-600 hover:bg-amber-700 text-white'
+                }`}
               >
-                Add to Cart
+                {!selectedColor || !selectedSize ? 'Select Options' : 'Add to Cart'}
               </button>
               <button className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
