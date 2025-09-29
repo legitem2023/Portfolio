@@ -155,7 +155,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   // Sample sizes
   const sizes = product?.variants?.map((item:any) => {
     return {
-      item.size
+      item.size;
     }
   }) //['XS', 'S', 'M', 'L', 'XL'];
 //console.log(product,"(((")
