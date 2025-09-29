@@ -22,7 +22,14 @@ export interface Product {
   description?: string;
   productCode?: string;
   size?: string;
-  variants:[];
+  variants: {
+    id: number;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
 }
 
 interface ProductThumbnailsProps {
