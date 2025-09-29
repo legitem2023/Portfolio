@@ -153,7 +153,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   ];
 
   // Sample sizes
-  const sizes = product?.variants?.map((item:any) => item.size)
+ // const sizes = product?.variants?.map((item:any) => item.size)
+ const sizes = product?.variants?.map((item: any) => item.size) || [];
+// Result: ["165.0 × 77.4", "165.0 × 77.4"]
   return (
     <div 
       className={`fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
