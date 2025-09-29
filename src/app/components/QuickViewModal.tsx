@@ -277,13 +277,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Color: {selectedColor}</h3>
                 <div className="flex space-x-2">
-                  { product?.variants.map((color, index) => (
+                  { color.map((color, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedColor(color)}
                       className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-2 ${selectedColor === color ? 'border-amber-500' : 'border-gray-300'}`}
-                      style={{ backgroundColor: color.color }}
-                      aria-label={`Color: ${color.color}`}
+                      style={{ backgroundColor: color }}
+                      aria-label={`Color: ${color}`}
                     ></button>
                   ))}
                 </div>
