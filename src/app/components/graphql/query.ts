@@ -33,9 +33,15 @@ query GetProducts($userId: ID!) {
         stock
         images
         category {
-            id    
+          id
+          name
+          description
+          image
+          isActive
+          createdAt   
         }
         variants {
+           id
            name
            createdAt
            sku
