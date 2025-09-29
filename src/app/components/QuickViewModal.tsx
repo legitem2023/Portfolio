@@ -145,12 +145,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   if (!isVisible && !isOpen) return null;
 
   // Generate additional images for the gallery
-  const additionalImages = [
-    product?.image || 'https://picsum.photos/400/500',
-    `https://picsum.photos/400/500?random=${(product?.id || 1) + 100}`,
-    `https://picsum.photos/400/500?random=${(product?.id || 1) + 200}`,
-    `https://picsum.photos/400/500?random=${(product?.id || 1) + 300}`,
-  ];
+  const additionalImages = product?.variants?.map((item: any) => item.images) || ['/NoImage.webp'];
 
   // Sample sizes
  // const sizes = product?.variants?.map((item:any) => item.size)
