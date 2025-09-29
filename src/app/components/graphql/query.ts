@@ -36,7 +36,6 @@ query GetProducts($userId: ID!) {
             id    
         }
         variants {
-           id
            name
            createdAt
            sku
@@ -86,7 +85,6 @@ query GetProducts($search: String, $cursor: String, $limit: Int, $category: Stri
                     id
              }
              variants {
-                 id
                  name
                  createdAt
                  sku
