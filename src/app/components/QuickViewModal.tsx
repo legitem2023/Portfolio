@@ -150,7 +150,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   // Sample sizes
  // const sizes = product?.variants?.map((item:any) => item.size)
  const sizes = product?.variants?.map((item: any) => item.size) || [];
-// Result: ["165.0 × 77.4", "165.0 × 77.4"]
+ 
+ const color = product?.variants?.map((item: any) => item.color) || [];
+
+  
+  // Result: ["165.0 × 77.4", "165.0 × 77.4"]
   return (
     <div 
       className={`fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
@@ -269,17 +273,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             </p>
 
             {/* Color Selection */}
-            {product?.colors && product.colors.length > 0 && (
+            { product?.variants && product?.variants.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">Color: {selectedColor}</h3>
                 <div className="flex space-x-2">
-                  {product.colors.map((color, index) => (
+                  { product?.variants.map((color, index) => (
                     <button
                       key={index}
                       onClick={() => setSelectedColor(color)}
                       className={`w-6 h-6 md:w-8 md:h-8 rounded-full border-2 ${selectedColor === color ? 'border-amber-500' : 'border-gray-300'}`}
-                      style={{ backgroundColor: color }}
-                      aria-label={`Color: ${color}`}
+                      style={{ backgroundColor: color.color }}
+                      aria-label={`Color: ${color.color}`}
                     ></button>
                   ))}
                 </div>
