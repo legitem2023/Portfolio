@@ -17,14 +17,7 @@ interface Product {
   description?: string;
   productCode?: string;
   category: string;
-  variants: {
-    id: number;
-    size: string;
-    color: string;
-    price?: number;
-    images?: string[];
-    stock?: number;
-  }[];
+  variants:[]
 }
 
 interface QuickViewModalProps {
