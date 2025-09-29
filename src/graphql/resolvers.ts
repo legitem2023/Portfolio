@@ -91,7 +91,6 @@ export const resolvers = {
             name: true,
             price: true,
             images: true,
-            category: true,
             featured: true,
             isActive: true,
             stock: true,
