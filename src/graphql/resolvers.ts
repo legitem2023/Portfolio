@@ -104,8 +104,20 @@ export const resolvers = {
             tags: true,
             sku: true,
             supplierId: true,
+            category:{
+              select:{
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                isActive: true,
+                createdAt: true,
+                parent: true
+              }
+            },
             variants: {
               select:{
+                id: true,
                 name: true,
                 createdAt: true,
                 sku  : true,
