@@ -9,7 +9,7 @@ import ProductsTab from './components/ProductsTab';
 import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 import { decryptToken } from '../../../utils/decryptToken';
-import UsersPage from './Users/UsersPage';
+import UsersPage from './components/Users/UsersPage';
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('products');
   const [userId, setUserId] = useState("");
