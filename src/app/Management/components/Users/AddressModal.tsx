@@ -30,7 +30,7 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, user }) =>
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                {user.firstName} {user.lastName}'s Addresses
+                {user.firstName} {user.lastName}s Addresses
               </h2>
               <p className="text-sm text-gray-500">{user.email}</p>
             </div>
