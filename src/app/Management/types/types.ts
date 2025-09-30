@@ -16,7 +16,7 @@ export interface User {
   password: string;
   firstName: string;
   lastName: string;
-  address: Address[];
+  addresses: Address[];
   avatar: string;
   phone: string;
   emailVerified: boolean;
