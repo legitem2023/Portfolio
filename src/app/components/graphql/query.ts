@@ -9,6 +9,16 @@ query GetUsers {
     password
     firstName
     lastName
+    address {
+      type
+      street
+      city
+      state
+      zipCode
+      country
+      isDefault
+      createdAt
+    }
     avatar
     phone
     emailVerified
