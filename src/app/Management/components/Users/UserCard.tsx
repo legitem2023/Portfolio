@@ -1,6 +1,6 @@
 // components/UserCard.tsx
 import React from 'react';
-import { User } from '../../types';
+import { User } from '../../types/types';
 
 interface UserCardProps {
   user: User;
