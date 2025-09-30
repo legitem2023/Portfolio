@@ -1,7 +1,7 @@
 // pages/UsersPage.tsx
 import React from 'react';
 import { useQuery } from '@apollo/client';
-import { USERS } from '../graphql/queries';
+import { USERS } from '../../../components/graphql/queries';
 import UserList from '../components/UserList';
 
 const UsersPage: React.FC = () => {
