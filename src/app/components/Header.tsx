@@ -33,8 +33,6 @@ const Header: React.FC = () => {
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
         const payload = await decryptToken(token, secret.toString());
-
-        console.log(payload);
       } catch (err) {
         console.error('Error getting role:', err);
       }
