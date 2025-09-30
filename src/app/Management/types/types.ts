@@ -1,3 +1,30 @@
+// types/index.ts
+export interface Address {
+  type: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  address: Address[];
+  avatar: string;
+  phone: string;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  role: string;
+}
+
 export interface Variant {
     id: string;
     name: string;
