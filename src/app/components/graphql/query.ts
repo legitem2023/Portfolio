@@ -9,7 +9,7 @@ query GetUsers {
     password
     firstName
     lastName
-    address {
+    addresses {
       type
       street
       city
