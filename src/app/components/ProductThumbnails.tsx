@@ -75,12 +75,18 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     // You can implement a toast notification system here
   };
 
+  // Helper function to get unique colors from variants
+  const getUniqueColors = (variants: Product['variants']) => {
+    const colors = variants.map(variant => variant.color).filter(Boolean);
+    return Array.from(new Set(colors));
+  };
+
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap:4">
         {products.map((product) => {
-          // Get unique colors from variants
-          const uniqueColors = [...new Set(product.variants.map(variant => variant.color).filter(Boolean))];
+          // Get unique colors from variants using helper function
+          const uniqueColors = getUniqueColors(product.variants);
           
           return (
             <div key={product.id} className="group relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
