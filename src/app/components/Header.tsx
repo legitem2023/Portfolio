@@ -8,21 +8,14 @@ import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
-
-
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
-
-
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch= useDispatch();
- 
-   const { data: userData, loading: userLoading } = useQuery(USERS);
- 
-  console.log(userData?.users);
+  const { data: userData, loading: userLoading } = useQuery(USERS);
   useEffect(() => {
     const getRole = async () => {
       try {
