@@ -176,7 +176,7 @@ console.log(productData);
           setNewCategory={setNewCategory}
           handleCategorySubmit={handleCategorySubmit}
         />;
-        case 'Users':
+        case 'users':
         return <UsersPage/>;
       default:
         return <div>Select a tab</div>;
