@@ -216,7 +216,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   };
 
   if (!isVisible && !isOpen) return null;
-
+console.log(quantity);
   return (
     <div 
       className={`fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
