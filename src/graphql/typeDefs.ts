@@ -440,7 +440,7 @@ export const typeDefs = gql`
     respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
 
     createVariant(input: ProductVariantInput): Result
-    
+    createAddress (input:AddressInputs ): Result
     # Social media mutations
     createPost(input: CreatePostInput!): Post!
     updatePost(id: ID!, input: UpdatePostInput!): Post!
@@ -469,7 +469,18 @@ input ProductVariantInput {
     stock : Int!
   }
 
-
+input AddressInputs {
+     id :        String
+     userId :    String
+     type :      String
+     street :    String
+     city :      String
+     state :     String
+     zipCode :   String
+     country :   String
+     isDefault : Boolean
+     createdAt : String
+}
 
   input OrderItemInput {
     productId: ID!
