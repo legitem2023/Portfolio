@@ -12,7 +12,7 @@ interface PaymentStageProps {
 type PaymentMethod = 'gcash' | 'bank' | 'cod';
 
 const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: PaymentStageProps) => {
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('gcash');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cod');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setPaymentInfo({
