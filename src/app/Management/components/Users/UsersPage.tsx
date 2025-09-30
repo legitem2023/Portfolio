@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
 import { USERS } from '../../../components/graphql/query';
-import UserList from '../components/UserList';
+import UserList from './UserList';
 
 const UsersPage: React.FC = () => {
   const { data, loading, error } = useQuery(USERS);
