@@ -173,7 +173,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               </div>
               
               {/* Color Options */}
-              {product.variants.color && product.variants.color.length > 0 && (
+              {product.variants?.color && product.variants?.color.length > 0 && (
                 <div className="mt-2 flex items-center space-x-1">
                   <span className="text-xs text-gray-500">Colors:</span>
                   <div className="flex space-x-1">
@@ -184,7 +184,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                         style={{ backgroundColor: color }}
                       ></span>
                     ))}
-                    {product.colors.length > 4 && (
+                    {product.variants.color.length > 4 && (
                       <span className="text-xs text-gray-500">+{product.colors.length - 4}</span>
                     )}
                   </div>
