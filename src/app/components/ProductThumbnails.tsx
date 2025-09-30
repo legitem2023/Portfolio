@@ -173,11 +173,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               </div>
               
               {/* Color Options */}
-              {product.colors && product.colors.length > 0 && (
+              {product.variants.color && product.variants.color.length > 0 && (
                 <div className="mt-2 flex items-center space-x-1">
                   <span className="text-xs text-gray-500">Colors:</span>
                   <div className="flex space-x-1">
-                    {product.colors.slice(0, 4).map((color, index) => (
+                    {product.variants.color.slice(0, 4).map((color, index) => (
                       <span
                         key={index}
                         className="w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-gray-200"
