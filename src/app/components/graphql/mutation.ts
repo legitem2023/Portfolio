@@ -260,3 +260,11 @@ export const CREATE_ORDER = gql`
   }
 }
 `;
+
+export const CREATE_ADDRESS = gql`
+mutation CreateAddress($input: CreateAddressInput!) {
+  createAddress(input: $input) {
+    statusText
+  }
+}
+`
