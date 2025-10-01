@@ -12,7 +12,7 @@ import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 
 import AdDrawer from './Ads/AdDrawer';
-import PromoAd from './Ads/PromoAd';
+import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
 
 const Header: React.FC = () => {
