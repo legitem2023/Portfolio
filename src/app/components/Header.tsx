@@ -11,6 +11,9 @@ import AnimatedCrowd from "./AnimatedCrowd";
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 
+import AdDrawer from './Ads/AdDrawer';
+import { useAdDrawer } from './hooks/useAdDrawer';
+
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
