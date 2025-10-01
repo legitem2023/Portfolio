@@ -96,7 +96,7 @@ const TabContent = ({ activeTab, user }: TabContentProps) => {
       return renderPhotosTab();
     case 'friends':
       return renderFriendsTab();
-    case 'checkins':
+    case 'address':
       return renderCheckinsTab();
     default:
       return renderPostsTab();
