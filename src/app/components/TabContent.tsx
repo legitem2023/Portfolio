@@ -78,7 +78,7 @@ const TabContent = ({ activeTab, user }: TabContentProps) => {
     </div>
   );
 
-  const renderCheckinsTab = () => (
+  const renderAddressTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="text-center py-12 text-gray-500">
         <svg className="w-16 h-16 mx-auto text-gray-300" fill="currentColor" viewBox="0 0 20 20">
@@ -97,9 +97,9 @@ const TabContent = ({ activeTab, user }: TabContentProps) => {
     case 'friends':
       return renderFriendsTab();
     case 'address':
-      return renderCheckinsTab();
+      return renderAddressTab();
     default:
-      return renderPostsTab();
+      return renderAddressTab();
   }
 };
 
