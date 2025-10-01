@@ -17,6 +17,10 @@ import { useAdDrawer } from './hooks/useAdDrawer';
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  
+  const drawer = useAdDrawer({ autoOpenDelay: 3000 });
+
+  
   const dispatch= useDispatch();
   const { data: userData, loading: userLoading } = useQuery(USERS);
   useEffect(() => {
@@ -56,7 +60,12 @@ const Header: React.FC = () => {
 
   return (
     <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2 aspect-[4/1] sm:aspect-[9/1]">
-      
+      <AdDrawer
+        isOpen={drawer.isOpen}
+        onClose={drawer.close}
+        position="top"
+        height={250}
+      >
         <AnimatedCrowd/>
       <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
       
