@@ -54,7 +54,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onViewAddresses }) => {
         </div>
         <div>
           <span className="text-gray-500">Addresses:</span>
-          <p className="font-medium">{user.address?.length || 0}</p>
+          <p className="font-medium">{user.addresses?.length || 0}</p>
         </div>
         <div>
           <span className="text-gray-500">Joined:</span>
@@ -68,7 +68,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onViewAddresses }) => {
         onClick={onViewAddresses}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors duration-200 text-sm font-medium"
       >
-        View Addresses ({user.address?.length || 0})
+        View Addresses ({user.addresses?.length || 0})
       </button>
     </div>
   );
