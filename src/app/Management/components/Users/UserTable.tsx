@@ -74,7 +74,7 @@ const UserTable: React.FC<UserTableProps> = ({ users, onViewAddresses }) => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {user.address?.length || 0} addresses
+                  {user.addresses?.length || 0} addresses
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
