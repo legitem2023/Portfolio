@@ -92,7 +92,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
             { id: 'posts', label: 'Posts', icon: 'user' },
             { id: 'photos', label: 'Photos', icon: 'photos' },
             { id: 'friends', label: 'Friends', icon: 'friends' },
-            { id: 'checkins', label: 'Check-ins', icon: 'location' }
+            { id: 'address', label: 'Addresses', icon: 'location' }
           ]}
         />
       </div>
