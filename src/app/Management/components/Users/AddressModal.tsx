@@ -11,8 +11,8 @@ interface AddressModalProps {
 const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, user }) => {
   if (!isOpen || !user) return null;
 
-  const formatAddress = (address: Address) => {
-    return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
+  const formatAddress = (addresses: Address) => {
+    return `${addresses.street}, ${addresses.city}, ${addresses.state} ${addresses.zipCode}, ${addresses.country}`;
   };
 
   return (
