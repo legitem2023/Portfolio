@@ -791,7 +791,29 @@ const isValid = await comparePassword(password, user?.password || "");
                 };
             }
     },
-
+    createAddress: async (_:any, args:any)=>{
+      const response = await prisma.address.create({
+        const = {
+        userId,
+        type,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault } = args.input
+        data :{
+          userId,
+          type,
+          street,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault
+        }
+      })
+    },
     createCategory: async (_: any, { name, description, status }: any) => {
       const response = await prisma.category.create({
         data: {
