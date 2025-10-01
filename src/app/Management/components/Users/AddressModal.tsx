@@ -46,13 +46,13 @@ const AddressModal: React.FC<AddressModalProps> = ({ isOpen, onClose, user }) =>
 
           {/* Content */}
           <div className="p-4 overflow-y-auto max-h-[60vh]">
-            {!user.address || user.address.length === 0 ? (
+            {!user.addresses || user.addresses.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No addresses found for this user.
               </div>
             ) : (
               <div className="space-y-4">
-                {user.address.map((addr, index) => (
+                {user.addresses.map((addr, index) => (
                   <div
                     key={index}
                     className={`border rounded-lg p-4 ${
