@@ -12,6 +12,7 @@ import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 
 import AdDrawer from './Ads/AdDrawer';
+import PromoAd from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
 
 const Header: React.FC = () => {
@@ -66,6 +67,14 @@ const Header: React.FC = () => {
         position="top"
         height={250}
       >
+        <PromoAd
+          title="New Feature Available!"
+          description="Check out our latest update with amazing new features."
+          ctaText="Learn More"
+          ctaLink="/features"
+          imageUrl="/api/placeholder/150/150"
+        />
+        </AdDrawer>
         <AnimatedCrowd/>
       <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
       
