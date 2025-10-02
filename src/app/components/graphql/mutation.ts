@@ -1,13 +1,24 @@
 import { gql } from "@apollo/client";
 
-export const SETDEFAULT = gql`
-mutation SetDefaultAddress($addressId: ID!) {
-  setDefaultAddress(addressId: $addressId) {
-    id
-    isDefault
+export const SET_DEFAULT_ADDRESS = gql`
+  mutation SetDefaultAddress($addressId: ID!) {
+    setDefaultAddress(addressId: $addressId) {
+      success
+      message
+      address {
+        id
+        type
+        street
+        city
+        state
+        zipCode
+        country
+        isDefault
+        createdAt
+      }
+    }
   }
-}
-`
+`;
 export const LOGIN = gql`
 mutation Login($input: LoginInput) {
   login(input: $input) {
