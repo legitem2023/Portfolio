@@ -2,24 +2,7 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import AddressForm from './Addresses/AddressForm';
-// Mutation for setting default address
-export const SET_DEFAULT_ADDRESS = gql`
-  mutation SetDefaultAddress($userId: ID!, $addressId: ID!) {
-    setDefaultAddress(userId: $userId, addressId: $addressId) {
-      id
-      addresses {
-        type
-        street
-        city
-        state
-        zipCode
-        country
-        isDefault
-        createdAt
-      }
-    }
-  }
-`;
+import { SET_DEFAULT_ADDRESS } from './graphql/mutation';
 
 // Types
 export interface Address {
