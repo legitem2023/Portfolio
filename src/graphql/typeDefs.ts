@@ -429,7 +429,15 @@ export const typeDefs = gql`
     content: String!
   }
 
+type SetDefaultAddressResponse {
+  success: Boolean!
+  message: String
+  address: Address
+}
+
+
   type Mutation {
+    setDefaultAddress(addressId: ID!): SetDefaultAddressResponse!
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
