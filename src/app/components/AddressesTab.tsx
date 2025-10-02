@@ -57,14 +57,15 @@ const AddressCard: React.FC<{
           </span>
         )}
       </div>
-      {isDefault && (
+      {//isDefault && (
         <button
           onClick={onMakeDefault(address.id)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           Make Default
         </button>
-      )}
+      //)
+      }
     </div>
 
     <div className="space-y-2 text-gray-700">
