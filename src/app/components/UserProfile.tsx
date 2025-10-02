@@ -98,7 +98,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
       </div>
 
       {/* Tab Content */}
-      <TabContent activeTab={activeTab} user={user} />
+      <TabContent activeTab={activeTab} user={user} userId={userId}/>
     </div>
   );
 };
