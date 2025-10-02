@@ -280,7 +280,7 @@ export const CREATE_ORDER = gql`
 `;
 
 export const CREATE_ADDRESS = gql`
-mutation CreateAddress($input: CreateAddressInput!) {
+mutation CreateAddress($input: AddressInputs!) {
   createAddress(input: $input) {
     statusText
   }
