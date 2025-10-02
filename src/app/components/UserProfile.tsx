@@ -32,7 +32,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
         <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
           <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg">
             <Image
-              src={user.avatar || '/default-avatar.png'}
+              src={user.avatar || '/NoImage.webp'}
               alt={`${user.firstName}'s avatar`}
               fill
               className="object-cover"
