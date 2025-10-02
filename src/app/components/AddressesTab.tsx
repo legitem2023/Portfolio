@@ -129,7 +129,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
 
       {showAddressForm && (
         <AddressForm
-          userId="user-123" // This should come from your auth context or props
+          userId={userId} // This should come from your auth context or props
           onSuccess={handleAddressSuccess}
           onCancel={() => setShowAddressForm(false)}
         />
