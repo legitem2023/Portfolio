@@ -37,8 +37,14 @@ export const resolvers = {
       }
     }),
     
-    user: (_: any, { id }: { id: string }) =>
-      prisma.user.findUnique({ where: { id } }),
+    user: async (_: any, { id }: { id: string }) => {
+      return await prisma.user.findUnique({ 
+        where: { id },
+         include : {
+          addresses:true
+        }
+      })
+    },
 
     products: async (
       _: any,
