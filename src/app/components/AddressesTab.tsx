@@ -1,5 +1,5 @@
 import { gql, useMutation } from '@apollo/client';
-
+import AddressForm from './Addresses/AddressForm';
 // Mutation for setting default address
 export const SET_DEFAULT_ADDRESS = gql`
   mutation SetDefaultAddress($userId: ID!, $addressId: ID!) {
@@ -84,7 +84,13 @@ const AddressCard: React.FC<{
 // Main Addresses Tab Component
 const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddressUpdate }) => {
   const [setDefaultAddress, { loading: updatingDefault }] = useMutation(SET_DEFAULT_ADDRESS);
+  const [showAddressForm, setShowAddressForm] = useState(false);
 
+  const handleAddressSuccess = () => {
+    setShowAddressForm(false);
+    // Optionally refresh addresses list or show success message
+    console.log('Address created successfully!');
+  };
   const handleMakeDefault = async (addressType: string) => {
     try {
       await setDefaultAddress({
@@ -130,7 +136,22 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
           {sortedAddresses.length} address(es) saved • Default address is used for shipping
         </p>
       </div>
+      <div>
+        <button
+        onClick={() => setShowAddressForm(true)}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Add New Address
+      </button>
 
+      {showAddressForm && (
+        <AddressForm
+          userId="user-123" // This should come from your auth context or props
+          onSuccess={handleAddressSuccess}
+          onCancel={() => setShowAddressForm(false)}
+        />
+      )}
+      </div>
       <div className="grid gap-6 md:grid-cols-2">
         {sortedAddresses.map((address, index) => (
           <AddressCard
