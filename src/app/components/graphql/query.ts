@@ -211,6 +211,16 @@ export const GET_USER_PROFILE = gql`
       followerCount
       followingCount
       isFollowing
+      addresses {
+        type
+        street
+        city
+        state
+        zipCode
+        country
+        isDefault
+        createdAt
+      }
       posts {
         id
         content
