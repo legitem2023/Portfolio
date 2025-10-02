@@ -1,13 +1,14 @@
 // components/TabContent.tsx
 import Image from 'next/image';
 import { User, Post } from '../../../types';
-
+import AddressesTab, { Address } from './AddressesTab';
 interface TabContentProps {
   activeTab: string;
   user: User;
+  userId: string;
 }
 
-const TabContent = ({ activeTab, user }: TabContentProps) => {
+const TabContent = ({ activeTab, user,userId }: TabContentProps) => {
   const renderPostsTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       {user.posts.length === 0 ? (
@@ -78,15 +79,17 @@ const TabContent = ({ activeTab, user }: TabContentProps) => {
     </div>
   );
 
+const handleAddressUpdate = () => {
+    // Refetch user data to get updated addresses
+    // refetch();
+  };
+  
   const renderAddressTab = () => (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="text-center py-12 text-gray-500">
-        <svg className="w-16 h-16 mx-auto text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-        <p className="mt-4 text-lg">Check-ins content coming soon</p>
-      </div>
-    </div>
+    <AddressesTab
+        addresses={user.addresses}
+        userId={userId}
+        onAddressUpdate={handleAddressUpdate}
+    />
   );
 
   switch (activeTab) {
