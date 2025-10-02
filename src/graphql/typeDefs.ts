@@ -478,7 +478,6 @@ input ProductVariantInput {
   }
 
 input AddressInputs {
-     id :        String
      userId :    String
      type :      String
      street :    String
@@ -487,7 +486,6 @@ input AddressInputs {
      zipCode :   String
      country :   String
      isDefault : Boolean
-     createdAt : String
 }
 
   input OrderItemInput {
