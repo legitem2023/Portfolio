@@ -212,6 +212,7 @@ export const GET_USER_PROFILE = gql`
       followingCount
       isFollowing
       addresses {
+        id
         type
         street
         city
