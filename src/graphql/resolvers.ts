@@ -17,6 +17,17 @@ const getUserId = (context: any, required = true): string => {
   return userId;
 };
 
+interface SetDefaultAddressArgs {
+  addressId: string;
+  userId:string;
+}
+
+interface SetDefaultAddressResponse {
+  success: boolean;
+  message?: string;
+  address?: any;
+}
+
 export const resolvers = {
   Query: {
     // Existing e-commerce queries
@@ -835,7 +846,70 @@ const isValid = await comparePassword(password, user?.password || "");
       }
       throw new Error('Failed to create category');
     },
-    
+ setDefaultAddress: async (_: any,{ addressId,userId }: SetDefaultAddressArgs): Promise<SetDefaultAddressResponse> => {
+      try {
+        
+        // Find the target address and verify ownership
+        const targetAddress = await prisma.address.findFirst({
+          where: {
+            id: addressId,
+            userId: userId,
+          },
+        });
+
+        if (!targetAddress) {
+          throw new Error('Address not found or unauthorized');
+        }
+
+        // Use transaction to ensure data consistency
+        const result = await prisma.$transaction(async (tx) => {
+          // Set all user addresses to non-default first
+          await tx.address.updateMany({
+            where: {
+              userId: userId,
+            },
+            data: {
+              isDefault: false,
+            },
+          });
+
+          // Set the target address as default
+          const updatedAddress = await tx.address.update({
+            where: {
+              id: addressId,
+            },
+            data: {
+              isDefault: true,
+            },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                },
+              },
+            },
+          });
+
+          return updatedAddress;
+        });
+
+        return {
+          success: true,
+          message: 'Default address updated successfully',
+          address: result,
+        };
+
+      } catch (error: any) {
+        console.error('Error setting default address:', error);
+        return {
+          success: false,
+          message: error.message,
+          address: null,
+        };
+      }
+    },   
     createOrder: async (_: any, { userId, addressId, items }: any) => {
       const response = await prisma.order.create({
         data: {
