@@ -6,6 +6,7 @@ export interface TabConfig {
 }
 
 export interface Address {
+  id: string;
   type: string;
   street: string;
   city: string;
