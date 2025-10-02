@@ -46,20 +46,23 @@ const ProfileTabs = ({ activeTab, onTabChange, tabsConfig }: ProfileTabsProps) =
   return (
     <div className="mt-6 border-t border-gray-300 flex overflow-x-auto scrollbar-hide">
       <div className="flex space-x-4 md:space-x-8 min-w-max">
-        {tabsConfig.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`px-3 py-3 md:px-4 md:py-3 border-b-2 font-medium flex items-center text-sm md:text-base transition-colors ${
-              activeTab === tab.id
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-600 hover:bg-gray-100 rounded-md'
-            }`}
-          >
-            {getTabIcon(tab.icon)}
-            {tab.label}
-          </button>
-        ))}
+        {tabsConfig
+  .slice() // Create a copy to avoid mutating the original array
+  .sort((a, b) => a.id - b.id) // Sort by id in ascending order
+  .map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => onTabChange(tab.id)}
+      className={`px-3 py-3 md:px-4 md:py-3 border-b-2 font-medium flex items-center text-sm md:text-base transition-colors ${
+        activeTab === tab.id
+          ? 'border-blue-600 text-blue-600'
+          : 'border-transparent text-gray-600 hover:bg-gray-100 rounded-md'
+      }`}
+    >
+      {getTabIcon(tab.icon)}
+      {tab.label}
+    </button>
+  ))}
       </div>
     </div>
   );
