@@ -12,6 +12,8 @@ export const typeDefs = gql`
   }
 
   enum AddressType {
+    HOME
+    WORK
     BILLING
     SHIPPING
   }
