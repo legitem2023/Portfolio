@@ -15,7 +15,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
     variables: { id: userId },
   });
 
-  const [activeTab, setActiveTab] = useState<string>('posts');
+  const [activeTab, setActiveTab] = useState<string>('address');
 
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
