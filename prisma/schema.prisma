@@ -464,6 +464,8 @@ enum Role {
 }
 
 enum AddressType {
+  HOME
+  WORK
   BILLING
   SHIPPING
 }
