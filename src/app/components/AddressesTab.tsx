@@ -50,6 +50,7 @@ const AddressCard: React.FC<{
       <div className="flex items-center gap-2">
         <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium capitalize">
           {address.type}
+          {console.log(address)}
         </span>
         {isDefault && (
           <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
