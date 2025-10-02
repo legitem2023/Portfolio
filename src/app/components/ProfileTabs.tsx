@@ -48,7 +48,7 @@ const ProfileTabs = ({ activeTab, onTabChange, tabsConfig }: ProfileTabsProps) =
       <div className="flex space-x-4 md:space-x-8 min-w-max">
         {tabsConfig
   .slice() // Create a copy to avoid mutating the original array
-  .sort((a:any, b:any) => a.id - b.id) // Sort by id in ascending order
+  .sort((a:any, b:any) => b.id - a.id) // Sort by id in ascending order
   .map((tab) => (
     <button
       key={tab.id}
