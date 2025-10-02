@@ -20,7 +20,7 @@ interface FormData {
 
 export default function AddressForm({ userId, onSuccess, onCancel }: AddressFormProps) {
   const [formData, setFormData] = useState<FormData>({
-    type: 'home',
+    type: 'HOME',
     street: '',
     city: '',
     state: '',
