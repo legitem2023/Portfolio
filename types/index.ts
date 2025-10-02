@@ -5,6 +5,16 @@ export interface TabConfig {
   icon: string;
 }
 
+export interface Address {
+  type: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+}
 
 
 export interface CartItem {
@@ -38,6 +48,7 @@ export interface User {
   followingCount: number;
   isFollowing: boolean;
   posts: Post[];
+  addresses:Address[]
 }
 
 export interface Product {
