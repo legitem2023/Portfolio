@@ -832,7 +832,6 @@ const isValid = await comparePassword(password, user?.password || "");
       isDefault,
     },
   });
-
   return {
     statusText:"Succesful"
   };
