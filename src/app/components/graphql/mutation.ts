@@ -1,8 +1,8 @@
 import { gql } from "@apollo/client";
 
 export const SET_DEFAULT_ADDRESS = gql`
-  mutation SetDefaultAddress($addressId: ID!) {
-    setDefaultAddress(addressId: $addressId) {
+  mutation SetDefaultAddress($addressId: ID!, $userId: ID!) {
+    setDefaultAddress(addressId: $addressId,userId: $userId) {
       success
       message
       address {
