@@ -86,11 +86,10 @@ export default function AddressForm({ userId, onSuccess, onCancel }: AddressForm
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
-            <option value="home">Home</option>
-            <option value="work">Work</option>
-            <option value="billing">Billing</option>
-            <option value="shipping">Shipping</option>
-            <option value="other">Other</option>
+            <option value="HOME">Home</option>
+            <option value="WORK">Work</option>
+            <option value="BILLING">Billing</option>
+            <option value="SHIPPING">Shipping</option>
           </select>
         </div>
 
