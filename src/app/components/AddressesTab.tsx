@@ -42,7 +42,7 @@ interface AddressesTabProps {
 // Address Card Component
 const AddressCard: React.FC<{
   address: Address;
-  onMakeDefault: () => void;
+  onMakeDefault: (id:any) => void;
   isDefault: boolean;
 }> = ({ address, onMakeDefault, isDefault }) => (
   <div className={`border rounded-lg p-6 ${isDefault ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
@@ -57,9 +57,9 @@ const AddressCard: React.FC<{
           </span>
         )}
       </div>
-      {!isDefault && (
+      {isDefault && (
         <button
-          onClick={onMakeDefault}
+          onClick={onMakeDefault(address.id)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
         >
           Make Default
@@ -176,7 +176,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
             key={`${address.type}-${index}`}
             address={address}
             isDefault={address.isDefault}
-            onMakeDefault={() => handleMakeDefault(address.type)}
+            onMakeDefault={() => handleMakeDefault(address.id)}
           />
         ))}
       </div>
