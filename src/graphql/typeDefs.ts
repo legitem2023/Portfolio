@@ -437,7 +437,7 @@ type SetDefaultAddressResponse {
 
 
   type Mutation {
-    setDefaultAddress(addressId: ID!): SetDefaultAddressResponse!
+    setDefaultAddress(addressId: ID!,userId: ID!): SetDefaultAddressResponse!
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
