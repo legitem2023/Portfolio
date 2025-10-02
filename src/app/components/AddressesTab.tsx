@@ -23,6 +23,7 @@ export const SET_DEFAULT_ADDRESS = gql`
 
 // Types
 export interface Address {
+  id:string;
   type: string;
   street: string;
   city: string;
