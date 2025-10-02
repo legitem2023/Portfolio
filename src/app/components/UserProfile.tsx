@@ -90,8 +90,6 @@ const UserProfile = ({ userId }: { userId: string }) => {
           onTabChange={setActiveTab}
           tabsConfig={[
             { id: 'posts', label: 'Posts', icon: 'user' },
-            { id: 'photos', label: 'Photos', icon: 'photos' },
-            { id: 'friends', label: 'Friends', icon: 'friends' },
             { id: 'address', label: 'Addresses', icon: 'location' }
           ]}
         />
