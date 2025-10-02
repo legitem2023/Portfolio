@@ -122,7 +122,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
         <div>
         <button
         onClick={() => setShowAddressForm(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-5"
       >
         Add New Address
       </button>
@@ -157,14 +157,14 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
       <div>
         <button
         onClick={() => setShowAddressForm(true)}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mb-5"
       >
         Add New Address
       </button>
 
       {showAddressForm && (
         <AddressForm
-          userId="user-123" // This should come from your auth context or props
+          userId={userId} // This should come from your auth context or props
           onSuccess={handleAddressSuccess}
           onCancel={() => setShowAddressForm(false)}
         />
