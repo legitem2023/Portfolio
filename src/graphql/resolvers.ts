@@ -678,7 +678,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
 
       if (!user) {
-        user = await prisma.user.create({
+        await prisma.user.create({
           data: {
             firstName: fbUser.name,
             lastName: '',
@@ -686,8 +686,7 @@ const isValid = await comparePassword(password, user?.password || "");
             phone: '',
             password: '',
             role: 'USER',
-            avatar: avatarUrl,
-            addresses: user?.addresses
+            avatar: avatarUrl
           },
         });
       }
@@ -699,7 +698,8 @@ const isValid = await comparePassword(password, user?.password || "");
         email: user.email,
         name: user.firstName,
         role: user.role,
-        image: user.avatar
+        image: user.avatar,
+        addresses: user?.addresses
       })
         .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
         .setIssuedAt()
