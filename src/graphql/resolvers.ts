@@ -170,9 +170,16 @@ export const resolvers = {
       return prisma.category.findMany();
     },
 
-    orders: (_: any, { userId }: { userId: string }) =>
-      prisma.order.findMany({ where: { userId } }),
-
+    orders: async (_: any, { userId }: { userId: string }) => {
+  try {
+    return await prisma.order.findMany({ 
+      where: { userId } 
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Could not fetch orders');
+  }
+    },
     supportTickets: () => prisma.supportTicket.findMany(),
     
     getProducts: async (_:any,args:any ) => {
