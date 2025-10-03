@@ -1,5 +1,6 @@
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useState,useEffect } from 'react';
 import { ShippingInfo } from './DeluxeCart';
+import { decryptToken } from '../../../../utils/decryptToken';
 
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
@@ -54,7 +55,30 @@ const savedAddresses = [
 
 const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(1); // Default to first address
-  
+  useEffect(() => {
+    const getRole = async () => {
+      try {
+        const response = await fetch('/api/protected', {
+          credentials: 'include' // Important: includes cookies
+        });
+        
+        if (response.status === 401) {
+          // Handle unauthorized access
+          throw new Error('Unauthorized');
+        }
+        
+        const data = await response.json();
+        const token = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+
+        const payload = await decryptToken(token, secret.toString());
+        console.log(payload);
+      } catch (err) {
+        console.error('Error getting role:', err);
+      }
+    };
+    getRole();
+  }, []);
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setShippingInfo({
       ...shippingInfo,
