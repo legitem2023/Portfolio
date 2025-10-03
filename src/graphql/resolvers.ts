@@ -693,12 +693,12 @@ const isValid = await comparePassword(password, user?.password || "");
 
       const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
       const token = await new EncryptJWT({
-        userId: user.id,
-        phone: user.phone,
-        email: user.email,
-        name: user.firstName,
-        role: user.role,
-        image: user.avatar,
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar,
         addresses: user?.addresses
       })
         .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
