@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, ReactNode } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import AddressForm from './Addresses/AddressForm';
 import { SET_DEFAULT_ADDRESS } from './graphql/mutation';
@@ -20,7 +20,7 @@ export interface Address {
 interface AddressesTabProps {
   addresses: Address[];
   userId: string;
-  onAddressUpdate?: () => void;
+  onAddressUpdate?: () => ReactNode;
 }
 
 // Address Card Component
