@@ -21,7 +21,7 @@ export interface Address {
 interface AddressesTabProps {
   addresses: Address[];
   userId: string;
-  onAddressUpdate: () => ReactNode;  // ✅ fix
+  onAddressUpdate: () => void;  // ✅ fix
 }
 // Address Card Component
 const AddressCard: React.FC<{
