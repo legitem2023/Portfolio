@@ -211,19 +211,19 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
   );
 }
 
-// Order Details Modal Component
+// Order Details Modal Component - Fixed for mobile
 function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => void }) {
   const currentStageIndex = ORDER_STAGES.findIndex(s => s.key === order.status);
   
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-2 max-h-[95vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-xl">
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 sm:p-6 rounded-t-xl">
           <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold">Order #{order.orderNumber}</h2>
-              <p className="text-purple-200">
+            <div className="pr-4">
+              <h2 className="text-xl sm:text-2xl font-bold">Order #{order.orderNumber}</h2>
+              <p className="text-purple-200 text-sm sm:text-base">
                 Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { 
                   weekday: 'long', 
                   year: 'numeric', 
@@ -234,50 +234,54 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
             </div>
             <button 
               onClick={onClose}
-              className="text-white hover:text-purple-200 text-2xl font-bold transition-colors"
+              className="text-white hover:text-purple-200 text-2xl font-bold transition-colors flex-shrink-0 ml-2"
             >
               ×
             </button>
           </div>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Order Status Timeline */}
-          <div className="bg-purple-50 rounded-lg p-6">
+        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+          {/* Order Status Timeline - Fixed for mobile */}
+          <div className="bg-purple-50 rounded-lg p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Status</h3>
-            <div className="flex items-center justify-between relative">
-              {ORDER_STAGES.map((stage, index) => (
-                <div key={stage.key} className="flex flex-col items-center flex-1">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    index <= currentStageIndex 
-                      ? 'bg-purple-600 border-purple-600 text-white' 
-                      : 'bg-white border-purple-300 text-purple-400'
-                  } font-bold text-sm`}>
-                    {index + 1}
+            <div className="overflow-x-auto pb-4">
+              <div className="flex items-center justify-between min-w-max">
+                {ORDER_STAGES.map((stage, index) => (
+                  <div key={stage.key} className="flex flex-col items-center min-w-[60px] sm:min-w-[80px]">
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${
+                      index <= currentStageIndex 
+                        ? 'bg-purple-600 border-purple-600 text-white' 
+                        : 'bg-white border-purple-300 text-purple-400'
+                    } font-bold text-xs sm:text-sm`}>
+                      {index + 1}
+                    </div>
+                    <span className={`text-xs mt-2 text-center ${
+                      index <= currentStageIndex ? 'text-purple-700 font-medium' : 'text-purple-400'
+                    }`}>
+                      {stage.label}
+                    </span>
                   </div>
-                  <span className={`text-xs mt-2 text-center ${
-                    index <= currentStageIndex ? 'text-purple-700 font-medium' : 'text-purple-400'
-                  }`}>
-                    {stage.label}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
               {/* Progress Line */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-purple-300 -z-10">
-                <div 
-                  className="h-full bg-purple-600 transition-all duration-500"
-                  style={{ width: `${(currentStageIndex / (ORDER_STAGES.length - 1)) * 100}%` }}
-                ></div>
+              <div className="relative -mt-6 sm:-mt-7 mx-4 sm:mx-10">
+                <div className="h-0.5 bg-purple-300">
+                  <div 
+                    className="h-full bg-purple-600 transition-all duration-500"
+                    style={{ width: `${(currentStageIndex / (ORDER_STAGES.length - 1)) * 100}%` }}
+                  ></div>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Order Summary */}
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Pricing Details */}
             <div className="bg-white border border-purple-200 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Summary</h3>
-              <div className="space-y-3">
+              <div className="space-y-3 text-sm sm:text-base">
                 <div className="flex justify-between">
                   <span className="text-purple-600">Subtotal:</span>
                   <span>${order.subtotal.toFixed(2)}</span>
@@ -306,12 +310,12 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
             {/* Order Information */}
             <div className="bg-white border border-purple-200 rounded-lg p-4">
               <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Information</h3>
-              <div className="space-y-3">
+              <div className="space-y-3 text-sm sm:text-base">
                 <div className="flex justify-between">
                   <span className="text-purple-600">Order Number:</span>
                   <span className="font-medium">{order.orderNumber}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span className="text-purple-600">Status:</span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                     ORDER_STAGES.find(s => s.key === order.status)?.color || 'bg-gray-200'
@@ -335,15 +339,15 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+          {/* Action Buttons - Fixed for mobile */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+            <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 sm:px-6 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
               Track Package
             </button>
-            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-4 sm:px-6 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
               Contact Support
             </button>
-            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-4 sm:px-6 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
               Download Invoice
             </button>
           </div>
@@ -398,4 +402,4 @@ function OrderError({ error }: { error: any }) {
       </div>
     </div>
   );
-                                                             }
+                    }
