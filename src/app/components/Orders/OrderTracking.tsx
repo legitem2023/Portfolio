@@ -211,7 +211,7 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
   );
 }
 
-// Order Details Modal Component - Fixed for mobile
+// Order Details Modal Component - Vertical timeline for mobile
 function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => void }) {
   const currentStageIndex = ORDER_STAGES.findIndex(s => s.key === order.status);
   
@@ -242,18 +242,55 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
         </div>
 
         <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-          {/* Order Status Timeline - Fixed for mobile */}
+          {/* Order Status Timeline - Vertical on mobile, horizontal on desktop */}
           <div className="bg-purple-50 rounded-lg p-4 sm:p-6">
             <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Status</h3>
-            <div className="overflow-x-auto pb-4">
-              <div className="flex items-center justify-between min-w-max">
+            
+            {/* Mobile - Vertical Timeline */}
+            <div className="block sm:hidden">
+              <div className="relative">
+                {/* Vertical Line */}
+                <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-purple-300">
+                  <div 
+                    className="bg-purple-600 w-0.5 transition-all duration-500"
+                    style={{ height: `${(currentStageIndex / (ORDER_STAGES.length - 1)) * 100}%` }}
+                  ></div>
+                </div>
+                
                 {ORDER_STAGES.map((stage, index) => (
-                  <div key={stage.key} className="flex flex-col items-center min-w-[60px] sm:min-w-[80px]">
-                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${
+                  <div key={stage.key} className="flex items-start mb-6 last:mb-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 z-10 ${
                       index <= currentStageIndex 
                         ? 'bg-purple-600 border-purple-600 text-white' 
                         : 'bg-white border-purple-300 text-purple-400'
-                    } font-bold text-xs sm:text-sm`}>
+                    } font-bold text-sm flex-shrink-0`}>
+                      {index + 1}
+                    </div>
+                    <div className="ml-4 pt-1">
+                      <span className={`font-medium ${
+                        index <= currentStageIndex ? 'text-purple-700' : 'text-purple-400'
+                      }`}>
+                        {stage.label}
+                      </span>
+                      {index === currentStageIndex && (
+                        <p className="text-sm text-purple-500 mt-1">Current Status</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Desktop - Horizontal Timeline */}
+            <div className="hidden sm:block">
+              <div className="flex items-center justify-between relative">
+                {ORDER_STAGES.map((stage, index) => (
+                  <div key={stage.key} className="flex flex-col items-center flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      index <= currentStageIndex 
+                        ? 'bg-purple-600 border-purple-600 text-white' 
+                        : 'bg-white border-purple-300 text-purple-400'
+                    } font-bold text-sm`}>
                       {index + 1}
                     </div>
                     <span className={`text-xs mt-2 text-center ${
@@ -263,10 +300,8 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                     </span>
                   </div>
                 ))}
-              </div>
-              {/* Progress Line */}
-              <div className="relative -mt-6 sm:-mt-7 mx-4 sm:mx-10">
-                <div className="h-0.5 bg-purple-300">
+                {/* Progress Line */}
+                <div className="absolute top-5 left-0 right-0 h-0.5 bg-purple-300 -z-10">
                   <div 
                     className="h-full bg-purple-600 transition-all duration-500"
                     style={{ width: `${(currentStageIndex / (ORDER_STAGES.length - 1)) * 100}%` }}
@@ -402,4 +437,4 @@ function OrderError({ error }: { error: any }) {
       </div>
     </div>
   );
-                    }
+                                        }
