@@ -17,12 +17,12 @@ export interface Address {
   createdAt: string;
 }
 
+
 interface AddressesTabProps {
   addresses: Address[];
   userId: string;
-  onAddressUpdate?: () => ReactNode;
+  onAddressUpdate: () => void | Promise<any>;  // ✅ fix
 }
-
 // Address Card Component
 const AddressCard: React.FC<{
   address: Address;
