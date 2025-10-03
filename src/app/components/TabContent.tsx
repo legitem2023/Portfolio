@@ -10,7 +10,7 @@ interface TabContentProps {
   refetch: () => ReactNode;
 }
 
-const TabContent = ({ activeTab, user,userId }: TabContentProps) => {
+const TabContent = ({ activeTab, user,userId ,refetch}: TabContentProps) => {
   const renderPostsTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       {user.posts.length === 0 ? (
