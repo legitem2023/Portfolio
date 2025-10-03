@@ -57,7 +57,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     const { name, value, type } = e.target;
     
     if (type === 'checkbox') {
-      co?nst checked = (e.target as HTMLInputElement).checked;
+      const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
