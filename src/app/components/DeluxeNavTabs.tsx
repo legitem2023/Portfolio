@@ -6,6 +6,7 @@ import UserProfile from './UserProfile';
 import { decryptToken } from '../../../utils/decryptToken';
 import PostDetail from './Posting/PostDetail';
 import PMTab from './PMTab';
+import OrderTracking from './Orders/OrderTracking';
 import {
   Home,
   ShoppingBag,
@@ -171,7 +172,13 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'PM',
       icon: <ShoppingCart size={18} />,
       content: <PMTab/>
-        }
+    },
+    {
+      id:10,
+      label: 'Order',
+      icon: <ShoppingCart size={18} />,
+      content:<OrderTracking userId={userId}/>
+    }
   ];
 
   function getCategoryIcon(category: string): React.ReactNode {
