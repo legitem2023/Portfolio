@@ -1,4 +1,5 @@
 // components/TabContent.tsx
+import { ReactNode } from 'react';
 import Image from 'next/image';
 import { User, Post } from '../../../types';
 import AddressesTab, { Address } from './AddressesTab';
@@ -81,14 +82,14 @@ const TabContent = ({ activeTab, user,userId }: TabContentProps) => {
 
 const handleAddressUpdate = () => {
     // Refetch user data to get updated addresses
-    // refetch();
+     refetch();
   };
   
   const renderAddressTab = () => (
     <AddressesTab
         addresses={user.addresses}
         userId={userId}
-        onAddressUpdate={handleAddressUpdate}
+        onAddressUpdate={()=>refetch()}
     />
   );
 
