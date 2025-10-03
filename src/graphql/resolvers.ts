@@ -175,6 +175,7 @@ export const resolvers = {
     return await prisma.order.findMany({ 
       where: { userId },
       include: {
+        user:true,
         address: true,
         items: true,
         payments: true
