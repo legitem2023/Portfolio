@@ -7,6 +7,7 @@ interface TabContentProps {
   activeTab: string;
   user: User;
   userId: string;
+  refetch: () => ReactNode;
 }
 
 const TabContent = ({ activeTab, user,userId }: TabContentProps) => {
