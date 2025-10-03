@@ -10,7 +10,7 @@ interface TabContentProps {
   activeTab: string;
   user: User;
   userId: string;
-  refetch: (variables?: Partial<OperationVariables>) => Promise<ApolloQueryResult<any>>;
+  refetch: ReactNode;
 }
 
 
@@ -94,7 +94,7 @@ const handleAddressUpdate = () => {
     <AddressesTab
         addresses={user.addresses}
         userId={userId}
-        onAddressUpdate={()=>refetch()}
+        onAddressUpdate={()=>handleAddressUpdate()}
     />
   );
 
