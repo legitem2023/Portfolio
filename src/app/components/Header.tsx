@@ -61,7 +61,7 @@ const Header: React.FC = () => {
 
   return (
     <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2 aspect-[4/1] sm:aspect-[9/1]">
-      <AdDrawer
+      {/* <AdDrawer
         isOpen={drawer.isOpen}
         onClose={drawer.close}
         position="top"
@@ -74,7 +74,7 @@ const Header: React.FC = () => {
           ctaLink="/features"
           imageUrl="/api/placeholder/150/150"
         />
-        </AdDrawer>
+        </AdDrawer>*/}
         <AnimatedCrowd/>
       <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
       
