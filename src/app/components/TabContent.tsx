@@ -10,11 +10,10 @@ interface TabContentProps {
   activeTab: string;
   user: User;
   userId: string;
-  refetch: ReactNode;
+  refetch: (variables?: Partial<OperationVariables>) => Promise<ApolloQueryResult<any>>;
 }
 
-
-const TabContent = ({ activeTab, user,userId ,refetch}: TabContentProps) => {
+const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   const renderPostsTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       {user.posts.length === 0 ? (
@@ -85,16 +84,16 @@ const TabContent = ({ activeTab, user,userId ,refetch}: TabContentProps) => {
     </div>
   );
 
-const handleAddressUpdate = async() => {
+  const handleAddressUpdate = async () => {
     // Refetch user data to get updated addresses
-     await refetch?.();
+    await refetch();
   };
   
   const renderAddressTab = () => (
     <AddressesTab
-        addresses={user.addresses}
-        userId={userId}
-        onAddressUpdate={()=>handleAddressUpdate()}
+      addresses={user.addresses}
+      userId={userId}
+      onAddressUpdate={handleAddressUpdate}
     />
   );
 
