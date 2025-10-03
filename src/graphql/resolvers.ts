@@ -173,7 +173,12 @@ export const resolvers = {
     orders: async (_: any, { userId }: { userId: string }) => {
   try {
     return await prisma.order.findMany({ 
-      where: { userId } 
+      where: { userId },
+      include: {
+        address: true,
+        items: true,
+        payments: true
+      }
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
