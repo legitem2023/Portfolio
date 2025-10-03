@@ -3,12 +3,16 @@ import { ReactNode } from 'react';
 import Image from 'next/image';
 import { User, Post } from '../../../types';
 import AddressesTab, { Address } from './AddressesTab';
+
+import { ApolloQueryResult, OperationVariables } from "@apollo/client";
+
 interface TabContentProps {
   activeTab: string;
   user: User;
   userId: string;
-  refetch: () => ReactNode;
+  refetch: (variables?: Partial<OperationVariables>) => Promise<ApolloQueryResult<any>>;
 }
+
 
 const TabContent = ({ activeTab, user,userId ,refetch}: TabContentProps) => {
   const renderPostsTab = () => (
