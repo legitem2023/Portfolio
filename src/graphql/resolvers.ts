@@ -601,10 +601,13 @@ export const resolvers = {
     }
 
     const user = await prisma.user.findUnique({ 
-      where: { email:email } 
+      where: { email:email },
+      include : {
+        addresses:true
+      }
     });
     
-    console.log(user);
+    
     if (!user) {
       console.log("User not found");
       //throw new ApolloError("User not found.", "USER_NOT_FOUND");
@@ -632,7 +635,8 @@ const isValid = await comparePassword(password, user?.password || "");
         email: user?.email,
         name: user?.firstName,
         role: user?.role,
-        image: user?.avatar
+        image: user?.avatar,
+        addresses:user?.addresses
       })
         .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
         .setIssuedAt()
@@ -668,6 +672,9 @@ const isValid = await comparePassword(password, user?.password || "");
 
       let user = await prisma.user.findUnique({
         where: { email: fbUser.email },
+        include : {
+          addresses:true
+        }
       });
 
       if (!user) {
@@ -678,8 +685,9 @@ const isValid = await comparePassword(password, user?.password || "");
             email: fbUser.email,
             phone: '',
             password: '',
+            role: 'USER',
             avatar: avatarUrl,
-            role: 'USER'
+            addresses: user?.addresses
           },
         });
       }
