@@ -6,7 +6,7 @@ interface AddressFormProps {
   userId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  onAddressUpdate?: () => ReactNode;
+  onAddressUpdate?: () => Promise<void>;
 }
 
 interface FormData {
