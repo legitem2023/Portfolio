@@ -1,5 +1,33 @@
 import { gql } from '@apollo/client';
 
+export const ORDER_ITEMS = gql`
+query GetOrders($userId: ID!) {
+  orders(userId: $userId) {
+    id
+    orderNumber
+    status
+    total
+    subtotal
+    tax
+    shipping
+    discount
+    createdAt
+    updatedAt
+    user {
+      id
+    }
+    address {
+      id
+    }
+    items {
+      id
+    }
+    payments {
+      id
+    }
+  }
+}
+`
 
 export const USERS = gql`
 query GetUsers {
