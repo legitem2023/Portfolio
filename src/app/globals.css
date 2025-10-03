@@ -48,3 +48,34 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Add smooth scrolling and animations */
+.order-card-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.order-card-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Custom scrollbar for order columns */
+.order-column::-webkit-scrollbar {
+  width: 6px;
+}
+
+.order-column::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.order-column::-webkit-scrollbar-thumb {
+  background: #c4b5fd;
+  border-radius: 10px;
+}
+
+.order-column::-webkit-scrollbar-thumb:hover {
+  background: #a78bfa;
+}
