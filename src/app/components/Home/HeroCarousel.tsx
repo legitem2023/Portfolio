@@ -35,7 +35,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
         autoplay={{ delay: 5000 }}
         effect="fade"
         loop={true}
-        className="h-screen max-h-[700px]"
+        className="w-full aspect-[16/9]"
       >
         {slides.map((slide) => (
           <SwiperSlide key={slide.id} className={`relative ${slide.bgColor} text-white`}>
