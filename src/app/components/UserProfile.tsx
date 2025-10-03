@@ -11,7 +11,7 @@ import ProfileTabs from './ProfileTabs';
 import { useState } from 'react';
 import TabContent from './TabContent';
 const UserProfile = ({ userId }: { userId: string }) => {
-  const { data, loading, error } = useQuery(GET_USER_PROFILE, {
+  const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
   });
 
@@ -96,7 +96,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
       </div>
 
       {/* Tab Content */}
-      <TabContent activeTab={activeTab} user={user} userId={userId}/>
+      <TabContent activeTab={activeTab} user={user} userId={userId} refetch={refetch}/>
     </div>
   );
 };
