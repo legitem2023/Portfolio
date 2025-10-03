@@ -1,5 +1,6 @@
 import { useQuery } from '@apollo/client';
 import { ORDER_ITEMS } from '../graphql/query';
+import { useState } from 'react';
 
 // Define types based on your schema
 interface Order {
@@ -34,6 +35,19 @@ export default function OrderTracking({ userId }: { userId: string }) {
     variables: { userId }
   });
 
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openOrderDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsModalOpen(true);
+  };
+
+  const closeOrderDetails = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
+
   if (loading) return <OrderLoadingSkeleton />;
   if (error) return <OrderError error={error} />;
 
@@ -56,20 +70,25 @@ export default function OrderTracking({ userId }: { userId: string }) {
 
         {/* Mobile View - Vertical Timeline */}
         <div className="lg:hidden">
-          <MobileOrderView ordersByStatus={ordersByStatus} />
+          <MobileOrderView ordersByStatus={ordersByStatus} onViewDetails={openOrderDetails} />
         </div>
 
         {/* Desktop View - Kanban Board */}
         <div className="hidden lg:block">
-          <DesktopOrderView ordersByStatus={ordersByStatus} />
+          <DesktopOrderView ordersByStatus={ordersByStatus} onViewDetails={openOrderDetails} />
         </div>
+
+        {/* Order Details Modal */}
+        {isModalOpen && selectedOrder && (
+          <OrderDetailsModal order={selectedOrder} onClose={closeOrderDetails} />
+        )}
       </div>
     </div>
   );
 }
 
 // Mobile View Component
-function MobileOrderView({ ordersByStatus }: { ordersByStatus: Record<string, Order[]> }) {
+function MobileOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: Record<string, Order[]>, onViewDetails: (order: Order) => void }) {
   return (
     <div className="space-y-6">
       {ORDER_STAGES.map((stage) => (
@@ -82,7 +101,7 @@ function MobileOrderView({ ordersByStatus }: { ordersByStatus: Record<string, Or
           <div className="p-4 space-y-4">
             {ordersByStatus[stage.key]?.length > 0 ? (
               ordersByStatus[stage.key].map((order) => (
-                <OrderCard key={order.id} order={order} />
+                <OrderCard key={order.id} order={order} onViewDetails={onViewDetails} />
               ))
             ) : (
               <div className="text-center py-8 text-purple-400">
@@ -98,7 +117,7 @@ function MobileOrderView({ ordersByStatus }: { ordersByStatus: Record<string, Or
 }
 
 // Desktop View Component
-function DesktopOrderView({ ordersByStatus }: { ordersByStatus: Record<string, Order[]> }) {
+function DesktopOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: Record<string, Order[]>, onViewDetails: (order: Order) => void }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
       {ORDER_STAGES.map((stage) => (
@@ -111,7 +130,7 @@ function DesktopOrderView({ ordersByStatus }: { ordersByStatus: Record<string, O
           <div className="p-4 space-y-4 h-[550px] overflow-y-auto">
             {ordersByStatus[stage.key]?.length > 0 ? (
               ordersByStatus[stage.key].map((order) => (
-                <OrderCard key={order.id} order={order} />
+                <OrderCard key={order.id} order={order} onViewDetails={onViewDetails} />
               ))
             ) : (
               <div className="flex flex-col items-center justify-center h-40 text-purple-400">
@@ -127,7 +146,7 @@ function DesktopOrderView({ ordersByStatus }: { ordersByStatus: Record<string, O
 }
 
 // Order Card Component
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (order: Order) => void }) {
   return (
     <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
       {/* Order Header */}
@@ -182,9 +201,154 @@ function OrderCard({ order }: { order: Order }) {
       </div>
 
       {/* Action Button */}
-      <button className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200">
+      <button 
+        onClick={() => onViewDetails(order)}
+        className="w-full mt-3 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors duration-200"
+      >
         View Details
       </button>
+    </div>
+  );
+}
+
+// Order Details Modal Component
+function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => void }) {
+  const currentStageIndex = ORDER_STAGES.findIndex(s => s.key === order.status);
+  
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Modal Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-6 rounded-t-xl">
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className="text-2xl font-bold">Order #{order.orderNumber}</h2>
+              <p className="text-purple-200">
+                Placed on {new Date(order.createdAt).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </p>
+            </div>
+            <button 
+              onClick={onClose}
+              className="text-white hover:text-purple-200 text-2xl font-bold transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Order Status Timeline */}
+          <div className="bg-purple-50 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Status</h3>
+            <div className="flex items-center justify-between relative">
+              {ORDER_STAGES.map((stage, index) => (
+                <div key={stage.key} className="flex flex-col items-center flex-1">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                    index <= currentStageIndex 
+                      ? 'bg-purple-600 border-purple-600 text-white' 
+                      : 'bg-white border-purple-300 text-purple-400'
+                  } font-bold text-sm`}>
+                    {index + 1}
+                  </div>
+                  <span className={`text-xs mt-2 text-center ${
+                    index <= currentStageIndex ? 'text-purple-700 font-medium' : 'text-purple-400'
+                  }`}>
+                    {stage.label}
+                  </span>
+                </div>
+              ))}
+              {/* Progress Line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-purple-300 -z-10">
+                <div 
+                  className="h-full bg-purple-600 transition-all duration-500"
+                  style={{ width: `${(currentStageIndex / (ORDER_STAGES.length - 1)) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Pricing Details */}
+            <div className="bg-white border border-purple-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Summary</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Subtotal:</span>
+                  <span>${order.subtotal.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Shipping:</span>
+                  <span>${order.shipping.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Tax:</span>
+                  <span>${order.tax.toFixed(2)}</span>
+                </div>
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Discount:</span>
+                    <span>-${order.discount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="border-t border-purple-200 pt-3 flex justify-between text-lg font-bold text-purple-900">
+                  <span>Total:</span>
+                  <span>${order.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Order Information */}
+            <div className="bg-white border border-purple-200 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Information</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Order Number:</span>
+                  <span className="font-medium">{order.orderNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Status:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    ORDER_STAGES.find(s => s.key === order.status)?.color || 'bg-gray-200'
+                  } ${ORDER_STAGES.find(s => s.key === order.status)?.textColor || 'text-gray-800'}`}>
+                    {ORDER_STAGES.find(s => s.key === order.status)?.label || order.status}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Items:</span>
+                  <span className="font-medium">{order.items.length} items</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Payments:</span>
+                  <span className="font-medium">{order.payments.length} payment(s)</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-purple-600">Last Updated:</span>
+                  <span className="text-sm">{new Date(order.updatedAt).toLocaleDateString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+              Track Package
+            </button>
+            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+              Contact Support
+            </button>
+            <button className="flex-1 bg-white hover:bg-purple-50 text-purple-600 border border-purple-600 py-3 px-6 rounded-lg font-medium transition-colors duration-200">
+              Download Invoice
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -234,4 +398,4 @@ function OrderError({ error }: { error: any }) {
       </div>
     </div>
   );
-}
+                                                             }
