@@ -62,7 +62,8 @@ const DeluxeCart = () => {
     address: '',
     city: '',
     zipCode: '',
-    country: ''
+    country: '',
+    state:''
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
     method:'',
