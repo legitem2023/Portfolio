@@ -87,7 +87,7 @@ const TabContent = ({ activeTab, user,userId ,refetch}: TabContentProps) => {
 
 const handleAddressUpdate = async() => {
     // Refetch user data to get updated addresses
-     await refetch();
+     await refetch?.();
   };
   
   const renderAddressTab = () => (
