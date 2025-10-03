@@ -117,7 +117,9 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
           userId={userId} // This should come from your auth context or props
           onSuccess={handleAddressSuccess}
           onCancel={() => setShowAddressForm(false)}
-        />
+          onAddressUpdate={() => onAddressUpdate?.()}
+
+          />
       )}
       </div>
         <div className="text-center py-12 text-gray-500">
@@ -152,7 +154,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
           userId={userId} // This should come from your auth context or props
           onSuccess={handleAddressSuccess}
           onCancel={() => setShowAddressForm(false)}
-          onAddressUpdate={onAddressUpdate}
+          onAddressUpdate={() => onAddressUpdate?.()}
         />
       )}
       </div>
