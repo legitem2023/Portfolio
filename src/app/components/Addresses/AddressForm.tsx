@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState },ReactNode from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation'; // Adjust import path
 
@@ -6,6 +6,7 @@ interface AddressFormProps {
   userId: string;
   onSuccess?: () => void;
   onCancel?: () => void;
+  onAddressUpdate?: () => ReactNode;
 }
 
 interface FormData {
@@ -18,7 +19,7 @@ interface FormData {
   isDefault: boolean;
 }
 
-export default function AddressForm({ userId, onSuccess, onCancel }: AddressFormProps) {
+export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate}: AddressFormProps) {
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
     street: '',
@@ -45,6 +46,7 @@ export default function AddressForm({ userId, onSuccess, onCancel }: AddressForm
       });
 
       onSuccess?.();
+      onAddressUpdate?.();
     } catch (err) {
       // Error handled by the error state
       console.error('Error creating address:', err);
@@ -55,7 +57,7 @@ export default function AddressForm({ userId, onSuccess, onCancel }: AddressForm
     const { name, value, type } = e.target;
     
     if (type === 'checkbox') {
-      const checked = (e.target as HTMLInputElement).checked;
+      co?nst checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
