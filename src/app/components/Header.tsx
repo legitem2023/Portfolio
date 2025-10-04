@@ -10,7 +10,7 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
-
+import LogoutButton from './LogoutButton';
 import AdDrawer from './Ads/AdDrawer';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
