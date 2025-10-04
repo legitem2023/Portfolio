@@ -259,12 +259,12 @@ export const REMOVE_TAG_FROM_POST = gql`
 `;
 
 export const CREATEUSER = gql`
-mutation CreateUser {
+mutation CreateUser($email:String,$password: String,$firstName: String, $lastName: String) {
   createUser(
-    email: "user@example.com",
-    password: "securepassword123",
-    firstName: "John",
-    lastName: "Doe"
+    email: $email,
+    password: $password,
+    firstName: $firstName,
+    lastName: $lastName
   ) {
     statusText
   }
