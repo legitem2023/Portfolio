@@ -35,6 +35,217 @@ const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // 
 
 export const resolvers = {
   Query: {
+
+myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
+      const skip = (page - 1) * limit;
+      
+      const where = {
+        OR: [
+          { senderId: userId },
+          { recipientId: userId }
+        ],
+        ...(isRead !== undefined && { isRead })
+      };
+
+      const [messages, totalCount] = await Promise.all([
+        prisma.message.findMany({
+          where,
+          include: {
+            sender: true,
+            recipient: true,
+            parent: {
+              include: {
+                sender: true,
+                recipient: true
+              }
+            },
+            replies: {
+              include: {
+                sender: true,
+                recipient: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        prisma.message.count({ where })
+      ]);
+
+      return {
+        messages,
+        totalCount,
+        hasNextPage: totalCount > skip + limit,
+        page
+      };
+    },
+
+    conversation: async (_, { userId, page = 1, limit = 20 }, { currentUserId }) => {
+      const skip = (page - 1) * limit;
+      
+      const where = {
+        OR: [
+          {
+            senderId: currentUserId,
+            recipientId: userId
+          },
+          {
+            senderId: userId,
+            recipientId: currentUserId
+          }
+        ]
+      };
+
+      const [messages, totalCount] = await Promise.all([
+        prisma.message.findMany({
+          where,
+          include: {
+            sender: true,
+            recipient: true,
+            parent: {
+              include: {
+                sender: true,
+                recipient: true
+              }
+            },
+            replies: {
+              include: {
+                sender: true,
+                recipient: true
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take: limit
+        }),
+        prisma.message.count({ where })
+      ]);
+
+      return {
+        messages,
+        totalCount,
+        hasNextPage: totalCount > skip + limit,
+        page
+      };
+    },
+
+    unreadMessageCount: async (_, __, { userId }) => {
+      return prisma.message.count({
+        where: {
+          recipientId: userId,
+          isRead: false
+        }
+      });
+    },
+
+    message: async (_, { id }, { userId }) => {
+      return prisma.message.findFirst({
+        where: {
+          id,
+          OR: [
+            { senderId: userId },
+            { recipientId: userId }
+          ]
+        },
+        include: {
+          sender: true,
+          recipient: true,
+          parent: {
+            include: {
+              sender: true,
+              recipient: true
+            }
+          },
+          replies: {
+            include: {
+              sender: true,
+              recipient: true
+            }
+          }
+        }
+      });
+    },
+
+    messageThreads: async (_, { page = 1, limit = 20 }, { userId }) => {
+      const skip = (page - 1) * limit;
+
+      // Get unique users that current user has conversations with
+      const conversations = await prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: userId },
+            { recipientId: userId }
+          ]
+        },
+        select: {
+          senderId: true,
+          recipientId: true,
+          createdAt: true,
+          isRead: true
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      // Group by other user and get latest message
+      const threadMap = new Map();
+      
+      for (const msg of conversations) {
+        const otherUserId = msg.senderId === userId ? msg.recipientId : msg.senderId;
+        
+        if (!threadMap.has(otherUserId)) {
+          threadMap.set(otherUserId, {
+            lastMessage: msg,
+            unreadCount: 0
+          });
+        }
+        
+        if (!msg.isRead && msg.recipientId === userId) {
+          threadMap.get(otherUserId).unreadCount++;
+        }
+      }
+
+      const threads = await Promise.all(
+        Array.from(threadMap.entries()).map(async ([otherUserId, data]) => {
+          const user = await prisma.user.findUnique({
+            where: { id: otherUserId },
+            select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
+          });
+
+          const lastMessage = await prisma.message.findUnique({
+            where: { id: data.lastMessage.id },
+            include: {
+              sender: true,
+              recipient: true
+            }
+          });
+
+          return {
+            user,
+            lastMessage,
+            unreadCount: data.unreadCount,
+            updatedAt: data.lastMessage.createdAt
+          };
+        })
+      );
+
+      // Sort by last message date
+      threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+      const paginatedThreads = threads.slice(skip, skip + limit);
+
+      return {
+        threads: paginatedThreads,
+        totalCount: threads.length,
+        hasNextPage: threads.length > skip + limit,
+        page
+      };
+    },
+
+
+
+    
     // Existing e-commerce queries
     users: async () => await prisma.user.findMany({
       include : {
@@ -609,6 +820,163 @@ export const resolvers = {
   },
 
   Mutation: {
+
+
+sendMessage: async (_, { input }, { userId }) => {
+      const { recipientId, body, subject } = input;
+
+      // Check if recipient exists
+      const recipient = await prisma.user.findUnique({
+        where: { id: recipientId }
+      });
+
+      if (!recipient) {
+        throw new Error('Recipient not found');
+      }
+
+      // Prevent sending to self
+      if (recipientId === userId) {
+        throw new Error('Cannot send message to yourself');
+      }
+
+      return prisma.message.create({
+        data: {
+          senderId: userId,
+          recipientId,
+          body,
+          subject,
+          isRead: false
+        },
+        include: {
+          sender: true,
+          recipient: true,
+          parent: true,
+          replies: true
+        }
+      });
+    },
+
+    replyMessage: async (_, { input }, { userId }) => {
+      const { parentId, body } = input;
+
+      // Check if parent message exists and user is participant
+      const parentMessage = await prisma.message.findFirst({
+        where: {
+          id: parentId,
+          OR: [
+            { senderId: userId },
+            { recipientId: userId }
+          ]
+        }
+      });
+
+      if (!parentMessage) {
+        throw new Error('Message not found or access denied');
+      }
+
+      // Determine recipient (the other person in the conversation)
+      const recipientId = parentMessage.senderId === userId ? parentMessage.recipientId : parentMessage.senderId;
+
+      return prisma.message.create({
+        data: {
+          senderId: userId,
+          recipientId,
+          body,
+          parentId,
+          isRead: false
+        },
+        include: {
+          sender: true,
+          recipient: true,
+          parent: {
+            include: {
+              sender: true,
+              recipient: true
+            }
+          },
+          replies: true
+        }
+      });
+    },
+
+    markAsRead: async (_, { messageId }, { userId }) => {
+      const message = await prisma.message.findFirst({
+        where: {
+          id: messageId,
+          recipientId: userId
+        }
+      });
+
+      if (!message) {
+        throw new Error('Message not found or access denied');
+      }
+
+      return prisma.message.update({
+        where: { id: messageId },
+        data: { isRead: true },
+        include: {
+          sender: true,
+          recipient: true,
+          parent: true,
+          replies: true
+        }
+      });
+    },
+
+    markMultipleAsRead: async (_, { messageIds }, { userId }) => {
+      await prisma.message.updateMany({
+        where: {
+          id: { in: messageIds },
+          recipientId: userId
+        },
+        data: { isRead: true }
+      });
+
+      return true;
+    },
+
+    deleteMessage: async (_, { messageId }, { userId }) => {
+      const message = await prisma.message.findFirst({
+        where: {
+          id: messageId,
+          senderId: userId // Only sender can delete
+        }
+      });
+
+      if (!message) {
+        throw new Error('Message not found or access denied');
+      }
+
+      await prisma.message.delete({
+        where: { id: messageId }
+      });
+
+      return true;
+    },
+
+    deleteConversation: async (_, { userId: otherUserId }, { currentUserId }) => {
+      await prisma.message.deleteMany({
+        where: {
+          OR: [
+            {
+              senderId: currentUserId,
+              recipientId: otherUserId
+            },
+            {
+              senderId: otherUserId,
+              recipientId: currentUserId
+            }
+          ]
+        }
+      });
+
+      return true;
+    },
+  
+
+
+
+    
     // Existing e-commerce mutations
     login: async (_: any, args: any) => {
   try {
