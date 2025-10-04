@@ -134,12 +134,7 @@ const Header: React.FC = () => {
                 <i className="fas fa-shopping-bag mr-2 text-gray-400"></i>Orders
               </div>
               <div className="border-t border-gray-100 my-1"></div>
-              <div
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                onClick={() => setIsDropdownOpen(false)}
-              >
-                <i className="fas fa-sign-out-alt mr-2 text-gray-400"></i>Sign out
-              </div>
+              <LogoutButton/>
             </div>
           )}
         </div>
