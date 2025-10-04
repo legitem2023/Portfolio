@@ -3,6 +3,10 @@ import { PrismaClient, PrivacySetting } from "@prisma/client";
 import { comparePassword, encryptPassword } from '../../utils/script';
 import { EncryptJWT } from 'jose';
 //import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
+import {
+  LogoutResponse,
+  Context
+} from './types/graphql.js';
 
 const prisma = new PrismaClient();
 
