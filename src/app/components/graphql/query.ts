@@ -1,66 +1,126 @@
 import { gql } from '@apollo/client';
 
-export const ORDER_ITEMS = gql`
-query GetOrders($userId: ID!) {
-  orders(userId: $userId) {
-    id
-    orderNumber
-    status
-    total
-    subtotal
-    tax
-    shipping
-    discount
-    createdAt
-    updatedAt
-    user {
+// ============ USER QUERIES ============
+export const USERS = gql`
+  query GetUsers {
+    users {
       id
-    }
-    address {
-      id
-    }
-    items {
-      id
-    }
-    payments {
-      id
+      email
+      password
+      firstName
+      lastName
+      addresses {
+        type
+        street
+        city
+        state
+        zipCode
+        country
+        isDefault
+        createdAt
+      }
+      avatar
+      phone
+      emailVerified
+      createdAt
+      updatedAt
+      role
     }
   }
-}
-`
+`;
 
-export const USERS = gql`
-query GetUsers {
-  users {
-    id
-    email
-    password
-    firstName
-    lastName
-    addresses {
-      type
-      street
-      city
-      state
-      zipCode
-      country
-      isDefault
+export const GET_USER_PROFILE = gql`
+  query GetUser($id: ID!) {
+    user(id: $id) {
+      id
+      firstName
+      lastName
+      avatar
+      followerCount
+      followingCount
+      isFollowing
+      addresses {
+        id
+        type
+        street
+        city
+        state
+        zipCode
+        country
+        isDefault
+        createdAt
+      }
+      posts {
+        id
+        content
+        createdAt
+        likeCount
+        commentCount
+        privacy
+      }
+    }
+  }
+`;
+
+export const SEARCH_USERS = gql`
+  query SearchUsers($query: String!, $page: Int, $limit: Int) {
+    searchUsers(query: $query, page: $page, limit: $limit) {
+      users {
+        id
+        firstName
+        lastName
+        avatar
+        followerCount
+        isFollowing
+      }
+      totalCount
+      hasNextPage
+    }
+  }
+`;
+
+export const GET_FOLLOWERS = gql`
+  query GetFollowers($userId: ID!) {
+    followers(userId: $userId) {
+      id
+      firstName
+      lastName
+      avatar
+      isFollowing
+    }
+  }
+`;
+
+export const GET_FOLLOWING = gql`
+  query GetFollowing($userId: ID!) {
+    following(userId: $userId) {
+      id
+      firstName
+      lastName
+      avatar
+      isFollowing
+    }
+  }
+`;
+
+// ============ PRODUCT QUERIES ============
+export const GETCATEGORY = gql`
+  query GetCategories {
+    categories {
+      id
+      name
+      description
+      image
+      isActive
       createdAt
     }
-    avatar
-    phone
-    emailVerified
-    createdAt
-    updatedAt
-    role
   }
-}
-`
+`;
 
-
-export const MANAGEMENTPRODUCTS = gql`
-query GetProducts($userId: ID!) {
-  getProducts(userId:$userId)   {
+export const GETPRODUCTS = gql`
+  query GetProducts($search: String, $cursor: String, $limit: Int, $category: String, $sortBy: String) {
+    products(search: $search, cursor: $cursor, limit: $limit, category: $category, sortBy: $sortBy) {
+      items {
         id
         name
         description
@@ -72,22 +132,16 @@ query GetProducts($userId: ID!) {
         images
         category {
           id
-          name
-          description
-          image
-          isActive
-          createdAt   
         }
         variants {
-           id
-           name
-           createdAt
-           sku
-           color
-           size
-           price
-           salePrice
-           stock
+          name
+          createdAt
+          sku
+          color
+          size
+          price
+          salePrice
+          stock
         }
         brand
         weight
@@ -97,172 +151,87 @@ query GetProducts($userId: ID!) {
         tags
         createdAt
         updatedAt
+      }
+      nextCursor
+      hasMore
+    }
   }
-}
-`
+`;
 
-export const GETCATEGORY = gql`
-query GetCategories {
-  categories{
-    id
-    name
-    description
-    image
-    isActive
-    createdAt
-  }
-}
-`
-export const GETPRODUCTS = gql`
-query GetProducts($search: String, $cursor: String, $limit: Int, $category: String, $sortBy: String) {
-   products(search: $search, cursor: $cursor, limit: $limit, category: $category, sortBy: $sortBy) {
-     items { id
-             name
-             description
-             price
-             salePrice
-             supplierId
-             sku
-             stock
-             images
-             category {
-                    id
-             }
-             variants {
-                 name
-                 createdAt
-                 sku
-                 color
-                 size
-                 price
-                 salePrice
-                 stock
-             }
-             brand
-             weight
-             dimensions
-             isActive
-             featured
-             tags
-             createdAt
-             updatedAt
-          }
-                nextCursor
-                hasMore
-              }
-            }`
-
-export const GET_USER_FOLLOWING_POSTS = gql`
-query GetFollowingPosts($page: Int, $limit: Int) {
-  posts(followingOnly: true, page: $page, limit: $limit) {
-    posts {
+export const MANAGEMENTPRODUCTS = gql`
+  query GetProducts($userId: ID!) {
+    getProducts(userId: $userId) {
       id
-      content
-      createdAt
-      privacy
-      isLikedByMe
-      likeCount
-      commentCount
-      user {
+      name
+      description
+      price
+      salePrice
+      supplierId
+      sku
+      stock
+      images
+      category {
         id
         name
-        avatar
-      }
-      taggedUsers {
-        id
-        name
-      }
-      comments {
-        id
-        content
+        description
+        image
+        isActive
         createdAt
-        user {
-          id
-          name
-        }
       }
-    }
-    totalCount
-    hasNextPage
-  }
-}
-`
-
-
-export const GET_USER_SPECIFIC_POSTS = gql`
-query GetUserPosts($userId: ID!, $page: Int, $limit: Int) {
-  posts(userId: $userId, page: $page, limit: $limit) {
-    posts {
-      id
-      content
-      createdAt
-      privacy
-      isLikedByMe
-      likeCount
-      commentCount
-      user {
+      variants {
         id
         name
-      }
-      taggedUsers {
-        id
-        name
-      }
-      comments {
-        id
-        content
-        user {
-          id
-          name
-        }
-      }
-    }
-    totalCount
-    hasNextPage
-  }
-}
-`
-
-
-export const GET_USER_POSTS = gql`
-query GetPosts($page: Int, $limit: Int) {
-  posts(page: $page, limit: $limit) {
-    posts {
-      id
-      content
-      createdAt
-      privacy
-      isLikedByMe
-      likeCount
-      commentCount
-      user {
-        id
-        name
-        email
-        avatar
-      }
-      taggedUsers {
-        id
-        name
-        email
-      }
-      comments {
-        id
-        content
         createdAt
-        user {
-          id
-          name
-        }
+        sku
+        color
+        size
+        price
+        salePrice
+        stock
+      }
+      brand
+      weight
+      dimensions
+      isActive
+      featured
+      tags
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// ============ ORDER QUERIES ============
+export const ORDER_ITEMS = gql`
+  query GetOrders($userId: ID!) {
+    orders(userId: $userId) {
+      id
+      orderNumber
+      status
+      total
+      subtotal
+      tax
+      shipping
+      discount
+      createdAt
+      updatedAt
+      user {
+        id
+      }
+      address {
+        id
+      }
+      items {
+        id
+      }
+      payments {
+        id
       }
     }
-    totalCount
-    hasNextPage
   }
-}
-`
+`;
 
-// Get user feed with posts
+// ============ POST QUERIES ============
 export const GET_USER_FEED = gql`
   query GetUserFeed($page: Int, $limit: Int, $userId: String) {
     userFeed(page: $page, limit: $limit, userId: $userId) {
@@ -294,7 +263,6 @@ export const GET_USER_FEED = gql`
   }
 `;
 
-// Get specific post with comments
 export const GET_POST = gql`
   query GetPost($id: ID!) {
     post(id: $id) {
@@ -335,51 +303,35 @@ export const GET_POST = gql`
   }
 `;
 
-// Get user profile with posts and follow info
-export const GET_USER_PROFILE = gql`
-  query GetUser($id: ID!) {
-    user(id: $id) {
-      id
-      firstName
-      lastName
-      avatar
-      followerCount
-      followingCount
-      isFollowing
-      addresses {
-        id
-        type
-        street
-        city
-        state
-        zipCode
-        country
-        isDefault
-        createdAt
-      }
+export const GET_USER_FOLLOWING_POSTS = gql`
+  query GetFollowingPosts($page: Int, $limit: Int) {
+    posts(followingOnly: true, page: $page, limit: $limit) {
       posts {
         id
         content
         createdAt
+        privacy
+        isLikedByMe
         likeCount
         commentCount
-        privacy
-      }
-    }
-  }
-`;
-
-// Search for users
-export const SEARCH_USERS = gql`
-  query SearchUsers($query: String!, $page: Int, $limit: Int) {
-    searchUsers(query: $query, page: $page, limit: $limit) {
-      users {
-        id
-        firstName
-        lastName
-        avatar
-        followerCount
-        isFollowing
+        user {
+          id
+          name
+          avatar
+        }
+        taggedUsers {
+          id
+          name
+        }
+        comments {
+          id
+          content
+          createdAt
+          user {
+            id
+            name
+          }
+        }
       }
       totalCount
       hasNextPage
@@ -387,33 +339,6 @@ export const SEARCH_USERS = gql`
   }
 `;
 
-// Get user's followers
-export const GET_FOLLOWERS = gql`
-  query GetFollowers($userId: ID!) {
-    followers(userId: $userId) {
-      id
-      firstName
-      lastName
-      avatar
-      isFollowing
-    }
-  }
-`;
-
-// Get users that a user is following
-export const GET_FOLLOWING = gql`
-  query GetFollowing($userId: ID!) {
-    following(userId: $userId) {
-      id
-      firstName
-      lastName
-      avatar
-      isFollowing
-    }
-  }
-`;
-
-// Get posts by a specific user
 export const GET_USER_POSTS = gql`
   query GetUserPosts($userId: ID!, $page: Int, $limit: Int) {
     posts(userId: $userId, page: $page, limit: $limit) {
@@ -434,7 +359,45 @@ export const GET_USER_POSTS = gql`
   }
 `;
 
-// Get comments for a post
+export const GET_ALL_POSTS = gql`
+  query GetPosts($page: Int, $limit: Int) {
+    posts(page: $page, limit: $limit) {
+      posts {
+        id
+        content
+        createdAt
+        privacy
+        isLikedByMe
+        likeCount
+        commentCount
+        user {
+          id
+          name
+          email
+          avatar
+        }
+        taggedUsers {
+          id
+          name
+          email
+        }
+        comments {
+          id
+          content
+          createdAt
+          user {
+            id
+            name
+          }
+        }
+      }
+      totalCount
+      hasNextPage
+    }
+  }
+`;
+
+// ============ COMMENT QUERIES ============
 export const GET_COMMENTS = gql`
   query GetComments($postId: ID!, $page: Int, $limit: Int) {
     comments(postId: $postId, page: $page, limit: $limit) {
