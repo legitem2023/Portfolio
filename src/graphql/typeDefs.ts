@@ -360,6 +360,38 @@ export const typeDefs = gql`
 
   # ================= Queries & Mutations =================
   type Query {
+
+
+# Get messages for current user (both sent and received)
+  myMessages(
+    page: Int
+    limit: Int
+    isRead: Boolean
+  ): MessageConnection!
+  
+  # Get conversation between two users
+  conversation(
+    userId: ID!
+    page: Int
+    limit: Int
+  ): MessageConnection!
+  
+  # Get unread message count
+  unreadMessageCount: Int!
+  
+  # Get specific message by ID
+  message(id: ID!): Message
+  
+  # Get message threads (conversations list)
+  messageThreads(
+    page: Int
+    limit: Int
+  ): MessageThreadConnection!
+
+
+
+
+  
     users: [User!]
     user(id: ID!): User
     products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
@@ -439,6 +471,27 @@ type SetDefaultAddressResponse {
 
 
   type Mutation {
+
+ # Send a new message
+  sendMessage(input: SendMessageInput!): Message!
+  
+  # Reply to a message
+  replyMessage(input: ReplyMessageInput!): Message!
+  
+  # Mark message as read
+  markAsRead(messageId: ID!): Message!
+  
+  # Mark multiple messages as read
+  markMultipleAsRead(messageIds: [ID!]!): Boolean!
+  
+  # Delete a message (soft delete for sender)
+  deleteMessage(messageId: ID!): Boolean!
+  
+  # Delete conversation with a user
+  deleteConversation(userId: ID!): Boolean!
+
+
+  
     setDefaultAddress(addressId: ID!,userId: ID!): SetDefaultAddressResponse!
     logout: LogoutResponse!
     login(input: LoginInput): Result
@@ -468,6 +521,42 @@ type SetDefaultAddressResponse {
     tagUsersInPost(postId: ID!, userIds: [ID!]!): Post!
     removeTagFromPost(postId: ID!, userId: ID!): Post!
   }
+
+# Input Types
+input SendMessageInput {
+  recipientId: ID!
+  body: String!
+  subject: String
+}
+
+input ReplyMessageInput {
+  parentId: ID!
+  body: String!
+}
+
+# Response Types
+type MessageConnection {
+  messages: [Message!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  page: Int!
+}
+
+type MessageThreadConnection {
+  threads: [MessageThread!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  page: Int!
+}
+
+type MessageThread {
+  user: User!
+  lastMessage: Message
+  unreadCount: Int!
+  updatedAt: DateTime!
+}
+
+
 
 type LogoutResponse {
   success: Boolean!
