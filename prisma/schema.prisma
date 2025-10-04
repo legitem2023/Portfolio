@@ -44,10 +44,23 @@ model User {
   followers       Follow[]         @relation("Follower")
   following       Follow[]         @relation("Following")
   taggedPosts     PostTaggedUser[] // Changed to explicit relation
-
+  blacklistedTokens  BlacklistedToken[]
   // Indexes
   @@index([createdAt])
   @@map("users")
+  
+}
+
+
+model BlacklistedToken {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // Social Media Models (NEW)
