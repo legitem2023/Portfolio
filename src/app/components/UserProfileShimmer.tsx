@@ -6,7 +6,7 @@ const UserProfileShimmer = () => {
     <div className="bg-gray-50 min-h-screen max-w-2xl">
       {/* Cover Photo Shimmer */}
       <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse relative">
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent"></div>
+        <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/10 to-transparent"></div>
         
         {/* Profile Picture Shimmer */}
         <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
