@@ -147,7 +147,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
  }
   return (
     <>
-      <div onClick={navigate} className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
@@ -166,19 +166,23 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         
         {/* Message Content */}
         <div className="p-0">    
-          <div className="mb-3 p-2" style={background ? { background: background, color: 'white' } : {}}>
+          <div onClick={navigate} className="mb-3 p-2" style={background ? { background: background, color: 'white' } : {}}>
             {content}
           </div>
           
           {/* Post Images */}
           {images && images.length > 0 && (
+          <div onClick={navigate}>
             <PostImages images={images} />
-          )}
+          </div>
+            )}
           
           {/* Single Post Image for backward compatibility */}
           {postImage && !images?.length && (
-            <PostImages images={[postImage]} />
-          )}
+            <div onClick={navigate}>
+              <PostImages images={[postImage]} />
+            </div>
+              )}
           
           {/* Tagged Users */}
           {taggedUsers && taggedUsers.length > 0 && (
