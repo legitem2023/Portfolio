@@ -244,7 +244,7 @@ const MessagesTab = () => {
         {/* No more posts message */}
         {!hasMore && posts.length > 0 && (
           <div className="text-center py-6 text-gray-500">
-            You've reached the end of the feed
+            Youve reached the end of the feed
           </div>
         )}
         
