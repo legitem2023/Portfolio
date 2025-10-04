@@ -669,7 +669,45 @@ const isValid = await comparePassword(password, user?.password || "");
     console.error('Login resolver error:', err);
   }
 },
-    
+  logout: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
+      try {
+        const { token } = context;
+
+        if (!token) {
+          return {
+            success: false,
+            message: 'No authentication token provided'
+          };
+        }
+
+        // Decrypt token to get user info
+        const { payload } = await jwtDecrypt(token, secret);
+        
+        // Add token to blacklist (valid for 7 days)
+        await prisma.blacklistedToken.upsert({
+          where: { token },
+          update: { 
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) 
+          },
+          create: {
+            token,
+            userId: payload.userId as string,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          }
+        });
+
+        return {
+          success: true,
+          message: 'Successfully logged out'
+        };
+      } catch (error) {
+        console.error('Logout error:', error);
+        return {
+          success: false,
+          message: 'Failed to complete logout process'
+        };
+      }
+    },  
     loginWithFacebook: async (_: any, args: any) => {
       const { idToken } = args.input;
 
