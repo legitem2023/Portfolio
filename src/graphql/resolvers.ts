@@ -31,6 +31,7 @@ interface SetDefaultAddressResponse {
   message?: string;
   address?: any;
 }
+const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
 export const resolvers = {
   Query: {
