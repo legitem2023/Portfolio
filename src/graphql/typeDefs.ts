@@ -440,6 +440,7 @@ type SetDefaultAddressResponse {
 
   type Mutation {
     setDefaultAddress(addressId: ID!,userId: ID!): SetDefaultAddressResponse!
+    logout: LogoutResponse!
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
@@ -467,6 +468,11 @@ type SetDefaultAddressResponse {
     tagUsersInPost(postId: ID!, userIds: [ID!]!): Post!
     removeTagFromPost(postId: ID!, userId: ID!): Post!
   }
+
+type LogoutResponse {
+  success: Boolean!
+  message: String!
+}
 
 input ProductVariantInput {
     name: String!
