@@ -493,9 +493,9 @@ const PMTab = () => {
     return user.avatar || "/NoImage.webp";
   };
 
-  // Determine which view to show on mobile
-  const showSidebar = isSidebarOpen || (!selectedUser && isMobile);
-  const showChat = !isSidebarOpen || (selectedUser && !isMobile) || !isMobile;
+  // Determine which view to show based on mobile/desktop and state
+  const shouldShowSidebar = isMobile ? isSidebarOpen : true;
+  const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
@@ -503,10 +503,10 @@ const PMTab = () => {
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4'}
+            ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
-            ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
+            ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
           `}>
             <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
               <div className="flex items-center justify-between">
@@ -596,187 +596,188 @@ const PMTab = () => {
             </div>
           </div>
 
-          {/* Chat Area */}
-          <div className={`
-            ${isMobile ? 'fixed inset-0 z-20' : 'relative z-10 flex-1'}
-            flex flex-col h-full bg-white
-            transform transition-transform duration-300 ease-in-out
-            ${showChat ? 'translate-x-0' : 'translate-x-full'}
-          `}>
-            {/* Chat Header */}
-            {selectedUser ? (
-              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
-                <div className="flex items-center">
-                  {isMobile && (
-                    <button 
-                      onClick={handleBackToContacts}
-                      className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                  )}
-                  <img
-                    src={getUserAvatar(selectedUser)}
-                    alt={getUserFullName(selectedUser)}
-                    className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
-                  />
-                  <div className="ml-3 flex-1 min-w-0">
-                    <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
-                      {getUserFullName(selectedUser)}
-                    </h2>
-                    <p className="text-xs md:text-sm text-purple-500 truncate">Online • Last seen recently</p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </button>
-                    <button 
-                      onClick={handleToggleSidebar}
-                      className="p-2 text-purple-400 hover:text-purple-600 transition-colors md:hidden"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
-                <div className="flex items-center justify-between">
+          {/* Chat Area - Only show when not in sidebar mode on mobile */}
+          {shouldShowChat && (
+            <div className={`
+              ${isMobile ? 'fixed inset-0 z-20' : 'relative z-10 flex-1'}
+              flex flex-col h-full bg-white
+              transform transition-transform duration-300 ease-in-out
+            `}>
+              {/* Chat Header */}
+              {selectedUser ? (
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
-                        onClick={handleToggleSidebar}
+                        onClick={handleBackToContacts}
                         className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                    )}
+                    <img
+                      src={getUserAvatar(selectedUser)}
+                      alt={getUserFullName(selectedUser)}
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                    />
+                    <div className="ml-3 flex-1 min-w-0">
+                      <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
+                        {getUserFullName(selectedUser)}
+                      </h2>
+                      <p className="text-xs md:text-sm text-purple-500 truncate">Online • Last seen recently</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={handleToggleSidebar}
+                        className="p-2 text-purple-400 hover:text-purple-600 transition-colors md:hidden"
                       >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
                       </button>
-                    )}
-                    <div>
-                      <h2 className="font-bold text-purple-900 text-sm md:text-base">Messages</h2>
-                      <p className="text-xs md:text-sm text-purple-500">Select a conversation</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom">
-              {selectedUser ? (
-                <div className="space-y-4">
-                  {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                    <div key={date}>
-                      <div className="flex justify-center my-4">
-                        <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium">
-                          {date}
-                        </span>
-                      </div>
-                      {dateMessages.map((message) => (
-                        <div
-                          key={message.id}
-                          className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+              ) : (
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {isMobile && (
+                        <button 
+                          onClick={handleToggleSidebar}
+                          className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
                         >
-                          <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
-                            message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                          }`}>
-                            <img
-                              src={message.avatar}
-                              alt={message.sender}
-                              className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0"
-                            />
-                            <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
-                              <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
-                                message.isOwnMessage
-                                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
-                                  : 'bg-white text-purple-900 border border-purple-100 rounded-bl-none'
-                              }`}>
-                                <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
-                              </div>
-                              <div className={`flex items-center mt-1 space-x-2 text-xs ${
-                                message.isOwnMessage ? 'justify-end' : 'justify-start'
-                              }`}>
-                                <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
-                                  {formatTime(message.timestamp)}
-                                </span>
-                                {message.isOwnMessage && (
-                                  <svg className="w-3 h-3 md:w-4 md:h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                          </svg>
+                        </button>
+                      )}
+                      <div>
+                        <h2 className="font-bold text-purple-900 text-sm md:text-base">Messages</h2>
+                        <p className="text-xs md:text-sm text-purple-500">Select a conversation</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Messages Container */}
+              <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom">
+                {selectedUser ? (
+                  <div className="space-y-4">
+                    {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                      <div key={date}>
+                        <div className="flex justify-center my-4">
+                          <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium">
+                            {date}
+                          </span>
+                        </div>
+                        {dateMessages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
+                              message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                            }`}>
+                              <img
+                                src={message.avatar}
+                                alt={message.sender}
+                                className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0"
+                              />
+                              <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
+                                <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
+                                  message.isOwnMessage
+                                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
+                                    : 'bg-white text-purple-900 border border-purple-100 rounded-bl-none'
+                                }`}>
+                                  <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
+                                </div>
+                                <div className={`flex items-center mt-1 space-x-2 text-xs ${
+                                  message.isOwnMessage ? 'justify-end' : 'justify-start'
+                                }`}>
+                                  <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
+                                    {formatTime(message.timestamp)}
+                                  </span>
+                                  {message.isOwnMessage && (
+                                    <svg className="w-3 h-3 md:w-4 md:h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-purple-400">
+                      <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <p className="text-lg font-medium">Select a conversation</p>
+                      <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
                     </div>
-                  ))}
-                  <div ref={messagesEndRef} />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center text-purple-400">
-                    <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <p className="text-lg font-medium">Select a conversation</p>
-                    <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Message Input */}
+              {selectedUser && (
+                <div className="border-t border-purple-200 p-4 bg-white safe-area-inset-bottom">
+                  <div className="flex space-x-3">
+                    <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+                      <textarea
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Type your message..."
+                        className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
+                        rows={1}
+                      />
+                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim()}
+                      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    >
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex justify-between items-center mt-2 px-1">
+                    <div className="flex space-x-2">
+                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                      </button>
+                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="text-xs text-purple-400 hidden md:block">
+                      Press Enter to send • Shift+Enter for new line
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Message Input */}
-            {selectedUser && (
-              <div className="border-t border-purple-200 p-4 bg-white safe-area-inset-bottom">
-                <div className="flex space-x-3">
-                  <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
-                    <textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
-                      rows={1}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                  >
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="flex justify-between items-center mt-2 px-1">
-                  <div className="flex space-x-2">
-                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                      </svg>
-                    </button>
-                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="text-xs text-purple-400 hidden md:block">
-                    Press Enter to send • Shift+Enter for new line
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
@@ -815,10 +816,6 @@ const PMTab = () => {
           .messages-scrollbar::-webkit-scrollbar {
             width: 3px;
           }
-          
-          body {
-            overflow-x: hidden;
-          }
         }
 
         /* Custom colors */
@@ -828,11 +825,6 @@ const PMTab = () => {
 
         .bg-purple-25 {
           background-color: #faf9ff;
-        }
-
-        /* Prevent body scroll when mobile sidebar is open */
-        body.sidebar-open {
-          overflow: hidden;
         }
       `}</style>
     </div>
