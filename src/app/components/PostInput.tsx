@@ -17,13 +17,15 @@ interface PostInputProps {
   onPostSubmit?: (content: string, images: string[], taggedUsers: string[], background?: string ) => void;
   placeholder?: string;
   friends?: User[];
+  isLoading:boolean;
 }
 
 const PostInput: React.FC<PostInputProps> = ({ 
   user, 
   onPostSubmit, 
   placeholder = "What's on your mind?",
-  friends = []
+  friends = [],
+  isLoading
 }) => {
   const [createPost, { loading, error }] = useMutation(CREATE_POST,{
     onCompleted:(e:any) =>{
