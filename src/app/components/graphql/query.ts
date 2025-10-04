@@ -279,22 +279,20 @@ export const GET_POST = gql`
         avatar
       }
       taggedUsers {
-        id
-        firstName
-        lastName
-      }
-      comments {
-        id
-        content
-        createdAt
-        user {
           id
           firstName
           lastName
-          avatar
         }
-        likeCount
-        isLikedByMe
+      comments {
+          id
+          content
+          createdAt
+          user {
+           id
+           firstName
+           lastName
+           avatar
+         }
       }
       commentCount
       likeCount
@@ -316,21 +314,25 @@ export const GET_USER_FOLLOWING_POSTS = gql`
         commentCount
         user {
           id
-          name
+          firstName
+          lastName
           avatar
         }
         taggedUsers {
           id
-          name
+          firstName
+          lastName
         }
         comments {
           id
           content
           createdAt
           user {
-            id
-            name
-          }
+           id
+           firstName
+           lastName
+           avatar
+         }
         }
       }
       totalCount
@@ -386,9 +388,11 @@ export const GET_ALL_POSTS = gql`
           content
           createdAt
           user {
-            id
-            name
-          }
+           id
+           firstName
+           lastName
+           avatar
+         }
         }
       }
       totalCount
