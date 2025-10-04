@@ -729,6 +729,8 @@ const isValid = await comparePassword(password, user?.password || "");
       
       const passwordHash = await encryptPassword(password, 10);
 
+
+      console.log(email, password, firstName, lastName);
       const result = await prisma.user.create({
         data: { 
           email: email,
