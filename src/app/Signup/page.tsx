@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Footer from '../components/Footer';
 import { useMutation } from '@apollo/client';
 import { CREATEUSER } from '../components/graphql/mutation';
-
+import Header from '../components/Header';
 interface FormData {
   firstName: string;
   lastName: string;
@@ -110,15 +110,7 @@ export default function LuxurySignup() {
       </Head>
       
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
-        <div className="text-center p-4">
-          <Image
-            src={`https://new-client-legitem.vercel.app/image/Crowd.svg`}
-            alt="home1"
-            height="80"
-            width="160"
-            className="h-25 w-50 mx-auto"
-          />
-        </div>
+        <Header/>
         
         <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
