@@ -784,13 +784,14 @@ const PMTab = () => {
       {/* Custom Styles */}
       <style jsx global>{`
         /* Safe area insets for modern mobile devices */
-        .safe-area-inset-bottom {
+       /* .safe-area-inset-bottom {
           padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
         }
         
         .safe-area-inset-top {
           padding-top: env(safe-area-inset-top);
         }
+        */
         
         /* Custom scrollbar */
         .messages-scrollbar::-webkit-scrollbar {
