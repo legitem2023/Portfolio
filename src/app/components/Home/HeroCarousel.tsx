@@ -22,7 +22,7 @@ interface HeroCarouselProps {
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
   return (
-    <section className="relative z-20">
+    <section className="relative z-10">
       <Swiper
         modules={[Navigation, Pagination, Autoplay, EffectFade]}
         spaceBetween={0}
