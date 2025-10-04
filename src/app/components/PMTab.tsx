@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
 
-// GraphQL Queries & Mutations
+// GraphQL Queries & Mutations (keep the same as before)
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -232,7 +232,6 @@ interface MessageThread {
   updatedAt: string;
 }
 
-// Local UI Message interface (compatible with GraphQL)
 interface Message {
   id: string;
   sender: string;
@@ -245,7 +244,7 @@ interface Message {
   images: string[];
   isOwnMessage: boolean;
   isRead: boolean;
-  graphQLData?: GraphQLMessage; // Keep reference to original data
+  graphQLData?: GraphQLMessage;
 }
 
 const PMTab = () => {
@@ -288,11 +287,13 @@ const PMTab = () => {
   // Check if mobile on mount and resize
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) {
-        setIsSidebarOpen(true);
-      } else {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // On mobile, sidebar starts closed; on desktop, it starts open
+      if (mobile) {
         setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
       }
     };
 
@@ -343,7 +344,7 @@ const PMTab = () => {
         avatar: msg.sender.avatar || "/NoImage.webp",
         timestamp: msg.createdAt,
         content: msg.body,
-        likes: 0, // You can extend your GraphQL schema to include these if needed
+        likes: 0,
         comments: msg.replies.length,
         isLikedByMe: false,
         images: [],
@@ -387,7 +388,6 @@ const PMTab = () => {
       });
 
       if (data?.sendMessage) {
-        // Convert the GraphQL response to UI message format
         const newMsg: Message = {
           id: data.sendMessage.id,
           sender: name,
@@ -405,13 +405,10 @@ const PMTab = () => {
 
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
-        
-        // Refetch threads to update last message
         refetchThreads();
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      // You might want to show a toast notification here
     }
   };
 
@@ -428,7 +425,6 @@ const PMTab = () => {
       setIsSidebarOpen(false);
     }
     
-    // Refetch conversation when user is selected
     try {
       await refetchConversation({ userId: user.id });
     } catch (error) {
@@ -437,9 +433,14 @@ const PMTab = () => {
   };
 
   const handleBackToContacts = () => {
+    setSelectedUser(null);
     if (isMobile) {
       setIsSidebarOpen(true);
     }
+  };
+
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const formatTime = (timestamp: string) => {
@@ -484,26 +485,28 @@ const PMTab = () => {
 
   const messageGroups = groupMessagesByDate();
 
-  // Get user's full name
   const getUserFullName = (user: User) => {
     return `${user.firstName} ${user.lastName}`;
   };
 
-  // Get user's avatar or default
   const getUserAvatar = (user: User) => {
     return user.avatar || "/NoImage.webp";
   };
 
+  // Determine which view to show on mobile
+  const showSidebar = isSidebarOpen || (!selectedUser && isMobile);
+  const showChat = !isSidebarOpen || (selectedUser && !isMobile) || !isMobile;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-4 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl overflow-hidden h-[calc(100vh-1rem)] md:h-[80vh]">
-        <div className="flex h-full">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
+        <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            absolute md:relative z-20 w-full md:w-1/3 lg:w-1/4
+            ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
-            ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+            ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
           `}>
             <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
               <div className="flex items-center justify-between">
@@ -516,14 +519,16 @@ const PMTab = () => {
                     }
                   </p>
                 </div>
-                <button 
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="md:hidden p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                {isMobile && (
+                  <button 
+                    onClick={handleToggleSidebar}
+                    className="p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
             
@@ -593,59 +598,80 @@ const PMTab = () => {
 
           {/* Chat Area */}
           <div className={`
-            absolute md:relative z-10 w-full md:w-2/3 lg:w-3/4 flex flex-col h-full
-            bg-white transform transition-transform duration-300 ease-in-out
-            ${isSidebarOpen ? 'translate-x-full md:translate-x-0' : 'translate-x-0'}
+            ${isMobile ? 'fixed inset-0 z-20' : 'relative z-10 flex-1'}
+            flex flex-col h-full bg-white
+            transform transition-transform duration-300 ease-in-out
+            ${showChat ? 'translate-x-0' : 'translate-x-full'}
           `}>
             {/* Chat Header */}
             {selectedUser ? (
-              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-3 md:p-4">
+              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
                 <div className="flex items-center">
-                  <button 
-                    onClick={handleBackToContacts}
-                    className="md:hidden mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
+                  {isMobile && (
+                    <button 
+                      onClick={handleBackToContacts}
+                      className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                  )}
                   <img
                     src={getUserAvatar(selectedUser)}
                     alt={getUserFullName(selectedUser)}
                     className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                   />
-                  <div className="ml-3">
-                    <h2 className="font-bold text-purple-900 text-sm md:text-base">
+                  <div className="ml-3 flex-1 min-w-0">
+                    <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
                       {getUserFullName(selectedUser)}
                     </h2>
-                    <p className="text-xs md:text-sm text-purple-500">Online • Last seen recently</p>
+                    <p className="text-xs md:text-sm text-purple-500 truncate">Online • Last seen recently</p>
                   </div>
-                  <div className="ml-auto flex space-x-2">
+                  <div className="flex space-x-2">
                     <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                       </svg>
                     </button>
-                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                    <button 
+                      onClick={handleToggleSidebar}
+                      className="p-2 text-purple-400 hover:text-purple-600 transition-colors md:hidden"
+                    >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
                     </button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4">
-                <div className="flex items-center justify-center h-10">
-                  <p className="text-purple-600">Select a conversation to start messaging</p>
+              <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    {isMobile && (
+                      <button 
+                        onClick={handleToggleSidebar}
+                        className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                      </button>
+                    )}
+                    <div>
+                      <h2 className="font-bold text-purple-900 text-sm md:text-base">Messages</h2>
+                      <p className="text-xs md:text-sm text-purple-500">Select a conversation</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-3 md:p-6 bg-gradient-to-b from-white to-purple-25 messages-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom">
               {selectedUser ? (
-                <div className="space-y-3 md:space-y-4">
+                <div className="space-y-4">
                   {Object.entries(messageGroups).map(([date, dateMessages]) => (
                     <div key={date}>
                       <div className="flex justify-center my-4">
@@ -667,14 +693,16 @@ const PMTab = () => {
                               className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0"
                             />
                             <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
-                              <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 shadow-lg ${
+                              <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
                                 message.isOwnMessage
                                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
                                   : 'bg-white text-purple-900 border border-purple-100 rounded-bl-none'
                               }`}>
                                 <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
                               </div>
-                              <div className="flex items-center mt-1 space-x-2 text-xs">
+                              <div className={`flex items-center mt-1 space-x-2 text-xs ${
+                                message.isOwnMessage ? 'justify-end' : 'justify-start'
+                              }`}>
                                 <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
                                   {formatTime(message.timestamp)}
                                 </span>
@@ -698,8 +726,8 @@ const PMTab = () => {
                     <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
-                    <p className="text-lg font-medium">Select a conversation to start messaging</p>
-                    <p className="text-sm mt-2">Choose from your contacts on the left</p>
+                    <p className="text-lg font-medium">Select a conversation</p>
+                    <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
                   </div>
                 </div>
               )}
@@ -707,45 +735,37 @@ const PMTab = () => {
 
             {/* Message Input */}
             {selectedUser && (
-              <div className="border-t border-purple-200 p-3 md:p-4 bg-white safe-area-inset-bottom">
-                <div className="flex space-x-2 md:space-x-3">
-                  <button 
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="md:hidden p-2 text-purple-400 hover:text-purple-600 transition-colors flex-shrink-0"
-                  >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                  </button>
-                  <div className="flex-1 bg-purple-50 rounded-xl md:rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+              <div className="border-t border-purple-200 p-4 bg-white safe-area-inset-bottom">
+                <div className="flex space-x-3">
+                  <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
                     <textarea
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Type your message..."
-                      className="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base bg-transparent focus:outline-none resize-none rounded-xl md:rounded-2xl min-h-[40px] max-h-[120px]"
+                      className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
                       rows={1}
                     />
                   </div>
                   <button
                     onClick={handleSendMessage}
                     disabled={!newMessage.trim()}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-2 md:p-3 rounded-xl md:rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex-shrink-0"
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                   >
-                    <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                   </button>
                 </div>
                 <div className="flex justify-between items-center mt-2 px-1">
-                  <div className="flex space-x-1 md:space-x-2">
-                    <button className="p-1 md:p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="flex space-x-2">
+                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                       </svg>
                     </button>
-                    <button className="p-1 md:p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                      <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     </button>
@@ -760,23 +780,15 @@ const PMTab = () => {
         </div>
       </div>
 
-      {/* Mobile Floating Action Button */}
-      {!isSidebarOpen && !selectedUser && isMobile && (
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed bottom-6 right-6 z-30 bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 rounded-full shadow-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 md:hidden"
-        >
-          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </button>
-      )}
-
       {/* Custom Styles */}
       <style jsx global>{`
         /* Safe area insets for modern mobile devices */
         .safe-area-inset-bottom {
-          padding-bottom: env(safe-area-inset-bottom);
+          padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+        }
+        
+        .safe-area-inset-top {
+          padding-top: env(safe-area-inset-top);
         }
         
         /* Custom scrollbar */
@@ -803,6 +815,10 @@ const PMTab = () => {
           .messages-scrollbar::-webkit-scrollbar {
             width: 3px;
           }
+          
+          body {
+            overflow-x: hidden;
+          }
         }
 
         /* Custom colors */
@@ -812,6 +828,11 @@ const PMTab = () => {
 
         .bg-purple-25 {
           background-color: #faf9ff;
+        }
+
+        /* Prevent body scroll when mobile sidebar is open */
+        body.sidebar-open {
+          overflow: hidden;
         }
       `}</style>
     </div>
