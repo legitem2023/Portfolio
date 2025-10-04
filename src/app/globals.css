@@ -26,7 +26,7 @@
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 2px;
 }
 
 ::-webkit-scrollbar-track {
@@ -34,11 +34,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-golden-400 rounded-full;
+  @apply bg-indigo-400 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-golden-500;
+  @apply bg-indigo-500;
 }
 
 /* Line clamp utility */
