@@ -36,10 +36,10 @@ const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // 
 export const resolvers = {
   Query: {
 
-myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
+myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
       
-      const where = {
+      const where: any = {
         OR: [
           { senderId: userId },
           { recipientId: userId }
@@ -47,7 +47,7 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
         ...(isRead !== undefined && { isRead })
       };
 
-      const [messages, totalCount] = await Promise.all([
+      const [messages, totalCount]: any = await Promise.all([
         prisma.message.findMany({
           where,
           include: {
@@ -81,10 +81,10 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
       };
     },
 
-    conversation: async (_, { userId, page = 1, limit = 20 }, { currentUserId }) => {
+    conversation: async (_: any, { userId, page = 1, limit = 20 }: any, { currentUserId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
       
-      const where = {
+      const where: any = {
         OR: [
           {
             senderId: currentUserId,
@@ -97,7 +97,7 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
         ]
       };
 
-      const [messages, totalCount] = await Promise.all([
+      const [messages, totalCount]: any = await Promise.all([
         prisma.message.findMany({
           where,
           include: {
@@ -131,7 +131,7 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
       };
     },
 
-    unreadMessageCount: async (_, __, { userId }) => {
+    unreadMessageCount: async (_: any, __: any, { userId }: any): Promise<any> => {
       return prisma.message.count({
         where: {
           recipientId: userId,
@@ -140,7 +140,7 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
       });
     },
 
-    message: async (_, { id }, { userId }) => {
+    message: async (_: any, { id }: any, { userId }: any): Promise<any> => {
       return prisma.message.findFirst({
         where: {
           id,
@@ -168,11 +168,11 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
       });
     },
 
-    messageThreads: async (_, { page = 1, limit = 20 }, { userId }) => {
+    messageThreads: async (_: any, { page = 1, limit = 20 }: any, { userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
 
       // Get unique users that current user has conversations with
-      const conversations = await prisma.message.findMany({
+      const conversations: any = await prisma.message.findMany({
         where: {
           OR: [
             { senderId: userId },
@@ -206,8 +206,8 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
         }
       }
 
-      const threads = await Promise.all(
-        Array.from(threadMap.entries()).map(async ([otherUserId, data]) => {
+      const threads: any = await Promise.all(
+        Array.from(threadMap.entries()).map(async ([otherUserId, data]: any) => {
           const user = await prisma.user.findUnique({
             where: { id: otherUserId },
             select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
@@ -231,7 +231,7 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
       );
 
       // Sort by last message date
-      threads.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      threads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
       const paginatedThreads = threads.slice(skip, skip + limit);
 
@@ -242,7 +242,6 @@ myMessages: async (_, { page = 1, limit = 20, isRead }, { userId }) => {
         page
       };
     },
-
 
 
     
