@@ -23,11 +23,10 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const user: User = data.user;
 
   return (
-    <div className="w-full flex justify-between items-center mb-6">
-    <div className="bg-gray-50 min-h-screen max-w-2xl">
-      {/* Cover Photo */}
+    <div className="min-h-screen bg-gray-100 p-0">
+      <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
       <div className="h-48 md:h-60 lg:h-80 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm relative">
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
+        <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
         
         {/* Profile Picture */}
         <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
