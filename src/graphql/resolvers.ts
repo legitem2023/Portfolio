@@ -1,7 +1,7 @@
 // resolvers.ts
 import { PrismaClient, PrivacySetting } from "@prisma/client";
 import { comparePassword, encryptPassword } from '../../utils/script';
-import { EncryptJWT } from 'jose';
+import { EncryptJWT,jwtDecrypt } from 'jose';
 //import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
   LogoutResponse,
