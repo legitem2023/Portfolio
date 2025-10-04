@@ -6,7 +6,7 @@ import { EncryptJWT } from 'jose';
 import {
   LogoutResponse,
   Context
-} from './types/graphql.js';
+} from './Types/graphql.js';
 
 const prisma = new PrismaClient();
 
