@@ -820,8 +820,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
 
   Mutation: {
 
-
-sendMessage: async (_, { input }, { userId }) => {
+sendMessage: async (_: any, { input }: any, { userId }: any): Promise<any> => {
       const { recipientId, body, subject } = input;
 
       // Check if recipient exists
@@ -855,7 +854,7 @@ sendMessage: async (_, { input }, { userId }) => {
       });
     },
 
-    replyMessage: async (_, { input }, { userId }) => {
+    replyMessage: async (_: any, { input }: any, { userId }: any): Promise<any> => {
       const { parentId, body } = input;
 
       // Check if parent message exists and user is participant
@@ -898,7 +897,7 @@ sendMessage: async (_, { input }, { userId }) => {
       });
     },
 
-    markAsRead: async (_, { messageId }, { userId }) => {
+    markAsRead: async (_: any, { messageId }: any, { userId }: any): Promise<any> => {
       const message = await prisma.message.findFirst({
         where: {
           id: messageId,
@@ -922,7 +921,7 @@ sendMessage: async (_, { input }, { userId }) => {
       });
     },
 
-    markMultipleAsRead: async (_, { messageIds }, { userId }) => {
+    markMultipleAsRead: async (_: any, { messageIds }: any, { userId }: any): Promise<any> => {
       await prisma.message.updateMany({
         where: {
           id: { in: messageIds },
@@ -934,7 +933,7 @@ sendMessage: async (_, { input }, { userId }) => {
       return true;
     },
 
-    deleteMessage: async (_, { messageId }, { userId }) => {
+    deleteMessage: async (_: any, { messageId }: any, { userId }: any): Promise<any> => {
       const message = await prisma.message.findFirst({
         where: {
           id: messageId,
@@ -953,7 +952,7 @@ sendMessage: async (_, { input }, { userId }) => {
       return true;
     },
 
-    deleteConversation: async (_, { userId: otherUserId }, { currentUserId }) => {
+    deleteConversation: async (_: any, { userId: otherUserId }: any, { currentUserId }: any): Promise<any> => {
       await prisma.message.deleteMany({
         where: {
           OR: [
@@ -971,7 +970,6 @@ sendMessage: async (_, { input }, { userId }) => {
 
       return true;
     },
-  
 
 
 
