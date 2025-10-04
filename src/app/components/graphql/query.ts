@@ -152,8 +152,115 @@ query GetProducts($search: String, $cursor: String, $limit: Int, $category: Stri
               }
             }`
 
+export const GET_USER_FOLLOWING_POSTS = gql`
+query GetFollowingPosts($page: Int, $limit: Int) {
+  posts(followingOnly: true, page: $page, limit: $limit) {
+    posts {
+      id
+      content
+      createdAt
+      privacy
+      isLikedByMe
+      likeCount
+      commentCount
+      user {
+        id
+        name
+        avatar
+      }
+      taggedUsers {
+        id
+        name
+      }
+      comments {
+        id
+        content
+        createdAt
+        user {
+          id
+          name
+        }
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}
+`
 
 
+export const GET_USER_SPECIFIC_POSTS = gql`
+query GetUserPosts($userId: ID!, $page: Int, $limit: Int) {
+  posts(userId: $userId, page: $page, limit: $limit) {
+    posts {
+      id
+      content
+      createdAt
+      privacy
+      isLikedByMe
+      likeCount
+      commentCount
+      user {
+        id
+        name
+      }
+      taggedUsers {
+        id
+        name
+      }
+      comments {
+        id
+        content
+        user {
+          id
+          name
+        }
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}
+`
+
+
+export const GET_USER_POSTS = gql`
+query GetPosts($page: Int, $limit: Int) {
+  posts(page: $page, limit: $limit) {
+    posts {
+      id
+      content
+      createdAt
+      privacy
+      isLikedByMe
+      likeCount
+      commentCount
+      user {
+        id
+        name
+        email
+        avatar
+      }
+      taggedUsers {
+        id
+        name
+        email
+      }
+      comments {
+        id
+        content
+        createdAt
+        user {
+          id
+          name
+        }
+      }
+    }
+    totalCount
+    hasNextPage
+  }
+}
+`
 
 // Get user feed with posts
 export const GET_USER_FEED = gql`
