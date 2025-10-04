@@ -1,5 +1,14 @@
 import { gql } from "@apollo/client";
 
+export const LOGOUT_MUTATION = gql`
+  mutation Logout {
+    logout {
+      success
+      message
+    }
+  }
+`;
+
 export const SET_DEFAULT_ADDRESS = gql`
   mutation SetDefaultAddress($addressId: ID!, $userId: ID!) {
     setDefaultAddress(addressId: $addressId,userId: $userId) {
