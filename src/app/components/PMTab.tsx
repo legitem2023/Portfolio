@@ -1,19 +1,238 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@apollo/client';
-import { GET_USER_FEED } from './graphql/query';
-import { CREATE_POST } from './graphql/mutation';
+import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
+
+// GraphQL Queries & Mutations
+const GET_MY_MESSAGES = gql`
+  query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
+    myMessages(page: $page, limit: $limit, isRead: $isRead) {
+      messages {
+        id
+        subject
+        body
+        isRead
+        createdAt
+        sender {
+          id
+          firstName
+          lastName
+          avatar
+          email
+        }
+        recipient {
+          id
+          firstName
+          lastName
+          avatar
+          email
+        }
+        parent {
+          id
+          body
+          sender {
+            firstName
+            lastName
+          }
+        }
+        replies {
+          id
+          body
+          createdAt
+          sender {
+            firstName
+            lastName
+          }
+        }
+      }
+      totalCount
+      hasNextPage
+      page
+    }
+  }
+`;
+
+const GET_CONVERSATION = gql`
+  query GetConversation($userId: ID!, $page: Int, $limit: Int) {
+    conversation(userId: $userId, page: $page, limit: $limit) {
+      messages {
+        id
+        subject
+        body
+        isRead
+        createdAt
+        sender {
+          id
+          firstName
+          lastName
+          avatar
+          email
+        }
+        recipient {
+          id
+          firstName
+          lastName
+          avatar
+          email
+        }
+        parent {
+          id
+          body
+          sender {
+            firstName
+            lastName
+          }
+        }
+        replies {
+          id
+          body
+          createdAt
+          sender {
+            firstName
+            lastName
+          }
+        }
+      }
+      totalCount
+      hasNextPage
+      page
+    }
+  }
+`;
+
+const GET_MESSAGE_THREADS = gql`
+  query GetMessageThreads($page: Int, $limit: Int) {
+    messageThreads(page: $page, limit: $limit) {
+      threads {
+        user {
+          id
+          firstName
+          lastName
+          avatar
+          email
+        }
+        lastMessage {
+          id
+          body
+          createdAt
+          isRead
+        }
+        unreadCount
+        updatedAt
+      }
+      totalCount
+      hasNextPage
+      page
+    }
+  }
+`;
+
+const GET_UNREAD_MESSAGE_COUNT = gql`
+  query GetUnreadMessageCount {
+    unreadMessageCount
+  }
+`;
+
+const SEND_MESSAGE = gql`
+  mutation SendMessage($input: SendMessageInput!) {
+    sendMessage(input: $input) {
+      id
+      subject
+      body
+      isRead
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        avatar
+      }
+      recipient {
+        id
+        firstName
+        lastName
+        avatar
+      }
+    }
+  }
+`;
+
+const MARK_AS_READ = gql`
+  mutation MarkAsRead($messageId: ID!) {
+    markAsRead(messageId: $messageId) {
+      id
+      isRead
+    }
+  }
+`;
+
+const MARK_MULTIPLE_AS_READ = gql`
+  mutation MarkMultipleAsRead($messageIds: [ID!]!) {
+    markMultipleAsRead(messageIds: $messageIds)
+  }
+`;
+
+const REPLY_MESSAGE = gql`
+  mutation ReplyMessage($input: ReplyMessageInput!) {
+    replyMessage(input: $input) {
+      id
+      body
+      isRead
+      createdAt
+      sender {
+        id
+        firstName
+        lastName
+        avatar
+      }
+      recipient {
+        id
+        firstName
+        lastName
+        avatar
+      }
+      parent {
+        id
+        body
+        sender {
+          firstName
+          lastName
+        }
+      }
+    }
+  }
+`;
 
 interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   avatar?: string;
   email?: string;
   phone?: string | null;
   role?: string;
 }
 
+interface GraphQLMessage {
+  id: string;
+  subject?: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
+  sender: User;
+  recipient: User;
+  parent?: GraphQLMessage;
+  replies: GraphQLMessage[];
+}
+
+interface MessageThread {
+  user: User;
+  lastMessage?: GraphQLMessage;
+  unreadCount: number;
+  updatedAt: string;
+}
+
+// Local UI Message interface (compatible with GraphQL)
 interface Message {
   id: string;
   sender: string;
@@ -25,6 +244,8 @@ interface Message {
   isLikedByMe: boolean;
   images: string[];
   isOwnMessage: boolean;
+  isRead: boolean;
+  graphQLData?: GraphQLMessage; // Keep reference to original data
 }
 
 const PMTab = () => {
@@ -36,17 +257,33 @@ const PMTab = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Mock users for demonstration
-  const mockUsers: User[] = [
-    { id: "1", name: "Sarah Johnson", avatar: "/avatars/sarah.jpg", email: "sarah@example.com" },
-    { id: "2", name: "Mike Chen", avatar: "/avatars/mike.jpg", email: "mike@example.com" },
-    { id: "3", name: "Emma Wilson", avatar: "/avatars/emma.jpg", email: "emma@example.com" },
-    { id: "4", name: "Alex Rivera", avatar: "/avatars/alex.jpg", email: "alex@example.com" },
-    { id: "5", name: "Jordan Taylor", avatar: "/avatars/jordan.jpg", email: "jordan@example.com" },
-    { id: "6", name: "Casey Smith", avatar: "/avatars/casey.jpg", email: "casey@example.com" },
-  ];
+  // GraphQL Queries
+  const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
+    variables: { page: 1, limit: 50 },
+    skip: !userId
+  });
+
+  const { data: conversationData, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
+    variables: { 
+      userId: selectedUser?.id,
+      page: 1,
+      limit: 50
+    },
+    skip: !selectedUser?.id || !userId
+  });
+
+  const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
+    skip: !userId
+  });
+
+  // GraphQL Mutations
+  const [sendMessageMutation] = useMutation(SEND_MESSAGE);
+  const [markAsReadMutation] = useMutation(MARK_AS_READ);
+  const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
+  const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -90,63 +327,43 @@ const PMTab = () => {
     getRole();
   }, []);
 
-  // Mock messages data
+  // Update message threads when data loads
   useEffect(() => {
-    if (userId) {
-      const mockMessages: Message[] = [
-        {
-          id: "1",
-          sender: "Sarah Johnson",
-          avatar: "/avatars/sarah.jpg",
-          timestamp: new Date(Date.now() - 300000).toISOString(),
-          content: "Hey! How's the project going? 🚀",
-          likes: 2,
-          comments: 1,
-          isLikedByMe: false,
-          images: [],
-          isOwnMessage: false
-        },
-        {
-          id: "2",
-          sender: name,
-          avatar: avatar,
-          timestamp: new Date(Date.now() - 180000).toISOString(),
-          content: "Going great! Just finished the responsive UI components. What do you think?",
-          likes: 3,
-          comments: 0,
-          isLikedByMe: true,
-          images: [],
-          isOwnMessage: true
-        },
-        {
-          id: "3",
-          sender: "Sarah Johnson",
-          avatar: "/avatars/sarah.jpg",
-          timestamp: new Date(Date.now() - 60000).toISOString(),
-          content: "The lavender theme looks absolutely stunning on mobile! ✨ And the responsive design is perfect!",
-          likes: 5,
-          comments: 2,
-          isLikedByMe: false,
-          images: [],
-          isOwnMessage: false
-        },
-        {
-          id: "4",
-          sender: name,
-          avatar: avatar,
-          timestamp: new Date(Date.now() - 30000).toISOString(),
-          content: "Thanks! I made sure it works perfectly on all devices. The mobile experience was my top priority! 📱",
-          likes: 3,
-          comments: 1,
-          isLikedByMe: true,
-          images: [],
-          isOwnMessage: true
-        }
-      ];
-      setMessages(mockMessages);
-      setSelectedUser(mockUsers[0]);
+    if (threadsData?.messageThreads?.threads) {
+      setMessageThreads(threadsData.messageThreads.threads);
     }
-  }, [userId, name, avatar]);
+  }, [threadsData]);
+
+  // Convert GraphQL messages to UI messages
+  useEffect(() => {
+    if (conversationData?.conversation?.messages && userId) {
+      const uiMessages: Message[] = conversationData.conversation.messages.map((msg: GraphQLMessage) => ({
+        id: msg.id,
+        sender: `${msg.sender.firstName} ${msg.sender.lastName}`,
+        avatar: msg.sender.avatar || "/NoImage.webp",
+        timestamp: msg.createdAt,
+        content: msg.body,
+        likes: 0, // You can extend your GraphQL schema to include these if needed
+        comments: msg.replies.length,
+        isLikedByMe: false,
+        images: [],
+        isOwnMessage: msg.sender.id === userId,
+        isRead: msg.isRead,
+        graphQLData: msg
+      }));
+
+      setMessages(uiMessages);
+
+      // Mark messages as read when conversation is opened
+      const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
+      if (unreadMessages.length > 0) {
+        const unreadIds = unreadMessages.map(msg => msg.id);
+        markMultipleAsReadMutation({
+          variables: { messageIds: unreadIds }
+        });
+      }
+    }
+  }, [conversationData, userId, markMultipleAsReadMutation]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,24 +373,46 @@ const PMTab = () => {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() === "") return;
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === "" || !selectedUser) return;
 
-    const newMsg: Message = {
-      id: (messages.length + 1).toString(),
-      sender: name,
-      avatar: avatar,
-      timestamp: new Date().toISOString(),
-      content: newMessage,
-      likes: 0,
-      comments: 0,
-      isLikedByMe: false,
-      images: [],
-      isOwnMessage: true
-    };
+    try {
+      const { data } = await sendMessageMutation({
+        variables: {
+          input: {
+            recipientId: selectedUser.id,
+            body: newMessage.trim()
+          }
+        }
+      });
 
-    setMessages([...messages, newMsg]);
-    setNewMessage("");
+      if (data?.sendMessage) {
+        // Convert the GraphQL response to UI message format
+        const newMsg: Message = {
+          id: data.sendMessage.id,
+          sender: name,
+          avatar: avatar,
+          timestamp: data.sendMessage.createdAt,
+          content: data.sendMessage.body,
+          likes: 0,
+          comments: 0,
+          isLikedByMe: false,
+          images: [],
+          isOwnMessage: true,
+          isRead: data.sendMessage.isRead,
+          graphQLData: data.sendMessage
+        };
+
+        setMessages(prev => [...prev, newMsg]);
+        setNewMessage("");
+        
+        // Refetch threads to update last message
+        refetchThreads();
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // You might want to show a toast notification here
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -183,10 +422,17 @@ const PMTab = () => {
     }
   };
 
-  const handleUserSelect = (user: User) => {
+  const handleUserSelect = async (user: User) => {
     setSelectedUser(user);
     if (isMobile) {
       setIsSidebarOpen(false);
+    }
+    
+    // Refetch conversation when user is selected
+    try {
+      await refetchConversation({ userId: user.id });
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
     }
   };
 
@@ -238,6 +484,16 @@ const PMTab = () => {
 
   const messageGroups = groupMessagesByDate();
 
+  // Get user's full name
+  const getUserFullName = (user: User) => {
+    return `${user.firstName} ${user.lastName}`;
+  };
+
+  // Get user's avatar or default
+  const getUserAvatar = (user: User) => {
+    return user.avatar || "/NoImage.webp";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-4 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl overflow-hidden h-[calc(100vh-1rem)] md:h-[80vh]">
@@ -253,7 +509,12 @@ const PMTab = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
-                  <p className="text-purple-200 text-sm hidden md:block">Chat with your connections</p>
+                  <p className="text-purple-200 text-sm hidden md:block">
+                    {unreadCountData?.unreadMessageCount > 0 
+                      ? `${unreadCountData.unreadMessageCount} unread messages`
+                      : 'Chat with your connections'
+                    }
+                  </p>
                 </div>
                 <button 
                   onClick={() => setIsSidebarOpen(false)}
@@ -280,31 +541,53 @@ const PMTab = () => {
             </div>
 
             <div className="overflow-y-auto h-[calc(100%-120px)] md:h-[calc(100%-140px)] messages-scrollbar">
-              {mockUsers.map((user) => (
+              {messageThreads.map((thread) => (
                 <div
-                  key={user.id}
+                  key={thread.user.id}
                   className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
-                    selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
+                    selectedUser?.id === thread.user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
                   }`}
-                  onClick={() => handleUserSelect(user)}
+                  onClick={() => handleUserSelect(thread.user)}
                 >
                   <div className="relative flex-shrink-0">
                     <img
-                      src={user.avatar || "/NoImage.webp"}
-                      alt={user.name}
+                      src={getUserAvatar(thread.user)}
+                      alt={getUserFullName(thread.user)}
                       className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                     />
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-400 border-2 border-white rounded-full"></div>
+                    {thread.unreadCount > 0 && (
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {thread.unreadCount}
+                      </div>
+                    )}
                   </div>
                   <div className="ml-3 flex-1 min-w-0">
                     <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-purple-900 text-sm md:text-base truncate">{user.name}</h3>
-                      <span className="text-xs text-purple-400 whitespace-nowrap ml-2">2 min ago</span>
+                      <h3 className="font-semibold text-purple-900 text-sm md:text-base truncate">
+                        {getUserFullName(thread.user)}
+                      </h3>
+                      {thread.lastMessage && (
+                        <span className="text-xs text-purple-400 whitespace-nowrap ml-2">
+                          {formatTime(thread.lastMessage.createdAt)}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-xs md:text-sm text-purple-600 truncate">Looking forward to our meeting!</p>
+                    <p className="text-xs md:text-sm text-purple-600 truncate">
+                      {thread.lastMessage?.body || 'No messages yet'}
+                    </p>
                   </div>
                 </div>
               ))}
+              
+              {messageThreads.length === 0 && (
+                <div className="text-center py-8 text-purple-400">
+                  <svg className="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <p className="text-sm">No conversations yet</p>
+                  <p className="text-xs mt-1">Start a conversation with someone!</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -327,12 +610,14 @@ const PMTab = () => {
                     </svg>
                   </button>
                   <img
-                    src={selectedUser.avatar || "/NoImage.webp"}
-                    alt={selectedUser.name}
+                    src={getUserAvatar(selectedUser)}
+                    alt={getUserFullName(selectedUser)}
                     className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                   />
                   <div className="ml-3">
-                    <h2 className="font-bold text-purple-900 text-sm md:text-base">{selectedUser.name}</h2>
+                    <h2 className="font-bold text-purple-900 text-sm md:text-base">
+                      {getUserFullName(selectedUser)}
+                    </h2>
                     <p className="text-xs md:text-sm text-purple-500">Online • Last seen recently</p>
                   </div>
                   <div className="ml-auto flex space-x-2">
