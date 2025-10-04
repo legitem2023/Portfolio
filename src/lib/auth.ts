@@ -4,7 +4,7 @@ import { NextAuthOptions } from "next-auth";
 import { NextResponse } from "next/server";
 import { gql, ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { cookies } from "next/headers";
-import { FBLOGIN, LOGIN } from "../app/components/graphql/mutation"; // Changed to LOGIN
+import { FBLOGIN, LOGIN, LOGOUT_MUTATION } from "../app/components/graphql/mutation"; // Changed to LOGIN
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -210,7 +210,7 @@ cookies: {
   events: {
     async signOut({ token, session }) {
       console.log("User signed out");
-      /*
+      
       try {
         if (token?.serverToken) {
           console.log("Calling server logout endpoint");
@@ -229,7 +229,7 @@ cookies: {
         
       } catch (error) {
         console.error("Error during logout:", error);
-      }*/
+      }
     },
   },
 
