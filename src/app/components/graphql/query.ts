@@ -372,14 +372,14 @@ export const GET_ALL_POSTS = gql`
         commentCount
         user {
           id
-          name
-          email
+          firstName
+          lastName
           avatar
         }
         taggedUsers {
           id
-          name
-          email
+          firstName
+          lastName
         }
         comments {
           id
