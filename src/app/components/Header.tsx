@@ -11,7 +11,7 @@ import AnimatedCrowd from "./AnimatedCrowd";
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 import LogoutButton from './LogoutButton';
-import AdDrawer from './Ads/AdDrawer';
+import Ads from './Ads/Ads';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
 
@@ -61,6 +61,7 @@ const Header: React.FC = () => {
 
   return (
     <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2 aspect-[4/1] sm:aspect-[9/1]">
+      <Ads/>
       {/* <AdDrawer
         isOpen={drawer.isOpen}
         onClose={drawer.close}
