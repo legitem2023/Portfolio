@@ -85,13 +85,8 @@ const AnimatedCrowd = ({
         detailLevel="near"
       />
 
-      {/* Department Store - Fixed in the middle */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
-        <EmojioneDepartmentStore className="h-16 w-16" />
-      </div>
-
-      {/* Moving Trees - Fixed spacing and infinite scrolling */}
-      <div className="absolute bottom-4 left-0 right-0 h-8">
+      {/* Moving Trees with Department Stores - Fixed spacing and infinite scrolling */}
+      <div className="absolute bottom-4 left-0 right-0 h-10">
         <div
           className={clsx(
             "absolute left-0 top-0 w-[300%]",
@@ -100,9 +95,9 @@ const AnimatedCrowd = ({
           style={{ backfaceVisibility: "hidden" }}
         >
           <div className="flex w-full">
-            <TreeRow />
-            <TreeRow />
-            <TreeRow />
+            <TreeAndStoreRow />
+            <TreeAndStoreRow />
+            <TreeAndStoreRow />
           </div>
         </div>
       </div>
@@ -346,12 +341,20 @@ function Tree() {
   );
 }
 
-function TreeRow() {
+function TreeAndStoreRow() {
   return (
     <div className="flex w-1/3 items-end justify-around">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <Tree key={i} />
-      ))}
+      {Array.from({ length: 8 }).map((_, i) => {
+        // Every 3rd item is a department store, others are trees
+        if (i % 3 === 0) {
+          return (
+            <div key={i} className="relative flex items-end">
+              <EmojioneDepartmentStore className="h-10 w-10" />
+            </div>
+          );
+        }
+        return <Tree key={i} />;
+      })}
     </div>
   );
 }
