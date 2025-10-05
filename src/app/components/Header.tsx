@@ -71,7 +71,7 @@ const Header: React.FC = () => {
             alt="Logo"
             height={80}
             width={160}
-            className="h-[100%] w-[auto]"
+            className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
           />
         </div>
            
