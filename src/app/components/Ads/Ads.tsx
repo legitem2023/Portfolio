@@ -1,5 +1,5 @@
 'use client'
-import Marquee from 'components/ui/Marquee';
+import Marquee from '../ui/Marquee';
 import AdDropdown from './AdDropdown';
 const Ads:React.FC = () => {
 
