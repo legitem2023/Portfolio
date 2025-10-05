@@ -61,7 +61,7 @@ const Header: React.FC = () => {
 
   return (
   <div>
-    <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm shadow-sm p-2 aspect-[4/1] sm:aspect-[9/1]">
+    <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90  p-2 aspect-[4/1] sm:aspect-[9/1]">
      <AnimatedCrowd/>
       <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
       
@@ -71,7 +71,7 @@ const Header: React.FC = () => {
             alt="Logo"
             height={80}
             width={160}
-            className="h-[100%] w-[auto] bg-white/20 backdrop-blur-sm"
+            className="h-[100%] w-[auto]"
           />
         </div>
            
