@@ -498,12 +498,12 @@ const PMTab = () => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+    <div className="sticky top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            ${isMobile ? 'sticky top-0 inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+            ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
@@ -599,7 +599,7 @@ const PMTab = () => {
           {/* Chat Area - Only show when not in sidebar mode on mobile */}
           {shouldShowChat && (
             <div className={`
-              ${isMobile ? 'sticky top-0 inset-0 z-20' : 'relative z-10 flex-1'}
+              ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
               flex flex-col h-full bg-white
               transform transition-transform duration-300 ease-in-out
             `}>
