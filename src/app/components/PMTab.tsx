@@ -498,8 +498,8 @@ const PMTab = () => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
+    <div className="relative min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+      <div className="absolute max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
@@ -508,7 +508,6 @@ const PMTab = () => {
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
           `}>
-            {isMobile ?(<div className="relative aspect-[4/1] sm:aspect-[9/1]"></div>):"" }
             <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -600,11 +599,10 @@ const PMTab = () => {
           {/* Chat Area - Only show when not in sidebar mode on mobile */}
           {shouldShowChat && (
             <div className={`
-              ${isMobile ? 'fixed inset-0 z-20 mt-6' : 'relative z-10 flex-1'}
+              ${isMobile ? 'fixed inset-0 z-20' : 'relative z-10 flex-1'}
               flex flex-col h-full bg-white
               transform transition-transform duration-300 ease-in-out
             `}>
-              {isMobile ?(<div className="relative aspect-[4/1] sm:aspect-[9/1]"></div>):"" }
               {/* Chat Header */}
               {selectedUser ? (
                 <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
