@@ -71,7 +71,7 @@ const Header: React.FC = () => {
             alt="Logo"
             height={80}
             width={160}
-            className="h-10 w-20 bg-white/20 backdrop-blur-sm"
+            className="h-[100%] w-[auto] bg-white/20 backdrop-blur-sm"
           />
         </div>
            
