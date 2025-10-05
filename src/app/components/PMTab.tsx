@@ -508,6 +508,7 @@ const PMTab = () => {
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
           `}>
+            {isMobile ?(<div className="relative aspect-[4/1] sm:aspect-[9/1]"></div>):"" }
             <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
               <div className="flex items-center justify-between">
                 <div>
@@ -603,6 +604,7 @@ const PMTab = () => {
               flex flex-col h-full bg-white
               transform transition-transform duration-300 ease-in-out
             `}>
+              {isMobile ?(<div className="relative aspect-[4/1] sm:aspect-[9/1]"></div>):"" }
               {/* Chat Header */}
               {selectedUser ? (
                 <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
