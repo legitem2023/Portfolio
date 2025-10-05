@@ -372,6 +372,7 @@ export const GET_ALL_POSTS = gql`
         isLikedByMe
         likeCount
         commentCount
+        images
         user {
           id
           firstName
