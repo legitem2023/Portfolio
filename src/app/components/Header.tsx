@@ -92,7 +92,7 @@ const Header: React.FC = () => {
 
           
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 border border-gray-200 translate-y-3/4">
+            <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
               <div
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                 onClick={() => {
