@@ -20,18 +20,17 @@ export default function LogoutButton() {
       return
     }
     
-    setIsLoggingOut(true)
-    
+    setIsLoggingOut(true); 
     await signOut({
       redirect: true,
       callbackUrl: '/', // Redirect to home after logout
     });
-   router.push('./Login');
+   router.push('https://portfolio-xi-eight-92.vercel.app/Login');
   };
   
   return (
     <button 
-      className={`w-full text-white bg-transparent-600 hover:bg-red-700 py-2 px-4 rounded-md transition-all duration-300 flex items-center justify-center ${
+      className={`w-full text-black bg-transparent-600 hover:bg-red-700 py-2 px-4 transition-all duration-300 flex items-center justify-center ${
         isLoggingOut ? 'opacity-70 cursor-not-allowed' : ''
       }`}
 
