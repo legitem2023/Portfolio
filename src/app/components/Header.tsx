@@ -130,13 +130,13 @@ const Header: React.FC = () => {
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
           <div className="z-20 h-[100%] flex items-center">
-            <Image
-              src="/Dlogo.svg"
-              alt="Logo"
-              height={80}
-              width={160}
-              className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
-            />
+            <Image 
+               src="/Dlogo.svg" 
+               alt="Logo" 
+               height={80} 
+               width={160} 
+               className="h-[100%] w-[auto] backdrop-blur-md bg-white/20 border border-white/30"
+             />
           </div>
              
           <div className="z-20 h-[100%] flex items-center" ref={dropdownRef}>
