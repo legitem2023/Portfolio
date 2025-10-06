@@ -50,7 +50,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 flex items-center justify-end">
-              <div className="text-center max-w-[90%] sm:max-w-[80%] md:max-w-2xl px-4">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8 text-white">
                 <h1 className="text-2xl md:text-4xl font-bold tracking-tight drop-shadow-md">
                   {slide.title}
                 </h1>
