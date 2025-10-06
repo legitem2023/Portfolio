@@ -98,7 +98,7 @@ const Header: React.FC = () => {
   if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
     return (
       <div>
-        <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
+        <div className="relative bg-gradient-to-r from-purple-100 to-indigo-200 animate-pulse bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
           <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
             <div className="z-20 h-[100%] flex items-center">
               <Image
