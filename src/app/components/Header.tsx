@@ -134,8 +134,8 @@ const Header: React.FC = () => {
                src="/Dlogo.svg" 
                alt="Logo" 
                height={80} 
-               width={160} 
-               className="h-[100%] w-[auto] backdrop-blur-md bg-white/20 border border-white/30"
+               width={80} 
+               className="h-[100%] w-[auto] backdrop-blur-md bg-white/20 border border-white/30 rounded"
              />
           </div>
              
