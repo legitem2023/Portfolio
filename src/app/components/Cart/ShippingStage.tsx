@@ -1,6 +1,9 @@
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
 import { ShippingInfo } from './DeluxeCart';
 import { decryptToken } from '../../../../utils/decryptToken';
+import { useQuery } from '@apollo/client';
+import Image from 'next/image';
+import { GET_USER_PROFILE } from '../graphql/query';
 
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
@@ -31,7 +34,9 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: Ship
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
+ // const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
+ //   variables: { id: userId },
+ // });
   useEffect(() => {
     const getAddresses = async () => {
       try {
