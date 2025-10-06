@@ -2,7 +2,7 @@ import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
 import { ShippingInfo } from './DeluxeCart';
 import { useQuery } from '@apollo/client';
 import Image from 'next/image';
-import { GET_USER_ADDRESSES } from '../graphql/query'; // You'll need to create this query
+import { GET_USER_PROFILE } from '../graphql/query'; // You'll need to create this query
 
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
