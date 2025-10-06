@@ -1,9 +1,8 @@
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
 import { ShippingInfo } from './DeluxeCart';
-import { decryptToken } from '../../../../utils/decryptToken';
 import { useQuery } from '@apollo/client';
 import Image from 'next/image';
-import { GET_USER_PROFILE } from '../graphql/query';
+import { GET_USER_ADDRESSES } from '../graphql/query'; // You'll need to create this query
 
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
@@ -26,63 +25,36 @@ interface Address {
   zipCode: string;
 }
 
-interface TokenPayload {
-  addresses?: Address[];
-  // ... other token payload fields
-}
-
 const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
-  const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
- // const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
- //   variables: { id: userId },
- // });
+  
+  // GraphQL query to fetch user addresses
+  const { data, loading, error, refetch } = useQuery(GET_USER_ADDRESSES, {
+    variables: { userId },
+    fetchPolicy: 'cache-and-network' // Optional: ensures fresh data
+  });
+
+  // Extract addresses from GraphQL response
+  const savedAddresses: Address[] = data?.user.addresses || data?.user?.addresses || [];
+
+  // Set default address when data loads
   useEffect(() => {
-    const getAddresses = async () => {
-      try {
-        const response = await fetch('/api/protected', {
-          credentials: 'include'
+    if (savedAddresses.length > 0) {
+      const defaultAddress = savedAddresses.find(addr => addr.isDefault);
+      if (defaultAddress) {
+        setSelectedAddressId(defaultAddress.id);
+        setShippingInfo({
+          addressId: defaultAddress.id,
+          fullName: "", // You might want to get this from user profile
+          address: defaultAddress.street,
+          city: defaultAddress.city,
+          zipCode: defaultAddress.zipCode,
+          country: defaultAddress.country,
+          state: defaultAddress.state
         });
-        
-        if (response.status === 401) {
-          throw new Error('Unauthorized');
-        }
-        
-        const data = await response.json();
-        const token = data?.user;
-        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
-        const payload: TokenPayload = await decryptToken(token, secret.toString());
-        
-        // Save addresses from token payload to state
-        if (payload.addresses && Array.isArray(payload.addresses)) {
-          setSavedAddresses(payload.addresses);
-          
-          // Find and set the default address
-          const defaultAddress = payload.addresses.find(addr => addr.isDefault);
-          if (defaultAddress) {
-            setSelectedAddressId(defaultAddress.id);
-            setShippingInfo({
-              addressId: defaultAddress.id,
-              fullName: "", // You might need to get this from user profile
-              address: defaultAddress.street,
-              city: defaultAddress.city,
-              zipCode: defaultAddress.zipCode,
-              country: defaultAddress.country,
-              state: defaultAddress.state // Added state if needed
-            });
-          }
-        }
-      } catch (err) {
-        console.error('Error getting addresses:', err);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    getAddresses();
-  }, [setShippingInfo]);
+    }
+  }, [savedAddresses, setShippingInfo]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setShippingInfo({
@@ -121,6 +93,14 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
     return (
       <div className="flex justify-center items-center py-8">
         <div className="text-indigo-600">Loading addresses...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <div className="text-red-600">Error loading addresses: {error.message}</div>
       </div>
     );
   }
