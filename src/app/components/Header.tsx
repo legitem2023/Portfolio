@@ -95,7 +95,7 @@ const Header: React.FC = () => {
   }, []);
 
   // Show loading state if needed
-  if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
+ /* if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
     return (
       <div>
         <div className="relative bg-gradient-to-r from-purple-100 to-indigo-200 animate-pulse bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
@@ -121,7 +121,7 @@ const Header: React.FC = () => {
         <Ads/>
       </div>
     );
-  }
+  }*/
 
   return (
     <div>
