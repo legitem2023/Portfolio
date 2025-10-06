@@ -49,18 +49,18 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
               alt={slide.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-end">
               <div className="text-center max-w-[90%] sm:max-w-[80%] md:max-w-2xl px-4">
-                <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 leading-tight">
+                <h1 className="text-2xl md:text-4xl font-bold tracking-tight drop-shadow-md">
                   {slide.title}
                 </h1>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 md:mb-8 leading-relaxed">
+                <p className="text-sm md:text-lg mt-2 md:mt-4 opacity-90 max-w-2xl drop-shadow-md">
                   {slide.subtitle}
                 </p>
-                <button className="bg-white text-gray-900 px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors text-sm sm:text-base">
+                <button className="mt-4 md:mt-6 px-6 py-2 md:px-8 md:py-3 bg-white text-black font-medium rounded-full text-sm md:text-base w-fit hover:bg-opacity-90 transition-all transform hover:scale-105">
                   {slide.cta}
                 </button>
-              </div>
+              </div>        
             </div>
           </SwiperSlide>
         ))}
