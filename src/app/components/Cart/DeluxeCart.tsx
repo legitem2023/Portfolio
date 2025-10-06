@@ -191,6 +191,7 @@ const DeluxeCart = () => {
               setShippingInfo={setShippingInfo}
               onSubmit={handleShippingSubmit}
               onBack={() => setCurrentStage('cart')}
+              userId={userId}
             />
           )}
           
