@@ -10,6 +10,7 @@ interface ShippingStageProps {
   setShippingInfo: (info: ShippingInfo) => void;
   onSubmit: (e: FormEvent) => void;
   onBack: () => void;
+  userId: string;
 }
 
 interface Address {
@@ -30,7 +31,7 @@ interface TokenPayload {
   // ... other token payload fields
 }
 
-const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack }: ShippingStageProps) => {
+const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
