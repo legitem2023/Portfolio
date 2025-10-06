@@ -64,14 +64,6 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
             </div>
           </SwiperSlide>
         ))}
-        
-        {/* Custom Navigation - Hidden on mobile, visible on tablet+ */}
-        <div className="swiper-button-prev absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 z-10 bg-white bg-opacity-20 text-white p-1 sm:p-2 rounded-full hidden sm:flex">
-          <ChevronLeft size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-        </div>
-        <div className="swiper-button-next absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 z-10 bg-white bg-opacity-20 text-white p-1 sm:p-2 rounded-full hidden sm:flex">
-          <ChevronRight size={20} className="sm:w-5 sm:h-5 md:w-6 md:h-6" />
-        </div>
       </Swiper>
     </section>
   );
