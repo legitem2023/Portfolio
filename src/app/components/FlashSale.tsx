@@ -5,7 +5,10 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, Category } from '../Management/types/types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
-
+import {
+  Gift,
+  Sparkles
+} from 'lucide-react';
 interface ProductsResponse {
   products: {
     items: any[];
