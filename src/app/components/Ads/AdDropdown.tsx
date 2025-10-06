@@ -35,14 +35,15 @@ export default function AdDropdown({ content }: AdDropdownProps) {
   };
 
   const contentStyle: React.CSSProperties = {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: 'lavender',
     padding: '5px',
     fontSize: '14px',
     width: '100%',
     boxSizing: 'border-box',
     overflowWrap: 'break-word',
     wordBreak: 'break-word',
-    zIndex:'0'
+    zIndex:'0',
+    boxShadow:'0.5px 0.5px 3px #000000'
   };
 
   return (
