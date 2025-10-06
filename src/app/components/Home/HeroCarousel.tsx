@@ -39,7 +39,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
         autoplay={{ delay: 5000 }}
         effect="fade"
         loop={true}
-        className="w-full aspect-[4/3] md:aspect-[16/9]"
+        className="w-full"
       >
         {slides.map((slide) => (
           <SwiperSlide key={slide.id} className={`relative ${slide.bgColor} text-white`}>
@@ -47,7 +47,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ slides }) => {
             <img 
               src={slide.image} 
               alt={slide.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover aspect-[4/3] md:aspect-[16/9]"
             />
             <div className="absolute inset-0 flex items-center justify-end">
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8 text-white">
