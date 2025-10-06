@@ -29,7 +29,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   
   // GraphQL query to fetch user addresses
-  const { data, loading, error, refetch } = useQuery(GET_USER_ADDRESSES, {
+  const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { userId },
     fetchPolicy: 'cache-and-network' // Optional: ensures fresh data
   });
