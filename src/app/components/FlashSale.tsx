@@ -137,7 +137,36 @@ const FlashSale: React.FC = () => {
   // Show loading shimmer during initial load OR when filters are changing
   const showLoadingShimmer = loading && !isFetchingMore;
   return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
+<div className="p-6 bg-white rounded-lg shadow-lg">
+          <h3 className="text-xl font-semibold mb-4">Special Offers</h3>
+          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 rounded-xl mb-4 shadow-lg">
+            <h4 className="font-bold text-lg">Flash Sale</h4>
+            <p className="text-sm">Ends in: 02:45:33</p>
+            <div className="w-full bg-white bg-opacity-30 rounded-full h-2 mt-2">
+              <div className="bg-amber-400 h-2 rounded-full" style={{ width: '30%' }}></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border border-amber-300 rounded-lg p-4 bg-amber-50 flex items-center">
+              <div className="bg-amber-100 p-3 rounded-full mr-4">
+                <Sparkles className="text-amber-700" size={20} />
+              </div>
+              <div>
+                <h4 className="font-medium">New Customer Discount</h4>
+                <p className="text-sm text-amber-700">15% off your first order</p>
+              </div>
+            </div>
+            <div className="border border-rose-300 rounded-lg p-4 bg-rose-50 flex items-center">
+              <div className="bg-rose-100 p-3 rounded-full mr-4">
+                <Gift className="text-rose-700" size={20} />
+              </div>
+              <div>
+                <h4 className="font-medium">Valentines Special</h4>
+                <p className="text-sm text-rose-700">Buy one, get one 50% off</p>
+              </div>
+            </div>
+          </div>
+ <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
         <input
           type="text"
@@ -197,7 +226,15 @@ const FlashSale: React.FC = () => {
           No products found. Try a different search or filter.  
         </div>  
       )}  
-    </div>
+    </div>       
+
+</div>
+
+
+
+
+    
+    
   );
 };
 
