@@ -20,6 +20,7 @@ const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   
@@ -27,17 +28,11 @@ const Header: React.FC = () => {
   
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
-  const { data: userData, loading: userLoading } = useQuery(USERS);
+  const { data: userData, loading: userLoading, networkStatus } = useQuery(USERS, {
+    notifyOnNetworkStatusChange: true
+  });
 
-  // Check if current route requires authentication
-  useEffect(() => {
-    const protectedIndexes = [5, 8, 9, 10];
-    
-    if (protectedIndexes.includes(activeIndex) && !user) {
-      router.push('/Login'); // Adjust the path as needed
-    }
-  }, [activeIndex, user, router]);
-
+  // Check authentication status
   useEffect(() => {
     const getRole = async () => {
       try {
@@ -63,10 +58,29 @@ const Header: React.FC = () => {
         setUser(null);
       } finally {
         setIsLoading(false);
+        setHasCheckedAuth(true);
       }
     };
     getRole();
   }, []);
+
+  // Check if current route requires authentication - ONLY AFTER everything is loaded
+  useEffect(() => {
+    // Only check redirect conditions when:
+    // 1. Authentication check is complete (hasCheckedAuth)
+    // 2. User query is not loading (if you're using it)
+    // 3. We're not in a loading state
+    if (!hasCheckedAuth || isLoading || networkStatus === NetworkStatus.loading) {
+      return;
+    }
+
+    const protectedIndexes = [5, 8, 9, 10];
+    
+    if (protectedIndexes.includes(activeIndex) && !user) {
+      console.log('Redirecting to login: protected index without user');
+      router.push('/Login');
+    }
+  }, [activeIndex, user, isLoading, hasCheckedAuth, networkStatus, router]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -79,6 +93,35 @@ const Header: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Show loading state if needed
+  if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
+    return (
+      <div>
+        <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
+          <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+            <div className="z-20 h-[100%] flex items-center">
+              <Image
+                src="/Dlogo.svg"
+                alt="Logo"
+                height={80}
+                width={160}
+                className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
+              />
+            </div>
+            <div className="z-20 h-[100%] flex items-center">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
+                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Ads/>
+      </div>
+    );
+  }
 
   return (
     <div>
