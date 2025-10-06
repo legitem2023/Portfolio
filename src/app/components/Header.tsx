@@ -74,7 +74,7 @@ const Header: React.FC = () => {
       return;
     }
 
-    const protectedIndexes = [5, 8, 9, 10];
+    const protectedIndexes = [5, 7, 8, 9, 10];
     
     if (protectedIndexes.includes(activeIndex) && !user) {
       console.log('Redirecting to login: protected index without user');
