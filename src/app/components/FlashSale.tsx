@@ -169,57 +169,17 @@ const FlashSale: React.FC = () => {
               </div>
             </div>
           </div>
- <div className="p-4 bg-white rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-
-      <div className="flex justify-between items-center mb-6">  
-        <div className="flex space-x-2">  
-          <select  
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"  
-            value={categoryFilter}  
-            onChange={(e) => setCategoryFilter(e.target.value)}  
-          >  
-            <option value="">All Categories</option>  
-            {categories.map(category => (  
-              <option key={category.id} value={category.id}>{category.name}</option>  
-            ))}  
-          </select>  
-            
-          <select   
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"  
-            value={sortBy}  
-            onChange={(e) => setSortBy(e.target.value)}  
-          >  
-            <option>Sort by: Featured</option>  
-            <option>Sort by: Newest</option>  
-            <option>Sort by: Price: Low to High</option>  
-            <option>Sort by: Price: High to Low</option>  
-            <option>Sort by: Highest Rated</option>  
-          </select>  
-        </div>  
-      </div>  
-      
-      <div className="text-sm text-gray-500 mb-4">  
+ <div className="p-0 bg-white rounded-lg shadow-lg">   
+    <div className="text-sm text-gray-500 mb-4">  
         {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
-      </div>  
-      
+      </div> 
       {showLoadingShimmer ? (
         <ProductThumbnailsShimmer count={queryVariables.limit}/>
       ) : products.length > 0 ? (  
         <>  
-          <ProductThumbnails products={products} />  
-            
+          <ProductThumbnails products={products} />     
           {/* Sentinel element for infinite scroll */}
-          <div ref={sentinelRef} className="h-2" />
-          
+          <div ref={sentinelRef} className="h-2" />   
           {isFetchingMore && (
             <ProductThumbnailsShimmer count={itemsToFetch} />     
           )}
@@ -230,14 +190,7 @@ const FlashSale: React.FC = () => {
         </div>  
       )}  
     </div>       
-
-</div>
-
-
-
-
-    
-    
+</div>    
   );
 };
 
