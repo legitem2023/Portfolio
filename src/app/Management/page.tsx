@@ -82,7 +82,7 @@ export default function ManagementDashboard() {
   }, [categoryData, productData]);
 
   // ... rest of your existing state and handlers
-
+  const renderContent = () => { switch(activeTab) { case 'products': return <ProductsTab  supplierId={userId} products={products}  categories={categories} newProduct={newProduct} setNewProduct={setNewProduct} handleProductSubmit={handleProductSubmit} />; case 'categories': return <CategoriesTab  categories={categories} newCategory={newCategory} setNewCategory={setNewCategory} handleCategorySubmit={handleCategorySubmit} />; case 'users': return <UsersPage/>; default: return <div>Select a tab</div>; } };
   if (categoryLoading && productLoading) return <div>Category Loading...</div>;
 
   return (
