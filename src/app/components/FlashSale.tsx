@@ -4,7 +4,7 @@ import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import FlashThumbnails from '../components/FlashThumbnails';
 import { Product, Category } from '../Management/types/types';
-import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
+import FlashThumbnailsShimmer from "./FlashThumbnailsShimmer";
 import {
   Gift,
   Sparkles
@@ -174,7 +174,7 @@ const FlashSale: React.FC = () => {
         {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
       </div> 
       {showLoadingShimmer ? (
-        <ProductThumbnailsShimmer count={queryVariables.limit}/>
+        <FlashThumbnailsShimmer count={queryVariables.limit}/>
       ) : products.length > 0 ? (  
         <>  
           <FlashThumbnails products={products} />     
