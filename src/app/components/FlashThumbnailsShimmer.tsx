@@ -21,7 +21,7 @@ const FlashThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ count
           
           {/* Image placeholder */}
           <div className="relative overflow-hidden bg-gray-200">
-            <div className="shimmer-effect absolute inset-0"></div>
+            <div className="shimmer-effect absolute inset-0 aspect-[1/1]"></div>
           </div>
           
           {/* Product Details */}
