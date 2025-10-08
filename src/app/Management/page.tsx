@@ -81,8 +81,106 @@ export default function ManagementDashboard() {
     }
   }, [categoryData, productData]);
 
-  // ... rest of your existing state and handlers
-  const renderContent = () => { switch(activeTab) { case 'products': return <ProductsTab  supplierId={userId} products={products}  categories={categories} newProduct={newProduct} setNewProduct={setNewProduct} handleProductSubmit={handleProductSubmit} />; case 'categories': return <CategoriesTab  categories={categories} newCategory={newCategory} setNewCategory={setNewCategory} handleCategorySubmit={handleCategorySubmit} />; case 'users': return <UsersPage/>; default: return <div>Select a tab</div>; } };
+  const [newProduct, setNewProduct] = useState<NewProduct>({
+    name: "",
+    description: "",
+    price: "",
+    salePrice: "",
+    sku: "",
+    stock: "",
+    categoryId: "",
+    brand: "",
+    isActive: true,
+    featured: false,
+    variants: [],
+  });
+
+  const [newCategory, setNewCategory] = useState<NewCategory>({
+    name: "",
+    description: "",
+    parentId: "",
+    isActive: true
+  });
+
+  const handleProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const category = categories.find(c => c.id === parseInt(newProduct.categoryId));
+    
+    const product: Product = {
+      id: newProduct.name,
+      name: newProduct.name,
+      variants: newProduct.variants,
+      description: newProduct.description,
+      price: parseFloat(newProduct.price),
+      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+      sku: newProduct.sku,
+      stock: parseInt(newProduct.stock),
+      category: category?.name || "Uncategorized",
+      brand: newProduct.brand || undefined,
+      status: newProduct.isActive ? "Active" : "Inactive"
+    };
+    
+    setProducts([...products, product]);
+    setNewProduct({
+      name: "",
+      description: "",
+      variants:[],
+      price: "",
+      salePrice: "",
+      sku: "",
+      stock: "",
+      categoryId: "",
+      brand: "",
+      isActive: true,
+      featured: false
+    });
+  };
+
+  const handleCategorySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const category: Category = {
+      id: categories.length + 1,
+      name: newCategory.name,
+      description: newCategory.description || undefined,
+      productCount: 0,
+      status: newCategory.isActive ? "Active" : "Inactive",
+      parentId: newCategory.parentId ? parseInt(newCategory.parentId) : undefined
+    };
+    
+    setCategories([...categories, category]);
+    setNewCategory({
+      name: "",
+      description: "",
+      parentId: "",
+      isActive: true
+    });
+  };
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'products':
+        return <ProductsTab 
+          supplierId={userId}
+          products={products} 
+          categories={categories}
+          newProduct={newProduct}
+          setNewProduct={setNewProduct}
+          handleProductSubmit={handleProductSubmit}
+        />;
+      case 'categories':
+        return <CategoriesTab 
+          categories={categories}
+          newCategory={newCategory}
+          setNewCategory={setNewCategory}
+          handleCategorySubmit={handleCategorySubmit}
+        />;
+      case 'users':
+        return <UsersPage/>;
+      default:
+        return <div>Select a tab</div>;
+    }
+  };
+
   if (categoryLoading && productLoading) return <div>Category Loading...</div>;
 
   return (
@@ -109,4 +207,4 @@ export default function ManagementDashboard() {
       </div>
     </div>
   );
-}
+      }
