@@ -7,7 +7,7 @@ interface ProductThumbnailsShimmerProps {
 
 const FlashThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ count = 20 }) => {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap:4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-3 lg:gap:4">
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="group relative bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
           {/* Badge placeholders */}
@@ -20,7 +20,7 @@ const FlashThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ count
           </div>
           
           {/* Image placeholder */}
-          <div className="relative overflow-hidden h-48 bg-gray-200">
+          <div className="relative overflow-hidden bg-gray-200">
             <div className="shimmer-effect absolute inset-0"></div>
           </div>
           
