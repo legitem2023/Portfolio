@@ -169,7 +169,7 @@ const FlashSale: React.FC = () => {
               </div>
             </div>
           </div>
- <div className="p-0 bg-white rounded-lg shadow-lg">   
+ <div className="p-0 bg-white rounded-lg">   
     <div className="text-sm text-gray-500 mb-4">  
         {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
       </div> 
