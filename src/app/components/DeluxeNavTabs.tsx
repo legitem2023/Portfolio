@@ -31,7 +31,7 @@ import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
 import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
-
+import MerchantsPage from './MerchantsPage';
 interface Tab {
   id: number;
   label: string;
@@ -99,20 +99,7 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Luxe Brands',
       icon: <Star size={18} />,
       content: (
-        <div className="p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Featured Brands</h3>
-          <div className="flex flex-wrap gap-4">
-            {['Gucci', 'Prada', 'Hermès', 'Tiffany', 'Rolex', 'Dior', 'Chanel', 'Louis Vuitton'].map((brand) => (
-              <div
-                key={brand}
-                className="flex-1 min-w-[120px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-center"
-              >
-                <div className="font-medium mb-2">{brand}</div>
-                <div className="text-xs text-gray-500">Exclusive collection</div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <MerchantsPage/>
       ),
     },
     {
