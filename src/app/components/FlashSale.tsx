@@ -2,7 +2,7 @@
 import { useQuery, NetworkStatus } from '@apollo/client';
 import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import ProductThumbnails from '../components/ProductThumbnails';
+import FlashThumbnails from '../components/FlashThumbnails';
 import { Product, Category } from '../Management/types/types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
 import {
@@ -177,7 +177,7 @@ const FlashSale: React.FC = () => {
         <ProductThumbnailsShimmer count={queryVariables.limit}/>
       ) : products.length > 0 ? (  
         <>  
-          <ProductThumbnails products={products} />     
+          <FlashThumbnails products={products} />     
           {/* Sentinel element for infinite scroll */}
           <div ref={sentinelRef} className="h-2" />   
           {isFetchingMore && (
