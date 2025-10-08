@@ -110,7 +110,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               )}
               
               {/* Product Image */}
-              <div className="relative overflow-hidden h-48 bg-gray-100">
+              <div className="relative overflow-hidden aspect-[1/1] bg-gray-100">
                 <Image
                   height="100"
                   width="100"
