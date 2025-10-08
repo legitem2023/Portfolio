@@ -112,8 +112,8 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
               {/* Product Image */}
               <div className="relative overflow-hidden bg-gray-100">
                 <Image
-                  height="100"
-                  width="100"
+                  height="200"
+                  width="200"
                   src={product.image || '/NoImage.webp'} 
                   alt={product.name}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
