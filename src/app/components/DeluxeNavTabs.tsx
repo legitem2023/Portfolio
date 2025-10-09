@@ -8,6 +8,7 @@ import PostDetail from './Posting/PostDetail';
 import PMTab from './PMTab';
 import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
+import MerchantDetails from './Merchants/MerchantDetails';
 import {
   Home,
   ShoppingBag,
@@ -137,6 +138,12 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Order',
       icon: <ShoppingCart size={18} />,
       content:<OrderTracking userId={userId}/>
+    },
+    {
+      id:11,
+      label: 'Merchants',
+      icon: <ShoppingCart size={18} />,
+      content:<MerchantDetails userId={userId} />
     }
   ];
 
