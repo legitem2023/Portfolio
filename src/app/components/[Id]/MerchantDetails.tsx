@@ -3,16 +3,16 @@
 
 import { useQuery } from '@apollo/client';
 import Image from 'next/image';
-import { GET_USER_PROFILE } from './graphql/query';
-import { Post, User } from '../../../types';
-import UserProfileShimmer from './UserProfileShimmer';
-import UserProfileShimmerRed from './UserProfileShimmerRed';
-import ProfileTabs from './ProfileTabs';
+import { GET_USER_PROFILE } from '../graphql/query';
+import { Post, User } from '../../../../types';
+import UserProfileShimmer from '../UserProfileShimmer';
+import UserProfileShimmerRed from '../UserProfileShimmerRed';
+import ProfileTabs from '../ProfileTabs';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
-import TabContent from './TabContent';
+import TabContent from '../TabContent';
 const MerchantDetails = ({ userId }: { userId: string }) => {
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
