@@ -74,28 +74,11 @@ export default function MerchantsPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-purple-900 mb-3">
             Discover Local Merchants
           </h1>
-          <p className="text-purple-700 text-lg md:text-xl max-w-2xl mx-auto">
-            Find the best local businesses in our lavender-themed directory
-          </p>
         </div>
 
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-8 border border-purple-200">
           <div className="flex flex-col md:flex-row gap-4 md:items-center">
-            <div className="flex-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search merchants..."
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-purple-50 text-purple-900 placeholder-purple-400"
-                />
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
             <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
               {categories.map((category) => (
                 <button
