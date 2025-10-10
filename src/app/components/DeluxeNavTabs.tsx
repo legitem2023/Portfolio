@@ -137,7 +137,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 9,
       label: 'PM',
       icon: <ShoppingCart size={18} />,
-      content: <PMTab/>
+      content: <PMTab UserId={userId}/>
     },
     {
       id:10,
