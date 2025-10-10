@@ -135,7 +135,8 @@ const Header: React.FC = () => {
                alt="Logo" 
                height={80} 
                width={80} 
-               className="h-[100%] w-[auto] backdrop-blur-md bg-white/20 border border-white/30 rounded"
+               className="h-[100%] w-[auto] rounded"
+               style={{ filter: 'drop-shadow(0.5px 0.5px 3px gold)' }}
              />
           </div>
              
