@@ -33,7 +33,7 @@ import MessagesTab from './MessagesTab';
 import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
 import MerchantsPage from './MerchantsPage';
-import { useParams } from 'next/navigation'; // Add this import
+import { useSearchParams } from 'next/navigation'; // Change this import
 
 interface Tab {
   id: number;
@@ -51,9 +51,10 @@ const DeluxeNavTabs: React.FC = () => {
   const [avatar, setAvatar] = useState("");
   
   // Get the URL parameter for merchant ID
-  const params = useParams();
-  const merchantIdFromUrl:any = params.id; // This gets the ID from URL
-  
+  // Use useSearchParams to get query parameters
+  const searchParams = useSearchParams();
+  const merchantIdFromUrl = searchParams.get('id'); // This gets the ID from URL query parameter
+
   useEffect(() => {
     const getRole = async () => {
       try {
