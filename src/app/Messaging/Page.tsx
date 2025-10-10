@@ -34,5 +34,5 @@ export default function Page() {
     };
     getRole();
   }, []);
-  return <PMTab userId={userId} />;
+  return <PMTab UserId={userId} />;
 }
