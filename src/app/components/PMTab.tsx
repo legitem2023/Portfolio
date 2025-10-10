@@ -292,6 +292,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Add these new state variables for keyboard handling
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -374,6 +380,78 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Enhanced keyboard detection for mobile
+  useEffect(() => {
+    if (!isMobile || !window.visualViewport) return;
+    
+    const visualViewport = window.visualViewport;
+    
+    const handleResize = () => {
+      const windowHeight = window.innerHeight;
+      const viewportHeight = visualViewport.height;
+      const newKeyboardHeight = windowHeight - viewportHeight;
+      
+      // Consider keyboard visible if it takes more than 150px and input is focused
+      if (newKeyboardHeight > 150 && isInputFocused) {
+        setIsKeyboardVisible(true);
+        setKeyboardHeight(newKeyboardHeight);
+        
+        // Scroll to bottom when keyboard appears
+        setTimeout(() => {
+          scrollToBottom();
+        }, 200);
+      } else {
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    };
+
+    // Handle focus events
+    const handleFocusIn = (e: FocusEvent) => {
+      if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
+        setIsInputFocused(true);
+        // Small delay to ensure keyboard is fully up
+        setTimeout(() => {
+          handleResize();
+        }, 300);
+      }
+    };
+
+    const handleFocusOut = (e: FocusEvent) => {
+      if (!textareaRef.current?.contains(e.target as Node)) {
+        setIsInputFocused(false);
+        setIsKeyboardVisible(false);
+        setKeyboardHeight(0);
+      }
+    };
+
+    // Add event listeners
+    visualViewport.addEventListener('resize', handleResize);
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    
+    // Initial check
+    handleResize();
+
+    return () => {
+      visualViewport.removeEventListener('resize', handleResize);
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, [isMobile, isInputFocused]);
+
+  // Adjust messages container padding when keyboard is visible
+  useEffect(() => {
+    if (messagesContainerRef.current && isMobile) {
+      if (isKeyboardVisible) {
+        // Add padding to prevent content from being hidden behind keyboard
+        messagesContainerRef.current.style.paddingBottom = `${keyboardHeight + 80}px`;
+      } else {
+        messagesContainerRef.current.style.paddingBottom = '1rem';
+      }
+    }
+  }, [isKeyboardVisible, keyboardHeight, isMobile]);
 
   useEffect(() => {
     const getRole = async () => {
@@ -527,6 +605,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  // Handle textarea focus
+  const handleTextareaFocus = () => {
+    setIsInputFocused(true);
+  };
+
+  // Handle textarea blur
+  const handleTextareaBlur = () => {
+    setIsInputFocused(false);
   };
 
   const formatTime = (timestamp: string) => {
@@ -790,7 +878,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               {/* Messages Container */}
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom"
+                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
               >
                 {selectedUser ? (
                   <div className="space-y-4">
@@ -853,37 +941,54 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
               {/* Message Input */}
               {selectedUser && (
-                <div className="border-t border-purple-200 p-4 bg-white safe-area-inset-bottom">
-                  <div className="flex space-x-3">
-                    <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
-                      <textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Type your message..."
-                        className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
-                        rows={1}
-                      />
-                    </div>
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
-                      className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
-                    >
-                      <Send className="w-6 h-6" />
-                    </button>
-                  </div>
-                  <div className="flex justify-between items-center mt-2 px-1">
-                    <div className="flex space-x-2">
-                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                        <Paperclip className="w-5 h-5" />
+                <div 
+                  className="border-t border-purple-200 bg-white safe-area-inset-bottom transition-all duration-300"
+                  style={{
+                    position: isKeyboardVisible && isMobile ? 'fixed' : 'relative',
+                    bottom: isKeyboardVisible && isMobile ? '0px' : 'auto',
+                    left: isKeyboardVisible && isMobile ? '0' : 'auto',
+                    right: isKeyboardVisible && isMobile ? '0' : 'auto',
+                    width: isKeyboardVisible && isMobile ? '100%' : 'auto',
+                    zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
+                    paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom, 20px)' : '0',
+                    transform: isKeyboardVisible && isMobile ? `translateY(-${keyboardHeight}px)` : 'translateY(0)'
+                  }}
+                >
+                  <div className="p-4 max-w-6xl mx-auto w-full">
+                    <div className="flex space-x-3">
+                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+                        <textarea
+                          ref={textareaRef}
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          onFocus={handleTextareaFocus}
+                          onBlur={handleTextareaBlur}
+                          placeholder="Type your message..."
+                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
+                          rows={1}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim()}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                      >
+                        <Send className="w-6 h-6" />
                       </button>
-                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                        <Image className="w-5 h-5" />
-                      </button>
                     </div>
-                    <div className="text-xs text-purple-400 hidden md:block">
-                      Press Enter to send • Shift+Enter for new line
+                    <div className="flex justify-between items-center mt-2 px-1">
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                          <Paperclip className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
+                          <Image className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="text-xs text-purple-400 hidden md:block">
+                        Press Enter to send • Shift+Enter for new line
+                      </div>
                     </div>
                   </div>
                 </div>
