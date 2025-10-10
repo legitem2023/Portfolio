@@ -3,7 +3,11 @@
 
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+"use client";
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
   query GetUsers {
@@ -62,8 +66,9 @@ interface Merchant {
 
 export default function MerchantsPage() {
   const { loading, error, data } = useQuery(GET_MERCHANTS);
-
+  const dispatch = useDispatch();
   // Static fallback data that matches GraphQL schema
+  const router = useRouter();
   const fallbackMerchants: Merchant[] = [
     {
       id: "1",
@@ -122,9 +127,10 @@ export default function MerchantsPage() {
   };
 
 
-  const redirect = (id) =>{
-    document.location.href="/id="+id;
-  }
+  const redirect = (id: string) => {
+  dispatch(setActiveIndex(11));
+  router.push(`/id=${id}`);
+};
 
   
   const getDisplayCategory = (merchant: Merchant) => {
