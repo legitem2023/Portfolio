@@ -947,13 +947,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 <div 
                   className="border-t border-purple-200 bg-white safe-area-inset-bottom transition-all duration-300"
                   style={{
-                    position: isKeyboardVisible && isMobile ? 'fixed' : 'relative',
+                    position: isKeyboardVisible && isMobile ? 'fixed' : 'fixed',
                     bottom: isKeyboardVisible && isMobile ? '0' : 'auto',
                     left: isKeyboardVisible && isMobile ? '0' : 'auto',
                     right: isKeyboardVisible && isMobile ? '0' : 'auto',
                     width: isKeyboardVisible && isMobile ? '100%' : 'auto',
                     zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
-                    paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom, 20px)' : '0',
+                   // paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom, 20px)' : '0',
                   }}
                 >
                   <div 
