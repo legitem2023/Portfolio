@@ -680,7 +680,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="sticky top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+    <div className="sticky top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
