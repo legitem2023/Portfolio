@@ -524,6 +524,7 @@ type SetDefaultAddressResponse {
 
 # Input Types
 input SendMessageInput {
+  senderId: ID!
   recipientId: ID!
   body: String!
   subject: String
