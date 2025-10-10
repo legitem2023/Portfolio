@@ -681,7 +681,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   return (
     <div className="sticky top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-[auto]">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-[100%]">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
