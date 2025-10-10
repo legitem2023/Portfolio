@@ -39,6 +39,38 @@ export const GET_USER_PROFILE = gql`
       followerCount
       followingCount
       isFollowing
+      products {
+        id
+        name
+        description
+        price
+        salePrice
+        supplierId
+        sku
+        stock
+        images
+        category {
+          id
+        }
+        variants {
+          name
+          createdAt
+          sku
+          color
+          size
+          price
+          salePrice
+          stock
+        }
+        brand
+        weight
+        dimensions
+        isActive
+        featured
+        tags
+        createdAt
+        updatedAt
+      }
       addresses {
         id
         type
