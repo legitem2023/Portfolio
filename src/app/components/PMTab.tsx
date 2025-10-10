@@ -449,9 +449,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     if (messagesContainerRef.current && isMobile) {
       if (isKeyboardVisible) {
         // Add padding to prevent content from being hidden behind keyboard
-        messagesContainerRef.current.style.paddingBottom = `${keyboardHeight + 80}px`;
+        messagesContainerRef.current.style.paddingBottom = `${keyboardHeight}px`;
       } else {
-        messagesContainerRef.current.style.paddingBottom = '1rem';
+        messagesContainerRef.current.style.paddingBottom = '0px';
       }
     }
   }, [isKeyboardVisible, keyboardHeight, isMobile]);
