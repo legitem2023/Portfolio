@@ -89,6 +89,7 @@ export const typeDefs = gql`
     reviews: [Review!]
     wishlist: [WishlistItem!]
     cart: [CartItem!]
+    products:[Product!]
     payments: [Payment!]
     messagesSent: [Message!]
     messagesReceived: [Message!]
