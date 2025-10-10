@@ -392,15 +392,15 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const viewportHeight = visualViewport.height;
       const newKeyboardHeight = windowHeight - viewportHeight;
       
-      // Consider keyboard visible if it takes more than 150px and input is focused
-      if (newKeyboardHeight > 150 && isInputFocused) {
+      // More reliable keyboard detection
+      if (newKeyboardHeight > 100 && isInputFocused) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
         
         // Scroll to bottom when keyboard appears
         setTimeout(() => {
           scrollToBottom();
-        }, 200);
+        }, 100);
       } else {
         setIsKeyboardVisible(false);
         setKeyboardHeight(0);
@@ -411,18 +411,21 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
         setIsInputFocused(true);
-        // Small delay to ensure keyboard is fully up
+        // Give time for keyboard to fully appear
         setTimeout(() => {
           handleResize();
-        }, 300);
+        }, 200);
       }
     };
 
     const handleFocusOut = (e: FocusEvent) => {
       if (!textareaRef.current?.contains(e.target as Node)) {
         setIsInputFocused(false);
-        setIsKeyboardVisible(false);
-        setKeyboardHeight(0);
+        // Small delay to ensure keyboard is fully dismissed
+        setTimeout(() => {
+          setIsKeyboardVisible(false);
+          setKeyboardHeight(0);
+        }, 100);
       }
     };
 
@@ -677,7 +680,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="sticky top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+    <div className="fixed top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
@@ -939,22 +942,28 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Message Input */}
+              {/* Message Input - Fixed positioning when keyboard is visible */}
               {selectedUser && (
                 <div 
                   className="border-t border-purple-200 bg-white safe-area-inset-bottom transition-all duration-300"
                   style={{
                     position: isKeyboardVisible && isMobile ? 'fixed' : 'relative',
-                    bottom: isKeyboardVisible && isMobile ? '0px' : 'auto',
+                    bottom: isKeyboardVisible && isMobile ? '0' : 'auto',
                     left: isKeyboardVisible && isMobile ? '0' : 'auto',
                     right: isKeyboardVisible && isMobile ? '0' : 'auto',
                     width: isKeyboardVisible && isMobile ? '100%' : 'auto',
                     zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
                     paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom, 20px)' : '0',
-                    transform: isKeyboardVisible && isMobile ? `translateY(-${keyboardHeight}px)` : 'translateY(0)'
                   }}
                 >
-                  <div className="p-4 max-w-6xl mx-auto w-full">
+                  <div 
+                    className="p-4 mx-auto w-full"
+                    style={{
+                      maxWidth: isKeyboardVisible && isMobile ? '100%' : 'none',
+                      paddingLeft: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                      paddingRight: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                    }}
+                  >
                     <div className="flex space-x-3">
                       <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
                         <textarea
