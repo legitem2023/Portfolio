@@ -33,6 +33,8 @@ import MessagesTab from './MessagesTab';
 import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
 import MerchantsPage from './MerchantsPage';
+import { useParams } from 'next/navigation'; // Add this import
+
 interface Tab {
   id: number;
   label: string;
@@ -47,6 +49,10 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
+  
+  // Get the URL parameter for merchant ID
+  const params = useParams();
+  const merchantIdFromUrl = params.id; // This gets the ID from URL
   
   useEffect(() => {
     const getRole = async () => {
@@ -119,7 +125,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 7,
       label: 'Profile',
       icon: <ShoppingCart size={18} />,
-      content: <UserProfile userId={userId} />
+      content: <UserProfile userId={userId} /> // Uses JWT userId
     },
     {
       id: 8,
@@ -137,13 +143,13 @@ const DeluxeNavTabs: React.FC = () => {
       id:10,
       label: 'Order',
       icon: <ShoppingCart size={18} />,
-      content:<OrderTracking userId={userId}/>
+      content:<OrderTracking userId={userId} /> // Uses JWT userId
     },
     {
       id:11,
       label: 'Merchants',
       icon: <ShoppingCart size={18} />,
-      content:<MerchantDetails userId={userId} />
+      content:<MerchantDetails userId={merchantIdFromUrl} /> // Uses URL id instead of JWT userId
     }
   ];
 
