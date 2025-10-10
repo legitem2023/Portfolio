@@ -309,8 +309,8 @@ const PMTab = () => {
 
   // Combine and filter contacts
   const allContacts = useMemo(() => {
-    const threadUsers = messageThreads.map(thread => thread.user);
-    const otherUsers = usersData?.users?.filter(user => 
+    const threadUsers = messageThreads.map((thread:any) => thread.user);
+    const otherUsers = usersData?.users?.filter((user:any) => 
       user.id !== userId && // Exclude current user
       !threadUsers.some(threadUser => threadUser.id === user.id)
     ) || [];
