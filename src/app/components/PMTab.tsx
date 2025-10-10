@@ -689,68 +689,73 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
+            flex flex-col
           `}>
-            <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
-                  <p className="text-purple-200 text-sm hidden md:block">
-                    {unreadCountData?.unreadMessageCount > 0 
-                      ? `${unreadCountData.unreadMessageCount} unread messages`
-                      : 'Chat with your connections'
-                    }
-                  </p>
+            {/* FIXED SIDEBAR HEADER */}
+            <div className="flex-shrink-0">
+              <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white sticky top-0 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
+                    <p className="text-purple-200 text-sm hidden md:block">
+                      {unreadCountData?.unreadMessageCount > 0 
+                        ? `${unreadCountData.unreadMessageCount} unread messages`
+                        : 'Chat with your connections'
+                      }
+                    </p>
+                  </div>
+                  {isMobile && (
+                    <button 
+                      onClick={handleToggleSidebar}
+                      className="p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
-                {isMobile && (
-                  <button 
-                    onClick={handleToggleSidebar}
-                    className="p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
+              </div>
+              
+              {/* Search and Tabs - ALSO FIXED */}
+              <div className="p-3 md:p-4 bg-white border-b border-purple-200 sticky top-[84px] md:top-[96px] z-10">
+                <div className="relative mb-3">
+                  <input
+                    type="text"
+                    placeholder="Search conversations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+                  />
+                  <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
+                </div>
+
+                {/* Tabs */}
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => setActiveTab("threads")}
+                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                      activeTab === "threads"
+                        ? "bg-purple-600 text-white"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
                   >
-                    <X className="w-5 h-5" />
+                    Conversations
                   </button>
-                )}
-              </div>
-            </div>
-            
-            {/* Search and Tabs */}
-            <div className="p-3 md:p-4">
-              <div className="relative mb-3">
-                <input
-                  type="text"
-                  placeholder="Search conversations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
-                />
-                <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
-              </div>
-
-              {/* Tabs */}
-              <div className="flex space-x-1 mb-3">
-                <button
-                  onClick={() => setActiveTab("threads")}
-                  className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                    activeTab === "threads"
-                      ? "bg-purple-600 text-white"
-                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                  }`}
-                >
-                  Conversations
-                </button>
-                <button
-                  onClick={() => setActiveTab("allUsers")}
-                  className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                    activeTab === "allUsers"
-                      ? "bg-purple-600 text-white"
-                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                  }`}
-                >
-                  All Users
-                </button>
+                  <button
+                    onClick={() => setActiveTab("allUsers")}
+                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                      activeTab === "allUsers"
+                        ? "bg-purple-600 text-white"
+                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                    }`}
+                  >
+                    All Users
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="overflow-y-auto h-[calc(100%-160px)] md:h-[calc(100%-180px)] messages-scrollbar">
+            {/* Scrollable Contacts List */}
+            <div className="flex-1 overflow-y-auto messages-scrollbar">
               {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
                 return (
@@ -819,9 +824,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               flex flex-col h-full bg-white
               transform transition-transform duration-300 ease-in-out
             `}>
-              {/* Chat Header */}
+              {/* FIXED CHAT HEADER */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top sticky top-0 z-10">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
@@ -858,7 +863,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top sticky top-0 z-10">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {isMobile && (
@@ -878,7 +883,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container */}
+              {/* Messages Container - This is the scrollable part */}
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
@@ -945,15 +950,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               {/* Message Input - Fixed positioning when keyboard is visible */}
               {selectedUser && (
                 <div 
-                  className="border-t border-purple-200 bg-green-700 transition-all duration-300"
+                  className="border-t border-purple-200 bg-white transition-all duration-300"
                   style={{
-                    position: isKeyboardVisible && isMobile ? 'fixed' : 'fixed',
+                    position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
                     bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
                     left: isKeyboardVisible && isMobile ? '0' : '0',
                     right: isKeyboardVisible && isMobile ? '0' : '0',
                     width: isKeyboardVisible && isMobile ? '100%' : '100%',
                     zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
-                   // paddingBottom: isKeyboardVisible && isMobile ? 'env(safe-area-inset-bottom, 20px)' : '0',
                   }}
                 >
                   <div 
