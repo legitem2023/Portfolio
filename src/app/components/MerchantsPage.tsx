@@ -121,6 +121,12 @@ export default function MerchantsPage() {
     return `${merchant.firstName} ${merchant.lastName}`;
   };
 
+
+  const redirect = (id) =>{
+    document.location.href="/id="+id;
+  }
+
+  
   const getDisplayCategory = (merchant: Merchant) => {
     // Map email domains or other fields to categories
     const domain = merchant.email.split('@')[1];
@@ -317,7 +323,7 @@ export default function MerchantsPage() {
                       </span>
                     </div>
                     
-                    <button className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105">
+                    <button onClick={()=> redirect(merchant.id)} className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105">
                       Visit
                     </button>
                   </div>
