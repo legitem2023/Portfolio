@@ -553,7 +553,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
-
+  
+  console.log(threadsData,"treads");
+ 
   return (
     <div className="sticky top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
