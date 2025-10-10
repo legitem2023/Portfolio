@@ -5,8 +5,6 @@ import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-"use client";
-
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
