@@ -52,7 +52,7 @@ const DeluxeNavTabs: React.FC = () => {
   
   // Get the URL parameter for merchant ID
   const params = useParams();
-  const merchantIdFromUrl = params.id; // This gets the ID from URL
+  const merchantIdFromUrl:any = params.id; // This gets the ID from URL
   
   useEffect(() => {
     const getRole = async () => {
