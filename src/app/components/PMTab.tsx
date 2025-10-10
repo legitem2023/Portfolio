@@ -685,7 +685,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+            ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
