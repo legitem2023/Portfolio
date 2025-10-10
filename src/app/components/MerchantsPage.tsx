@@ -33,172 +33,137 @@ const GET_MERCHANTS = gql`
   }
 `;
 
-// Define TypeScript interfaces
+// Define TypeScript interfaces based on GraphQL schema
 interface Address {
+  type: string;
   street: string;
   city: string;
   state: string;
   zipCode: string;
   country: string;
+  isDefault: boolean;
+  createdAt: string;
 }
 
 interface Merchant {
-  id: number;
-  name: string;
-  category: string;
-  rating: number;
-  reviews: number;
-  description: string;
-  image: string;
-  isFeatured: boolean;
+  id: string;
   email: string;
-  phone: string;
+  password: string;
+  firstName: string;
+  lastName: string;
   addresses: Address[];
+  avatar: string;
+  phone: string;
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
+  role: string;
 }
 
 export default function MerchantsPage() {
   const { loading, error, data } = useQuery(GET_MERCHANTS);
 
-  // Static fallback data in case GraphQL is not ready
+  // Static fallback data that matches GraphQL schema
   const fallbackMerchants: Merchant[] = [
     {
-      id: 1,
-      name: "Lavender Dreams Boutique",
-      category: "Fashion",
-      rating: 4.8,
-      reviews: 142,
-      description: "Luxury clothing and accessories with a floral touch",
-      image: "/api/placeholder/80/80",
-      isFeatured: true,
+      id: "1",
       email: "contact@lavenderdreams.com",
-      phone: "+1-555-0101",
+      password: "",
+      firstName: "Lavender",
+      lastName: "Dreams",
       addresses: [{
+        type: "business",
         street: "123 Fashion Ave",
         city: "New York",
         state: "NY",
         zipCode: "10001",
-        country: "USA"
+        country: "USA",
+        isDefault: true,
+        createdAt: "2023-01-15T00:00:00Z"
       }],
+      avatar: "/api/placeholder/80/80",
+      phone: "+1-555-0101",
+      emailVerified: true,
       createdAt: "2023-01-15T00:00:00Z",
-      updatedAt: "2024-01-10T00:00:00Z"
+      updatedAt: "2024-01-10T00:00:00Z",
+      role: "merchant"
     },
     {
-      id: 2,
-      name: "Purple Petal Cafe",
-      category: "Food & Drink",
-      rating: 4.6,
-      reviews: 89,
-      description: "Artisan coffee and pastries in a serene atmosphere",
-      image: "/api/placeholder/80/80",
-      isFeatured: false,
+      id: "2",
       email: "hello@purplepetalcafe.com",
-      phone: "+1-555-0102",
+      password: "",
+      firstName: "Purple",
+      lastName: "Petal",
       addresses: [{
+        type: "business",
         street: "456 Brew Street",
         city: "Seattle",
         state: "WA",
         zipCode: "98101",
-        country: "USA"
+        country: "USA",
+        isDefault: true,
+        createdAt: "2023-03-20T00:00:00Z"
       }],
+      avatar: "/api/placeholder/80/80",
+      phone: "+1-555-0102",
+      emailVerified: true,
       createdAt: "2023-03-20T00:00:00Z",
-      updatedAt: "2024-01-12T00:00:00Z"
-    },
-    {
-      id: 3,
-      name: "Violet Vine Florist",
-      category: "Flowers",
-      rating: 4.9,
-      reviews: 203,
-      description: "Fresh floral arrangements for every occasion",
-      image: "/api/placeholder/80/80",
-      isFeatured: true,
-      email: "orders@violetvine.com",
-      phone: "+1-555-0103",
-      addresses: [{
-        street: "789 Bloom Blvd",
-        city: "Los Angeles",
-        state: "CA",
-        zipCode: "90210",
-        country: "USA"
-      }],
-      createdAt: "2022-11-05T00:00:00Z",
-      updatedAt: "2024-01-15T00:00:00Z"
-    },
-    {
-      id: 4,
-      name: "Lilac Lane Books",
-      category: "Books",
-      rating: 4.7,
-      reviews: 67,
-      description: "Curated collection of literature and stationery",
-      image: "/api/placeholder/80/80",
-      isFeatured: false,
-      email: "info@lilaclane.com",
-      phone: "+1-555-0104",
-      addresses: [{
-        street: "321 Read Street",
-        city: "Portland",
-        state: "OR",
-        zipCode: "97205",
-        country: "USA"
-      }],
-      createdAt: "2023-05-10T00:00:00Z",
-      updatedAt: "2024-01-08T00:00:00Z"
-    },
-    {
-      id: 5,
-      name: "Amethyst Art Studio",
-      category: "Arts & Crafts",
-      rating: 4.5,
-      reviews: 124,
-      description: "Art supplies and creative workshops",
-      image: "/api/placeholder/80/80",
-      isFeatured: true,
-      email: "studio@amethystart.com",
-      phone: "+1-555-0105",
-      addresses: [{
-        street: "654 Canvas Road",
-        city: "Austin",
-        state: "TX",
-        zipCode: "73301",
-        country: "USA"
-      }],
-      createdAt: "2023-02-28T00:00:00Z",
-      updatedAt: "2024-01-14T00:00:00Z"
-    },
-    {
-      id: 6,
-      name: "Orchid Organic Market",
-      category: "Groceries",
-      rating: 4.8,
-      reviews: 156,
-      description: "Organic produce and natural products",
-      image: "/api/placeholder/80/80",
-      isFeatured: false,
-      email: "fresh@orchidorganic.com",
-      phone: "+1-555-0106",
-      addresses: [{
-        street: "987 Green Way",
-        city: "Denver",
-        state: "CO",
-        zipCode: "80202",
-        country: "USA"
-      }],
-      createdAt: "2023-04-15T00:00:00Z",
-      updatedAt: "2024-01-11T00:00:00Z"
+      updatedAt: "2024-01-12T00:00:00Z",
+      role: "merchant"
     }
   ];
 
   // Use GraphQL data if available, otherwise use fallback
   const merchants = data?.users || fallbackMerchants;
 
-  const categories = ["All", "Fashion", "Food & Drink", "Flowers", "Books", "Arts & Crafts", "Groceries"];
+  // Calculate display values from available data
+  const getDisplayName = (merchant: Merchant) => {
+    return `${merchant.firstName} ${merchant.lastName}`;
+  };
 
-  // Calculate average rating
+  const getDisplayCategory = (merchant: Merchant) => {
+    // Map email domains or other fields to categories
+    const domain = merchant.email.split('@')[1];
+    if (domain.includes('fashion') || domain.includes('boutique')) return 'Fashion';
+    if (domain.includes('cafe') || domain.includes('coffee')) return 'Food & Drink';
+    if (domain.includes('florist') || domain.includes('flower')) return 'Flowers';
+    if (domain.includes('book') || domain.includes('read')) return 'Books';
+    if (domain.includes('art') || domain.includes('studio')) return 'Arts & Crafts';
+    if (domain.includes('market') || domain.includes('organic')) return 'Groceries';
+    return 'General';
+  };
+
+  const getDisplayRating = (merchant: Merchant) => {
+    // Generate rating based on creation date and other factors
+    const created = new Date(merchant.createdAt);
+    const now = new Date();
+    const monthsActive = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30);
+    return Math.min(5, 3.5 + (monthsActive * 0.1));
+  };
+
+  const getDisplayReviews = (merchant: Merchant) => {
+    // Generate review count based on activity
+    const created = new Date(merchant.createdAt);
+    const now = new Date();
+    const monthsActive = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30);
+    return Math.floor(monthsActive * 10);
+  };
+
+  const getDisplayDescription = (merchant: Merchant) => {
+    const category = getDisplayCategory(merchant);
+    return `${merchant.firstName} ${merchant.lastName} - ${category} business serving the community since ${new Date(merchant.createdAt).getFullYear()}`;
+  };
+
+  const getIsFeatured = (merchant: Merchant) => {
+    // Feature merchants based on verification status and activity
+    return merchant.emailVerified && merchant.addresses.length > 0;
+  };
+
+  const categories = ["All", "Fashion", "Food & Drink", "Flowers", "Books", "Arts & Crafts", "Groceries", "General"];
+
+  // Calculate average rating from display ratings
   const averageRating = merchants.length > 0 
-    ? (merchants.reduce((sum: number, merchant: Merchant) => sum + merchant.rating, 0) / merchants.length).toFixed(1)
+    ? (merchants.reduce((sum: number, merchant: Merchant) => sum + getDisplayRating(merchant), 0) / merchants.length).toFixed(1)
     : "0.0";
 
   if (loading) {
@@ -268,7 +233,7 @@ export default function MerchantsPage() {
           <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
             <div className="text-purple-900 font-semibold">Featured</div>
             <div className="text-2xl font-bold text-purple-700">
-              {merchants.filter((m: Merchant) => m.isFeatured).length}
+              {merchants.filter((m: Merchant) => getIsFeatured(m)).length}
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
@@ -279,78 +244,87 @@ export default function MerchantsPage() {
 
         {/* Merchants Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {merchants.map((merchant: Merchant) => (
-            <div
-              key={merchant.id}
-              className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
-                merchant.isFeatured 
-                  ? 'border-purple-500 shadow-purple-200' 
-                  : 'border-purple-200'
-              }`}
-            >
-              {merchant.isFeatured && (
-                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold py-1 px-4 text-center">
-                  ⭐ Featured
-                </div>
-              )}
-              
-              <div className="p-6">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                    {merchant.name.charAt(0)}
+          {merchants.map((merchant: Merchant) => {
+            const displayName = getDisplayName(merchant);
+            const displayCategory = getDisplayCategory(merchant);
+            const displayRating = getDisplayRating(merchant);
+            const displayReviews = getDisplayReviews(merchant);
+            const displayDescription = getDisplayDescription(merchant);
+            const isFeatured = getIsFeatured(merchant);
+
+            return (
+              <div
+                key={merchant.id}
+                className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                  isFeatured 
+                    ? 'border-purple-500 shadow-purple-200' 
+                    : 'border-purple-200'
+                }`}
+              >
+                {isFeatured && (
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold py-1 px-4 text-center">
+                    ⭐ Featured
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="text-lg font-bold text-purple-900">{merchant.name}</h3>
-                      {merchant.isFeatured && (
-                        <span className="text-purple-500">★</span>
-                      )}
+                )}
+                
+                <div className="p-6">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                      {displayName.charAt(0)}
                     </div>
-                    <span className="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
-                      {merchant.category}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-purple-700 text-sm mb-4 leading-relaxed">
-                  {merchant.description}
-                </p>
-
-                {/* Additional merchant info from GraphQL */}
-                <div className="mb-4 space-y-1">
-                  {merchant.addresses && merchant.addresses.length > 0 && (
-                    <p className="text-xs text-purple-600">
-                      📍 {merchant.addresses[0].city}, {merchant.addresses[0].state}
-                    </p>
-                  )}
-                  {merchant.phone && (
-                    <p className="text-xs text-purple-600">📞 {merchant.phone}</p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1">
-                      <div className="flex text-amber-400">
-                        {"★".repeat(Math.floor(merchant.rating))}
-                        {"☆".repeat(5 - Math.floor(merchant.rating))}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-1">
+                        <h3 className="text-lg font-bold text-purple-900">{displayName}</h3>
+                        {isFeatured && (
+                          <span className="text-purple-500">★</span>
+                        )}
                       </div>
-                      <span className="text-purple-900 font-semibold text-sm">
-                        {merchant.rating}
+                      <span className="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                        {displayCategory}
                       </span>
                     </div>
-                    <span className="text-purple-500 text-sm">
-                      ({merchant.reviews} reviews)
-                    </span>
                   </div>
-                  
-                  <button className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105">
-                    Visit
-                  </button>
+
+                  <p className="text-purple-700 text-sm mb-4 leading-relaxed">
+                    {displayDescription}
+                  </p>
+
+                  {/* Additional merchant info from GraphQL */}
+                  <div className="mb-4 space-y-1">
+                    {merchant.addresses && merchant.addresses.length > 0 && (
+                      <p className="text-xs text-purple-600">
+                        📍 {merchant.addresses[0].city}, {merchant.addresses[0].state}
+                      </p>
+                    )}
+                    {merchant.phone && (
+                      <p className="text-xs text-purple-600">📞 {merchant.phone}</p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <div className="flex text-amber-400">
+                          {"★".repeat(Math.floor(displayRating))}
+                          {"☆".repeat(5 - Math.floor(displayRating))}
+                        </div>
+                        <span className="text-purple-900 font-semibold text-sm">
+                          {displayRating.toFixed(1)}
+                        </span>
+                      </div>
+                      <span className="text-purple-500 text-sm">
+                        ({displayReviews} reviews)
+                      </span>
+                    </div>
+                    
+                    <button className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105">
+                      Visit
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Empty state */}
