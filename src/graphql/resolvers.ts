@@ -833,7 +833,7 @@ sendMessage: async (_: any, args:any): Promise<any> => {
       }
 
       // Prevent sending to self
-      if (recipientId === userId) {
+      if (recipientId === senderId) {
         throw new Error('Cannot send message to yourself');
       }
 
