@@ -150,7 +150,7 @@ const DeluxeNavTabs: React.FC = () => {
       id:11,
       label: 'Merchants',
       icon: <ShoppingCart size={18} />,
-      content:<MerchantDetails userId={merchantIdFromUrl} /> // Uses URL id instead of JWT userId
+      content:<MerchantDetails userId={merchantIdFromUrl || ""} /> // Uses URL id instead of JWT userId
     }
   ];
 
