@@ -66,7 +66,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
           </div>
           
           <div className="flex gap-2 mt-4 md:mt-0 w-full md:w-auto justify-start md:justify-end">
-            <button className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center text-sm md:text-base flex-1 md:flex-initial justify-center">
+            {/*<button className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center text-sm md:text-base flex-1 md:flex-initial justify-center">
               <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                 <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
@@ -83,7 +83,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
               <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
               </svg>
-            </button>
+            </button>*/}
           </div>
         </div>
         
