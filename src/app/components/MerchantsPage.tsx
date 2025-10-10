@@ -127,7 +127,7 @@ export default function MerchantsPage() {
 
   const redirect = (id: string) => {
   dispatch(setActiveIndex(11));
-  router.push(`/id=${id}`);
+  router.push(`?id=${id}`);
 };
 
   
