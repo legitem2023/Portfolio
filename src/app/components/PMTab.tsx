@@ -264,7 +264,7 @@ interface Message {
   graphQLData?: GraphQLMessage;
 }
 
-const PMTab = () => {
+const PMTab = ({ UserId }: { UserId: string }) => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
