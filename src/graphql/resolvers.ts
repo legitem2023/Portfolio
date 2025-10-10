@@ -820,8 +820,8 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
 
   Mutation: {
 
-sendMessage: async (_: any, { input }: any, { userId }: any): Promise<any> => {
-      const { recipientId, body, subject } = input;
+sendMessage: async (_: any, args:any): Promise<any> => {
+      const { senderId, recipientId, body, subject } = args.input;
 
       // Check if recipient exists
       const recipient = await prisma.user.findUnique({
@@ -839,7 +839,7 @@ sendMessage: async (_: any, { input }: any, { userId }: any): Promise<any> => {
 
       return prisma.message.create({
         data: {
-          senderId: userId,
+          senderId,
           recipientId,
           body,
           subject,
