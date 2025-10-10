@@ -945,7 +945,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               {/* Message Input - Fixed positioning when keyboard is visible */}
               {selectedUser && (
                 <div 
-                  className="border-t border-purple-200 bg-white safe-area-inset-bottom transition-all duration-300"
+                  className="border-t border-purple-200 bg-green-700 safe-area-inset-bottom transition-all duration-300"
                   style={{
                     position: isKeyboardVisible && isMobile ? 'fixed' : 'fixed',
                     bottom: isKeyboardVisible && isMobile ? '0' : 'auto',
