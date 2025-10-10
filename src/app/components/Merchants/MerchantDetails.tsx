@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
-import TabContent from '../TabContent';
+import TabContent from './TabContent';
 const MerchantDetails = ({ userId }: { userId: string }) => {
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
