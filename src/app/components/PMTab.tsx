@@ -271,6 +271,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
@@ -281,7 +282,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50 },
-    skip: !userId
+    skip: !userId,
+    pollInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: usersData } = useQuery(GET_ALL_USERS, {
@@ -298,7 +300,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
-    skip: !userId
+    skip: !userId,
+    pollInterval: 30000,
   });
 
   // GraphQL Mutations
@@ -309,8 +312,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // Combine and filter contacts
   const allContacts = useMemo(() => {
-    const threadUsers = messageThreads.map((thread:any) => thread.user);
-    const otherUsers = usersData?.users?.filter((user:any) => 
+    const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
+    const otherUsers = usersData?.users?.filter((user: User) => 
       user.id !== userId && // Exclude current user
       !threadUsers.some(threadUser => threadUser.id === user.id)
     ) || [];
@@ -387,7 +390,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // Update message threads when data loads
   useEffect(() => {
     if (threadsData?.messageThreads?.threads) {
-      setMessageThreads(threadsData.messageThreads.threads);
+      const sortedThreads = [...threadsData.messageThreads.threads].sort((a, b) => 
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      );
+      setMessageThreads(sortedThreads);
     }
   }, [threadsData]);
 
@@ -437,7 +443,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const { data } = await sendMessageMutation({
         variables: {
           input: {
-            senderId:UserId,
+            senderId: UserId,
             recipientId: selectedUser.id,
             body: newMessage.trim()
           }
@@ -463,6 +469,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
         refetchThreads();
+        refetchConversation();
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -478,6 +485,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const handleUserSelect = async (user: User) => {
     setSelectedUser(user);
+    setSelectedThread(messageThreads.find(thread => thread.user.id === user.id) || null);
+    
     if (isMobile) {
       setIsSidebarOpen(false);
     }
@@ -491,6 +500,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const handleBackToContacts = () => {
     setSelectedUser(null);
+    setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
     }
@@ -525,6 +535,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
+  // Get thread info for a user
+  const getThreadInfo = (user: User) => {
+    return messageThreads.find(thread => thread.user.id === user.id);
+  };
+
   // Group messages by date
   const groupMessagesByDate = () => {
     const groups: { [key: string]: Message[] } = {};
@@ -553,9 +568,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
-  
-  console.log(threadsData,"treads");
- 
+
   return (
     <div className="sticky top-0 min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-screen md:h-[80vh]">
@@ -633,7 +646,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
             <div className="overflow-y-auto h-[calc(100%-160px)] md:h-[calc(100%-180px)] messages-scrollbar">
               {displayContacts.map((user) => {
-                const thread = messageThreads.find(t => t.user.id === user.id);
+                const thread = getThreadInfo(user);
                 return (
                   <div
                     key={user.id}
@@ -648,10 +661,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                         alt={getUserFullName(user)}
                         className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                       />
-                      {/* FIXED: Added proper check for thread existence */}
                       {thread && thread.unreadCount > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                          {thread.unreadCount}
+                          {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
                         </div>
                       )}
                     </div>
@@ -666,7 +678,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           </span>
                         )}
                       </div>
-                      {/* FIXED: Added additional safety check for user.email */}
                       <p className="text-xs md:text-sm text-purple-600 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
