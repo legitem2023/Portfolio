@@ -1,7 +1,66 @@
 // app/merchants/page.tsx
+'use client';
+
+import { useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+
+// Define the GraphQL query for merchants
+const GET_MERCHANTS = gql`
+  query GetMerchants {
+    merchants {
+      id
+      name
+      category
+      rating
+      reviews
+      description
+      image
+      isFeatured
+      email
+      phone
+      addresses {
+        street
+        city
+        state
+        zipCode
+        country
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// Define TypeScript interfaces
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface Merchant {
+  id: number;
+  name: string;
+  category: string;
+  rating: number;
+  reviews: number;
+  description: string;
+  image: string;
+  isFeatured: boolean;
+  email: string;
+  phone: string;
+  addresses: Address[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export default function MerchantsPage() {
-  // Static merchant data
-  const merchants = [
+  const { loading, error, data } = useQuery(GET_MERCHANTS);
+
+  // Static fallback data in case GraphQL is not ready
+  const fallbackMerchants: Merchant[] = [
     {
       id: 1,
       name: "Lavender Dreams Boutique",
@@ -10,7 +69,18 @@ export default function MerchantsPage() {
       reviews: 142,
       description: "Luxury clothing and accessories with a floral touch",
       image: "/api/placeholder/80/80",
-      isFeatured: true
+      isFeatured: true,
+      email: "contact@lavenderdreams.com",
+      phone: "+1-555-0101",
+      addresses: [{
+        street: "123 Fashion Ave",
+        city: "New York",
+        state: "NY",
+        zipCode: "10001",
+        country: "USA"
+      }],
+      createdAt: "2023-01-15T00:00:00Z",
+      updatedAt: "2024-01-10T00:00:00Z"
     },
     {
       id: 2,
@@ -20,7 +90,18 @@ export default function MerchantsPage() {
       reviews: 89,
       description: "Artisan coffee and pastries in a serene atmosphere",
       image: "/api/placeholder/80/80",
-      isFeatured: false
+      isFeatured: false,
+      email: "hello@purplepetalcafe.com",
+      phone: "+1-555-0102",
+      addresses: [{
+        street: "456 Brew Street",
+        city: "Seattle",
+        state: "WA",
+        zipCode: "98101",
+        country: "USA"
+      }],
+      createdAt: "2023-03-20T00:00:00Z",
+      updatedAt: "2024-01-12T00:00:00Z"
     },
     {
       id: 3,
@@ -30,7 +111,18 @@ export default function MerchantsPage() {
       reviews: 203,
       description: "Fresh floral arrangements for every occasion",
       image: "/api/placeholder/80/80",
-      isFeatured: true
+      isFeatured: true,
+      email: "orders@violetvine.com",
+      phone: "+1-555-0103",
+      addresses: [{
+        street: "789 Bloom Blvd",
+        city: "Los Angeles",
+        state: "CA",
+        zipCode: "90210",
+        country: "USA"
+      }],
+      createdAt: "2022-11-05T00:00:00Z",
+      updatedAt: "2024-01-15T00:00:00Z"
     },
     {
       id: 4,
@@ -40,7 +132,18 @@ export default function MerchantsPage() {
       reviews: 67,
       description: "Curated collection of literature and stationery",
       image: "/api/placeholder/80/80",
-      isFeatured: false
+      isFeatured: false,
+      email: "info@lilaclane.com",
+      phone: "+1-555-0104",
+      addresses: [{
+        street: "321 Read Street",
+        city: "Portland",
+        state: "OR",
+        zipCode: "97205",
+        country: "USA"
+      }],
+      createdAt: "2023-05-10T00:00:00Z",
+      updatedAt: "2024-01-08T00:00:00Z"
     },
     {
       id: 5,
@@ -50,7 +153,18 @@ export default function MerchantsPage() {
       reviews: 124,
       description: "Art supplies and creative workshops",
       image: "/api/placeholder/80/80",
-      isFeatured: true
+      isFeatured: true,
+      email: "studio@amethystart.com",
+      phone: "+1-555-0105",
+      addresses: [{
+        street: "654 Canvas Road",
+        city: "Austin",
+        state: "TX",
+        zipCode: "73301",
+        country: "USA"
+      }],
+      createdAt: "2023-02-28T00:00:00Z",
+      updatedAt: "2024-01-14T00:00:00Z"
     },
     {
       id: 6,
@@ -60,11 +174,52 @@ export default function MerchantsPage() {
       reviews: 156,
       description: "Organic produce and natural products",
       image: "/api/placeholder/80/80",
-      isFeatured: false
+      isFeatured: false,
+      email: "fresh@orchidorganic.com",
+      phone: "+1-555-0106",
+      addresses: [{
+        street: "987 Green Way",
+        city: "Denver",
+        state: "CO",
+        zipCode: "80202",
+        country: "USA"
+      }],
+      createdAt: "2023-04-15T00:00:00Z",
+      updatedAt: "2024-01-11T00:00:00Z"
     }
   ];
 
+  // Use GraphQL data if available, otherwise use fallback
+  const merchants = data?.merchants || fallbackMerchants;
+
   const categories = ["All", "Fashion", "Food & Drink", "Flowers", "Books", "Arts & Crafts", "Groceries"];
+
+  // Calculate average rating
+  const averageRating = merchants.length > 0 
+    ? (merchants.reduce((sum: number, merchant: Merchant) => sum + merchant.rating, 0) / merchants.length).toFixed(1)
+    : "0.0";
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-purple-900 font-semibold">Loading merchants...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6 flex items-center justify-center">
+        <div className="text-center text-red-600">
+          <p className="text-lg font-semibold">Error loading merchants</p>
+          <p className="mt-2">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6">
@@ -74,6 +229,9 @@ export default function MerchantsPage() {
           <h1 className="text-3xl md:text-4xl font-bold text-purple-900 mb-3">
             Discover Local Merchants
           </h1>
+          <p className="text-purple-700">
+            Supporting {merchants.length} local businesses in your community
+          </p>
         </div>
 
         {/* Search and Filter Bar */}
@@ -89,6 +247,13 @@ export default function MerchantsPage() {
                 </button>
               ))}
             </div>
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search merchants..."
+                className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
           </div>
         </div>
 
@@ -101,18 +266,18 @@ export default function MerchantsPage() {
           <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
             <div className="text-purple-900 font-semibold">Featured</div>
             <div className="text-2xl font-bold text-purple-700">
-              {merchants.filter(m => m.isFeatured).length}
+              {merchants.filter((m: Merchant) => m.isFeatured).length}
             </div>
           </div>
           <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
             <div className="text-purple-900 font-semibold">Avg. Rating</div>
-            <div className="text-2xl font-bold text-purple-700">4.7</div>
+            <div className="text-2xl font-bold text-purple-700">{averageRating}</div>
           </div>
         </div>
 
         {/* Merchants Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {merchants.map((merchant) => (
+          {merchants.map((merchant: Merchant) => (
             <div
               key={merchant.id}
               className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
@@ -149,6 +314,18 @@ export default function MerchantsPage() {
                   {merchant.description}
                 </p>
 
+                {/* Additional merchant info from GraphQL */}
+                <div className="mb-4 space-y-1">
+                  {merchant.addresses && merchant.addresses.length > 0 && (
+                    <p className="text-xs text-purple-600">
+                      📍 {merchant.addresses[0].city}, {merchant.addresses[0].state}
+                    </p>
+                  )}
+                  {merchant.phone && (
+                    <p className="text-xs text-purple-600">📞 {merchant.phone}</p>
+                  )}
+                </div>
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
@@ -174,7 +351,14 @@ export default function MerchantsPage() {
           ))}
         </div>
 
-        
+        {/* Empty state */}
+        {merchants.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-purple-400 text-6xl mb-4">🏪</div>
+            <h3 className="text-xl font-semibold text-purple-900 mb-2">No merchants found</h3>
+            <p className="text-purple-700">Check back later for new local businesses.</p>
+          </div>
+        )}
       </div>
     </div>
   );
