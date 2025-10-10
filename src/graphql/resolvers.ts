@@ -256,7 +256,8 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       return await prisma.user.findUnique({ 
         where: { id },
          include : {
-          addresses:true
+          addresses:true,
+          products:true
         }
       })
     },
