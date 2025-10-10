@@ -1,9 +1,9 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
 
-// GraphQL Queries & Mutations (keep the same as before)
+// GraphQL Queries & Mutations
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -133,6 +133,23 @@ const GET_UNREAD_MESSAGE_COUNT = gql`
   }
 `;
 
+const GET_ALL_USERS = gql`
+  query GetUsers {
+    users {
+      id
+      email
+      firstName
+      lastName
+      avatar
+      phone
+      emailVerified
+      createdAt
+      updatedAt
+      role
+    }
+  }
+`;
+
 const SEND_MESSAGE = gql`
   mutation SendMessage($input: SendMessageInput!) {
     sendMessage(input: $input) {
@@ -257,11 +274,17 @@ const PMTab = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50 },
+    skip: !userId
+  });
+
+  const { data: usersData } = useQuery(GET_ALL_USERS, {
     skip: !userId
   });
 
@@ -283,6 +306,39 @@ const PMTab = () => {
   const [markAsReadMutation] = useMutation(MARK_AS_READ);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
   const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
+
+  // Combine and filter contacts
+  const allContacts = useMemo(() => {
+    const threadUsers = messageThreads.map(thread => thread.user);
+    const otherUsers = usersData?.users?.filter(user => 
+      user.id !== userId && // Exclude current user
+      !threadUsers.some(threadUser => threadUser.id === user.id)
+    ) || [];
+    
+    return [...threadUsers, ...otherUsers];
+  }, [messageThreads, usersData?.users, userId]);
+
+  // Filter contacts based on search term
+  const filteredContacts = useMemo(() => {
+    if (!searchTerm.trim()) return allContacts;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return allContacts.filter(user => 
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower)
+    );
+  }, [allContacts, searchTerm]);
+
+  // Filter contacts by tab
+  const displayContacts = useMemo(() => {
+    if (activeTab === "threads") {
+      return filteredContacts.filter(user => 
+        messageThreads.some(thread => thread.user.id === user.id)
+      );
+    } else {
+      return filteredContacts;
+    }
+  }, [filteredContacts, activeTab, messageThreads]);
 
   // Check if mobile on mount and resize
   useEffect(() => {
@@ -532,65 +588,105 @@ const PMTab = () => {
               </div>
             </div>
             
+            {/* Search and Tabs */}
             <div className="p-3 md:p-4">
-              <div className="relative">
+              <div className="relative mb-3">
                 <input
                   type="text"
                   placeholder="Search conversations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
                 />
                 <svg className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
+
+              {/* Tabs */}
+              <div className="flex space-x-1 mb-3">
+                <button
+                  onClick={() => setActiveTab("threads")}
+                  className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                    activeTab === "threads"
+                      ? "bg-purple-600 text-white"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                  }`}
+                >
+                  Conversations
+                </button>
+                <button
+                  onClick={() => setActiveTab("allUsers")}
+                  className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                    activeTab === "allUsers"
+                      ? "bg-purple-600 text-white"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
+                  }`}
+                >
+                  All Users
+                </button>
+              </div>
             </div>
 
-            <div className="overflow-y-auto h-[calc(100%-120px)] md:h-[calc(100%-140px)] messages-scrollbar">
-              {messageThreads.map((thread) => (
-                <div
-                  key={thread.user.id}
-                  className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
-                    selectedUser?.id === thread.user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
-                  }`}
-                  onClick={() => handleUserSelect(thread.user)}
-                >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={getUserAvatar(thread.user)}
-                      alt={getUserFullName(thread.user)}
-                      className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
-                    />
-                    {thread.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                        {thread.unreadCount}
+            <div className="overflow-y-auto h-[calc(100%-160px)] md:h-[calc(100%-180px)] messages-scrollbar">
+              {displayContacts.map((user) => {
+                const thread = messageThreads.find(t => t.user.id === user.id);
+                return (
+                  <div
+                    key={user.id}
+                    className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
+                      selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
+                    }`}
+                    onClick={() => handleUserSelect(user)}
+                  >
+                    <div className="relative flex-shrink-0">
+                      <img
+                        src={getUserAvatar(user)}
+                        alt={getUserFullName(user)}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                      />
+                      {thread?.unreadCount > 0 && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                          {thread.unreadCount}
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3 flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold text-purple-900 text-sm md:text-base truncate">
+                          {getUserFullName(user)}
+                        </h3>
+                        {thread?.lastMessage && (
+                          <span className="text-xs text-purple-400 whitespace-nowrap ml-2">
+                            {formatTime(thread.lastMessage.createdAt)}
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="ml-3 flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold text-purple-900 text-sm md:text-base truncate">
-                        {getUserFullName(thread.user)}
-                      </h3>
-                      {thread.lastMessage && (
-                        <span className="text-xs text-purple-400 whitespace-nowrap ml-2">
-                          {formatTime(thread.lastMessage.createdAt)}
+                      <p className="text-xs md:text-sm text-purple-600 truncate">
+                        {thread?.lastMessage?.body || user.email || 'Start a conversation'}
+                      </p>
+                      {!thread && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">
+                          New
                         </span>
                       )}
                     </div>
-                    <p className="text-xs md:text-sm text-purple-600 truncate">
-                      {thread.lastMessage?.body || 'No messages yet'}
-                    </p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               
-              {messageThreads.length === 0 && (
+              {displayContacts.length === 0 && (
                 <div className="text-center py-8 text-purple-400">
                   <svg className="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  <p className="text-sm">No conversations yet</p>
-                  <p className="text-xs mt-1">Start a conversation with someone!</p>
+                  <p className="text-sm">
+                    {searchTerm ? 'No users found' : 
+                     activeTab === "threads" ? 'No conversations yet' : 'No users available'}
+                  </p>
+                  <p className="text-xs mt-1">
+                    {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
+                  </p>
                 </div>
               )}
             </div>
@@ -626,7 +722,9 @@ const PMTab = () => {
                       <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
                         {getUserFullName(selectedUser)}
                       </h2>
-                      <p className="text-xs md:text-sm text-purple-500 truncate">Online • Last seen recently</p>
+                      <p className="text-xs md:text-sm text-purple-500 truncate">
+                        {selectedUser.email}
+                      </p>
                     </div>
                     <div className="flex space-x-2">
                       <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
@@ -783,16 +881,6 @@ const PMTab = () => {
 
       {/* Custom Styles */}
       <style jsx global>{`
-        /* Safe area insets for modern mobile devices */
-       /* .safe-area-inset-bottom {
-          padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
-        }
-        
-        .safe-area-inset-top {
-          padding-top: env(safe-area-inset-top);
-        }
-        */
-        
         /* Custom scrollbar */
         .messages-scrollbar::-webkit-scrollbar {
           width: 4px;
