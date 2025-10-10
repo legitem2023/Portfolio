@@ -6,27 +6,29 @@ import { gql } from '@apollo/client';
 
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
-  query GetMerchants {
-    merchants {
+  query GetUsers {
+    users {
       id
-      name
-      category
-      rating
-      reviews
-      description
-      image
-      isFeatured
       email
-      phone
+      password
+      firstName
+      lastName
       addresses {
+        type
         street
         city
         state
         zipCode
         country
+        isDefault
+        createdAt
       }
+      avatar
+      phone
+      emailVerified
       createdAt
       updatedAt
+      role
     }
   }
 `;
@@ -190,7 +192,7 @@ export default function MerchantsPage() {
   ];
 
   // Use GraphQL data if available, otherwise use fallback
-  const merchants = data?.merchants || fallbackMerchants;
+  const merchants = data?.users || fallbackMerchants;
 
   const categories = ["All", "Fashion", "Food & Drink", "Flowers", "Books", "Arts & Crafts", "Groceries"];
 
