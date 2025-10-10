@@ -437,6 +437,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const { data } = await sendMessageMutation({
         variables: {
           input: {
+            senderId:UserId,
             recipientId: selectedUser.id,
             body: newMessage.trim()
           }
