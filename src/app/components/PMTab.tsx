@@ -645,7 +645,8 @@ const PMTab = () => {
                         alt={getUserFullName(user)}
                         className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
                       />
-                      {thread?.unreadCount > 0 && (
+                      {/* FIXED: Added proper check for thread existence */}
+                      {thread && thread.unreadCount > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                           {thread.unreadCount}
                         </div>
@@ -662,8 +663,9 @@ const PMTab = () => {
                           </span>
                         )}
                       </div>
+                      {/* FIXED: Added additional safety check for user.email */}
                       <p className="text-xs md:text-sm text-purple-600 truncate">
-                        {thread?.lastMessage?.body || user.email || 'Start a conversation'}
+                        {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                       {!thread && (
                         <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">
