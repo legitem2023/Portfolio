@@ -66,7 +66,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
               }
             }
           },
-          orderBy: { createdAt: 'asc' },
+          orderBy: { createdAt: 'desc' },
           skip,
           take: limit
         }),
