@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import PMTab from '../components/PMTab';
 import { decryptToken } from '../../../utils/decryptToken';
 
-export default function page() {
+export default function Page() {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
