@@ -681,8 +681,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   return (
     <div className="sticky top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-[100vh]">
-        <div className="flex h-[100%] relative">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-[100%]">
+        <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
             ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
@@ -691,9 +691,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
             flex flex-col
           `}>
-            {/* FIXED SIDEBAR HEADER */}
+            {/* Fixed Sidebar Header */}
             <div className="flex-shrink-0">
-              <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white sticky top-0 z-10">
+              <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
@@ -715,8 +715,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
               
-              {/* Search and Tabs - ALSO FIXED */}
-              <div className="p-3 md:p-4 bg-white border-b border-purple-200 sticky top-[84px] md:top-[96px] z-10">
+              {/* Search and Tabs */}
+              <div className="p-3 md:p-4 bg-white border-b border-purple-200">
                 <div className="relative mb-3">
                   <input
                     type="text"
@@ -824,9 +824,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               flex flex-col h-full bg-white
               transform transition-transform duration-300 ease-in-out
             `}>
-              {/* FIXED CHAT HEADER */}
+              {/* Fixed Chat Header */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top sticky top-0 z-10">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
@@ -863,7 +863,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top sticky top-0 z-10">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {isMobile && (
@@ -947,10 +947,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Message Input - Fixed positioning when keyboard is visible */}
+              {/* Message Input */}
               {selectedUser && (
                 <div 
-                  className="border-t border-purple-200 bg-white transition-all duration-300"
+                  className="border-t border-purple-200 bg-white transition-all duration-300 flex-shrink-0"
                   style={{
                     position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
                     bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
