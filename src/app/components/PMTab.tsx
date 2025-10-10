@@ -2,8 +2,21 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
+import { 
+  Search, 
+  X, 
+  ChevronLeft, 
+  Menu, 
+  Phone, 
+  Check, 
+  MessageCircle, 
+  Send, 
+  Paperclip, 
+  Image,
+  MessageSquare
+} from 'lucide-react';
 
-// GraphQL Queries & Mutations
+// GraphQL Queries & Mutations (same as before)
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -278,6 +291,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -397,10 +411,15 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages
+  // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      const uiMessages: Message[] = conversationData.conversation.messages.map((msg: GraphQLMessage) => ({
+      // Sort messages by createdAt in ascending order (oldest first)
+      const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+
+      const uiMessages: Message[] = sortedMessages.map((msg: GraphQLMessage) => ({
         id: msg.id,
         sender: `${msg.sender.firstName} ${msg.sender.lastName}`,
         avatar: msg.sender.avatar || "/NoImage.webp",
@@ -540,7 +559,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return messageThreads.find(thread => thread.user.id === user.id);
   };
 
-  // Group messages by date
+  // Group messages by date - messages are already sorted by time
   const groupMessagesByDate = () => {
     const groups: { [key: string]: Message[] } = {};
     
@@ -596,9 +615,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     onClick={handleToggleSidebar}
                     className="p-2 rounded-lg bg-purple-700 hover:bg-purple-800"
                   >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X className="w-5 h-5" />
                   </button>
                 )}
               </div>
@@ -614,9 +631,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
                 />
-                <svg className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
               </div>
 
               {/* Tabs */}
@@ -693,9 +708,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               
               {displayContacts.length === 0 && (
                 <div className="text-center py-8 text-purple-400">
-                  <svg className="w-12 h-12 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3" />
                   <p className="text-sm">
                     {searchTerm ? 'No users found' : 
                      activeTab === "threads" ? 'No conversations yet' : 'No users available'}
@@ -724,9 +737,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                         onClick={handleBackToContacts}
                         className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
+                        <ChevronLeft className="w-5 h-5" />
                       </button>
                     )}
                     <img
@@ -744,17 +755,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     </div>
                     <div className="flex space-x-2">
                       <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
+                        <Phone className="w-5 h-5" />
                       </button>
                       <button 
                         onClick={handleToggleSidebar}
                         className="p-2 text-purple-400 hover:text-purple-600 transition-colors md:hidden"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
+                        <Menu className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -768,9 +775,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           onClick={handleToggleSidebar}
                           className="mr-3 p-2 rounded-lg bg-purple-100 hover:bg-purple-200 text-purple-600"
                         >
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                          </svg>
+                          <Menu className="w-5 h-5" />
                         </button>
                       )}
                       <div>
@@ -783,7 +788,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               )}
 
               {/* Messages Container */}
-              <div className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom">
+              <div 
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar safe-area-inset-bottom"
+              >
                 {selectedUser ? (
                   <div className="space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
@@ -821,9 +829,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                     {formatTime(message.timestamp)}
                                   </span>
                                   {message.isOwnMessage && (
-                                    <svg className="w-3 h-3 md:w-4 md:h-4 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                    <Check className="w-3 h-3 md:w-4 md:h-4 text-purple-300" />
                                   )}
                                 </div>
                               </div>
@@ -837,9 +843,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 ) : (
                   <div className="flex items-center justify-center h-full">
                     <div className="text-center text-purple-400">
-                      <svg className="w-16 h-16 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
+                      <MessageSquare className="w-16 h-16 mx-auto mb-4" />
                       <p className="text-lg font-medium">Select a conversation</p>
                       <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
                     </div>
@@ -866,22 +870,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       disabled={!newMessage.trim()}
                       className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                     >
-                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                      </svg>
+                      <Send className="w-6 h-6" />
                     </button>
                   </div>
                   <div className="flex justify-between items-center mt-2 px-1">
                     <div className="flex space-x-2">
                       <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                        </svg>
+                        <Paperclip className="w-5 h-5" />
                       </button>
                       <button className="p-2 text-purple-400 hover:text-purple-600 transition-colors">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <Image className="w-5 h-5" />
                       </button>
                     </div>
                     <div className="text-xs text-purple-400 hidden md:block">
