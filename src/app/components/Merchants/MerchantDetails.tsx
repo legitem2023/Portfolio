@@ -1,6 +1,5 @@
 // components/UserProfile.tsx
 'use client';
-
 import { useQuery } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from '../graphql/query';
