@@ -75,7 +75,7 @@ export interface Product {
     price?: number;
     images?: string[];
     stock?: number;
-  };
+  }[];
 }
 
 export interface ProductCardProps {
