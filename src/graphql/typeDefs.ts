@@ -129,7 +129,7 @@ export const typeDefs = gql`
     sku: String!
     stock: Int!
     images: [String!]!
-    category: Category!
+    category: Category
     brand: String
     weight: Float
     supplierId: String
