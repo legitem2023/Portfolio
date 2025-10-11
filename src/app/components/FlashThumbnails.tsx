@@ -65,7 +65,8 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
       color: product.colors && product.colors.length > 0 ? product.colors[0] : 'Default',
       size: product.size || 'M',
       category: product.category,
-      rating: product.rating
+      rating: product.rating,
+      variants: ""
     };
     
     dispatch(addToCart(cartItem));
