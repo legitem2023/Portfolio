@@ -1,7 +1,7 @@
 // components/TabContent.tsx
 import { ReactNode } from 'react';
 import Image from 'next/image';
-import { User, Post } from '../../../../types';
+import { User, Post , Product } from '../../../../types';
 import ProductThumbnails from '../ProductThumbnails';
 
 import { ApolloQueryResult, OperationVariables } from "@apollo/client";
@@ -14,6 +14,7 @@ interface TabContentProps {
 }
 
 const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
+ 
   const renderPostsTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       {user.posts.length === 0 ? (
