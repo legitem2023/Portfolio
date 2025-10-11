@@ -58,6 +58,7 @@ export interface Product {
   name: string;
   price: number;
   image: string;
+  productCode: string;
   images?: string[];
   category: string;
   rating: number;
