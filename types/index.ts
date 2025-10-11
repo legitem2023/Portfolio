@@ -28,7 +28,6 @@ export interface CartItem {
     size:string;
     price: number;
     quantity: number;
-    variants: Product[]
   }
   
 
