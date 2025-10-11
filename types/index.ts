@@ -68,7 +68,14 @@ export interface Product {
   stock?: number;
   colors?: string[];
   sizes?: string[];
-  variants: Product[]
+  variants: {
+    id: number;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
 }
 
 export interface ProductCardProps {
