@@ -68,7 +68,7 @@ export interface Product {
   colors?: string[];
   sizes?: string[];
   variants: {
-    id: number;
+    id: string;
     size: string;
     color: string;
     price?: number;
