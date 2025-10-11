@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import Image from 'next/image';
 import { User, Post } from '../../../../types';
+import ProductThumbnails from '../ProductThumbnails';
 
 import { ApolloQueryResult, OperationVariables } from "@apollo/client";
 
@@ -89,7 +90,8 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   };
   
   const renderAddressTab = () => (
-    <></>
+    <ProductThumbnails products={user.products} />  
+            
   );
 
   switch (activeTab) {
