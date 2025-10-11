@@ -38,7 +38,7 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
       // Adding the missing properties with default values
       productCode: product.productCode || `PC-${product.id}`,
       color: product.colors && product.colors.length > 0 ? product.colors[0] : 'Default',
-      size: product.size || 'M',
+      size: product.sizes || 'M',
       category: product.category,
       rating: product.rating
     };
