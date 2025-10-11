@@ -68,7 +68,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       rating: product.rating
     };
     
-    dispatch(addToCart(cartItem));
+    //dispatch(addToCart(cartItem));
     
     showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
