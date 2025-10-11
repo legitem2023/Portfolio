@@ -68,7 +68,7 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
       rating: product.rating
     };
     
-    dispatch(addToCart(cartItem));
+   // dispatch(addToCart(cartItem));
     
     showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
