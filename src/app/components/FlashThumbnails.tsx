@@ -27,7 +27,7 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
   };
 
   const handleAddToCart = (product: Product) => {
-    const cartItem = {
+   /* const cartItem = {
       userId:"",
       id: product.id.toString(),
       name: product.name,
@@ -42,10 +42,10 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
       category: product.category,
       rating: product.rating
     };
-    
+    */
    // dispatch(addToCart(cartItem));
     
-    showToast('Added to Cart', 'success')
+   // showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
     // You can implement a toast notification system here
   };
@@ -68,21 +68,21 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
               {/* Sale/New Badge */}
               {(product.onSale || product.isNew) && (
                 <div className="absolute top-3 left-3 z-10 flex flex-col space-y-1">
-                  {product.onSale && (
+                  {/*product.onSale && (
                     <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
-                  )}
-                  {product.isNew && (
+                  )*/}
+                  {/*product.isNew && (
                     <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
-                  )}
+                  )*/}
                 </div>
               )}
               
               {/* Featured Badge */}
-              {product.isFeatured && (
+              {/*product.isFeatured && (
                 <div className="absolute top-3 right-3 z-10">
                   <span className="px-2 py-1 text-xs font-bold bg-amber-600 text-white rounded-md">FEATURED</span>
                 </div>
-              )}
+              )*/}
               
               {/* Product Image */}
               <div className="relative overflow-hidden bg-gray-100">
