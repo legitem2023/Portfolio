@@ -5,32 +5,7 @@ import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 import { showToast } from '../../../utils/toastify'
-
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  category: string;
-  onSale?: boolean;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  colors?: string[];
-  description?: string;
-  productCode?: string;
-  size?: string;
-  variants: {
-    id: number;
-    size: string;
-    color: string;
-    price?: number;
-    images?: string[];
-    stock?: number;
-  }[];
-}
+import { Product } from '../../../types';
 
 interface FlashThumbnailsProps {
   products: Product[];
