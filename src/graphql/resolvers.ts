@@ -248,7 +248,8 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
     // Existing e-commerce queries
     users: async () => await prisma.user.findMany({
       include : {
-        addresses:true
+        addresses:true,
+        products:true
       }
     }),
     
