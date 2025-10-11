@@ -49,7 +49,8 @@ export interface User {
   followingCount: number;
   isFollowing: boolean;
   posts: Post[];
-  addresses:Address[]
+  addresses: Address[]
+  products: Product[]
 }
 
 export interface Product {
