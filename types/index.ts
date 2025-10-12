@@ -1,4 +1,3 @@
-
 export interface TabConfig {
   id: string;
   label: string;
@@ -17,19 +16,38 @@ export interface Address {
   createdAt: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  onSale: boolean;
+  isNew: boolean;
+  isFeatured: boolean;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  colors?: string[];
+  description?: string;
+  productCode?: string;
+  category: string;
+  variants: {
+    id: string;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
+}
 
-export interface CartItem {
-    userId: string;
-    id: string; // You can change this to number if IDs are numeric
-    productCode: string;
-    image:string;
-    name: string;
-    color:string;
-    size:string;
-    price: number;
-    quantity: number;
-  }
-  
+// FIXED: Single CartItem definition that extends Product
+export interface CartItem extends Product {
+  userId: string;
+  quantity: number;
+  color: string;
+  size: string;
+}
 
 export interface Post {
   id: string;
@@ -49,64 +67,9 @@ export interface User {
   followingCount: number;
   isFollowing: boolean;
   posts: Post[];
-  addresses: Address[]
-  products: Product[]
+  addresses: Address[];
+  products: Product[];
 }
-/*
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  productCode: string;
-  images?: string[];
-  category: string;
-  rating: number;
-  description: string;
-  longDescription?: string;
-  features?: string[];
-  stock?: number;
-  colors?: string[];
-  sizes?: string[];
-  variants: {
-    id: string;
-    size: string;
-    color: string;
-    price?: number;
-    images?: string[];
-    stock?: number;
-  }[];
-}
-*/
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  onSale: boolean;
-  isNew: boolean;
-  isFeatured: boolean;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  colors?: string[];
-  onSale?: boolean;
-  isNew?: boolean;
-  description?: string;
-  productCode?: string;
-  category: string;
-  variants: {
-    id: string;
-    size: string;
-    color: string;
-    price?: number;
-    images?: string[];
-    stock?: number;
-  }[];
-}
-
-
-
 
 export interface ProductCardProps {
   product: Product;
@@ -122,23 +85,6 @@ export interface Tab {
 export interface LuxuryTabsProps {
   tabs: Tab[];
   defaultTab?: string;
-}
-
-
-export interface ProductCardProps {
-  product: Product;
-}
-
-// If you're using any state management, add those types here
-export interface CartItem extends Product {
-  quantity: number;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  // Add other user properties as needed
 }
 
 // API response types
