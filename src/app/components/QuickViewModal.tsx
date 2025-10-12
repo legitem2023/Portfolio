@@ -2,30 +2,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../Redux/cartSlice';
+import { Product } from '../../../types';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  rating: number;
-  reviewCount: number;
-  image: string;
-  colors?: string[];
-  onSale?: boolean;
-  isNew?: boolean;
-  description?: string;
-  productCode?: string;
-  category: string;
-  variants: {
-    id: number;
-    size: string;
-    color: string;
-    price?: number;
-    images?: string[];
-    stock?: number;
-  }[];
-}
 
 interface QuickViewModalProps {
   product: Product | null;
