@@ -68,17 +68,16 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
     // Refetch user data to get updated addresses
     await refetch();
   };
-  
+ /* 
   const renderAddressTab = () => (
-    <ProductThumbnails products={user.products} />  
-            
+    <ProductThumbnails products={user.products} />          
   );
-
+*/
   switch (activeTab) {
     case 'posts':
       return renderPostsTab();
     case 'address':
-      return renderAddressTab();
+      //return //renderAddressTab();
     default:
       return renderAddressTab();
   }
