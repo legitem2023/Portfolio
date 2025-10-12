@@ -141,9 +141,7 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1 sm:space-x-2">
                     <span className="text-sm sm:text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
-                    {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-                    )}
+                    <span className="text-xs text-gray-500 line-through">${product.price.toFixed(2)}</span>         
                   </div>
                   
                   {/* Add to Cart Button */}
