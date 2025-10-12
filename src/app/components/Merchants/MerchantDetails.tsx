@@ -98,7 +98,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
       </div>
 
       {/* Tab Content */}
-      <TabContent activeTab={activeTab} user={user} userId={userId} refetch={refetch}/>
+        {/* <TabContent activeTab={activeTab} user={user} userId={userId} refetch={refetch}/>*/}
     </div>
      </div> 
   );
