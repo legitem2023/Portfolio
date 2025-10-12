@@ -167,7 +167,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     
     // In your QuickViewModal.tsx, find where you create the cartItem and update it:
 
-const cartItem: CartItem = {
+const cartItem = {
   // Include ALL Product properties
   id: product.id,
   name: product.name,
