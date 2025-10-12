@@ -52,7 +52,7 @@ export interface User {
   addresses: Address[]
   products: Product[]
 }
-
+/*
 export interface Product {
   id: string;
   name: string;
@@ -77,6 +77,33 @@ export interface Product {
     stock?: number;
   }[];
 }
+*/
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  colors?: string[];
+  onSale?: boolean;
+  isNew?: boolean;
+  description?: string;
+  productCode?: string;
+  category: string;
+  variants: {
+    id: string;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
+}
+
+
+
 
 export interface ProductCardProps {
   product: Product;
