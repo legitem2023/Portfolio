@@ -82,6 +82,9 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  onSale: boolean;
+  isNew: boolean;
+  isFeatured: boolean;
   originalPrice?: number;
   rating: number;
   reviewCount: number;
