@@ -165,20 +165,34 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const handleAddToCartClick = () => {
     if (!product) return;
     
-    const cartItem = {
-      userId: "",
-      id: product.id.toString(),
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      quantity: quantity,
-      image: additionalImages[0] || product.image,
-      productCode: product.productCode || `PC-${product.id}`,
-      color: selectedColor || (product.colors && product.colors.length > 0 ? product.colors[0] : 'Default'),
-      size: selectedSize || 'M',
-      category: product.category,
-      rating: product.rating
-    };
+    // In your QuickViewModal.tsx, find where you create the cartItem and update it:
+
+const cartItem: CartItem = {
+  // Include ALL Product properties
+  id: product.id,
+  name: product.name,
+  price: product.price,
+  onSale: product.onSale,           // This was missing
+  isNew: product.isNew,             // This was missing
+  isFeatured: product.isFeatured,   // This was missing
+  originalPrice: product.originalPrice,
+  rating: product.rating,
+  reviewCount: product.reviewCount, // This was missing
+  image: product.image,
+  colors: product.colors,
+  description: product.description,
+  productCode: product.productCode,
+  category: product.category,
+  variants: product.variants,       // This was missing
+  
+  // CartItem specific properties
+  userId: 'current-user-id', // Replace with actual user ID from your auth context
+  quantity: 1,
+  color: selectedColor,      // Make sure you have this variable
+  size: selectedSize,        // Make sure you have this variable
+};
+
+
     
     dispatch(addToCart(cartItem));
     
