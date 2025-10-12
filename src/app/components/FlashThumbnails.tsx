@@ -65,17 +65,17 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
           
           return (
             <div key={product.id} className="group relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border border-gray-100">
-              {/* Sale/New Badge */}
-              {(product.onSale || product.isNew) && (
+              
+              {/*(product.onSale || product.isNew) && (
                 <div className="absolute top-3 left-3 z-10 flex flex-col space-y-1">
-                  {/*product.onSale && (
+                  product.onSale && (
                     <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
-                  )*/}
-                  {/*product.isNew && (
+                  )
+                  product.isNew && (
                     <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
-                  )*/}
+                  )
                 </div>
-              )}
+              )*/}
               
               {/* Featured Badge */}
               {/*product.isFeatured && (
