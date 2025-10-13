@@ -3,6 +3,8 @@ import { ReactNode } from 'react';
 import Image from 'next/image';
 import { User, Post } from '../../../types';
 import AddressesTab, { Address } from './AddressesTab';
+import DeluxeMessageCard from '../components/Posting/DeluxeMessageCard';
+import DeluxeMessageCardLoading from './DeluxeMessageCardLoading';
 
 import { ApolloQueryResult, OperationVariables } from "@apollo/client";
 
@@ -25,7 +27,32 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-          {user.posts.map((post: Post) => (
+          {/* Posts list */}
+        {posts.map((post: Post, index: number) => (
+          <DeluxeMessageCard 
+            key={post.id} 
+            message={{
+              id: post.id,
+              sender: formatUserName(post.user),
+              avatar: post.user.avatar,
+              timestamp: formatDate(post.createdAt),
+              content: post.content,
+              likes: post.likeCount,
+              comments: post.commentCount,
+              shares: 0, // You might need to add this field to your schema
+              // New post-specific fields
+              background: post.background,
+              images: post.images,
+              isLikedByMe: post.isLikedByMe,
+              privacy: post.privacy,
+              taggedUsers: post.taggedUsers,
+              user: post.user,
+              isOwnMessage: post.user.id === userId
+            }} 
+            className="mb-2"
+          />
+        ))}
+          {/*user.posts.map((post: Post) => (
             <div key={post.id} className="relative group cursor-pointer rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
               <div className="aspect-square relative overflow-hidden bg-gray-200">
                 <Image
@@ -56,7 +83,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
                 </div>
               </div>
             </div>
-          ))}
+          ))*/}
         </div>
       )}
     </div>
