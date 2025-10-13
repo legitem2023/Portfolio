@@ -254,19 +254,25 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
     }),
     
     user: async (_: any, { id }: { id: string }) => {
-      if (!id || id.length === 0) {
-        console.log("Invalid ID");
-        // Alternatively, you could return null
-       // return null;
-      }
-      return await prisma.user.findUnique({ 
-        where: { id },
-         include : {
-          addresses:true,
-          products:true
+  if (!id || id.length === 0) {
+    console.log("Invalid ID");
+    // Alternatively, you could return null
+    // return null;
+  }
+  return await prisma.user.findUnique({ 
+    where: { id },
+    include: {
+      addresses: true,
+      products: {
+        include: {
+          category: true,    // Include category relation
+          variants: true     // Include variants relation
         }
-      })
-    },
+      },
+      posts:true
+    }
+  })
+},
 
     products: async (
       _: any,
