@@ -265,8 +265,31 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       addresses: true,
       products: {
         include: {
-          category: true,    // Include category relation
-          variants: true     // Include variants relation
+          category:{
+              select:{
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                isActive: true,
+                createdAt: true,
+                parent: true
+              }
+            },
+            variants: {
+              select:{
+                id: true,
+                name: true,
+                createdAt: true,
+                sku  : true,
+                color : true,
+                size  : true,
+                price : true,
+                salePrice: true,
+                stock : true,
+                images: true
+              }
+            }
         }
       },
       posts:true
