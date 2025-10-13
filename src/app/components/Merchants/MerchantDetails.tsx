@@ -23,7 +23,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
   if (error) return <UserProfileShimmerRed />;
 
   const user: User = data.user;
- console.log(user,"User Profile");
+ //console.log(user,"User Profile");
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
