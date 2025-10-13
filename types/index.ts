@@ -67,7 +67,7 @@ export interface Post {
   privacy: string;
   user: User;
   background: string;
-  images:string;
+  images:string[];
 }
 
 export interface User {
