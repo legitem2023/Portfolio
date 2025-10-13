@@ -68,6 +68,8 @@ export interface Post {
   user: User;
   background: string;
   images:string[];
+  isLikedByMe:boolean;
+  taggedUsers:string;
 }
 
 export interface User {
