@@ -86,9 +86,32 @@ export const GET_USER_PROFILE = gql`
         id
         content
         createdAt
+        privacy
+        isLikedByMe
         likeCount
         commentCount
-        privacy
+        user {
+          id
+          firstName
+          lastName
+          avatar
+        }
+        taggedUsers {
+          id
+          firstName
+          lastName
+        }
+        comments {
+          id
+          content
+          createdAt
+          user {
+           id
+           firstName
+           lastName
+           avatar
+         }
+        }
       }
     }
   }
