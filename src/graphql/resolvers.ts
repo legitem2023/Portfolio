@@ -253,46 +253,71 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       }
     }),
     
-    user: async (_: any, { id }: { id: string }) => {
+  user: async (_: any, { id }: { id: string }) => {
+
+  
   if (!id || id.length === 0) {
     console.log("Invalid ID");
-    // Alternatively, you could return null
-    // return null;
+    return null;
   }
+  
   return await prisma.user.findUnique({ 
     where: { id },
     include: {
       addresses: true,
       products: {
         include: {
-          category:{
-              select:{
-                id: true,
-                name: true,
-                description: true,
-                image: true,
-                isActive: true,
-                createdAt: true,
-                parent: true
-              }
-            },
-            variants: {
-              select:{
-                id: true,
-                name: true,
-                createdAt: true,
-                sku  : true,
-                color : true,
-                size  : true,
-                price : true,
-                salePrice: true,
-                stock : true,
-                images: true
-              }
+          category: {
+            include: {
+              parent: true
             }
+          },
+          variants: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+              sku: true,
+              color: true,
+              size: true,
+              price: true,
+              salePrice: true,
+              stock: true,
+              images: true
+            }
+          }
         }
       },
-      posts:true
+      posts: {
+        include: {
+          user: true,
+          taggedUsers: {
+            include: {
+              user: true
+            }
+          },
+          comments: {
+            take: 2,
+            include: {
+              user: true
+            },
+            orderBy: {
+              createdAt: 'desc'
+            }
+          },
+          likes: {
+            where: {
+              userId: id
+            }
+          },
+          _count: {
+            select: {
+              comments: true,
+              likes: true
+            }
+          }
+        }
+      }
     }
   })
 },
