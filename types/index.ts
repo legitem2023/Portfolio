@@ -66,6 +66,7 @@ export interface Post {
   commentCount: number;
   privacy: string;
   user: User;
+  background: string;
 }
 
 export interface User {
