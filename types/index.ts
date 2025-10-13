@@ -16,6 +16,15 @@ export interface Address {
   createdAt: string;
 }
 
+export interface category {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  isActive:boolean;
+  createdAt:string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -30,7 +39,7 @@ export interface Product {
   colors?: string[];
   description?: string;
   productCode?: string;
-  category: string;
+  category: category;
   variants: {
     id: string;
     size: string;
