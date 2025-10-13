@@ -17,7 +17,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
     variables: { id: userId },
   });
 
-  const [activeTab, setActiveTab] = useState<string>('address');
+  const [activeTab, setActiveTab] = useState<string>('product');
   const dispatch = useDispatch();
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
@@ -92,7 +92,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
           onTabChange={setActiveTab}
           tabsConfig={[
             { id: 'posts', label: 'Posts', icon: 'user' },
-            { id: 'address', label: 'Addresses', icon: 'location' }
+            { id: 'product', label: 'Products', icon: 'tags' }
           ]}
         />
       </div>
