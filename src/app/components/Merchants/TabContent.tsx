@@ -79,7 +79,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
     case 'address':
       //return //renderAddressTab();
     default:
-      return renderAddressTab();
+      //return renderAddressTab();
   }
 };
 
