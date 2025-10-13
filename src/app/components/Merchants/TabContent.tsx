@@ -70,8 +70,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   };
   
   const renderProductTab = () => (
-  <div>sample</div>
-  {/* <ProductThumbnails products={user.products} />   */}       
+    <ProductThumbnails products={user.products} />
   );
 
   switch (activeTab) {
