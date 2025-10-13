@@ -69,12 +69,12 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
     await refetch();
   };
   
-  const renderProductTab = () => {
-  
-      console.log(user);
+  const renderProductTab = () => (
+  <>sample</>
+      //console.log(user);
   
   {/* <ProductThumbnails products={user.products} />   */}       
-  };
+  );
 
   switch (activeTab) {
     case 'posts':
