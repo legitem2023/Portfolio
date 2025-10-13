@@ -3,7 +3,7 @@ import { ReactNode } from 'react';
 import Image from 'next/image';
 import { User, Post , Product } from '../../../../types';
 import ProductThumbnails from '../ProductThumbnails';
-import DeluxeMessageCard from '../components/Posting/DeluxeMessageCard';
+import DeluxeMessageCard from '../Posting/DeluxeMessageCard';
 import DeluxeMessageCardLoading from '../DeluxeMessageCardLoading';
 
 import { ApolloQueryResult, OperationVariables } from "@apollo/client";
