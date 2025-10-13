@@ -16,6 +16,26 @@ interface TabContentProps {
 }
 
 const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
+ // Format user name for display
+  const formatUserName = (user: User) => {
+    if (user.firstName && user.lastName) {
+      return `${user.firstName} ${user.lastName}`;
+    }
+    return user.name || 'Unknown User';
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  
   const renderPostsTab = () => (
     <div className="max-w-4xl mx-auto px-4 py-6">
       {user.posts.length === 0 ? (
