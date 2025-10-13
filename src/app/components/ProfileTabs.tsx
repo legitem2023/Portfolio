@@ -40,7 +40,7 @@ const ProfileTabs = ({ activeTab, onTabChange, tabsConfig }: ProfileTabsProps) =
       <div className="flex space-x-4 md:space-x-8 min-w-max">
         {tabsConfig
           .slice()
-          .sort((a, b) => b.id - a.id)
+          .sort((a:any, b:any) => b.id - a.id)
           .map((tab) => (
             <button
               key={tab.id}
