@@ -65,7 +65,7 @@ export interface Post {
   likeCount: number;
   commentCount: number;
   privacy: string;
-  user: string;
+  user: User;
 }
 
 export interface User {
