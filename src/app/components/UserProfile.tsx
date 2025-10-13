@@ -23,7 +23,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
 
-  const user: User = data.user;
+  const user: User = data?.user;
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
