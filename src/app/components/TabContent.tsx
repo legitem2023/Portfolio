@@ -1,12 +1,7 @@
 // components/TabContent.tsx
-import { ReactNode } from 'react';
-import Image from 'next/image';
 import { User, Post } from '../../../types';
-import AddressesTab, { Address } from './AddressesTab';
+import AddressesTab from './AddressesTab';
 import DeluxeMessageCard from '../components/Posting/DeluxeMessageCard';
-import DeluxeMessageCardLoading from './DeluxeMessageCardLoading';
-
-import { ApolloQueryResult, OperationVariables } from "@apollo/client";
 
 interface TabContentProps {
   activeTab: string;
@@ -16,7 +11,11 @@ interface TabContentProps {
 }
 
 const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
- // Format user name for display
+  // Add safety checks
+  if (!user) {
+    return <div>No user data available</div>;
+  }
+
   const formatUserName = (user: User) => {
     if (user.firstName && user.lastName) {
       return `${user.firstName} ${user.lastName}`;
@@ -25,20 +24,33 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
   };
 
-  
-  const renderPostsTab = () => (
-    <div>
-        {user?.posts?.map((post: Post, index: number) => (
+  const renderPostsTab = () => {
+    // Check if posts exist
+    if (!user.posts || user.posts.length === 0) {
+      return (
+        <div className="text-center py-8 text-gray-500">
+          No posts available
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        {user.posts.map((post: Post, index: number) => (
           <DeluxeMessageCard 
             key={post.id} 
             message={{
@@ -49,8 +61,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
               content: post.content,
               likes: post.likeCount,
               comments: post.commentCount,
-              shares: 0, // You might need to add this field to your schema
-              // New post-specific fields
+              shares: 0,
               background: post.background,
               images: post.images,
               isLikedByMe: post.isLikedByMe,
@@ -62,30 +73,32 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
             className="mb-2"
           />
         ))}     
-    </div>
-  );
-
-  
-  const handleAddressUpdate = async () => {
-    // Refetch user data to get updated addresses
-    await refetch();
+      </div>
+    );
   };
-  
-  const renderAddressTab = () => (
-    <AddressesTab
-      addresses={user?.addresses}
-      userId={userId}
-      onAddressUpdate={handleAddressUpdate}
-    />
-  );
 
+  const renderAddressTab = () => {
+    return (
+      <AddressesTab
+        addresses={user?.addresses || []}
+        userId={userId}
+        onAddressUpdate={async () => await refetch()}
+      />
+    );
+  };
+
+  // Add default case for unknown tabs
   switch (activeTab) {
     case 'posts':
       return renderPostsTab();
     case 'address':
       return renderAddressTab();
     default:
-      return renderAddressTab();
+      return (
+        <div className="text-center py-8">
+          Tab content not available
+        </div>
+      );
   }
 };
 
