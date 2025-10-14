@@ -72,10 +72,8 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   };
   
   const renderProductTab = () => (
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/*
+      <div className="max-w-4xl mx-auto p-0">
           <ProductThumbnails products={user?.products} />
-       */ }
        </div>
       );
 
