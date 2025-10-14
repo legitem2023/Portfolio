@@ -1,25 +1,23 @@
 // lib/seo.ts
-import type { Metadata, Viewport } from 'next'; // Import Viewport type
+import type { Metadata, Viewport } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Motogo - We move what matters',
-  description: 'Motogo is a modern logistics platform connecting senders, couriers, and recipients with real-time delivery tracking, seamless route management, and smart geolocation services.',
+  title: 'DVN - Digital Vendors Network | Shop Smarter with DVN.com',
+  description:
+    'Discover a smarter way to shop online with DVN — your trusted digital vendors network. Explore top brands, unbeatable deals, and fast checkout on DVN.com.',
   manifest: '/manifest.json',
   keywords: [
-    'motogo',
-    'Logistics',
-    'Delivery',
-    'Courier Service',
-    'Shipping',
-    'Real-time Tracking',
-    'Transport',
-    'Route Optimization',
-    'Pickup and Dropoff',
-    'Philippine Logistics',
+    'DVN',
+    'Digital Vendors Network',
+    'dvn.com',
+    'e-commerce',
+    'online shopping',
+    'shop online',
+    'buy products',
+    'digital marketplace',
+    'online store',
   ],
   authors: [{ name: 'Robert Marquez', url: 'https://github.com/robertmarquez' }],
-  
-  // REMOVED: viewport property
 
   icons: {
     icon: '/favicon.ico',
@@ -27,7 +25,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon-32x32.png',
   },
 
-  metadataBase: new URL('https://logisticfrontend.vercel.app'),
+  metadataBase: new URL('https://dvn.com'),
 
   other: {
     'format-detection': 'telephone=no',
@@ -37,30 +35,32 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: 'website',
-    title: 'Motogo - We move what matters',
-    description: 'Motogo connects deliveries with precision and speed. Monitor real-time routes, schedule pickups, and streamline logistics with ease.',
-    url: 'https://logisticfrontend.vercel.app',
-    siteName: 'Motogo',
+    title: 'DVN - Digital Vendors Network | Shop Smarter with DVN.com',
+    description:
+      'DVN.com brings you closer to thousands of trusted digital vendors. Shop, compare, and buy online — all in one smart network.',
+    url: 'https://dvn.com',
+    siteName: 'DVN',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Motogo - Real-time Delivery and Logistics Platform',
+        alt: 'DVN - Digital Vendors Network | Online Shopping Platform',
       },
     ],
   },
 
   twitter: {
     card: 'summary_large_image',
-    title: 'Motogo - We move what matters',
-    description: 'Real-time delivery management and logistics made simple and reliable with Adiviso.',
+    title: 'DVN - Digital Vendors Network | Shop Smarter with DVN.com',
+    description:
+      'Shop with DVN.com — your digital marketplace for top brands and trusted online vendors. Fast, easy, and secure shopping experience.',
     images: ['/og-image.jpg'],
-    creator: 'robertsancomarquez1988@gmail.com',
+    creator: '@dvn_official',
   },
 };
 
-// Add a separate viewport export
+// Viewport settings for responsive design
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
