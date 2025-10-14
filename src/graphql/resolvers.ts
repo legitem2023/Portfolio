@@ -468,7 +468,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
     const userId = args.userId;
       const products = await prisma.product.findMany({
         where: {
-          supplierId: userId.toString(); 
+          supplierId: userId.toString()
         },
         include: {
           category: true,
