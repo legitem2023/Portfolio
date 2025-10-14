@@ -27,12 +27,12 @@ interface Address {
 
 const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  console.log(userId);
+  
   // GraphQL query to fetch user addresses
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
   });
-
+  console.log(data,"<===");
   // Extract addresses from GraphQL response
   const savedAddresses: Address[] = data?.user.addresses || data?.user?.addresses || [];
 
