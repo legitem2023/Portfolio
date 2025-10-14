@@ -89,7 +89,7 @@ export const typeDefs = gql`
     reviews: [Review]
     wishlist: [WishlistItem]
     cart: [CartItem]
-    products:[Product]
+    products: [Product]
     payments: [Payment]
     messagesSent: [Message]
     messagesReceived: [Message]
@@ -133,7 +133,7 @@ export const typeDefs = gql`
     brand: String
     weight: Float
     supplierId: String
-    supplier : User
+    supplier: User
     dimensions: String
     isActive: Boolean
     featured: Boolean
@@ -154,13 +154,13 @@ export const typeDefs = gql`
     options: [String]
     createdAt: DateTime
     product: Product
-    productId:  String
-    sku  : String
-    color : String
-    size  : String
-    price : Float
+    productId: String
+    sku: String
+    color: String
+    size: String
+    price: Float
     salePrice: Float
-    stock : Int
+    stock: Int
     images: [String]
   }
 
@@ -284,7 +284,7 @@ export const typeDefs = gql`
     isRead: Boolean
     link: String
     createdAt: DateTime
-    user: User!l
+    user: User
   }
 
   # ================= Social Media Types =================
@@ -361,41 +361,39 @@ export const typeDefs = gql`
 
   # ================= Queries & Mutations =================
   type Query {
-
-
-# Get messages for current user (both sent and received)
-  myMessages(page: Int,limit: Int,isRead: Boolean): MessageConnection
+    # Get messages for current user (both sent and received)
+    myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
   
-  # Get conversation between two users
-  conversation(userId: ID, page: Int, limit: Int): MessageConnection
+    # Get conversation between two users
+    conversation(userId: ID, page: Int, limit: Int): MessageConnection
   
-  # Get unread message count
-  unreadMessageCount: Int
+    # Get unread message count
+    unreadMessageCount: Int
   
-  # Get specific message by ID
-  message(id: ID): Message
+    # Get specific message by ID
+    message(id: ID): Message
   
-  # Get message threads (conversations list)
-  messageThreads(page: Int, limit: Int): MessageThreadConnection
+    # Get message threads (conversations list)
+    messageThreads(page: Int, limit: Int): MessageThreadConnection
   
-  users: [User]
-  user(id: ID): User
-  products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
-  product(id: ID): Product
-  categories: [Category]
-  orders(userId: ID): [Order]
-  supportTickets: [SupportTicket]
-  getProducts(userId: ID): [Product]
+    users: [User]
+    user(id: ID): User
+    products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
+    product(id: ID): Product
+    categories: [Category]
+    orders(userId: ID): [Order]
+    supportTickets: [SupportTicket]
+    getProducts(userId: ID): [Product]
     
     # Social media queries
-  posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed
-  post(id: ID!): Post
-  comments(postId: ID, page: Int, limit: Int): CommentFeed
-  userFeed(page: Int, limit: Int, userId: String): PostFeed
-  userLikes(userId: ID): [Like]
-  followers(userId: ID): [User]
-  following(userId: ID): [User]
-  searchUsers(query: String, page: Int, limit: Int): UserSearchResult
+    posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed
+    post(id: ID): Post
+    comments(postId: ID, page: Int, limit: Int): CommentFeed
+    userFeed(page: Int, limit: Int, userId: String): PostFeed
+    userLikes(userId: ID): [Like]
+    followers(userId: ID): [User]
+    following(userId: ID): [User]
+    searchUsers(query: String, page: Int, limit: Int): UserSearchResult
   }
 
   type Response {
@@ -422,7 +420,7 @@ export const typeDefs = gql`
 
   # Social media input types
   input CreatePostInput {
-    userId:String
+    userId: String
     content: String
     background: String
     images: [String]
@@ -439,7 +437,7 @@ export const typeDefs = gql`
   }
 
   input CreateCommentInput {
-    userId:String
+    userId: String
     postId: ID
     content: String
     parentId: ID
@@ -449,37 +447,33 @@ export const typeDefs = gql`
     content: String
   }
 
-type SetDefaultAddressResponse {
-  success: Boolean
-  message: String
-  address: Address
-}
-
+  type SetDefaultAddressResponse {
+    success: Boolean
+    message: String
+    address: Address
+  }
 
   type Mutation {
+    # Send a new message
+    sendMessage(input: SendMessageInput): Message
+  
+    # Reply to a message
+    replyMessage(input: ReplyMessageInput): Message
+  
+    # Mark message as read
+    markAsRead(messageId: ID): Message
+  
+    # Mark multiple messages as read
+    markMultipleAsRead(messageIds: [ID]): Boolean
+  
+    # Delete a message (soft delete for sender)
+    deleteMessage(messageId: ID): Boolean
+  
+    # Delete conversation with a user
+    deleteConversation(userId: ID): Boolean
 
- # Send a new message
-  sendMessage(input: SendMessageInput): Message
-  
-  # Reply to a message
-  replyMessage(input: ReplyMessageInput!): Message
-  
-  # Mark message as read
-  markAsRead(messageId: ID): Message
-  
-  # Mark multiple messages as read
-  markMultipleAsRead(messageIds: [ID]): Boolean
-  
-  # Delete a message (soft delete for sender)
-  deleteMessage(messageId: ID): Boolean
-  
-  # Delete conversation with a user
-  deleteConversation(userId: ID): Boolean
-
-
-  
-    setDefaultAddress(addressId: ID,userId: ID): SetDefaultAddressResponse
-    logout: LogoutResponse!
+    setDefaultAddress(addressId: ID, userId: ID): SetDefaultAddressResponse
+    logout: LogoutResponse
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
@@ -490,7 +484,7 @@ type SetDefaultAddressResponse {
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
 
     createVariant(input: ProductVariantInput): Result
-    createAddress (input:AddressInputs ): Result
+    createAddress(input: AddressInputs): Result
     # Social media mutations
     createPost(input: CreatePostInput): Post
     updatePost(id: ID, input: UpdatePostInput): Post
@@ -508,69 +502,67 @@ type SetDefaultAddressResponse {
     removeTagFromPost(postId: ID, userId: ID): Post
   }
 
-# Input Types
-input SendMessageInput {
-  senderId: ID
-  recipientId: ID
-  body: String
-  subject: String
-}
-
-input ReplyMessageInput {
-  parentId: ID
-  body: String
-}
-
-# Response Types
-type MessageConnection {
-  messages: [Message]
-  totalCount: Int
-  hasNextPage: Boolean
-  page: Int
-}
-
-type MessageThreadConnection {
-  threads: [MessageThread]
-  totalCount: Int
-  hasNextPage: Boolean
-  page: Int
-}
-
-type MessageThread {
-  user: User
-  lastMessage: Message
-  unreadCount: Int
-  updatedAt: DateTime
-}
-
-
-
-type LogoutResponse {
-  success: Boolean
-  message: String
-}
-
-input ProductVariantInput {
-    name: String
-    productId: String
-    sku  : String
-    color : String
-    size  : String
-    price : Float
-    salePrice: Float
-    stock : Int
+  # Input Types
+  input SendMessageInput {
+    senderId: ID
+    recipientId: ID
+    body: String
+    subject: String
   }
 
-input AddressInputs {
-     userId :    String
-     type :      String
-     street :    String
-     city :      String
-     state :     String
-     zipCode :   String
-     country :   String
-     isDefault : Boolean
-}
+  input ReplyMessageInput {
+    parentId: ID
+    body: String
+  }
+
+  # Response Types
+  type MessageConnection {
+    messages: [Message]
+    totalCount: Int
+    hasNextPage: Boolean
+    page: Int
+  }
+
+  type MessageThreadConnection {
+    threads: [MessageThread]
+    totalCount: Int
+    hasNextPage: Boolean
+    page: Int
+  }
+
+  type MessageThread {
+    user: User
+    lastMessage: Message
+    unreadCount: Int
+    updatedAt: DateTime
+  }
+
+  type LogoutResponse {
+    success: Boolean
+    message: String
+  }
+
+  input ProductVariantInput {
+    name: String
+    productId: String
+    sku: String
+    color: String
+    size: String
+    price: Float
+    salePrice: Float
+    stock: Int
+  }
+
+  input AddressInputs {
+    userId: String
+    type: String
+    street: String
+    city: String
+    state: String
+    zipCode: String
+    country: String
+    isDefault: Boolean
+  }
 
   input OrderItemInput {
     productId: ID
