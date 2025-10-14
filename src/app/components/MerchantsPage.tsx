@@ -201,15 +201,7 @@ export default function MerchantsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8 md:mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-purple-900 mb-3">
-            Discover Local Merchants
-          </h1>
-          <p className="text-purple-700">
-            Supporting {merchants.length} local businesses in your community
-          </p>
-        </div>
+
 
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-8 border border-purple-200">
