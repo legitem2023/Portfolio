@@ -2,7 +2,7 @@
 import { User, Post } from '../../../types';
 import AddressesTab from './AddressesTab';
 import DeluxeMessageCard from '../components/Posting/DeluxeMessageCard';
-
+import { ApolloQueryResult, OperationVariables } from "@apollo/client";
 interface TabContentProps {
   activeTab: string;
   user: User;
