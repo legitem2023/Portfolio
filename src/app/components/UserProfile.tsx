@@ -58,11 +58,9 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 <strong>{user.posts.length}</strong> posts
               </span>
               <span className="hover:underline cursor-pointer">
-                <strong>{user.followerCount}</strong> followers
+                <strong>{user.addresses.length}</strong> Addresses
               </span>
-              <span className="hover:underline cursor-pointer">
-                <strong>{user.followingCount}</strong> following
-              </span>
+
             </div>
           </div>
         </div>
