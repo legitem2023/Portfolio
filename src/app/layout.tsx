@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import { metadata as baseMetadata, viewport as baseViewport } from './components/Seo/Seo'; // Import both
+
 import ReduxWrapper from "./components/ApolloProvider/ReduxWrapper"; 
 import { ApolloWrapper } from './components/ApolloWrapper';
 // ✅ Toastify import
@@ -9,10 +10,10 @@ import LoadEruda from "./LoadEruda";
 import "./globals.css";
 import "./styles/messaging.css";
 const inter = Inter({ subsets: ["latin"] });
-export const metadata: Metadata = {
-  title: "Robert Marquez",
-  description: "Portfolio",
-};
+
+export const metadata = baseMetadata;
+export const viewport = baseViewport; // Add viewport export
+
 
 export default function RootLayout({
   children,
