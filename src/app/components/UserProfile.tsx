@@ -23,6 +23,8 @@ const UserProfile = ({ userId }: { userId: string }) => {
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
 
+  if(!data?.user) return "User not found!";
+  
   const user: User = data?.user;
   return (
     <div className="min-h-screen bg-gray-100 p-0">
