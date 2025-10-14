@@ -178,7 +178,7 @@ const DeluxeNavTabs: React.FC = () => {
             onClick={() => dispatch(setActiveIndex(tab.id))}
             className={`flex-1 md:flex-none flex items-center justify-center px-2 md:px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
               activeIndex === tab.id
-                ? 'border-amber-200 text-amber-800 bg-gradient-to-t from-amber-50 to-white'
+                ? 'border-amber-800 text-amber-800 bg-gradient-to-t from-amber-50 to-white'
                 : 'border-violet-600 text-violet-600 hover:text-violet-600 hover:border-violet-400'
             }`}
           >
