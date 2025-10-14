@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Target,
   Star,
+  Store,
   Gift,
   Shirt,
   Briefcase,
@@ -104,8 +105,8 @@ const DeluxeNavTabs: React.FC = () => {
     },
     {
       id:4,
-      label: 'Luxe Brands',
-      icon: <Star size={18} />,
+      label: 'Merchants',
+      icon: <Store size={18} />,
       content: (
         <MerchantsPage/>
       ),
