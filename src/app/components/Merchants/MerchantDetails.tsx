@@ -22,6 +22,8 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
 
+  if(!data?.user) return "User not found!";
+  
   const user: User = data.user;
  //console.log(user,"User Profile");
   return (
