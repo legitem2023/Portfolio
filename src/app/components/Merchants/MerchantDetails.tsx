@@ -29,7 +29,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
-      <div className="h-48 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm relative">
+      <div className="h-36 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 backdrop-blur-sm relative">
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
         
         {/* Profile Picture */}
