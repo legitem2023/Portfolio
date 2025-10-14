@@ -58,22 +58,12 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
                 <strong>{user.posts.length}</strong> posts
               </span>
               <span className="hover:underline cursor-pointer">
-                <strong>{user.followerCount}</strong> followers
-              </span>
-              <span className="hover:underline cursor-pointer">
-                <strong>{user.followingCount}</strong> following
+                <strong>{user.products.length}</strong> Products
               </span>
             </div>
           </div>
           
           <div className="flex gap-2 mt-4 md:mt-0 w-full md:w-auto justify-start md:justify-end">
-            <button className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition-colors flex items-center text-sm md:text-base flex-1 md:flex-initial justify-center">
-              <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-              </svg>
-              Follow
-            </button>
             <button onClick={()=>dispatch(setActiveIndex(9))}className="px-3 py-2 md:px-4 md:py-2 bg-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-300 transition-colors flex items-center text-sm md:text-base flex-1 md:flex-initial justify-center">
               <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
