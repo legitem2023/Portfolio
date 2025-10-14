@@ -35,8 +35,8 @@ import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
 import MerchantsPage from './MerchantsPage';
 import { useSearchParams } from 'next/navigation'; // Change this import
-
-interface Tab {
+import InstallPWAButton from './InstallPWAButton';
+interface Tab  {
   id: number;
   label: string;
   icon: React.ReactNode;
@@ -187,7 +187,7 @@ const DeluxeNavTabs: React.FC = () => {
           </button>
         ))}
       </div>
-
+      <InstallPWAButton/>
       
       <div className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden">
         {tabs.find((tab) => tab.id === activeIndex)?.content}
