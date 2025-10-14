@@ -73,290 +73,290 @@ export const typeDefs = gql`
 
   # ================= Models =================
   type User {
-    id: ID!
-    email: String!
-    password: String!
-    firstName: String!
-    lastName: String!
+    id: ID
+    email: String
+    password: String
+    firstName: String
+    lastName: String
     avatar: String
     phone: String
-    emailVerified: Boolean!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    role: Role!
-    addresses: [Address!]
-    orders: [Order!]
-    reviews: [Review!]
-    wishlist: [WishlistItem!]
-    cart: [CartItem!]
+    emailVerified: Boolean
+    createdAt: DateTime
+    updatedAt: DateTime
+    role: Role
+    addresses: [Address]
+    orders: [Order]
+    reviews: [Review]
+    wishlist: [WishlistItem]
+    cart: [CartItem]
     products:[Product]
-    payments: [Payment!]
-    messagesSent: [Message!]
-    messagesReceived: [Message!]
-    supportTickets: [SupportTicket!]
-    notifications: [Notification!]
-    ticketResponses: [TicketResponse!]
+    payments: [Payment]
+    messagesSent: [Message]
+    messagesReceived: [Message]
+    supportTickets: [SupportTicket]
+    notifications: [Notification]
+    ticketResponses: [TicketResponse]
     
     # Social media fields
-    posts: [Post!]!
-    followers: [User!]!
-    following: [User!]!
-    followerCount: Int!
-    followingCount: Int!
-    isFollowing: Boolean!
+    posts: [Post]
+    followers: [User]
+    following: [User]
+    followerCount: Int
+    followingCount: Int
+    isFollowing: Boolean
   }
 
   type Address {
-    id: ID!
-    type: AddressType!
-    street: String!
-    city: String!
-    state: String!
-    zipCode: String!
-    country: String!
-    isDefault: Boolean!
-    createdAt: DateTime!
-    user: User!
-    orders: [Order!]
+    id: ID
+    type: AddressType
+    street: String
+    city: String
+    state: String
+    zipCode: String
+    country: String
+    isDefault: Boolean
+    createdAt: DateTime
+    user: User
+    orders: [Order]
   }
 
   type Product {
-    id: ID!
-    name: String!
-    description: String!
-    price: Float!
+    id: ID
+    name: String
+    description: String
+    price: Float
     salePrice: Float
-    sku: String!
-    stock: Int!
-    images: [String!]!
+    sku: String
+    stock: Int
+    images: [String]
     category: Category
     brand: String
     weight: Float
     supplierId: String
     supplier : User
     dimensions: String
-    isActive: Boolean!
-    featured: Boolean!
-    tags: [String!]!
+    isActive: Boolean
+    featured: Boolean
+    tags: [String]
     attributes: Json
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: DateTime
+    updatedAt: DateTime
     variants: [ProductVariant]
-    orders: [OrderItem!]
-    reviews: [Review!]
-    wishlist: [WishlistItem!]
-    cart: [CartItem!]
+    orders: [OrderItem]
+    reviews: [Review]
+    wishlist: [WishlistItem]
+    cart: [CartItem]
   }
 
   type ProductVariant {
-    id: ID!
-    name: String!
-    options: [String!]!
-    createdAt: DateTime!
-    product: Product!
+    id: ID
+    name: String
+    options: [String]
+    createdAt: DateTime
+    product: Product
     productId:  String
     sku  : String
     color : String
     size  : String
     price : Float
     salePrice: Float
-    stock : Int!
-    images: [String!]!
+    stock : Int
+    images: [String]
   }
 
   type Category {
-    id: ID!
-    name: String!
+    id: ID
+    name: String
     description: String
     image: String
-    isActive: Boolean!
-    createdAt: DateTime!
+    isActive: Boolean
+    createdAt: DateTime
     parent: Category
-    children: [Category!]
-    products: [Product!]
+    children: [Category]
+    products: [Product]
   }
 
   type Order {
-    id: ID!
-    orderNumber: String!
-    status: OrderStatus!
-    total: Float!
-    subtotal: Float!
-    tax: Float!
-    shipping: Float!
-    discount: Float!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    user: User!
-    address: Address!
-    items: [OrderItem!]
-    payments: [Payment!]
+    id: ID
+    orderNumber: String
+    status: OrderStatus
+    total: Float
+    subtotal: Float
+    tax: Float
+    shipping: Float
+    discount: Float
+    createdAt: DateTime
+    updatedAt: DateTime
+    user: User
+    address: Address
+    items: [OrderItem]
+    payments: [Payment]
   }
 
   type OrderItem {
-    id: ID!
-    quantity: Int!
-    price: Float!
+    id: ID
+    quantity: Int
+    price: Float
     variantInfo: String
-    order: Order!
-    product: Product!
+    order: Order
+    product: Product
   }
 
   type CartItem {
-    id: ID!
-    quantity: Int!
+    id: ID
+    quantity: Int
     variantInfo: String
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    user: User!
-    product: Product!
+    createdAt: DateTime
+    updatedAt: DateTime
+    user: User
+    product: Product
   }
 
   type WishlistItem {
-    id: ID!
-    createdAt: DateTime!
-    user: User!
-    product: Product!
+    id: ID
+    createdAt: DateTime
+    user: User
+    product: Product
   }
 
   type Payment {
-    id: ID!
-    amount: Float!
-    method: PaymentMethod!
-    status: PaymentStatus!
+    id: ID
+    amount: Float
+    method: PaymentMethod
+    status: PaymentStatus
     transactionId: String
     details: String
-    createdAt: DateTime!
-    order: Order!
-    user: User!
+    createdAt: DateTime
+    order: Order
+    user: User
   }
 
   type Review {
-    id: ID!
-    rating: Int!
+    id: ID
+    rating: Int
     title: String
     comment: String
-    isApproved: Boolean!
-    createdAt: DateTime!
-    user: User!
-    product: Product!
+    isApproved: Boolean
+    createdAt: DateTime
+    user: User
+    product: Product
   }
 
   type Message {
-    id: ID!
+    id: ID
     subject: String
-    body: String!
-    isRead: Boolean!
-    createdAt: DateTime!
-    sender: User!
-    recipient: User!
+    body: String
+    isRead: Boolean
+    createdAt: DateTime
+    sender: User
+    recipient: User
     parent: Message
-    replies: [Message!]
+    replies: [Message]
   }
 
   type SupportTicket {
-    id: ID!
-    subject: String!
-    description: String!
-    status: TicketStatus!
-    priority: TicketPriority!
+    id: ID
+    subject: String
+    description: String
+    status: TicketStatus
+    priority: TicketPriority
     assignedTo: ID
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    user: User!
-    responses: [TicketResponse!]
+    createdAt: DateTime
+    updatedAt: DateTime
+    user: User
+    responses: [TicketResponse]
   }
 
   type TicketResponse {
-    id: ID!
-    message: String!
-    isInternal: Boolean!
-    createdAt: DateTime!
-    ticket: SupportTicket!
-    user: User!
+    id: ID
+    message: String
+    isInternal: Boolean
+    createdAt: DateTime
+    ticket: SupportTicket
+    user: User
   }
 
   type Notification {
-    id: ID!
-    type: NotificationType!
-    title: String!
-    message: String!
-    isRead: Boolean!
+    id: ID
+    type: NotificationType
+    title: String
+    message: String
+    isRead: Boolean
     link: String
-    createdAt: DateTime!
-    user: User!
+    createdAt: DateTime
+    user: User!l
   }
 
   # ================= Social Media Types =================
   type Post {
-    id: ID!
-    user: User!
-    content: String!
+    id: ID
+    user: User
+    content: String
     background: String
-    images: [String!]!
-    taggedUsers: [User!]!
-    comments: [Comment!]!
-    likes: [Like!]!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    privacy: PrivacySetting!
-    commentCount: Int!
-    likeCount: Int!
-    isLikedByMe: Boolean!
+    images: [String]
+    taggedUsers: [User]
+    comments: [Comment]
+    likes: [Like]
+    createdAt: DateTime
+    updatedAt: DateTime
+    privacy: PrivacySetting
+    commentCount: Int
+    likeCount: Int
+    isLikedByMe: Boolean
   }
 
   type Comment {
-    id: ID!
-    post: Post!
-    user: User!
-    content: String!
+    id: ID
+    post: Post
+    user: User
+    content: String
     parent: Comment
-    replies: [Comment!]!
-    likes: [Like!]!
-    createdAt: DateTime!
-    updatedAt: DateTime!
-    likeCount: Int!
-    isLikedByMe: Boolean!
+    replies: [Comment]
+    likes: [Like]
+    createdAt: DateTime
+    updatedAt: DateTime
+    likeCount: Int
+    isLikedByMe: Boolean
   }
 
   type Like {
-    id: ID!
-    user: User!
+    id: ID
+    user: User
     post: Post
     comment: Comment
-    createdAt: DateTime!
+    createdAt: DateTime
   }
 
   type Follow {
-    id: ID!
-    follower: User!
-    following: User!
-    createdAt: DateTime!
+    id: ID
+    follower: User
+    following: User
+    createdAt: DateTime
   }
 
   # Feed types
   type PostFeed {
-    posts: [Post!]!
-    totalCount: Int!
-    hasNextPage: Boolean!
+    posts: [Post]
+    totalCount: Int
+    hasNextPage: Boolean
   }
 
   type CommentFeed {
-    comments: [Comment!]!
-    totalCount: Int!
-    hasNextPage: Boolean!
+    comments: [Comment]
+    totalCount: Int
+    hasNextPage: Boolean
   }
 
   type UserSearchResult {
-    users: [User!]!
-    totalCount: Int!
-    hasNextPage: Boolean!
+    users: [User]
+    totalCount: Int
+    hasNextPage: Boolean
   }
 
   type ProductHaslimit {
     items: [Product]
     nextCursor: String
-    hasMore: Boolean!
+    hasMore: Boolean
   }
 
   # ================= Queries & Mutations =================
@@ -364,53 +364,38 @@ export const typeDefs = gql`
 
 
 # Get messages for current user (both sent and received)
-  myMessages(
-    page: Int
-    limit: Int
-    isRead: Boolean
-  ): MessageConnection!
+  myMessages(page: Int,limit: Int,isRead: Boolean): MessageConnection
   
   # Get conversation between two users
-  conversation(
-    userId: ID!
-    page: Int
-    limit: Int
-  ): MessageConnection!
+  conversation(userId: ID, page: Int, limit: Int): MessageConnection
   
   # Get unread message count
-  unreadMessageCount: Int!
+  unreadMessageCount: Int
   
   # Get specific message by ID
-  message(id: ID!): Message
+  message(id: ID): Message
   
   # Get message threads (conversations list)
-  messageThreads(
-    page: Int
-    limit: Int
-  ): MessageThreadConnection!
-
-
-
-
+  messageThreads(page: Int, limit: Int): MessageThreadConnection
   
-    users: [User!]
-    user(id: ID!): User
-    products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
-    product(id: ID!): Product
-    categories: [Category!]
-    orders(userId: ID!): [Order!]
-    supportTickets: [SupportTicket!]
-    getProducts(userId: ID!): [Product]
+  users: [User]
+  user(id: ID): User
+  products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
+  product(id: ID): Product
+  categories: [Category]
+  orders(userId: ID): [Order]
+  supportTickets: [SupportTicket]
+  getProducts(userId: ID): [Product]
     
     # Social media queries
-    posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed!
-    post(id: ID!): Post
-    comments(postId: ID!, page: Int, limit: Int): CommentFeed!
-    userFeed(page: Int, limit: Int, userId: String): PostFeed!
-    userLikes(userId: ID!): [Like]!
-    followers(userId: ID!): [User]!
-    following(userId: ID!): [User]!
-    searchUsers(query: String!, page: Int, limit: Int): UserSearchResult!
+  posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed
+  post(id: ID!): Post
+  comments(postId: ID, page: Int, limit: Int): CommentFeed
+  userFeed(page: Int, limit: Int, userId: String): PostFeed
+  userLikes(userId: ID): [Like]
+  followers(userId: ID): [User]
+  following(userId: ID): [User]
+  searchUsers(query: String, page: Int, limit: Int): UserSearchResult
   }
 
   type Response {
@@ -428,44 +413,44 @@ export const typeDefs = gql`
   }
 
   input FacebookLoginInput {
-    idToken: String!
+    idToken: String
   }
 
   input GoogleLoginInput {
-    idToken: String!
+    idToken: String
   }
 
   # Social media input types
   input CreatePostInput {
-    userId:String!
-    content: String!
+    userId:String
+    content: String
     background: String
-    images: [String!]
-    taggedUsers: [ID!]
+    images: [String]
+    taggedUsers: [ID]
     privacy: PrivacySetting
   }
 
   input UpdatePostInput {
     content: String
     background: String
-    images: [String!]
-    taggedUsers: [ID!]
+    images: [String]
+    taggedUsers: [ID]
     privacy: PrivacySetting
   }
 
   input CreateCommentInput {
-    userId:String!
-    postId: ID!
-    content: String!
+    userId:String
+    postId: ID
+    content: String
     parentId: ID
   }
 
   input UpdateCommentInput {
-    content: String!
+    content: String
   }
 
 type SetDefaultAddressResponse {
-  success: Boolean!
+  success: Boolean
   message: String
   address: Address
 }
@@ -474,106 +459,106 @@ type SetDefaultAddressResponse {
   type Mutation {
 
  # Send a new message
-  sendMessage(input: SendMessageInput!): Message!
+  sendMessage(input: SendMessageInput): Message
   
   # Reply to a message
-  replyMessage(input: ReplyMessageInput!): Message!
+  replyMessage(input: ReplyMessageInput!): Message
   
   # Mark message as read
-  markAsRead(messageId: ID!): Message!
+  markAsRead(messageId: ID): Message
   
   # Mark multiple messages as read
-  markMultipleAsRead(messageIds: [ID!]!): Boolean!
+  markMultipleAsRead(messageIds: [ID]): Boolean
   
   # Delete a message (soft delete for sender)
-  deleteMessage(messageId: ID!): Boolean!
+  deleteMessage(messageId: ID): Boolean
   
   # Delete conversation with a user
-  deleteConversation(userId: ID!): Boolean!
+  deleteConversation(userId: ID): Boolean
 
 
   
-    setDefaultAddress(addressId: ID!,userId: ID!): SetDefaultAddressResponse!
+    setDefaultAddress(addressId: ID,userId: ID): SetDefaultAddressResponse
     logout: LogoutResponse!
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
     loginWithFacebook(input: FacebookLoginInput): Result
-    createUser(email: String!, password: String!, firstName: String!, lastName: String!): Result
-    createProduct(id: String, name: String!, description: String!, price: Float!, salePrice: Float!, sku: String!, supplierId: String!): Response!
-    createCategory(name: String!, description: String!, status: Boolean): Response!
-    createOrder(userId: ID!, addressId: ID!, items: [OrderItemInput!]!): Result
-    respondToTicket(ticketId: ID!, userId: ID!, message: String!): TicketResponse!
+    createUser(email: String, password: String, firstName: String, lastName: String): Result
+    createProduct(id: String, name: String, description: String, price: Float, salePrice: Float, sku: String, supplierId: String): Response
+    createCategory(name: String, description: String, status: Boolean): Response
+    createOrder(userId: ID, addressId: ID, items: [OrderItemInput]): Result
+    respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
 
     createVariant(input: ProductVariantInput): Result
     createAddress (input:AddressInputs ): Result
     # Social media mutations
-    createPost(input: CreatePostInput!): Post!
-    updatePost(id: ID!, input: UpdatePostInput!): Post!
-    deletePost(id: ID!): Boolean!
-    createComment(input: CreateCommentInput!): Comment!
-    updateComment(id: ID!, input: UpdateCommentInput!): Comment!
-    deleteComment(id: ID!): Boolean!
-    likePost(postId: ID!): Like!
-    unlikePost(postId: ID!): Boolean!
-    likeComment(commentId: ID!): Like!
-    unlikeComment(commentId: ID!): Boolean!
-    followUser(userId: ID!): Follow!
-    unfollowUser(userId: ID!): Boolean!
-    tagUsersInPost(postId: ID!, userIds: [ID!]!): Post!
-    removeTagFromPost(postId: ID!, userId: ID!): Post!
+    createPost(input: CreatePostInput): Post
+    updatePost(id: ID, input: UpdatePostInput): Post
+    deletePost(id: ID): Boolean
+    createComment(input: CreateCommentInput): Comment
+    updateComment(id: ID, input: UpdateCommentInput): Comment
+    deleteComment(id: ID): Boolean
+    likePost(postId: ID): Like
+    unlikePost(postId: ID): Boolean
+    likeComment(commentId: ID): Like
+    unlikeComment(commentId: ID): Boolean
+    followUser(userId: ID): Follow
+    unfollowUser(userId: ID): Boolean
+    tagUsersInPost(postId: ID, userIds: [ID]): Post
+    removeTagFromPost(postId: ID, userId: ID): Post
   }
 
 # Input Types
 input SendMessageInput {
-  senderId: ID!
-  recipientId: ID!
-  body: String!
+  senderId: ID
+  recipientId: ID
+  body: String
   subject: String
 }
 
 input ReplyMessageInput {
-  parentId: ID!
-  body: String!
+  parentId: ID
+  body: String
 }
 
 # Response Types
 type MessageConnection {
-  messages: [Message!]!
-  totalCount: Int!
-  hasNextPage: Boolean!
-  page: Int!
+  messages: [Message]
+  totalCount: Int
+  hasNextPage: Boolean
+  page: Int
 }
 
 type MessageThreadConnection {
-  threads: [MessageThread!]!
-  totalCount: Int!
-  hasNextPage: Boolean!
-  page: Int!
+  threads: [MessageThread]
+  totalCount: Int
+  hasNextPage: Boolean
+  page: Int
 }
 
 type MessageThread {
-  user: User!
+  user: User
   lastMessage: Message
-  unreadCount: Int!
-  updatedAt: DateTime!
+  unreadCount: Int
+  updatedAt: DateTime
 }
 
 
 
 type LogoutResponse {
-  success: Boolean!
-  message: String!
+  success: Boolean
+  message: String
 }
 
 input ProductVariantInput {
-    name: String!
+    name: String
     productId: String
     sku  : String
     color : String
     size  : String
     price : Float
     salePrice: Float
-    stock : Int!
+    stock : Int
   }
 
 input AddressInputs {
@@ -588,8 +573,8 @@ input AddressInputs {
 }
 
   input OrderItemInput {
-    productId: ID!
-    quantity: Int!
-    price: Float!
+    productId: ID
+    quantity: Int
+    price: Float
   }
 `;
