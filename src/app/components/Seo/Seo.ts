@@ -1,5 +1,5 @@
 // lib/seo.ts
-import type { Metadata, Viewport } from 'next';
+import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'DVN - Digital Vendors Network | Shop Smarter with DVN.com',
@@ -60,8 +60,8 @@ export const metadata: Metadata = {
   },
 };
 
-// Viewport settings for responsive design
-export const viewport: Viewport = {
+// 👇 Define viewport object without the type import
+export const viewport = {
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
