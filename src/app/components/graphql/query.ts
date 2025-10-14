@@ -30,7 +30,7 @@ export const USERS = gql`
 `;
 
 export const GET_USER_PROFILE = gql`
-  query GetUser($id: ID!) {
+  query GetUser($id: ID) {
     user(id: $id) {
       id
       firstName
@@ -118,7 +118,7 @@ export const GET_USER_PROFILE = gql`
 `;
 
 export const SEARCH_USERS = gql`
-  query SearchUsers($query: String!, $page: Int, $limit: Int) {
+  query SearchUsers($query: String, $page: Int, $limit: Int) {
     searchUsers(query: $query, page: $page, limit: $limit) {
       users {
         id
@@ -135,7 +135,7 @@ export const SEARCH_USERS = gql`
 `;
 
 export const GET_FOLLOWERS = gql`
-  query GetFollowers($userId: ID!) {
+  query GetFollowers($userId: ID) {
     followers(userId: $userId) {
       id
       firstName
@@ -147,7 +147,7 @@ export const GET_FOLLOWERS = gql`
 `;
 
 export const GET_FOLLOWING = gql`
-  query GetFollowing($userId: ID!) {
+  query GetFollowing($userId: ID) {
     following(userId: $userId) {
       id
       firstName
@@ -214,7 +214,7 @@ export const GETPRODUCTS = gql`
 `;
 
 export const MANAGEMENTPRODUCTS = gql`
-  query GetProducts($userId: ID!) {
+  query GetProducts($userId: ID) {
     getProducts(userId: $userId) {
       id
       name
@@ -258,7 +258,7 @@ export const MANAGEMENTPRODUCTS = gql`
 
 // ============ ORDER QUERIES ============
 export const ORDER_ITEMS = gql`
-  query GetOrders($userId: ID!) {
+  query GetOrders($userId: ID) {
     orders(userId: $userId) {
       id
       orderNumber
@@ -397,7 +397,7 @@ export const GET_USER_FOLLOWING_POSTS = gql`
 `;
 
 export const GET_USER_POSTS = gql`
-  query GetUserPosts($userId: ID!, $page: Int, $limit: Int) {
+  query GetUserPosts($userId: ID, $page: Int, $limit: Int) {
     posts(userId: $userId, page: $page, limit: $limit) {
       posts {
         id
@@ -459,7 +459,7 @@ export const GET_ALL_POSTS = gql`
 
 // ============ COMMENT QUERIES ============
 export const GET_COMMENTS = gql`
-  query GetComments($postId: ID!, $page: Int, $limit: Int) {
+  query GetComments($postId: ID, $page: Int, $limit: Int) {
     comments(postId: $postId, page: $page, limit: $limit) {
       comments {
         id
