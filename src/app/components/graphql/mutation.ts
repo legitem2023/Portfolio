@@ -1,5 +1,14 @@
 import { gql } from "@apollo/client";
 
+export const SINGLE_UPLOAD_MUTATION = gql`
+  mutation SingleUpload($base64Image: String, $productId: String) {
+    singleUpload(base64Image: $base64Image, productId: $productId) {
+      statusText
+    }
+  }
+`;
+
+
 export const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout {
