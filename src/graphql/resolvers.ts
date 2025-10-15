@@ -880,7 +880,48 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
   },
 
   Mutation: {
+  singleUpload: async (_:any, { base64Image, userId }:{ base64Image:string, userId:string }  ) => {
+    // Basic validation for the Base64 string
+    if (!base64Image.startsWith('data:image/')) {
+      throw new Error('Invalid base64 image format');
+    }
 
+    // Extract the MIME type and the actual data
+    const matches = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      throw new Error('Invalid base64 string');
+    }
+
+    const mimeType = matches[1];
+    const dataBuffer = Buffer.from(matches[2], 'base64');
+
+    // (Optional) Validate file size (e.g., 5MB limit)
+    const maxSize = 5 * 1024 * 1024;
+    if (dataBuffer.length > maxSize) {
+      throw new Error('Image file is too large.');
+    }
+
+    // TODO: Here, you would typically save the file to a storage service
+    // and get back a URL. For this example, we'll use the base64 string as the URL.
+    // const imageUrl = await saveToCloudStorage(dataBuffer, mimeType);
+
+    // For direct database storage, you can save the base64Image string or the dataBuffer.
+    // Using your Prisma client, update your Product model.
+    // Example: Adding the image to a product's images array.
+    // const updatedProduct = await prisma.product.update({
+    //   where: { id: productId },
+    //   data: {
+    //     images: {
+    //       push: imageUrl // Or base64Image if storing directly
+    //     }
+    //   }
+    // });
+
+    // For this example, we return a success message.
+    return {
+      statusText:"Successfully Uploaded"
+    };
+  },
 sendMessage: async (_: any, args:any): Promise<any> => {
       const { senderId, recipientId, body, subject } = args.input;
 
