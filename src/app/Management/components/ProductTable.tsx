@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
-import { SINGLE_UPLOAD_MUTATION } from '../../components/grahpql/mutation';
+import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
 interface ProductTableProps {
   products: Product[];
 }
