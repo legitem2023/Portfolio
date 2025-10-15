@@ -890,7 +890,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
        where: { id: productId },
        data: {
          images: {
-           push: imageUrl.url // Or base64Image if storing directly
+           push: imageFile.url // Or base64Image if storing directly
          }
        }
      });
