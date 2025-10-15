@@ -482,7 +482,7 @@ export const typeDefs = gql`
     createCategory(name: String, description: String, status: Boolean): Response
     createOrder(userId: ID, addressId: ID, items: [OrderItemInput]): Result
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
-    singleUpload(base64Image: String,userId: ID): Result
+    singleUpload(base64Image: String,productId: ID): Result
     createVariant(input: ProductVariantInput): Result
     createAddress(input: AddressInputs): Result
     # Social media mutations
