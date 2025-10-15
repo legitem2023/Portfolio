@@ -1239,7 +1239,7 @@ const isValid = await comparePassword(password, user?.password || "");
       
     },
 
-    createProduct: async (_: any, { id, name, description, price, salePrice, sku, supplierId }: any) => {
+    createProduct: async (_: any, { id, name, description, price, salePrice, color, size, sku, supplierId }: any) => {
       await prisma.product.create({
         data: {
           name,
@@ -1247,6 +1247,15 @@ const isValid = await comparePassword(password, user?.password || "");
           price,
           sku,
           salePrice,
+          variants: {
+            create: {
+              color,
+              size,
+              price,
+              salePrice,
+              stock
+            }
+          },
           supplier: {
             connect: { id: supplierId }
           },
