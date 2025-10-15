@@ -1253,8 +1253,8 @@ const isValid = await comparePassword(password, user?.password || "");
               color,
               size,
               price,
-              salePrice,
-              stock
+              salePrice: salePrice || null, // Ensure it can be null
+              stock: stock || 0,
             }
           },
           supplier: {
