@@ -36,7 +36,7 @@ export default function ProductForm({
           id: newProduct.categoryId,
           supplierId: supplierId,
           // Add color and size to mutation variables
-          color: newProduct.colorName,
+          color: newProduct.color,
           size: newProduct.size,
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
@@ -62,7 +62,7 @@ export default function ProductForm({
           isActive: false,
           featured: false,
           variants: [],
-          colorName: '',
+          color: '',
           size: ''
         });
         onProductAdded();
@@ -173,15 +173,15 @@ export default function ProductForm({
             <input
               type="color"
               className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
-              value={newProduct.colorName || '#000000'}
-              onChange={(e) => setNewProduct({...newProduct, colorName: e.target.value})}
+              value={newProduct.color || '#000000'}
+              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
             />
             <input
               type="text"
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Color name (optional)"
-              value={newProduct.colorName || ''}
-              onChange={(e) => setNewProduct({...newProduct, colorName: e.target.value})}
+              value={newProduct.color || ''}
+              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
             />
           </div>
         </div>
@@ -203,7 +203,7 @@ export default function ProductForm({
               type="text"
               className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Enter custom size"
-              value={newProduct.customSize || ''}
+              value={newProduct.size || ''}
               onChange={(e) => setNewProduct({...newProduct, customSize: e.target.value})}
             />
           )}
