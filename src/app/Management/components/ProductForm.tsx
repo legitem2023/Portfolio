@@ -62,7 +62,7 @@ export default function ProductForm({
           isActive: false,
           featured: false,
           variants: [],
-          color: '',
+          colorName: '',
           size: ''
         });
         onProductAdded();
