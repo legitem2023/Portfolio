@@ -1239,7 +1239,7 @@ const isValid = await comparePassword(password, user?.password || "");
       
     },
 
-    createProduct: async (_: any, { id, name, description, price, salePrice, color, size, sku, supplierId }: any) => {
+    createProduct: async (_: any, { id, name, description, price, salePrice, color, size,stock, sku, supplierId }: any) => {
       await prisma.product.create({
         data: {
           name,
