@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
-
+import { SINGLE_UPLOAD_MUTATION } from '../../components/grahpql/mutation';
 interface ProductTableProps {
   products: Product[];
 }
@@ -10,7 +10,11 @@ interface ProductTableProps {
 export default function ProductTable({ products }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [singleUpload] = useMutation(SINGLE_UPLOAD_MUTATION,{
+    onCompleted:(e:any) =>{
+      console.log(e);
+    }
+  })
   const openVariantsModal = (product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
