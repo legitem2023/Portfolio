@@ -1255,7 +1255,7 @@ const isValid = await comparePassword(password, user?.password || "");
               price,
               salePrice: salePrice || null, // Ensure it can be null
               stock: stock || 0,
-            }
+            } as any
           },
           supplier: {
             connect: { id: supplierId }
