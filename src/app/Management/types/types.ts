@@ -42,6 +42,8 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  color: string;
+  size: string;
   salePrice?: number;
   sku: string;
   stock: number;
