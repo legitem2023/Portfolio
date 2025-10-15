@@ -204,7 +204,7 @@ export default function ProductForm({
               className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Enter custom size"
               value={newProduct.size || ''}
-              onChange={(e) => setNewProduct({...newProduct, customSize: e.target.value})}
+              onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
             />
           )}
         </div>
