@@ -57,8 +57,8 @@ export const FBLOGIN = gql`
 `;
 
 export const INSERTPRODUCT = gql`
-  mutation InsertProduct($id: String, $name: String, $description: String, color: String, size: String, $price: Float, $salePrice: Float, $sku: String, $supplierId: String) {
-    createProduct(id: $id, name: $name, description: $description, color: $color, size: $size, price: $price, salePrice: $salePrice, sku: $sku, supplierId: $supplierId) {
+  mutation InsertProduct($id: String, $name: String, $description: String, color: String, stock: Int, size: String, $price: Float, $salePrice: Float, $sku: String, $supplierId: String) {
+    createProduct(id: $id, name: $name, description: $description, color: $color, stock: $stock, size: $size, price: $price, salePrice: $salePrice, sku: $sku, supplierId: $supplierId) {
       statusText
     }  
   }
