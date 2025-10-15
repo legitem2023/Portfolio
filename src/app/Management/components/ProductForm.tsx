@@ -174,7 +174,7 @@ export default function ProductForm({
               type="color"
               className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
               value={newProduct.colorName || '#000000'}
-              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+              onChange={(e) => setNewProduct({...newProduct, colorName: e.target.value})}
             />
             <input
               type="text"
