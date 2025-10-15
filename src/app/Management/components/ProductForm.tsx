@@ -40,7 +40,7 @@ export default function ProductForm({
           size: newProduct.size,
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
-          // stock: parseInt(newProduct.stock),
+          stock: parseInt(newProduct.stock),
           // brand: newProduct.brand,
           // isActive: newProduct.isActive,
           // featured: newProduct.featured
