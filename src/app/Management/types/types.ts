@@ -72,7 +72,7 @@ export interface NewProduct {
   isActive: boolean;
   featured: boolean;
   variants: Variant[];
-  colorName: string;
+  color: string;
   size: string;
 }
 
