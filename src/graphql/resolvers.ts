@@ -2,7 +2,7 @@
 import { PrismaClient, PrivacySetting } from "@prisma/client";
 import { comparePassword, encryptPassword } from '../../utils/script';
 import { EncryptJWT,jwtDecrypt } from 'jose';
-import { saveBase64Image } from '../../utils/saveBase64Image.js';
+import { saveBase64Image } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
 //import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
