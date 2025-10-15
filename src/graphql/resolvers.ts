@@ -1249,6 +1249,7 @@ const isValid = await comparePassword(password, user?.password || "");
           salePrice,
           variants: {
             create: {
+              sku,
               color,
               size,
               price,
