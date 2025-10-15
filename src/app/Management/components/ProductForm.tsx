@@ -36,7 +36,7 @@ export default function ProductForm({
           id: newProduct.categoryId,
           supplierId: supplierId,
           // Add color and size to mutation variables
-          color: newProduct.color,
+          color: newProduct.colorName,
           size: newProduct.size,
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
@@ -173,7 +173,7 @@ export default function ProductForm({
             <input
               type="color"
               className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
-              value={newProduct.color || '#000000'}
+              value={newProduct.colorName || '#000000'}
               onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
             />
             <input
