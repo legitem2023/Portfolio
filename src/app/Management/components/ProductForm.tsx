@@ -34,7 +34,10 @@ export default function ProductForm({
           salePrice: parseFloat(newProduct.salePrice || '0'),
           sku: newProduct.sku,
           id: newProduct.categoryId,
-          supplierId:supplierId
+          supplierId: supplierId,
+          // Add color and size to mutation variables
+          color: newProduct.color,
+          size: newProduct.size,
           // Note: Add these fields to your mutation if needed
           // categoryId: newProduct.categoryId,
           // stock: parseInt(newProduct.stock),
@@ -58,7 +61,9 @@ export default function ProductForm({
           brand: '',
           isActive: false,
           featured: false,
-          variants: []
+          variants: [],
+          color: '',
+          size: ''
         });
         onProductAdded();
         
@@ -70,6 +75,9 @@ export default function ProductForm({
       // Error is already handled by the error variable from useMutation
     }
   };
+
+  // Common sizes for products
+  const commonSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
   return (
     <form onSubmit={handleSubmit}>
@@ -156,6 +164,51 @@ export default function ProductForm({
           />
         </div>
       </div>
+
+      {/* Color and Size Fields */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
+          <div className="flex items-center space-x-2">
+            <input
+              type="color"
+              className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
+              value={newProduct.color || '#000000'}
+              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+            />
+            <input
+              type="text"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="Color name (optional)"
+              value={newProduct.colorName || ''}
+              onChange={(e) => setNewProduct({...newProduct, colorName: e.target.value})}
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
+          <select
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            value={newProduct.size || ''}
+            onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+          >
+            <option value="">Select size</option>
+            {commonSizes.map(size => (
+              <option key={size} value={size}>{size}</option>
+            ))}
+            <option value="Custom">Custom</option>
+          </select>
+          {newProduct.size === 'Custom' && (
+            <input
+              type="text"
+              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
+              placeholder="Enter custom size"
+              value={newProduct.customSize || ''}
+              onChange={(e) => setNewProduct({...newProduct, customSize: e.target.value})}
+            />
+          )}
+        </div>
+      </div>
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
@@ -213,4 +266,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-    }
+}
