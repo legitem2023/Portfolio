@@ -27,15 +27,15 @@ export interface User {
 
 export interface Variant {
     id: string;
-    name: string;
-    createdAt: string;
-    sku: string;
-    color: string;
+    id: string;
+    name?: string;        // Make optional
+    createdAt?: string;   // Make optional
+    sku?: string;         // Make optional
     size: string;
-    price: number;
-    salePrice?: number;
-    stock: number;
-    images: string[];
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
 }
 
 export interface Product {
