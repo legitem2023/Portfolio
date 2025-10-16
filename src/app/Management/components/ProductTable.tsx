@@ -179,6 +179,15 @@ function TableRow({
     }
   };
 
+  // Before line 247, add this:
+const safeVariants = product.variants.map(variant => ({
+  ...variant,
+  name: variant.name || '', // Provide default empty string
+  // Add other required defaults as needed
+}));
+
+// Then use safeVariants instead:
+<VariantButton variants={safeVariants} onClick={() => onViewVariants(product)} />
   return (
     <tr>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -244,7 +253,7 @@ function TableRow({
         {product.stock} units
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        <VariantButton variants={product.variants} onClick={() => onViewVariants(product)} />
+        <VariantButton variants={safeVariants} onClick={() => onViewVariants(product)} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <StatusBadge status={product.status} />
