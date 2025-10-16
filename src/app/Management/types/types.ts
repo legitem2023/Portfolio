@@ -27,7 +27,6 @@ export interface User {
 
 export interface Variant {
     id: string;
-    id: string;
     name?: string;        // Make optional
     createdAt?: string;   // Make optional
     sku?: string;         // Make optional
