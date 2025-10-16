@@ -3,6 +3,17 @@ import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Thumbs } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+
+
+
+
 
 interface ProductTableProps {
   products: Product[];
@@ -173,15 +184,30 @@ function TableRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
-            {product.variants[0].images && product.variants[0].images.length > 0 ? (
-              <img 
-                src={product.variants.images[0]} 
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-gray-600 text-sm">No Image</span>
-            )}
+// In your component
+{product.variants[0].images && product.variants[0].images.length > 0 ? (
+  <Swiper
+    modules={[Navigation, Pagination, Thumbs]}
+    spaceBetween={10}
+    slidesPerView={1}
+    navigation
+    pagination={{ clickable: true }}
+    className="h-full w-full"
+  >
+    {product.variants[0].images.map((image, index) => (
+      <SwiperSlide key={index}>
+        <img 
+          src={image} 
+          alt={`${product.name} - ${index + 1}`}
+          className="h-full w-full object-cover"
+        />
+      </SwiperSlide>
+    ))}
+  </Swiper>
+) : (
+  <span className="text-gray-600 text-sm">No Image</span>
+)}
+
             
             {/* Upload Overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
