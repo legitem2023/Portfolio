@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
+
 interface ProductTableProps {
   products: Product[];
 }
@@ -10,11 +11,39 @@ interface ProductTableProps {
 export default function ProductTable({ products }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [singleUpload] = useMutation(SINGLE_UPLOAD_MUTATION,{
-    onCompleted:(e:any) =>{
-      console.log(e);
+  const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
+  
+  const [singleUpload] = useMutation(SINGLE_UPLOAD_MUTATION, {
+    onCompleted: (data) => {
+      console.log('Upload completed:', data);
+      setUploadingProductId(null);
+      // You might want to refetch products here to get updated images
+    },
+    onError: (error) => {
+      console.error('Upload failed:', error);
+      setUploadingProductId(null);
     }
-  })
+  });
+
+  const handleImageUpload = async (productId: string, file: File) => {
+    setUploadingProductId(productId);
+    
+    try {
+      // Convert file to base64
+      const base64 = await convertToBase64(file);
+      
+      // Upload image
+      await singleUpload({
+        variables: {
+          base64Image: base64,
+          productId: productId
+        }
+      });
+    } catch (error) {
+      console.error('Upload error:', error);
+    }
+  };
+
   const openVariantsModal = (product: Product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
@@ -54,7 +83,13 @@ export default function ProductTable({ products }: ProductTableProps) {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {products.map((product) => (
-              <TableRow key={product.id} product={product} onViewVariants={openVariantsModal} />
+              <TableRow 
+                key={product.id} 
+                product={product} 
+                onViewVariants={openVariantsModal}
+                onImageUpload={handleImageUpload}
+                isUploading={uploadingProductId === product.id}
+              />
             ))}
           </tbody>
         </table>
@@ -63,7 +98,13 @@ export default function ProductTable({ products }: ProductTableProps) {
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
         {products.map((product) => (
-          <MobileProductCard key={product.id} product={product} onViewVariants={openVariantsModal} />
+          <MobileProductCard 
+            key={product.id} 
+            product={product} 
+            onViewVariants={openVariantsModal}
+            onImageUpload={handleImageUpload}
+            isUploading={uploadingProductId === product.id}
+          />
         ))}
       </div>
 
@@ -77,14 +118,76 @@ export default function ProductTable({ products }: ProductTableProps) {
   );
 }
 
+// Helper function to convert file to base64
+const convertToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Remove the data:image/...;base64, prefix
+      const base64 = (reader.result as string).split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = error => reject(error);
+  });
+};
+
 // Table Row Component
-function TableRow({ product, onViewVariants }: { product: Product; onViewVariants: (product: Product) => void }) {
+function TableRow({ 
+  product, 
+  onViewVariants, 
+  onImageUpload,
+  isUploading 
+}: { 
+  product: Product; 
+  onViewVariants: (product: Product) => void;
+  onImageUpload: (productId: string, file: File) => void;
+  isUploading: boolean;
+}) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onImageUpload(product.id, file);
+    }
+  };
+
   return (
     <tr>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center">
-            <span className="text-gray-600 text-sm">Img</span>
+          <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
+            {product.images && product.images.length > 0 ? (
+              <img 
+                src={product.images[0]} 
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-gray-600 text-sm">No Image</span>
+            )}
+            
+            {/* Upload Overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+              <label className="cursor-pointer text-white text-xs text-center p-1">
+                <svg className="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Upload
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={isUploading}
+                />
+              </label>
+            </div>
+
+            {isUploading && (
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              </div>
+            )}
           </div>
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900">{product.name}</div>
@@ -112,13 +215,61 @@ function TableRow({ product, onViewVariants }: { product: Product; onViewVariant
 }
 
 // Mobile Product Card Component
-function MobileProductCard({ product, onViewVariants }: { product: Product; onViewVariants: (product: Product) => void }) {
+function MobileProductCard({ 
+  product, 
+  onViewVariants, 
+  onImageUpload,
+  isUploading 
+}: { 
+  product: Product; 
+  onViewVariants: (product: Product) => void;
+  onImageUpload: (productId: string, file: File) => void;
+  isUploading: boolean;
+}) {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onImageUpload(product.id, file);
+    }
+  };
+
   return (
     <div className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
-          <div className="flex-shrink-0 h-12 w-12 bg-gray-300 rounded-md flex items-center justify-center">
-            <span className="text-gray-600 text-xs">Img</span>
+          <div className="flex-shrink-0 h-12 w-12 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
+            {product.images && product.images.length > 0 ? (
+              <img 
+                src={product.images[0]} 
+                alt={product.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span className="text-gray-600 text-xs">No Image</span>
+            )}
+            
+            {/* Upload Overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+              <label className="cursor-pointer text-white text-xs text-center p-1">
+                <svg className="w-3 h-3 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Upload
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  disabled={isUploading}
+                />
+              </label>
+            </div>
+
+            {isUploading && (
+              <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              </div>
+            )}
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">{product.name}</h3>
@@ -156,16 +307,12 @@ function MobileProductCard({ product, onViewVariants }: { product: Product; onVi
 function VariantButton({ variants, onClick }: { variants?: Variant[]; onClick: () => void }) {
   const variantCount = variants?.length || 0;
   
-/*  if (variantCount === 0) {
-    return <span className="text-sm text-gray-400">No variants</span>;
-  }*/
-
   return (
     <button
       onClick={onClick}
       className="text-indigo-600 hover:text-indigo-900 text-sm font-medium underline"
     >
-      Open New {variantCount} variant{variantCount !== 1 ? 's' : ''}
+      View {variantCount} variant{variantCount !== 1 ? 's' : ''}
     </button>
   );
 }
@@ -175,7 +322,7 @@ function VariantsModal({ isOpen, onClose, product }: { isOpen: boolean; onClose:
   const [showAddForm, setShowAddForm] = useState(false);
 
   if (!isOpen || !product) return null;
-console.log(product);
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
@@ -293,7 +440,7 @@ function AddVariantForm({ productId, onSuccess, onCancel }: {
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
       stock: parseInt(formData.stock) || 0
     };
-//console.log(input);
+
     createVariant({ variables: { input } });
   };
 
@@ -452,7 +599,7 @@ function AddVariantForm({ productId, onSuccess, onCancel }: {
   );
 }
 
-// Variant Card Component (same as before)
+// Variant Card Component
 function VariantCard({ variant }: { variant: Variant }) {
   return (
     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -492,7 +639,7 @@ function VariantCard({ variant }: { variant: Variant }) {
   );
 }
 
-// Reusable Components (same as before)
+// Reusable Components
 function PriceDisplay({ price, salePrice }: { price: number; salePrice?: number }) {
   return (
     <div className="text-sm text-gray-500">
@@ -529,4 +676,4 @@ function ActionButtons() {
       </button>
     </div>
   );
-        }
+            }
