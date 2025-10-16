@@ -663,10 +663,9 @@ function VariantCard({
           <span className="ml-1 text-gray-900">{variant.stock} units</span>
         </div>
       </div>
-      
       <div className="mt-2 text-xs text-gray-500">
-        Created: {new Date(variant.createdAt).toLocaleDateString()}
-      </div>
+  Created: {new Date(variant.createdAt || '').toLocaleDateString()}
+</div>
     </div>
   );
 }
