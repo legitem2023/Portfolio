@@ -651,12 +651,12 @@ function VariantCard({
         </div>
         <div>
           <span className="text-gray-600">Price:</span>
-          <span className="ml-1 text-gray-900">
-            ${variant.price}
-            {variant.salePrice && variant.salePrice < variant.price && (
-              <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
-            )}
-          </span>
+<span className="ml-1 text-gray-900">
+  ${variant.price}
+  {variant.salePrice && variant.price && variant.salePrice < variant.price && (
+    <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
+  )}
+</span>
         </div>
         <div>
           <span className="text-gray-600">Stock:</span>
