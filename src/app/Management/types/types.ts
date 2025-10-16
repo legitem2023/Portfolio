@@ -49,10 +49,16 @@ export interface Product {
   sku: string;
   stock: number;
   category: string;
-  images:string[];
   brand?: string;
   status: 'Active' | 'Inactive';
-  variants: Variant[]
+  variants: {
+    id: string;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  }[];
 }
 
 export interface Category {
