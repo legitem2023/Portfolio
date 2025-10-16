@@ -289,7 +289,8 @@ function MobileProductCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 h-12 w-12 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
-              <SwiperSlide key={index}>
+    {product.variants[0].images.map((image, index) => (
+      <SwiperSlide key={index}>
         <img 
           src={image} 
           alt={`${product.name} - ${index + 1}`}
