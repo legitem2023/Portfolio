@@ -289,6 +289,15 @@ function MobileProductCard({
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 h-12 w-12 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
+    {product.variants[0].images && product.variants[0].images.length > 0 ? (
+  <Swiper
+    modules={[Navigation, Pagination, Thumbs]}
+    spaceBetween={10}
+    slidesPerView={1}
+    navigation
+    pagination={{ clickable: true }}
+    className="h-full w-full"
+  >
     {product.variants[0].images.map((image, index) => (
       <SwiperSlide key={index}>
         <img 
