@@ -53,11 +53,15 @@ export interface Product {
   status: 'Active' | 'Inactive';
   variants: {
     id: string;
+    name?: string;        // Make optional
+    createdAt?: string;   // Make optional
+    sku?: string;         // Make optional
     size: string;
     color: string;
     price?: number;
     images?: string[];
     stock?: number;
+    
   }[];
 }
 
