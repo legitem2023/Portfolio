@@ -34,6 +34,7 @@ export interface Variant {
     size: string;
     color: string;
     price?: number;
+    salePrice?: number;
     images?: string[];
     stock?: number;
 }
@@ -59,6 +60,7 @@ export interface Product {
     size: string;
     color: string;
     price?: number;
+    salePrice?: number;
     images?: string[];
     stock?: number;
     
