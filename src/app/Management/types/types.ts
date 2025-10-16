@@ -35,6 +35,7 @@ export interface Variant {
     price: number;
     salePrice?: number;
     stock: number;
+    images: string[];
 }
 
 export interface Product {
@@ -48,6 +49,7 @@ export interface Product {
   sku: string;
   stock: number;
   category: string;
+  images:string[];
   brand?: string;
   status: 'Active' | 'Inactive';
   variants: Variant[]
