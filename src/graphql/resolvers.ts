@@ -886,7 +886,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       const imageUUID = uuidv4();
     // Save images
       const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
-      const updatedProduct = await prisma.product.update({
+      const updatedProduct = await prisma.productVariant.update({
        where: { id: productId },
        data: {
          images: {
