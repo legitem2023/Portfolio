@@ -11,10 +11,6 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
-
-
-
-
 interface ProductTableProps {
   products: Product[];
 }
@@ -30,7 +26,6 @@ export default function ProductTable({ products }: ProductTableProps) {
       console.log('Upload completed:', data);
       setUploadingProductId(null);
       setUploadingVariantId(null);
-      // You might want to refetch products here to get updated images
     },
     onError: (error) => {
       console.error('Upload failed:', error);
@@ -179,43 +174,41 @@ function TableRow({
     }
   };
 
-  // Before line 247, add this:
-const safeVariants = product.variants.map(variant => ({
-  ...variant,
-  name: variant.name || '', // Provide default empty string
-  // Add other required defaults as needed
-}));
+  // Safe variants with defaults
+  const safeVariants = (product.variants || []).map(variant => ({
+    ...variant,
+    name: variant.name || '',
+    sku: variant.sku || '',
+    color: variant.color || '',
+    size: variant.size || '',
+    price: variant.price || 0,
+    salePrice: variant.salePrice || 0,
+    stock: variant.stock || 0,
+    images: variant.images || [],
+    createdAt: variant.createdAt || new Date().toISOString()
+  }));
 
-// Then use safeVariants instead:
-<VariantButton variants={safeVariants} onClick={() => onViewVariants(product)} />
+  // Check if product has variants with images
+  const hasVariantsWithImages = safeVariants.length > 0 && 
+                               safeVariants[0].images && 
+                               safeVariants[0].images.length > 0;
+
   return (
     <tr>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
-{product.variants[0].images && product.variants[0].images.length > 0 ? (
-  <Swiper
-    modules={[Navigation, Pagination, Thumbs]}
-    spaceBetween={10}
-    slidesPerView={1}
-    navigation
-    pagination={{ clickable: true }}
-    className="h-full w-full"
-  >
-    {product.variants[0].images.map((image, index) => (
-      <SwiperSlide key={index}>
-        <img 
-          src={image} 
-          alt={`${product.name} - ${index + 1}`}
-          className="h-full w-full object-cover"
-        />
-      </SwiperSlide>
-    ))}
-  </Swiper>
-) : (
-  <span className="text-gray-600 text-sm">No Image</span>
-)}
-
+            {hasVariantsWithImages ? (
+              <div className="h-full w-full">
+                <img 
+                  src={safeVariants[0].images![0]} 
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : (
+              <span className="text-gray-600 text-sm">No Image</span>
+            )}
             
             {/* Upload Overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -284,33 +277,41 @@ function MobileProductCard({
     }
   };
 
+  // Safe variants with defaults
+  const safeVariants = (product.variants || []).map(variant => ({
+    ...variant,
+    name: variant.name || '',
+    sku: variant.sku || '',
+    color: variant.color || '',
+    size: variant.size || '',
+    price: variant.price || 0,
+    salePrice: variant.salePrice || 0,
+    stock: variant.stock || 0,
+    images: variant.images || [],
+    createdAt: variant.createdAt || new Date().toISOString()
+  }));
+
+  // Check if product has variants with images
+  const hasVariantsWithImages = safeVariants.length > 0 && 
+                               safeVariants[0].images && 
+                               safeVariants[0].images.length > 0;
+
   return (
     <div className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="flex-shrink-0 h-12 w-12 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
-    {product.variants[0].images && product.variants[0].images.length > 0 ? (
-  <Swiper
-    modules={[Navigation, Pagination, Thumbs]}
-    spaceBetween={10}
-    slidesPerView={1}
-    navigation
-    pagination={{ clickable: true }}
-    className="h-full w-full"
-  >
-    {product.variants[0].images.map((image, index) => (
-      <SwiperSlide key={index}>
-        <img 
-          src={image} 
-          alt={`${product.name} - ${index + 1}`}
-          className="h-full w-full object-cover"
-        />
-      </SwiperSlide>
-    ))}
-  </Swiper>
-) : (
-  <span className="text-gray-600 text-sm">No Image</span>
-)}
+            {hasVariantsWithImages ? (
+              <div className="h-full w-full">
+                <img 
+                  src={safeVariants[0].images![0]} 
+                  alt={product.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ) : (
+              <span className="text-gray-600 text-sm">No Image</span>
+            )}
             
             {/* Upload Overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -356,7 +357,7 @@ function MobileProductCard({
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Variants</span>
-          <VariantButton variants={product.variants} onClick={() => onViewVariants(product)} />
+          <VariantButton variants={safeVariants} onClick={() => onViewVariants(product)} />
         </div>
       </div>
       
@@ -399,6 +400,20 @@ function VariantsModal({
 
   if (!isOpen || !product) return null;
 
+  // Safe variants with defaults
+  const safeVariants = (product.variants || []).map(variant => ({
+    ...variant,
+    name: variant.name || '',
+    sku: variant.sku || '',
+    color: variant.color || '',
+    size: variant.size || '',
+    price: variant.price || 0,
+    salePrice: variant.salePrice || 0,
+    stock: variant.stock || 0,
+    images: variant.images || [],
+    createdAt: variant.createdAt || new Date().toISOString()
+  }));
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
@@ -413,7 +428,7 @@ function VariantsModal({
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{product.name} - Variants</h2>
-            <p className="text-sm text-gray-500">{product.variants?.length || 0} variants</p>
+            <p className="text-sm text-gray-500">{safeVariants.length} variants</p>
           </div>
           <button
             onClick={onClose}
@@ -449,9 +464,9 @@ function VariantsModal({
 
         {/* Variants List */}
         <div className="h-full overflow-y-auto">
-          {product.variants && product.variants.length > 0 ? (
+          {safeVariants.length > 0 ? (
             <div className="p-4 space-y-4">
-              {product.variants.map((variant) => (
+              {safeVariants.map((variant) => (
                 <VariantCard 
                   key={variant.id} 
                   variant={variant} 
@@ -651,12 +666,12 @@ function VariantCard({
         </div>
         <div>
           <span className="text-gray-600">Price:</span>
-<span className="ml-1 text-gray-900">
-  ${variant.price}
-  {variant.salePrice && variant.price && variant.salePrice < variant.price && (
-    <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
-  )}
-</span>
+          <span className="ml-1 text-gray-900">
+            ${variant.price}
+            {variant.salePrice && variant.price && variant.salePrice < variant.price && (
+              <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
+            )}
+          </span>
         </div>
         <div>
           <span className="text-gray-600">Stock:</span>
@@ -664,13 +679,13 @@ function VariantCard({
         </div>
       </div>
       <div className="mt-2 text-xs text-gray-500">
-  Created: {new Date(variant.createdAt || '').toLocaleDateString()}
-</div>
+        Created: {new Date(variant.createdAt || '').toLocaleDateString()}
+      </div>
     </div>
   );
 }
 
-// Add Variant Form Component (same as before)
+// Add Variant Form Component
 function AddVariantForm({ productId, onSuccess, onCancel }: { 
   productId: string; 
   onSuccess: () => void;
@@ -874,7 +889,7 @@ function AddVariantForm({ productId, onSuccess, onCancel }: {
   );
 }
 
-// Reusable Components (same as before)
+// Reusable Components
 function PriceDisplay({ price, salePrice }: { price: number; salePrice?: number }) {
   return (
     <div className="text-sm text-gray-500">
@@ -911,4 +926,4 @@ function ActionButtons() {
       </button>
     </div>
   );
-  }
+                }
