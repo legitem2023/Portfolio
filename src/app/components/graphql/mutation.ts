@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const SINGLE_UPLOAD_MUTATION = gql`
-  mutation SingleUpload($base64Image: String, $productId: String) {
+  mutation SingleUpload($base64Image: String, $productId: ID) {
     singleUpload(base64Image: $base64Image, productId: $productId) {
       statusText
     }
