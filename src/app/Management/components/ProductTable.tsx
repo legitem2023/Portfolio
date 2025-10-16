@@ -184,7 +184,6 @@ function TableRow({
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <div className="flex-shrink-0 h-10 w-10 bg-gray-300 rounded-md flex items-center justify-center relative overflow-hidden">
-// In your component
 {product.variants[0].images && product.variants[0].images.length > 0 ? (
   <Swiper
     modules={[Navigation, Pagination, Thumbs]}
