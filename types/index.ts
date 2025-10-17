@@ -27,6 +27,7 @@ export interface category {
 
 export interface Product {
   id: string;
+  sku: string;
   name: string;
   price: number;
   onSale: boolean;
@@ -42,6 +43,7 @@ export interface Product {
   category: category;
   variants: {
     id: string;
+    sku: string;
     size: string;
     color: string;
     price?: number;
