@@ -908,26 +908,17 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
     
     if (!updatedProduct) {
       return {
-        statusText: "Upload failed!",
-        success: false
+        statusText: "Upload failed!"
       };
     }
     
     // For this example, we return a success message.
     return {
-      statusText: "Successfully Uploaded",
-      success: true
+      statusText: "Successfully Uploaded"
     };
     
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in singleUpload:', error);
-    
-    // Return a structured error response
-    return {
-      statusText: `Upload failed: ${error.message}`,
-      success: false,
-      error: error.message
-    };
   }
 },
 sendMessage: async (_: any, args:any): Promise<any> => {
