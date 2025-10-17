@@ -197,6 +197,7 @@ export const GETPRODUCTS = gql`
           price
           salePrice
           stock
+          images
         }
         brand
         weight
