@@ -882,28 +882,54 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
   },
 
   Mutation: {
-  singleUpload: async (_:any, args:any ) => {
-      const { base64Image, productId } = args;
-      const imageUUID = uuidv4();
-    // Save images
-      const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
-      const updatedProduct = await prisma.productVariant.update({
-       where: { id: productId },
-       data: {
-         images: {
-           push: imageFile.url // Or base64Image if storing directly
-         }
-       }
-     });
+
+  singleUpload: async (_: any, args: any) => {
+  try {
+    const { base64Image, productId } = args;
     
-    if(!updatedProduct) return {
-      statusText:"Upload failed!"
+    // Validate required inputs
+    if (!base64Image || !productId) {
+      throw new Error('base64Image and productId are required');
     }
+
+    const imageUUID = uuidv4();
+    
+    // Save images
+    const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
+    
+    const updatedProduct = await prisma.productVariant.update({
+      where: { id: productId },
+      data: {
+        images: {
+          push: imageFile.url // Or base64Image if storing directly
+        }
+      }
+    });
+    
+    if (!updatedProduct) {
+      return {
+        statusText: "Upload failed!",
+        success: false
+      };
+    }
+    
     // For this example, we return a success message.
     return {
-      statusText:"Successfully Uploaded"
+      statusText: "Successfully Uploaded",
+      success: true
     };
-  },
+    
+  } catch (error) {
+    console.error('Error in singleUpload:', error);
+    
+    // Return a structured error response
+    return {
+      statusText: `Upload failed: ${error.message}`,
+      success: false,
+      error: error.message
+    };
+  }
+},
 sendMessage: async (_: any, args:any): Promise<any> => {
       const { senderId, recipientId, body, subject } = args.input;
 
