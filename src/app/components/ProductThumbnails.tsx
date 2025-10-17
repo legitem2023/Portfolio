@@ -95,7 +95,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               {/* Product Image */}
               <div className="relative overflow-hidden aspect-[1/1] bg-gray-100">
                 
-                <Swiper
+<Swiper
   spaceBetween={10}
   slidesPerView={1}
   navigation
@@ -103,13 +103,19 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   className="h-full"
 >
   {product.variants
-    .filter((filter: any) => filter.sku === product.sku)
-    .map((variant: any, index: number) => (
-      <SwiperSlide key={index}>
+    .filter((variant: any) => variant.sku === product.sku)
+    .flatMap((variant: any) => 
+      variant.images?.map((image: string, index: number) => ({
+        image,
+        key: `${variant.sku}-${index}`
+      })) || []
+    )
+    .map(({ image, key }) => (
+      <SwiperSlide key={key}>
         <Image
-          height="100"
-          width="100"
-          src={variant.images || '/NoImage.webp'}
+          height="400"
+          width="400"
+          src={image || '/NoImage.webp'}
           alt={product.name}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
