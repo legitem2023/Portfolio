@@ -42,7 +42,6 @@ export interface Product {
   description?: string;
   productCode?: string;
   category: category;
-  reviews:boolean:
   variants: {
     id: string;
     sku: string;
