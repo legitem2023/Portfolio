@@ -2,7 +2,7 @@
 "use client";
 import { GETCATEGORY, MANAGEMENTPRODUCTS, USERS } from '../graphql/query';
 import { useQuery } from '@apollo/client';
-import { Category, Product } from '../../../../types';
+import { category, Product } from '../../../../types';
 
 import React, { useState, useEffect } from 'react';
 import MobileMenu from './MobileMenu';
@@ -13,7 +13,7 @@ import Testimonials from './Testimonials';
 
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
