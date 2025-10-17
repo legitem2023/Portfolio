@@ -21,38 +21,17 @@ const convertToBase64 = (file: File): Promise<string> => {
     const reader = new FileReader();
     
     reader.onload = () => {
-      try {
-        const result = reader.result as string;
-        
-        // Extract base64 part after "base64," if it's a data URL
-        if (result.includes('base64,')) {
-          const base64 = result.split('base64,')[1];
-          
-          // Validate base64 format
-          if (!base64 || base64.trim() === '') {
-            reject(new Error('Empty base64 string after extraction'));
-            return;
-          }
-          
-          resolve(base64);
-        } else {
-          // If no data URL prefix, use the entire string
-          resolve(result);
-        }
-      } catch (error) {
-        reject(new Error(`Error processing base64: ${error}`));
-      }
+      const result = reader.result as string;
+      // Extract base64 part after the comma - exactly like in ProofOfDeliveryForm
+      const base64 = result.split(',')[1];
+      resolve(base64);
     };
     
     reader.onerror = (error) => {
-      reject(new Error('Failed to read file'));
+      reject(error);
     };
     
-    reader.onabort = () => {
-      reject(new Error('File reading was aborted'));
-    };
-    
-    // Read as data URL to get base64
+    // Read as data URL to get base64 - exactly like in ProofOfDeliveryForm
     reader.readAsDataURL(file);
   });
 };
