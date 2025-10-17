@@ -15,6 +15,48 @@ interface ProductTableProps {
   products: Product[];
 }
 
+// Improved helper function to convert file to base64
+const convertToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      try {
+        const result = reader.result as string;
+        
+        // Extract base64 part after "base64," if it's a data URL
+        if (result.includes('base64,')) {
+          const base64 = result.split('base64,')[1];
+          
+          // Validate base64 format
+          if (!base64 || base64.trim() === '') {
+            reject(new Error('Empty base64 string after extraction'));
+            return;
+          }
+          
+          resolve(base64);
+        } else {
+          // If no data URL prefix, use the entire string
+          resolve(result);
+        }
+      } catch (error) {
+        reject(new Error(`Error processing base64: ${error}`));
+      }
+    };
+    
+    reader.onerror = (error) => {
+      reject(new Error('Failed to read file'));
+    };
+    
+    reader.onabort = () => {
+      reject(new Error('File reading was aborted'));
+    };
+    
+    // Read as data URL to get base64
+    reader.readAsDataURL(file);
+  });
+};
+
 export default function ProductTable({ products }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,10 +77,27 @@ export default function ProductTable({ products }: ProductTableProps) {
   });
 
   const handleProductImageUpload = async (productId: string, file: File) => {
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('File size must be less than 5MB');
+      return;
+    }
+    
     setUploadingProductId(productId);
     
     try {
       const base64 = await convertToBase64(file);
+      
+      // Additional validation
+      if (!base64 || base64.trim() === '') {
+        throw new Error('Generated base64 string is empty');
+      }
+      
       await singleUpload({
         variables: {
           base64Image: base64,
@@ -47,14 +106,32 @@ export default function ProductTable({ products }: ProductTableProps) {
       });
     } catch (error) {
       console.error('Upload error:', error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleVariantImageUpload = async (variantId: string, file: File) => {
+    // Validate file type and size
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      alert('File size must be less than 5MB');
+      return;
+    }
+    
     setUploadingVariantId(variantId);
     
     try {
       const base64 = await convertToBase64(file);
+      
+      // Additional validation
+      if (!base64 || base64.trim() === '') {
+        throw new Error('Generated base64 string is empty');
+      }
+      
       await singleUpload({
         variables: {
           base64Image: base64,
@@ -63,6 +140,7 @@ export default function ProductTable({ products }: ProductTableProps) {
       });
     } catch (error) {
       console.error('Upload error:', error);
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -141,19 +219,6 @@ export default function ProductTable({ products }: ProductTableProps) {
     </>
   );
 }
-
-// Helper function to convert file to base64
-const convertToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const base64 = (reader.result as string).split(',')[1];
-      resolve(base64);
-    };
-    reader.onerror = error => reject(error);
-  });
-};
 
 // Table Row Component
 function TableRow({ 
@@ -926,4 +991,4 @@ function ActionButtons() {
       </button>
     </div>
   );
-                }
+          }
