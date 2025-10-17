@@ -115,7 +115,7 @@ export default function ProductTable({ products }: ProductTableProps) {
     await singleUpload({
         variables: {
           base64Image: base64,
-          variantId: variantId
+          productId: variantId
         }
       });
     } catch (error) {
