@@ -1,11 +1,11 @@
 // components/FeaturedCategories.tsx
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Category } from '../types/types';
+import { category } from '../../../../types';
 import CategoryShimmer from '../CategoryShimmer';
 
 interface FeaturedCategoriesProps {
-  categories: Category[];
+  categories: category[];
   loading: boolean;
   title?: string;
   description?: string;
