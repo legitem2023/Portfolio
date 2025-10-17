@@ -102,7 +102,7 @@ const cartItem = {
               
               {/* Product Image */}
               <div className="relative overflow-hidden aspect-[1/1] bg-gray-100">
-                
+                { product.variants.length > 0?(               
 <Swiper
   spaceBetween={10}
   slidesPerView={1}
@@ -150,7 +150,16 @@ const cartItem = {
       </SwiperSlide>
     ))
   }
-</Swiper>
+</Swiper>):(
+        <Image
+          height="400"
+          width="400"
+          src={'/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+)
+            }
                 
                 {/* Quick View Button */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
