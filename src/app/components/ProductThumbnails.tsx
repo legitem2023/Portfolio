@@ -162,7 +162,7 @@ const cartItem = {
             }
                 
                 {/* Quick View Button */}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                <div className="z-50 absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
                   <button 
                     onClick={() => handleQuickView(product)} 
                     className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-gray-900 font-medium px-3 py-1.5 text-sm rounded-md"
