@@ -6,6 +6,13 @@ import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 import { showToast } from '../../../utils/toastify'
 import { Product } from '../../../types';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Thumbs } from 'swiper/modules';
+
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 
 interface ProductThumbnailsProps {
@@ -87,13 +94,29 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               
               {/* Product Image */}
               <div className="relative overflow-hidden aspect-[1/1] bg-gray-100">
-                <Image
-                  height="100"
-                  width="100"
-                  src={product.image || '/NoImage.webp'} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                
+                <Swiper
+  spaceBetween={10}
+  slidesPerView={1}
+  navigation
+  pagination={{ clickable: true }}
+  className="h-full"
+>
+  {product.variants
+    .filter((filter: any) => filter.sku === product.sku)
+    .map((variant: any, index: number) => (
+      <SwiperSlide key={index}>
+        <Image
+          height="100"
+          width="100"
+          src={variant.images || '/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </SwiperSlide>
+    ))
+  }
+</Swiper>
                 
                 {/* Quick View Button */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
