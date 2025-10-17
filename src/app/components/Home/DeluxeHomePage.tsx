@@ -2,7 +2,7 @@
 "use client";
 import { GETCATEGORY, MANAGEMENTPRODUCTS, USERS } from '../graphql/query';
 import { useQuery } from '@apollo/client';
-import { Category, Product } from '../types/types';
+import { Category, Product } from '../../../../types/types';
 import React, { useState, useEffect } from 'react';
 import MobileMenu from './MobileMenu';
 import HeroCarousel from './HeroCarousel';
