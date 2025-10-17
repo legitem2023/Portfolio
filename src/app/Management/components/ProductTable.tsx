@@ -15,26 +15,26 @@ interface ProductTableProps {
   products: Product[];
 }
 
-// Improved helper function to convert file to base64
+// Corrected helper function to convert file to base64
 const convertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     
     reader.onload = () => {
       const result = reader.result as string;
-      // Extract base64 part after the comma - exactly like in ProofOfDeliveryForm
-      const base64 = result.split(',')[1];
-      resolve(base64);
+      // Return the FULL data URL including the prefix
+      // The backend expects: "data:image/png;base64,iVBORw0KGgo..."
+      resolve(result);
     };
     
     reader.onerror = (error) => {
       reject(error);
     };
     
-    // Read as data URL to get base64 - exactly like in ProofOfDeliveryForm
+    // Read as data URL to get base64
     reader.readAsDataURL(file);
   });
-};
+};;
 
 export default function ProductTable({ products }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
