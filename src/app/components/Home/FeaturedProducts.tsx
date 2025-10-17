@@ -65,7 +65,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500 ml-1">({product.reviewsCount})</span>
+                    <span className="text-xs text-gray-500 ml-1">({product.reviewCount})</span>
                   </div>
                   <div className="flex items-center">
                     <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
