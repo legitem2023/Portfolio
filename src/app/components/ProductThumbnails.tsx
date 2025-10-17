@@ -35,7 +35,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   };
 
   const handleAddToCart = (product: Product) => {
-    /*const cartItem = {
+    const cartItem = {
       userId:"",
       id: product.id.toString(),
       name: product.name,
@@ -49,11 +49,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       size: product.size || 'M',
       category: product.category,
       rating: product.rating
-    };*/
+    };
     
-    //dispatch(addToCart(cartItem));
+    dispatch(addToCart(cartItem));
     
-    //showToast('Added to Cart', 'success')
+    showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
     // You can implement a toast notification system here
   };
