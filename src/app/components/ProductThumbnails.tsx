@@ -35,21 +35,28 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   };
 
   const handleAddToCart = (product: Product) => {
-    const cartItem = {
-      userId:"",
-      id: product.id.toString(),
-      name: product.name,
-      description: product.description || '',
-      price: product.price,
-      quantity: 1,
-      image: product.image,
-      // Adding the missing properties with default values
-      productCode: product.productCode || `PC-${product.id}`,
-      color: product.colors && product.colors.length > 0 ? product.colors[0] : 'Default',
-      size: product.size || 'M',
-      category: product.category,
-      rating: product.rating
-    };
+const cartItem = {
+  // Include ALL Product properties
+  id: product.id,
+  name: product.name,
+  price: product.price,
+  onSale: product.onSale,           // This was missing
+  isNew: product.isNew,             // This was missing
+  isFeatured: product.isFeatured,   // This was missing
+  originalPrice: product.originalPrice,
+  rating: product.rating,
+  reviewCount: product.reviewCount, // This was missing
+  image: product.image,
+  colors: product.colors,
+  description: product.description,
+  productCode: product.productCode,
+  category: product.category,
+  sku:product.sku,
+  variants: product.variants,       
+  size:product.size
+  // This was missing
+  // Make sure you have this variable
+};
     
     dispatch(addToCart(cartItem));
     
