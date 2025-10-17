@@ -30,6 +30,7 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
+  size: string;
   price: number;
   onSale: boolean;
   isNew: boolean;
