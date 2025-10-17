@@ -112,12 +112,12 @@ export default function ProductTable({ products }: ProductTableProps) {
       }
      console.log(base64);
      console.log(variantId);
-     /* await singleUpload({
+    await singleUpload({
         variables: {
           base64Image: base64,
           variantId: variantId
         }
-      });*/
+      });
     } catch (error) {
       console.error('Upload error:', error);
       alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
