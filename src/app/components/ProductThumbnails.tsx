@@ -61,7 +61,7 @@ const cartItem = {
   // Make sure you have this variable
 };
     
-    dispatch(addToCart(cartItem));
+   // dispatch(addToCart(cartItem));
     
     showToast('Added to Cart', 'success')
     // Optional: Show a notification or toast message
