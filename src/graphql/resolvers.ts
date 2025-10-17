@@ -882,7 +882,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
   },
 
   Mutation: {
-  singleUpload: async (_:any, { base64Image, productId }:{ base64Image:string, productId:string }  ) => {
+  singleUpload: async (_:any, { base64Image, productId }:{ base64Image:any, productId:any }  ) => {
       const imageUUID = uuidv4();
     // Save images
       const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
