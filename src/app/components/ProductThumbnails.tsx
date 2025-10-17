@@ -52,8 +52,11 @@ const cartItem = {
   productCode: product.productCode,
   category: product.category,
   sku:product.sku,
-  variants: product.variants,       
-  size:product.size
+  variants: product.variants,
+  userId: 'current-user-id', // Replace with actual user ID from your auth context
+  quantity: 1,
+  color: product.colors,      // Make sure you have this variable
+  size: product.size,
   // This was missing
   // Make sure you have this variable
 };
