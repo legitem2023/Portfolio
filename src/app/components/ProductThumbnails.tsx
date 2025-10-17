@@ -7,11 +7,9 @@ import Image from 'next/image';
 import { showToast } from '../../../utils/toastify'
 import { Product } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Thumbs } from 'swiper/modules';
-import { Autoplay } from 'swiper/modules';
+import { Pagination, Autoplay } from 'swiper/modules';
 // Import Swiper styles
 import 'swiper/css';
-import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 
@@ -108,14 +106,20 @@ const cartItem = {
 <Swiper
   spaceBetween={10}
   slidesPerView={1}
-  navigation
   autoplay={{
     delay: 3000,
     disableOnInteraction: false,
     pauseOnMouseEnter: true,
   }}
-  pagination={{ clickable: true }}
-  modules={[Autoplay]}
+  pagination={{
+    clickable: true,
+    bulletClass: 'swiper-pagination-bullet',
+    bulletActiveClass: 'swiper-pagination-bullet-active',
+    renderBullet: function (index, className) {
+      return `<span class="${className} !w-2 !h-2 !bg-white !opacity-70"></span>`;
+    }
+  }}
+  modules={[Autoplay, Pagination]}
   className="h-full"
 >
   {product.variants
