@@ -183,6 +183,7 @@ const cartItem = {
   description: product.description,
   productCode: product.productCode,
   category: product.category,
+  sku:product.sku,
   variants: product.variants,       // This was missing
   
   // CartItem specific properties
