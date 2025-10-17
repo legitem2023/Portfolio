@@ -63,7 +63,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
   };
-console.log(product.variants.filter((variant: any) => variant.sku === product.sku));
+console.log(products.variants.filter((variant: any) => variant.sku === product.sku));
   
   return (
     <>
