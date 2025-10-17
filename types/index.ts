@@ -23,6 +23,7 @@ export interface category {
   image: string;
   isActive:boolean;
   createdAt:string;
+  items:string;
 }
 
 export interface Product {
