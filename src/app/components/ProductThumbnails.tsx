@@ -19,7 +19,7 @@ interface ProductThumbnailsProps {
   products: Product[];
 }
 
-const ProductThumbnails: React.FC<Product> = ({ products }) => {
+const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
@@ -63,8 +63,7 @@ const ProductThumbnails: React.FC<Product> = ({ products }) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
   };
-console.log(products.variants,"[[[");
-  
+
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap:4">
@@ -112,10 +111,18 @@ console.log(products.variants,"[[[");
   {product.variants
     .filter((variant: any) => variant.sku === product.sku)
     .flatMap((variant: any) => 
-      variant.images?.map((image: string, index: number) => ({
+      variant.images.length > 0?variant.images?.map((image: string, index: number) => ({
         image,
         key: `${variant.sku}-${index}`
-      })) || []
+      })):(<SwiperSlide>
+        <Image
+          height="400"
+          width="400"
+          src={'/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </SwiperSlide>) || []
     )
     .map(({ image, key }) => (
       <SwiperSlide key={key}>
