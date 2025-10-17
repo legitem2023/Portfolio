@@ -16,7 +16,7 @@ import 'swiper/css/pagination';
 
 
 interface ProductThumbnailsProps {
-  products: Product;
+  products: Product[];
 }
 
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
