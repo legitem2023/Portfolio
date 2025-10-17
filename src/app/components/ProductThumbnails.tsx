@@ -8,7 +8,7 @@ import { showToast } from '../../../utils/toastify'
 import { Product } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
-
+import { Autoplay } from 'swiper/modules';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -99,7 +99,13 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   spaceBetween={10}
   slidesPerView={1}
   navigation
+  autoplay={{
+    delay: 3000,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  }}
   pagination={{ clickable: true }}
+  modules={[Autoplay]}
   className="h-full"
 >
   {product.variants
