@@ -1,10 +1,10 @@
 // resolvers.ts
 import { PrismaClient, PrivacySetting } from "@prisma/client";
 import { comparePassword, encryptPassword } from '../../utils/script';
-import { EncryptJWT,jwtDecrypt } from 'jose';
+import { EncryptJWT, jwtDecrypt } from 'jose';
 import { saveBase64Image } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
-//import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
+// import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
   LogoutResponse,
   Context
@@ -17,7 +17,7 @@ const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
   
   if (required && !userId) {
-  //  throw new AuthenticationError('Authentication required');
+    // throw new AuthenticationError('Authentication required');
   }
   
   return userId;
@@ -25,7 +25,7 @@ const getUserId = (context: any, required = true): string => {
 
 interface SetDefaultAddressArgs {
   addressId: string;
-  userId:string;
+  userId: string;
 }
 
 interface SetDefaultAddressResponse {
@@ -33,12 +33,12 @@ interface SetDefaultAddressResponse {
   message?: string;
   address?: any;
 }
+
 const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
 export const resolvers = {
   Query: {
-
-myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: any): Promise<any> => {
+    myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
       
       const where: any = {
@@ -245,84 +245,80 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       };
     },
 
-
-    
     // Existing e-commerce queries
     users: async () => await prisma.user.findMany({
-      include : {
-        addresses:true,
-        products:true
+      include: {
+        addresses: true,
+        products: true
       }
     }),
     
-  user: async (_: any, { id }: { id: string }) => {
-
-  
-  if (!id || id.length === 0) {
-    console.log("Invalid ID");
-    return null;
-  }
-  
-  return await prisma.user.findUnique({ 
-    where: { id },
-    include: {
-      addresses: true,
-      products: {
-        include: {
-          category: {
-            include: {
-              parent: true
-            }
-          },
-          variants: {
-            select: {
-              id: true,
-              name: true,
-              createdAt: true,
-              sku: true,
-              color: true,
-              size: true,
-              price: true,
-              salePrice: true,
-              stock: true,
-              images: true
-            }
-          }
-        }
-      },
-      posts: {
-        include: {
-          user: true,
-          taggedUsers: {
-            include: {
-              user: true
-            }
-          },
-          comments: {
-            take: 2,
-            include: {
-              user: true
-            },
-            orderBy: {
-              createdAt: 'desc'
-            }
-          },
-          likes: {
-            where: {
-              userId: id
-            }
-          },
-          _count: {
-            select: {
-              comments: true,
-              likes: true
-            }
-          }
-        }
+    user: async (_: any, { id }: { id: string }) => {
+      if (!id || id.length === 0) {
+        console.log("Invalid ID");
+        return null;
       }
-    }
-  })
-},
+      
+      return await prisma.user.findUnique({ 
+        where: { id },
+        include: {
+          addresses: true,
+          products: {
+            include: {
+              category: {
+                include: {
+                  parent: true
+                }
+              },
+              variants: {
+                select: {
+                  id: true,
+                  name: true,
+                  createdAt: true,
+                  sku: true,
+                  color: true,
+                  size: true,
+                  price: true,
+                  salePrice: true,
+                  stock: true,
+                  images: true
+                }
+              }
+            }
+          },
+          posts: {
+            include: {
+              user: true,
+              taggedUsers: {
+                include: {
+                  user: true
+                }
+              },
+              comments: {
+                take: 2,
+                include: {
+                  user: true
+                },
+                orderBy: {
+                  createdAt: 'desc'
+                }
+              },
+              likes: {
+                where: {
+                  userId: id
+                }
+              },
+              _count: {
+                select: {
+                  comments: true,
+                  likes: true
+                }
+              }
+            }
+          }
+        }
+      })
+    },
 
     products: async (
       _: any,
@@ -398,8 +394,8 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
             tags: true,
             sku: true,
             supplierId: true,
-            category:{
-              select:{
+            category: {
+              select: {
                 id: true,
                 name: true,
                 description: true,
@@ -410,21 +406,20 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
               }
             },
             variants: {
-              select:{
+              select: {
                 id: true,
                 name: true,
                 createdAt: true,
-                sku  : true,
-                color : true,
-                size  : true,
-                price : true,
+                sku: true,
+                color: true,
+                size: true,
+                price: true,
                 salePrice: true,
-                stock : true,
+                stock: true,
                 images: true
               }
             }
           },
-          
         });
 
         const hasMore = products.length > limit;
@@ -449,25 +444,26 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
     },
 
     orders: async (_: any, { userId }: { userId: string }) => {
-  try {
-    return await prisma.order.findMany({ 
-      where: { userId },
-      include: {
-        user:true,
-        address: true,
-        items: true,
-        payments: true
+      try {
+        return await prisma.order.findMany({ 
+          where: { userId },
+          include: {
+            user: true,
+            address: true,
+            items: true,
+            payments: true
+          }
+        });
+      } catch (error) {
+        console.error('Error fetching orders:', error);
+        throw new Error('Could not fetch orders');
       }
-    });
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    throw new Error('Could not fetch orders');
-  }
     },
+
     supportTickets: () => prisma.supportTicket.findMany(),
     
-    getProducts: async (_:any,args:any ) => {
-    const userId = args.userId;
+    getProducts: async (_: any, args: any) => {
+      const userId = args.userId;
       const products = await prisma.product.findMany({
         where: {
           supplierId: userId.toString()
@@ -476,10 +472,10 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
           category: true,
           variants: true,
           supplier: true, // include the supplier relation
-       }
-  });
-  return products;
-},
+        }
+      });
+      return products;
+    },
 
     // Social media queries
     posts: async (_: any, { page = 1, limit = 10, userId, followingOnly = false }: any, context: any) => {
@@ -644,12 +640,12 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       });
       
       if (!post) {
-       // throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       if (post?.userId !== currentUserId) {
         if (post?.privacy === 'ONLY_ME') {
-       //   throw new ForbiddenError('You do not have permission to view this post');
+          // throw new ForbiddenError('You do not have permission to view this post');
         }
         
         if (post?.privacy === 'FRIENDS') {
@@ -661,7 +657,7 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
           });
           
           if (!isFriend) {
-         //   throw new ForbiddenError('You do not have permission to view this post');
+            // throw new ForbiddenError('You do not have permission to view this post');
           }
         }
       }
@@ -720,81 +716,81 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
       };
     },
     
-    userFeed: async (_: any, { page = 1, limit = 10 , userId = ""}: any, context: any) => {
-  const currentUserId = getUserId(context);
-  const skip = (page - 1) * limit;
-  
-  const whereClause = {
-    OR: [
-      { userId: userId },
-      {
-        user: {
-          followers: {
-            some: {
-              followerId: userId
-            }
-          }
-        },
+    userFeed: async (_: any, { page = 1, limit = 10, userId = "" }: any, context: any) => {
+      const currentUserId = getUserId(context);
+      const skip = (page - 1) * limit;
+      
+      const whereClause = {
         OR: [
-          { privacy: PrivacySetting.PUBLIC },
-          { privacy: PrivacySetting.FRIENDS }
-        ]
-      }
-    ]
-  };
-  
-  const [posts, totalCount] = await Promise.all([
-    prisma.post.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      include: {
-        user: true,
-        taggedUsers: {
-          include: {
-            user: true
+          { userId: userId },
+          {
+            user: {
+              followers: {
+                some: {
+                  followerId: userId
+                }
+              }
+            },
+            OR: [
+              { privacy: PrivacySetting.PUBLIC },
+              { privacy: PrivacySetting.FRIENDS }
+            ]
           }
-        },
-        comments: {
-          take: 2,
+        ]
+      };
+      
+      const [posts, totalCount] = await Promise.all([
+        prisma.post.findMany({
+          where: whereClause,
+          skip,
+          take: limit,
           include: {
-            user: true
+            user: true,
+            taggedUsers: {
+              include: {
+                user: true
+              }
+            },
+            comments: {
+              take: 2,
+              include: {
+                user: true
+              },
+              orderBy: {
+                createdAt: 'desc'
+              }
+            },
+            likes: {
+              where: {
+                userId: userId
+              }
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true
+              }
+            }
           },
           orderBy: {
             createdAt: 'desc'
           }
-        },
-        likes: {
-          where: {
-            userId: userId
-          }
-        },
-        _count: {
-          select: {
-            comments: true,
-            likes: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    }),
-    prisma.post.count({ where: whereClause })
-  ]);
-  
-  return {
-    posts: posts.map(post => ({
-      ...post,
-      taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
-      isLikedByMe: (post.likes?.length || 0) > 0,
-      likeCount: post._count?.likes || 0,
-      commentCount: post._count?.comments || 0
-    })),
-    totalCount,
-    hasNextPage: totalCount > page * limit
-  };
-},
+        }),
+        prisma.post.count({ where: whereClause })
+      ]);
+      
+      return {
+        posts: posts.map(post => ({
+          ...post,
+          taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
+          isLikedByMe: (post.likes?.length || 0) > 0,
+          likeCount: post._count?.likes || 0,
+          commentCount: post._count?.comments || 0
+        })),
+        totalCount,
+        hasNextPage: totalCount > page * limit
+      };
+    },
     
     userLikes: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
@@ -882,46 +878,46 @@ myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: an
   },
 
   Mutation: {
-
-  singleUpload: async (_: any, args: any) => {
-  try {
-    const { base64Image, productId } = args;
-    
-    // Validate required inputs
-    if (!base64Image || !productId) {
-      throw new Error('base64Image and productId are required');
-    }
-
-    const imageUUID = uuidv4();
-    
-    // Save images
-    const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
-    
-    const updatedProduct = await prisma.productVariant.update({
-      where: { id: productId },
-      data: {
-        images: {
-          push: imageFile.url // Or base64Image if storing directly
+    singleUpload: async (_: any, args: any) => {
+      try {
+        const { base64Image, productId } = args;
+        
+        // Validate required inputs
+        if (!base64Image || !productId) {
+          throw new Error('base64Image and productId are required');
         }
+
+        const imageUUID = uuidv4();
+        
+        // Save images
+        const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
+        
+        const updatedProduct = await prisma.productVariant.update({
+          where: { id: productId },
+          data: {
+            images: {
+              push: imageFile.url // Or base64Image if storing directly
+            }
+          }
+        });
+        
+        if (!updatedProduct) {
+          return {
+            statusText: "Upload failed!"
+          };
+        }
+        
+        // For this example, we return a success message.
+        return {
+          statusText: "Successfully Uploaded"
+        };
+        
+      } catch (error: any) {
+        console.error('Error in singleUpload:', error);
       }
-    });
-    
-    if (!updatedProduct) {
-      return {
-        statusText: "Upload failed!"
-      };
-    }
-    
-    // For this example, we return a success message.
-    return {
-      statusText: "Successfully Uploaded"
-    };
-    
-  } catch (error:any) {
-    console.error('Error in singleUpload:', error);
-  }
-},
-sendMessage: async (_: any, args:any): Promise<any> => {
+    },
+
+    sendMessage: async (_: any, args: any): Promise<any> => {
       const { senderId, recipientId, body, subject } = args.input;
 
       // Check if recipient exists
@@ -1072,75 +1068,72 @@ sendMessage: async (_: any, args:any): Promise<any> => {
       return true;
     },
 
-
-
-    
     // Existing e-commerce mutations
     login: async (_: any, args: any) => {
-  try {
-    const { email, password } = args.input || {};
-    
-    if (!email || !password) {
-      console.log("Bad User Inputs");//throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
-    }
+      try {
+        const { email, password } = args.input || {};
+        
+        if (!email || !password) {
+          console.log("Bad User Inputs"); // throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
+        }
 
-    const user = await prisma.user.findUnique({ 
-      where: { email:email },
-      include : {
-        addresses:true
+        const user = await prisma.user.findUnique({ 
+          where: { email: email },
+          include: {
+            addresses: true
+          }
+        });
+        
+        if (!user) {
+          console.log("User not found");
+          // throw new ApolloError("User not found.", "USER_NOT_FOUND");
+        }
+
+        if (!user?.password) {
+          console.log("User has no password");
+          // throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
+        }
+
+        const isValid = await comparePassword(password, user?.password || "");
+       
+        if (!isValid) {
+          console.log("Invalid password");
+          // throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
+        }
+
+        const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+
+        let token;
+        try {
+          token = await new EncryptJWT({
+            userId: user?.id,
+            phone: user?.phone,
+            email: user?.email,
+            name: user?.firstName,
+            role: user?.role,
+            image: user?.avatar,
+            addresses: user?.addresses
+          })
+            .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+            .setIssuedAt()
+            .setExpirationTime('7d')
+            .encrypt(secret);
+        } catch (err) {
+          console.error('Token encryption error:', err);
+          // throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
+        }
+
+        return {
+          statusText: "success",
+          token
+        };
+
+      } catch (err) {
+        console.error('Login resolver error:', err);
       }
-    });
-    
-    
-    if (!user) {
-      console.log("User not found");
-      //throw new ApolloError("User not found.", "USER_NOT_FOUND");
-    }
+    },
 
-    if (!user?.password) {
-     console.log("User has no password");
-      //throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
-    }
-
-const isValid = await comparePassword(password, user?.password || "");
-   
-    if (!isValid) {
-      console.log("Invalid password");
-      //throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
-    }
-
-    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
-
-    let token;
-    try {
-      token = await new EncryptJWT({
-        userId: user?.id,
-        phone: user?.phone,
-        email: user?.email,
-        name: user?.firstName,
-        role: user?.role,
-        image: user?.avatar,
-        addresses:user?.addresses
-      })
-        .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
-        .setIssuedAt()
-        .setExpirationTime('7d')
-        .encrypt(secret);
-    } catch (err) {
-      console.error('Token encryption error:', err);
-     // throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
-    }
-
-    return {
-      statusText: "success",
-      token
-    };
-
-  } catch (err) {
-    console.error('Login resolver error:', err);
-  }
-},
-  logout: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
+    logout: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
       try {
         const { token } = context;
 
@@ -1178,7 +1171,8 @@ const isValid = await comparePassword(password, user?.password || "");
           message: 'Failed to complete logout process'
         };
       }
-    },  
+    },
+
     loginWithFacebook: async (_: any, args: any) => {
       const { idToken } = args.input;
 
@@ -1194,8 +1188,8 @@ const isValid = await comparePassword(password, user?.password || "");
 
       let user = await prisma.user.findUnique({
         where: { email: fbUser.email },
-        include : {
-          addresses:true
+        include: {
+          addresses: true
         }
       });
 
@@ -1234,10 +1228,8 @@ const isValid = await comparePassword(password, user?.password || "");
       };
     },
     
-    createUser: async (_: any,{ email, password, firstName, lastName }:any) => {
-      
+    createUser: async (_: any, { email, password, firstName, lastName }: any) => {
       const passwordHash = await encryptPassword(password, 10);
-
 
       console.log(email, password, firstName, lastName);
       const result = await prisma.user.create({
@@ -1249,15 +1241,14 @@ const isValid = await comparePassword(password, user?.password || "");
         },
       });
 
-      if(result) {
+      if (result) {
         return {
-          statusText:"Account Successfully Created."
+          statusText: "Account Successfully Created."
         }
       }
-      
     },
 
-    createProduct: async (_: any, { id, name, description, price, salePrice, color, size,stock, sku, supplierId }: any) => {
+    createProduct: async (_: any, { id, name, description, price, salePrice, color, size, stock, sku, supplierId }: any) => {
       await prisma.product.create({
         data: {
           name,
@@ -1287,98 +1278,99 @@ const isValid = await comparePassword(password, user?.password || "");
       return { statusText: 'Product created successfully!' };
     },
     
-    createVariant: async (_parent: any,{ input }: { input: any },_context: any) => {
-            try {
-                // Validate required fields
-                if (!input.name || input.stock === undefined) {
-                    return {
-                      
-                        statusText: 'Name and stock are required fields'
-                    };
-                }
+    createVariant: async (_parent: any, { input }: { input: any }, _context: any) => {
+      try {
+        // Validate required fields
+        if (!input.name || input.stock === undefined) {
+          return {
+            statusText: 'Name and stock are required fields'
+          };
+        }
 
-                // Check if product exists when productId is provided
-                if (input.productId) {
-                    const productExists = await prisma.product.findUnique({
-                        where: { id: input.productId }
-                    });
+        // Check if product exists when productId is provided
+        if (input.productId) {
+          const productExists = await prisma.product.findUnique({
+            where: { id: input.productId }
+          });
 
-                    if (!productExists) {
-                        return {
-                            statusText: 'Product not found'
-                        };
-                    }
-                }
+          if (!productExists) {
+            return {
+              statusText: 'Product not found'
+            };
+          }
+        }
 
-                // Check for duplicate SKU
-                if (input.sku) {
-                    const existingVariant = await prisma.productVariant.findUnique({
-                        where: { sku: input.sku }
-                    });
+        // Check for duplicate SKU
+        if (input.sku) {
+          const existingVariant = await prisma.productVariant.findUnique({
+            where: { sku: input.sku }
+          });
 
-                    if (existingVariant) {
-                        return {
-                            statusText: 'SKU must be unique'
-                        };
-                    }
-                }
+          if (existingVariant) {
+            return {
+              statusText: 'SKU must be unique'
+            };
+          }
+        }
 
-                // Create the variant
-                const variant = await prisma.productVariant.create({
-                    data: {
-                        name: input.name,
-                        productId: input.productId,
-                        sku: input.sku || `SKU-${Date.now()}`, // Generate SKU if not provided
-                        color: input.color,
-                        size: input.size,
-                        price: input.price,
-                        salePrice: input.salePrice,
-                        stock: input.stock,
-                        images: [], // Default empty array
-                        options: [], // Default empty array
-                        isActive: true
-                    }
-                });
+        // Create the variant
+        const variant = await prisma.productVariant.create({
+          data: {
+            name: input.name,
+            productId: input.productId,
+            sku: input.sku || `SKU-${Date.now()}`, // Generate SKU if not provided
+            color: input.color,
+            size: input.size,
+            price: input.price,
+            salePrice: input.salePrice,
+            stock: input.stock,
+            images: [], // Default empty array
+            options: [], // Default empty array
+            isActive: true
+          }
+        });
 
-                return {
-                    statusText:'Successful'
-                };
+        return {
+          statusText: 'Successful'
+        };
 
-            } catch (error) {
-                console.error('Error creating product variant:', error);
-                return {
-                    statusText:'Product creation Failed!'
-                };
-            }
+      } catch (error) {
+        console.error('Error creating product variant:', error);
+        return {
+          statusText: 'Product creation Failed!'
+        };
+      }
     },
+
     createAddress: async (_: any, args: any) => {
-  const {
-    userId,
-    type,
-    street,
-    city,
-    state,
-    zipCode,
-    country,
-    isDefault,
-  } = args.input;
+      const {
+        userId,
+        type,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault,
+      } = args.input;
 
-  const response = await prisma.address.create({
-    data: {
-      userId,
-      type,
-      street,
-      city,
-      state,
-      zipCode,
-      country,
-      isDefault,
+      const response = await prisma.address.create({
+        data: {
+          userId,
+          type,
+          street,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault,
+        },
+      });
+      return {
+        statusText: "Succesful"
+      };
     },
-  });
-  return {
-    statusText:"Succesful"
-  };
-},
+
     createCategory: async (_: any, { name, description, status }: any) => {
       const response = await prisma.category.create({
         data: {
@@ -1394,9 +1386,9 @@ const isValid = await comparePassword(password, user?.password || "");
       }
       throw new Error('Failed to create category');
     },
- setDefaultAddress: async (_: any,{ addressId,userId }: SetDefaultAddressArgs): Promise<SetDefaultAddressResponse> => {
+
+    setDefaultAddress: async (_: any, { addressId, userId }: SetDefaultAddressArgs): Promise<SetDefaultAddressResponse> => {
       try {
-        
         // Find the target address and verify ownership
         const targetAddress = await prisma.address.findFirst({
           where: {
@@ -1457,7 +1449,8 @@ const isValid = await comparePassword(password, user?.password || "");
           address: null,
         };
       }
-    },   
+    },
+
     createOrder: async (_: any, { userId, addressId, items }: any) => {
       const response = await prisma.order.create({
         data: {
@@ -1547,11 +1540,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!existingPost) {
-      //  throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       if (existingPost?.userId !== currentUserId) {
-      //  throw new ForbiddenError('You can only update your own posts');
+        // throw new ForbiddenError('You can only update your own posts');
       }
       
       await prisma.postTaggedUser.deleteMany({
@@ -1613,11 +1606,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!existingPost) {
-      //  throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       if (existingPost?.userId !== currentUserId) {
-     //   throw new ForbiddenError('You can only delete your own posts');
+        // throw new ForbiddenError('You can only delete your own posts');
       }
       
       await prisma.post.delete({
@@ -1669,11 +1662,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!existingComment) {
-      //  throw new UserInputError('Comment not found');
+        // throw new UserInputError('Comment not found');
       }
       
       if (existingComment?.userId !== currentUserId) {
-      //  throw new ForbiddenError('You can only update your own comments');
+        // throw new ForbiddenError('You can only update your own comments');
       }
       
       const comment = await prisma.comment.update({
@@ -1713,11 +1706,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!existingComment) {
-       // throw new UserInputError('Comment not found');
+        // throw new UserInputError('Comment not found');
       }
       
       if (existingComment?.userId !== currentUserId) {
-      //  throw new ForbiddenError('You can only delete your own comments');
+        // throw new ForbiddenError('You can only delete your own comments');
       }
       
       await prisma.comment.delete({
@@ -1735,7 +1728,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!post) {
-    //    throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       const existingLike = await prisma.like.findFirst({
@@ -1746,7 +1739,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (existingLike) {
-     //   throw new UserInputError('You already liked this post');
+        // throw new UserInputError('You already liked this post');
       }
       
       const like = await prisma.like.create({
@@ -1778,7 +1771,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!like) {
-     //   throw new UserInputError('You have not liked this post');
+        // throw new UserInputError('You have not liked this post');
       }
       
       await prisma.like.delete({
@@ -1796,7 +1789,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!comment) {
-     //   throw new UserInputError('Comment not found');
+        // throw new UserInputError('Comment not found');
       }
       
       const existingLike = await prisma.like.findFirst({
@@ -1807,7 +1800,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (existingLike) {
-     //   throw new UserInputError('You already liked this comment');
+        // throw new UserInputError('You already liked this comment');
       }
       
       const like = await prisma.like.create({
@@ -1840,7 +1833,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!like) {
-     //   throw new UserInputError('You have not liked this comment');
+        // throw new UserInputError('You have not liked this comment');
       }
       
       await prisma.like.delete({
@@ -1854,7 +1847,7 @@ const isValid = await comparePassword(password, user?.password || "");
       const currentUserId = getUserId(context);
       
       if (userId === currentUserId) {
-        //throw new UserInputError('You cannot follow yourself');
+        // throw new UserInputError('You cannot follow yourself');
       }
       
       const user = await prisma.user.findUnique({
@@ -1862,7 +1855,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!user) {
-      //  throw new UserInputError('User not found');
+        // throw new UserInputError('User not found');
       }
       
       const existingFollow = await prisma.follow.findFirst({
@@ -1873,7 +1866,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (existingFollow) {
-     //   throw new UserInputError('You are already following this user');
+        // throw new UserInputError('You are already following this user');
       }
       
       const follow = await prisma.follow.create({
@@ -1901,7 +1894,7 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!follow) {
-     //   throw new UserInputError('You are not following this user');
+        // throw new UserInputError('You are not following this user');
       }
       
       await prisma.follow.delete({
@@ -1920,11 +1913,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!post) {
-     //   throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       if (post?.userId !== currentUserId) {
-      //  throw new ForbiddenError('You can only tag users in your own posts');
+        // throw new ForbiddenError('You can only tag users in your own posts');
       }
       
       await prisma.postTaggedUser.createMany({
@@ -1980,11 +1973,11 @@ const isValid = await comparePassword(password, user?.password || "");
       });
       
       if (!post) {
-     //   throw new UserInputError('Post not found');
+        // throw new UserInputError('Post not found');
       }
       
       if (post?.userId !== currentUserId) {
-     //   throw new ForbiddenError('You can only modify tags in your own posts');
+        // throw new ForbiddenError('You can only modify tags in your own posts');
       }
       
       await prisma.postTaggedUser.deleteMany({
@@ -2133,6 +2126,7 @@ const isValid = await comparePassword(password, user?.password || "");
         where: { followerId: parent?.id }
       });
     },
+
     isFollowing: async (parent: any, _: any, context: any) => {
       const currentUserId = getUserId(context, false);
       
