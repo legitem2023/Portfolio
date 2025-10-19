@@ -2,8 +2,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../Redux/cartSlice';
-import { Product } from '../../../types';
-
+import { Product, Variant } from '../../../types';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -25,11 +24,40 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   // Memoize variants to prevent unnecessary recalculations
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
 
+  // Get the currently selected variant based on color and size
+  const selectedVariant = useMemo(() => {
+    return variants.find((variant: Variant) => 
+      variant.color === selectedColor && variant.size === selectedSize
+    );
+  }, [variants, selectedColor, selectedSize]);
+
+  // Get images for display - prioritize variant images
+  const additionalImages = useMemo(() => {
+    if (!product) return ['/NoImage.webp'];
+    
+    // Use selected variant images if available
+    if (selectedVariant?.images && selectedVariant.images.length > 0) {
+      return selectedVariant.images;
+    }
+    
+    // Fallback to all variant images
+    const variantImages = variants
+      ?.map((item: Variant) => item.images)
+      .filter(Boolean)
+      .flat() || [];
+    
+    return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
+  }, [product, variants, selectedVariant]);
+
+  // Update image when variant changes
+  useEffect(() => {
+    setSelectedImage(0); // Reset to first image when variant changes
+  }, [selectedVariant]);
+
   // Get unique sizes and colors with filtering logic
   const { uniqueSizes, uniqueColors, availableSizes, availableColors } = useMemo(() => {
-    // Use Array.from instead of spread operator to avoid downlevel iteration issues
-    const allSizes = Array.from(new Set(variants.map((item: any) => item.size).filter(Boolean)));
-    const allColors = Array.from(new Set(variants.map((item: any) => item.color).filter(Boolean)));
+    const allSizes = Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean)));
+    const allColors = Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean)));
 
     // Filter available options based on current selections
     let availableSizes = allSizes;
@@ -37,16 +65,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
     if (selectedColor) {
       availableSizes = Array.from(new Set(variants
-        .filter((item: any) => item.color === selectedColor)
-        .map((item: any) => item.size)
+        .filter((item: Variant) => item.color === selectedColor)
+        .map((item: Variant) => item.size)
         .filter(Boolean)
       ));
     }
 
     if (selectedSize) {
       availableColors = Array.from(new Set(variants
-        .filter((item: any) => item.size === selectedSize)
-        .map((item: any) => item.color)
+        .filter((item: Variant) => item.size === selectedSize)
+        .map((item: Variant) => item.color)
         .filter(Boolean)
       ));
     }
@@ -150,33 +178,23 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
-  // Get images for display
-  const additionalImages = useMemo(() => {
-    if (!product) return ['/NoImage.webp'];
-    
-    const variantImages = variants
-      ?.map((item: any) => item.images)
-      .filter(Boolean)
-      .flat() || [];
-    
-    return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
-  }, [product, variants]);
-
   const handleAddToCartClick = () => {
-    if (!product) return;
+    if (!product || !selectedVariant) return;
     
-    // In your QuickViewModal.tsx, find where you create the cartItem and update it:
-
-const cartItem = {
-  id:product.id,
-  userId: 'current-user-id', // Replace with actual user ID from your auth context
-  sku:product.sku,
-  quantity: quantity,
-  color: selectedColor,      // Make sure you have this variable
-  size: selectedSize,        // Make sure you have this variable
-};
-
-
+    // Create cart item with variant-specific data
+    const cartItem = {
+      id: selectedVariant.id, // Use variant ID instead of product ID
+      productId: product.id, // Keep reference to main product
+      userId: 'current-user-id', // Replace with actual user ID from your auth context
+      sku: selectedVariant.sku, // Use variant SKU
+      name: product.name,
+      price: selectedVariant.price || product.price, // Use variant price if available
+      image: additionalImages[0] || product.image,
+      quantity: quantity,
+      color: selectedColor,
+      size: selectedSize,
+      variant: selectedVariant // Include full variant data if needed
+    };
     
     dispatch(addToCart(cartItem));
     
@@ -192,7 +210,7 @@ const cartItem = {
   };
 
   if (!isVisible && !isOpen) return null;
-console.log(quantity);
+
   return (
     <div 
       className={`fixed inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
@@ -273,6 +291,15 @@ console.log(quantity);
           <div className="py-2 md:py-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{product?.name || 'Product Name'}</h2>
             
+            {/* Variant-specific details */}
+            {selectedVariant && (
+              <div className="mb-3 text-sm text-gray-600">
+                {selectedColor && <span>Color: {selectedColor}</span>}
+                {selectedSize && <span className="ml-2">Size: {selectedSize}</span>}
+                {selectedVariant.sku && <div className="mt-1">SKU: {selectedVariant.sku}</div>}
+              </div>
+            )}
+            
             {/* Rating */}
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex">
@@ -290,16 +317,18 @@ console.log(quantity);
               <span className="ml-2 text-xs md:text-sm text-gray-600">({product?.reviewCount || 0} reviews)</span>
             </div>
 
-            {/* Price */}
+            {/* Price - Use variant price if available */}
             <div className="mb-4 md:mb-6">
               <div className="flex items-center space-x-2">
-                <span className="text-xl md:text-2xl font-bold text-gray-900">${product?.price.toFixed(2) || '0.00'}</span>
-                {product?.originalPrice && product.originalPrice > (product.price || 0) && (
+                <span className="text-xl md:text-2xl font-bold text-gray-900">
+                  ${(selectedVariant?.price || product?.price || 0).toFixed(2)}
+                </span>
+                {product?.originalPrice && product.originalPrice > (selectedVariant?.price || product.price || 0) && (
                   <span className="text-lg text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
                 )}
                 {product?.onSale && (
                   <span className="px-2 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-md">
-                    Save ${(product.originalPrice! - product.price).toFixed(2)}
+                    Save ${(product.originalPrice! - (selectedVariant?.price || product.price)).toFixed(2)}
                   </span>
                 )}
               </div>
@@ -385,9 +414,14 @@ console.log(quantity);
             <div className="flex space-x-3 md:space-x-4 mb-4 md:mb-0">
               <button 
                 onClick={handleAddToCartClick}
-                className="flex-1 bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base"
+                disabled={!selectedVariant}
+                className={`flex-1 font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base ${
+                  selectedVariant 
+                    ? 'bg-amber-600 hover:bg-amber-700 text-white' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
               >
-                Add to Cart
+                {selectedVariant ? 'Add to Cart' : 'Select Options'}
               </button>
               <button className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
