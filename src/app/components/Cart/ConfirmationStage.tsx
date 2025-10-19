@@ -162,7 +162,9 @@ const ConfirmationStage = ({
                             {item.name}
                           </h3>
                         </div>
-                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                        <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.color}</p>
+                                                <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.size}</p>
+
                         <p className="mt-1 text-sm font-medium text-gray-900">${item.price.toFixed(2)} each</p>
                       </div>
 
