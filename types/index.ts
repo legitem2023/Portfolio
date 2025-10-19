@@ -55,7 +55,7 @@ export interface Product {
 }
 
 export interface Variant {
-    id: string;
+    id: number;
     sku: string;
     size: string;
     color: string;
