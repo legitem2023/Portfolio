@@ -54,6 +54,16 @@ export interface Product {
   }[];
 }
 
+export interface Variants {
+    id: string;
+    sku: string;
+    size: string;
+    color: string;
+    price?: number;
+    images?: string[];
+    stock?: number;
+  };
+
 // FIXED: Single CartItem definition that extends Product
 export interface CartItem {
   id: string;
