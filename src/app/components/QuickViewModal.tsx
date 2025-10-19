@@ -40,7 +40,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       return selectedVariant.images;
     }
     
-    // Fallback to all variant images
+    // Fallback to all variant images or product image
     const variantImages = variants
       ?.map((item: Variant) => item.images)
       .filter(Boolean)
@@ -54,10 +54,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     setSelectedImage(0); // Reset to first image when variant changes
   }, [selectedVariant]);
 
-  // Get unique sizes and colors with filtering logic
+  // Get unique sizes and colors with filtering logic - PROPERLY TYPED
   const { uniqueSizes, uniqueColors, availableSizes, availableColors } = useMemo(() => {
-    const allSizes = Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean)));
-    const allColors = Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean)));
+    const allSizes = Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean))) as string[];
+    const allColors = Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean))) as string[];
 
     // Filter available options based on current selections
     let availableSizes = allSizes;
@@ -68,7 +68,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         .filter((item: Variant) => item.color === selectedColor)
         .map((item: Variant) => item.size)
         .filter(Boolean)
-      ));
+      )) as string[];
     }
 
     if (selectedSize) {
@@ -76,7 +76,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         .filter((item: Variant) => item.size === selectedSize)
         .map((item: Variant) => item.color)
         .filter(Boolean)
-      ));
+      )) as string[];
     }
 
     return {
@@ -86,6 +86,50 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       availableColors
     };
   }, [variants, selectedColor, selectedSize]);
+
+  // Get color display data (name and actual color value)
+  const colorOptions = useMemo(() => {
+    return availableColors.map(color => {
+      // If color is a CSS color value (hex, rgb, named color), use it directly
+      const isCssColor = /^(#|rgb|hsl|currentColor|transparent|[a-z]+)$/i.test(color);
+      
+      return {
+        name: color,
+        displayColor: isCssColor ? color : getColorValue(color), // Function to map color names to values
+        isCssColor
+      };
+    });
+  }, [availableColors]);
+
+  // Helper function to map color names to actual color values
+  const getColorValue = (colorName: string): string => {
+    const colorMap: { [key: string]: string } = {
+      'black': '#000000',
+      'white': '#FFFFFF',
+      'red': '#FF0000',
+      'blue': '#0000FF',
+      'green': '#008000',
+      'yellow': '#FFFF00',
+      'purple': '#800080',
+      'pink': '#FFC0CB',
+      'orange': '#FFA500',
+      'gray': '#808080',
+      'brown': '#A52A2A',
+      'navy': '#000080',
+      'teal': '#008080',
+      'maroon': '#800000',
+      'olive': '#808000',
+      'silver': '#C0C0C0',
+      'gold': '#FFD700',
+      'beige': '#F5F5DC',
+      'burgundy': '#800020',
+      'charcoal': '#36454F',
+      'cream': '#FFFDD0',
+      'khaki': '#F0E68C',
+    };
+    
+    return colorMap[colorName.toLowerCase()] || '#CCCCCC'; // Default fallback
+  };
 
   // Auto-select first available option when filters change
   useEffect(() => {
@@ -174,9 +218,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       onClose();
     }
   }, [onClose]);
- 
+
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+
+  // Handle color selection
+  const handleColorSelect = (colorName: string) => {
+    setSelectedColor(colorName);
+  };
+
+  // Handle size selection
+  const handleSizeSelect = (size: string) => {
+    setSelectedSize(size);
+  };
 
   const handleAddToCartClick = () => {
     if (!product || !selectedVariant) return;
@@ -339,47 +393,77 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
             </p>
 
-            {/* Color Selection */}
-            {availableColors.length > 0 && (
+            {/* Color Selection - FIXED */}
+            {colorOptions.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  Color: {selectedColor}
-                  {selectedSize && ` (Available for size ${selectedSize})`}
+                  Color: <span className="font-normal">{selectedColor}</span>
+                  {selectedSize && <span className="text-xs text-gray-500 ml-1">(Available for size {selectedSize})</span>}
                 </h3>
                 <div className="flex space-x-2 flex-wrap">
-                  {availableColors.map((color, index) => (
+                  {colorOptions.map((colorOption, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full border-2 ${selectedColor === color ? 'border-amber-500 ring-2 ring-amber-200' : 'border-gray-300'} mb-2`}
-                      style={{ backgroundColor: color.toLowerCase() }}
-                      aria-label={`Color: ${color}`}
-                      title={color}
-                    />
+                      onClick={() => handleColorSelect(colorOption.name)}
+                      className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${
+                        selectedColor === colorOption.name 
+                          ? 'border-amber-500 ring-2 ring-amber-200' 
+                          : 'border-gray-300 hover:border-gray-400'
+                      } mb-2 flex items-center justify-center transition-all`}
+                      style={{ 
+                        backgroundColor: colorOption.isCssColor ? colorOption.displayColor : undefined 
+                      }}
+                      aria-label={`Color: ${colorOption.name}`}
+                      title={colorOption.name}
+                    >
+                      {/* For non-CSS colors, show the first letter */}
+                      {!colorOption.isCssColor && (
+                        <span className="text-xs font-medium text-gray-700">
+                          {colorOption.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                      
+                      {/* Selected indicator */}
+                      {selectedColor === colorOption.name && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Size Selection */}
+            {/* Size Selection - FIXED */}
             {availableSizes.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  Size
-                  {selectedColor && ` (Available for ${selectedColor})`}
+                  Size: <span className="font-normal">{selectedSize}</span>
+                  {selectedColor && <span className="text-xs text-gray-500 ml-1">(Available for {selectedColor})</span>}
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {availableSizes.map((size) => (
                     <button
                       key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-3 py-1.5 text-xs md:px-4 md:py-2 md:text-sm border rounded-md transition-all ${
+                      onClick={() => handleSizeSelect(size)}
+                      className={`relative px-4 py-2 text-sm border rounded-md transition-all min-w-12 ${
                         selectedSize === size 
                           ? 'border-amber-500 bg-amber-50 text-amber-700 font-semibold' 
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
                       }`}
                     >
                       {size}
+                      {/* Selected indicator for sizes */}
+                      {selectedSize === size && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -393,6 +477,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 <button
                   onClick={decrementQuantity}
                   className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100 transition-colors"
+                  disabled={quantity <= 1}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
