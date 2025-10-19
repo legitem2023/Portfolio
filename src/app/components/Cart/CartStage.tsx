@@ -35,7 +35,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               <li key={item.id} className="flex py-6">
                 <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                   <img
-                    src={item.image || '/NoImage.webp'}
+                    src={item.images[0] || '/NoImage.webp'}
                     alt={item.name}
                     className="h-full w-full object-cover object-center"
                   />
