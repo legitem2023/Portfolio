@@ -29,13 +29,15 @@ export interface ShippingInfo {
 
 
 export interface CartItem {
+  id: number;
+  images?:string[];
+  name:string;
   userId: string;
-  id: string | number;
-  name: string;
-  description: string;
-  price: number;
+  sku: string;
   quantity: number;
-  image: string;
+  color: string;
+  size: string;
+  price:number;
 }
 
 
