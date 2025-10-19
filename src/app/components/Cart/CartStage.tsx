@@ -10,7 +10,7 @@ interface CartStageProps {
   onQuantityChange: (id: string | number, quantity: number) => void;
   onCheckout: () => void;
 }
-
+console.log(cartItems);
 const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
@@ -47,7 +47,6 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                       <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
                       <p className="ml-4 text-indigo-700">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="mt-1 text-sm text-indigo-600">{item.color}</p>
                     <p className="mt-1 text-sm text-indigo-600">{item.size}</p>
 
                   </div>
