@@ -55,8 +55,9 @@ export interface Product {
 }
 
 // FIXED: Single CartItem definition that extends Product
-export interface CartItem extends Product {
+export interface CartItem {
   userId: string;
+  sku: string;
   quantity: number;
   color: string;
   size: string;
