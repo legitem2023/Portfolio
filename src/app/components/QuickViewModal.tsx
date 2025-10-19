@@ -168,6 +168,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     // In your QuickViewModal.tsx, find where you create the cartItem and update it:
 
 const cartItem = {
+  id:product.id,
   userId: 'current-user-id', // Replace with actual user ID from your auth context
   sku:product.sku,
   quantity: quantity,
