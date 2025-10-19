@@ -55,7 +55,7 @@ export interface Product {
 }
 
 export interface Variant {
-    id: number;
+    id: string;
     sku: string;
     size: string;
     color: string;
@@ -66,7 +66,7 @@ export interface Variant {
 
 // FIXED: Single CartItem definition that extends Product
 export interface CartItem {
-  id: string;
+  id: number;
   images?:string[];
   name:string;
   userId: string;
