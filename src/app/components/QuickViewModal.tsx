@@ -176,7 +176,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       };
 
       // Validate required fields before dispatching
-      if (!cartItem.id || !cartItem.productId) {
+      if (!cartItem.id) {
         console.error('Missing required cart item fields:', cartItem);
         return;
       }
