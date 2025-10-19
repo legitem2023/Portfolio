@@ -54,95 +54,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     setSelectedImage(0); // Reset to first image when variant changes
   }, [selectedVariant]);
 
-  // Get unique sizes and colors with filtering logic - PROPERLY TYPED
-  const { uniqueSizes, uniqueColors, availableSizes, availableColors } = useMemo(() => {
-    const allSizes = Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean))) as string[];
-    const allColors = Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean))) as string[];
+  // Get unique sizes and colors directly from variants
+  const uniqueSizes = useMemo(() => 
+    Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean))) as string[], 
+    [variants]
+  );
 
-    // Filter available options based on current selections
-    let availableSizes = allSizes;
-    let availableColors = allColors;
-
-    if (selectedColor) {
-      availableSizes = Array.from(new Set(variants
-        .filter((item: Variant) => item.color === selectedColor)
-        .map((item: Variant) => item.size)
-        .filter(Boolean)
-      )) as string[];
-    }
-
-    if (selectedSize) {
-      availableColors = Array.from(new Set(variants
-        .filter((item: Variant) => item.size === selectedSize)
-        .map((item: Variant) => item.color)
-        .filter(Boolean)
-      )) as string[];
-    }
-
-    return {
-      uniqueSizes: allSizes,
-      uniqueColors: allColors,
-      availableSizes,
-      availableColors
-    };
-  }, [variants, selectedColor, selectedSize]);
-
-  // Get color display data (name and actual color value)
-  const colorOptions = useMemo(() => {
-    return availableColors.map(color => {
-      // If color is a CSS color value (hex, rgb, named color), use it directly
-      const isCssColor = /^(#|rgb|hsl|currentColor|transparent|[a-z]+)$/i.test(color);
-      
-      return {
-        name: color,
-        displayColor: isCssColor ? color : getColorValue(color), // Function to map color names to values
-        isCssColor
-      };
-    });
-  }, [availableColors]);
-
-  // Helper function to map color names to actual color values
-  const getColorValue = (colorName: string): string => {
-    const colorMap: { [key: string]: string } = {
-      'black': '#000000',
-      'white': '#FFFFFF',
-      'red': '#FF0000',
-      'blue': '#0000FF',
-      'green': '#008000',
-      'yellow': '#FFFF00',
-      'purple': '#800080',
-      'pink': '#FFC0CB',
-      'orange': '#FFA500',
-      'gray': '#808080',
-      'brown': '#A52A2A',
-      'navy': '#000080',
-      'teal': '#008080',
-      'maroon': '#800000',
-      'olive': '#808000',
-      'silver': '#C0C0C0',
-      'gold': '#FFD700',
-      'beige': '#F5F5DC',
-      'burgundy': '#800020',
-      'charcoal': '#36454F',
-      'cream': '#FFFDD0',
-      'khaki': '#F0E68C',
-    };
-    
-    return colorMap[colorName.toLowerCase()] || '#CCCCCC'; // Default fallback
-  };
-
-  // Auto-select first available option when filters change
-  useEffect(() => {
-    if (availableColors.length > 0 && (!selectedColor || !availableColors.includes(selectedColor))) {
-      setSelectedColor(availableColors[0]);
-    }
-  }, [availableColors, selectedColor]);
-
-  useEffect(() => {
-    if (availableSizes.length > 0 && (!selectedSize || !availableSizes.includes(selectedSize))) {
-      setSelectedSize(availableSizes[0]);
-    }
-  }, [availableSizes, selectedSize]);
+  const uniqueColors = useMemo(() => 
+    Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean))) as string[], 
+    [variants]
+  );
 
   // Initialize selections when product changes
   useEffect(() => {
@@ -393,77 +314,48 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
             </p>
 
-            {/* Color Selection - FIXED */}
-            {colorOptions.length > 0 && (
+            {/* Color Selection - SIMPLIFIED */}
+            {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
                   Color: <span className="font-normal">{selectedColor}</span>
-                  {selectedSize && <span className="text-xs text-gray-500 ml-1">(Available for size {selectedSize})</span>}
                 </h3>
                 <div className="flex space-x-2 flex-wrap">
-                  {colorOptions.map((colorOption, index) => (
+                  {uniqueColors.map((color, index) => (
                     <button
                       key={index}
-                      onClick={() => handleColorSelect(colorOption.name)}
-                      className={`relative w-10 h-10 md:w-12 md:h-12 rounded-full border-2 ${
-                        selectedColor === colorOption.name 
-                          ? 'border-amber-500 ring-2 ring-amber-200' 
-                          : 'border-gray-300 hover:border-gray-400'
-                      } mb-2 flex items-center justify-center transition-all`}
-                      style={{ 
-                        backgroundColor: colorOption.isCssColor ? colorOption.displayColor : undefined 
-                      }}
-                      aria-label={`Color: ${colorOption.name}`}
-                      title={colorOption.name}
+                      onClick={() => handleColorSelect(color)}
+                      className={`px-4 py-2 text-sm border rounded-md transition-all ${
+                        selectedColor === color 
+                          ? 'border-amber-500 bg-amber-50 text-amber-700 font-semibold' 
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                      }`}
                     >
-                      {/* For non-CSS colors, show the first letter */}
-                      {!colorOption.isCssColor && (
-                        <span className="text-xs font-medium text-gray-700">
-                          {colorOption.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                      
-                      {/* Selected indicator */}
-                      {selectedColor === colorOption.name && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
-                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
+                      {color}
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Size Selection - FIXED */}
-            {availableSizes.length > 0 && (
+            {/* Size Selection - SIMPLIFIED */}
+            {uniqueSizes.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
                   Size: <span className="font-normal">{selectedSize}</span>
-                  {selectedColor && <span className="text-xs text-gray-500 ml-1">(Available for {selectedColor})</span>}
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {availableSizes.map((size) => (
+                  {uniqueSizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => handleSizeSelect(size)}
-                      className={`relative px-4 py-2 text-sm border rounded-md transition-all min-w-12 ${
+                      className={`px-4 py-2 text-sm border rounded-md transition-all ${
                         selectedSize === size 
                           ? 'border-amber-500 bg-amber-50 text-amber-700 font-semibold' 
-                          : 'border-gray-300 text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                          : 'border-gray-300 text-gray-700 hover:border-gray-400'
                       }`}
                     >
                       {size}
-                      {/* Selected indicator for sizes */}
-                      {selectedSize === size && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
-                          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
                     </button>
                   ))}
                 </div>
