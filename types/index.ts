@@ -54,7 +54,7 @@ export interface Product {
   }[];
 }
 
-export interface Variants {
+export interface Variant {
     id: string;
     sku: string;
     size: string;
