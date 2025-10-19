@@ -148,10 +148,10 @@ const ConfirmationStage = ({
                 <li key={item.id} className="flex py-6 sm:py-10">
                   <div className="flex-shrink-0">
                     <img
-                      src={item.image || '/NoImage.webp'}
-                      alt={item.name}
-                      className="w-24 h-24 rounded-lg object-center object-cover sm:w-32 sm:h-32 border border-gray-200"
-                    />
+  src={item.images?.[0] ?? '/NoImage.webp'}
+  alt={item.name}
+  className="h-full w-full object-cover object-center"
+/>
                   </div>
 
                   <div className="ml-4 flex-1 flex flex-col justify-between sm:ml-6">
