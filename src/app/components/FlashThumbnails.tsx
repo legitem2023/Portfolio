@@ -95,20 +95,15 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
 <Swiper
   spaceBetween={10}
   slidesPerView={1}
-  autoplay={{
-    delay: 3000,
-    disableOnInteraction: false,
-    pauseOnMouseEnter: true,
-  }}
   pagination={{
     clickable: true,
     bulletClass: 'swiper-pagination-bullet',
     bulletActiveClass: 'swiper-pagination-bullet-active',
     renderBullet: function (index, className) {
-      return `<span class="${className} !w-2 !h-2 !bg-white !opacity-70"></span>`;
+      return `<span class="${className} !w-2 !h-2 !bg-indigo-200 !opacity-70"></span>`;
     }
   }}
-  modules={[Autoplay, Pagination]}
+  modules={[Pagination]}
   className="h-full"
 >
   {product.variants
