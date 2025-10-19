@@ -45,8 +45,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                   <div>
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
-                      <p className="ml-4 text-indigo-700">${(item?.price * item?.quantity).toFixed(2)}</p>
-                    </div>
+<p className="ml-4 text-indigo-700">${((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</p>                    </div>
                        <p className={`mt-1 text-sm text-indigo-600 h-[40px] w-[40px] bg-[${item.color}`}>{item.color}</p>
                        <p className="mt-1 text-sm text-indigo-600">{item.size}</p>
 
