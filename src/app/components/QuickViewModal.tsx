@@ -25,12 +25,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
 
   // Get the currently selected variant based on color and size
-  const selectedVariant = useMemo(() => {
-    return variants.find((variant: Variant) => 
-      variant?.color === selectedColor && variant?.size === selectedSize
-    );
-  }, [variants, selectedColor, selectedSize]);
+  
+const selectedVariant = useMemo(() => {
+  return variants.find((variant) => 
+    variant?.color === selectedColor && variant?.size === selectedSize
+  ) as Variant | undefined;
+}, [variants, selectedColor, selectedSize]);
 
+
+
+  
   // Get images for display - prioritize variant images
   const additionalImages = useMemo(() => {
     if (!product) return ['/NoImage.webp'];
