@@ -27,7 +27,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   // Get the currently selected variant based on color and size
   const selectedVariant = useMemo(() => {
     return variants.find((variant: Variant) => 
-      variant.color === selectedColor && variant.size === selectedSize
+      variant?.color === selectedColor && variant?.size === selectedSize
     );
   }, [variants, selectedColor, selectedSize]);
 
@@ -42,7 +42,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     
     // Fallback to all variant images or product image
     const variantImages = variants
-      ?.map((item: Variant) => item.images)
+      ?.map((item: Variant) => item?.images)
       .filter(Boolean)
       .flat() || [];
     
@@ -54,16 +54,20 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     setSelectedImage(0); // Reset to first image when variant changes
   }, [selectedVariant]);
 
-  // Get unique sizes and colors directly from variants
-  const uniqueSizes = useMemo(() => 
-    Array.from(new Set(variants.map((item: Variant) => item.size).filter(Boolean))) as string[], 
-    [variants]
-  );
+  // Get unique sizes and colors directly from variants with safety checks
+  const uniqueSizes = useMemo(() => {
+    const sizes = variants
+      .map((item: Variant) => item?.size)
+      .filter((size): size is string => Boolean(size) && typeof size === 'string');
+    return Array.from(new Set(sizes));
+  }, [variants]);
 
-  const uniqueColors = useMemo(() => 
-    Array.from(new Set(variants.map((item: Variant) => item.color).filter(Boolean))) as string[], 
-    [variants]
-  );
+  const uniqueColors = useMemo(() => {
+    const colors = variants
+      .map((item: Variant) => item?.color)
+      .filter((color): color is string => Boolean(color) && typeof color === 'string');
+    return Array.from(new Set(colors));
+  }, [variants]);
 
   // Initialize selections when product changes
   useEffect(() => {
@@ -156,32 +160,62 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const handleAddToCartClick = () => {
     if (!product || !selectedVariant) return;
     
-    // Create cart item with variant-specific data
-    const cartItem = {
-      id: selectedVariant.id, // Use variant ID instead of product ID
-      productId: product.id, // Keep reference to main product
-      userId: 'current-user-id', // Replace with actual user ID from your auth context
-      sku: selectedVariant.sku, // Use variant SKU
-      name: product.name,
-      price: selectedVariant.price || product.price, // Use variant price if available
-      image: additionalImages[0] || product.image,
-      quantity: quantity,
-      color: selectedColor,
-      size: selectedSize,
-      variant: selectedVariant // Include full variant data if needed
-    };
-    
-    dispatch(addToCart(cartItem));
-    
-    if (onAddToCart) {
-      onAddToCart(product, {
-        color: selectedColor,
-        size: selectedSize,
-        quantity: quantity
-      });
+    try {
+      // Create cart item with variant-specific data and proper error handling
+      const cartItem = {
+        id: selectedVariant.id?.toString() || `${product.id}-${selectedColor}-${selectedSize}`,
+        productId: product.id?.toString() || 'unknown',
+        userId: 'current-user-id', // Replace with actual user ID from your auth context
+        sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
+        name: product.name || 'Unknown Product',
+        price: selectedVariant.price || product.price || 0,
+        image: additionalImages[0] || product.image || '/NoImage.webp',
+        quantity: quantity,
+        color: selectedColor || 'Unknown',
+        size: selectedSize || 'Unknown',
+        variant: selectedVariant
+      };
+
+      // Validate required fields before dispatching
+      if (!cartItem.id || !cartItem.productId) {
+        console.error('Missing required cart item fields:', cartItem);
+        return;
+      }
+      
+      dispatch(addToCart(cartItem));
+      
+      if (onAddToCart) {
+        onAddToCart(product, {
+          color: selectedColor,
+          size: selectedSize,
+          quantity: quantity
+        });
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      // You can show a user-friendly error message here
     }
-    
-    onClose();
+  };
+
+  // Safe price calculation
+  const getDisplayPrice = () => {
+    const price = selectedVariant?.price || product?.price || 0;
+    return typeof price === 'number' ? price.toFixed(2) : '0.00';
+  };
+
+  // Safe original price calculation
+  const getOriginalPrice = () => {
+    const originalPrice = product?.originalPrice;
+    return typeof originalPrice === 'number' ? originalPrice.toFixed(2) : '0.00';
+  };
+
+  // Calculate savings safely
+  const getSavings = () => {
+    const currentPrice = selectedVariant?.price || product?.price || 0;
+    const originalPrice = product?.originalPrice || currentPrice;
+    return (originalPrice - currentPrice).toFixed(2);
   };
 
   if (!isVisible && !isOpen) return null;
@@ -229,6 +263,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 src={additionalImages[selectedImage]}
                 alt={product?.name || 'Product'}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = '/NoImage.webp';
+                }}
               />
               
               {/* Sale/New Badge */}
@@ -256,6 +293,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                     src={image}
                     alt={`${product?.name || 'Product'} view ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/NoImage.webp';
+                    }}
                   />
                 </button>
               ))}
@@ -296,14 +336,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             <div className="mb-4 md:mb-6">
               <div className="flex items-center space-x-2">
                 <span className="text-xl md:text-2xl font-bold text-gray-900">
-                  ${(selectedVariant?.price || product?.price || 0).toFixed(2)}
+                  ${getDisplayPrice()}
                 </span>
                 {product?.originalPrice && product.originalPrice > (selectedVariant?.price || product.price || 0) && (
-                  <span className="text-lg text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                  <span className="text-lg text-gray-500 line-through">${getOriginalPrice()}</span>
                 )}
                 {product?.onSale && (
                   <span className="px-2 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-md">
-                    Save ${(product.originalPrice! - (selectedVariant?.price || product.price)).toFixed(2)}
+                    Save ${getSavings()}
                   </span>
                 )}
               </div>
@@ -314,7 +354,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
             </p>
 
-            {/* Color Selection - SIMPLIFIED */}
+            {/* Color Selection */}
             {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
@@ -338,7 +378,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               </div>
             )}
 
-            {/* Size Selection - SIMPLIFIED */}
+            {/* Size Selection */}
             {uniqueSizes.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
