@@ -10,7 +10,7 @@ interface CartStageProps {
   onQuantityChange: (id: string | number, quantity: number) => void;
   onCheckout: () => void;
 }
-console.log(cartItems);
+
 const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
@@ -23,7 +23,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
       </div>
     );
   }
-  
+  console.log(cartItems);
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-2 sm:px-2 lg:px-3">
