@@ -6,6 +6,11 @@ import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 import { showToast } from '../../../utils/toastify'
 import { Product } from '../../../types';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination, Autoplay } from 'swiper/modules';
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/pagination';
 
 interface FlashThumbnailsProps {
   products: Product[];
@@ -86,13 +91,64 @@ const FlashThumbnails: React.FC<FlashThumbnailsProps> = ({ products }) => {
               
               {/* Product Image */}
               <div className="relative overflow-hidden bg-gray-100">
-                <Image
-                  height="200"
-                  width="200"
-                  src={product.image || '/NoImage.webp'} 
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                                { product.variants.length > 0?(               
+<Swiper
+  spaceBetween={10}
+  slidesPerView={1}
+  autoplay={{
+    delay: 3000,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  }}
+  pagination={{
+    clickable: true,
+    bulletClass: 'swiper-pagination-bullet',
+    bulletActiveClass: 'swiper-pagination-bullet-active',
+    renderBullet: function (index, className) {
+      return `<span class="${className} !w-2 !h-2 !bg-white !opacity-70"></span>`;
+    }
+  }}
+  modules={[Autoplay, Pagination]}
+  className="h-full"
+>
+  {product.variants
+    .filter((variant: any) => variant.sku === product.sku)
+    .flatMap((variant: any) => 
+      variant.images.length > 0?variant.images?.map((image: string, index: number) => ({
+        image,
+        key: `${variant.sku}-${index}`
+      })):(<SwiperSlide>
+        <Image
+          height="400"
+          width="400"
+          src={'/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </SwiperSlide>) || []
+    )
+    .map(({ image, key }) => (
+      <SwiperSlide key={key}>
+        <Image
+          height="400"
+          width="400"
+          src={image || '/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      </SwiperSlide>
+    ))
+  }
+</Swiper>):(
+        <Image
+          height="400"
+          width="400"
+          src={'/NoImage.webp'}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+)
+            }
                 
                 {/* Quick View Button */}
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
