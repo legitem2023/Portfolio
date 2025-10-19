@@ -72,9 +72,9 @@ export interface CartItem {
   userId: string;
   sku: string;
   quantity: number;
-  color: string;
-  size: string;
-  price:number;
+  color?: string;
+  size?: string;
+  price?:number;
 }
 
 export interface Post {
