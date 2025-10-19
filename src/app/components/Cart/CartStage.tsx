@@ -35,20 +35,28 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               <li key={item.id} className="flex py-6">
                 <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                   <img
-  src={item.images?.[0] || '/NoImage.webp'}
-  alt={item.name}
-  className="h-full w-full object-cover object-center"
-/>
+                    src={item.images?.[0] || '/NoImage.webp'}
+                    alt={item.name}
+                    className="h-full w-full object-cover object-center"
+                  />
                 </div>
 
                 <div className="ml-4 flex flex-1 flex-col">
                   <div>
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
-<p className="ml-4 text-indigo-700">${((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</p>                    </div>
-                       <p className={`mt-1 text-sm text-indigo-600 h-[40px] w-[40px] bg-[${item.color}`}>{item.color}</p>
-                       <p className="mt-1 text-sm text-indigo-600">{item.size}</p>
-
+                      <p className="ml-4 text-indigo-700">${((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</p>
+                    </div>
+                    <div className="mt-1 flex items-center space-x-4">
+                      <div 
+                        className="h-6 w-6 rounded-full border border-gray-300 shadow-sm"
+                        style={{
+                          backgroundColor: item.color || '#cccccc'
+                        }}
+                        title={item.color}
+                      />
+                      <p className="text-sm text-indigo-600">{item.size}</p>
+                    </div>
                   </div>
                   <div className="flex flex-1 items-end justify-between text-sm">
                     <div className="flex items-center space-x-2">
