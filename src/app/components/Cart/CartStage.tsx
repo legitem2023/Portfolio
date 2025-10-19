@@ -47,7 +47,9 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                       <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
                       <p className="ml-4 text-indigo-700">${(item.price * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="mt-1 text-sm text-indigo-600">{item.description}</p>
+                    <p className="mt-1 text-sm text-indigo-600">{item.color}</p>
+                    <p className="mt-1 text-sm text-indigo-600">{item.size}</p>
+
                   </div>
                   <div className="flex flex-1 items-end justify-between text-sm">
                     <div className="flex items-center space-x-2">
