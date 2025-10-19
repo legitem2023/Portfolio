@@ -59,7 +59,7 @@ export interface Variant {
     sku: string;
     size: string;
     color: string;
-    price: number;
+    price?: number;
     images?: string[];
     stock?: number;
   };
