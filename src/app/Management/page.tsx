@@ -37,7 +37,7 @@ export default function ManagementDashboard() {
 
         const payload = await decryptToken(token, secret.toString());
         setUserId(payload.userId);
-        
+        console.log(payload.role);
       } catch (err) {
         console.error('Error getting role:', err);
       }
