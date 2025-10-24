@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/navigation';
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from '../components/graphql/query';
 import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
@@ -14,7 +15,10 @@ import UsersPage from './components/Users/UsersPage';
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('products');
   const [userId, setUserId] = useState("");
+  const [userRole, setUserRole] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const [products, setProducts] = useState<Product[]>([]);
@@ -23,32 +27,57 @@ export default function ManagementDashboard() {
   useEffect(() => {
     const getRole = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/protected', {
           credentials: 'include'
         });
         
+        // Redirect to login if unauthorized (no active user)
         if (response.status === 401) {
-          throw new Error('Unauthorized');
+          router.push('./Login');
+          return;
+        }
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
         }
         
         const data = await response.json();
         const token = data?.user;
+        
+        if (!token) {
+          router.push('./Login');
+          return;
+        }
+        
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
         const payload = await decryptToken(token, secret.toString());
+        
+        // Check if user role is admin or manager
+        if (payload.role !== 'admin' && payload.role !== 'manager') {
+          router.push('./');
+          return;
+        }
+        
         setUserId(payload.userId);
+        setUserRole(payload.role);
         console.log(payload.role);
+        
       } catch (err) {
         console.error('Error getting role:', err);
+        router.push('./Login');
+      } finally {
+        setIsLoading(false);
       }
     };
     getRole();
-  }, []);
+  }, [router]);
 
   const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS,{
     variables :{
       userId:userId
-    }
+    },
+    skip: !userId // Skip query until userId is available
   });
   
   useEffect(() => {
@@ -181,11 +210,29 @@ export default function ManagementDashboard() {
           handleCategorySubmit={handleCategorySubmit}
         />;
       case 'users':
+        // Optionally, you can add additional role-based restrictions here
+        if (userRole !== 'admin') {
+          return <div className="p-4">Access denied. Admin privileges required.</div>;
+        }
         return <UsersPage/>;
       default:
         return <div>Select a tab</div>;
     }
   };
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render anything if redirecting
+  if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
+    return null;
+  }
 
   if (categoryLoading && productLoading) return <div>Category Loading...</div>;
 
@@ -204,6 +251,7 @@ export default function ManagementDashboard() {
         setActiveTab={setActiveTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        userRole={userRole} // You might want to pass userRole to Sidebar for conditional rendering
       />
       
       <div className="md:pl-64 flex flex-col flex-1">
@@ -213,4 +261,4 @@ export default function ManagementDashboard() {
       </div>
     </div>
   );
-      }
+        }
