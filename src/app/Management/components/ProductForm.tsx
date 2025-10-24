@@ -172,7 +172,7 @@ export default function ProductForm({
           <div className="flex items-center space-x-2">
             <input
               type="color"
-              className="w-12 h-10 border border-gray-300 rounded-md cursor-pointer"
+              className="border border-gray-300 rounded-md cursor-pointer"
               value={newProduct.color || '#000000'}
               onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
             />
