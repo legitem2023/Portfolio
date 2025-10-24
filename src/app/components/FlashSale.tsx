@@ -9,6 +9,7 @@ import {
   Gift,
   Sparkles
 } from 'lucide-react';
+
 interface ProductsResponse {
   products: {
     items: any[];
@@ -22,7 +23,8 @@ const FlashSale: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [sortBy, setSortBy] = useState('Sort by: Featured');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [itemsToFetch, setItemsToFetch] = useState(12); // Track how many items to fetch
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   
@@ -54,6 +56,12 @@ const FlashSale: React.FC = () => {
     };
   }, [searchTerm]);
 
+  // Reset products when filters change
+  useEffect(() => {
+    setAllProducts([]);
+    setHasMore(true);
+  }, [debouncedSearch, categoryFilter, sortBy]);
+
   // Memoize query variables to prevent unnecessary re-renders
   const queryVariables = React.useMemo(() => ({
     search: debouncedSearch,
@@ -74,34 +82,33 @@ const FlashSale: React.FC = () => {
   // Check if we're fetching more products (pagination)
   const isFetchingMore = networkStatus === NetworkStatus.fetchMore;
 
-  const products = data?.products?.items || [];
-  const hasMore = data?.products?.hasMore || false;
+  // Update products when new data is received
+  useEffect(() => {
+    if (data?.products) {
+      if (isRefetching) {
+        // Replace products when filters change
+        setAllProducts(data.products.items);
+      } else if (data.products.items.length > 0) {
+        // Append products when loading more
+        setAllProducts(prev => {
+          // Avoid duplicates by checking if we're at the initial load
+          const isInitialLoad = prev.length === 0;
+          return isInitialLoad ? data.products.items : [...prev, ...data.products.items];
+        });
+      }
+      setHasMore(data.products.hasMore);
+    }
+  }, [data, isRefetching]);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMore && !isFetchingMore) {
-      // Set the number of items we expect to fetch
-      setItemsToFetch(queryVariables.limit);
-      
-      fetchMore({
-        variables: {
-          ...queryVariables,
-          cursor: data.products.nextCursor,
-        },
-        updateQuery: (prev: ProductsResponse, { fetchMoreResult }) => {
-          if (!fetchMoreResult) return prev;
+    if (!hasMore || isFetchingMore || !data?.products?.nextCursor) return;
 
-          return {  
-            products: {  
-              ...fetchMoreResult.products,  
-              items: [  
-                ...prev.products.items,  
-                ...fetchMoreResult.products.items,  
-              ],  
-            },  
-          };  
-        },  
-      });  
-    }
+    fetchMore({
+      variables: {
+        ...queryVariables,
+        cursor: data.products.nextCursor,
+      },
+    });
   }, [data, fetchMore, isFetchingMore, hasMore, queryVariables]);
 
   // Infinite scroll setup
@@ -113,9 +120,12 @@ const FlashSale: React.FC = () => {
     }
 
     observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
+      if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
         handleLoadMore();
       }
+    }, {
+      threshold: 0.1, // Trigger when 10% of the sentinel is visible
+      rootMargin: '100px' // Start loading 100px before reaching the sentinel
     });
 
     if (sentinelRef.current) {
@@ -138,59 +148,75 @@ const FlashSale: React.FC = () => {
   );
 
   // Show loading shimmer during initial load OR when filters are changing
-  const showLoadingShimmer = loading && !isFetchingMore;
+  const showInitialLoading = loading && !isFetchingMore && allProducts.length === 0;
+  
   return (
-<div className="p-6 bg-white rounded-lg shadow-lg">
-          <h3 className="text-xl font-semibold mb-4">Special Offers</h3>
-          <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 rounded-xl mb-4 shadow-lg">
-            <h4 className="font-bold text-lg">Flash Sale</h4>
-            <p className="text-sm">Ends in: 02:45:33</p>
-            <div className="w-full bg-white bg-opacity-30 rounded-full h-2 mt-2">
-              <div className="bg-amber-400 h-2 rounded-full" style={{ width: '30%' }}></div>
-            </div>
+    <div className="p-6 bg-white rounded-lg shadow-lg">
+      <h3 className="text-xl font-semibold mb-4">Special Offers</h3>
+      <div className="bg-gradient-to-r from-red-600 to-rose-700 text-white p-5 rounded-xl mb-4 shadow-lg">
+        <h4 className="font-bold text-lg">Flash Sale</h4>
+        <p className="text-sm">Ends in: 02:45:33</p>
+        <div className="w-full bg-white bg-opacity-30 rounded-full h-2 mt-2">
+          <div className="bg-amber-400 h-2 rounded-full" style={{ width: '30%' }}></div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="border border-amber-300 rounded-lg p-4 bg-amber-50 flex items-center">
+          <div className="bg-amber-100 p-3 rounded-full mr-4">
+            <Sparkles className="text-amber-700" size={20} />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-amber-300 rounded-lg p-4 bg-amber-50 flex items-center">
-              <div className="bg-amber-100 p-3 rounded-full mr-4">
-                <Sparkles className="text-amber-700" size={20} />
-              </div>
-              <div>
-                <h4 className="font-medium">New Customer Discount</h4>
-                <p className="text-sm text-amber-700">15% off your first order</p>
-              </div>
-            </div>
-            <div className="border border-rose-300 rounded-lg p-4 bg-rose-50 flex items-center">
-              <div className="bg-rose-100 p-3 rounded-full mr-4">
-                <Gift className="text-rose-700" size={20} />
-              </div>
-              <div>
-                <h4 className="font-medium">Valentines Special</h4>
-                <p className="text-sm text-rose-700">Buy one, get one 50% off</p>
-              </div>
-            </div>
+          <div>
+            <h4 className="font-medium">New Customer Discount</h4>
+            <p className="text-sm text-amber-700">15% off your first order</p>
           </div>
- <div className="p-0 bg-white rounded-lg">   
-    <div className="text-sm text-gray-500 mb-4">  
-        {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
-      </div> 
-      {showLoadingShimmer ? (
-        <FlashThumbnailsShimmer count={queryVariables.limit}/>
-      ) : products.length > 0 ? (  
-        <>  
-          <FlashThumbnails products={products} />     
-          {/* Sentinel element for infinite scroll */}
-          <div ref={sentinelRef} className="h-2" />   
-          {isFetchingMore && (
-            <FlashThumbnailsShimmer count={itemsToFetch} />     
-          )}
-        </>  
-      ) : (  
-        <div className="text-center py-12 text-gray-500">  
-          No products found. Try a different search or filter.  
-        </div>  
-      )}  
-    </div>       
-</div>    
+        </div>
+        <div className="border border-rose-300 rounded-lg p-4 bg-rose-50 flex items-center">
+          <div className="bg-rose-100 p-3 rounded-full mr-4">
+            <Gift className="text-rose-700" size={20} />
+          </div>
+          <div>
+            <h4 className="font-medium">Valentines Special</h4>
+            <p className="text-sm text-rose-700">Buy one, get one 50% off</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-0 bg-white rounded-lg">   
+        <div className="text-sm text-gray-500 mb-4">  
+          {isRefetching ? 'Filtering...' : `${allProducts.length} ${allProducts.length === 1 ? 'product' : 'products'} shown`}
+          {hasMore && allProducts.length > 0 && ' • Scroll to load more'}
+        </div> 
+        
+        {showInitialLoading ? (
+          <FlashThumbnailsShimmer count={queryVariables.limit}/>
+        ) : allProducts.length > 0 ? (  
+          <>  
+            <FlashThumbnails products={allProducts} />     
+            
+            {/* Sentinel element for infinite scroll */}
+            <div ref={sentinelRef} className="h-2" />   
+            
+            {/* Loading indicator for additional products */}
+            {isFetchingMore && (
+              <div className="mt-4">
+                <FlashThumbnailsShimmer count={4} />     
+              </div>
+            )}
+            
+            {/* End of results message */}
+            {!hasMore && allProducts.length > 0 && (
+              <div className="text-center py-8 text-gray-500 border-t">
+                No more products to load
+              </div>
+            )}
+          </>  
+        ) : (  
+          <div className="text-center py-12 text-gray-500">  
+            No products found. Try a different search or filter.  
+          </div>  
+        )}  
+      </div>       
+    </div>    
   );
 };
 
