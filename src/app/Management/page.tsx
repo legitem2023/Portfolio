@@ -251,7 +251,6 @@ export default function ManagementDashboard() {
         setActiveTab={setActiveTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        userRole={userRole} // You might want to pass userRole to Sidebar for conditional rendering
       />
       
       <div className="md:pl-64 flex flex-col flex-1">
