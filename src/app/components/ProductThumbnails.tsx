@@ -215,7 +215,7 @@ const cartItem = {
                   
                   {/* Add to Cart Button */}
                   <button 
-                    className="bg-amber-600 hover:bg-amber-700 text-white p-1.5 sm:p-2 rounded-full transition-colors"
+                    className="bg-violet-200 hover:bg-violet-300 text-white p-1.5 sm:p-2 rounded-full transition-colors"
                     onClick={() => handleAddToCart(product)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
