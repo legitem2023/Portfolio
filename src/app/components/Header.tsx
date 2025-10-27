@@ -253,8 +253,8 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90  p-2 aspect-[3/1]">
-              <AnimatedCrowdMenu/>
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-black bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+              
               <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
