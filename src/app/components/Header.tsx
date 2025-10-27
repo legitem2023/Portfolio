@@ -245,7 +245,7 @@ const Header: React.FC = () => {
             className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden"
             style={{ 
               transform: isModalOpen ? 'translateY(0)' : 'translateY(100%)',
-              maxHeight: '80vh'
+              maxHeight: '50vh'
             }}
           >
             {/* Drag handle */}
