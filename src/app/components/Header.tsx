@@ -245,7 +245,7 @@ const Header: React.FC = () => {
           {/* Modal */}
           <div 
             ref={modalRef}
-            className="fixed top-0 left-0 h-full w-3/4 max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out md:hidden"
+            className="fixed top-0 left-0 h-full w-3/4 max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-linear md:hidden"
             style={{ 
               transform: isModalOpen ? 'translateX(0)' : 'translateX(-100%)'
             }}
