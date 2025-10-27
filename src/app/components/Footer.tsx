@@ -31,15 +31,6 @@ const Footer = () => {
             </div>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Shop</h3>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-indigo-600 hover:text-white">New Arrivals</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">Best Sellers</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">Collections</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">Sale</a></li>
-            </ul>
-          </div>
 
           <div>
             <h3 className="text-lg font-semibold mb-4">Information</h3>
