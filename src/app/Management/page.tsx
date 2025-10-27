@@ -55,8 +55,8 @@ export default function ManagementDashboard() {
         
         // Check if user role is admin or manager
         if (payload.role !== 'admin' && payload.role !== 'manager') {
-          router.push('./');
-          return;
+          //router.push('./');
+          //return;
         }
         
         setUserId(payload.userId);
