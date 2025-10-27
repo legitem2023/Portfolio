@@ -1,4 +1,5 @@
 'use client';
+import Ads from './Ads/Ads'
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -187,6 +188,7 @@ const DeluxeNavTabs: React.FC = () => {
           </button>
         ))}
       </div>
+      <Ads/>
       <InstallPWAButton/>
       
       <div className="bg-white rounded-b-xl rounded-tr-xl shadow-lg border border-gray-200 overflow-hidden">
