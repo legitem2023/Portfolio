@@ -267,7 +267,7 @@ const Header: React.FC = () => {
             </div>
 
             {/* Modal content */}
-            <div className="overflow-y-auto h-full pb-20">
+            <div className="overflow-y-auto h-full pb-20 bg-[#f1f1f1]">
               <div className="p-4">
                 <div className="space-y-1">
                   <button
