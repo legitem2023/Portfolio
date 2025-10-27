@@ -9,6 +9,8 @@ import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
+import AnimatedCrowdMenu from "./AnimatedCrowdMenu";
+
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 import LogoutButton from './LogoutButton';
@@ -252,7 +254,7 @@ const Header: React.FC = () => {
           >
             {/* Header with close button */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90  p-2 aspect-[3/1]">
-              <AnimatedCrowd/>
+              <AnimatedCrowdMenu/>
               <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
