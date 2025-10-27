@@ -472,4 +472,4 @@ function TreeAndStoreRow() {
   );
 }
 
-export default React.memo(AnimatedCrowd);
+export default React.memo(AnimatedCrowdMenu);
