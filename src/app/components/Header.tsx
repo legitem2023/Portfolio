@@ -139,35 +139,6 @@ const Header: React.FC = () => {
     }
   };
 
-  // Show loading state if needed
-  /* if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
-    return (
-      <div>
-        <div className="relative bg-gradient-to-r from-purple-100 to-indigo-200 animate-pulse bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
-          <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-            <div className="z-20 h-[100%] flex items-center">
-              <Image
-                src="/Dlogo.svg"
-                alt="Logo"
-                height={80}
-                width={160}
-                className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
-              />
-            </div>
-            <div className="z-20 h-[100%] flex items-center">
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Ads/>
-      </div>
-    );
-  }*/
-
   return (
     <div>
       <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90  p-2 aspect-[4/1] sm:aspect-[9/1]">
@@ -255,15 +226,15 @@ const Header: React.FC = () => {
             {/* Header with close button */}
             <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-black-600 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center">
-            <Image 
-               src="/Dlogo.svg" 
-               alt="Logo" 
-               height={80} 
-               width={80} 
-               className="h-[100%] w-[auto] rounded"
-               style={{ filter: 'drop-shadow(0.5px 0.5px 3px gold)' }}
-             />
-          </div>
+                <Image 
+                  src="/Dlogo.svg" 
+                  alt="Logo" 
+                  height={80} 
+                  width={80} 
+                  className="h-[100%] w-[auto] rounded"
+                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px gold)' }}
+                />
+              </div>
               <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -326,7 +297,6 @@ const Header: React.FC = () => {
           </div>
         </>
       )}
-      {/*<Ads/>*/}
     </div>
   );
 };
