@@ -193,7 +193,7 @@ const Header: React.FC = () => {
         </div>
         
       </div>
-      <Ads/>
+      {/*<Ads/>*/}
     </div>
   );
 };
