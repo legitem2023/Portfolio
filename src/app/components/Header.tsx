@@ -262,7 +262,7 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-black-600 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-950 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center">
                 <Image 
                   src="/Dlogo.svg" 
