@@ -1,11 +1,11 @@
 {
-  "name": "DigitalVendorsNetwork",
+  "name": " Digital-Vendors-Network",
   "version": "1.0.0",
   "description": "Luxury e-commerce application with responsive design",
   "private": true,
   "scripts": {
     "dev": "prisma generate && prisma db push && next dev",
-    "build": "npm install --legacy-peer-deps && prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
@@ -63,6 +63,9 @@
     "prisma": "latest",
     "tailwindcss": "^3.3.5",
     "typescript": "^5.2.2"
+  },
+  "resolutions": {
+    "nodemailer": "^6.9.15"
   },
   "engines": {
     "node": "20.x"
