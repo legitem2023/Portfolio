@@ -249,7 +249,7 @@ const Header: React.FC = () => {
         <>
           {/* Backdrop */}
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 md:hidden"
+            className="fixed inset-0 bg-black backdrop-blur-sm bg-opacity-50 z-40 transition-opacity duration-300 md:hidden"
             onClick={() => setIsModalOpen(false)}
           />
           
@@ -262,7 +262,7 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-950 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-200 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center">
                 <Image 
                   src="/Dlogo.svg" 
