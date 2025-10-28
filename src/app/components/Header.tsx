@@ -262,7 +262,7 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-200 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center">
                 <Image 
                   src="/Dlogo.svg" 
@@ -270,10 +270,10 @@ const Header: React.FC = () => {
                   height={80} 
                   width={80} 
                   className="h-[100%] w-[auto] rounded"
-                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px gold)' }}
+                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
                 />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+              
               <button
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors duration-200"
