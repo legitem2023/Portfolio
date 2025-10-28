@@ -10,6 +10,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
 import AnimatedCrowdMenu from "./AnimatedCrowdMenu";
+import { 
+  User, 
+  MessageCircle, 
+  ShoppingBag, 
+  X, 
+  ChevronRight,
+  LogOut
+} from 'lucide-react';
 
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
@@ -139,6 +147,35 @@ const Header: React.FC = () => {
     }
   };
 
+  // Show loading state if needed
+  /* if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
+    return (
+      <div>
+        <div className="relative bg-gradient-to-r from-purple-100 to-indigo-200 animate-pulse bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
+          <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+            <div className="z-20 h-[100%] flex items-center">
+              <Image
+                src="/Dlogo.svg"
+                alt="Logo"
+                height={80}
+                width={160}
+                className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
+              />
+            </div>
+            <div className="z-20 h-[100%] flex items-center">
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
+                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <Ads/>
+      </div>
+    );
+  }*/
+
   return (
     <div>
       <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90  p-2 aspect-[4/1] sm:aspect-[9/1]">
@@ -162,9 +199,7 @@ const Header: React.FC = () => {
               className="flex items-center text-sm focus:outline-none"
             >
               <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+                <User className="w-5 h-5 text-indigo-600" />
               </div>
             </button>
 
@@ -172,31 +207,34 @@ const Header: React.FC = () => {
             {isDropdownOpen && !isMobile() && (
               <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
                 <div
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     dispatch(setActiveIndex(7));
                   }}
                 >
-                  <i className="fas fa-user mr-2 text-gray-400"></i>Your Profile
+                  <User className="mr-2 text-gray-400 w-4 h-4" />
+                  Your Profile
                 </div>
                 <div
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     dispatch(setActiveIndex(9));
                   }}
                 >
-                  <i className="fas fa-messages mr-2 text-gray-400"></i>Messages
+                  <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
+                  Messages
                 </div>
                 <div
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
                     dispatch(setActiveIndex(10));
                   }}
                 >
-                  <i className="fas fa-shopping-bag mr-2 text-gray-400"></i>Orders
+                  <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
+                  Orders
                 </div>
                 <div className="border-t border-gray-100 my-1"></div>
                 <LogoutButton/>
@@ -240,9 +278,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors duration-200"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
@@ -257,9 +293,9 @@ const Header: React.FC = () => {
                       dispatch(setActiveIndex(7));
                     }}
                   >
-                    <i className="fas fa-user mr-3 text-gray-400 w-5 text-center"></i>
+                    <User className="mr-3 text-gray-400 w-5 h-5" />
                     <span className="flex-1">Your Profile</span>
-                    <i className="fas fa-chevron-right text-gray-400 text-sm"></i>
+                    <ChevronRight className="text-gray-400 w-4 h-4" />
                   </button>
 
                   <button
@@ -269,9 +305,9 @@ const Header: React.FC = () => {
                       dispatch(setActiveIndex(9));
                     }}
                   >
-                    <i className="fas fa-messages mr-3 text-gray-400 w-5 text-center"></i>
+                    <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
                     <span className="flex-1">Messages</span>
-                    <i className="fas fa-chevron-right text-gray-400 text-sm"></i>
+                    <ChevronRight className="text-gray-400 w-4 h-4" />
                   </button>
 
                   <button
@@ -281,9 +317,9 @@ const Header: React.FC = () => {
                       dispatch(setActiveIndex(10));
                     }}
                   >
-                    <i className="fas fa-shopping-bag mr-3 text-gray-400 w-5 text-center"></i>
+                    <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
                     <span className="flex-1">Orders</span>
-                    <i className="fas fa-chevron-right text-gray-400 text-sm"></i>
+                    <ChevronRight className="text-gray-400 w-4 h-4" />
                   </button>
 
                   <div className="border-t border-gray-200 my-3"></div>
@@ -297,6 +333,7 @@ const Header: React.FC = () => {
           </div>
         </>
       )}
+      {/*<Ads/>*/}
     </div>
   );
 };
