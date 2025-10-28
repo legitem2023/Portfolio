@@ -10,14 +10,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
 
-import { 
+/*import { 
   User, 
   MessageCircle, 
   ShoppingBag, 
   X, 
   ChevronRight,
   LogOut
-} from 'lucide-react';
+} from 'lucide-react';*/
 
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
@@ -278,7 +278,7 @@ const Header: React.FC = () => {
                 onClick={() => setIsModalOpen(false)}
                 className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors duration-200"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                
               </button>
             </div>
 
@@ -295,7 +295,7 @@ const Header: React.FC = () => {
                   >
                     <User className="mr-3 text-gray-400 w-5 h-5" />
                     <span className="flex-1">Your Profile</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    
                   </button>
 
                   <button
@@ -305,9 +305,9 @@ const Header: React.FC = () => {
                       dispatch(setActiveIndex(9));
                     }}
                   >
-                    <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
+                    
                     <span className="flex-1">Messages</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    
                   </button>
 
                   <button
@@ -317,9 +317,9 @@ const Header: React.FC = () => {
                       dispatch(setActiveIndex(10));
                     }}
                   >
-                    <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
+                    
                     <span className="flex-1">Orders</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    
                   </button>
 
                   <div className="border-t border-gray-200 my-3"></div>
