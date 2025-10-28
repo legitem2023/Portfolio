@@ -4,12 +4,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import VisitorCounter from './VisitorCounter';
+
 import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import AnimatedCrowd from "./AnimatedCrowd";
-import AnimatedCrowdMenu from "./AnimatedCrowdMenu";
+
 import { 
   User, 
   MessageCircle, 
@@ -23,7 +23,7 @@ import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
 import LogoutButton from './LogoutButton';
 import Ads from './Ads/Ads';
-import { PromoAd } from './Ads/PromoAd';
+
 import { useAdDrawer } from './hooks/useAdDrawer';
 
 const Header: React.FC = () => {
