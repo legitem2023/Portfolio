@@ -37,6 +37,7 @@ import DeluxeHomePage from './Home/DeluxeHomePage';
 import MerchantsPage from './MerchantsPage';
 import { useSearchParams } from 'next/navigation'; // Change this import
 import InstallPWAButton from './InstallPWAButton';
+import BellBadge from './ui/BellBadge';
 interface Tab  {
   id: number;
   label: string;
@@ -185,6 +186,7 @@ const DeluxeNavTabs: React.FC = () => {
             }`}
           >
             <span className="text-xl">{tab.icon}</span>
+          <BellBadge count={10}/>
           </button>
         ))}
       </div>
