@@ -186,7 +186,7 @@ const DeluxeNavTabs: React.FC = () => {
             }`}
           >
             <span className="text-xl">{tab.icon}</span>
-          <BellBadge count={10}/>
+            {tab.label==='Cart' && (<BellBadge count={10}/>)}
           </button>
         ))}
       </div>
