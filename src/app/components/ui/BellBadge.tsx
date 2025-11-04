@@ -1,7 +1,18 @@
-// components/BellBadge.jsx
+// components/BellBadge.tsx
 import React from 'react';
 
-const BellBadge = ({
+interface BellBadgeProps {
+  count?: number;
+  maxCount?: number;
+  showZero?: boolean;
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'dark' | 'light';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  pulse?: boolean;
+  className?: string;
+  children?: React.ReactNode; // Make this optional with ?
+}
+
+const BellBadge: React.FC<BellBadgeProps> = ({
   count,
   maxCount = 99,
   showZero = false,
@@ -9,14 +20,13 @@ const BellBadge = ({
   size = 'md',
   pulse = false,
   className = '',
-  children
+  children // Now optional
 }) => {
-  // Don't render if count is 0 and showZero is false
   if ((count === 0 || count === null || count === undefined) && !showZero && !children) {
     return null;
   }
 
-  const displayCount = count > maxCount ? `${maxCount}+` : count;
+  const displayCount = count && count > maxCount ? `${maxCount}+` : count;
 
   const sizeClasses = {
     sm: 'w-6 h-6 text-xs',
