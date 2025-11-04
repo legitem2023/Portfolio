@@ -87,19 +87,19 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 1,
       label: 'Home',
-      icon: <Home size={18} />,
+      icon: <Home size={20} />,
       content: <DeluxeHomePage />,
     },
     {
       id: 2,
       label: 'Products',
-      icon: <Tags size={18} />,
+      icon: <Tags size={20} />,
       content: <ProductsTab />,
     },
     {
       id: 3,
       label: 'Exclusive Deals',
-      icon: <Target size={18} />,
+      icon: <Target size={20} />,
       content: (
         <FlashSale/>
       ),
@@ -107,7 +107,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id:4,
       label: 'Merchants',
-      icon: <Store size={18} />,
+      icon: <Store size={20} />,
       content: (
         <MerchantsPage/>
       ),
@@ -115,43 +115,43 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 5,
       label: 'Messages',
-      icon: <Users size={18} />,
+      icon: <Users size={20} />,
       content: <MessagesTab />,
     },
     {
       id: 6,
       label: 'Cart',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content: <DeluxeCart />,
     },
     {
       id: 7,
       label: 'Profile',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content: <UserProfile userId={userId} /> // Uses JWT userId
     },
     {
       id: 8,
       label: 'Post',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content: <PostDetail postId={activePostId} />
     },
     {
       id: 9,
       label: 'PM',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content: <PMTab UserId={userId}/>
     },
     {
       id:10,
       label: 'Order',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content:<OrderTracking userId={userId} /> // Uses JWT userId
     },
     {
       id:11,
       label: 'Merchants',
-      icon: <ShoppingCart size={18} />,
+      icon: <ShoppingCart size={20} />,
       content:<MerchantDetails userId={merchantIdFromUrl || ""} /> // Uses URL id instead of JWT userId
     }
   ];
