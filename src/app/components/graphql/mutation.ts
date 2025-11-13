@@ -1,5 +1,24 @@
 import { gql } from "@apollo/client";
 
+// Delete Variant Mutation
+export const DELETE_VARIANT = gql`
+  mutation DeleteVariant($id: ID!) {
+    deleteVariant(id: $id) {
+      statusText
+    }
+  }
+`;
+
+// Delete Product Mutation
+export const DELETE_PRODUCT = gql`
+  mutation DeleteProduct($id: ID!) {
+    deleteProduct(id: $id) {
+      statusText
+    }
+  }
+`;
+
+
 export const SINGLE_UPLOAD_MUTATION = gql`
   mutation SingleUpload($base64Image: String, $productId: ID) {
     singleUpload(base64Image: $base64Image, productId: $productId) {
