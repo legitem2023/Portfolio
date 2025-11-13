@@ -479,6 +479,7 @@ export const typeDefs = gql`
     loginWithFacebook(input: FacebookLoginInput): Result
     createUser(email: String, password: String, firstName: String, lastName: String): Result
     createProduct(id: String, name: String, stock: Int, description: String, color: String, size: String, price: Float, salePrice: Float, sku: String, supplierId: String): Response
+    deleteProduct(id: String) : Result
     createCategory(name: String, description: String, status: Boolean): Response
     createOrder(userId: ID, addressId: ID, items: [OrderItemInput]): Result
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
