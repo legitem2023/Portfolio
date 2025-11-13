@@ -1031,15 +1031,13 @@ export const resolvers = {
     },
     deleteVariant: async (_: any, { id }:any) => {
       await prisma.productVariant.delete(
-        where:{
+        where: {
           id
         }
       )
       return {
         statusText:"Successful"
-      }
-        
-      
+      }  
     }, 
     deleteProduct: async (_: any, { id }:any) => {
       await prisma.product.delete(
@@ -1049,9 +1047,7 @@ export const resolvers = {
       )
       return {
         statusText:"Successful"
-      }
-        
-      
+      } 
     }, 
     deleteMessage: async (_: any, { messageId }: any, { userId }: any): Promise<any> => {
       const message = await prisma.message.findFirst({
