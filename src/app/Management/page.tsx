@@ -231,9 +231,9 @@ export default function ManagementDashboard() {
   }
 
   // Don't render anything if redirecting
-  if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
+  /*if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
     return null;
-  }
+  }*/
 
   if (categoryLoading && productLoading) return <div>Category Loading...</div>;
 
