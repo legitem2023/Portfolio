@@ -33,10 +33,10 @@ export default function ManagementDashboard() {
         });
         
         // Redirect to login if unauthorized (no active user)
-        if (response.status === 401) {
-          router.push('./Login');
-          return;
-        }
+       // if (response.status === 401) {
+       //   router.push('./Login');
+        //  return;
+      //  }
         
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
@@ -45,20 +45,21 @@ export default function ManagementDashboard() {
         const data = await response.json();
         const token = data?.user;
         
-        if (!token) {
-          router.push('./Login');
-          return;
-        }
+       // if (!token) {
+         // router.push('./Login');
+         // return;
+       // }
         
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
         const payload = await decryptToken(token, secret.toString());
         
         // Check if user role is admin or manager
+       /*
         if (payload.role !== 'admin' && payload.role !== 'manager') {
-          //router.push('./');
-          //return;
+          router.push('./');
+          return;
         }
-        
+        */
         setUserId(payload.userId);
         setUserRole(payload.role);
         console.log(payload.role);
