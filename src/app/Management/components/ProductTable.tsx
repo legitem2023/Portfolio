@@ -14,6 +14,7 @@ import 'swiper/css/pagination';
 
 interface ProductTableProps {
   products: Product[];
+  onProductDeleted?: () => void; // Optional callback to refresh products
 }
 
 // Corrected helper function to convert file to base64
@@ -35,47 +36,49 @@ const convertToBase64 = (file: File): Promise<string> => {
     // Read as data URL to get base64
     reader.readAsDataURL(file);
   });
-};;
+};
 
-export default function ProductTable({ products }: ProductTableProps) {
+export default function ProductTable({ products, onProductDeleted }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
   const [uploadingVariantId, setUploadingVariantId] = useState<string | null>(null);
 
+  // Fixed delete mutation - moved outside and properly defined
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
-  variables: {
-    id
-  },
-  onCompleted: (data) => {
-    // Handle successful deletion
-    console.log('Product deleted successfully:', data);
-    // You might want to refetch products or update cache
-  },
-  onError: (error) => {
-    // Handle errors
-    console.error('Error deleting product:', error);
-    // Show error message to user
-  },
-  update: (cache, { data: { deleteProduct } }) => {
-    // Update cache after mutation
-    // Remove the deleted product from cache
-    cache.evict({ id: cache.identify(deleteProduct) });
-    cache.gc();
-  },
-  // Alternative cache update approach:
-  // refetchQueries: [
-  //   { query: GET_PRODUCTS } // Refetch products list after deletion
-  // ],
-});
-
- // Call the mutation
-const handleDelete = (productId:string) => {
-  deleteProduct({ 
-    variables: { id: productId } 
+    onCompleted: (data) => {
+      // Handle successful deletion
+      console.log('Product deleted successfully:', data);
+      // Call callback to refresh products if provided
+      if (onProductDeleted) {
+        onProductDeleted();
+      }
+    },
+    onError: (error) => {
+      // Handle errors
+      console.error('Error deleting product:', error);
+      // Show error message to user (you might want to use a toast notification)
+      alert(`Error deleting product: ${error.message}`);
+    },
+    update: (cache, { data: { deleteProduct } }) => {
+      // Update cache after mutation
+      // Remove the deleted product from cache
+      if (deleteProduct && deleteProduct.id) {
+        cache.evict({ id: cache.identify(deleteProduct) });
+        cache.gc();
+      }
+    },
   });
-};
-  
+
+  // Call the mutation
+  const handleDelete = (productId: string) => {
+    if (window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      deleteProduct({ 
+        variables: { id: productId } 
+      });
+    }
+  };
+
   const [singleUpload] = useMutation(SINGLE_UPLOAD_MUTATION, {
     onCompleted: (data) => {
       console.log('Upload completed:', data);
@@ -202,6 +205,7 @@ const handleDelete = (productId:string) => {
                 product={product} 
                 onViewVariants={openVariantsModal}
                 onImageUpload={handleProductImageUpload}
+                onDeleteProduct={handleDelete}
                 isUploading={uploadingProductId === product.id}
               />
             ))}
@@ -217,6 +221,7 @@ const handleDelete = (productId:string) => {
             product={product} 
             onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
+            onDeleteProduct={handleDelete}
             isUploading={uploadingProductId === product.id}
           />
         ))}
@@ -239,11 +244,13 @@ function TableRow({
   product, 
   onViewVariants, 
   onImageUpload,
+  onDeleteProduct,
   isUploading 
 }: { 
   product: Product; 
   onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
+  onDeleteProduct: (productId: string) => void;
   isUploading: boolean;
 }) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -331,7 +338,7 @@ function TableRow({
         <StatusBadge status={product.status} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <ActionButtons id={product.id}/>
+        <ActionButtons productId={product.id} onDelete={onDeleteProduct} />
       </td>
     </tr>
   );
@@ -342,11 +349,13 @@ function MobileProductCard({
   product, 
   onViewVariants, 
   onImageUpload,
+  onDeleteProduct,
   isUploading 
 }: { 
   product: Product; 
   onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
+  onDeleteProduct: (productId: string) => void;
   isUploading: boolean;
 }) {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -441,7 +450,7 @@ function MobileProductCard({
       </div>
       
       <div className="pt-3 border-t border-gray-200">
-        <ActionButtons />
+        <ActionButtons productId={product.id} onDelete={onDeleteProduct} />
       </div>
     </div>
   );
@@ -994,15 +1003,18 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ActionButtons(id:string) {
+function ActionButtons({ productId, onDelete }: { productId: string; onDelete: (id: string) => void }) {
   return (
     <div className="flex space-x-3">
       <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
         Edit
       </button>
-      <button onClick={()=>handleDelete(id)} className="text-red-600 hover:text-red-900 text-sm font-medium">
+      <button 
+        onClick={() => onDelete(productId)} 
+        className="text-red-600 hover:text-red-900 text-sm font-medium"
+      >
         Delete
       </button>
     </div>
   );
-          }
+}
