@@ -45,7 +45,7 @@ export default function ProductTable({ products }: ProductTableProps) {
 
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
   variables: {
-    id: productId // You'll need to pass the product ID here
+    id
   },
   onCompleted: (data) => {
     // Handle successful deletion
