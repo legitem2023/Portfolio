@@ -1045,7 +1045,7 @@ deleteProduct: async (_: any, { id }: any) => {
     await tx.orderItem.deleteMany({
       where: {
         product: {
-          productId: id
+          id: id
         }
       }
     });
