@@ -3,6 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
+import { DELETE_PRODUCT } from '../../components/graphql/mutation';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 
@@ -41,6 +42,39 @@ export default function ProductTable({ products }: ProductTableProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
   const [uploadingVariantId, setUploadingVariantId] = useState<string | null>(null);
+
+  const [deleteProduct] = useMutation(DELETE_PRODUCT, {
+  variables: {
+    id: productId // You'll need to pass the product ID here
+  },
+  onCompleted: (data) => {
+    // Handle successful deletion
+    console.log('Product deleted successfully:', data);
+    // You might want to refetch products or update cache
+  },
+  onError: (error) => {
+    // Handle errors
+    console.error('Error deleting product:', error);
+    // Show error message to user
+  },
+  update: (cache, { data: { deleteProduct } }) => {
+    // Update cache after mutation
+    // Remove the deleted product from cache
+    cache.evict({ id: cache.identify(deleteProduct) });
+    cache.gc();
+  },
+  // Alternative cache update approach:
+  // refetchQueries: [
+  //   { query: GET_PRODUCTS } // Refetch products list after deletion
+  // ],
+});
+
+ // Call the mutation
+const handleDelete = (productId:string) => {
+  deleteProduct({ 
+    variables: { id: productId } 
+  });
+};
   
   const [singleUpload] = useMutation(SINGLE_UPLOAD_MUTATION, {
     onCompleted: (data) => {
@@ -297,7 +331,7 @@ function TableRow({
         <StatusBadge status={product.status} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-        <ActionButtons />
+        <ActionButtons id={product.id}/>
       </td>
     </tr>
   );
@@ -960,13 +994,13 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ActionButtons() {
+function ActionButtons(id:string) {
   return (
     <div className="flex space-x-3">
       <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
         Edit
       </button>
-      <button className="text-red-600 hover:text-red-900 text-sm font-medium">
+      <button onClick={()=>handleDelete(id)} className="text-red-600 hover:text-red-900 text-sm font-medium">
         Delete
       </button>
     </div>
