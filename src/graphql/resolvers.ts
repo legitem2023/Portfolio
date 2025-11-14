@@ -1044,7 +1044,7 @@ deleteProduct: async (_: any, { id }: any) => {
     // 1. First delete OrderItems that reference ProductVariants
     await tx.orderItem.deleteMany({
       where: {
-        productVariant: {
+        product: {
           productId: id
         }
       }
