@@ -1040,11 +1040,20 @@ deleteVariant: async (_: any, { id }: any) => {
   }  
 }, 
 deleteProduct: async (_: any, { id }: any) => {
+  // Delete product variants first
+  await prisma.productVariant.deleteMany({
+    where: {
+      productId: id
+    }
+  });
+  
+  // Then delete the product
   await prisma.product.delete({
     where: {
       id
     }
-  })
+  });
+  
   return {
     statusText: "Successful"
   } 
