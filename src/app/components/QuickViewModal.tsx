@@ -261,7 +261,7 @@ const selectedVariant = useMemo(() => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-6">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
+            <div className="relative flex items-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
               <img
                 src={additionalImages[selectedImage]}
                 alt={product?.name || 'Product'}
