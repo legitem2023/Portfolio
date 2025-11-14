@@ -1040,20 +1040,39 @@ deleteVariant: async (_: any, { id }: any) => {
   }  
 }, 
 deleteProduct: async (_: any, { id }: any) => {
-  // Delete product variants first
-  await prisma.productVariant.deleteMany({
-    where: {
-      productId: id
-    }
+  await prisma.$transaction(async (tx) => {
+    // 1. First delete OrderItems that reference ProductVariants
+    await tx.orderItem.deleteMany({
+      where: {
+        productVariant: {
+          productId: id
+        }
+      }
+    });
+
+    // 2. Delete product variants
+    await tx.productVariant.deleteMany({
+      where: {
+        productId: id
+      }
+    });
+
+    // 3. Delete any OrderItems that directly reference the Product (if applicable)
+    // Check your schema - if OrderItem has both productId and productVariantId
+    await tx.orderItem.deleteMany({
+      where: {
+        productId: id
+      }
+    });
+
+    // 4. Finally delete the product
+    await tx.product.delete({
+      where: {
+        id
+      }
+    });
   });
-  
-  // Then delete the product
-  await prisma.product.delete({
-    where: {
-      id
-    }
-  });
-  
+
   return {
     statusText: "Successful"
   } 
