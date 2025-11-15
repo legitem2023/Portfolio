@@ -21,6 +21,17 @@
 .transform-style-preserve-3d {
   transform-style: preserve-3d;
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.rotating-element {
+  animation: spin 2s linear infinite;
+}
+
+
 .customZIndex{
   z-index:999;
 }
