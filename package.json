@@ -44,7 +44,8 @@
     "@reduxjs/toolkit": "^2.8.2",
     "redux-persist": "^6.0.0",
     "react-redux": "^9.2.0",
-    "react-intersection-observer": "^9.5.2"
+    "react-intersection-observer": "^9.5.2",
+    "framer-motion": "^10.16.0"
   },
   "devDependencies": {
     "uuid": "^10.0.0",
