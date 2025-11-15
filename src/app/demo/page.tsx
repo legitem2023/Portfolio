@@ -1,5 +1,5 @@
 // app/demo/page.tsx
-import CylindricalCarousel from '../../components/CylindricalCarousel';
+import CylindricalCarousel from '../components/CylindricalCarousel';
 
 const DemoPage = () => {
   const carouselItems = [
