@@ -220,7 +220,7 @@ const Header: React.FC = () => {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    dispatch(setActiveIndex(9));
+                    router.push('/Messaging');
                   }}
                 >
                   <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
