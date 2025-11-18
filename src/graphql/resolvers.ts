@@ -1498,37 +1498,55 @@ deleteProduct: async (_: any, { id }: any) => {
       }
     },
 
-    createOrder: async (_: any, { userId, addressId, items }: any) => {
-      const response = await prisma.order.create({
-        data: {
-          userId,
-          addressId,
-          orderNumber: `ORD-${Date.now()}`,
-          status: "PENDING",
-          total: items.reduce(
-            (sum: number, item: any) => sum + item.price * item.quantity,
-            0
-          ),
-          subtotal: items.reduce(
-            (sum: number, item: any) => sum + item.price * item.quantity,
-            0
-          ),
-          items: {
-            create: items.map((item: any) => ({
-              productId: item.productId,
-              quantity: item.quantity,
-              price: item.price,
-            })),
-          },
-        },
-        include: { items: true },
-      });
-      if (response) {
-        return {
-          statusText: 'Successful!'
-        };
-      }
+createOrder: async (_: any, { userId, addressId, items }: any) => {
+  // Validate and convert productIds to proper ObjectID format
+  const validItems = items.map((item: any) => {
+    let productId = item.productId;
+    
+    // If it's a numeric string, pad it to 24 hex characters
+    if (/^\d+$/.test(productId)) {
+      productId = productId.padStart(24, '0');
+    }
+    
+    // If it's already a hex string but wrong length, handle it
+    if (productId.length !== 24) {
+      throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
+    }
+    
+    return {
+      productId,
+      quantity: item.quantity,
+      price: item.price,
+    };
+  });
+
+  const response = await prisma.order.create({
+    data: {
+      userId,
+      addressId,
+      orderNumber: `ORD-${Date.now()}`,
+      status: "PENDING",
+      total: items.reduce(
+        (sum: number, item: any) => sum + item.price * item.quantity,
+        0
+      ),
+      subtotal: items.reduce(
+        (sum: number, item: any) => sum + item.price * item.quantity,
+        0
+      ),
+      items: {
+        create: validItems,
+      },
     },
+    include: { items: true },
+  });
+  
+  if (response) {
+    return {
+      statusText: 'Successful!'
+    };
+  }
+},
 
     respondToTicket: async (_: any, { ticketId, userId, message }: any) => {
       return prisma.ticketResponse.create({
