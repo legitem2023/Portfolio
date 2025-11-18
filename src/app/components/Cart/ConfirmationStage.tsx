@@ -150,7 +150,7 @@ const ConfirmationStage = ({
                     <img
   src={item.images?.[0] ?? '/NoImage.webp'}
   alt={item.name}
-  className="h-full w-full object-cover object-center"
+  className="h-[auto] w-[75px] aspect-[1/1] object-cover object-center"
 />
                   </div>
 
