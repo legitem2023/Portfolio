@@ -10,6 +10,8 @@ import PMTab from './PMTab';
 import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
+import { useRouter } from 'next/navigation';
+
 import {
   Home,
   ShoppingBag,
