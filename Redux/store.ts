@@ -5,6 +5,8 @@ import storage from 'redux-persist/lib/storage'; // defaults to localStorage for
 import activeIndexReducer from './activeIndexSlice';
 import cartReducer from './cartSlice'; // Import your cart reducer
 import activePostIdReducer from './activePostIdSlice';
+import searchReducer from './searchSlice';
+
 // Persist configuration for activeIndex
 const activeIndexPersistConfig = {
   key: 'activeIndex',
@@ -32,7 +34,8 @@ export const store = configureStore({
   reducer: {
     activeIndex: persistedActiveIndexReducer,
     cart: persistedCartReducer, // Add the cart reducer
-    activePostId:persistedPostIdReducer
+    activePostId:persistedPostIdReducer,
+    search:searchReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
