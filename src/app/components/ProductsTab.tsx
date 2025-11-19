@@ -5,7 +5,8 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, category } from '../../../types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
-import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/slices/searchSlice';
 
 interface ProductsResponse {
   products: {
@@ -16,11 +17,13 @@ interface ProductsResponse {
 }
 
 const ProductsTab: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [sortBy, setSortBy] = useState('Sort by: Featured');
+  // Redux state and dispatch
+  const dispatch = useDispatch();
+  const { searchTerm, categoryFilter, sortBy } = useSelector((state: any) => state.search);
+  
+  // Local state (keep these as they're not part of global state)
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [itemsToFetch, setItemsToFetch] = useState(12); // Track how many items to fetch
+  const [itemsToFetch, setItemsToFetch] = useState(12);
   const observer = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   
@@ -127,6 +130,23 @@ const ProductsTab: React.FC = () => {
     };
   }, [handleLoadMore, isFetchingMore, hasMore]);
 
+  // Handler functions using Redux dispatch
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setSearchTerm(e.target.value));
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    dispatch(setCategoryFilter(e.target.value));
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    dispatch(setSortBy(e.target.value));
+  };
+
+  const handleClearFilters = () => {
+    dispatch(clearAllFilters());
+  };
+
   if (error) return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="text-red-600 text-center py-8">
@@ -137,25 +157,36 @@ const ProductsTab: React.FC = () => {
 
   // Show loading shimmer during initial load OR when filters are changing
   const showLoadingShimmer = loading && !isFetchingMore;
-  //console.log(products,"<-products");
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <input
-          type="text"
-          placeholder="Search..."
-          className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <div className="flex space-x-2 w-full">
+          <input
+            type="text"
+            placeholder="Search..."
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
+          {/* Optional: Add clear filters button */}
+          {(searchTerm || categoryFilter || sortBy !== 'Sort by: Featured') && (
+            <button
+              onClick={handleClearFilters}
+              className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm whitespace-nowrap"
+            >
+              Clear Filters
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex justify-between items-center mb-6">  
-        <div className="flex space-x-2">  
+        <div className="flex space-x-2 w-full">  
           <select  
             className="w-full px-3 py-2 border border-gray-300 rounded-md"  
             value={categoryFilter}  
-            onChange={(e) => setCategoryFilter(e.target.value)}  
+            onChange={handleCategoryChange}  
           >  
             <option value="">All Categories</option>  
             {categories.map(category => (  
@@ -164,9 +195,9 @@ const ProductsTab: React.FC = () => {
           </select>  
             
           <select   
-            className="border border-gray-300 rounded-md px-3 py-2 text-sm"  
+            className="border border-gray-300 rounded-md px-3 py-2 text-sm w-full"  
             value={sortBy}  
-            onChange={(e) => setSortBy(e.target.value)}  
+            onChange={handleSortChange}  
           >  
             <option>Sort by: Featured</option>  
             <option>Sort by: Newest</option>  
