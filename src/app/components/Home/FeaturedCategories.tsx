@@ -5,6 +5,7 @@ import { category } from '../../../../types';
 import CategoryShimmer from '../CategoryShimmer';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../../Redux/searchSlice';
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
 interface FeaturedCategoriesProps {
   categories: category[];
@@ -24,6 +25,7 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
   
   const handleCategoryChange = (e:any) => {
     dispatch(setCategoryFilter(e));
+    dispatch(setActiveIndex(2));
   }; 
   
   return (
