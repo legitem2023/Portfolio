@@ -103,7 +103,7 @@ export default function About() {
                 <div className="space-y-6">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision for 2026</h3>
                   <p>
-                    We're creating more than just another e-commerce platform. DVN will be a complete 
+                    Were creating more than just another e-commerce platform. DVN will be a complete 
                     ecosystem that blends artificial intelligence, augmented reality, and sustainable 
                     practices to deliver shopping experiences unlike anything available today.
                   </p>
@@ -145,7 +145,7 @@ export default function About() {
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Sustainable Commerce</h3>
                   <p>
                     We believe the future of e-commerce must be environmentally responsible. 
-                    That's why we're committing to carbon-neutral operations, eco-friendly packaging, 
+                    Thats why were committing to carbon-neutral operations, eco-friendly packaging, 
                     and partnerships with sustainable brands from day one.
                   </p>
                   <div className="bg-green-50 border border-green-100 rounded-lg p-6">
