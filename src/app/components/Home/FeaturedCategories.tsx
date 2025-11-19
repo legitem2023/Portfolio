@@ -49,8 +49,8 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
                   <h3 className="text-xl font-bold text-white mb-1">{category.name}</h3>
                   <p className="text-gray-200 mb-4">{category.items}</p>
                   <button 
-                    onClick={()=>handleCategoryChange(category.name)}
-                    value={category.name}
+                    onClick={()=>handleCategoryChange(category.id)}
+                    value={category.id}
                     className="self-start text-white font-medium flex items-center">
                     Explore <ArrowRight size={16} className="ml-1" />
                   </button>
