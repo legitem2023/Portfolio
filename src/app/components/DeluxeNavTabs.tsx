@@ -10,7 +10,7 @@ import PMTab from './PMTab';
 import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
 
 import {
   Home,
@@ -37,9 +37,10 @@ import MessagesTab from './MessagesTab';
 import DeluxeCart from './Cart/DeluxeCart';
 import DeluxeHomePage from './Home/DeluxeHomePage';
 import MerchantsPage from './MerchantsPage';
-import { useSearchParams } from 'next/navigation'; // Change this import
+import { useSearchParams } from 'next/navigation';
 import InstallPWAButton from './InstallPWAButton';
 import BellBadge from './ui/BellBadge';
+
 interface Tab  {
   id: number;
   label: string;
@@ -55,10 +56,10 @@ const DeluxeNavTabs: React.FC = () => {
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   
-  // Get the URL parameter for merchant ID
-  // Use useSearchParams to get query parameters
+  const router = useRouter();
+  const pathname = usePathname(); // Get current path
   const searchParams = useSearchParams();
-  const merchantIdFromUrl = searchParams.get('id'); // This gets the ID from URL query parameter
+  const merchantIdFromUrl = searchParams.get('id');
 
   useEffect(() => {
     const getRole = async () => {
@@ -86,6 +87,20 @@ const DeluxeNavTabs: React.FC = () => {
     getRole();
   }, []);
   
+  const handleTabClick = (tabId: number) => {
+    // If not on homepage, redirect to homepage first
+    if (pathname !== '/') {
+      router.push('/');
+      // Optionally, you can set a timeout to dispatch the active index after navigation
+      setTimeout(() => {
+        dispatch(setActiveIndex(tabId));
+      }, 100);
+    } else {
+      // If already on homepage, just update the active tab
+      dispatch(setActiveIndex(tabId));
+    }
+  };
+
   const tabs: Tab[] = [
     {
       id: 1,
@@ -180,7 +195,7 @@ const DeluxeNavTabs: React.FC = () => {
         {tabs.slice(0,6).map((tab) => (
           <button
             key={tab.id}
-            onClick={() => dispatch(setActiveIndex(tab.id))}
+            onClick={() => handleTabClick(tab.id)}
             className={`relative flex-1 md:flex-none flex items-center justify-center px-2 md:px-5 py-3 text-lg font-large whitespace-nowrap transition-all duration-300 border-b-4 ${
               activeIndex === tab.id
                 ? 'border-amber-800 text-amber-800 bg-gradient-to-t from-amber-50 to-white'
