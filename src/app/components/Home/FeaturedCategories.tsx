@@ -3,6 +3,8 @@ import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { category } from '../../../../types';
 import CategoryShimmer from '../CategoryShimmer';
+import { useSelector, useDispatch } from 'react-redux';
+import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../../Redux/searchSlice';
 
 interface FeaturedCategoriesProps {
   categories: category[];
@@ -17,9 +19,12 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
   title = "Shop by Category",
   description = "Discover our curated collections of luxury items, carefully selected to elevate your style and sophistication."
 }) => {
- /* const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    dispatch(setCategoryFilter(e.target.value));
-  }; */ 
+ const dispatch = useDispatch();
+  const { searchTerm, categoryFilter, sortBy } = useSelector((state: any) => state.search);
+  
+  const handleCategoryChange = (e:any) => {
+    dispatch(setCategoryFilter(e));
+  }; 
   
   return (
     <section className="py-16 px-4">
@@ -43,7 +48,10 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
                 <div className="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-end p-6">
                   <h3 className="text-xl font-bold text-white mb-1">{category.name}</h3>
                   <p className="text-gray-200 mb-4">{category.items}</p>
-                  <button className="self-start text-white font-medium flex items-center">
+                  <button 
+                    onClick={()=>handleCategoryChange(category.name)}
+                    value={category.name}
+                    className="self-start text-white font-medium flex items-center">
                     Explore <ArrowRight size={16} className="ml-1" />
                   </button>
                 </div>
