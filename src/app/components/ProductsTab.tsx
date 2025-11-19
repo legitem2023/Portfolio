@@ -6,7 +6,7 @@ import ProductThumbnails from '../components/ProductThumbnails';
 import { Product, category } from '../../../types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
 import { useSelector, useDispatch } from 'react-redux';
-import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/slices/searchSlice';
+import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
 
 interface ProductsResponse {
   products: {
