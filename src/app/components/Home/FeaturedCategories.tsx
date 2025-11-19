@@ -17,6 +17,10 @@ const FeaturedCategories: React.FC<FeaturedCategoriesProps> = ({
   title = "Shop by Category",
   description = "Discover our curated collections of luxury items, carefully selected to elevate your style and sophistication."
 }) => {
+ /* const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    dispatch(setCategoryFilter(e.target.value));
+  }; */ 
+  
   return (
     <section className="py-16 px-4">
       <div className="container mx-auto">
