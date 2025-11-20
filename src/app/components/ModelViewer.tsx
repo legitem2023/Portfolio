@@ -10,31 +10,6 @@ interface ModelViewerProps {
 }
 
 const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
-    const [useHeight, setHeight] = useState<string>('100vw');
-    const [useWidth, setWidth] = useState<string>('100vw');
-
-    const handleWidth = (): void => {
-        if (typeof window !== 'undefined' && window.innerWidth < 600) {
-            setWidth('100vw');
-            setHeight('100vw');
-        } else {
-            setWidth('100%');
-            setHeight('500px');
-        }
-    };
-
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            handleWidth();
-            window.addEventListener('resize', handleWidth);
-            const interval = setInterval(handleWidth, 1000);
-
-            return () => {
-                window.removeEventListener('resize', handleWidth);
-                clearInterval(interval);
-            };
-        }
-    }, []);
 
     return (
         <div className="canvas">
@@ -55,7 +30,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
                 skybox-image="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/hdr/symmetrical_garden_02_1k.hdr"
                 skybox-height="2m"
                 max-camera-orbit="auto 90deg auto"
-                style={{ width: useWidth, height: useHeight }}
+                style={{ width: 300, height: 300 }}
             />
         </div>
     );
