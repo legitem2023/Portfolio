@@ -58,42 +58,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         <div className="text-center">
           <ModelViewer data="https://modelviewer.dev/assets/ShopifyModels/Chair.glb"/>
         </div>
-        
-        {/* 3D Controls */}
-        <div className="absolute bottom-4 left-4 flex space-x-2">
-          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
-            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </button>
-          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
-            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-            </svg>
-          </button>
-        </div>
-      </div>
-      
-      {/* Model Information */}
-      <div className="w-full p-4 bg-white rounded-lg mt-4">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="font-medium text-gray-700">Polygons:</span>
-            <span className="text-gray-600 ml-2">12.5k</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Textures:</span>
-            <span className="text-gray-600 ml-2">4K Resolution</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">Format:</span>
-            <span className="text-gray-600 ml-2">GLTF/GLB</span>
-          </div>
-          <div>
-            <span className="font-medium text-gray-700">File Size:</span>
-            <span className="text-gray-600 ml-2">8.7 MB</span>
-          </div>
-        </div>
       </div>
     </div>
   );
