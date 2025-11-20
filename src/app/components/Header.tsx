@@ -18,6 +18,7 @@ import {
   ChevronRight,
   LogOut
 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
 
 import { USERS } from './graphql/query';
 import { useQuery, NetworkStatus } from '@apollo/client';
@@ -34,7 +35,9 @@ const Header: React.FC = () => {
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  
   const router = useRouter();
+  const pathname = usePathname();
   
   const drawer = useAdDrawer({ autoOpenDelay: 3000 });
   
