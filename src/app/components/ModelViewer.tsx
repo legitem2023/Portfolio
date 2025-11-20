@@ -14,7 +14,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     const [useWidth, setWidth] = useState<string>('100vw');
 
     const handleWidth = (): void => {
-        if (window.innerWidth < 600) {
+        if (typeof window !== 'undefined' && window.innerWidth < 600) {
             setWidth('100vw');
             setHeight('100vw');
         } else {
@@ -24,24 +24,28 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     };
 
     useEffect(() => {
-        handleWidth(); // Initial call to set the dimensions correctly
-        window.addEventListener('resize', handleWidth);
-        const interval = setInterval(handleWidth, 1000);
+        if (typeof window !== 'undefined') {
+            handleWidth();
+            window.addEventListener('resize', handleWidth);
+            const interval = setInterval(handleWidth, 1000);
 
-        return () => {
-            window.removeEventListener('resize', handleWidth);
-            clearInterval(interval);
-        };
-    }, []); // Added empty dependency array to run only on mount/unmount
+            return () => {
+                window.removeEventListener('resize', handleWidth);
+                clearInterval(interval);
+            };
+        }
+    }, []);
 
     return (
         <div className="canvas">
-                <Script
-                    type="module"
-                    src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
-                    strategy="lazyOnload"/>
+            <Script
+                type="module"
+                src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"
+                strategy="lazyOnload"
+            />
+            {/* @ts-ignore */}
             <model-viewer
-                src={data[0].model}
+                src={data[0]?.model}
                 alt="A 3D model"
                 ar
                 ar-scale="fixed"
@@ -51,8 +55,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
                 skybox-image="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/hdr/symmetrical_garden_02_1k.hdr"
                 skybox-height="2m"
                 max-camera-orbit="auto 90deg auto"
-                style={{ width: useWidth, height: useHeight }}>
-            </model-viewer>
+                style={{ width: useWidth, height: useHeight }}
+            />
         </div>
     );
 };
