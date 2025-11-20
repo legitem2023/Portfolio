@@ -1,10 +1,19 @@
 import Script from 'next/script';
 import React, { useState, useEffect } from 'react';
-const ModelViewer = ({data}:any) => {
-    const [useHeight, setHeight] = useState('100vw');
-    const [useWidth, setWidth] = useState('100vw');
 
-    const handleWidth = () => {
+interface ModelData {
+  model: string;
+}
+
+interface ModelViewerProps {
+  data: ModelData[];
+}
+
+const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
+    const [useHeight, setHeight] = useState<string>('100vw');
+    const [useWidth, setWidth] = useState<string>('100vw');
+
+    const handleWidth = (): void => {
         if (window.innerWidth < 600) {
             setWidth('100vw');
             setHeight('100vw');
@@ -23,7 +32,7 @@ const ModelViewer = ({data}:any) => {
             window.removeEventListener('resize', handleWidth);
             clearInterval(interval);
         };
-    });
+    }, []); // Added empty dependency array to run only on mount/unmount
 
     return (
         <div className="canvas">
@@ -36,7 +45,8 @@ const ModelViewer = ({data}:any) => {
                 alt="A 3D model"
                 ar
                 ar-scale="fixed"
-                camera-controls touch-action="pan-y"
+                camera-controls 
+                touch-action="pan-y"
                 shadow-intensity="2"
                 skybox-image="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/hdr/symmetrical_garden_02_1k.hdr"
                 skybox-height="2m"
