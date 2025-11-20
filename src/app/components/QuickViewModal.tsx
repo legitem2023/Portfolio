@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../Redux/cartSlice';
 import { Product, Variant } from '../../../types';
 import LuxuryTabs from './ui/LuxuryTabs';
-
+import ModelViewer from "./ModelViewer";
 interface QuickViewModalProps {
   product: Product | null;
   isOpen: boolean;
@@ -56,15 +56,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       <div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
         {/* Placeholder for 3D model - Replace with your actual 3D viewer */}
         <div className="text-center">
-          <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-amber-500 rounded-full flex items-center justify-center">
-            <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">3D Product Viewer</h3>
-          <p className="text-gray-600 text-sm max-w-md px-4">
-            Interactive 3D model - Drag to rotate, scroll to zoom
-          </p>
+          <ModelViewer data=""/>
         </div>
         
         {/* 3D Controls */}
