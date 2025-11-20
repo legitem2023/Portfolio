@@ -1,6 +1,6 @@
 import Script from 'next/script';
 import React, { useState, useEffect } from 'react';
-const ModelViewer = ({data}) => {
+const ModelViewer = ({data}:any) => {
     const [useHeight, setHeight] = useState('100vw');
     const [useWidth, setWidth] = useState('100vw');
 
