@@ -1,4 +1,5 @@
 // components/Footer.tsx
+import Link from 'next/link';
 import { 
   Phone,
   Mail,
@@ -35,10 +36,10 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Information</h3>
             <ul className="space-y-2">
-              <li><a href="#" className="text-indigo-600 hover:text-white">About Us</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">Contact Us</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">Shipping & Returns</a></li>
-              <li><a href="#" className="text-indigo-600 hover:text-white">FAQs</a></li>
+              <li><Link href="/About" className="text-indigo-600 hover:text-white">About Us</Link></li>
+              <li><Link href="/Contact" className="text-indigo-600 hover:text-white">Contact Us</Link></li>
+              <li><Link href="/Shipping" className="text-indigo-600 hover:text-white">Shipping & Returns</Link></li>
+              <li><Link href="/FAQ" className="text-indigo-600 hover:text-white">FAQs</Link></li>
             </ul>
           </div>
 
