@@ -175,6 +175,19 @@ const Header: React.FC = () => {
       </div>
     );
   }*/
+const handleTabClick = (tabId: number) => {
+    // If not on homepage, redirect to homepage first
+    if (pathname !== '/') {
+      router.push('/');
+      // Optionally, you can set a timeout to dispatch the active index after navigation
+      setTimeout(() => {
+        dispatch(setActiveIndex(tabId));
+      }, 100);
+    } else {
+      // If already on homepage, just update the active tab
+      dispatch(setActiveIndex(tabId));
+    }
+  };
 
   return (
     <div>
@@ -210,7 +223,7 @@ const Header: React.FC = () => {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    dispatch(setActiveIndex(7));
+                    handleTabClick(7);
                   }}
                 >
                   <User className="mr-2 text-gray-400 w-4 h-4" />
@@ -230,7 +243,7 @@ const Header: React.FC = () => {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
                   onClick={() => {
                     setIsDropdownOpen(false);
-                    dispatch(setActiveIndex(10));
+                    handleTabClick(10);
                   }}
                 >
                   <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
@@ -290,7 +303,7 @@ const Header: React.FC = () => {
                     className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
                     onClick={() => {
                       setIsModalOpen(false);
-                      dispatch(setActiveIndex(7));
+                      handleTabClick(7);
                     }}
                   >
                     <User className="mr-3 text-gray-400 w-5 h-5" />
@@ -302,7 +315,7 @@ const Header: React.FC = () => {
                     className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
                     onClick={() => {
                       setIsModalOpen(false);
-                      dispatch(setActiveIndex(9));
+                      handleTabClick(9);
                     }}
                   >
                     <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
@@ -314,7 +327,7 @@ const Header: React.FC = () => {
                     className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
                     onClick={() => {
                       setIsModalOpen(false);
-                      dispatch(setActiveIndex(10));
+                      handleTabClick(10);
                     }}
                   >
                     <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
