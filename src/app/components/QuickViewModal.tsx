@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../../../Redux/cartSlice';
 import { Product, Variant } from '../../../types';
+import LuxuryTabs from './ui/LuxuryTabs';
 
 interface QuickViewModalProps {
   product: Product | null;
@@ -25,16 +26,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
 
   // Get the currently selected variant based on color and size
-  
-const selectedVariant = useMemo(() => {
-  return variants.find((variant) => 
-    variant?.color === selectedColor && variant?.size === selectedSize
-  ) as Variant | undefined;
-}, [variants, selectedColor, selectedSize]);
+  const selectedVariant = useMemo(() => {
+    return variants.find((variant) => 
+      variant?.color === selectedColor && variant?.size === selectedSize
+    ) as Variant | undefined;
+  }, [variants, selectedColor, selectedSize]);
 
-
-
-  
   // Get images for display - prioritize variant images
   const additionalImages = useMemo(() => {
     if (!product) return ['/NoImage.webp'];
@@ -52,6 +49,136 @@ const selectedVariant = useMemo(() => {
     
     return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
   }, [product, variants, selectedVariant]);
+
+  // 3D Model Component
+  const ModelViewer3D = () => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg">
+      <div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+        {/* Placeholder for 3D model - Replace with your actual 3D viewer */}
+        <div className="text-center">
+          <div className="w-16 h-16 md:w-20 md:h-20 mx-auto mb-4 bg-amber-500 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-2">3D Product Viewer</h3>
+          <p className="text-gray-600 text-sm max-w-md px-4">
+            Interactive 3D model - Drag to rotate, scroll to zoom
+          </p>
+        </div>
+        
+        {/* 3D Controls */}
+        <div className="absolute bottom-4 left-4 flex space-x-2">
+          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
+            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+            </svg>
+          </button>
+          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors">
+            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Model Information */}
+      <div className="w-full p-4 bg-white rounded-lg mt-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="font-medium text-gray-700">Polygons:</span>
+            <span className="text-gray-600 ml-2">12.5k</span>
+          </div>
+          <div>
+            <span className="font-medium text-gray-700">Textures:</span>
+            <span className="text-gray-600 ml-2">4K Resolution</span>
+          </div>
+          <div>
+            <span className="font-medium text-gray-700">Format:</span>
+            <span className="text-gray-600 ml-2">GLTF/GLB</span>
+          </div>
+          <div>
+            <span className="font-medium text-gray-700">File Size:</span>
+            <span className="text-gray-600 ml-2">8.7 MB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Image Gallery Component
+  const ImageGallery = () => (
+    <div className="space-y-4">
+      <div className="relative flex items-center justify-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
+        <img
+          src={additionalImages[selectedImage]}
+          alt={product?.name || 'Product'}
+          className="h-full object-cover"
+          onError={(e) => {
+            e.currentTarget.src = '/NoImage.webp';
+          }}
+        />
+        
+        {/* Sale/New Badge */}
+        {(product?.onSale || product?.isNew) && (
+          <div className="absolute top-3 left-3 flex space-x-2">
+            {product.onSale && (
+              <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
+            )}
+            {product.isNew && (
+              <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Thumbnail Gallery */}
+      <div className="grid grid-cols-4 gap-2">
+        {additionalImages.map((image, index) => (
+          <button
+            key={index}
+            onClick={() => setSelectedImage(index)}
+            className={`h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
+              selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
+            }`}
+          >
+            <img
+              src={image}
+              alt={`${product?.name || 'Product'} view ${index + 1}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.src = '/NoImage.webp';
+              }}
+            />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Define tabs for LuxuryTabs component
+  const productTabs = useMemo(() => [
+    {
+      id: 'gallery',
+      label: 'Image Gallery',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      content: <ImageGallery />
+    },
+    {
+      id: '3d-view',
+      label: '3D View',
+      icon: (
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+        </svg>
+      ),
+      content: <ModelViewer3D />
+    }
+  ], [additionalImages, selectedImage, product]);
 
   // Update image when variant changes
   useEffect(() => {
@@ -167,8 +294,9 @@ const selectedVariant = useMemo(() => {
     try {
       // Create cart item with variant-specific data and proper error handling
       const cartItem = {
-        id:Number(selectedVariant.id) || Date.now(), // Convert to number or use timestamp as fallback        productId: product.id?.toString() || 'unknown',
-        userId: 'current-user-id', // Replace with actual user ID from your auth context
+        id: Number(selectedVariant.id) || Date.now(),
+        productId: product.id?.toString() || 'unknown',
+        userId: 'current-user-id',
         sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
@@ -198,7 +326,6 @@ const selectedVariant = useMemo(() => {
       onClose();
     } catch (error) {
       console.error('Error adding to cart:', error);
-      // You can show a user-friendly error message here
     }
   };
 
@@ -259,50 +386,12 @@ const selectedVariant = useMemo(() => {
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-6">
-          {/* Product Images */}
+          {/* Product Media Section with Tabs */}
           <div className="space-y-4">
-            <div className="relative flex items-center justify-center   aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={additionalImages[selectedImage]}
-                alt={product?.name || 'Product'}
-                className="h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = '/NoImage.webp';
-                }}
-              />
-              
-              {/* Sale/New Badge */}
-              {(product?.onSale || product?.isNew) && (
-                <div className="absolute top-3 left-3 flex space-x-2">
-                  {product.onSale && (
-                    <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
-                  )}
-                  {product.isNew && (
-                    <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Thumbnail Gallery */}
-            <div className="grid grid-cols-4 gap-2">
-              {additionalImages.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 ${selectedImage === index ? 'border-amber-500' : 'border-transparent'}`}
-                >
-                  <img
-                    src={image}
-                    alt={`${product?.name || 'Product'} view ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = '/NoImage.webp';
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
+            <LuxuryTabs 
+              tabs={productTabs} 
+              defaultTab="gallery"
+            />
           </div>
 
           {/* Product Details */}
