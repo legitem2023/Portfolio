@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+
 import VisitorCounter from './VisitorCounter';
 import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch, useSelector } from 'react-redux';
