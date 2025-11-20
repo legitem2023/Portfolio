@@ -6,7 +6,7 @@ interface ModelData {
 }
 
 interface ModelViewerProps {
-  data: ModelData[];
+  data: string;
 }
 
 const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
@@ -45,7 +45,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
             />
             {/* @ts-ignore */}
             <model-viewer
-                src={data[0]?.model}
+                src={data}
                 alt="A 3D model"
                 ar
                 ar-scale="fixed"
