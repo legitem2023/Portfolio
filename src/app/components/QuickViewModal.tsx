@@ -56,7 +56,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       <div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
         {/* Placeholder for 3D model - Replace with your actual 3D viewer */}
         <div className="text-center">
-          <ModelViewer data=""/>
+          <ModelViewer data="https://new-client-legitem.vercel.app/honda_pcx.glb"/>
         </div>
         
         {/* 3D Controls */}
