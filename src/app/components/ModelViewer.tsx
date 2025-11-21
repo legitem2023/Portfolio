@@ -27,10 +27,10 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
                 camera-controls 
                 touch-action="pan-y"
                 shadow-intensity="2"
-                skybox-image="https://hokei-storage.s3.ap-northeast-1.amazonaws.com/images/Legit/hdr/symmetrical_garden_02_1k.hdr"
+                skybox-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_1k_HDR.jpg"
                 skybox-height="2m"
                 max-camera-orbit="auto 90deg auto"
-                style={{ width: 300, height: 300 }}
+                style={{ width: 400px, height: 400px , backgroundColor:'red'}}
             />
         </div>
     );
