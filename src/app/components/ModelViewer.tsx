@@ -30,8 +30,12 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     skybox-height="3m"
     max-camera-orbit="auto 90deg auto"
     className="aspect-[4/3]"
-    style={{ width: '400', height: '400' }}
-  />
+    style={{ 
+        width: '100%', 
+        minWidth: '400px',
+        height: 'auto'
+    }}
+/>
 </div>
         </div>
     );
