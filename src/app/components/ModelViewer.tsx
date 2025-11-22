@@ -14,20 +14,26 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
                 strategy="lazyOnload"
             />
             {/* @ts-ignore */}
-            <model-viewer
-                src={data}
-                alt="A 3D model"
-                ar
-                ar-scale="fixed"
-                camera-controls 
-                touch-action="pan-y"
-                shadow-intensity="2"
-                skybox-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_1k_HDR.jpg"
-                skybox-height="3m"
-                max-camera-orbit="auto 90deg auto"
-                className="aspect-[16/9]"
-                style={{ width: '100%', height: 'auto' }}
-            />
+            <div style={{
+  background: 'radial-gradient(circle, white, indigo, violet)',
+  padding: '20px',
+  borderRadius: '8px'
+}}>
+  <model-viewer
+    src={data}
+    alt="A 3D model"
+    ar
+    ar-scale="fixed"
+    camera-controls
+    touch-action="pan-y"
+    shadow-intensity="2"
+    skybox-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_1k_HDR.jpg"
+    skybox-height="3m"
+    max-camera-orbit="auto 90deg auto"
+    className="aspect-[16/9]"
+    style={{ width: '100%', height: 'auto' }}
+  />
+</div>
         </div>
     );
 };
