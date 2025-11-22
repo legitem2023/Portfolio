@@ -33,7 +33,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     style={{ 
         width: '100%', 
         minWidth: '400px',
-        height: 'auto'
+        height: 'auto',
+        minHeight: '300px'
     }}
 />
 </div>
