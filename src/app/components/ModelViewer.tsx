@@ -16,7 +16,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
             {/* @ts-ignore */}
             <div style={{
   background: 'radial-gradient(circle, white, indigo)',
-  padding: '20px',
   borderRadius: '8px'
 }}>
   <model-viewer
@@ -30,7 +29,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     skybox-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_1k_HDR.jpg"
     skybox-height="3m"
     max-camera-orbit="auto 90deg auto"
-    className="aspect-[16/9]"
+    className="aspect-[4/3]"
     style={{ width: '400', height: '400' }}
   />
 </div>
