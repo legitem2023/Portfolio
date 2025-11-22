@@ -23,9 +23,9 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
                 touch-action="pan-y"
                 shadow-intensity="2"
                 skybox-image="https://modelviewer.dev/shared-assets/environments/whipple_creek_regional_park_1k_HDR.jpg"
-                skybox-height="2m"
+                skybox-height="3m"
                 max-camera-orbit="auto 90deg auto"
-                style={{ width: '400px', height: '400px', backgroundColor: 'red' }}
+                style={{ width: '100%', height: 'auto' }}
             />
         </div>
     );
