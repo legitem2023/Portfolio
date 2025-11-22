@@ -55,7 +55,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg">
       <div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
         {/* Placeholder for 3D model - Replace with your actual 3D viewer */}
-        <div className="text-center">
+        <div className="text-center relative">
           <ModelViewer data="./2024_ducati_streetfighter_v4_s.glb"/>
         </div>
       </div>
