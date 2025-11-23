@@ -52,7 +52,7 @@ const Footer = () => {
               </li>
               <li className="flex items-center text-indigo-600">
                 <Mail size={16} className="mr-2" />
-                <span>DVN2025.com</span>
+                <span>DVN.com</span>
               </li>
               <li className="flex items-center text-indigo-600">
                 <MapPin size={16} className="mr-2" />
@@ -63,7 +63,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 pt-8 text-center text-indigo-400">
-          <p>© {new Date().getFullYear()} Digital Vendors Network. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} DVN.com All rights reserved.</p>
         </div>
       </div>
     </footer>
