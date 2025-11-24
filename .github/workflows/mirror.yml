@@ -23,7 +23,7 @@ jobs:
         env:
           MIRROR_TOKEN: ${{ secrets.MIRROR_DVN }}
         run: |
-          git remote add mirror https://legitem2023:${MIRROR_TOKEN}github.com/robertsancomarquez1988-lgtm/DVN.git
+          git remote add mirror https://legitem2023:${MIRROR_TOKEN}@github.com/robertsancomarquez1988-lgtm/DVN.git
 
       # Step 3: Push only branches and tags
       - name: Push branches
