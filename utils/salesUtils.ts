@@ -1,4 +1,4 @@
-import { Timeframe, GroupBy } from '@/types/sales';
+import { Timeframe, GroupBy } from '../types/sales';
 
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-US', {
