@@ -14,7 +14,7 @@ import { decryptToken } from '../../../utils/decryptToken';
 import UsersPage from './components/Users/UsersPage';
 
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState<string>('Dashboard');
+  const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userId, setUserId] = useState("");
   const [userRole, setUserRole] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
