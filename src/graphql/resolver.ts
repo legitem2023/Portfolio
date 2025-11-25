@@ -266,7 +266,7 @@ async function getOrderStatusBreakdown(whereClause: any) {
     percentage: total > 0 ? (item._count.id / total) * 100 : 0
   }));
 }
-
+/*
 async function getCustomerMetrics(
   currentWhere: any, 
   previousWhere: any
@@ -316,7 +316,45 @@ async function getCustomerMetrics(
       (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
   };
 }
+*/
+async function getCustomerMetrics(
+  currentWhere: any, 
+  previousWhere: any
+) {
+  const [currentCustomers, previousCustomers, totalRevenueResult] = await Promise.all([
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: currentWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: previousWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.aggregate({
+      where: currentWhere,
+      _sum: {
+        total: true
+      }
+    })
+  ]);
 
+  // Calculate repeat customers (users with more than 1 order)
+  const repeatCustomers = currentCustomers.filter(customer => customer._count.id > 1);
+
+  return {
+    total: currentCustomers.length,
+    repeatCustomers: repeatCustomers.length,
+    newCustomers: currentCustomers.length - repeatCustomers.length,
+    averageSpend: currentCustomers.length > 0 ? 
+      (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
+  };
+}
 async function getSalesTrendData(
   whereClause: any, 
   groupBy: string, 
