@@ -4,11 +4,11 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { SALES_METRICS_QUERY, SALES_DATA_QUERY, TOP_PRODUCTS_QUERY } from '../../components/graphql/query';
 import { Timeframe, GroupBy, SalesFilters } from '../../../../types/sales';
-import SalesMetricsCards from './SalesMetricsCards';
-import RevenueChart from './RevenueChart';
-import TopProductsTable from './TopProductsTable';
-import OrderStatusChart from './OrderStatusChart';
-import TimeframeSelector from './TimeframeSelector';
+import SalesMetricsCards from './sales/SalesMetricsCards';
+import RevenueChart from './sales/RevenueChart';
+import TopProductsTable from './sales/TopProductsTable';
+import OrderStatusChart from './sales/OrderStatusChart';
+import TimeframeSelector from './sales/TimeframeSelector';
 
 const SalesDashboard: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('LAST_30_DAYS');
