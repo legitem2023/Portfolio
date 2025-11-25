@@ -258,7 +258,7 @@ export default function ManagementDashboard() {
       />
       
       <div className="md:pl-64 flex flex-col flex-1 absolute">
-        <main className="flex-1">
+        <main className="flex-1 absolute">
           {renderContent()}
         </main>
       </div>
