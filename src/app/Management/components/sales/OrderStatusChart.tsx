@@ -3,7 +3,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { OrderStatusCount } from '../../../../../types/sales';
-import { formatNumber } from '@/utils/salesUtils';
+import { formatNumber } from '../../../../../utils/salesUtils';
 
 interface OrderStatusChartProps {
   data?: OrderStatusCount[];
