@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ProductSales } from '@/types/sales';
-import { formatCurrency, formatNumber } from '@/utils/salesUtils';
+import { ProductSales } from '../../../../../types/sales';
+import { formatCurrency, formatNumber } from '../../../../../utils/salesUtils';
 
 interface TopProductsTableProps {
   data?: ProductSales[];
