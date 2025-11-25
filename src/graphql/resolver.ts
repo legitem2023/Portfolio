@@ -1775,6 +1775,9 @@ export const resolvers = {
               role: 'USER',
               avatar: avatarUrl
             },
+            include: {
+             addresses: true
+            }
           });
         }
 
