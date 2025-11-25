@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { SalesDataResponse } from '../../../../types/sales';
-import { formatCurrency, formatNumber } from '@/utils/salesUtils';
+import { SalesDataResponse } from '../../../../../types/sales';
+import { formatCurrency, formatNumber } from '../../../../../utils/salesUtils';
 
 interface RevenueChartProps {
   data?: SalesDataResponse;
