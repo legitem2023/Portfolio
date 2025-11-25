@@ -195,7 +195,7 @@ export default function ManagementDashboard() {
 
   const renderContent = () => {
     switch(activeTab) {
-      case 'Dashboard':
+      case 'dashboard':
         return <SalesDashboard/>;
       case 'products':
         return <ProductsTab 
