@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { SalesMetrics } from '../../../../types/sales';
-import { formatCurrency, formatNumber, formatPercentage, getGrowthColor, getGrowthIcon } from '@/utils/salesUtils';
+import { formatCurrency, formatNumber, formatPercentage, getGrowthColor, getGrowthIcon } from '../../../../utils/salesUtils';
 
 interface SalesMetricsCardsProps {
   data?: SalesMetrics;
