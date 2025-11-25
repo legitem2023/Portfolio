@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Timeframe, GroupBy, SalesFilters } from '../../../../types/sales';
-import { getTimeframeLabel } from '../../../../utils/salesUtils';
+import { Timeframe, GroupBy, SalesFilters } from '../../../../../types/sales';
+import { getTimeframeLabel } from '../../../../../utils/salesUtils';
 
 interface TimeframeSelectorProps {
   timeframe: Timeframe;
