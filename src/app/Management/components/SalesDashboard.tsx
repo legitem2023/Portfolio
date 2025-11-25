@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { SALES_METRICS_QUERY, SALES_DATA_QUERY, TOP_PRODUCTS_QUERY } from '../../components/graphql/query';
-import { Timeframe, GroupBy, SalesFilters } from '@/types/sales';
+import { Timeframe, GroupBy, SalesFilters } from '../../../../types/sales';
 import SalesMetricsCards from './SalesMetricsCards';
 import RevenueChart from './RevenueChart';
 import TopProductsTable from './TopProductsTable';
