@@ -1,5 +1,84 @@
 import { gql } from '@apollo/client';
 
+export const SALES_DATA_QUERY = gql`
+  query SalesData($timeframe: Timeframe!, $groupBy: GroupBy!, $filters: SalesFilters) {
+    salesData(timeframe: $timeframe, groupBy: $groupBy, filters: $filters) {
+      data {
+        period
+        date
+        revenue
+        orders
+        averageOrderValue
+        itemsSold
+      }
+      summary {
+        totalRevenue
+        totalOrders
+        averageOrderValue
+        totalItemsSold
+        growthRate
+      }
+      timeframe {
+        start
+        end
+        label
+      }
+    }
+  }
+`;
+
+export const SALES_METRICS_QUERY = gql`
+  query SalesMetrics($timeframe: Timeframe!, $filters: SalesFilters) {
+    salesMetrics(timeframe: $timeframe, filters: $filters) {
+      revenue {
+        total
+        average
+        growth
+        target
+      }
+      orders {
+        total
+        averageValue
+        growth
+        statusBreakdown {
+          status
+          count
+          percentage
+        }
+      }
+      customers {
+        total
+        repeatCustomers
+        newCustomers
+        averageSpend
+      }
+    }
+  }
+`;
+
+export const TOP_PRODUCTS_QUERY = gql`
+  query TopProducts($timeframe: Timeframe!, $limit: Int) {
+    topProducts(timeframe: $timeframe, limit: $limit) {
+      productId
+      productName
+      unitsSold
+      revenue
+      percentage
+    }
+  }
+`;
+
+export const SALES_TREND_QUERY = gql`
+  query SalesTrend($timeframe: Timeframe!, $groupBy: TrendGroupBy!) {
+    salesTrend(timeframe: $timeframe, groupBy: $groupBy) {
+      date
+      period
+      revenue
+      orders
+      trend
+    }
+  }
+`;
 // ============ USER QUERIES ============
 export const USERS = gql`
   query GetUsers {
