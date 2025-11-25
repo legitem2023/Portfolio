@@ -7,13 +7,14 @@ import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
+import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 import { decryptToken } from '../../../utils/decryptToken';
 import UsersPage from './components/Users/UsersPage';
 
 export default function ManagementDashboard() {
-  const [activeTab, setActiveTab] = useState<string>('products');
+  const [activeTab, setActiveTab] = useState<string>('Dashboard');
   const [userId, setUserId] = useState("");
   const [userRole, setUserRole] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -194,6 +195,8 @@ export default function ManagementDashboard() {
 
   const renderContent = () => {
     switch(activeTab) {
+      case 'Dashboard':
+        return <SalesDashboard/>;
       case 'products':
         return <ProductsTab 
           supplierId={userId}
