@@ -41,6 +41,20 @@ export interface SalesSummary {
   averageOrderValue: number;
   totalItemsSold: number;
   growthRate: number;
+  conversionRate?: number;
+}
+
+export interface TimeframeInfo {
+  start: string;
+  end: string;
+  label: string;
+}
+
+// ADD THIS MISSING INTERFACE
+export interface SalesDataResponse {
+  data: SalesDataPoint[];
+  summary: SalesSummary;
+  timeframe: TimeframeInfo;
 }
 
 export interface RevenueMetrics {
