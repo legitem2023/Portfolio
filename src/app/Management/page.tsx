@@ -257,8 +257,8 @@ export default function ManagementDashboard() {
         onClose={() => setSidebarOpen(false)}
       />
       
-      <div className="md:pl-64 flex flex-col flex-1 absolute bg-amber-500">
-        <main className="flex-1 absolute">
+      <div className="md:pl-64 flex flex-col flex-1 bg-amber-500">
+        <main className="flex-1">
           {renderContent()}
         </main>
       </div>
