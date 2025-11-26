@@ -36,8 +36,8 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
       <div className={`
         fixed inset-y-0 left-0 z-50 
         transform transition-transform duration-300 ease-in-out
-        ${isOpen ? ' fixed translate-x-0' : '-translate-x-full'}
-        md:relative md:translate-x-0
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:absolute md:translate-x-0
         md:flex md:w-64 md:flex-col
       `}>
         <div className="border-r border-gray-200 pt-5 flex flex-col flex-grow bg-white overflow-y-auto h-full">
