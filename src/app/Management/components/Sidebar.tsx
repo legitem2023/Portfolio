@@ -33,9 +33,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
       )}
       
       {/* Sidebar */}
-      <div className={`
-        bg-zinc-800
-        
+      <div className={`   
         fixed inset-y-0 left-0 z-50 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -56,7 +54,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
             </button>
           </div>
 
-          <div className="flex-grow mt-5 flex flex-col">
+          <div className="flex-grow mt-5 flex flex-col bg-zinc-800">
             <nav className="flex-1 px-2 pb-4 space-y-1">
               {navItems.map((item) => (
                 <button
