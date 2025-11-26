@@ -27,14 +27,14 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-40 md:hidden"
+          className="fixed inset-0 bg-zinc-800 z-40 md:hidden"
           onClick={onClose}
         />
       )}
       
       {/* Sidebar */}
       <div className={`
-        bg-neutral-800
+        bg-zinc-800
         
         fixed inset-y-0 left-0 z-50 
         transform transition-transform duration-300 ease-in-out
