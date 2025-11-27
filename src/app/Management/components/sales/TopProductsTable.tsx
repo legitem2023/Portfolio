@@ -12,12 +12,12 @@ interface TopProductsTableProps {
 const TopProductsTable: React.FC<TopProductsTableProps> = ({ data, loading }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         <div className="h-6 bg-gray-200 rounded w-1/3 mb-4 animate-pulse"></div>
         {[...Array(5)].map((_, i) => (
           <div key={i} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 sm:w-2/5"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/4 sm:w-1/5"></div>
           </div>
         ))}
       </div>
@@ -27,32 +27,35 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({ data, loading }) =>
   const products = data || [];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Products</h3>
       
       {products.length === 0 ? (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 text-sm sm:text-base">
           No product data available for the selected timeframe.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {products.map((product, index) => (
-            <div key={product.productId} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-semibold text-sm">
+            <div 
+              key={product.productId} 
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-semibold text-xs sm:text-sm flex-shrink-0">
                   {index + 1}
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900 text-sm line-clamp-1">
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-medium text-gray-900 text-sm line-clamp-1 truncate">
                     {product.productName}
                   </h4>
-                  <p className="text-gray-500 text-xs">
+                  <p className="text-gray-500 text-xs sm:text-sm">
                     {formatNumber(product.unitsSold)} units
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-gray-900 text-sm">
+              <div className="text-right ml-2 sm:ml-4 flex-shrink-0">
+                <p className="font-semibold text-gray-900 text-sm sm:text-base">
                   {formatCurrency(product.revenue)}
                 </p>
                 <p className="text-green-600 text-xs font-medium">
