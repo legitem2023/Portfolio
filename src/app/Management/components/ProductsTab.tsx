@@ -56,8 +56,11 @@ export default function ProductsTab({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Tabs/>
-
+      <Tabs 
+        tabs={tabs} 
+        defaultTab="Form"
+        className="max-w-4xl"
+      />
 
  
       </div>
