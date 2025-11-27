@@ -43,7 +43,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
         <div className="flex flex-col flex-grow bg-gray-800 overflow-y-auto h-full">
           {/* Close button for mobile */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold text-white">Menu</h2>
+            <div className="text-lg font-semibold text-white">Menu</div>
             <button
               onClick={onClose}
               className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
