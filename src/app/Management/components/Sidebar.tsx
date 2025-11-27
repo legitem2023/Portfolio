@@ -27,7 +27,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-zinc-800 z-40 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={onClose}
         />
       )}
@@ -37,16 +37,16 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
         fixed inset-y-0 left-0 z-50 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:absolute md:translate-x-0
+        md:relative md:translate-x-0
         md:flex md:w-64 md:flex-col
       `}>
-        <div className="border-r border-gray-200 pt-5 flex flex-col flex-grow bg-white overflow-y-auto h-full">
+        <div className="flex flex-col flex-grow bg-gray-800 overflow-y-auto h-full">
           {/* Close button for mobile */}
-          <div className="flex items-center justify-between px-4 md:hidden">
-            <h2 className="text-lg font-semibold text-gray-800">Menu</h2>
+          <div className="flex items-center justify-between px-4 py-4 md:hidden border-b border-gray-700">
+            <h2 className="text-lg font-semibold text-white">Menu</h2>
             <button
               onClick={onClose}
-              className="p-2 rounded-md text-gray-200 hover:text-gray-100 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
             >
               <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -54,19 +54,27 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
             </button>
           </div>
 
-          <div className="flex-grow mt-5 flex flex-col bg-zinc-800">
-            <nav className="flex-1 px-2 pb-4 space-y-1">
+          <div className="flex-grow flex flex-col">
+            <nav className="flex-1 px-2 py-4 space-y-1">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleTabClick(item.id)}
                   className={`${
                     activeTab === item.id 
-                      ? 'bg-gray-100 text-gray-400' 
-                      : 'text-gray-400 hover:bg-gray-50 hover:text-gray-400'
-                  } group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full`}
+                      ? 'bg-gray-900 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700 hover:text-white'
+                  } group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full transition-colors duration-200`}
                 >
-                  <svg className="text-gray-400 mr-3 flex-shrink-0 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg 
+                    className={`${
+                      activeTab === item.id ? 'text-white' : 'text-gray-400 group-hover:text-white'
+                    } mr-3 flex-shrink-0 h-6 w-6 transition-colors duration-200`} 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
                   </svg>
                   {item.label}
