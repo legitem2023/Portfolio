@@ -11,7 +11,7 @@ import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 import { decryptToken } from '../../../utils/decryptToken';
-import UsersPage from './components/Users/UsersPage';
+import UsersTab from './components/UsersTab';
 
 export default function ManagementDashboard() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -214,11 +214,7 @@ export default function ManagementDashboard() {
           handleCategorySubmit={handleCategorySubmit}
         />;
       case 'users':
-        // Optionally, you can add additional role-based restrictions here
-        if (userRole !== 'admin') {
-          return <div className="p-4">Access denied. Admin privileges required.</div>;
-        }
-        return <UsersPage/>;
+        return <UsersTab/>;
       default:
         return <div>Select a tab</div>;
     }
