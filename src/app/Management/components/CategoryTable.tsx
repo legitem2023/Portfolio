@@ -45,7 +45,7 @@ export default function CategoryTable({ categories }: CategoryTableProps) {
                   <StatusBadge status={category.status} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <ActionButtons categoryId={category.id} />
+                  <ActionButtons categoryId={category.id.toString()} />
                 </td>
               </tr>
             ))}
