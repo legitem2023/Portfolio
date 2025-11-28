@@ -245,7 +245,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
         <div className="mt-2 text-sm text-gray-500">
           Showing {filteredAndSortedProducts.length} of {products.length} products
           {searchQuery && (
-            <span> for "<span className="font-medium">{searchQuery}</span>"</span>
+            <span> for <span className="font-medium">{searchQuery}</span></span>
           )}
         </div>
       </div>
