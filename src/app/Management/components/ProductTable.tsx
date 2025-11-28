@@ -79,7 +79,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
     }
     
     // Apply sorting
-    return filtered.sort((a, b) => {
+    return filtered.sort((a:any, b:any) => {
       switch (sortOption.value) {
         case 'name-asc':
           return a.name.localeCompare(b.name);
