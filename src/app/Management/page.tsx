@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
 import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
+import LoadingShimmer from './components/LoadingShimmer';
 import { Product, Category, NewProduct, NewCategory } from './types/types';
 import { decryptToken } from '../../../utils/decryptToken';
 import UsersTab from './components/UsersTab';
@@ -223,9 +224,7 @@ export default function ManagementDashboard() {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
+      <LoadingShimmer/>
     );
   }
 
@@ -234,7 +233,7 @@ export default function ManagementDashboard() {
     return null;
   }*/
 
-  if (categoryLoading && productLoading) return <div>Category Loading...</div>;
+  if (categoryLoading && productLoading) return <LoadingShimmer/>;
 
   return (
     <div className="min-h-screen bg-gray-100">
