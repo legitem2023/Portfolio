@@ -45,7 +45,7 @@ export default function CategoriesTab({
     ]
 
   return (
-    <div className="p-6">
+    <div className="p-4 m:p-0">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Category Management</h2>
       </div>
