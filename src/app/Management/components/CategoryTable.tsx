@@ -103,7 +103,7 @@ function MobileCategoryCard({ category }: { category: Category }) {
       
       {/* Actions */}
       <div className="pt-3 border-t border-gray-200">
-        <ActionButtons categoryId={category.id} />
+        <ActionButtons categoryId={category.id.toString()} />
       </div>
     </div>
   );
