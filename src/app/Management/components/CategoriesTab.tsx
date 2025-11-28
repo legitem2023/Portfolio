@@ -22,7 +22,6 @@ export default function CategoriesTab({
       label: 'Form',
       content: (
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Category</h3>
           <CategoryForm
             newCategory={newCategory}
             setNewCategory={setNewCategory}
