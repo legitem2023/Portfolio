@@ -48,9 +48,6 @@ export default function CategoriesTab({
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Category Management</h2>
-        <button className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-          + Add New Category
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
