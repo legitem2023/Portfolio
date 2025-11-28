@@ -37,7 +37,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
         fixed inset-y-0 left-0 z-50 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        md:absolute md:translate-x-0
+        md:fixed md:translate-x-0
         md:flex md:w-64 md:flex-col
       `}>
         <div className="flex flex-col flex-grow bg-gray-800 overflow-y-auto h-full">
