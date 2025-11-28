@@ -43,6 +43,7 @@ export interface Product {
   description?: string;
   productCode?: string;
   category: category;
+  createdAt:string;
   variants: {
     id: string;
     sku: string;
