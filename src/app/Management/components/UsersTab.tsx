@@ -36,4 +36,4 @@ const UsersTab: React.FC = () => {
   );
 };
 
-export default UsersPage;
+export default UsersTab;
