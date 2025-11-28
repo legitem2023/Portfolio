@@ -604,14 +604,10 @@ function VariantsModal({
       />
       
       {/* Modal Panel */}
-<div className="fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease-in-out">
-        <div className="bg-white rounded-t-2xl shadow-xl max-h-[80vh] overflow-hidden">
-
-      
-      
-          {/* <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out">
-        
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">*/}
+     <div className="fixed inset-x-0 bottom-0 z-50 transform transition-transform duration-300 ease">
+        <div className="bg-white shadow-xl max-h-[80vh]">      
+          {/* <div className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl transform transition-transform duration-300 ease-in-out">     
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">*/}
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{product.name} - Variants</h2>
             <p className="text-sm text-gray-500">{safeVariants.length} variants</p>
