@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useMutation } from '@apollo/client';
 import { Product, Variant } from '../types/types';
 import { CREATE_VARIANT_MUTATION } from '../../components/graphql/mutation';
@@ -12,10 +12,27 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
+// Import Search and Sort Components
+import SearchInput from './UI/SearchInput';
+import SortDropdown, { SortOption } from './UI/components/SortDropdown';
+import SearchSortBar from './UI/SearchSortBar';
+
 interface ProductTableProps {
   products: Product[];
   onProductDeleted?: () => void; // Optional callback to refresh products
 }
+
+// Sort options configuration
+const sortOptions: SortOption[] = [
+  { value: 'name-asc', label: 'Name (A-Z)', direction: 'asc' },
+  { value: 'name-desc', label: 'Name (Z-A)', direction: 'desc' },
+  { value: 'price-asc', label: 'Price (Low to High)', direction: 'asc' },
+  { value: 'price-desc', label: 'Price (High to Low)', direction: 'desc' },
+  { value: 'stock-asc', label: 'Stock (Low to High)', direction: 'asc' },
+  { value: 'stock-desc', label: 'Stock (High to Low)', direction: 'desc' },
+  { value: 'createdAt-desc', label: 'Newest First', direction: 'desc' },
+  { value: 'createdAt-asc', label: 'Oldest First', direction: 'asc' },
+];
 
 // Corrected helper function to convert file to base64
 const convertToBase64 = (file: File): Promise<string> => {
@@ -43,6 +60,48 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
   const [uploadingVariantId, setUploadingVariantId] = useState<string | null>(null);
+  
+  // Search and Sort state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOption, setSortOption] = useState<SortOption>(sortOptions[0]);
+
+  // Filter and sort products
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = products;
+    
+    // Apply search filter
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.sku?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      switch (sortOption.value) {
+        case 'name-asc':
+          return a.name.localeCompare(b.name);
+        case 'name-desc':
+          return b.name.localeCompare(a.name);
+        case 'price-asc':
+          return (a.price || 0) - (b.price || 0);
+        case 'price-desc':
+          return (b.price || 0) - (a.price || 0);
+        case 'stock-asc':
+          return (a.stock || 0) - (b.stock || 0);
+        case 'stock-desc':
+          return (b.stock || 0) - (a.stock || 0);
+        case 'createdAt-asc':
+          return new Date(a.createdAt || '').getTime() - new Date(b.createdAt || '').getTime();
+        case 'createdAt-desc':
+          return new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime();
+        default:
+          return 0;
+      }
+    });
+  }, [products, searchQuery, sortOption]);
 
   // Fixed delete mutation - moved outside and properly defined
   const [deleteProduct] = useMutation(DELETE_PRODUCT, {
@@ -173,6 +232,24 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
 
   return (
     <>
+      {/* Search and Sort Bar */}
+      <div className="mb-6">
+        <SearchSortBar
+          searchPlaceholder="Search products by name, SKU, or description..."
+          sortOptions={sortOptions}
+          onSearch={setSearchQuery}
+          onSortChange={setSortOption}
+        />
+        
+        {/* Results Count */}
+        <div className="mt-2 text-sm text-gray-500">
+          Showing {filteredAndSortedProducts.length} of {products.length} products
+          {searchQuery && (
+            <span> for "<span className="font-medium">{searchQuery}</span>"</span>
+          )}
+        </div>
+      </div>
+
       {/* Desktop Table View */}
       <div className="hidden md:block bg-white shadow-md rounded-lg overflow-hidden">
         <table className="min-w-full divide-y divide-gray-200">
@@ -199,7 +276,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => (
+            {filteredAndSortedProducts.map((product) => (
               <TableRow 
                 key={product.id} 
                 product={product} 
@@ -215,7 +292,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-4">
-        {products.map((product) => (
+        {filteredAndSortedProducts.map((product) => (
           <MobileProductCard 
             key={product.id} 
             product={product} 
@@ -226,6 +303,22 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
           />
         ))}
       </div>
+
+      {/* Empty State */}
+      {filteredAndSortedProducts.length === 0 && (
+        <div className="text-center py-12 bg-white rounded-lg shadow">
+          <svg className="w-16 h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">No products found</h3>
+          <p className="mt-2 text-gray-500">
+            {searchQuery 
+              ? 'No products match your search criteria. Try different keywords.'
+              : 'No products available. Add your first product to get started.'
+            }
+          </p>
+        </div>
+      )}
 
       {/* Variants Modal */}
       <VariantsModal 
@@ -756,265 +849,4 @@ function VariantCard({
           <span className="text-gray-600">Price:</span>
           <span className="ml-1 text-gray-900">
             ${variant.price}
-            {variant.salePrice && variant.price && variant.salePrice < variant.price && (
-              <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
-            )}
-          </span>
-        </div>
-        <div>
-          <span className="text-gray-600">Stock:</span>
-          <span className="ml-1 text-gray-900">{variant.stock} units</span>
-        </div>
-      </div>
-      <div className="mt-2 text-xs text-gray-500">
-        Created: {new Date(variant.createdAt || '').toLocaleDateString()}
-      </div>
-    </div>
-  );
-}
-
-// Add Variant Form Component
-function AddVariantForm({ productId, onSuccess, onCancel }: { 
-  productId: string; 
-  onSuccess: () => void;
-  onCancel: () => void;
-}) {
-  const [formData, setFormData] = useState({
-    name: '',
-    sku: '',
-    color: '',
-    size: '',
-    price: '',
-    salePrice: '',
-    stock: ''
-  });
-
-  const [createVariant, { loading, error }] = useMutation(CREATE_VARIANT_MUTATION, {
-    onCompleted: () => {
-      onSuccess();
-      setFormData({
-        name: '',
-        sku: '',
-        color: '',
-        size: '',
-        price: '',
-        salePrice: '',
-        stock: ''
-      });
-    },
-    refetchQueries: ['GetProducts']
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const input = {
-      name: formData.name,
-      productId,
-      sku: formData.sku || undefined,
-      color: formData.color || undefined,
-      size: formData.size || undefined,
-      price: formData.price ? parseFloat(formData.price) : undefined,
-      salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-      stock: parseInt(formData.stock) || 0
-    };
-
-    createVariant({ variables: { input } });
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  return (
-    <div className="p-4 border-b border-gray-200 bg-gray-50">
-      <h3 className="text-lg font-medium text-gray-900 mb-3">Add New Variant</h3>
-      
-      {error && (
-        <div className="mb-3 p-2 bg-red-100 text-red-700 text-sm rounded">
-          Error: {error.message}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="Variant name"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="sku" className="block text-sm font-medium text-gray-700">
-              SKU
-            </label>
-            <input
-              type="text"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="SKU code"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="color" className="block text-sm font-medium text-gray-700">
-              Color
-            </label>
-            <input
-              type="text"
-              id="color"
-              name="color"
-              value={formData.color}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="Color"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="size" className="block text-sm font-medium text-gray-700">
-              Size
-            </label>
-            <input
-              type="text"
-              id="size"
-              name="size"
-              value={formData.size}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="Size"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-              Price ($)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="0.00"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
-              Sale Price ($)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="salePrice"
-              name="salePrice"
-              value={formData.salePrice}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
-            Stock *
-          </label>
-          <input
-            type="number"
-            id="stock"
-            name="stock"
-            required
-            value={formData.stock}
-            onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-            placeholder="0"
-          />
-        </div>
-
-        <div className="flex space-x-3 pt-2">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors"
-          >
-            {loading ? 'Creating...' : 'Create Variant'}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-// Reusable Components
-function PriceDisplay({ price, salePrice }: { price: number; salePrice?: number }) {
-  return (
-    <div className="text-sm text-gray-500">
-      {salePrice ? (
-        <div className="flex items-center space-x-2">
-          <span className="text-red-600 font-semibold">${salePrice}</span>
-          <span className="text-gray-400 line-through">${price}</span>
-        </div>
-      ) : (
-        <span>${price}</span>
-      )}
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-      status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-    }`}>
-      {status}
-    </span>
-  );
-}
-
-function ActionButtons({ productId, onDelete }: { productId: string; onDelete: (id: string) => void }) {
-  return (
-    <div className="flex space-x-3">
-      <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-        Edit
-      </button>
-      <button 
-        onClick={() => onDelete(productId)} 
-        className="text-red-600 hover:text-red-900 text-sm font-medium"
-      >
-        Delete
-      </button>
-    </div>
-  );
-}
+            {variant.salePrice &&
