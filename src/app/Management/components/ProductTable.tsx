@@ -14,7 +14,7 @@ import 'swiper/css/pagination';
 
 // Import Search and Sort Components
 import SearchInput from './UI/SearchInput';
-import SortDropdown, { SortOption } from './UI/components/SortDropdown';
+import SortDropdown, { SortOption } from './UI/SortDropdown';
 import SearchSortBar from './UI/SearchSortBar';
 
 interface ProductTableProps {
@@ -849,4 +849,265 @@ function VariantCard({
           <span className="text-gray-600">Price:</span>
           <span className="ml-1 text-gray-900">
             ${variant.price}
-            {variant.salePrice &&
+            {variant.salePrice && variant.price && variant.salePrice < variant.price && (
+              <span className="ml-1 text-red-500 line-through">${variant.salePrice}</span>
+            )}
+          </span>
+        </div>
+        <div>
+          <span className="text-gray-600">Stock:</span>
+          <span className="ml-1 text-gray-900">{variant.stock} units</span>
+        </div>
+      </div>
+      <div className="mt-2 text-xs text-gray-500">
+        Created: {new Date(variant.createdAt || '').toLocaleDateString()}
+      </div>
+    </div>
+  );
+}
+
+// Add Variant Form Component
+function AddVariantForm({ productId, onSuccess, onCancel }: { 
+  productId: string; 
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    sku: '',
+    color: '',
+    size: '',
+    price: '',
+    salePrice: '',
+    stock: ''
+  });
+
+  const [createVariant, { loading, error }] = useMutation(CREATE_VARIANT_MUTATION, {
+    onCompleted: () => {
+      onSuccess();
+      setFormData({
+        name: '',
+        sku: '',
+        color: '',
+        size: '',
+        price: '',
+        salePrice: '',
+        stock: ''
+      });
+    },
+    refetchQueries: ['GetProducts']
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const input = {
+      name: formData.name,
+      productId,
+      sku: formData.sku || undefined,
+      color: formData.color || undefined,
+      size: formData.size || undefined,
+      price: formData.price ? parseFloat(formData.price) : undefined,
+      salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
+      stock: parseInt(formData.stock) || 0
+    };
+
+    createVariant({ variables: { input } });
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <h3 className="text-lg font-medium text-gray-900 mb-3">Add New Variant</h3>
+      
+      {error && (
+        <div className="mb-3 p-2 bg-red-100 text-red-700 text-sm rounded">
+          Error: {error.message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name *
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              required
+              value={formData.name}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Variant name"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sku" className="block text-sm font-medium text-gray-700">
+              SKU
+            </label>
+            <input
+              type="text"
+              id="sku"
+              name="sku"
+              value={formData.sku}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="SKU code"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="color" className="block text-sm font-medium text-gray-700">
+              Color
+            </label>
+            <input
+              type="text"
+              id="color"
+              name="color"
+              value={formData.color}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Color"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="size" className="block text-sm font-medium text-gray-700">
+              Size
+            </label>
+            <input
+              type="text"
+              id="size"
+              name="size"
+              value={formData.size}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="Size"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+              Price ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              id="price"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="0.00"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
+              Sale Price ($)
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              id="salePrice"
+              name="salePrice"
+              value={formData.salePrice}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
+            Stock *
+          </label>
+          <input
+            type="number"
+            id="stock"
+            name="stock"
+            required
+            value={formData.stock}
+            onChange={handleChange}
+            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+            placeholder="0"
+          />
+        </div>
+
+        <div className="flex space-x-3 pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors"
+          >
+            {loading ? 'Creating...' : 'Create Variant'}
+          </button>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+// Reusable Components
+function PriceDisplay({ price, salePrice }: { price: number; salePrice?: number }) {
+  return (
+    <div className="text-sm text-gray-500">
+      {salePrice ? (
+        <div className="flex items-center space-x-2">
+          <span className="text-red-600 font-semibold">${salePrice}</span>
+          <span className="text-gray-400 line-through">${price}</span>
+        </div>
+      ) : (
+        <span>${price}</span>
+      )}
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  return (
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`}>
+      {status}
+    </span>
+  );
+}
+
+function ActionButtons({ productId, onDelete }: { productId: string; onDelete: (id: string) => void }) {
+  return (
+    <div className="flex space-x-3">
+      <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+        Edit
+      </button>
+      <button 
+        onClick={() => onDelete(productId)} 
+        className="text-red-600 hover:text-red-900 text-sm font-medium"
+      >
+        Delete
+      </button>
+    </div>
+  );
+}
