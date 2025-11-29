@@ -1,4 +1,4 @@
-import { Product } from '../types/types';
+import { Product } from '../../types/types';
 import PriceDisplay from './PriceDisplay';
 import StatusBadge from './StatusBadge';
 import ActionButtons from './ActionButtons';
