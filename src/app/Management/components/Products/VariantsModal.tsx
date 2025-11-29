@@ -35,6 +35,34 @@ export default function VariantsModal({
     createdAt: variant.createdAt || new Date().toISOString()
   }));
 
+// In your VariantsModal.tsx, make sure you have:
+const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
+  try {
+    // Your deletion logic here
+    console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
+    
+    // Example implementation:
+    // 1. Update local state first
+    const updatedVariants = variants.map(variant => {
+      if (variant.id === variantId) {
+        const updatedImages = [...variant.images];
+        updatedImages.splice(imageIndex, 1);
+        return { ...variant, images: updatedImages };
+      }
+      return variant;
+    });
+    setVariants(updatedVariants);
+
+    // 2. Make API call to delete from backend
+    // await deleteVariantImage(variantId, imageIndex);
+    
+  } catch (error) {
+    console.error('Error deleting variant image:', error);
+    // Handle error (show toast, etc.)
+  }
+};
+
+  
   return (
     <div className={`fixed inset-0 z-50 overflow-y-auto transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div 
@@ -92,7 +120,7 @@ export default function VariantsModal({
                   <VariantCard 
                     key={variant.id} 
                     variant={variant} 
-                    onImageDelete={variant.id}
+                    onImageDelete={handleVariantImageDelete}
                     onImageUpload={onVariantImageUpload}
                     isUploading={uploadingVariantId === variant.id}
                   />
