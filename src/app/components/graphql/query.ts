@@ -323,6 +323,7 @@ export const MANAGEMENTPRODUCTS = gql`
         price
         salePrice
         stock
+        images
       }
       brand
       weight
