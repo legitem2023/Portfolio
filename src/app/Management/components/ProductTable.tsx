@@ -8,7 +8,7 @@ import { SortOption } from './UI/SortDropdown';
 import TableRow from './Products/TableRow';
 import MobileProductCard from './Products/MobileProductCard';
 import VariantsModal from './Products/VariantsModal';
-
+import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
   onProductDeleted?: () => void;
