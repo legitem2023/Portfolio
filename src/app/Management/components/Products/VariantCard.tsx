@@ -51,7 +51,7 @@ export default function VariantCard({
 
   const hasImages = variant.images && variant.images.length > 0;
   const imageCount = variant.images?.length || 0;
-
+console.log(variant.images);
   return (
     <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
