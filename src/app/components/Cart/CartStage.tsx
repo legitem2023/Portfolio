@@ -45,7 +45,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                   <div>
                     <div className="flex justify-between text-base font-medium text-gray-900">
                       <h3 className="font-serif font-semibold text-indigo-900">{item.name}</h3>
-                      <p className="ml-4 text-indigo-700">${((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</p>
+                      <p className="ml-4 text-indigo-700">₱{((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}</p>
                     </div>
                     <div className="mt-1 flex items-center space-x-4">
                       <div 
@@ -99,15 +99,15 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
         <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
           <div className="flex justify-between text-base font-medium text-gray-900">
             <p className="text-indigo-900">Subtotal</p>
-            <p className="text-indigo-700">${subtotal.toFixed(2)}</p>
+            <p className="text-indigo-700">₱{subtotal.toFixed(2)}</p>
           </div>
           <div className="flex justify-between text-sm text-gray-600 mt-1">
             <p>Shipping</p>
-            <p>${shippingCost.toFixed(2)}</p>
+            <p>₱{shippingCost.toFixed(2)}</p>
           </div>
           <div className="flex justify-between text-sm text-gray-600 mt-1">
             <p>Tax</p>
-            <p>${tax.toFixed(2)}</p>
+            <p>₱{tax.toFixed(2)}</p>
           </div>
           <p className="mt-4 text-sm text-gray-500">
             Shipping and taxes calculated at checkout.
