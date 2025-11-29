@@ -3,7 +3,6 @@ import { useMutation } from '@apollo/client';
 import { CartItem, ShippingInfo, PaymentInfo } from './DeluxeCart';
 import { CREATE_ORDER } from '../graphql/mutation'; 
 
-
 interface ConfirmationStageProps {
   cartItems: CartItem[];
   shippingInfo: ShippingInfo;
@@ -165,12 +164,12 @@ const ConfirmationStage = ({
                         <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.color}</p>
                                                 <p className="mt-1 text-sm text-gray-500 line-clamp-2">{item.size}</p>
 
-                        <p className="mt-1 text-sm font-medium text-gray-900">${item.price.toFixed(2)} each</p>
+                        <p className="mt-1 text-sm font-medium text-gray-900">₱{item.price.toFixed(2)} each</p>
                       </div>
 
                       <div className="mt-4 sm:mt-0 sm:pr-9">
                         <div className="absolute top-0 right-0">
-                          <span className="text-sm font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
+                          <span className="text-sm font-medium text-gray-900">₱{(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                         <div className="mt-2 text-sm text-gray-500">
                           <span className="font-medium">Qty: {item.quantity}</span>
@@ -193,19 +192,19 @@ const ConfirmationStage = ({
             <dl className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Subtotal</dt>
-                <dd className="text-sm font-medium text-gray-900">${subtotal.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-gray-900">₱{subtotal.toFixed(2)}</dd>
               </div>
               <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Shipping</dt>
-                <dd className="text-sm font-medium text-gray-900">${shippingCost.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-gray-900">₱{shippingCost.toFixed(2)}</dd>
               </div>
               <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Tax</dt>
-                <dd className="text-sm font-medium text-gray-900">${tax.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-gray-900">₱{tax.toFixed(2)}</dd>
               </div>
               <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-base font-medium text-gray-900">Order total</dt>
-                <dd className="text-base font-medium text-gray-900">${total.toFixed(2)}</dd>
+                <dd className="text-base font-medium text-gray-900">₱{total.toFixed(2)}</dd>
               </div>
             </dl>
 
@@ -270,7 +269,7 @@ const ConfirmationStage = ({
           
           <div className="text-right">
             <div className="text-sm text-gray-600 mb-2">
-              Total: <span className="font-bold text-lg text-gray-900">${total.toFixed(2)}</span>
+              Total: <span className="font-bold text-lg text-gray-900">₱{total.toFixed(2)}</span>
             </div>
             <button
               onClick={handlePlaceOrder}
