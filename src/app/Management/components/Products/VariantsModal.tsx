@@ -37,7 +37,7 @@ export default function VariantsModal({
 
 // In your VariantsModal.tsx, make sure you have:
 const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
-  try {
+/*  try {
     // Your deletion logic here
     console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
     
@@ -59,7 +59,7 @@ const handleVariantImageDelete = async (variantId: string, imageIndex: number) =
   } catch (error) {
     console.error('Error deleting variant image:', error);
     // Handle error (show toast, etc.)
-  }
+  }*/
 };
 
   
