@@ -92,6 +92,7 @@ export default function VariantsModal({
                   <VariantCard 
                     key={variant.id} 
                     variant={variant} 
+                    onImageDelete={variant.id}
                     onImageUpload={onVariantImageUpload}
                     isUploading={uploadingVariantId === variant.id}
                   />
