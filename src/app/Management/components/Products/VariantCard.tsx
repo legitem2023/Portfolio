@@ -3,11 +3,8 @@ import { Variant } from '../../types/types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
-import 'swiper/css/thumbs';
+// Import Swiper bundled CSS
+import 'swiper/swiper-bundle.min.css';
 
 interface VariantCardProps {
   variant: Variant;
@@ -77,82 +74,80 @@ export default function VariantCard({
           {hasImages ? (
             <div className="space-y-3">
               {/* Main Swiper with 16:9 Aspect Ratio */}
-              <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-                <div className="aspect-w-16 aspect-h-9"> {/* 16:9 Aspect Ratio Container */}
-                  <Swiper
-                    modules={[Navigation, Pagination, Thumbs]}
-                    navigation={{
-                      nextEl: '.swiper-button-next',
-                      prevEl: '.swiper-button-prev',
-                    }}
-                    pagination={{
-                      clickable: true,
-                      type: imageCount > 1 ? 'bullets' : 'fraction',
-                    }}
-                    thumbs={{ swiper: thumbsSwiper }}
-                    spaceBetween={0}
-                    slidesPerView={1}
-                    className="h-full w-full rounded-lg"
-                  >
-                    {variant.images!.map((image, index) => (
-                      <SwiperSlide key={index}>
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100 relative">
-                          <img 
-                            src={image} 
-                            alt={`${variant.name} - Image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          
-                          {/* Delete Button on Main Image */}
-                          <button
-                            onClick={() => handleDeleteClick(index)}
-                            className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
-                            aria-label={`Delete image ${index + 1}`}
-                          >
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
+              <div className="relative bg-gray-100 rounded-lg overflow-hidden aspect-video">
+                <Swiper
+                  modules={[Navigation, Pagination, Thumbs]}
+                  navigation={{
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                  }}
+                  pagination={{
+                    clickable: true,
+                    type: imageCount > 1 ? 'bullets' : 'fraction',
+                  }}
+                  thumbs={{ swiper: thumbsSwiper }}
+                  spaceBetween={0}
+                  slidesPerView={1}
+                  className="h-full w-full"
+                >
+                  {variant.images!.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 relative">
+                        <img 
+                          src={image} 
+                          alt={`${variant.name} - Image ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        
+                        {/* Delete Button on Main Image */}
+                        <button
+                          onClick={() => handleDeleteClick(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-lg z-20"
+                          aria-label={`Delete image ${index + 1}`}
+                        >
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
 
-                  {/* Custom Navigation Buttons */}
-                  {imageCount > 1 && (
-                    <>
-                      <button
-                        className="swiper-button-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-all focus:outline-none focus:ring-2 focus:ring-white z-10"
-                        aria-label="Previous image"
-                      >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                      <button
-                        className="swiper-button-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-all focus:outline-none focus:ring-2 focus:ring-white z-10"
-                        aria-label="Next image"
-                      >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
-
-                  {/* Upload Overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all group cursor-pointer">
+                {/* Custom Navigation Buttons */}
+                {imageCount > 1 && (
+                  <>
                     <button
-                      onClick={handleAddImageClick}
-                      className="bg-white text-gray-800 text-sm px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2 hover:bg-gray-50 font-medium shadow-lg"
+                      className="swiper-button-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-all focus:outline-none focus:ring-2 focus:ring-white z-20"
+                      aria-label="Previous image"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
-                      <span>Add Image</span>
                     </button>
-                  </div>
+                    <button
+                      className="swiper-button-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-all focus:outline-none focus:ring-2 focus:ring-white z-20"
+                      aria-label="Next image"
+                    >
+                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Upload Overlay */}
+                <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 flex items-center justify-center transition-all group cursor-pointer z-10">
+                  <button
+                    onClick={handleAddImageClick}
+                    className="bg-white text-gray-800 text-sm px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-2 hover:bg-gray-50 font-medium shadow-lg"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>Add Image</span>
+                  </button>
                 </div>
               </div>
 
@@ -180,7 +175,7 @@ export default function VariantCard({
                   >
                     {variant.images!.map((image, index) => (
                       <SwiperSlide key={index}>
-                        <div className="aspect-w-16 aspect-h-9 bg-gray-100 rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-400 transition-colors cursor-pointer relative group">
+                        <div className="aspect-video bg-gray-100 rounded-md overflow-hidden border-2 border-transparent hover:border-indigo-400 transition-colors cursor-pointer relative group">
                           <img 
                             src={image} 
                             alt={`Thumbnail ${index + 1}`}
@@ -207,7 +202,7 @@ export default function VariantCard({
             </div>
           ) : (
             /* No Images State with 16:9 Aspect Ratio */
-            <div className="aspect-w-16 aspect-h-9 flex flex-col items-center justify-center bg-gray-100 rounded-lg relative">
+            <div className="aspect-video flex flex-col items-center justify-center bg-gray-100 rounded-lg relative">
               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -227,7 +222,7 @@ export default function VariantCard({
 
           {/* Delete Confirmation Modal */}
           {showDeleteConfirm !== null && (
-            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg z-30">
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg z-50">
               <div className="bg-white rounded-lg p-6 m-4 max-w-sm w-full shadow-xl">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Delete Image?
@@ -255,7 +250,7 @@ export default function VariantCard({
 
           {/* Loading Overlay */}
           {isUploading && (
-            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg z-20">
+            <div className="absolute inset-0 bg-black bg-opacity-70 flex items-center justify-center rounded-lg z-40">
               <div className="text-white text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
                 <p className="text-sm">Uploading...</p>
@@ -307,67 +302,6 @@ export default function VariantCard({
           <span>ID: {variant.id.slice(-8)}</span>
         </div>
       </div>
-
-      {/* Custom Swiper Styles */}
-      <style jsx>{`
-        :global(.swiper-pagination) {
-          position: absolute;
-          bottom: 10px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 10;
-        }
-        
-        :global(.swiper-pagination-bullet) {
-          width: 6px;
-          height: 6px;
-          background: rgba(255, 255, 255, 0.8);
-          opacity: 0.7;
-          margin: 0 4px;
-        }
-        
-        :global(.swiper-pagination-bullet-active) {
-          background: #ffffff;
-          opacity: 1;
-          width: 20px;
-          border-radius: 3px;
-        }
-        
-        :global(.thumbnail-swiper .swiper-slide) {
-          opacity: 0.4;
-          transition: opacity 0.3s ease;
-        }
-        
-        :global(.thumbnail-swiper .swiper-slide-thumb-active) {
-          opacity: 1;
-          border-color: #4f46e5 !important;
-        }
-        
-        :global(.swiper-button-disabled) {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        /* Aspect ratio utility classes */
-        .aspect-w-16 {
-          position: relative;
-          padding-bottom: 56.25%; /* 16:9 Aspect Ratio (9/16 = 0.5625) */
-        }
-
-        .aspect-w-16 > * {
-          position: absolute;
-          height: 100%;
-          width: 100%;
-          top: 0;
-          right: 0;
-          bottom: 0;
-          left: 0;
-        }
-
-        .aspect-h-9 {
-          /* This class works with aspect-w-16 to maintain 16:9 ratio */
-        }
-      `}</style>
     </div>
   );
 }
