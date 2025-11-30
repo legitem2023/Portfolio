@@ -3,8 +3,11 @@ import { Variant } from '../../types/types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 
-// Import Swiper bundled CSS
-import 'swiper/swiper-bundle.min.css';
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/thumbs';
 
 interface VariantCardProps {
   variant: Variant;
