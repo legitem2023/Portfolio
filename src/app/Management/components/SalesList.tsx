@@ -127,7 +127,7 @@ const SalesList = () => {
   }, [page, filters, sortBy, sortOrder, searchTerm, limit, refetch]);
 
   // Handlers
-  const handleStatusChange = (e) => {
+  const handleStatusChange = (e:any) => {
     const value = e.target.value;
     setFilters(prev => ({
       ...prev,
@@ -136,7 +136,7 @@ const SalesList = () => {
     setPage(1);
   };
 
-  const handleDateChange = (type, value) => {
+  const handleDateChange = (type:any, value:any) => {
     setFilters(prev => ({
       ...prev,
       dateRange: {
@@ -164,18 +164,18 @@ const SalesList = () => {
     setShowFilters(false);
   };
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = (amount:any) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString:any) => {
     return format(new Date(dateString), 'MMM dd, yyyy');
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status:any) => {
     const colors = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       PROCESSING: 'bg-blue-100 text-blue-800',
