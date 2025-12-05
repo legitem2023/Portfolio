@@ -192,7 +192,7 @@ const SalesList = () => {
   };
 
   const handleDateChange = (type: 'start' | 'end', value: string) => {
-    setFilters(prev:any => ({
+    setFilters(prev => ({
       ...prev,
       dateRange: {
         ...prev.dateRange,
