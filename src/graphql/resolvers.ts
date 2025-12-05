@@ -874,6 +874,190 @@ export const resolvers = {
         totalCount,
         hasNextPage: totalCount > page * limit
       };
+    },
+
+    // ================= Sales List Queries =================
+    salesList: async (
+      _: any, 
+      { 
+        page = 1, 
+        limit = 20, 
+        filters, 
+        sortBy = "createdAt", 
+        sortOrder = "DESC" 
+      }: any
+    ) => {
+      try {
+        const skip = (page - 1) * limit;
+        
+        // Build where clause from filters
+        const where: any = {};
+        
+        if (filters) {
+          if (filters.status) {
+            where.status = filters.status;
+          }
+          
+          if (filters.userId) {
+            where.userId = filters.userId;
+          }
+          
+          if (filters.dateRange) {
+            where.createdAt = {
+              gte: new Date(filters.dateRange.start),
+              lte: new Date(filters.dateRange.end)
+            };
+          }
+          
+          if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
+            where.total = {};
+            if (filters.minAmount !== undefined) {
+              where.total.gte = filters.minAmount;
+            }
+            if (filters.maxAmount !== undefined) {
+              where.total.lte = filters.maxAmount;
+            }
+          }
+        }
+        
+        // Build orderBy clause
+        let orderBy: any = {};
+        if (sortBy === "createdAt") {
+          orderBy.createdAt = sortOrder.toLowerCase();
+        } else if (sortBy === "total") {
+          orderBy.total = sortOrder.toLowerCase();
+        } else if (sortBy === "orderNumber") {
+          orderBy.orderNumber = sortOrder.toLowerCase();
+        } else {
+          orderBy.createdAt = 'desc';
+        }
+        
+        // Get paginated orders
+        const [orders, totalCount] = await Promise.all([
+          prisma.order.findMany({
+            where,
+            skip,
+            take: limit,
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  avatar: true
+                }
+              },
+              address: true,
+              items: {
+                include: {
+                  product: {
+                    select: {
+                      id: true,
+                      name: true,
+                      price: true,
+                      images: true
+                    }
+                  }
+                }
+              },
+              payments: true
+            },
+            orderBy
+          }),
+          prisma.order.count({ where })
+        ]);
+        
+        // Calculate summary statistics
+        const [totalRevenue, pendingOrders, completedOrders] = await Promise.all([
+          prisma.order.aggregate({
+            where,
+            _sum: {
+              total: true
+            }
+          }),
+          prisma.order.count({
+            where: {
+              ...where,
+              status: 'PENDING'
+            }
+          }),
+          prisma.order.count({
+            where: {
+              ...where,
+              OR: [
+                { status: 'DELIVERED' },
+                { status: 'SHIPPED' }
+              ]
+            }
+          })
+        ]);
+        
+        const averageOrderValue = totalRevenue._sum.total ? 
+          totalRevenue._sum.total / totalCount : 0;
+        
+        return {
+          orders,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+          currentPage: page,
+          summary: {
+            totalRevenue: totalRevenue._sum.total || 0,
+            totalOrders: totalCount,
+            averageOrderValue,
+            pendingOrders,
+            completedOrders
+          }
+        };
+      } catch (error) {
+        console.error('Error fetching sales list:', error);
+        throw new Error('Failed to fetch sales list');
+      }
+    },
+    
+    salesOrder: async (_: any, { id }: { id: string }) => {
+      try {
+        const order = await prisma.order.findUnique({
+          where: { id },
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+                avatar: true
+              }
+            },
+            address: true,
+            items: {
+              include: {
+                product: {
+                  include: {
+                    variants: true,
+                    category: true
+                  }
+                }
+              }
+            },
+            payments: {
+              orderBy: {
+                createdAt: 'desc'
+              }
+            }
+          }
+        });
+        
+        if (!order) {
+          throw new Error('Order not found');
+        }
+        
+        return order;
+      } catch (error) {
+        console.error('Error fetching sales order:', error);
+        throw new Error('Failed to fetch order details');
+      }
     }
   },
 
