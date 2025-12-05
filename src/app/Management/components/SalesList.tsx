@@ -13,6 +13,7 @@ import {
   Clock,
   User
 } from 'lucide-react';
+import Image from 'next/image';
 
 // GraphQL Query
 const SALES_LIST_QUERY = gql`
@@ -90,11 +91,65 @@ const SALES_LIST_QUERY = gql`
   }
 `;
 
+// Type definitions
+interface SalesFilters {
+  status?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  subtotal: number;
+  tax: number;
+  shipping: number;
+  discount: number;
+  createdAt: string;
+  user?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    avatar?: string;
+  };
+  items?: Array<{
+    id: string;
+    quantity: number;
+    price: number;
+    variantInfo: string;
+    product?: {
+      id: string;
+      name: string;
+      price: number;
+      images: string[];
+    };
+  }>;
+}
+
+interface SalesData {
+  orders: Order[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  summary: {
+    totalRevenue: number;
+    totalOrders: number;
+    averageOrderValue: number;
+    pendingOrders: number;
+    completedOrders: number;
+  };
+}
+
 const SalesList = () => {
   // State
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<SalesFilters>({
     status: '',
     dateRange: {
       start: '',
@@ -127,7 +182,7 @@ const SalesList = () => {
   }, [page, filters, sortBy, sortOrder, searchTerm, limit, refetch]);
 
   // Handlers
-  const handleStatusChange = (e:any) => {
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setFilters(prev => ({
       ...prev,
@@ -136,7 +191,7 @@ const SalesList = () => {
     setPage(1);
   };
 
-  const handleDateChange = (type:any, value:any) => {
+  const handleDateChange = (type: 'start' | 'end', value: string) => {
     setFilters(prev => ({
       ...prev,
       dateRange: {
@@ -164,19 +219,19 @@ const SalesList = () => {
     setShowFilters(false);
   };
 
-  const formatCurrency = (amount:any) => {
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
   };
 
-  const formatDate = (dateString:any) => {
+  const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'MMM dd, yyyy');
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       PROCESSING: 'bg-blue-100 text-blue-800',
       SHIPPED: 'bg-indigo-100 text-indigo-800',
@@ -225,7 +280,7 @@ const SalesList = () => {
     );
   }
 
-  const salesData = data?.salesList || {
+  const salesData: SalesData = data?.salesList || {
     orders: [],
     totalCount: 0,
     totalPages: 0,
@@ -239,7 +294,7 @@ const SalesList = () => {
     }
   };
 
-  const hasFilters = filters.status || filters.dateRange.start || filters.dateRange.end || searchTerm;
+  const hasFilters = filters.status || filters.dateRange?.start || filters.dateRange?.end || searchTerm;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -373,7 +428,7 @@ const SalesList = () => {
                   Status
                 </label>
                 <select
-                  value={filters.status}
+                  value={filters.status || ''}
                   onChange={handleStatusChange}
                   className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
                 >
@@ -393,7 +448,7 @@ const SalesList = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.dateRange.start}
+                  value={filters.dateRange?.start || ''}
                   onChange={(e) => handleDateChange('start', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -405,7 +460,7 @@ const SalesList = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.dateRange.end}
+                  value={filters.dateRange?.end || ''}
                   onChange={(e) => handleDateChange('end', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
@@ -509,10 +564,12 @@ const SalesList = () => {
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
                               {order.user?.avatar ? (
-                                <img
+                                <Image
+                                  width={40}
+                                  height={40}
                                   className="h-10 w-10 rounded-full"
                                   src={order.user.avatar}
-                                  alt=""
+                                  alt={`${order.user.firstName} ${order.user.lastName}`}
                                 />
                               ) : (
                                 <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -599,10 +656,12 @@ const SalesList = () => {
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-8 w-8">
                         {order.user?.avatar ? (
-                          <img
+                          <Image
+                            width={32}
+                            height={32}
                             className="h-8 w-8 rounded-full"
                             src={order.user.avatar}
-                            alt=""
+                            alt={`${order.user.firstName} ${order.user.lastName}`}
                           />
                         ) : (
                           <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
@@ -704,7 +763,7 @@ const SalesList = () => {
                     </button>
                     
                     {Array.from({ length: Math.min(5, salesData.totalPages) }, (_, i) => {
-                      let pageNum;
+                      let pageNum: number;
                       if (salesData.totalPages <= 5) {
                         pageNum = i + 1;
                       } else if (page <= 3) {
