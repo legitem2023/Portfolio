@@ -1,3 +1,172 @@
+// TypeScript interfaces for the sales queries
+export interface SalesFilters {
+  status?: OrderStatus;
+  userId?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+enum OrderStatus {
+  PENDING = "PENDING",
+  PROCESSING = "PROCESSING",
+  SHIPPED = "SHIPPED",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+  REFUNDED = "REFUNDED"
+}
+
+enum PaymentMethod {
+  CREDIT_CARD = "CREDIT_CARD",
+  PAYPAL = "PAYPAL",
+  STRIPE = "STRIPE",
+  BANK_TRANSFER = "BANK_TRANSFER",
+  COD = "COD"
+}
+
+enum PaymentStatus {
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  REFUNDED = "REFUNDED"
+}
+
+export interface SalesListResponse {
+  salesList: {
+    orders: Array<{
+      id: string;
+      orderNumber: string;
+      status: OrderStatus;
+      total: number;
+      subtotal: number;
+      tax: number;
+      shipping: number;
+      discount: number;
+      createdAt: string;
+      user: {
+        id: string;
+        firstName: string;
+        lastName: string;
+        email: string;
+        avatar: string;
+      };
+      address: {
+        id: string;
+        street: string;
+        city: string;
+        state: string;
+        zipCode: string;
+        country: string;
+      };
+      items: Array<{
+        id: string;
+        quantity: number;
+        price: number;
+        variantInfo: string;
+        product: {
+          id: string;
+          name: string;
+          price: number;
+          images: string[];
+        };
+      }>;
+      payments: Array<{
+        id: string;
+        amount: number;
+        method: PaymentMethod;
+        status: PaymentStatus;
+        transactionId: string;
+        createdAt: string;
+      }>;
+    }>;
+    totalCount: number;
+    totalPages: number;
+    currentPage: number;
+    summary: {
+      totalRevenue: number;
+      totalOrders: number;
+      averageOrderValue: number;
+      pendingOrders: number;
+      completedOrders: number;
+    };
+  };
+}
+
+export interface SalesOrderResponse {
+  salesOrder: {
+    id: string;
+    orderNumber: string;
+    status: OrderStatus;
+    total: number;
+    subtotal: number;
+    tax: number;
+    shipping: number;
+    discount: number;
+    createdAt: string;
+    updatedAt: string;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone: string;
+      avatar: string;
+    };
+    address: {
+      id: string;
+      type: string;
+      street: string;
+      city: string;
+      state: string;
+      zipCode: string;
+      country: string;
+      isDefault: boolean;
+    };
+    items: Array<{
+      id: string;
+      quantity: number;
+      price: number;
+      variantInfo: string;
+      product: {
+        id: string;
+        name: string;
+        description: string;
+        price: number;
+        salePrice: number;
+        sku: string;
+        stock: number;
+        images: string[];
+        category: {
+          id: string;
+          name: string;
+        };
+        variants: Array<{
+          id: string;
+          name: string;
+          sku: string;
+          color: string;
+          size: string;
+          price: number;
+          stock: number;
+        }>;
+      };
+    }>;
+    payments: Array<{
+      id: string;
+      amount: number;
+      method: PaymentMethod;
+      status: PaymentStatus;
+      transactionId: string;
+      details: string;
+      createdAt: string;
+    }>;
+  };
+}
+
+
 export interface TabConfig {
   id: string;
   label: string;
