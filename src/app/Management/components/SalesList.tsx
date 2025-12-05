@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { format } from 'date-fns';
+import { SALES_LIST_QUERY } from '../../components/graphql/query';
 import { 
   Search, 
   Filter, 
@@ -15,81 +16,6 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
-// GraphQL Query
-const SALES_LIST_QUERY = gql`
-  query SalesList(
-    $page: Int
-    $limit: Int
-    $filters: SalesFilters
-    $sortBy: String
-    $sortOrder: String
-  ) {
-    salesList(
-      page: $page
-      limit: $limit
-      filters: $filters
-      sortBy: $sortBy
-      sortOrder: $sortOrder
-    ) {
-      orders {
-        id
-        orderNumber
-        status
-        total
-        subtotal
-        tax
-        shipping
-        discount
-        createdAt
-        user {
-          id
-          firstName
-          lastName
-          email
-          avatar
-        }
-        address {
-          id
-          street
-          city
-          state
-          zipCode
-          country
-        }
-        items {
-          id
-          quantity
-          price
-          variantInfo
-          product {
-            id
-            name
-            price
-            images
-          }
-        }
-        payments {
-          id
-          amount
-          method
-          status
-          transactionId
-          createdAt
-        }
-      }
-      totalCount
-      totalPages
-      currentPage
-      summary {
-        totalRevenue
-        totalOrders
-        averageOrderValue
-        pendingOrders
-        completedOrders
-      }
-    }
-  }
-`;
 
 // Type definitions
 interface SalesFilters {
