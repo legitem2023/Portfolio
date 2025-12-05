@@ -175,7 +175,7 @@ const SalesList = () => {
     return format(new Date(dateString), 'MMM dd, yyyy');
   };
 
-  const getStatusColor = (status:any) => {
+  const getStatusColor = (status) => {
     const colors = {
       PENDING: 'bg-yellow-100 text-yellow-800',
       PROCESSING: 'bg-blue-100 text-blue-800',
