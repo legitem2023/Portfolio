@@ -1,5 +1,155 @@
 import { gql } from '@apollo/client';
 
+export const SALEVIEW = gql`
+query SalesOrder($id: ID!) {
+  salesOrder(id: $id) {
+    id
+    orderNumber
+    status
+    total
+    subtotal
+    tax
+    shipping
+    discount
+    createdAt
+    updatedAt
+    user {
+      id
+      firstName
+      lastName
+      email
+      phone
+      avatar
+    }
+    address {
+      id
+      type
+      street
+      city
+      state
+      zipCode
+      country
+      isDefault
+    }
+    items {
+      id
+      quantity
+      price
+      variantInfo
+      product {
+        id
+        name
+        description
+        price
+        salePrice
+        sku
+        stock
+        images
+        category {
+          id
+          name
+        }
+        variants {
+          id
+          name
+          sku
+          color
+          size
+          price
+          stock
+        }
+      }
+    }
+    payments {
+      id
+      amount
+      method
+      status
+      transactionId
+      details
+      createdAt
+    }
+  }
+}
+`
+
+export const SALESLIST = gql`
+query SalesList(
+  $page: Int
+  $limit: Int
+  $filters: SalesFilters
+  $sortBy: String
+  $sortOrder: String
+) {
+  salesList(
+    page: $page
+    limit: $limit
+    filters: $filters
+    sortBy: $sortBy
+    sortOrder: $sortOrder
+  ) {
+    orders {
+      id
+      orderNumber
+      status
+      total
+      subtotal
+      tax
+      shipping
+      discount
+      createdAt
+      user {
+        id
+        firstName
+        lastName
+        email
+        avatar
+      }
+      address {
+        id
+        street
+        city
+        state
+        zipCode
+        country
+      }
+      items {
+        id
+        quantity
+        price
+        variantInfo
+        product {
+          id
+          name
+          price
+          images
+        }
+      }
+      payments {
+        id
+        amount
+        method
+        status
+        transactionId
+        createdAt
+      }
+    }
+    totalCount
+    totalPages
+    currentPage
+    summary {
+      totalRevenue
+      totalOrders
+      averageOrderValue
+      pendingOrders
+      completedOrders
+    }
+  }
+}
+`
+
+
+
 export const SALES_DATA_QUERY = gql`
   query SalesData($timeframe: Timeframe!, $groupBy: GroupBy!, $filters: SalesFilters) {
     salesData(timeframe: $timeframe, groupBy: $groupBy, filters: $filters) {
