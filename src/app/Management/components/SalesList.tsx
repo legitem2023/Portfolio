@@ -95,8 +95,8 @@ const SALES_LIST_QUERY = gql`
 interface SalesFilters {
   status?: string;
   dateRange?: {
-    start: string;
-    end: string;
+    start?: string;
+    end?: string;
   };
 }
 
@@ -195,8 +195,8 @@ const SalesList = () => {
     setFilters(prev => ({
       ...prev,
       dateRange: {
-        ...prev.dateRange,
-        [type]: value
+        ...(prev.dateRange || {}),
+        [type]: value || undefined
       }
     }));
     setPage(1);
@@ -596,7 +596,7 @@ const SalesList = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} units
+                          {order.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0} units
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-gray-900">
@@ -687,7 +687,7 @@ const SalesList = () => {
                       <div>
                         <p className="text-xs text-gray-500">Quantity</p>
                         <p className="text-sm font-medium text-gray-900">
-                          {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} units
+                          {order.items?.reduce((sum, item) => sum + (item.quantity || 0), 0) || 0} units
                         </p>
                       </div>
                     </div>
