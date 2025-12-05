@@ -73,7 +73,7 @@ query SalesOrder($id: ID!) {
 }
 `
 
-export const SALESLIST = gql`
+export const SALES_LIST_QUERY = gql`
 query SalesList(
   $page: Int
   $limit: Int
