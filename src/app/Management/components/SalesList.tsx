@@ -14,9 +14,9 @@ import {
   User
 } from 'lucide-react';
 import Image from 'next/image';
-
+import { SALES_LIST_QUERY } from '../../components/graphql/query';
 // GraphQL Query - Fixed to match resolver types
-const SALES_LIST_QUERY = gql`
+/*const SALES_LIST_QUERY = gql`
   query SalesList(
     $page: Int
     $limit: Int
@@ -94,7 +94,7 @@ const SALES_LIST_QUERY = gql`
       }
     }
   }
-`;
+`;*/
 
 // Updated Type definitions to match resolver
 interface DateRangeFilter {
