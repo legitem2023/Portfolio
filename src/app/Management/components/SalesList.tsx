@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { format } from 'date-fns';
 import { 
@@ -163,21 +163,15 @@ interface SalesData {
 const SalesList = () => {
   // State - Updated to match resolver expectations
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(20); // Changed from 10 to match resolver default
-  const [filters, setFilters] = useState<SalesFilters>({
-    status: undefined,
-    userId: undefined,
-    dateRange: undefined,
-    minAmount: undefined,
-    maxAmount: undefined
-  });
+  const [limit, setLimit] = useState(20);
+  const [filters, setFilters] = useState<SalesFilters>({});
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('DESC');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   // Clean filters for GraphQL - Fixed to match resolver structure
-  const getCleanFilters = (): SalesFilters => {
+  const getCleanFilters = useCallback((): SalesFilters => {
     const cleanFilters: SalesFilters = {};
     
     if (filters.status) cleanFilters.status = filters.status;
@@ -195,7 +189,7 @@ const SalesList = () => {
     }
     
     return cleanFilters;
-  };
+  }, [filters, searchTerm]);
 
   // GraphQL Query
   const { loading, error, data, refetch } = useQuery(SALES_LIST_QUERY, {
@@ -225,7 +219,7 @@ const SalesList = () => {
       sortBy,
       sortOrder
     });
-  }, [page, limit, sortBy, sortOrder, searchTerm]);
+  }, [page, limit, sortBy, sortOrder, getCleanFilters, refetch]);
 
   // Handlers - Updated to handle new filter structure
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -239,8 +233,9 @@ const SalesList = () => {
 
   const handleDateChange = (type: 'start' | 'end', value: string) => {
     setFilters(prev => {
+      const currentDateRange = prev.dateRange || { start: '', end: '' };
       const newDateRange = {
-        ...prev.dateRange,
+        ...currentDateRange,
         [type]: value
       };
       
