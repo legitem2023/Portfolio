@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { format } from 'date-fns';
-import { SALES_LIST_QUERY } from '../../components/graphql/query';
 import { 
   Search, 
   Filter, 
@@ -16,14 +15,88 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
+// GraphQL Query
+const SALES_LIST_QUERY = gql`
+  query SalesList(
+    $page: Int
+    $limit: Int
+    $filters: SalesFilters
+    $sortBy: String
+    $sortOrder: String
+  ) {
+    salesList(
+      page: $page
+      limit: $limit
+      filters: $filters
+      sortBy: $sortBy
+      sortOrder: $sortOrder
+    ) {
+      orders {
+        id
+        orderNumber
+        status
+        total
+        subtotal
+        tax
+        shipping
+        discount
+        createdAt
+        user {
+          id
+          firstName
+          lastName
+          email
+          avatar
+        }
+        address {
+          id
+          street
+          city
+          state
+          zipCode
+          country
+        }
+        items {
+          id
+          quantity
+          price
+          variantInfo
+          product {
+            id
+            name
+            price
+            images
+          }
+        }
+        payments {
+          id
+          amount
+          method
+          status
+          transactionId
+          createdAt
+        }
+      }
+      totalCount
+      totalPages
+      currentPage
+      summary {
+        totalRevenue
+        totalOrders
+        averageOrderValue
+        pendingOrders
+        completedOrders
+      }
+    }
+  }
+`;
 
 // Type definitions
 interface SalesFilters {
   status?: string;
-  dateRange?: {
-    start?: string;
-    end?: string;
-  };
+  startDate?: string;
+  endDate?: string;
+  customerId?: string;
 }
 
 interface Order {
@@ -77,53 +150,71 @@ const SalesList = () => {
   const [limit, setLimit] = useState(10);
   const [filters, setFilters] = useState<SalesFilters>({
     status: '',
-    dateRange: {
-      start: '',
-      end: ''
-    }
+    startDate: '',
+    endDate: '',
+    customerId: ''
   });
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('DESC');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // Clean filters for GraphQL (removing empty strings)
+  const getCleanFilters = () => {
+    const cleanFilters: SalesFilters = {};
+    
+    if (filters.status) cleanFilters.status = filters.status;
+    if (filters.startDate) cleanFilters.startDate = filters.startDate;
+    if (filters.endDate) cleanFilters.endDate = filters.endDate;
+    if (searchTerm) cleanFilters.customerId = searchTerm;
+    
+    return cleanFilters;
+  };
+
   // GraphQL Query
   const { loading, error, data, refetch } = useQuery(SALES_LIST_QUERY, {
     variables: {
       page,
       limit,
-      filters: {
-        ...filters,
-        ...(searchTerm && { userId: searchTerm })
-      },
+      filters: getCleanFilters(),
       sortBy,
       sortOrder
     },
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'cache-and-network',
+    onError: (error) => {
+      console.error('GraphQL Error:', {
+        message: error.message,
+        graphQLErrors: error.graphQLErrors,
+        networkError: error.networkError
+      });
+    }
   });
 
   // Refetch when filters change
   useEffect(() => {
-    refetch();
-  }, [page, filters, sortBy, sortOrder, searchTerm, limit, refetch]);
+    refetch({
+      page,
+      limit,
+      filters: getCleanFilters(),
+      sortBy,
+      sortOrder
+    });
+  }, [page, sortBy, sortOrder, limit, searchTerm]);
 
   // Handlers
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     setFilters(prev => ({
       ...prev,
-      status: value || undefined
+      status: value
     }));
     setPage(1);
   };
 
-  const handleDateChange = (type: 'start' | 'end', value: string) => {
+  const handleDateChange = (type: 'startDate' | 'endDate', value: string) => {
     setFilters(prev => ({
       ...prev,
-      dateRange: {
-        ...(prev.dateRange || {}),
-        [type]: value || undefined
-      }
+      [type]: value
     }));
     setPage(1);
   };
@@ -136,7 +227,9 @@ const SalesList = () => {
   const handleClearFilters = () => {
     setFilters({
       status: '',
-      dateRange: { start: '', end: '' }
+      startDate: '',
+      endDate: '',
+      customerId: ''
     });
     setSearchTerm('');
     setSortBy('createdAt');
@@ -186,9 +279,19 @@ const SalesList = () => {
                 <X className="h-5 w-5 text-red-400" />
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error</h3>
+                <h3 className="text-sm font-medium text-red-800">Error Loading Data</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  <p>{error.message}</p>
+                  <p className="font-semibold">{error.message}</p>
+                  {error.graphQLErrors && error.graphQLErrors.length > 0 && (
+                    <div className="mt-2">
+                      <p className="font-medium">GraphQL Errors:</p>
+                      <ul className="list-disc pl-5 mt-1">
+                        {error.graphQLErrors.map((err, index) => (
+                          <li key={index}>{err.message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -220,7 +323,7 @@ const SalesList = () => {
     }
   };
 
-  const hasFilters = filters.status || filters.dateRange?.start || filters.dateRange?.end || searchTerm;
+  const hasFilters = filters.status || filters.startDate || filters.endDate || searchTerm;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -243,7 +346,7 @@ const SalesList = () => {
                 <input
                   type="text"
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
-                  placeholder="Search orders..."
+                  placeholder="Search by customer ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -374,8 +477,8 @@ const SalesList = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.dateRange?.start || ''}
-                  onChange={(e) => handleDateChange('start', e.target.value)}
+                  value={filters.startDate || ''}
+                  onChange={(e) => handleDateChange('startDate', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -386,8 +489,8 @@ const SalesList = () => {
                 </label>
                 <input
                   type="date"
-                  value={filters.dateRange?.end || ''}
-                  onChange={(e) => handleDateChange('end', e.target.value)}
+                  value={filters.endDate || ''}
+                  onChange={(e) => handleDateChange('endDate', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
