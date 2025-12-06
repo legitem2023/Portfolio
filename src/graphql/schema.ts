@@ -1285,7 +1285,7 @@ export const typeDefs = gql`
       filters: SalesFilters
       sortBy: String = "createdAt"
       sortOrder: String = "DESC"
-    ): SalesListResponse!
+    ): SalesListResponse
     
     salesOrder(id: ID!): Order
   }
