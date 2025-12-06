@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 
-// GraphQL Query
+// GraphQL Query - Fixed to match resolver types
 const SALES_LIST_QUERY = gql`
   query SalesList(
     $page: Int
@@ -67,6 +67,11 @@ const SALES_LIST_QUERY = gql`
             price
             images
           }
+          variant {
+            id
+            name
+            sku
+          }
         }
         payments {
           id
@@ -91,12 +96,18 @@ const SALES_LIST_QUERY = gql`
   }
 `;
 
-// Type definitions
+// Updated Type definitions to match resolver
+interface DateRangeFilter {
+  start: string;
+  end: string;
+}
+
 interface SalesFilters {
   status?: string;
-  startDate?: string;
-  endDate?: string;
-  customerId?: string;
+  userId?: string;
+  dateRange?: DateRangeFilter;
+  minAmount?: number;
+  maxAmount?: number;
 }
 
 interface Order {
@@ -120,12 +131,17 @@ interface Order {
     id: string;
     quantity: number;
     price: number;
-    variantInfo: string;
+    variantInfo?: string;
     product?: {
       id: string;
       name: string;
       price: number;
       images: string[];
+    };
+    variant?: {
+      id: string;
+      name: string;
+      sku: string;
     };
   }>;
 }
@@ -145,28 +161,38 @@ interface SalesData {
 }
 
 const SalesList = () => {
-  // State
+  // State - Updated to match resolver expectations
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(20); // Changed from 10 to match resolver default
   const [filters, setFilters] = useState<SalesFilters>({
-    status: '',
-    startDate: '',
-    endDate: '',
-    customerId: ''
+    status: undefined,
+    userId: undefined,
+    dateRange: undefined,
+    minAmount: undefined,
+    maxAmount: undefined
   });
   const [sortBy, setSortBy] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('DESC');
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Clean filters for GraphQL (removing empty strings)
-  const getCleanFilters = () => {
+  // Clean filters for GraphQL - Fixed to match resolver structure
+  const getCleanFilters = (): SalesFilters => {
     const cleanFilters: SalesFilters = {};
     
     if (filters.status) cleanFilters.status = filters.status;
-    if (filters.startDate) cleanFilters.startDate = filters.startDate;
-    if (filters.endDate) cleanFilters.endDate = filters.endDate;
-    if (searchTerm) cleanFilters.customerId = searchTerm;
+    if (filters.userId) cleanFilters.userId = filters.userId;
+    if (filters.dateRange) cleanFilters.dateRange = filters.dateRange;
+    if (filters.minAmount !== undefined) cleanFilters.minAmount = filters.minAmount;
+    if (filters.maxAmount !== undefined) cleanFilters.maxAmount = filters.maxAmount;
+    
+    // Handle search term as userId
+    if (searchTerm) cleanFilters.userId = searchTerm;
+    
+    // If dateRange exists but has empty strings, remove it
+    if (cleanFilters.dateRange && (!cleanFilters.dateRange.start || !cleanFilters.dateRange.end)) {
+      delete cleanFilters.dateRange;
+    }
     
     return cleanFilters;
   };
@@ -199,11 +225,11 @@ const SalesList = () => {
       sortBy,
       sortOrder
     });
-  }, [page, sortBy, sortOrder, limit, searchTerm]);
+  }, [page, limit, sortBy, sortOrder, searchTerm]);
 
-  // Handlers
+  // Handlers - Updated to handle new filter structure
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
+    const value = e.target.value || undefined;
     setFilters(prev => ({
       ...prev,
       status: value
@@ -211,10 +237,32 @@ const SalesList = () => {
     setPage(1);
   };
 
-  const handleDateChange = (type: 'startDate' | 'endDate', value: string) => {
+  const handleDateChange = (type: 'start' | 'end', value: string) => {
+    setFilters(prev => {
+      const newDateRange = {
+        ...prev.dateRange,
+        [type]: value
+      };
+      
+      // If both dates are empty, remove dateRange
+      if (!newDateRange.start && !newDateRange.end) {
+        const { dateRange, ...rest } = prev;
+        return rest;
+      }
+      
+      return {
+        ...prev,
+        dateRange: newDateRange
+      };
+    });
+    setPage(1);
+  };
+
+  const handleAmountChange = (type: 'min' | 'max', value: string) => {
+    const numValue = value ? parseFloat(value) : undefined;
     setFilters(prev => ({
       ...prev,
-      [type]: value
+      [type === 'min' ? 'minAmount' : 'maxAmount']: numValue
     }));
     setPage(1);
   };
@@ -225,12 +273,7 @@ const SalesList = () => {
   };
 
   const handleClearFilters = () => {
-    setFilters({
-      status: '',
-      startDate: '',
-      endDate: '',
-      customerId: ''
-    });
+    setFilters({});
     setSearchTerm('');
     setSortBy('createdAt');
     setSortOrder('DESC');
@@ -260,6 +303,15 @@ const SalesList = () => {
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
+
+  // Check if any filters are active
+  const hasFilters = 
+    !!filters.status || 
+    !!filters.userId || 
+    !!filters.dateRange || 
+    filters.minAmount !== undefined || 
+    filters.maxAmount !== undefined || 
+    !!searchTerm;
 
   if (loading && !data) {
     return (
@@ -323,8 +375,6 @@ const SalesList = () => {
     }
   };
 
-  const hasFilters = filters.status || filters.startDate || filters.endDate || searchTerm;
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -346,7 +396,7 @@ const SalesList = () => {
                 <input
                   type="text"
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent sm:text-sm"
-                  placeholder="Search by customer ID..."
+                  placeholder="Search by user ID..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -473,24 +523,24 @@ const SalesList = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  From Date
+                  Start Date
                 </label>
                 <input
                   type="date"
-                  value={filters.startDate || ''}
-                  onChange={(e) => handleDateChange('startDate', e.target.value)}
+                  value={filters.dateRange?.start || ''}
+                  onChange={(e) => handleDateChange('start', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  To Date
+                  End Date
                 </label>
                 <input
                   type="date"
-                  value={filters.endDate || ''}
-                  onChange={(e) => handleDateChange('endDate', e.target.value)}
+                  value={filters.dateRange?.end || ''}
+                  onChange={(e) => handleDateChange('end', e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                 />
               </div>
@@ -519,6 +569,36 @@ const SalesList = () => {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Min Amount
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={filters.minAmount || ''}
+                  onChange={(e) => handleAmountChange('min', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Max Amount
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={filters.maxAmount || ''}
+                  onChange={(e) => handleAmountChange('max', e.target.value)}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="1000.00"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -544,8 +624,7 @@ const SalesList = () => {
                     }}
                     className="block w-20 pl-3 pr-10 py-1 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg"
                   >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
+                    <option value="20">20</option>
                     <option value="50">50</option>
                     <option value="100">100</option>
                   </select>
