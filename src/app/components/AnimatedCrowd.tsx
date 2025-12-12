@@ -519,18 +519,23 @@ function BuildingsRow({
   );
 }
 
-function Tree() {
+function Tree({ isDayTime }: { isDayTime: boolean }) {
   return (
     <div className="relative w-8 h-8">
       <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-2 h-6 bg-amber-950"></div>
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full", 
-      {isDayTime ? "bg-gradient-to-l from-lime-400 to-lime-600":"bg-gradient-to-l from-lime-600 to-lime-950"
-        ></div>
+      <div 
+        className={clsx(
+          "absolute bottom-4 left-1/2 transform -translate-x-1/2 w-6 h-6 rounded-full",
+          isDayTime 
+            ? "bg-gradient-to-l from-lime-400 to-lime-600" 
+            : "bg-gradient-to-l from-lime-600 to-lime-950"
+        )}
+      ></div>
     </div>
   );
 }
 
-function TreeAndStoreRow() {
+function TreeAndStoreRow({ isDayTime }: { isDayTime: boolean }) {
   return (
     <div className="flex w-1/3 items-end justify-around">
       {Array.from({ length: 8 }).map((_, i) => {
@@ -542,7 +547,7 @@ function TreeAndStoreRow() {
             </div>
           );
         }
-        return <Tree key={i} />;
+        return <Tree key={i} isDayTime={isDayTime} />;
       })}
     </div>
   );
