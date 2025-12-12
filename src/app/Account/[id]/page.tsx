@@ -1,8 +1,8 @@
 // pages/index.tsx (or wherever you want to use the component)
 import React from 'react';
-import DeluxeNavTabs from '../components/DeluxeNavTabs';
-import Footer from '../components/Footer';
-import Header from '../components/Header';
+import DeluxeNavTabs from '../../components/DeluxeNavTabs';
+import Footer from '../../components/Footer';
+import Header from '../../components/Header';
 import Image from 'next/image';
 import { 
   Phone,
