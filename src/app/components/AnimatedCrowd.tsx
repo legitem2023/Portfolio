@@ -1,7 +1,31 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react"; // Added useEffect and useState imports
 import clsx from "clsx";
 import type { SVGProps } from 'react';
+
+// Added function to check if current minute is odd/even
+function useTimeOfDay() {
+  const [isDayTime, setIsDayTime] = useState(false);
+  
+  useEffect(() => {
+    const updateTimeOfDay = () => {
+      const now = new Date();
+      const minutes = now.getMinutes();
+      const isEvenMinute = minutes % 2 === 0;
+      setIsDayTime(isEvenMinute);
+    };
+    
+    // Initial update
+    updateTimeOfDay();
+    
+    // Update every second to catch minute changes
+    const interval = setInterval(updateTimeOfDay, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return isDayTime;
+}
 
 // Motorcycle component (unchanged)
 function EmojioneMotorcycle(props: SVGProps<SVGSVGElement>) {
@@ -133,48 +157,80 @@ const AnimatedCrowd = ({
   className?: string;
   children?: React.ReactNode;
 }) => {
+  const isDayTime = useTimeOfDay(); // Use the custom hook
+  
   return (
     <div
       className={clsx(
         "z-10 absolute inset-x-0 top-0 mx-auto w-[100%] overflow-hidden aspect-[4/1] sm:aspect-[9/1]",
-        "bg-gradient-to-b from-blue-950 via-indigo-600 to-violet-300",
+        isDayTime 
+          ? "bg-gradient-to-b from-sky-400 via-blue-300 to-amber-100" // Day gradient
+          : "bg-gradient-to-b from-blue-950 via-indigo-600 to-violet-300", // Night gradient (original)
         className
       )}
     >
-      {/*<div className="absolute inset-0 bg-white/20 backdrop-blur-sm z-30"></div>*/}
-      {/* STAR FIELD */}
-      <div className="absolute inset-0">
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white"
-            style={{
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`,
-              width: "1px",
-              height: "1px",
-              opacity: Math.random() * 0.8 + 0.2,
-              animation: `twinkle ${2 + Math.random() * 3}s infinite alternate`,
-            }}
-          />
-        ))}
+      {/* STAR FIELD - Only show at night (odd minutes) */}
+      {!isDayTime && (
+        <div className="absolute inset-0">
+          {Array.from({ length: 40 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{
+                top: `${Math.random() * 100}%`,
+                left: `${Math.random() * 100}%`,
+                width: "1px",
+                height: "1px",
+                opacity: Math.random() * 0.8 + 0.2,
+                animation: `twinkle ${2 + Math.random() * 3}s infinite alternate`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* SUN/MOON - Changes based on time of day */}
+      <div className={clsx(
+        "absolute top-6 right-6 w-12 h-12",
+        isDayTime 
+          ? "bg-gradient-to-b from-amber-400 to-orange-300 rounded-full shadow-[0_0_30px_15px_rgba(255,200,50,0.6)]"
+          : "bg-gradient-to-b from-amber-50 to-amber-100 rounded-full"
+      )}>
+        {!isDayTime && (
+          <>
+            <div
+              className="absolute inset-0 rounded-full bg-zinc-200/30 animate-ping"
+              style={{ animationDuration: "5s" }}
+            ></div>
+            <div className="absolute inset-0 rounded-full shadow-[0_0_25px_10px_rgba(255,255,200,0.4)]"></div>
+          </>
+        )}
       </div>
 
-      {/* GLOWING MOON */}
-      <div className="absolute top-6 right-6 w-12 h-12">
-        <div className="absolute inset-0 rounded-full bg-gradient-to-b from-amber-50 to-amber-100"></div>
-        <div
-          className="absolute inset-0 rounded-full bg-zinc-200/30 animate-ping"
-          style={{ animationDuration: "5s" }}
-        ></div>
-        <div className="absolute inset-0 rounded-full shadow-[0_0_25px_10px_rgba(255,255,200,0.4)]"></div>
-      </div>
+      {/* CLOUDS - Only show during day (even minutes) */}
+      {isDayTime && (
+        <div className="absolute inset-0 opacity-40">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="absolute top-4 rounded-full bg-white/80"
+              style={{
+                left: `${10 + i * 20}%`,
+                width: `${40 + Math.random() * 30}px`,
+                height: `${20 + Math.random() * 15}px`,
+                animation: `float ${15 + Math.random() * 10}s infinite linear`,
+                animationDelay: `${Math.random() * 5}s`
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* FAR skyline - 3 copies for seamless looping */}
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-900 to-black-950"
+        buildingTone={isDayTime ? "from-slate-700 to-slate-800" : "from-indigo-900 to-black-950"}
         heights={[20, 30, 45, 55]}
         detailLevel="far"
       />
@@ -183,7 +239,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-purple-900 to-purple-950"
+        buildingTone={isDayTime ? "from-slate-800 to-slate-900" : "from-purple-900 to-purple-950"}
         heights={[30, 50, 65, 75]}
         detailLevel="mid"
       />
@@ -192,7 +248,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone="from-indigo-900 to-indigo-950"
+        buildingTone={isDayTime ? "from-gray-900 to-gray-950" : "from-indigo-900 to-indigo-950"}
         heights={[40, 65, 55, 70]}
         hasAntennas
         detailLevel="near"
@@ -226,8 +282,13 @@ const AnimatedCrowd = ({
         <EmojioneMotorcycle className="h-14 w-14 transform scale-x-[-1] z-10" />
       </div>
 
-      {/* Ground */}
-      <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-zinc-700 to-zinc-900" />
+      {/* Ground - Changes color based on time of day */}
+      <div className={clsx(
+        "absolute bottom-0 left-0 right-0 h-6",
+        isDayTime 
+          ? "bg-gradient-to-b from-amber-800 to-amber-900"
+          : "bg-gradient-to-b from-zinc-700 to-zinc-900"
+      )} />
 
       {/* Content overlay */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
@@ -284,6 +345,16 @@ const AnimatedCrowd = ({
           }
           100% {
             left: 20%;
+          }
+        }
+        
+        /* Cloud floating animation for day time */
+        @keyframes float {
+          0% {
+            transform: translateX(-100px);
+          }
+          100% {
+            transform: translateX(calc(100vw + 100px));
           }
         }
       `}</style>
