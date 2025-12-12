@@ -3,23 +3,26 @@ import React, { useEffect, useState } from "react"; // Added useEffect and useSt
 import clsx from "clsx";
 import type { SVGProps } from 'react';
 
-// Added function to check if current minute is odd/even
+// Added function to check current time for day/night mode
 function useTimeOfDay() {
-  const [isDayTime, setIsDayTime] = useState(false);
+  const [isDayTime, setIsDayTime] = useState(true);
   
   useEffect(() => {
     const updateTimeOfDay = () => {
       const now = new Date();
-      const minutes = now.getMinutes();
-      const isEvenMinute = minutes % 2 === 0;
-      setIsDayTime(isEvenMinute);
+      const currentHour = now.getHours();
+      
+      // Day mode: 6 AM to 5:59 PM (6:00 to 17:59)
+      // Night mode: 6 PM to 5:59 AM (18:00 to 5:59)
+      const isDay = currentHour >= 6 && currentHour < 18;
+      setIsDayTime(isDay);
     };
     
     // Initial update
     updateTimeOfDay();
     
-    // Update every second to catch minute changes
-    const interval = setInterval(updateTimeOfDay, 1000);
+    // Update every minute to catch hour changes
+    const interval = setInterval(updateTimeOfDay, 60000);
     
     return () => clearInterval(interval);
   }, []);
@@ -164,12 +167,12 @@ const AnimatedCrowd = ({
       className={clsx(
         "z-10 absolute inset-x-0 top-0 mx-auto w-[100%] overflow-hidden aspect-[4/1] sm:aspect-[9/1]",
         isDayTime 
-          ? "bg-gradient-to-b from-sky-400 via-blue-300 to-amber-100" // Day gradient
-          : "bg-gradient-to-b from-blue-950 via-indigo-600 to-violet-300", // Night gradient (original)
+          ? "bg-gradient-to-b from-sky-400 via-blue-300 to-amber-100" // Day gradient (6 AM - 5:59 PM)
+          : "bg-gradient-to-b from-blue-950 via-indigo-600 to-violet-300", // Night gradient (6 PM - 5:59 AM)
         className
       )}
     >
-      {/* STAR FIELD - Only show at night (odd minutes) */}
+      {/* STAR FIELD - Only show at night (6 PM to 5:59 AM) */}
       {!isDayTime && (
         <div className="absolute inset-0">
           {Array.from({ length: 40 }).map((_, i) => (
@@ -207,7 +210,7 @@ const AnimatedCrowd = ({
         )}
       </div>
 
-      {/* CLOUDS - Only show during day (even minutes) */}
+      {/* CLOUDS - Only show during day (6 AM to 5:59 PM) */}
       {isDayTime && (
         <div className="absolute inset-0 opacity-40">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -230,7 +233,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-gray-200 to-gray-300" : "from-indigo-900 to-black-950"}
+        buildingTone={isDayTime ? "from-gray-600 to-gray-300" : "from-indigo-900 to-black-950"}
         heights={[20, 30, 45, 55]}
         detailLevel="far"
       />
@@ -248,7 +251,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-gray-700 to-gray-800" : "from-indigo-900 to-indigo-950"}
+        buildingTone={isDayTime ? "from-gray-200 to-gray-800" : "from-indigo-900 to-indigo-950"}
         heights={[40, 65, 55, 70]}
         hasAntennas
         detailLevel="near"
@@ -286,8 +289,8 @@ const AnimatedCrowd = ({
       <div className={clsx(
         "absolute bottom-0 left-0 right-0 h-6",
         isDayTime 
-          ? "bg-gradient-to-b from-amber-800 to-amber-900"
-          : "bg-gradient-to-b from-zinc-700 to-zinc-900"
+          ? "bg-gradient-to-b from-zinc-600 to-amber-700"
+          : "bg-gradient-to-b from-zinc-800 to-zinc-900"
       )} />
 
       {/* Content overlay */}
