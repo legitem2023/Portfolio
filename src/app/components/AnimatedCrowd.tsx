@@ -258,21 +258,21 @@ const AnimatedCrowd = ({
       />
 
       {/* Moving Trees with Department Stores - Fixed spacing and infinite scrolling */}
-      <div className="absolute bottom-4 left-0 right-0 h-10">
-        <div
-          className={clsx(
-            "absolute left-0 top-0 w-[300%]",
-            "animate-[scrollX_15s_linear_infinite] will-change-transform transform-gpu"
-          )}
-          style={{ backfaceVisibility: "hidden" }}
-        >
-          <div className="flex w-full">
-            <TreeAndStoreRow />
-            <TreeAndStoreRow />
-            <TreeAndStoreRow />
-          </div>
-        </div>
-      </div>
+<div className="absolute bottom-4 left-0 right-0 h-10">
+  <div
+    className={clsx(
+      "absolute left-0 top-0 w-[300%]",
+      "animate-[scrollX_15s_linear_infinite] will-change-transform transform-gpu"
+    )}
+    style={{ backfaceVisibility: "hidden" }}
+  >
+    <div className="flex w-full">
+      <TreeAndStoreRow isDayTime={isDayTime} />
+      <TreeAndStoreRow isDayTime={isDayTime} />
+      <TreeAndStoreRow isDayTime={isDayTime} />
+    </div>
+  </div>
+</div>
 
       {/* Motorcycle - Animated to overtake the truck */}
       <div 
