@@ -230,7 +230,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-slate-700 to-slate-800" : "from-indigo-900 to-black-950"}
+        buildingTone={isDayTime ? "from-gray-200 to-gray-300" : "from-indigo-900 to-black-950"}
         heights={[20, 30, 45, 55]}
         detailLevel="far"
       />
@@ -239,7 +239,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_45s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-slate-800 to-slate-900" : "from-purple-900 to-purple-950"}
+        buildingTone={isDayTime ? "from-gray-400 to-gray-500" : "from-purple-900 to-purple-950"}
         heights={[30, 50, 65, 75]}
         detailLevel="mid"
       />
@@ -248,7 +248,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_25s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-gray-900 to-gray-950" : "from-indigo-900 to-indigo-950"}
+        buildingTone={isDayTime ? "from-gray-700 to-gray-800" : "from-indigo-900 to-indigo-950"}
         heights={[40, 65, 55, 70]}
         hasAntennas
         detailLevel="near"
