@@ -233,7 +233,7 @@ const AnimatedCrowd = ({
       <ParallaxStrip
         className="bottom-2 opacity-100"
         speedClass="animate-[scrollX_70s_linear_infinite] will-change-transform transform-gpu"
-        buildingTone={isDayTime ? "from-gray-600 to-gray-700" : "from-indigo-900 to-black-950"}
+        buildingTone={isDayTime ? "from-gray-500 to-gray-600" : "from-indigo-900 to-black-950"}
         heights={[20, 30, 45, 55]}
         detailLevel="far"
       />
