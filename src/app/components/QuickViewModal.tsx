@@ -113,7 +113,9 @@ console.log(product?.model,"<-");
   );
 
   // Define tabs for LuxuryTabs component
-  const productTabs = useMemo(() => [
+  const productTabs = useMemo(() => {
+  // Create the tabs array with conditional inclusion
+  const tabs = [
     {
       id: 'gallery',
       label: 'Image Gallery',
@@ -124,7 +126,8 @@ console.log(product?.model,"<-");
       ),
       content: <ImageGallery />
     },
-    {
+    // Conditionally include the 3D View tab
+    ...(product?.model ? [{
       id: '3d-view',
       label: '3D View',
       icon: (
@@ -133,9 +136,11 @@ console.log(product?.model,"<-");
         </svg>
       ),
       content: <ModelViewer3D />
-    }
-  ], [additionalImages, selectedImage, product]);
+    }] : [])  // Empty array if no model
+  ];
 
+  return tabs;
+}, [additionalImages, selectedImage, product]);
   // Update image when variant changes
   useEffect(() => {
     setSelectedImage(0); // Reset to first image when variant changes
