@@ -49,7 +49,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     
     return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
   }, [product, variants, selectedVariant]);
-console.log(product?.model,"<-");
+console.log(product,"<-");
   // 3D Model Component
   const ModelViewer3D = () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg">
