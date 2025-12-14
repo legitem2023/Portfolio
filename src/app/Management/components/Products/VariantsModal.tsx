@@ -36,9 +36,7 @@ export default function VariantsModal({
   }));
 
   const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
-    // Your deletion logic here
     console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
-    // Add your actual deletion logic
   };
 
   return (
@@ -93,9 +91,7 @@ export default function VariantsModal({
 
           <div className="overflow-y-auto max-h-[calc(90vh-200px)] sm:max-h-[calc(80vh-200px)]">
             {safeVariants.length > 0 ? (
-              // Updated container for grid/card layout
               <div className="p-4 sm:p-6">
-                {/* Grid layout for desktop, card layout for mobile */}
                 <div className="
                   grid grid-cols-1 gap-4 sm:gap-6
                   sm:grid-cols-2 lg:grid-cols-3
@@ -110,8 +106,6 @@ export default function VariantsModal({
                         onImageDelete={handleVariantImageDelete}
                         onImageUpload={onVariantImageUpload}
                         isUploading={uploadingVariantId === variant.id}
-                        // Add a prop if VariantCard needs to adjust its layout
-                        layout="responsive"
                       />
                     </div>
                   ))}
