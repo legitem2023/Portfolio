@@ -232,6 +232,7 @@ model ProductVariant {
   stock       Int      @default(0) // Variant-specific stock
   weight      Float?            // Variant-specific weight
   images      String[]          // Variant-specific images
+  model       String  @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb") @db.ObjectId
   isActive    Boolean  @default(true)
   options     String[]          // Keep for additional options
   createdAt   DateTime @default(now())
