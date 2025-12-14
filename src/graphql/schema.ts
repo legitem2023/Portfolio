@@ -912,6 +912,7 @@ export const typeDefs = gql`
     salePrice: Float
     stock: Int
     images: [String]
+    model: String
   }
 
   type Category {
