@@ -382,6 +382,7 @@ export const resolvers = {
             name: true,
             price: true,
             images: true,
+            model: true,
             featured: true,
             isActive: true,
             stock: true,
@@ -416,7 +417,8 @@ export const resolvers = {
                 price: true,
                 salePrice: true,
                 stock: true,
-                images: true
+                images: true,
+                model: true
               }
             }
           },
