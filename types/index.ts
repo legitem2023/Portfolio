@@ -208,6 +208,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   image: string;
+  model:string;
   colors?: string[];
   description?: string;
   productCode?: string;
@@ -220,6 +221,7 @@ export interface Product {
     color: string;
     price?: number;
     images?: string[];
+    model?:string;
     stock?: number;
   }[];
 }
@@ -231,6 +233,7 @@ export interface Variant {
     color: string;
     price?: number;
     images?: string[];
+    model:string;
     stock?: number;
   };
 
