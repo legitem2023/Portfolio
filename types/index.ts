@@ -233,7 +233,7 @@ export interface Variant {
     color: string;
     price?: number;
     images?: string[];
-    model:string;
+    model?:string;
     stock?: number;
   };
 
