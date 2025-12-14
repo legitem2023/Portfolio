@@ -35,34 +35,12 @@ export default function VariantsModal({
     createdAt: variant.createdAt || new Date().toISOString()
   }));
 
-// In your VariantsModal.tsx, make sure you have:
-const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
-/*  try {
+  const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
     // Your deletion logic here
     console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
-    
-    // Example implementation:
-    // 1. Update local state first
-    const updatedVariants = variants.map(variant => {
-      if (variant.id === variantId) {
-        const updatedImages = [...variant.images];
-        updatedImages.splice(imageIndex, 1);
-        return { ...variant, images: updatedImages };
-      }
-      return variant;
-    });
-    setVariants(updatedVariants);
+    // Add your actual deletion logic
+  };
 
-    // 2. Make API call to delete from backend
-    // await deleteVariantImage(variantId, imageIndex);
-    
-  } catch (error) {
-    console.error('Error deleting variant image:', error);
-    // Handle error (show toast, etc.)
-  }*/
-};
-
-  
   return (
     <div className={`fixed inset-0 z-50 overflow-y-auto transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div 
@@ -115,16 +93,29 @@ const handleVariantImageDelete = async (variantId: string, imageIndex: number) =
 
           <div className="overflow-y-auto max-h-[calc(90vh-200px)] sm:max-h-[calc(80vh-200px)]">
             {safeVariants.length > 0 ? (
-              <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                {safeVariants.map((variant) => (
-                  <VariantCard 
-                    key={variant.id} 
-                    variant={variant} 
-                    onImageDelete={handleVariantImageDelete}
-                    onImageUpload={onVariantImageUpload}
-                    isUploading={uploadingVariantId === variant.id}
-                  />
-                ))}
+              // Updated container for grid/card layout
+              <div className="p-4 sm:p-6">
+                {/* Grid layout for desktop, card layout for mobile */}
+                <div className="
+                  grid grid-cols-1 gap-4 sm:gap-6
+                  sm:grid-cols-2 lg:grid-cols-3
+                ">
+                  {safeVariants.map((variant) => (
+                    <div key={variant.id} className="
+                      w-full
+                      sm:bg-gray-50 sm:p-4 sm:rounded-lg
+                    ">
+                      <VariantCard 
+                        variant={variant} 
+                        onImageDelete={handleVariantImageDelete}
+                        onImageUpload={onVariantImageUpload}
+                        isUploading={uploadingVariantId === variant.id}
+                        // Add a prop if VariantCard needs to adjust its layout
+                        layout="responsive"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <EmptyVariantsState />
