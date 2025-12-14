@@ -21,9 +21,11 @@ export default function ProductForm({
 }: ProductFormProps) {
   const [insertProduct, { loading, error }] = useMutation(INSERTPRODUCT);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(''); // Clear previous error
     
     try {
       const { data } = await insertProduct({
@@ -35,20 +37,23 @@ export default function ProductForm({
           sku: newProduct.sku,
           id: newProduct.categoryId,
           supplierId: supplierId,
-          // Add color and size to mutation variables
           color: newProduct.color,
           size: newProduct.size,
-          // Note: Add these fields to your mutation if needed
-          // categoryId: newProduct.categoryId,
           stock: parseInt(newProduct.stock),
-          // brand: newProduct.brand,
-          // isActive: newProduct.isActive,
-          // featured: newProduct.featured
+          // Include these if your mutation expects them
+          brand: newProduct.brand,
+          isActive: newProduct.isActive,
+          featured: newProduct.featured
         }
       });
 
-      if (data.createProduct.statusText === 'Success') {
+      // Check the response structure - adjust based on your actual GraphQL response
+      if (data?.insertProduct?.success || data?.createProduct?.success || 
+          data?.insertProduct?.statusText === 'Success' || 
+          data?.createProduct?.statusText === 'Success') {
+        
         setSuccessMessage('Product added successfully!');
+        
         // Reset form
         setNewProduct({
           name: '',
@@ -65,14 +70,31 @@ export default function ProductForm({
           color: '',
           size: ''
         });
+        
         onProductAdded();
         
         // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000);
+      } else {
+        // Handle cases where product might already exist or other issues
+        const message = data?.insertProduct?.message || 
+                       data?.createProduct?.message || 
+                       'Failed to add product. It might already exist.';
+        setErrorMessage(message);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error adding product:', err);
-      // Error is already handled by the error variable from useMutation
+      
+      // Check for specific error messages like duplicate product
+      if (err.message.includes('duplicate') || err.message.includes('already exists')) {
+        setErrorMessage('This product already exists. Please check the SKU or product name.');
+      } else if (err.message.includes('unique constraint')) {
+        setErrorMessage('A product with this SKU or name already exists.');
+      } else if (err.networkError) {
+        setErrorMessage('Network error. Please check your connection.');
+      } else {
+        setErrorMessage(`Error: ${err.message}`);
+      }
     }
   };
 
@@ -81,25 +103,38 @@ export default function ProductForm({
 
   return (
     <form onSubmit={handleSubmit}>
+      {/* Show GraphQL errors */}
       {error && (
         <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
           Error: {error.message}
         </div>
       )}
       
+      {/* Show custom error messages */}
+      {errorMessage && (
+        <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
+          {errorMessage}
+        </div>
+      )}
+      
+      {/* Show success message */}
       {successMessage && (
         <div className="text-green-500 mb-4 p-2 bg-green-100 rounded-md">
           {successMessage}
         </div>
       )}
       
+      {/* Rest of your form remains the same */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
         <input
           type="text"
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
           value={newProduct.name}
-          onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+          onChange={(e) => {
+            setNewProduct({...newProduct, name: e.target.value});
+            setErrorMessage(''); // Clear error when user edits
+          }}
           required
         />
       </div>
@@ -148,7 +183,10 @@ export default function ProductForm({
             type="text"
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
             value={newProduct.sku}
-            onChange={(e) => setNewProduct({...newProduct, sku: e.target.value})}
+            onChange={(e) => {
+              setNewProduct({...newProduct, sku: e.target.value});
+              setErrorMessage(''); // Clear error when user edits SKU
+            }}
             required
           />
         </div>
@@ -266,4 +304,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+          }
