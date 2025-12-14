@@ -414,6 +414,7 @@ export const GETPRODUCTS = gql`
         sku
         stock
         images
+        model
         category {
           id
         }
@@ -427,6 +428,7 @@ export const GETPRODUCTS = gql`
           salePrice
           stock
           images
+          model
         }
         brand
         weight
@@ -455,6 +457,7 @@ export const MANAGEMENTPRODUCTS = gql`
       sku
       stock
       images
+      model
       category {
         id
         name
@@ -474,6 +477,7 @@ export const MANAGEMENTPRODUCTS = gql`
         salePrice
         stock
         images
+        model
       }
       brand
       weight
