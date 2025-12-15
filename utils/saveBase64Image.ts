@@ -65,7 +65,7 @@ export async function upload3DModel(file: any, customFilename?: string) {
 
   // Generate filename
   const filename = customFilename || `${uuidv4()}.${extension}`;
-  const filePath = `3d-models/${filename}`;
+  const filePath = `Models/${filename}`;
 
   // Upload
   const { error } = await supabase.storage
