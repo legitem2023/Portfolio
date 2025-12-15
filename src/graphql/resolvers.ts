@@ -1064,6 +1064,42 @@ export const resolvers = {
   },
 
   Mutation: {
+     categoryImageUpload: async (_: any, args: any) =>{
+        try {
+        const { base64Image, categoryId } = args;
+        
+        // Validate required inputs
+        if (!base64Image || !categoryId) {
+          throw new Error('base64Image and categoryId are required');
+        }
+
+        const imageUUID = uuidv4();
+        
+        // Save images
+        const imageFile = await saveBase64Image(base64Image, `vendorsify-category-${imageUUID}.webp`);
+        
+        const updatedProduct = await prisma.category.update({
+          where: { id: productId },
+          data: {
+            images: imageFile.url // Or base64Image if storing directly 
+          }
+        });
+        
+        if (!updatedProduct) {
+          return {
+            statusText: "Upload failed!"
+          };
+        }
+        
+        // For this example, we return a success message.
+        return {
+          statusText: "Successfully Uploaded"
+        };
+        
+      } catch (error: any) {
+        console.error('Error in singleUpload:', error);
+        }
+},
 upload3DModel: async (_: any, args: any) => {
   try {
     const { file, fileName, productId } = args;
