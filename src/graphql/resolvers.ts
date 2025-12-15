@@ -1064,7 +1064,7 @@ export const resolvers = {
   },
 
   Mutation: {
-    upload3DModel: async (_: any, args: any) => {
+upload3DModel: async (_: any, args: any) => {
   try {
     const { file, fileName, productId } = args;
     
@@ -1093,12 +1093,13 @@ export const resolvers = {
       throw new Error(`Invalid 3D model format. Allowed: ${allowedExtensions.join(', ')}`);
     }
     
-    // Call your upload function (needs to be updated for Vercel storage)
-    const result = await upload3DModel({
-      name: finalFilename,
-      size: buffer.length,
-      buffer: buffer
-    });
+    // Create a file-like object with name property
+    const fileForUpload = buffer;
+    // You can also add name property to the buffer if needed:
+    // buffer.name = finalFilename;
+    
+    // Call upload function with buffer and filename
+    const result = await upload3DModel(fileForUpload, finalFilename);
 
     return {
       success: true,
