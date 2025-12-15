@@ -1081,7 +1081,7 @@ export const resolvers = {
         const updatedProduct = await prisma.category.update({
           where: { id: categoryId },
           data: {
-            images: imageFile.url // Or base64Image if storing directly 
+            image: imageFile.url // Or base64Image if storing directly 
           }
         });
         
