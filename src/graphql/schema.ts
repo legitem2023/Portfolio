@@ -723,7 +723,7 @@ import { gql } from 'graphql-tag';
 export const typeDefs = gql`
   scalar DateTime
   scalar Json
-  scaler Upload
+  scalar Upload
   # ================= Enums =================
   enum Role {
     ADMIN
