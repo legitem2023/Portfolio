@@ -1064,6 +1064,47 @@ export const resolvers = {
   },
 
   Mutation: {
+    upload3DModel: async (_:any, args:any) => {
+      try {
+
+        const { file, fileName, productId } = args;
+        const { createReadStream, filename } = await file;
+        
+        // Convert stream to buffer
+        const stream = createReadStream();
+        const chunks = [];
+        for await (const chunk of stream) {
+          chunks.push(chunk);
+        }
+        const buffer = Buffer.concat(chunks);
+        
+        // Call your function directly
+        const result = await upload3DModel({
+          name: filename,
+          size: buffer.length,
+          buffer: buffer
+        });
+
+        return {
+          success: true,
+          url: result.url,
+          filename: result.filename
+        };
+
+      } catch (error) {
+        return {
+          success: false,
+          message: error.message
+        };
+      }
+    },
+  
+
+
+
+
+
+    
     singleUpload: async (_: any, args: any) => {
       try {
         const { base64Image, productId } = args;
