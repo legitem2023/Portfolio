@@ -147,7 +147,7 @@ export default function ManagementDashboard() {
   variants: newProduct.variants,
   description: newProduct.description,
   price: parseFloat(newProduct.price),
-  salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+  salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : 0,
   sku: newProduct.sku,
   color: newProduct.color,
   size: newProduct.size,
