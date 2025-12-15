@@ -4,7 +4,7 @@ import { typeDefs } from "../../../graphql/schema";
 import { resolvers } from "../../../graphql/resolver";
 
 // CORRECT IMPORT for graphql-upload v13.0.0
-import { GraphQLUpload } from "graphql-upload";
+import  GraphQLUpload  from "graphql-upload";
 
 const schema = makeExecutableSchema({
   typeDefs,
