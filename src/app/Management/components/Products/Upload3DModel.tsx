@@ -11,8 +11,8 @@ function Upload3DModel() {
   // Using onCompleted and onError callbacks
   const [uploadModel, { loading }] = useMutation(UPLOAD_3D_MODEL, {
     onCompleted: (data) => {
-      console.log('✅ Upload completed successfully:', data);
-      if(data.upload3DModel.success) {
+      console.log(data?.upload3DModel);
+      if(data?.upload3DModel.success) {
          setUploadData(data);
          setUploadSuccess(true);
          setUploadError(null);
