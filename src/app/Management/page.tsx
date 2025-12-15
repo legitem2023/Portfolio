@@ -142,20 +142,26 @@ export default function ManagementDashboard() {
     const category = categories.find(c => c.id === newProduct.categoryId);
     
     const product: Product = {
-      id: newProduct.name,
-      name: newProduct.name,
-      variants: newProduct.variants,
-      description: newProduct.description,
-      price: parseFloat(newProduct.price),
-      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
-      sku: newProduct.sku,
-      color:newProduct.color,
-      size:newProduct.size,
-      stock: parseInt(newProduct.stock),
-      category: category?.name || "Uncategorized",
-      brand: newProduct.brand || undefined,
-      status: newProduct.isActive ? "Active" : "Inactive"
-    };
+  id: newProduct.name,
+  name: newProduct.name,
+  variants: newProduct.variants,
+  description: newProduct.description,
+  price: parseFloat(newProduct.price),
+  salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : undefined,
+  sku: newProduct.sku,
+  color: newProduct.color,
+  size: newProduct.size,
+  stock: parseInt(newProduct.stock),
+  // Connect to existing category or create new one
+  category: category ? { connect: { id: category.id } } : {
+    create: {
+      name: "Uncategorized",
+      // Add other required fields for Category model
+    }
+  },
+  brand: newProduct.brand || undefined,
+  status: newProduct.isActive ? "Active" : "Inactive"
+};
     
     setProducts([...products, product]);
     setNewProduct({
