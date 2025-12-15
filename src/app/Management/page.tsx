@@ -11,7 +11,7 @@ import SalesList from './components/SalesList';
 import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import LoadingShimmer from './components/LoadingShimmer';
-import { Product, Category, NewProduct, NewCategory } from './types/types';
+import { Product, category, NewProduct, NewCategory } from '../../../types';
 import { decryptToken } from '../../../utils/decryptToken';
 import UsersTab from './components/UsersTab';
 
