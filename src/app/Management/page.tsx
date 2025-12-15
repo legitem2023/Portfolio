@@ -152,13 +152,7 @@ export default function ManagementDashboard() {
   color: newProduct.color,
   size: newProduct.size,
   stock: parseInt(newProduct.stock),
-  // Connect to existing category or create new one
-  category: category ? { connect: { id: category.id } } : {
-    create: {
-      name: "Uncategorized",
-      // Add other required fields for Category model
-    }
-  },
+  category: category?.name || "Uncategorized" as any,
   brand: newProduct.brand || undefined,
   status: newProduct.isActive ? "Active" : "Inactive"
 };
