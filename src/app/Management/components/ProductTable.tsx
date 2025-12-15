@@ -14,6 +14,7 @@ interface ProductTableProps {
   onProductDeleted?: () => void;
 } 
 
+
 const sortOptions: SortOption[] = [
   { value: 'name-asc', label: 'Name (A-Z)', direction: 'asc' },
   { value: 'name-desc', label: 'Name (Z-A)', direction: 'desc' },
