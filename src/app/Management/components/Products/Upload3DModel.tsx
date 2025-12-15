@@ -7,11 +7,14 @@ function Upload3DModel() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadData, setUploadData] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState(false); // Custom loading state
 
   // Using onCompleted and onError callbacks
-  const [uploadModel, { loading }] = useMutation(UPLOAD_3D_MODEL, {
+  const [uploadModel, { loading: apolloLoading }] = useMutation(UPLOAD_3D_MODEL, {
     onCompleted: (data) => {
       console.log(data?.upload3DModel);
+      setIsUploading(false); // Stop loading here
+      
       if(data?.upload3DModel.success) {
          setUploadData(data);
          setUploadSuccess(true);
@@ -25,8 +28,14 @@ function Upload3DModel() {
     },
     onError: (error) => {
       console.error('❌ Upload error:', error);
+      setIsUploading(false); // Stop loading here
       setUploadError(error.message);
       setUploadSuccess(false);
+    },
+    // Optional: Update cache after upload
+    update: (cache, { data }) => {
+      // You can update your Apollo cache here if needed
+      console.log('Cache update:', data);
     }
   });
 
@@ -34,6 +43,7 @@ function Upload3DModel() {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
       setUploadError(null); // Clear previous errors when new file is selected
+      setUploadSuccess(false); // Clear success state when new file is selected
     }
   };
 
@@ -48,6 +58,7 @@ function Upload3DModel() {
       // Reset states
       setUploadSuccess(false);
       setUploadError(null);
+      setIsUploading(true); // Start loading
       
       // Execute mutation
       await uploadModel({
@@ -58,11 +69,14 @@ function Upload3DModel() {
         }
       });
       
-      // No need to handle success/error here since onCompleted/onError will handle it
+      // Note: We don't set loading to false here because
+      // onCompleted/onError will handle it
+      
     } catch (err) {
       // This catch block might not be needed since onError handles it,
       // but it's good for additional error handling
       console.error('Submission error:', err);
+      setIsUploading(false); // Just in case
     }
   };
 
@@ -77,6 +91,9 @@ function Upload3DModel() {
     }
   }, [uploadSuccess, uploadData]);
 
+  // Helper to check if we should show loading state
+  const showLoading = isUploading || apolloLoading;
+
   return (
     <div className="upload-container">
       <form onSubmit={handleSubmit}>
@@ -85,21 +102,23 @@ function Upload3DModel() {
           accept=".glb,.gltf,.obj,.fbx,.stl"
           onChange={handleFileChange}
           required
+          disabled={showLoading} // Disable during upload
         />
         
         <button 
           type="submit" 
-          disabled={loading || !file}
+          disabled={showLoading || !file}
           style={{ 
-            backgroundColor: loading ? '#ccc' : '#007bff',
+            backgroundColor: showLoading ? '#ccc' : '#007bff',
             color: 'white',
             padding: '10px 20px',
             border: 'none',
             borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer'
+            cursor: showLoading ? 'not-allowed' : 'pointer',
+            transition: 'background-color 0.3s ease'
           }}
         >
-          {loading ? (
+          {showLoading ? (
             <>
               <span style={{ marginRight: '8px' }}>⏳</span>
               Uploading...
@@ -109,7 +128,7 @@ function Upload3DModel() {
       </form>
 
       {/* Error Display */}
-      {uploadError && (
+      {!showLoading && uploadError && (
         <div style={{ 
           backgroundColor: '#f8d7da', 
           color: '#721c24',
@@ -123,8 +142,8 @@ function Upload3DModel() {
         </div>
       )}
 
-      {/* Success Display */}
-      {uploadSuccess && uploadData?.upload3DModel && (
+      {/* Success Display - Only show when not loading */}
+      {!showLoading && uploadSuccess && uploadData?.upload3DModel && (
         <div style={{ 
           backgroundColor: '#d4edda', 
           color: '#155724',
@@ -169,7 +188,7 @@ function Upload3DModel() {
       )}
 
       {/* Loading Indicator */}
-      {loading && (
+      {showLoading && (
         <div style={{ 
           backgroundColor: '#e2e3e5', 
           color: '#383d41',
