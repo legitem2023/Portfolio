@@ -92,13 +92,13 @@ export default function TableRow({
         <PriceDisplay price={product.price} salePrice={product.salePrice} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {product.stock} units
+        
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
         <VariantButton variants={safeVariants} onClick={() => onViewVariants(product)} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
-        <StatusBadge status={product.status} />
+        <StatusBadge status={product.isActive} />
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
         <ActionButtons productId={product.id} onDelete={onDeleteProduct} />
