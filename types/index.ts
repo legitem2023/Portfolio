@@ -217,7 +217,6 @@ export interface NewProduct {
 }
 
 export interface NewCategory {
-  id: string;
   name: string;
   description: string;
   parentId: string;
