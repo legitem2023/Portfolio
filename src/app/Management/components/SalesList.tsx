@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { SALES_LIST_QUERY } from '../../components/graphql/query';
-import Upload3DModel from '../Products/Upload3DModel';
+import Upload3DModel from './Products/Upload3DModel';
 
 // GraphQL Query - Fixed to match resolver types
 /*const SALES_LIST_QUERY = gql`
