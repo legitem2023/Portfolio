@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client';
 import { UPLOAD_3D_MODEL } from '../../../components/graphql/mutation';
 
 function Upload3DModel() {
-  const [file, setFile] = useState(null);
+  const [file, setFile]:any = useState(null);
   const [uploadModel, { loading, error, data }] = useMutation(UPLOAD_3D_MODEL);
 
   const handleFileChange = (e:any) => {
@@ -15,13 +15,13 @@ function Upload3DModel() {
     if (!file) return;
     console.log(file);
     try {
-    /*  await uploadModel({
+      await uploadModel({
         variables: {
           file: file,
-          filename: file,
+          filename: file.name,
           productId:""
         }
-      });*/
+      });
     } catch (err) {
       console.error('Upload failed:', err);
     }
