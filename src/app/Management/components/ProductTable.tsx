@@ -12,7 +12,7 @@ import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
   onProductDeleted?: () => void;
-}
+} 
 
 const sortOptions: SortOption[] = [
   { value: 'name-asc', label: 'Name (A-Z)', direction: 'asc' },
