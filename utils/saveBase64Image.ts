@@ -54,8 +54,12 @@ export async function saveBase64Image(base64Data: string, customFilename?: strin
 }
 
 
-export async function upload3DModel(file: any, customFilename?: string) {
-  const extension = file.name.split('.').pop().toLowerCase();
+export async function upload3DModel(fileBuffer: Buffer, customFilename?: string) {
+  if (!customFilename) {
+    throw new Error('Filename is required for 3D models');
+  }
+  
+  const extension = customFilename.split('.').pop().toLowerCase();
   
   // Supported 3D formats
   const supported = ['glb', 'gltf', 'obj', 'fbx', 'stl'];
@@ -64,13 +68,13 @@ export async function upload3DModel(file: any, customFilename?: string) {
   }
 
   // Generate filename
-  const filename = customFilename || `${uuidv4()}.${extension}`;
+  const filename = customFilename.includes('.') ? customFilename : `${customFilename}.${extension}`;
   const filePath = `Models/${filename}`;
 
   // Upload
   const { error } = await supabase.storage
     .from('legitemfiles')
-    .upload(filePath, file, {
+    .upload(filePath, fileBuffer, {
       contentType: 'application/octet-stream',
       upsert: false
     });
@@ -86,6 +90,6 @@ export async function upload3DModel(file: any, customFilename?: string) {
     filename,
     filePath,
     url: urlData.publicUrl,
-    size: file.size
+    size: fileBuffer.length
   };
 }
