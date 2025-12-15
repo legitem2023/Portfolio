@@ -190,7 +190,7 @@ function CategoryImageUploader({
       {/* Upload Button */}
       <label className="cursor-pointer">
         <div className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-          {loading ? 'Uploading...' : category.imageUrl ? 'Change' : 'Upload'}
+          {loading ? 'Uploading...' : category.image ? 'Change' : 'Upload'}
         </div>
         <input
           type="file"
