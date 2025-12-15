@@ -52,3 +52,40 @@ export async function saveBase64Image(base64Data: string, customFilename?: strin
     throw new Error('Image upload failed');
   }
 }
+
+
+export async function upload3DModel(file, customFilename = null) {
+  const extension = file.name.split('.').pop().toLowerCase();
+  
+  // Supported 3D formats
+  const supported = ['glb', 'gltf', 'obj', 'fbx', 'stl'];
+  if (!supported.includes(extension)) {
+    throw new Error(`Unsupported format. Use: ${supported.join(', ')}`);
+  }
+
+  // Generate filename
+  const filename = customFilename || `${uuidv4()}.${extension}`;
+  const filePath = `3d-models/${filename}`;
+
+  // Upload
+  const { error } = await supabase.storage
+    .from('legitemfiles')
+    .upload(filePath, file, {
+      contentType: 'application/octet-stream',
+      upsert: false
+    });
+
+  if (error) throw error;
+
+  // Get URL
+  const { data: urlData } = supabase.storage
+    .from('legitemfiles')
+    .getPublicUrl(filePath);
+
+  return {
+    filename,
+    filePath,
+    url: urlData.publicUrl,
+    size: file.size
+  };
+}
