@@ -1068,13 +1068,34 @@ upload3DModel: async (_: any, args: any) => {
   try {
     const { file, fileName, productId } = args;
     
+    // Validate required parameters
+    if (!file) {
+      throw new Error('No file provided for upload');
+    }
+    
     // With GraphQL Yoga, 'file' is already resolved, no need to await it
     // But check if it's a Promise (some implementations still return Promise)
     const uploadFile = file.then ? await file : file;
     const { createReadStream, filename: uploadedFilename } = uploadFile;
     
+    if (!createReadStream) {
+      throw new Error('Invalid file object - missing createReadStream');
+    }
+    
     // Use provided fileName or fallback to uploaded filename
     const finalFilename = fileName || uploadedFilename;
+    
+    if (!finalFilename) {
+      throw new Error('No filename available for the upload');
+    }
+    
+    // Validate it's a 3D model file
+    const fileExt = finalFilename.split('.').pop()?.toLowerCase();
+    const allowedExtensions = ['glb', 'gltf', 'obj', 'stl', 'fbx'];
+    
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      throw new Error(`Invalid 3D model format. Allowed: ${allowedExtensions.join(', ')}`);
+    }
     
     // Convert stream to buffer
     const stream = createReadStream();
@@ -1085,39 +1106,60 @@ upload3DModel: async (_: any, args: any) => {
     }
     const buffer = Buffer.concat(chunks);
     
-    // Validate it's a 3D model file
-    const fileExt = finalFilename.split('.').pop()?.toLowerCase();
-    const allowedExtensions = ['glb', 'gltf', 'obj', 'stl', 'fbx'];
-    
-    if (!fileExt || !allowedExtensions.includes(fileExt)) {
-      throw new Error(`Invalid 3D model format. Allowed: ${allowedExtensions.join(', ')}`);
+    // Validate buffer size (optional: add size limits)
+    if (buffer.length === 0) {
+      throw new Error('Uploaded file is empty');
     }
     
-    // Create a file-like object with name property
-    const fileForUpload = buffer;
-    // You can also add name property to the buffer if needed:
-    // buffer.name = finalFilename;
+    // Maximum file size: 100MB (adjust as needed)
+    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    if (buffer.length > MAX_FILE_SIZE) {
+      throw new Error(`File size exceeds maximum limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+    }
     
     // Call upload function with buffer and filename
-    const result = await upload3DModel(fileForUpload, finalFilename);
-
+    const result = await upload3DModel(buffer, finalFilename);
+    
+    // Validate the upload result
+    if (!result) {
+      throw new Error('Upload failed - no result returned from upload service');
+    }
+    
+    if (!result.url) {
+      throw new Error('Upload failed - no URL returned from upload service');
+    }
+    
+    if (!result.filename) {
+      throw new Error('Upload failed - no filename returned from upload service');
+    }
+    
+    // Verify the URL is valid (basic check)
+    if (!result.url.startsWith('http://') && !result.url.startsWith('https://')) {
+      throw new Error('Upload failed - invalid URL format returned');
+    }
+    
+    // Return success with message
     return {
       success: true,
+      message: `3D model "${result.filename}" uploaded successfully`,
       url: result.url,
-      filename: result.filename
+      filename: result.filename,
+      fileSize: buffer.length, // Include file size in response
+      fileType: fileExt
     };
 
   } catch (error: any) {
     console.error('3D Model upload error:', error);
     return {
       success: false,
-      message: error.message
+      message: error.message,
+      url: null,
+      filename: null,
+      fileSize: null,
+      fileType: null
     };
   }
 },
-
-
-
 
 
     
