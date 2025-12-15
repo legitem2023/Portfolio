@@ -1091,7 +1091,7 @@ export const resolvers = {
           filename: result.filename
         };
 
-      } catch (error) {
+      } catch (error:any) {
         return {
           success: false,
           message: error.message
