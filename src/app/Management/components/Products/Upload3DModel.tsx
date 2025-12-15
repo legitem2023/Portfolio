@@ -12,7 +12,7 @@ function Upload3DModel() {
   // Using onCompleted and onError callbacks
   const [uploadModel, { loading: apolloLoading }] = useMutation(UPLOAD_3D_MODEL, {
     onCompleted: (data) => {
-      console.log(data?.upload3DModel);
+      console.log(data);
       setIsUploading(false); // Stop loading here
       
       if(data?.upload3DModel.success) {
@@ -31,11 +31,6 @@ function Upload3DModel() {
       setIsUploading(false); // Stop loading here
       setUploadError(error.message);
       setUploadSuccess(false);
-    },
-    // Optional: Update cache after upload
-    update: (cache, { data }) => {
-      // You can update your Apollo cache here if needed
-      console.log('Cache update:', data);
     }
   });
 
