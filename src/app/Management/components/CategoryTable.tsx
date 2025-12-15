@@ -98,7 +98,7 @@ function CategoryImageUploader({
   category, 
   refetchCategories 
 }: { 
-  category: Category;
+  category: category;
   refetchCategories?: () => void;
 }) {
   const [uploadImage, { loading, error }] = useMutation(CATEGORY_IMAGE_UPLOAD_MUTATION);
