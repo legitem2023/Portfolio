@@ -138,22 +138,26 @@ export default function ManagementDashboard() {
   });
 
   const handleProductSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+   /* e.preventDefault();
     const category = categories.find(c => c.id === newProduct.categoryId);
     
     const product: Product = {
-  id: newProduct.name,
-  name: newProduct.name,
-  variants: newProduct.variants,
-  description: newProduct.description,
-  price: parseFloat(newProduct.price),
-  salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : 0,
-  sku: newProduct.sku,
-  size: newProduct.size,
-  category: category?.name || "Uncategorized" as any,
-  brand: newProduct.brand,
-  isActive: newProduct.isActive ? true : false
-};
+      id: newProduct.name,
+      name: newProduct.name,
+      variants: newProduct.variants,
+      description: newProduct.description,
+      price: parseFloat(newProduct.price),
+      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : 0,
+      sku: newProduct.sku,
+      size: newProduct.size,
+      category: category?.name || "Uncategorized" as any,
+      brand: newProduct.brand,
+      isActive: newProduct.isActive ? true : false
+      onSale, 
+      isNew, 
+      isFeatured, 
+      rating*/
+    };
     
     setProducts([...products, product]);
     setNewProduct({
