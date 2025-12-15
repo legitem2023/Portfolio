@@ -1079,7 +1079,7 @@ export const resolvers = {
         const imageFile = await saveBase64Image(base64Image, `vendorsify-category-${imageUUID}.webp`);
         
         const updatedProduct = await prisma.category.update({
-          where: { id: productId },
+          where: { id: categoryId },
           data: {
             images: imageFile.url // Or base64Image if storing directly 
           }
