@@ -12,14 +12,16 @@ function Upload3DModel() {
   const [uploadModel, { loading }] = useMutation(UPLOAD_3D_MODEL, {
     onCompleted: (data) => {
       console.log('✅ Upload completed successfully:', data);
-      setUploadData(data);
-      setUploadSuccess(true);
-      setUploadError(null);
+      if(data.upload3DModel.success) {
+         setUploadData(data);
+         setUploadSuccess(true);
+         setUploadError(null);
       
-      // Reset file input after successful upload
-      setFile(null);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+         // Reset file input after successful upload
+         setFile(null);
+         const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+          if (fileInput) fileInput.value = ''; 
+      }  
     },
     onError: (error) => {
       console.error('❌ Upload error:', error);
