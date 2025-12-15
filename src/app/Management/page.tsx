@@ -139,7 +139,7 @@ export default function ManagementDashboard() {
 
   const handleProductSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const category = categories.find(c => c.id === parseInt(newProduct.categoryId));
+    const category = categories.find(c => c.id === newProduct.categoryId);
     
     const product: Product = {
       id: newProduct.name,
