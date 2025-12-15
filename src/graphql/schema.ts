@@ -1412,24 +1412,24 @@ export const typeDefs = gql`
     unfollowUser(userId: ID): Boolean
     tagUsersInPost(postId: ID, userIds: [ID]): Post
     removeTagFromPost(postId: ID, userId: ID): Post
-    upload3DModel(file: Upload!, filename: String, productId: String): ModelUploadResponse!
+    upload3DModel(file: Upload, filename: String, productId: String): ModelUploadResponse
 
   }
 
 type ModelUploadResponse {
-  success: Boolean!
+  success: Boolean
   message: String
   model: Model
 }
 
 type Model {
-  id: ID!
-  filename: String!
-  url: String!
-  filePath: String!
-  size: Int!
-  format: String!
-  uploadedAt: String!
+  id: ID
+  filename: String
+  url: String
+  filePath: String
+  size: Int
+  format: String
+  uploadedAt: String
 }
 
 
