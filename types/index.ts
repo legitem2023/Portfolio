@@ -200,7 +200,6 @@ export interface category {
 
 
 export interface NewProduct {
-  id: string;
   name: string;
   description: string;
   price: string;
