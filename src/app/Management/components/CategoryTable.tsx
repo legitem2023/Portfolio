@@ -219,7 +219,7 @@ function MobileCategoryCard({
   category,
   refetchCategories 
 }: { 
-  category: Category;
+  category: category;
   refetchCategories?: () => void;
 }) {
   return (
