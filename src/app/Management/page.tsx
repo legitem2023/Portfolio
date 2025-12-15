@@ -156,7 +156,7 @@ export default function ManagementDashboard() {
       onSale, 
       isNew, 
       isFeatured, 
-      rating*/
+      rating
     };
     
     setProducts([...products, product]);
@@ -174,7 +174,7 @@ export default function ManagementDashboard() {
       brand: "",
       isActive: true,
       featured: false
-    });
+    });*/
   };
 
   const handleCategorySubmit = (e: React.FormEvent) => {
