@@ -6,11 +6,11 @@ function Upload3DModel() {
   const [file, setFile] = useState(null);
   const [uploadModel, { loading, error, data }] = useMutation(UPLOAD_3D_MODEL);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e:any) => {
     setFile(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:any) => {
     e.preventDefault();
     if (!file) return;
 
