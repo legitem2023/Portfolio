@@ -1,5 +1,22 @@
 import { gql } from "@apollo/client";
 
+
+export const UPLOAD_3D_MODEL = gql`
+  mutation Upload3DModel($file: Upload!, $filename: String, $productId: String) {
+    upload3DModel(file: $file, filename: $filename, productId: $productId) {
+      success
+      message
+      model {
+        id
+        filename
+        url
+        size
+        format
+        uploadedAt
+      }
+    }
+  }
+`;
 // Delete Variant Mutation
 export const DELETE_VARIANT = gql`
   mutation DeleteVariant($id: ID!) {
