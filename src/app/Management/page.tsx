@@ -152,7 +152,7 @@ export default function ManagementDashboard() {
   size: newProduct.size,
   category: category?.name || "Uncategorized" as any,
   brand: newProduct.brand,
-  isActive: newProduct.isActive ? "Active" : "Inactive"
+  isActive: newProduct.isActive ? true : false
 };
     
     setProducts([...products, product]);
