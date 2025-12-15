@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Category } from '../../../../types/types';
 import { useMutation } from '@apollo/client';
-import { CATEGORY_IMAGE_UPLOAD_MUTATION } from '../../graphql/mutation'; // Assuming you have this in a separate file
+import { CATEGORY_IMAGE_UPLOAD_MUTATION } from '../../components/graphql/mutation'; // Assuming you have this in a separate file
 
 interface CategoryTableProps {
   categories: Category[];
