@@ -25,7 +25,7 @@ export default function ManagementDashboard() {
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<category[]>([]);
 
   useEffect(() => {
     const getRole = async () => {
