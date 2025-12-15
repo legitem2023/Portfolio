@@ -195,6 +195,30 @@ export interface category {
   items:string;
 }
 
+
+export interface NewProduct {
+  name: string;
+  description: string;
+  price: string;
+  salePrice: string;
+  sku: string;
+  stock: string;
+  categoryId: string;
+  brand: string;
+  isActive: boolean;
+  featured: boolean;
+  variants: Variant[];
+  color: string;
+  size: string;
+}
+
+export interface NewCategory {
+  name: string;
+  description: string;
+  parentId: string;
+  isActive: boolean;
+}
+
 export interface Product {
   id: string;
   sku: string;
