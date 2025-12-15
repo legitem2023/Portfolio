@@ -2,11 +2,16 @@ import { createYoga } from "graphql-yoga";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { typeDefs } from "../../../graphql/schema";
 import { resolvers } from "../../../graphql/resolver";
-import { useGraphQLUpload } from "@graphql-yoga/plugin-graphql-upload";
+
+// CORRECT IMPORT for graphql-upload v13.0.0
+import { GraphQLUpload } from "graphql-upload";
 
 const schema = makeExecutableSchema({
   typeDefs,
-  resolvers,
+  resolvers: {
+    ...resolvers,
+    Upload: GraphQLUpload, // Add this
+  },
 });
 
 const { handleRequest } = createYoga({
@@ -14,7 +19,7 @@ const { handleRequest } = createYoga({
   graphqlEndpoint: "/api/graphql",
   fetchAPI: { Response },
   graphiql: true,
-  plugins: [useGraphQLUpload()], // Use the plugin instead
+  multipart: true, // Enable file uploads
 });
 
 export { handleRequest as GET, handleRequest as POST };
