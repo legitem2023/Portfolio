@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation } from '@apollo/client'; 
 import { Product } from '../../../../types';
 import { DELETE_PRODUCT } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
