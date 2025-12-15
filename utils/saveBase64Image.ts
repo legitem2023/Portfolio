@@ -54,7 +54,7 @@ export async function saveBase64Image(base64Data: string, customFilename?: strin
 }
 
 
-export async function upload3DModel(file, customFilename = null) {
+export async function upload3DModel(file:any, customFilename?:string = null) {
   const extension = file.name.split('.').pop().toLowerCase();
   
   // Supported 3D formats
