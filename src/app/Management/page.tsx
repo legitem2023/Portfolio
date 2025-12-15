@@ -179,7 +179,7 @@ export default function ManagementDashboard() {
 
   const handleCategorySubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const category: Category = {
+    const category: category = {
       id: categories.length + 1,
       name: newCategory.name,
       description: newCategory.description || undefined,
