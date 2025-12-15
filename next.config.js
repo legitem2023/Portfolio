@@ -1,10 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable the experimental app directory (required for Next.js 13+)
-  experimental: {
-    appDir: true,
-  },
-  
   // Image optimization configuration
   images: {
     remotePatterns: [
