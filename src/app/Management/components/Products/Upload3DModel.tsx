@@ -19,7 +19,7 @@ function Upload3DModel() {
         variables: {
           file: file,
           filename: file.name,
-          productId:""
+          productId:"68c8c1765038c47a4b9ef519"
         }
       });
     } catch (err) {
