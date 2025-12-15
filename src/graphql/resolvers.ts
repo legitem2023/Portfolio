@@ -1070,7 +1070,14 @@ upload3DModel: async (_: any, args: any) => {
     
     // Validate required parameters
     if (!file) {
-      throw new Error('No file provided for upload');
+      return {
+        success: false,
+        message: 'No file provided for upload',
+        url: null,
+        filename: null,
+        fileSize: null,
+        fileType: null
+      };
     }
     
     // With GraphQL Yoga, 'file' is already resolved, no need to await it
@@ -1079,14 +1086,28 @@ upload3DModel: async (_: any, args: any) => {
     const { createReadStream, filename: uploadedFilename } = uploadFile;
     
     if (!createReadStream) {
-      throw new Error('Invalid file object - missing createReadStream');
+      return {
+        success: false,
+        message: 'Invalid file object - missing createReadStream',
+        url: null,
+        filename: null,
+        fileSize: null,
+        fileType: null
+      };
     }
     
     // Use provided fileName or fallback to uploaded filename
     const finalFilename = fileName || uploadedFilename;
     
     if (!finalFilename) {
-      throw new Error('No filename available for the upload');
+      return {
+        success: false,
+        message: 'No filename available for the upload',
+        url: null,
+        filename: null,
+        fileSize: null,
+        fileType: null
+      };
     }
     
     // Validate it's a 3D model file
@@ -1094,7 +1115,14 @@ upload3DModel: async (_: any, args: any) => {
     const allowedExtensions = ['glb', 'gltf', 'obj', 'stl', 'fbx'];
     
     if (!fileExt || !allowedExtensions.includes(fileExt)) {
-      throw new Error(`Invalid 3D model format. Allowed: ${allowedExtensions.join(', ')}`);
+      return {
+        success: false,
+        message: `Invalid 3D model format. Allowed formats: ${allowedExtensions.join(', ')}`,
+        url: null,
+        filename: null,
+        fileSize: null,
+        fileType: null
+      };
     }
     
     // Convert stream to buffer
@@ -1106,15 +1134,30 @@ upload3DModel: async (_: any, args: any) => {
     }
     const buffer = Buffer.concat(chunks);
     
-    // Validate buffer size (optional: add size limits)
+    // Validate buffer size
     if (buffer.length === 0) {
-      throw new Error('Uploaded file is empty');
+      return {
+        success: false,
+        message: 'Uploaded file is empty',
+        url: null,
+        filename: null,
+        fileSize: null,
+        fileType: null
+      };
     }
     
-    // Maximum file size: 100MB (adjust as needed)
-    const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+    // Maximum file size: 100MB
+    const MAX_FILE_SIZE = 100 * 1024 * 1024;
     if (buffer.length > MAX_FILE_SIZE) {
-      throw new Error(`File size exceeds maximum limit of ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+      const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
+      return {
+        success: false,
+        message: `File size exceeds maximum limit of ${maxSizeMB}MB`,
+        url: null,
+        filename: null,
+        fileSize: buffer.length,
+        fileType: fileExt
+      };
     }
     
     // Call upload function with buffer and filename
@@ -1122,20 +1165,48 @@ upload3DModel: async (_: any, args: any) => {
     
     // Validate the upload result
     if (!result) {
-      throw new Error('Upload failed - no result returned from upload service');
+      return {
+        success: false,
+        message: 'Upload failed - no result returned from upload service',
+        url: null,
+        filename: null,
+        fileSize: buffer.length,
+        fileType: fileExt
+      };
     }
     
     if (!result.url) {
-      throw new Error('Upload failed - no URL returned from upload service');
+      return {
+        success: false,
+        message: 'Upload failed - no URL returned from upload service',
+        url: null,
+        filename: result.filename || finalFilename,
+        fileSize: buffer.length,
+        fileType: fileExt
+      };
     }
     
     if (!result.filename) {
-      throw new Error('Upload failed - no filename returned from upload service');
+      return {
+        success: false,
+        message: 'Upload failed - no filename returned from upload service',
+        url: result.url,
+        filename: null,
+        fileSize: buffer.length,
+        fileType: fileExt
+      };
     }
     
     // Verify the URL is valid (basic check)
     if (!result.url.startsWith('http://') && !result.url.startsWith('https://')) {
-      throw new Error('Upload failed - invalid URL format returned');
+      return {
+        success: false,
+        message: 'Upload failed - invalid URL format returned',
+        url: result.url,
+        filename: result.filename,
+        fileSize: buffer.length,
+        fileType: fileExt
+      };
     }
     
     // Return success with message
@@ -1144,25 +1215,42 @@ upload3DModel: async (_: any, args: any) => {
       message: `3D model "${result.filename}" uploaded successfully`,
       url: result.url,
       filename: result.filename,
-      fileSize: buffer.length, // Include file size in response
-      fileType: fileExt
+      fileSize: buffer.length,
+      fileType: fileExt,
+      // Optional: Add more metadata if available
+      timestamp: new Date().toISOString()
     };
 
   } catch (error: any) {
     console.error('3D Model upload error:', error);
+    
+    // Provide more specific error messages for common issues
+    let userMessage = error.message || 'An unexpected error occurred during upload';
+    
+    // Handle common error types with user-friendly messages
+    if (error.code === 'ENOENT' || error.code === 'ENOTFOUND') {
+      userMessage = 'Storage service unavailable. Please try again later.';
+    } else if (error.code === 'ECONNREFUSED') {
+      userMessage = 'Unable to connect to storage service.';
+    } else if (error.message.includes('timeout')) {
+      userMessage = 'Upload timed out. Please try again.';
+    } else if (error.message.includes('network')) {
+      userMessage = 'Network error. Please check your connection and try again.';
+    }
+    
     return {
       success: false,
-      message: error.message,
+      message: userMessage,
       url: null,
       filename: null,
       fileSize: null,
-      fileType: null
+      fileType: null,
+      // Optional: include error code for debugging (be careful with sensitive info)
+      errorCode: process.env.NODE_ENV === 'development' ? error.code : null
     };
   }
 },
-
-
-    
+   
     singleUpload: async (_: any, args: any) => {
       try {
         const { base64Image, productId } = args;
