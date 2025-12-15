@@ -723,7 +723,7 @@ import { gql } from 'graphql-tag';
 export const typeDefs = gql`
   scalar DateTime
   scalar Json
-
+  scaler Upload
   # ================= Enums =================
   enum Role {
     ADMIN
@@ -1412,7 +1412,26 @@ export const typeDefs = gql`
     unfollowUser(userId: ID): Boolean
     tagUsersInPost(postId: ID, userIds: [ID]): Post
     removeTagFromPost(postId: ID, userId: ID): Post
+    upload3DModel(file: Upload!, filename: String, productId: String): ModelUploadResponse!
+
   }
+
+type ModelUploadResponse {
+  success: Boolean!
+  message: String
+  model: Model
+}
+
+type Model {
+  id: ID!
+  filename: String!
+  url: String!
+  filePath: String!
+  size: Int!
+  format: String!
+  uploadedAt: String!
+}
+
 
   # Input Types
   input SendMessageInput {
