@@ -58,7 +58,7 @@
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.5",
     "@iconify/react": "^4.1.1",
-    "@types/graphql-upload": "^8.0.14",
+    "@types/graphql-upload": "8.0.14",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.52.0",
     "eslint-config-next": "13.5.6",
