@@ -13,15 +13,15 @@ function Upload3DModel() {
   const handleSubmit = async (e:any) => {
     e.preventDefault();
     if (!file) return;
-
+    console.log(file);
     try {
-      await uploadModel({
+    /*  await uploadModel({
         variables: {
           file: file,
-          filename: file.name,
+          filename: file,
           productId:""
         }
-      });
+      });*/
     } catch (err) {
       console.error('Upload failed:', err);
     }
