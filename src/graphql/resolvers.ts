@@ -1064,41 +1064,56 @@ export const resolvers = {
   },
 
   Mutation: {
-    upload3DModel: async (_:any, args:any) => {
-      try {
+    upload3DModel: async (_: any, args: any) => {
+  try {
+    const { file, fileName, productId } = args;
+    
+    // With GraphQL Yoga, 'file' is already resolved, no need to await it
+    // But check if it's a Promise (some implementations still return Promise)
+    const uploadFile = file.then ? await file : file;
+    const { createReadStream, filename: uploadedFilename } = uploadFile;
+    
+    // Use provided fileName or fallback to uploaded filename
+    const finalFilename = fileName || uploadedFilename;
+    
+    // Convert stream to buffer
+    const stream = createReadStream();
+    const chunks: Buffer[] = [];
+    
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+    
+    // Validate it's a 3D model file
+    const fileExt = finalFilename.split('.').pop()?.toLowerCase();
+    const allowedExtensions = ['glb', 'gltf', 'obj', 'stl', 'fbx'];
+    
+    if (!fileExt || !allowedExtensions.includes(fileExt)) {
+      throw new Error(`Invalid 3D model format. Allowed: ${allowedExtensions.join(', ')}`);
+    }
+    
+    // Call your upload function (needs to be updated for Vercel storage)
+    const result = await upload3DModel({
+      name: finalFilename,
+      size: buffer.length,
+      buffer: buffer
+    });
 
-        const { file, fileName, productId } = args;
-        const { createReadStream, filename } = await file;
-        
-        // Convert stream to buffer
-        const stream = createReadStream();
-        const chunks = [];
-        for await (const chunk of stream) {
-          chunks.push(chunk);
-        }
-        const buffer = Buffer.concat(chunks);
-        
-        // Call your function directly
-        const result = await upload3DModel({
-          name: filename,
-          size: buffer.length,
-          buffer: buffer
-        });
+    return {
+      success: true,
+      url: result.url,
+      filename: result.filename
+    };
 
-        return {
-          success: true,
-          url: result.url,
-          filename: result.filename
-        };
-
-      } catch (error:any) {
-        return {
-          success: false,
-          message: error.message
-        };
-      }
-    },
-  
+  } catch (error: any) {
+    console.error('3D Model upload error:', error);
+    return {
+      success: false,
+      message: error.message
+    };
+  }
+},
 
 
 
