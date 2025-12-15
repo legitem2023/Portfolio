@@ -1,9 +1,9 @@
-import { Category, NewCategory } from '../types/types';
+import { category, NewCategory } from '../../../../types';
 import CategoryTable from './CategoryTable';
 import CategoryForm from './CategoryForm';
 import Tabs from './Tabs';
 interface CategoriesTabProps {
-  categories: Category[];
+  categories: category[];
   newCategory: NewCategory;
   setNewCategory: (category: NewCategory) => void;
   handleCategorySubmit: (e: React.FormEvent) => void;
