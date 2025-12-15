@@ -1,15 +1,12 @@
 import { createYoga } from "graphql-yoga";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { GraphQLUpload } from "graphql-upload";  // This should work with v15.0.2
 import { typeDefs } from "../../../graphql/schema";
 import { resolvers } from "../../../graphql/resolver";
+import { useGraphQLUpload } from "@graphql-yoga/plugin-graphql-upload";
 
 const schema = makeExecutableSchema({
   typeDefs,
-  resolvers: {
-    ...resolvers,
-    Upload: GraphQLUpload,
-  },
+  resolvers,
 });
 
 const { handleRequest } = createYoga({
@@ -17,7 +14,7 @@ const { handleRequest } = createYoga({
   graphqlEndpoint: "/api/graphql",
   fetchAPI: { Response },
   graphiql: true,
-  multipart: true,
+  plugins: [useGraphQLUpload()], // Use the plugin instead
 });
 
 export { handleRequest as GET, handleRequest as POST };
