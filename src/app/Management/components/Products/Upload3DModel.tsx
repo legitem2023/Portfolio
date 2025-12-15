@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { UPLOAD_3D_MODEL } from '../../../components/graphql/query';
+import { UPLOAD_3D_MODEL } from '../../../components/graphql/mutation';
 
 function Upload3DModel() {
   const [file, setFile] = useState(null);
