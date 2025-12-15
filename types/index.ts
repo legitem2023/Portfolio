@@ -193,6 +193,9 @@ export interface category {
   isActive:boolean;
   createdAt:string;
   items:string;
+  productCount: number;
+  status: 'Active' | 'Inactive';
+  parentId?: number;
 }
 
 
