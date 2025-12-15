@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Category } from '../../../../types/types';
+import { category } from '../../../../types';
 import { useMutation } from '@apollo/client';
 import { CATEGORY_IMAGE_UPLOAD_MUTATION } from '../../components/graphql/mutation'; // Assuming you have this in a separate file
 
 interface CategoryTableProps {
-  categories: Category[];
+  categories: category[];
   refetchCategories?: () => void; // Optional refetch function to update list after upload
 }
 
