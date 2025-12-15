@@ -150,7 +150,6 @@ export default function ManagementDashboard() {
   salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : 0,
   sku: newProduct.sku,
   size: newProduct.size,
-  stock: parseInt(newProduct.stock),
   category: category?.name || "Uncategorized" as any,
   brand: newProduct.brand || undefined,
   status: newProduct.isActive ? "Active" : "Inactive"
