@@ -228,6 +228,7 @@ export interface Product {
   name: string;
   size: string;
   price: number;
+  salePrice: number;
   onSale: boolean;
   isNew: boolean;
   isFeatured: boolean;
