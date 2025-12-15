@@ -243,6 +243,7 @@ export interface Product {
   productCode?: string;
   category: category;
   createdAt:string;
+  isActive:boolean;
   variants: {
     id: string;
     sku: string;
