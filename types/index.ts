@@ -238,6 +238,7 @@ export interface Product {
   image: string;
   model:string;
   colors?: string[];
+  brand: string;
   description?: string;
   productCode?: string;
   category: category;
