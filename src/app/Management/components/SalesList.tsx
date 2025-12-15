@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { SALES_LIST_QUERY } from '../../components/graphql/query';
+import Upload3DModel from '../Products/Upload3DModel';
+
 // GraphQL Query - Fixed to match resolver types
 /*const SALES_LIST_QUERY = gql`
   query SalesList(
@@ -397,7 +399,7 @@ const SalesList = () => {
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
-              
+              <Upload3DModel/>
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
