@@ -59,7 +59,7 @@ export async function upload3DModel(fileBuffer: Buffer, customFilename?: string)
     throw new Error('Filename is required for 3D models');
   }
   
-  const extension = customFilename.split('.').pop().toLowerCase();
+  const extension = customFilename?.split('.').pop().toLowerCase();
   
   // Supported 3D formats
   const supported = ['glb', 'gltf', 'obj', 'fbx', 'stl'];
@@ -68,7 +68,7 @@ export async function upload3DModel(fileBuffer: Buffer, customFilename?: string)
   }
 
   // Generate filename
-  const filename = customFilename.includes('.') ? customFilename : `${customFilename}.${extension}`;
+  const filename = customFilename?.includes('.') ? customFilename : `${customFilename}.${extension}`;
   const filePath = `Models/${filename}`;
 
   // Upload
