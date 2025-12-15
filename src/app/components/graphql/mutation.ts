@@ -44,7 +44,13 @@ export const SINGLE_UPLOAD_MUTATION = gql`
   }
 `;
 
-
+export const CATEGORY_IMAGE_UPLOAD_MUTATION = `
+  mutation CategoryImageUpload($base64Image: String!, $categoryId: ID!) {
+    categoryImageUpload(base64Image: $base64Image, categoryId: $categoryId) {
+      statusText
+    }
+  }
+`;
 export const LOGOUT_MUTATION = gql`
   mutation Logout {
     logout {
