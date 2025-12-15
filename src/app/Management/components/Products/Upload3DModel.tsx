@@ -27,11 +27,6 @@ function Upload3DModel() {
       console.error('❌ Upload error:', error);
       setUploadError(error.message);
       setUploadSuccess(false);
-    },
-    // Optional: Update cache after upload
-    update: (cache, { data }) => {
-      // You can update your Apollo cache here if needed
-      console.log('Cache update:', data);
     }
   });
 
