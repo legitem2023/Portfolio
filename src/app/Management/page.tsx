@@ -178,7 +178,7 @@ export default function ManagementDashboard() {
   };
 
   const handleCategorySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    /*e.preventDefault();
     const category: category = {
       id: categories.length + 1,
       name: newCategory.name,
@@ -194,7 +194,7 @@ export default function ManagementDashboard() {
       description: "",
       parentId: "",
       isActive: true
-    });
+    });*/
   };
 
   const renderContent = () => {
