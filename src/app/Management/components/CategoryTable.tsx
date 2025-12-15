@@ -173,10 +173,10 @@ function CategoryImageUploader({
   return (
     <div className="flex flex-col items-center">
       {/* Current Image Display */}
-      {category.imageUrl ? (
+      {category.image ? (
         <div className="relative mb-2">
           <img 
-            src={category.imageUrl} 
+            src={category.image} 
             alt={category.name}
             className="w-12 h-12 rounded-full object-cover border border-gray-200"
           />
