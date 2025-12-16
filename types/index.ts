@@ -395,15 +395,29 @@ export interface Role {
   permissions: string[];
 }
 
+
+// With this complete version:
 export interface Address {
   id: string;
+  type: AddressType;
   street: string;
   city: string;
   state: string;
   zipCode: string;
   country: string;
   isDefault: boolean;
-  type: string;
+  createdAt: Date | string;
+  user: User;
+  orders: Order[];
+}
+
+// Add this enum after the Address interface:
+export enum AddressType {
+  HOME = "HOME",
+  WORK = "WORK",
+  BILLING = "BILLING",
+  SHIPPING = "SHIPPING",
+  OTHER = "OTHER"
 }
 
 export interface Order {
