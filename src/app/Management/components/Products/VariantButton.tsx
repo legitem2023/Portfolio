@@ -1,4 +1,4 @@
-import { Variant } from '../../types/types';
+import { Variant } from '../../../../../types';
 
 interface VariantButtonProps {
   variants?: Variant[];
