@@ -204,7 +204,7 @@ function CategoryImageUploader({
         </div>
       ) : (
         <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2 border border-gray-300">
-          <span className="text-xs text-gray-500">No image</span>
+          <span className="text-xs text-gray-500 justify-center items-center">No image</span>
         </div>
       )}
 
