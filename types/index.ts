@@ -313,6 +313,7 @@ export interface User {
   followingCount: number;
   isFollowing: boolean;
   posts: Post[];
+  email: string;
   addresses: Address[];
   products: Product[];
 }
