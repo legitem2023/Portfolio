@@ -577,7 +577,7 @@ export interface Post {
   likeCount: number;
   commentCount: number;
   isLikedByMe: boolean;
-  createdAt: Date | string;
+  createdAt: string;
   author: User;
   user: User;
   taggedUsers: User[];
