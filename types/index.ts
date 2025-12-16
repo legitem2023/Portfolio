@@ -365,7 +365,7 @@ export interface User {
   emailVerified: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
-  role: Role;
+  role: string;
   addresses: Address[];
   orders: Order[];
   reviews: Review[];
