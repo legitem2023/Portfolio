@@ -1,6 +1,6 @@
 // components/UserList.tsx
 import React, { useState } from 'react';
-import { User } from '../../types/types';
+import { User } from '../../../../../types';
 import UserCard from './UserCard';
 import UserTable from './UserTable';
 import AddressModal from './AddressModal';
