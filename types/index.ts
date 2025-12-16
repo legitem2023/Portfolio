@@ -309,6 +309,7 @@ export interface User {
   firstName: string;
   lastName: string;
   avatar: string;
+  role: string;
   followerCount: number;
   followingCount: number;
   isFollowing: boolean;
