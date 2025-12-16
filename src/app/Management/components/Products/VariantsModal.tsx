@@ -3,6 +3,7 @@ import { Product, Variant } from '../../../../../types';
 import VariantCard from './VariantCard';
 import AddVariantForm from './AddVariantForm';
 
+
 interface VariantsModalProps {
   isOpen: boolean;
   onClose: () => void;
