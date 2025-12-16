@@ -87,7 +87,7 @@ export default function MobileProductCard({
             <p className="text-sm text-gray-500">{product.sku}</p>
           </div>
         </div>
-        <StatusBadge status={product.status} />
+        <StatusBadge status={product.isActive} />
       </div>
       
       <div className="space-y-2 mb-4">
