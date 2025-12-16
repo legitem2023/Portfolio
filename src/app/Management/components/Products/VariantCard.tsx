@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Variant } from '../../types/types';
+import { Variant } from '../../../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 
