@@ -363,8 +363,8 @@ export interface User {
   avatar: string;
   phone: string;
   emailVerified: boolean;
-  createdAt: Date | string;
-  updatedAt: Date | string;
+  createdAt: string;
+  updatedAt: string;
   role: string;
   addresses: Address[];
   orders: Order[];
@@ -406,7 +406,7 @@ export interface Address {
   zipCode: string;
   country: string;
   isDefault: boolean;
-  createdAt: Date | string;
+  createdAt: string;
   user: User;
   orders: Order[];
 }
@@ -429,7 +429,7 @@ export interface Order {
   tax: number;
   shipping: number;
   discount: number;
-  createdAt: Date | string;
+  createdAt: string;
   user: User;
   items: OrderItem[];
   payments: Payment[];
@@ -457,7 +457,7 @@ export interface WishlistItem {
   id: string;
   product: Product;
   user: User;
-  addedAt: Date | string;
+  addedAt: string;
 }
 
 export interface CartItem {
