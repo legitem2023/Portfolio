@@ -403,6 +403,7 @@ export interface Address {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  type: string;
 }
 
 export interface Order {
