@@ -1,11 +1,11 @@
-import { Product, Category, NewProduct } from '../../../../types';
+import { Product, category, NewProduct } from '../../../../types';
 import ProductTable from './ProductTable';
 import ProductForm from './ProductForm';
 import Tabs from './Tabs';
 interface ProductsTabProps {
   supplierId: String;
   products: Product[];
-  categories: Category[];
+  categories: category[];
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
   handleProductSubmit: (e: React.FormEvent) => void;
