@@ -318,6 +318,7 @@ export interface User {
   phone: string;
   addresses: Address[];
   products: Product[];
+  emailVerified: boolean;
 }
 
 export interface ProductCardProps {
