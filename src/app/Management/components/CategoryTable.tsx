@@ -115,7 +115,7 @@ function CategoryImageUploader({
 
     // Validate file
     if (!file.type.startsWith('image/')) {
-      setUploadError('Please select an image file');
+      setUploadError('Please select an image file (JPEG, PNG, etc.)');
       return;
     }
 
@@ -128,6 +128,14 @@ function CategoryImageUploader({
     try {
       // Convert file to base64
       const base64Image = await convertToBase64(file);
+      
+      // Log for debugging (remove in production)
+      console.log('File info:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        base64Length: base64Image.length
+      });
 
       // Upload image
       const result = await uploadImage({
@@ -137,6 +145,8 @@ function CategoryImageUploader({
         }
       });
 
+      console.log('Upload result:', result);
+
       if (result.data?.categoryImageUpload?.success) {
         setUploadSuccess(true);
         
@@ -145,12 +155,16 @@ function CategoryImageUploader({
         
         // Refetch categories if callback provided
         if (refetchCategories) {
-          refetchCategories();
+          setTimeout(() => refetchCategories(), 500); // Small delay to ensure DB update
         }
       } else {
-        setUploadError(result.data?.categoryImageUpload?.message || 'Upload failed');
+        const errorMsg = result.data?.categoryImageUpload?.message || 
+                        result.errors?.[0]?.message || 
+                        'Upload failed';
+        setUploadError(errorMsg);
       }
     } catch (err) {
+      console.error('Upload error:', err);
       setUploadError(err instanceof Error ? err.message : 'Upload failed');
     }
   };
@@ -160,13 +174,16 @@ function CategoryImageUploader({
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
-        // Remove the data:image/...;base64, prefix if you only want the base64 string
-        const base64String = reader.result as string;
-        // If you need just the base64 part without the prefix:
-        // const base64String = (reader.result as string).split(',')[1];
+        const result = reader.result as string;
+        
+        // Send only base64 string (usually what servers expect)
+        const base64String = result.split(',')[1];
         resolve(base64String);
       };
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (error) => {
+        console.error('FileReader error:', error);
+        reject(new Error('Failed to read file'));
+      };
     });
   };
 
@@ -179,36 +196,53 @@ function CategoryImageUploader({
             src={category.image} 
             alt={category.name}
             className="w-12 h-12 rounded-full object-cover border border-gray-200"
+            onError={(e) => {
+              // Handle broken images
+              e.currentTarget.src = '/placeholder-image.png';
+            }}
           />
         </div>
       ) : (
-        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-          <span className="text-xs text-gray-400">No image</span>
+        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2 border border-gray-300">
+          <span className="text-xs text-gray-500">No image</span>
         </div>
       )}
 
       {/* Upload Button */}
-      <label className="cursor-pointer">
-        <div className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
+      <label className={`cursor-pointer ${loading ? 'opacity-50' : ''}`}>
+        <div className={`text-xs font-medium px-2 py-1 rounded ${
+          loading 
+            ? 'bg-gray-100 text-gray-500' 
+            : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:text-indigo-800'
+        }`}>
           {loading ? 'Uploading...' : category.image ? 'Change' : 'Upload'}
         </div>
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/gif,image/webp"
           onChange={handleFileChange}
           className="hidden"
           disabled={loading}
         />
       </label>
 
-      {/* Error Message */}
+      {/* Status Messages */}
       {uploadError && (
-        <p className="text-xs text-red-500 mt-1">{uploadError}</p>
+        <p className="text-xs text-red-600 mt-1 bg-red-50 px-2 py-1 rounded max-w-[120px] text-center">
+          {uploadError}
+        </p>
       )}
 
-      {/* Success Message */}
       {uploadSuccess && (
-        <p className="text-xs text-green-500 mt-1">✓ Uploaded!</p>
+        <p className="text-xs text-green-600 mt-1 bg-green-50 px-2 py-1 rounded max-w-[120px] text-center">
+          ✓ Uploaded successfully!
+        </p>
+      )}
+
+      {error && (
+        <p className="text-xs text-red-600 mt-1 bg-red-50 px-2 py-1 rounded max-w-[120px] text-center">
+          GraphQL error occurred
+        </p>
       )}
     </div>
   );
@@ -297,4 +331,4 @@ function ActionButtons({ categoryId }: { categoryId: string }) {
       </button>
     </div>
   );
-            }
+}
