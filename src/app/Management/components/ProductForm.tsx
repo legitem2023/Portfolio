@@ -1,14 +1,14 @@
 "use client";
 import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
-import { NewProduct, Category } from '../types/types';
+import { NewProduct, category } from '../../../../types';
 import { useState } from 'react';
 
 interface ProductFormProps {
   supplierId: String;
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
-  categories: Category[];
+  categories: category[];
   onProductAdded: () => void;
 }
 
