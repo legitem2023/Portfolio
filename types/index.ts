@@ -579,7 +579,7 @@ export interface Post {
   isLikedByMe: boolean;
   createdAt: Date | string;
   author: User;
-  user: string;
+  user: User;
   taggedUsers: User[];
   comments: Comment[];
 }
