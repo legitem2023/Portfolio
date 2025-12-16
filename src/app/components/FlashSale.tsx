@@ -3,7 +3,7 @@ import { useQuery, NetworkStatus } from '@apollo/client';
 import { GETPRODUCTS, GETCATEGORY } from './graphql/query';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import FlashThumbnails from '../components/FlashThumbnails';
-import { Product, Category } from '../Management/types/types';
+import { Product, category } from '../../../types';
 import FlashThumbnailsShimmer from "./FlashThumbnailsShimmer";
 import {
   Gift,
@@ -30,7 +30,7 @@ const FlashSale: React.FC = () => {
   
   // Get categories
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<category[]>([]);
 
   useEffect(() => {
     if (categoryData?.categories) {
