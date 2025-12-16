@@ -226,33 +226,39 @@ export interface Product {
   id: string;
   sku: string;
   name: string;
-  size: string;
+  description: string;
   price: number;
   salePrice: number;
+  originalPrice?: number;
   onSale: boolean;
   isNew: boolean;
   isFeatured: boolean;
-  originalPrice?: number;
   rating: number;
   reviewCount: number;
   image: string;
-  model:string;
+  model: string;
   colors?: string[];
   brand: string;
-  description?: string;
   productCode?: string;
-  category: category;
-  createdAt:string;
-  isActive:boolean;
+  category: string;
+  createdAt: string;
+  isActive: boolean;
+  color: string;           // From first interface
+  size: string;           // From first interface (duplicate with variants but kept for top-level)
+  stock: number;          // From first interface
+  status: 'Active' | 'Inactive';  // From first interface
   variants: {
     id: string;
+    name?: string;        // From first interface
     sku: string;
     size: string;
     color: string;
     price?: number;
+    salePrice?: number;   // From first interface
     images?: string[];
-    model?:string;
+    model?: string;
     stock?: number;
+    createdAt?: string;   // From first interface
   }[];
 }
 
