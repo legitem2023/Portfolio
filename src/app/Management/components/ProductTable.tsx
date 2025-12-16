@@ -220,7 +220,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
             {filteredAndSortedProducts.map((product) => (
               <TableRow 
                 key={product.id} 
-                product={product} 
+                product={product as any} 
                 onViewVariants={openVariantsModal}
                 onImageUpload={handleProductImageUpload}
                 onDeleteProduct={handleDelete}
@@ -235,7 +235,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
         {filteredAndSortedProducts.map((product) => (
           <MobileProductCard 
             key={product.id} 
-            product={product} 
+            product={product as any} 
             onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
             onDeleteProduct={handleDelete}
