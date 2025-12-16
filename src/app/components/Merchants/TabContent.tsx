@@ -22,7 +22,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
     if (user.firstName && user.lastName) {
       return `${user.firstName} ${user.lastName}`;
     }
-    return user.name || 'Unknown User';
+    return user.firstName || 'Unknown User';
   };
 
   const formatDate = (dateString: string) => {
