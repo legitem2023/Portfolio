@@ -1,6 +1,6 @@
 // components/AddressModal.tsx
 import React from 'react';
-import { User, Address } from '../../types/types';
+import { User, Address } from '../../../../../types';
 
 interface AddressModalProps {
   isOpen: boolean;
