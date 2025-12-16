@@ -264,13 +264,16 @@ export interface Product {
 
 export interface Variant {
     id: string;
+    name?: string;        // From first interface
     sku: string;
     size: string;
     color: string;
     price?: number;
+    salePrice?: number;   // From first interface
     images?: string[];
-    model?:string;
+    model?: string;
     stock?: number;
+    createdAt?: string
   };
 
 // FIXED: Single CartItem definition that extends Product
