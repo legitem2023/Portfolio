@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product, Variant } from '../../types/types';
+import { Product, Variant } from '../../../../../types';
 import VariantCard from './VariantCard';
 import AddVariantForm from './AddVariantForm';
 
