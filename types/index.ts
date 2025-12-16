@@ -315,6 +315,7 @@ export interface User {
   isFollowing: boolean;
   posts: Post[];
   email: string;
+  phone: string;
   addresses: Address[];
   products: Product[];
 }
