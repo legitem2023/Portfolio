@@ -1070,13 +1070,16 @@ export const resolvers = {
         
         // Validate required inputs
         if (!base64Image || !categoryId) {
-          throw new Error('base64Image and categoryId are required');
+          //throw new Error('base64Image and categoryId are required');
+          return {
+            statusText: "base64Image and categoryId are required"
+          };
         }
 
         const imageUUID = uuidv4();
         
         // Save images
-        const imageFile = await saveBase64Image(base64Image, `vendorsify-category-${imageUUID}.webp`);
+        const imageFile = await saveBase64Image(base64Image, `vendorsify_category_${imageUUID}.webp`);
         
         const updatedProduct = await prisma.category.update({
           where: { id: categoryId },
@@ -1097,8 +1100,11 @@ export const resolvers = {
         };
         
       } catch (error: any) {
-        console.error('Error in singleUpload:', error);
-        }
+        //console.error('Error in singleUpload:', error);
+        return {
+            statusText:"Error in singleUpload:", error
+          };
+      }
 },
 upload3DModel: async (_: any, args: any) => {
   try {
