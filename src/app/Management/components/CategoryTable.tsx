@@ -1,12 +1,21 @@
 import { useState } from 'react';
 import { category } from '../../../../types';
-import { useMutation } from '@apollo/client';
-import { CATEGORY_IMAGE_UPLOAD_MUTATION } from '../../components/graphql/mutation'; // Assuming you have this in a separate file
+import { useMutation, gql } from '@apollo/client';
 
 interface CategoryTableProps {
   categories: category[];
-  refetchCategories?: () => void; // Optional refetch function to update list after upload
+  refetchCategories?: () => void;
 }
+
+// Define the mutation here
+const CATEGORY_IMAGE_UPLOAD_MUTATION = gql`
+  mutation CategoryImageUpload($base64Image: String!, $categoryId: ID!) {
+    categoryImageUpload(base64Image: $base64Image, categoryId: $categoryId) {
+      statusText
+      token
+    }
+  }
+`;
 
 export default function CategoryTable({ categories, refetchCategories }: CategoryTableProps) {
   return (
@@ -129,25 +138,23 @@ function CategoryImageUploader({
       // Convert file to base64
       const base64Image = await convertToBase64(file);
       
-      // Log for debugging (remove in production)
-      console.log('File info:', {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        base64Length: base64Image.length
-      });
-console.log(category.id,base64Image);
-      // Upload image
+      // Extract only the base64 data (remove data:image/... prefix if needed)
+      const cleanBase64 = base64Image.split(',')[1] || base64Image;
+      
+      console.log('Uploading to category:', category.id, 'Base64 length:', cleanBase64.length);
+
+      // Upload image using the mutation
       const result = await uploadImage({
         variables: {
-          base64Image,
+          base64Image: cleanBase64, // Send the base64 string
           categoryId: category.id.toString()
         }
       });
 
       console.log('Upload result:', result);
 
-      if (result.data?.categoryImageUpload?.success) {
+      // Check the response based on your backend schema
+      if (result.data?.categoryImageUpload?.statusText === "Successfully Uploaded") {
         setUploadSuccess(true);
         
         // Clear success message after 3 seconds
@@ -155,10 +162,10 @@ console.log(category.id,base64Image);
         
         // Refetch categories if callback provided
         if (refetchCategories) {
-          setTimeout(() => refetchCategories(), 500); // Small delay to ensure DB update
+          setTimeout(() => refetchCategories(), 1000); // Give some time for the backend to process
         }
       } else {
-        const errorMsg = result.data?.categoryImageUpload?.message || 
+        const errorMsg = result.data?.categoryImageUpload?.statusText || 
                         result.errors?.[0]?.message || 
                         'Upload failed';
         setUploadError(errorMsg);
@@ -169,23 +176,23 @@ console.log(category.id,base64Image);
     }
   };
 
-  // Helper function
-const convertToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result);
-    };
-    
-    reader.onerror = (error) => {
-      reject(error);
-    };
-    
-    reader.readAsDataURL(file);
-  });
-};
+  // Helper function to convert file to base64
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result);
+      };
+      
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  };
 
   return (
     <div className="flex flex-col items-center">
@@ -197,7 +204,6 @@ const convertToBase64 = (file: File): Promise<string> => {
             alt={category.name}
             className="w-12 h-12 rounded-full object-cover border border-gray-200"
             onError={(e) => {
-              // Handle broken images
               e.currentTarget.src = '/placeholder-image.png';
             }}
           />
@@ -235,13 +241,13 @@ const convertToBase64 = (file: File): Promise<string> => {
 
       {uploadSuccess && (
         <p className="text-xs text-green-600 mt-1 bg-green-50 px-2 py-1 rounded max-w-[120px] text-center">
-          ✓ Uploaded successfully!
+          ✓ Uploaded!
         </p>
       )}
 
       {error && (
         <p className="text-xs text-red-600 mt-1 bg-red-50 px-2 py-1 rounded max-w-[120px] text-center">
-          GraphQL error occurred
+          Error: {error.message}
         </p>
       )}
     </div>
@@ -305,13 +311,11 @@ function StatusBadge({ status }: { status: string }) {
 function ActionButtons({ categoryId }: { categoryId: string }) {
   const handleEdit = () => {
     console.log('Edit category:', categoryId);
-    // Add edit logic here
   };
 
   const handleDelete = () => {
     if (window.confirm('Are you sure you want to delete this category?')) {
       console.log('Delete category:', categoryId);
-      // Add delete logic here
     }
   };
 
