@@ -45,11 +45,12 @@ export const SINGLE_UPLOAD_MUTATION = gql`
 `;
 
 export const CATEGORY_IMAGE_UPLOAD_MUTATION = gql`
-  mutation CategoryImageUpload($base64Image: String!, $categoryId: ID!) {
-    categoryImageUpload(base64Image: $base64Image, categoryId: $categoryId) {
-      statusText
-    }
+mutation CategoryImageUpload($base64Image: String!, $categoryId: ID!) {
+  categoryImageUpload(base64Image: $base64Image, categoryId: $categoryId) {
+    statusText
+    token
   }
+}
 `;
 export const LOGOUT_MUTATION = gql`
   mutation Logout {
