@@ -136,7 +136,7 @@ function CategoryImageUploader({
         size: file.size,
         base64Length: base64Image.length
       });
-
+console.log(category.id,base64Image);
       // Upload image
       const result = await uploadImage({
         variables: {
@@ -169,23 +169,23 @@ function CategoryImageUploader({
     }
   };
 
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => {
-        const result = reader.result as string;
-        
-        // Send only base64 string (usually what servers expect)
-        const base64String = result.split(',')[1];
-        resolve(base64String);
-      };
-      reader.onerror = (error) => {
-        console.error('FileReader error:', error);
-        reject(new Error('Failed to read file'));
-      };
-    });
-  };
+  // Helper function
+const convertToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result);
+    };
+    
+    reader.onerror = (error) => {
+      reject(error);
+    };
+    
+    reader.readAsDataURL(file);
+  });
+};
 
   return (
     <div className="flex flex-col items-center">
