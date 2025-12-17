@@ -271,7 +271,7 @@ export const USERS = gql`
   }
 `;
 
-export const GET_USER_PROFILE = gql`
+/*export const GET_USER_PROFILE = gql`
   query GetUser($id: ID) {
     user(id: $id) {
       id
@@ -357,7 +357,99 @@ export const GET_USER_PROFILE = gql`
       }
     }
   }
+`;*/
+
+export const GET_USER_PROFILE = gql`
+query GetUser($id: ID) {
+    user(id: $id) {
+      id
+      firstName
+      lastName
+      avatar
+      followerCount
+      followingCount
+      isFollowing
+      products {
+        id
+        name
+        description
+        price
+        salePrice
+        supplierId
+        sku
+        stock
+        images
+        model
+        category {
+          id
+        }
+        variants {
+          name
+          createdAt
+          sku
+          color
+          size
+          price
+          salePrice
+          stock
+          images
+          model
+        }
+        brand
+        weight
+        dimensions
+        isActive
+        featured
+        tags
+        createdAt
+        updatedAt
+      }
+      addresses {
+        id
+        type
+        street
+        city
+        state
+        zipCode
+        country
+        isDefault
+        createdAt
+      }
+      posts {
+        id
+        content
+        createdAt
+        privacy
+        isLikedByMe
+        likeCount
+        commentCount
+        user {
+          id
+          firstName
+          lastName
+          avatar
+        }
+        taggedUsers {
+          id
+          firstName
+          lastName
+        }
+        comments {
+          id
+          content
+          createdAt
+          user {
+           id
+           firstName
+           lastName
+           avatar
+         }
+        }
+      }
+    }
+  }
 `;
+
 
 export const SEARCH_USERS = gql`
   query SearchUsers($query: String, $page: Int, $limit: Int) {
