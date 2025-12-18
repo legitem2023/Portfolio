@@ -114,14 +114,14 @@ const DeluxeNavTabs: React.FC = () => {
       icon: <Tags size={20} />,
       content: <ProductsTab />,
     },
-    {
+    /*{
       id: 3,
       label: 'Exclusive Deals',
       icon: <Target size={20} />,
       content: (
         <FlashSale/>
       ),
-    },
+    },*/
     {
       id:4,
       label: 'Merchants',
