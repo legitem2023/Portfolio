@@ -156,7 +156,6 @@ const ProductsTab: React.FC = () => {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
-      <ColdStartErrorUI/>
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-2 w-full">
           <input
