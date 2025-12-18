@@ -191,7 +191,7 @@ const DeluxeNavTabs: React.FC = () => {
   return (
     <div className="w-full mx-auto font-sans z-10">
        <div className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1">
-        {tabs.slice(0,6).map((tab) => (
+        {tabs.slice(0,5).map((tab) => (
           <button
             key={tab.id}
             onClick={() => handleTabClick(tab.id)}
