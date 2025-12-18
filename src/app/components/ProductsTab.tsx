@@ -7,7 +7,7 @@ import { Product, category } from '../../../types';
 import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
-
+import ColdStartErrorUI from './ColdStartErrorUI';
 interface ProductsResponse {
   products: {
     items: any[];
@@ -148,11 +148,7 @@ const ProductsTab: React.FC = () => {
   };
 
   if (error) return (
-    <div className="p-4 bg-white rounded-lg shadow-lg">
-      <div className="text-red-600 text-center py-8">
-        Error loading products: {error.message}
-      </div>
-    </div>
+     <ColdStartErrorUI/>
   );
 
   // Show loading shimmer during initial load OR when filters are changing
@@ -160,6 +156,7 @@ const ProductsTab: React.FC = () => {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg">
+      <ColdStartErrorUI/>
       <div className="flex justify-between items-center mb-6">
         <div className="flex space-x-2 w-full">
           <input
