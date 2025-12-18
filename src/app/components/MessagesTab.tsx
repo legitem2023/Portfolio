@@ -8,7 +8,7 @@ import { GET_ALL_POSTS } from './graphql/query'; // Changed to GET_ALL_POSTS
 import { CREATE_POST } from './graphql/mutation';
 import { decryptToken } from '../../../utils/decryptToken';
 import { useInView } from 'react-intersection-observer';
-
+import ColdStartErrorUI from './ColdStartErrorUI';
 interface User {
   id: string;
   name: string;
@@ -179,7 +179,7 @@ const MessagesTab = () => {
     });
   };
 
-  if (postsError) return <div className="text-red-500 text-center p-4">Error: {postsError.message}</div>;
+  if (postsError) return <ColdStartErrorUI/>;
 
   const posts = data?.posts?.posts || [];
   const showLoader = postsLoading && page === 1;
