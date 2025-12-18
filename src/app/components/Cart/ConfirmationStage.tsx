@@ -78,10 +78,10 @@ const ConfirmationStage = ({
       });
 
       // Handle successful order creation
-      /* if (result.data?.createOrder) {
+       if (result.data?.createOrder) {
         console.log('Order created successfully:', result.data.createOrder);
         onPlaceOrder();
-      } */
+      } 
     } catch (err) {
       console.error('Error creating order:', err);
     }
