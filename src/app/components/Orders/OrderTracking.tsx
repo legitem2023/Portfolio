@@ -30,6 +30,13 @@ const ORDER_STAGES = [
   { key: 'CANCELLED', label: 'Cancelled', color: 'bg-red-200', textColor: 'text-red-800' },
 ];
 
+// Helper function to calculate order progress
+const getOrderProgress = (status: string) => {
+  const stageIndex = ORDER_STAGES.findIndex(s => s.key === status);
+  const percentage = ((stageIndex + 1) / ORDER_STAGES.length) * 100;
+  return { stageIndex, percentage: Math.round(percentage) };
+};
+
 export default function OrderTracking({ userId }: { userId: string }) {
   const { loading, error, data } = useQuery(ORDER_ITEMS, {
     variables: { userId }
@@ -45,7 +52,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
 
   const closeOrderDetails = () => {
     setIsModalOpen(false);
-    setSelectedOrder(null);
+    setTimeout(() => setSelectedOrder(null), 300);
   };
 
   if (loading) return <OrderLoadingSkeleton />;
@@ -63,10 +70,10 @@ export default function OrderTracking({ userId }: { userId: string }) {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <header className="text-center mb-8">
           <h1 className="text-4xl font-bold text-purple-900 mb-2">Order Tracking</h1>
           <p className="text-purple-600">Track your orders from placement to delivery</p>
-        </div>
+        </header>
 
         {/* Mobile View - Vertical Timeline */}
         <div className="lg:hidden">
@@ -92,11 +99,11 @@ function MobileOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: Re
   return (
     <div className="space-y-6">
       {ORDER_STAGES.map((stage) => (
-        <div key={stage.key} className="bg-white rounded-xl shadow-lg border border-purple-200">
+        <section key={stage.key} className="bg-white rounded-xl shadow-lg border border-purple-200">
           <div className={`${stage.color} ${stage.textColor} px-4 py-3 rounded-t-xl`}>
-            <h3 className="font-semibold text-lg">
+            <h2 className="font-semibold text-lg">
               {stage.label} ({ordersByStatus[stage.key]?.length || 0})
-            </h3>
+            </h2>
           </div>
           <div className="p-4 space-y-4">
             {ordersByStatus[stage.key]?.length > 0 ? (
@@ -110,7 +117,7 @@ function MobileOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: Re
               </div>
             )}
           </div>
-        </div>
+        </section>
       ))}
     </div>
   );
@@ -121,11 +128,11 @@ function DesktopOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: R
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
       {ORDER_STAGES.map((stage) => (
-        <div key={stage.key} className="bg-white rounded-xl shadow-lg border border-purple-200 min-h-[600px]">
+        <section key={stage.key} className="bg-white rounded-xl shadow-lg border border-purple-200 min-h-[600px]">
           <div className={`${stage.color} ${stage.textColor} px-4 py-3 rounded-t-xl`}>
-            <h3 className="font-semibold text-lg text-center">
+            <h2 className="font-semibold text-lg text-center">
               {stage.label} ({ordersByStatus[stage.key]?.length || 0})
-            </h3>
+            </h2>
           </div>
           <div className="p-4 space-y-4 h-[550px] overflow-y-auto">
             {ordersByStatus[stage.key]?.length > 0 ? (
@@ -139,7 +146,7 @@ function DesktopOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: R
               </div>
             )}
           </div>
-        </div>
+        </section>
       ))}
     </div>
   );
@@ -147,20 +154,22 @@ function DesktopOrderView({ ordersByStatus, onViewDetails }: { ordersByStatus: R
 
 // Order Card Component
 function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (order: Order) => void }) {
+  const { percentage } = getOrderProgress(order.status);
+  
   return (
-    <div className="bg-gradient-to-br from-white to-purple-50 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+    <article className="bg-white border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
       {/* Order Header */}
-      <div className="flex justify-between items-start mb-3">
+      <header className="flex justify-between items-start mb-3">
         <div>
-          <h4 className="font-bold text-purple-900">#{order.orderNumber}</h4>
-          <p className="text-xs text-purple-600">
+          <h3 className="font-bold text-purple-900">#{order.orderNumber}</h3>
+          <time className="text-xs text-purple-600" dateTime={order.createdAt}>
             {new Date(order.createdAt).toLocaleDateString()}
-          </p>
+          </time>
         </div>
         <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium">
           ${order.total.toFixed(2)}
         </span>
-      </div>
+      </header>
 
       {/* Order Details */}
       <div className="space-y-2 text-sm">
@@ -188,14 +197,12 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
       <div className="mt-4">
         <div className="flex items-center justify-between text-xs text-purple-500 mb-1">
           <span>Progress</span>
-          <span>{Math.round((ORDER_STAGES.findIndex(s => s.key === order.status) + 1) / ORDER_STAGES.length * 100)}%</span>
+          <span>{percentage}%</span>
         </div>
         <div className="w-full bg-purple-200 rounded-full h-2">
           <div 
             className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-            style={{ 
-              width: `${(ORDER_STAGES.findIndex(s => s.key === order.status) + 1) / ORDER_STAGES.length * 100}%` 
-            }}
+            style={{ width: `${percentage}%` }}
           ></div>
         </div>
       </div>
@@ -207,13 +214,14 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
       >
         View Details
       </button>
-    </div>
+    </article>
   );
 }
 
 // Order Details Modal Component - Bottom sheet style for mobile
 function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => void }) {
-  const currentStageIndex = ORDER_STAGES.findIndex(s => s.key === order.status);
+  const { stageIndex: currentStageIndex } = getOrderProgress(order.status);
+  const stage = ORDER_STAGES.find(s => s.key === order.status);
   
   return (
     <div className="fixed inset-0 z-50">
@@ -221,18 +229,19 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
+        aria-hidden="true"
       />
       
       {/* Modal Container - Bottom sheet on mobile, centered on desktop */}
       <div className="fixed inset-x-0 bottom-0 sm:inset-0 sm:flex sm:items-center sm:justify-center p-0 sm:p-4">
-        <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full h-[80vh] sm:h-auto sm:max-h-[90vh] sm:max-w-4xl flex flex-col overflow-hidden">
+        <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-h-[90vh] sm:max-h-[80vh] sm:max-w-4xl flex flex-col overflow-hidden">
           {/* Drag handle for mobile */}
           <div className="sm:hidden flex justify-center py-2">
             <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
           </div>
           
           {/* Modal Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 sm:p-6 flex-shrink-0">
+          <header className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 sm:p-6 flex-shrink-0">
             <div className="flex justify-between items-start">
               <div className="pr-4">
                 <h2 className="text-xl sm:text-2xl font-bold">Order #{order.orderNumber}</h2>
@@ -248,16 +257,17 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
               <button 
                 onClick={onClose}
                 className="text-white hover:text-purple-200 text-2xl font-bold transition-colors flex-shrink-0 ml-2"
+                aria-label="Close order details"
               >
                 ×
               </button>
             </div>
-          </div>
+          </header>
 
           {/* Scrollable Content */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-            {/* Order Status Timeline - Vertical on mobile, horizontal on desktop */}
-            <div className="bg-purple-50 rounded-lg p-4 sm:p-6">
+            {/* Order Status Timeline */}
+            <section className="bg-purple-50 rounded-lg p-4 sm:p-6">
               <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Status</h3>
               
               {/* Mobile - Vertical Timeline */}
@@ -323,12 +333,12 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                   </div>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Order Summary */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Pricing Details */}
-              <div className="bg-white border border-purple-200 rounded-lg p-4">
+              <section className="bg-white border border-purple-200 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Summary</h3>
                 <div className="space-y-3 text-sm sm:text-base">
                   <div className="flex justify-between">
@@ -354,10 +364,10 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                     <span>${order.total.toFixed(2)}</span>
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Order Information */}
-              <div className="bg-white border border-purple-200 rounded-lg p-4">
+              <section className="bg-white border border-purple-200 rounded-lg p-4">
                 <h3 className="text-lg font-semibold text-purple-900 mb-4">Order Information</h3>
                 <div className="space-y-3 text-sm sm:text-base">
                   <div className="flex justify-between">
@@ -366,10 +376,8 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-purple-600">Status:</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      ORDER_STAGES.find(s => s.key === order.status)?.color || 'bg-gray-200'
-                    } ${ORDER_STAGES.find(s => s.key === order.status)?.textColor || 'text-gray-800'}`}>
-                      {ORDER_STAGES.find(s => s.key === order.status)?.label || order.status}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${stage?.color || 'bg-gray-200'} ${stage?.textColor || 'text-gray-800'}`}>
+                      {stage?.label || order.status}
                     </span>
                   </div>
                   <div className="flex justify-between">
@@ -385,11 +393,11 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                     <span className="text-sm">{new Date(order.updatedAt).toLocaleDateString()}</span>
                   </div>
                 </div>
-              </div>
+              </section>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 sm:pt-6">
               <button className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-3 px-4 sm:px-6 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base">
                 Track Package
               </button>
@@ -452,4 +460,4 @@ function OrderError({ error }: { error: any }) {
       </div>
     </div>
   );
-        }
+      }
