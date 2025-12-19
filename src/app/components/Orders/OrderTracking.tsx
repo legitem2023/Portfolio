@@ -42,6 +42,17 @@ const formatPeso = (amount: number) => {
   return `₱${amount.toFixed(2)}`;
 };
 
+// Type for order counts
+type OrderCounts = {
+  ALL: number;
+  PENDING: number;
+  CONFIRMED: number;
+  PROCESSING: number;
+  SHIPPED: number;
+  DELIVERED: number;
+  CANCELLED: number;
+};
+
 export default function OrderTracking({ userId }: { userId: string }) {
   const { loading, error, data } = useQuery(ORDER_ITEMS, {
     variables: { userId }
@@ -72,19 +83,21 @@ export default function OrderTracking({ userId }: { userId: string }) {
     return acc;
   }, {} as Record<string, Order[]>);
 
+  // Calculate order counts for each tab
+  const orderCounts: OrderCounts = {
+    ALL: orders.length,
+    PENDING: ordersByStatus['PENDING']?.length || 0,
+    CONFIRMED: ordersByStatus['CONFIRMED']?.length || 0,
+    PROCESSING: ordersByStatus['PROCESSING']?.length || 0,
+    SHIPPED: ordersByStatus['SHIPPED']?.length || 0,
+    DELIVERED: ordersByStatus['DELIVERED']?.length || 0,
+    CANCELLED: ordersByStatus['CANCELLED']?.length || 0,
+  };
+
   // Get filtered orders based on active tab
   const filteredOrders = activeTab === 'ALL' 
     ? orders 
     : ordersByStatus[activeTab] || [];
-
-  // Calculate order counts for each tab
-  const orderCounts = {
-    ALL: orders.length,
-    ...ORDER_STAGES.reduce((acc, stage) => {
-      acc[stage.key] = ordersByStatus[stage.key]?.length || 0;
-      return acc;
-    }, {} as Record<string, number>)
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4">
@@ -134,7 +147,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
                     ? 'bg-white bg-opacity-20 text-white'
                     : `${stage.color} ${stage.textColor}`
                 }`}>
-                  {orderCounts[stage.key]}
+                  {orderCounts[stage.key as keyof OrderCounts]}
                 </span>
               </button>
             ))}
@@ -153,7 +166,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
                       <div className="text-sm font-medium text-gray-700 mb-1">{stage.label}</div>
                       <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
                         <div 
-                          className={`absolute inset-y-0 left-0 ${stage.color.replace('bg-', 'bg-').replace('200', '500')}`}
+                          className={`absolute inset-y-0 left-0 ${stage.color.replace('200', '500')}`}
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -350,7 +363,7 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                   <div key={stage.key} className="flex flex-col items-center flex-1">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 ${
                       index <= currentStageIndex 
-                        ? `${stage.color.replace('200', '600')} border-${stage.color.replace('bg-', '').replace('200', '600')} text-white` 
+                        ? `${stage.color.replace('200', '600')} border-purple-600 text-white` 
                         : 'bg-white border-purple-300 text-purple-400'
                     } font-bold text-sm`}>
                       {index + 1}
@@ -507,4 +520,4 @@ function OrderError({ error }: { error: any }) {
       </div>
     </div>
   );
-              }
+}
