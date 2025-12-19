@@ -94,14 +94,14 @@ console.log(product,"<-");
           <button
             key={index}
             onClick={() => setSelectedImage(index)}
-            className={`h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
+            className={`aspect-[1/1]  h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
               selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
             }`}
           >
             <img
               src={image}
               alt={`${product?.name || 'Product'} view ${index + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full aspect-[1/1] object-cover"
               onError={(e) => {
                 e.currentTarget.src = '/NoImage.webp';
               }}
