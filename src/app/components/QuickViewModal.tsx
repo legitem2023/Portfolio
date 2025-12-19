@@ -69,7 +69,7 @@ console.log(product,"<-");
         <img
           src={additionalImages[selectedImage]}
           alt={product?.name || 'Product'}
-          className="h-full object-cover"
+          className="h-full object-cover aspect-[1/1]"
           onError={(e) => {
             e.currentTarget.src = '/NoImage.webp';
           }}
