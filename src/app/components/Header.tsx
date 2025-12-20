@@ -218,7 +218,14 @@ const handleTabClick = (tabId: number) => {
                 <User className="w-5 h-5 text-indigo-600" />
               </div>
             </button>
-
+            <button
+              onClick={handleUserButtonClick}
+              className="flex items-center text-sm focus:outline-none"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
+                <User className="w-5 h-5 text-indigo-600" />
+              </div>
+            </button>
             {/* Desktop Dropdown */}
             {isDropdownOpen && !isMobile() && (
               <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
