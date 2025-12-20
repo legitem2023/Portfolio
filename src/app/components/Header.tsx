@@ -16,6 +16,7 @@ import {
   ShoppingBag, 
   X, 
   ChevronRight,
+  Bell,
   LogOut
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
@@ -223,7 +224,7 @@ const handleTabClick = (tabId: number) => {
               className="flex items-center text-sm focus:outline-none"
             >
               <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <User className="w-5 h-5 text-indigo-600" />
+                <Bell className="w-5 h-5 text-indigo-600" />
               </div>
             </button>
             {/* Desktop Dropdown */}
