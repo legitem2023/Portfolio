@@ -3,7 +3,7 @@ import { ShippingInfo } from './DeluxeCart';
 import { useQuery } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from '../graphql/query'; // You'll need to create this query
-
+import ShippingStageShimmer from './ShippingStageShimmer';
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
   setShippingInfo: (info: ShippingInfo) => void;
@@ -90,9 +90,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="text-indigo-600">Loading addresses...</div>
-      </div>
+      <ShippingStageShimmer/>
     );
   }
 
