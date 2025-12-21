@@ -38,8 +38,11 @@ const getOrderProgress = (status: string) => {
 };
 
 // Helper function to format currency as pesos
-const formatPeso = (amount: number) => {
-  return `₱${amount.toFixed(2)}`;
+const formatPesoPrice = (amount: number): string => {
+  return `₱${amount.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 };
 
 // Type for order counts
@@ -248,7 +251,7 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
           </div>
           <div className="text-right flex-shrink-0">
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-purple-900 whitespace-nowrap">
-              {formatPeso(order.total)}
+              {formatPesoPrice(order.total)}
             </div>
             <div className="text-xs text-gray-600">Total</div>
           </div>
@@ -262,16 +265,16 @@ function OrderCard({ order, onViewDetails }: { order: Order, onViewDetails: (ord
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Subtotal:</span>
-            <span className="truncate pl-2">{formatPeso(order.subtotal)}</span>
+            <span className="truncate pl-2">{formatPesoPrice(order.subtotal)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Shipping:</span>
-            <span>{formatPeso(order.shipping)}</span>
+            <span>{formatPesoPrice(order.shipping)}</span>
           </div>
           {order.discount > 0 && (
             <div className="flex justify-between text-green-600">
               <span>Discount:</span>
-              <span className="font-medium">-{formatPeso(order.discount)}</span>
+              <span className="font-medium">-{formatPesoPrice(order.discount)}</span>
             </div>
           )}
         </div>
@@ -440,25 +443,25 @@ function OrderDetailsModal({ order, onClose }: { order: Order, onClose: () => vo
                 <div className="space-y-2 sm:space-y-3 md:space-y-4">
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm sm:text-base">Subtotal:</span>
-                    <span className="font-medium text-sm sm:text-base">{formatPeso(order.subtotal)}</span>
+                    <span className="font-medium text-sm sm:text-base">{formatPesoPrice(order.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm sm:text-base">Shipping:</span>
-                    <span className="font-medium text-sm sm:text-base">{formatPeso(order.shipping)}</span>
+                    <span className="font-medium text-sm sm:text-base">{formatPesoPrice(order.shipping)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 text-sm sm:text-base">Tax:</span>
-                    <span className="font-medium text-sm sm:text-base">{formatPeso(order.tax)}</span>
+                    <span className="font-medium text-sm sm:text-base">{formatPesoPrice(order.tax)}</span>
                   </div>
                   {order.discount > 0 && (
                     <div className="flex justify-between text-green-600">
                       <span className="text-sm sm:text-base">Discount:</span>
-                      <span className="font-medium text-sm sm:text-base">-{formatPeso(order.discount)}</span>
+                      <span className="font-medium text-sm sm:text-base">-{formatPesoPrice(order.discount)}</span>
                     </div>
                   )}
                   <div className="border-t border-gray-200 pt-2 sm:pt-3 md:pt-4 flex justify-between text-base sm:text-lg md:text-xl font-bold text-purple-900">
                     <span className="text-sm sm:text-base md:text-lg">Total:</span>
-                    <span>{formatPeso(order.total)}</span>
+                    <span>{formatPesoPrice(order.total)}</span>
                   </div>
                 </div>
               </section>
