@@ -213,7 +213,7 @@ const handleTabClick = (tabId: number) => {
           <div className="z-20 h-[100%] flex items-center" ref={dropdownRef}>
             <button
               onClick={handleUserButtonClick}
-              className="flex items-center text-sm focus:outline-none"
+              className="mx-4 flex items-center text-sm focus:outline-none"
             >
               <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
                 <User className="w-5 h-5 text-indigo-600" />
@@ -221,7 +221,7 @@ const handleTabClick = (tabId: number) => {
             </button>
             <button
               onClick={handleUserButtonClick}
-              className="flex items-center text-sm focus:outline-none"
+              className="mx-4 flex items-center text-sm focus:outline-none"
             >
               <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
                 <Bell className="w-5 h-5 text-indigo-600" />
