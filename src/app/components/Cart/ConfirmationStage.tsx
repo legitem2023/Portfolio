@@ -16,6 +16,14 @@ interface ConfirmationStageProps {
   userId: string;
 }
 
+// Helper function to format price as peso
+const formatPesoPrice = (price: number): string => {
+  return `₱${price.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
+
 const ConfirmationStage = ({ 
   cartItems, 
   shippingInfo, 
@@ -78,7 +86,7 @@ const ConfirmationStage = ({
       });
 
       // Handle successful order creation
-       if (result.data?.createOrder) {
+      if (result.data?.createOrder) {
         console.log('Order created successfully:', result.data.createOrder);
         onPlaceOrder();
       } 
@@ -174,13 +182,13 @@ const ConfirmationStage = ({
                             )}
                           </div>
                           <p className="text-sm text-gray-600 mt-2">
-                            ₱{item.price.toFixed(2)} × {item.quantity}
+                            {formatPesoPrice(item.price)} × {item.quantity}
                           </p>
                         </div>
                         
                         <div className="flex items-center justify-between sm:flex-col sm:items-end sm:space-y-1">
                           <p className="text-base font-semibold text-gray-900">
-                            ₱{(item.price * item.quantity).toFixed(2)}
+                            {formatPesoPrice(item.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -201,19 +209,19 @@ const ConfirmationStage = ({
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Subtotal</span>
-                    <span className="text-sm font-medium text-gray-900">₱{subtotal.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatPesoPrice(subtotal)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                     <span className="text-sm text-gray-600">Shipping</span>
-                    <span className="text-sm font-medium text-gray-900">₱{shippingCost.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatPesoPrice(shippingCost)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                     <span className="text-sm text-gray-600">Tax</span>
-                    <span className="text-sm font-medium text-gray-900">₱{tax.toFixed(2)}</span>
+                    <span className="text-sm font-medium text-gray-900">{formatPesoPrice(tax)}</span>
                   </div>
                   <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                     <span className="text-base font-semibold text-gray-900">Total</span>
-                    <span className="text-base font-semibold text-gray-900">₱{total.toFixed(2)}</span>
+                    <span className="text-base font-semibold text-gray-900">{formatPesoPrice(total)}</span>
                   </div>
                 </div>
               </div>
@@ -285,7 +293,7 @@ const ConfirmationStage = ({
             <div className="text-center sm:text-right">
               <div className="flex items-center justify-center sm:justify-end space-x-2 mb-3">
                 <span className="text-sm text-gray-600">Total:</span>
-                <span className="text-lg font-bold text-gray-900">₱{total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-gray-900">{formatPesoPrice(total)}</span>
               </div>
               <button
                 onClick={handlePlaceOrder}
