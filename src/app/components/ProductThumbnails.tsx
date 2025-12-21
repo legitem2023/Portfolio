@@ -12,10 +12,17 @@ import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-
 interface ProductThumbnailsProps {
   products: Product[];
 }
+
+// Helper function to format price as peso
+const formatPesoPrice = (price: number): string => {
+  return `₱${price.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
 
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -33,37 +40,32 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   };
 
   const handleAddToCart = (product: Product) => {
-const cartItem = {
-  // Include ALL Product properties
-  id: product.id,
-  name: product.name,
-  price: product.price,
-  onSale: product.onSale,           // This was missing
-  isNew: product.isNew,             // This was missing
-  isFeatured: product.isFeatured,   // This was missing
-  originalPrice: product.originalPrice,
-  rating: product.rating,
-  reviewCount: product.reviewCount, // This was missing
-  image: product.image,
-  colors: product.colors,
-  description: product.description,
-  productCode: product.productCode,
-  category: product.category,
-  sku:product.sku,
-  variants: product.variants,
-  userId: 'current-user-id', // Replace with actual user ID from your auth context
-  quantity: 1,
-  color: product.colors,      // Make sure you have this variable
-  size: product.size,
-  // This was missing
-  // Make sure you have this variable
-};
+    const cartItem = {
+      // Include ALL Product properties
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      onSale: product.onSale,           // This was missing
+      isNew: product.isNew,             // This was missing
+      isFeatured: product.isFeatured,   // This was missing
+      originalPrice: product.originalPrice,
+      rating: product.rating,
+      reviewCount: product.reviewCount, // This was missing
+      image: product.image,
+      colors: product.colors,
+      description: product.description,
+      productCode: product.productCode,
+      category: product.category,
+      sku: product.sku,
+      variants: product.variants,
+      userId: 'current-user-id', // Replace with actual user ID from your auth context
+      quantity: 1,
+      color: product.colors,      // Make sure you have this variable
+      size: product.size,
+    };
     
-   // dispatch(addToCart(cartItem));
-    
-    showToast('Added to Cart', 'success')
-    // Optional: Show a notification or toast message
-    // You can implement a toast notification system here
+    // dispatch(addToCart(cartItem));
+    showToast('Added to Cart', 'success');
   };
 
   // Helper function to get unique colors from variants
@@ -102,64 +104,64 @@ const cartItem = {
               
               {/* Product Image */}
               <div className="relative overflow-hidden aspect-[1/1] bg-gray-100">
-                { product.variants.length > 0?(               
-<Swiper
-  spaceBetween={10}
-  slidesPerView={1}
-  autoplay={{
-    delay: 3000,
-    disableOnInteraction: false,
-    pauseOnMouseEnter: true,
-  }}
-  pagination={{
-    clickable: true,
-    bulletClass: 'swiper-pagination-bullet',
-    bulletActiveClass: 'swiper-pagination-bullet-active',
-    renderBullet: function (index, className) {
-      return `<span class="${className} !w-2 !h-2 !bg-white !opacity-70"></span>`;
-    }
-  }}
-  modules={[Autoplay, Pagination]}
-  className="h-full"
->
-  {product.variants
-    .filter((variant: any) => variant.sku === product.sku)
-    .flatMap((variant: any) => 
-      variant.images.length > 0?variant.images?.map((image: string, index: number) => ({
-        image,
-        key: `${variant.sku}-${index}`
-      })):(<SwiperSlide>
-        <Image
-          height="400"
-          width="400"
-          src={'/NoImage.webp'}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </SwiperSlide>) || []
-    )
-    .map(({ image, key }) => (
-      <SwiperSlide key={key}>
-        <Image
-          height="400"
-          width="400"
-          src={image || '/NoImage.webp'}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </SwiperSlide>
-    ))
-  }
-</Swiper>):(
-        <Image
-          height="400"
-          width="400"
-          src={'/NoImage.webp'}
-          alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-)
-            }
+                {product.variants.length > 0 ? (               
+                  <Swiper
+                    spaceBetween={10}
+                    slidesPerView={1}
+                    autoplay={{
+                      delay: 3000,
+                      disableOnInteraction: false,
+                      pauseOnMouseEnter: true,
+                    }}
+                    pagination={{
+                      clickable: true,
+                      bulletClass: 'swiper-pagination-bullet',
+                      bulletActiveClass: 'swiper-pagination-bullet-active',
+                      renderBullet: function (index, className) {
+                        return `<span class="${className} !w-2 !h-2 !bg-white !opacity-70"></span>`;
+                      }
+                    }}
+                    modules={[Autoplay, Pagination]}
+                    className="h-full"
+                  >
+                    {product.variants
+                      .filter((variant: any) => variant.sku === product.sku)
+                      .flatMap((variant: any) => 
+                        variant.images.length > 0 ? variant.images?.map((image: string, index: number) => ({
+                          image,
+                          key: `${variant.sku}-${index}`
+                        })) : (<SwiperSlide>
+                          <Image
+                            height="400"
+                            width="400"
+                            src={'/NoImage.webp'}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </SwiperSlide>) || []
+                      )
+                      .map(({ image, key }) => (
+                        <SwiperSlide key={key}>
+                          <Image
+                            height="400"
+                            width="400"
+                            src={image || '/NoImage.webp'}
+                            alt={product.name}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                        </SwiperSlide>
+                      ))
+                    }
+                  </Swiper>
+                ) : (
+                  <Image
+                    height="400"
+                    width="400"
+                    src={'/NoImage.webp'}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                )}
                 
                 {/* Quick View Button */}
                 <div className="z-50 absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
@@ -207,9 +209,13 @@ const cartItem = {
                 {/* Price */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1 sm:space-x-2">
-                    <span className="text-sm sm:text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                    <span className="text-sm sm:text-lg font-bold text-gray-900">
+                      {formatPesoPrice(product.price)}
+                    </span>
                     {product.originalPrice && product.originalPrice > product.price && (
-                      <span className="text-xs text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                      <span className="text-xs text-gray-500 line-through">
+                        {formatPesoPrice(product.originalPrice)}
+                      </span>
                     )}
                   </div>
                   
@@ -249,7 +255,7 @@ const cartItem = {
       </div>
       
       {/* Quick View Modal */}
-       <QuickViewModal 
+      <QuickViewModal 
         product={selectedProduct} 
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
