@@ -11,6 +11,14 @@ interface CartStageProps {
   onCheckout: () => void;
 }
 
+// Helper function to format price as peso
+const formatPesoPrice = (price: number): string => {
+  return `₱${price.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
+
 const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
@@ -64,7 +72,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                           </div>
                         </div>
                         <p className="text-sm md:text-base font-medium text-indigo-700 mt-1 sm:mt-0 sm:ml-4">
-                          ₱{((item?.price || 0) * (item?.quantity || 0)).toFixed(2)}
+                          {formatPesoPrice((item?.price || 0) * (item?.quantity || 0))}
                         </p>
                       </div>
 
@@ -115,20 +123,20 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               <div className="space-y-3">
                 <div className="flex justify-between text-sm md:text-base">
                   <p className="text-indigo-900">Subtotal</p>
-                  <p className="text-indigo-700">₱{subtotal.toFixed(2)}</p>
+                  <p className="text-indigo-700">{formatPesoPrice(subtotal)}</p>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <p>Shipping</p>
-                  <p>₱{shippingCost.toFixed(2)}</p>
+                  <p>{formatPesoPrice(shippingCost)}</p>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
                   <p>Tax</p>
-                  <p>₱{tax.toFixed(2)}</p>
+                  <p>{formatPesoPrice(tax)}</p>
                 </div>
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-base md:text-lg font-semibold">
                     <p className="text-indigo-900">Total</p>
-                    <p className="text-indigo-700">₱{total.toFixed(2)}</p>
+                    <p className="text-indigo-700">{formatPesoPrice(total)}</p>
                   </div>
                 </div>
               </div>
