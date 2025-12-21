@@ -5,12 +5,21 @@ import { addToCart } from '../../../Redux/cartSlice';
 import { Product, Variant } from '../../../types';
 import LuxuryTabs from './ui/LuxuryTabs';
 import ModelViewer from "./ModelViewer";
+
 interface QuickViewModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
   onAddToCart?: (product: Product, options: { color: string; size: string; quantity: number }) => void;
 }
+
+// Helper function to format price as peso
+const formatPesoPrice = (price: number): string => {
+  return `₱${price.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
 
 const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose, onAddToCart }) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -49,7 +58,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     
     return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
   }, [product, variants, selectedVariant]);
-console.log(product,"<-");
+
   // 3D Model Component
   const ModelViewer3D = () => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg">
@@ -114,33 +123,34 @@ console.log(product,"<-");
 
   // Define tabs for LuxuryTabs component
   const productTabs = useMemo(() => {
-  // Create the tabs array with conditional inclusion
-  const tabs = [
-    {
-      id: 'gallery',
-      label: 'Image Gallery',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      content: <ImageGallery />
-    },
-    // Conditionally include the 3D View tab
-    ...(product?.model ? [{
-      id: '3d-view',
-      label: '3D View',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-        </svg>
-      ),
-      content: <ModelViewer3D />
-    }] : [])  // Empty array if no model
-  ];
+    // Create the tabs array with conditional inclusion
+    const tabs = [
+      {
+        id: 'gallery',
+        label: 'Image Gallery',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        ),
+        content: <ImageGallery />
+      },
+      // Conditionally include the 3D View tab
+      ...(product?.model ? [{
+        id: '3d-view',
+        label: '3D View',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
+          </svg>
+        ),
+        content: <ModelViewer3D />
+      }] : [])  // Empty array if no model
+    ];
 
-  return tabs;
-}, [additionalImages, selectedImage, product]);
+    return tabs;
+  }, [additionalImages, selectedImage, product]);
+
   // Update image when variant changes
   useEffect(() => {
     setSelectedImage(0); // Reset to first image when variant changes
@@ -293,20 +303,20 @@ console.log(product,"<-");
   // Safe price calculation
   const getDisplayPrice = () => {
     const price = selectedVariant?.price || product?.price || 0;
-    return typeof price === 'number' ? price.toFixed(2) : '0.00';
+    return price;
   };
 
   // Safe original price calculation
   const getOriginalPrice = () => {
     const originalPrice = product?.originalPrice;
-    return typeof originalPrice === 'number' ? originalPrice.toFixed(2) : '0.00';
+    return originalPrice || 0;
   };
 
   // Calculate savings safely
   const getSavings = () => {
     const currentPrice = selectedVariant?.price || product?.price || 0;
     const originalPrice = product?.originalPrice || currentPrice;
-    return (originalPrice - currentPrice).toFixed(2);
+    return (originalPrice - currentPrice);
   };
 
   if (!isVisible && !isOpen) return null;
@@ -389,14 +399,16 @@ console.log(product,"<-");
             <div className="mb-4 md:mb-6">
               <div className="flex items-center space-x-2">
                 <span className="text-xl md:text-2xl font-bold text-gray-900">
-                  ${getDisplayPrice()}
+                  {formatPesoPrice(getDisplayPrice())}
                 </span>
                 {product?.originalPrice && product.originalPrice > (selectedVariant?.price || product.price || 0) && (
-                  <span className="text-lg text-gray-500 line-through">${getOriginalPrice()}</span>
+                  <span className="text-lg text-gray-500 line-through">
+                    {formatPesoPrice(getOriginalPrice())}
+                  </span>
                 )}
                 {product?.onSale && (
                   <span className="px-2 py-1 text-xs font-bold bg-red-100 text-red-700 rounded-md">
-                    Save ${getSavings()}
+                    Save {formatPesoPrice(getSavings())}
                   </span>
                 )}
               </div>
@@ -505,7 +517,7 @@ console.log(product,"<-");
               <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
                 <div>
                   <h4 className="font-medium text-gray-900">Free Shipping</h4>
-                  <p className="text-gray-600">On orders over $100</p>
+                  <p className="text-gray-600">On orders over ₱100</p>
                 </div>
                 <div>
                   <h4 className="font-medium text-gray-900">Returns</h4>
