@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-
 export async function GET(request: NextRequest) {
   // Optional: Add a security check for the CRON_SECRET if you set one
   const authHeader = request.headers.get('authorization');
