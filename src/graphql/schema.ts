@@ -522,7 +522,7 @@ export const typeDefs = gql`
     users: [User]
     user(id: ID): User
     products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
-    product(id: ID): Product
+    product(id: String): Product
     categories: [Category]
     orders(userId: ID): [Order]
     supportTickets: [SupportTicket]
