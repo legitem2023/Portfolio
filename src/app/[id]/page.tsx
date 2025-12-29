@@ -60,7 +60,7 @@ const ProductPage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
       <Header/>
       <QuickViewModal 
-        product={data} 
+        product={data?.product} 
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={handleAddToCart}
