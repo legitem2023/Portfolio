@@ -438,9 +438,59 @@ export const resolvers = {
       }
     },
 
-    product: (_: any, { id }: { id: string }) =>
-      prisma.product.findUnique({ where: { id } }),
-
+    product: (_: any, { id }: { id: string }) => {
+      const products = await prisma.product.findMany({
+          where: {
+            id:id
+          }, 
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            images: true,
+            model: true,
+            featured: true,
+            isActive: true,
+            stock: true,
+            brand: true,
+            weight: true,
+            dimensions: true,
+            createdAt: true,
+            updatedAt: true,
+            description: true,
+            tags: true,
+            sku: true,
+            supplierId: true,
+            category: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                isActive: true,
+                createdAt: true,
+                parent: true
+              }
+            },
+            variants: {
+              select: {
+                id: true,
+                name: true,
+                createdAt: true,
+                sku: true,
+                color: true,
+                size: true,
+                price: true,
+                salePrice: true,
+                stock: true,
+                images: true,
+                model: true
+              }
+            }
+          },
+        });
+    },
+      
     categories: async () => {
       return prisma.category.findMany();
     },
