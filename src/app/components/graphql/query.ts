@@ -550,6 +550,49 @@ export const GETPRODUCTS = gql`
   }
 `;
 
+export const GETPRODUCT = gql`
+  query GetProducts($id: String) {
+    product(id: $id) {
+      items {
+        id
+        name
+        description
+        price
+        salePrice
+        supplierId
+        sku
+        stock
+        images
+        model
+        category {
+          id
+        }
+        variants {
+          name
+          createdAt
+          sku
+          color
+          size
+          price
+          salePrice
+          stock
+          images
+          model
+        }
+        brand
+        weight
+        dimensions
+        isActive
+        featured
+        tags
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+
 export const MANAGEMENTPRODUCTS = gql`
   query GetProducts($userId: ID) {
     getProducts(userId: $userId) {
