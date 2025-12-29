@@ -553,7 +553,6 @@ export const GETPRODUCTS = gql`
 export const GETPRODUCT = gql`
   query GetProducts($id: String) {
     product(id: $id) {
-      items {
         id
         name
         description
@@ -586,8 +585,7 @@ export const GETPRODUCT = gql`
         featured
         tags
         createdAt
-        updatedAt
-      }
+        updatedAt  
     }
   }
 `;
