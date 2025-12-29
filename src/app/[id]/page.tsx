@@ -7,6 +7,8 @@ import { GETPRODUCT } from '../components/graphql/query';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import { Product } from '../../../types';
+import QuickViewModal from '../components/QuickViewModal';
+
 const ProductPage: React.FC = () => {
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const params = useParams();
