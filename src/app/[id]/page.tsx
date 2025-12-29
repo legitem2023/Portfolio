@@ -4,7 +4,7 @@
 import { useQuery, NetworkStatus } from '@apollo/client';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { GETPRODUCTS } from '../graphql/query';
+import { GETPRODUCTS } from '../components/graphql/query';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import Image from 'next/image';
