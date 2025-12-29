@@ -438,7 +438,7 @@ export const resolvers = {
       }
     },
 
-    product: (_: any, { id }: { id: string }) => {
+    product: async (_: any, { id }: { id: string }) => {
       const products = await prisma.product.findMany({
           where: {
             id:id
