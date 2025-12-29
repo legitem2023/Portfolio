@@ -10,7 +10,7 @@ import { Product } from '../../../types';
 import QuickViewModal from '../components/QuickViewModal';
 
 const ProductPage: React.FC = () => {
-  const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
+  const [isQuickViewOpen, setIsQuickViewOpen] = useState(true);
   const params = useParams();
   const id = params?.id as string; // Extract id from URL params
 
