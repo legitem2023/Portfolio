@@ -1,6 +1,6 @@
 'use client'
 // pages/index.tsx (or wherever you want to use the component)
-import React from 'react';
+
 import { useQuery, NetworkStatus } from '@apollo/client';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
