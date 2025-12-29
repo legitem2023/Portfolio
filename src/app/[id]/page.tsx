@@ -1,40 +1,42 @@
 'use client'
-// pages/index.tsx (or wherever you want to use the component)
+// app/product/[id]/page.tsx
 
-import { useQuery, NetworkStatus } from '@apollo/client';
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useQuery } from '@apollo/client';
+import { useParams } from 'next/navigation';
 import { GETPRODUCT } from '../components/graphql/query';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
-import Image from 'next/image';
-import { 
-  Phone,
-  Mail,
-  MapPin,
-  Facebook,
-  Instagram,
-  Twitter,
-  Youtube
-} from 'lucide-react';
-const EcommercePage: React.FC = () => {
+
+const ProductPage: React.FC = () => {
+  const params = useParams();
+  const id = params?.id as string; // Extract id from URL params
 
   // Use networkStatus to track loading states
   const { data, loading, error } = useQuery(GETPRODUCT, {
     variables: {
-      id:""
-    }
+      id: id || "" // Use the id from URL
+    },
+    skip: !id, // Skip query until id is available
   });
   
   console.log(data);
   
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
       <Header/>
-      {/* Footer */}
+      {/* Product content here */}
+      {data && (
+        <div className="p-4">
+          <h1>Product ID: {id}</h1>
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        </div>
+      )}
       <Footer/>
     </div>
   );
 };
 
-export default EcommercePage;
+export default ProductPage;
