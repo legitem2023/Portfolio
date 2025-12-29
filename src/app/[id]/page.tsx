@@ -1,7 +1,8 @@
 
 // pages/index.tsx (or wherever you want to use the component)
 import React from 'react';
-
+import { useQuery, NetworkStatus } from '@apollo/client';
+import { GETPRODUCTS } from '../graphql/query';
 import Footer from '../components/Footer';
 import Header from '../components/Header';
 import Image from 'next/image';
