@@ -159,7 +159,7 @@ const Header: React.FC = () => {
           <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
             <div className="z-20 h-[100%] flex items-center">
               <Image
-                src="/Dlogo.svg"
+                src="/Vendor.svg"
                 alt="Logo"
                 height={80}
                 width={160}
@@ -201,7 +201,7 @@ const handleTabClick = (tabId: number) => {
         
           <div className="z-20 h-[100%] flex items-center">
             <Image 
-              src="/Dlogo.svg" 
+              src="/Vendor.svg" 
               alt="Logo" 
               height={80} 
               width={80} 
