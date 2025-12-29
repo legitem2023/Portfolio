@@ -28,7 +28,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
-
+console.log(products);
   const handleQuickView = (product: Product) => {
     setSelectedProduct(product);
     setIsQuickViewOpen(true);
