@@ -22,7 +22,7 @@ export default function VisitorBadge() {
     }
 
     // Get total visits
-    fetch('/api/visitor-count')
+    fetch('/api/visit')
       .then(res => res.json())
       .then(data => {
         if (data.success) {
