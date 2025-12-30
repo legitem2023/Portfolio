@@ -8,6 +8,7 @@ import ProductThumbnailsShimmer from "./ProductThumbnailsShimmer";
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
 import ColdStartErrorUI from './ColdStartErrorUI';
+import CategoryPage from './CategoryPage';
 interface ProductsResponse {
   products: {
     items: any[];
@@ -202,6 +203,7 @@ const ProductsTab: React.FC = () => {
             <option>Sort by: Highest Rated</option>  
           </select>  
         </div>  
+        <CategoryPage/>
       </div>  
       
       <div className="text-sm text-gray-500 mb-4">  
