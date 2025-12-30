@@ -53,7 +53,7 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
   fetchCategories,
   slidesPerView = 3,
   spaceBetween = 30,
-  navigation = true,
+  navigation = false,
   pagination = false,
   autoplay = false,
   loop = false,
