@@ -116,7 +116,7 @@ const CategoryPage: React.FC = () => {
       className="p-0.5 bg-white rounded-lg shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
       onClick={() => handleCategoryClick(category)}
     >
-      <div className="relative h-28 w-full bg-gray-50 rounded-t-lg">
+      <div className="relative aspect-[1/1] bg-gray-50 rounded-t-lg">
         <div className="relative h-full w-full">
           <img
             src={category.image || '/NoImage.webp'}
