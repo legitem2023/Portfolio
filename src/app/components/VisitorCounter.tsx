@@ -76,7 +76,7 @@ export default function VisitorCounter() {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 rounded-lg p-4">
+      <div className="bg-gray-100 rounded-lg p-2">
         <div className="animate-pulse">
           <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
           <div className="h-4 bg-gray-300 rounded w-1/3"></div>
@@ -86,43 +86,43 @@ export default function VisitorCounter() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 Website Analytics</h3>
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2">
+      <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900 mb-2 text-center">📊 Analytics</h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-blue-50 p-4 rounded-lg">
-          <p className="text-sm text-blue-600 font-medium">Total Visits</p>
-          <p className="text-2xl font-bold text-blue-700">
+      <div className="flex flex-row justify-between items-center gap-1 sm:gap-2 mb-2">
+        <div className="bg-blue-50 p-2 rounded-lg flex-1 min-w-0">
+          <p className="text-[10px] xs:text-xs sm:text-sm text-blue-600 font-medium truncate">Total</p>
+          <p className="text-base sm:text-lg md:text-xl font-bold text-blue-700 truncate">
             {stats?.totalVisits.toLocaleString() || '0'}
           </p>
         </div>
         
-        <div className="bg-green-50 p-4 rounded-lg">
-          <p className="text-sm text-green-600 font-medium">Visits Today</p>
-          <p className="text-2xl font-bold text-green-700">
+        <div className="bg-green-50 p-2 rounded-lg flex-1 min-w-0">
+          <p className="text-[10px] xs:text-xs sm:text-sm text-green-600 font-medium truncate">Today</p>
+          <p className="text-base sm:text-lg md:text-xl font-bold text-green-700 truncate">
             {stats?.visitsToday.toLocaleString() || '0'}
           </p>
         </div>
         
-        <div className="bg-purple-50 p-4 rounded-lg">
-          <p className="text-sm text-purple-600 font-medium">Unique Visitors (24h)</p>
-          <p className="text-2xl font-bold text-purple-700">
+        <div className="bg-purple-50 p-2 rounded-lg flex-1 min-w-0">
+          <p className="text-[10px] xs:text-xs sm:text-sm text-purple-600 font-medium truncate">24h Unique</p>
+          <p className="text-base sm:text-lg md:text-xl font-bold text-purple-700 truncate">
             {stats?.uniqueVisitors24h.toLocaleString() || '0'}
           </p>
         </div>
       </div>
       
       {stats?.topPages && stats.topPages.length > 0 && (
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2">Top Pages</h4>
-          <div className="space-y-2">
-            {stats.topPages.map((page, index) => (
+        <div className="mt-2">
+          <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1 truncate">Top Pages</h4>
+          <div className="space-y-1 max-h-16 sm:max-h-20 overflow-y-auto">
+            {stats.topPages.slice(0, 3).map((page, index) => (
               <div key={index} className="flex justify-between items-center">
-                <span className="text-sm text-gray-600 truncate max-w-[200px]">
-                  {page.page === '/' ? 'Homepage' : page.page}
+                <span className="text-[10px] xs:text-xs text-gray-600 truncate max-w-[100px] sm:max-w-[140px] md:max-w-[160px]">
+                  {page.page === '/' ? 'Home' : page.page.split('/').pop() || page.page}
                 </span>
-                <span className="text-sm font-medium text-gray-900">
-                  {page.visits} visits
+                <span className="text-[10px] xs:text-xs font-medium text-gray-900">
+                  {page.visits}
                 </span>
               </div>
             ))}
@@ -130,8 +130,8 @@ export default function VisitorCounter() {
         </div>
       )}
       
-      <p className="text-xs text-gray-500 mt-4 text-center">
-        Auto-updates every 30 seconds
+      <p className="text-[10px] xs:text-xs text-gray-500 mt-2 text-center truncate">
+        Updates every 30s
       </p>
     </div>
   )
