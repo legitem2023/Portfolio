@@ -2,8 +2,10 @@
 
 import React, { useState } from 'react';
 import SwiperComponent, { category } from './SwiperComponent';
-
+import { useSelector, useDispatch } from 'react-redux';
+import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
 const CategoryPage: React.FC = () => {
+  const dispatch = useDispatch();
   const [categories, setCategories] = useState<category[]>([
     {
       id: 'cat-1',
@@ -96,11 +98,9 @@ const CategoryPage: React.FC = () => {
     },
   ]);
 
-  // Handle category click
-  const handleCategoryClick = (category: category) => {
-    console.log('Category clicked:', category);
-    // Navigate to category page or show details
-    // router.push(`/categories/${category.id}`);
+  // Handle category click - FIXED
+  const handleCategoryClick = (categoryName: string) => {
+    dispatch(setCategoryFilter(categoryName));
   };
 
   // Handle image error
@@ -114,7 +114,7 @@ const CategoryPage: React.FC = () => {
   const renderCompactCard = (category: category, index: number) => (
     <div 
       className="p-0.5 bg-white rounded-lg shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
-      onClick={() => handleCategoryClick(category)}
+      onClick={() => handleCategoryClick(category.name)}
     >
       <div className="relative aspect-[1/1] bg-gray-50 rounded-t-lg">
         <div className="relative h-full w-full">
