@@ -103,6 +103,13 @@ const CategoryPage: React.FC = () => {
     // router.push(`/categories/${category.id}`);
   };
 
+  // Handle image error
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const imgElement = e.currentTarget;
+    imgElement.src = '/NoImage.webp';
+    imgElement.onerror = null; // Prevent infinite loop if NoImage.webp also fails
+  };
+
   // Compact card render function with minimal padding
   const renderCompactCard = (category: category, index: number) => (
     <div 
@@ -110,22 +117,15 @@ const CategoryPage: React.FC = () => {
       onClick={() => handleCategoryClick(category)}
     >
       <div className="relative h-28 w-full bg-gray-50 rounded-t-lg">
-        {category.image ? (
-          <div className="relative h-full w-full">
-            {/* Using img instead of Image for simplicity - you can replace with Next.js Image */}
-            <img
-              src={category.image? category.image : '/NoImage.webp'}
-              alt={category.name}
-              className="aspect-[1/1] h-full w-full object-cover rounded-t-lg"
-            />
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center rounded-t-lg">
-            <span className="text-xl font-bold text-gray-400">
-              {category.name.charAt(0)}
-            </span>
-          </div>
-        )}
+        <div className="relative h-full w-full">
+          <img
+            src={category.image || '/NoImage.webp'}
+            alt={category.name}
+            className="aspect-[1/1] h-full w-full object-cover rounded-t-lg"
+            onError={handleImageError}
+            loading="lazy"
+          />
+        </div>
         <div className="absolute top-1 right-1">
           <div className={`w-2 h-2 rounded-full ${category.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
         </div>
@@ -143,11 +143,10 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-2 py-6">
-    
       <SwiperComponent
         initialCategories={categories}
-        slidesPerView={4}  // 4 items per view
-        spaceBetween={4}   // Reduced space between items (approximately 2px)
+        slidesPerView={4}
+        spaceBetween={4}
         navigation={true}
         pagination={{ clickable: true }}
         autoplay={{ delay: 4000, disableOnInteraction: false }}
@@ -156,16 +155,7 @@ const CategoryPage: React.FC = () => {
         showStatusBadge={false}
         showProductCount={false}
         className="compact-swiper"
-        /*breakpoints={{
-          // Responsive breakpoints with minimal spacing
-          320: { slidesPerView: 2, spaceBetween: 4 },  // 2 items on mobile, 1px spacing
-          640: { slidesPerView: 3, spaceBetween: 6 },  // 3 items on tablet, 1.5px spacing
-          768: { slidesPerView: 4, spaceBetween: 8 },  // 4 items on desktop, 2px spacing
-          1024: { slidesPerView: 5, spaceBetween: 8 }, // 5 items on large screens
-          1280: { slidesPerView: 6, spaceBetween: 8 }, // 6 items on extra large screens
-        }}*/
       />
-    
     </div>
   );
 };
