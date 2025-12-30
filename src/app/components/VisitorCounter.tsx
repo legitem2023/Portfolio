@@ -45,7 +45,6 @@ export default function VisitorCounter() {
         // Get updated stats
         const statsResponse = await fetch('/api/visitor-count')
         const statsData = await statsResponse.json()
-        console.log(statsData,"<<<<<");
         if (statsData.success) {
           setStats(statsData.counts)
         }
@@ -76,11 +75,48 @@ export default function VisitorCounter() {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 rounded-lg p-2">
-        <div className="animate-pulse">
-          <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
-          <div className="h-4 bg-gray-300 rounded w-1/3"></div>
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2">
+        <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900 mb-2 text-center">📊 Analytics</h3>
+        
+        <div className="flex flex-row justify-between items-center gap-1 sm:gap-2 mb-2">
+          <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
+            <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">Total</p>
+            <div className="animate-pulse">
+              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-16 sm:w-20 md:w-24"></div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
+            <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">Today</p>
+            <div className="animate-pulse">
+              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-12 sm:w-16 md:w-20"></div>
+            </div>
+          </div>
+          
+          <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
+            <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">24h Unique</p>
+            <div className="animate-pulse">
+              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-12 sm:w-16 md:w-20"></div>
+            </div>
+          </div>
         </div>
+        
+        <div className="mt-2">
+          <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">Top Pages</h4>
+          <div className="space-y-1 max-h-16 sm:max-h-20 overflow-y-auto">
+            {[1, 2, 3].map((index) => (
+              <div key={index} className="flex justify-between items-center">
+                <div className="animate-pulse w-full">
+                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <p className="text-[10px] xs:text-xs text-gray-400 mt-2 text-center truncate">
+          Updates every 30s
+        </p>
       </div>
     )
   }
