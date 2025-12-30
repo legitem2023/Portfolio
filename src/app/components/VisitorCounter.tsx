@@ -101,18 +101,7 @@ export default function VisitorCounter() {
           </div>
         </div>
         
-        <div className="mt-2">
-          <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-400 mb-1 truncate">Top Pages</h4>
-          <div className="space-y-1 max-h-16 sm:max-h-20 overflow-y-auto">
-            {[1, 2, 3].map((index) => (
-              <div key={index} className="flex justify-between items-center">
-                <div className="animate-pulse w-full">
-                  <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        
         
         <p className="text-[10px] xs:text-xs text-gray-400 mt-2 text-center truncate">
           Updates every 30s
