@@ -150,19 +150,7 @@ export default function VisitorCounter() {
       
       {stats?.topPages && stats.topPages.length > 0 && (
         <div className="mt-2">
-          <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1 truncate">Top Pages</h4>
-          <div className="space-y-1 max-h-16 sm:max-h-20 overflow-y-auto">
-            {stats.topPages.slice(0, 3).map((page, index) => (
-              <div key={index} className="flex justify-between items-center">
-                <span className="text-[10px] xs:text-xs text-gray-600 truncate max-w-[100px] sm:max-w-[140px] md:max-w-[160px]">
-                  {page.page === '/' ? 'Home' : page.page.split('/').pop() || page.page}
-                </span>
-                <span className="text-[10px] xs:text-xs font-medium text-gray-900">
-                  {page.visits}
-                </span>
-              </div>
-            ))}
-          </div>
+
         </div>
       )}
       
