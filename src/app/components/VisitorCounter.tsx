@@ -47,7 +47,7 @@ export default function VisitorCounter() {
         const statsData = await statsResponse.json()
         console.log(statsData,"<<<<<");
         if (statsData.success) {
-          setStats(statsData.stats)
+          setStats(statsData.counts)
         }
       } catch (error) {
         console.error('Error tracking visit:', error)
