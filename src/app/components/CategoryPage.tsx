@@ -100,7 +100,7 @@ const CategoryPage: React.FC = () => {
   const renderCompactCard = (category: category, index: number) => (
     <div 
       className="bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
-      onClick={() => handleCategoryClick(category.name)}
+      onClick={() => handleCategoryClick(category.id)}
     >
       <div className="relative aspect-[1/1] bg-gray-50">
         <div className="relative h-full w-full">
