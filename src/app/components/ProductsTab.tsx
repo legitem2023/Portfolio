@@ -203,9 +203,9 @@ const ProductsTab: React.FC = () => {
             <option>Sort by: Highest Rated</option>  
           </select>  
         </div>  
-        <CategoryPage/>
+        
       </div>  
-      
+      <CategoryPage/>
       <div className="text-sm text-gray-500 mb-4">  
         {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
       </div>  
