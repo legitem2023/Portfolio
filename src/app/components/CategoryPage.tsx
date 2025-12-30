@@ -1,12 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
+import { GETCATEGORY } from '../../../graphql/query'; // Adjust the import path as needed
+
+// Define the GraphQL response type
+interface GraphQLCategory {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
-  const [categories, setCategories] = useState<category[]>([
+  const [categories, setCategories] = useState<category[]>([]);
+  
+  // Use the GraphQL query
+  const { loading, error, data } = useQuery(GETCATEGORY);
+
+  // Fallback categories in case GraphQL fails or is loading
+  const fallbackCategories: category[] = [
     {
       id: 'cat-1',
       name: 'Electronics',
@@ -18,87 +37,37 @@ const CategoryPage: React.FC = () => {
       productCount: 120,
       status: 'Active',
     },
-    {
-      id: 'cat-2',
-      name: 'Fashion',
-      description: 'Trendy clothing and accessories',
-      image: '/images/fashion.jpg',
-      isActive: true,
-      createdAt: '2024-01-10T14:20:00Z',
-      items: '85 items',
-      productCount: 85,
-      status: 'Active',
-    },
-    {
-      id: 'cat-3',
-      name: 'Home & Kitchen',
-      description: 'Home appliances and kitchenware',
-      image: '/images/home-kitchen.jpg',
-      isActive: true,
-      createdAt: '2024-01-05T09:15:00Z',
-      items: '200 items',
-      productCount: 200,
-      status: 'Active',
-      parentId: 1,
-    },
-    {
-      id: 'cat-4',
-      name: 'Books',
-      description: 'Best selling books and novels',
-      image: '/images/books.jpg',
-      isActive: true,
-      createdAt: '2024-01-20T11:45:00Z',
-      items: '150 items',
-      productCount: 150,
-      status: 'Active',
-    },
-    {
-      id: 'cat-5',
-      name: 'Sports',
-      description: 'Sports equipment and gear',
-      image: '/images/sports.jpg',
-      isActive: true,
-      createdAt: '2024-01-18T16:30:00Z',
-      items: '75 items',
-      productCount: 75,
-      status: 'Active',
-    },
-    {
-      id: 'cat-6',
-      name: 'Beauty',
-      description: 'Beauty products and cosmetics',
-      image: '/images/beauty.jpg',
-      isActive: true,
-      createdAt: '2024-01-25T09:30:00Z',
-      items: '90 items',
-      productCount: 90,
-      status: 'Active',
-    },
-    {
-      id: 'cat-7',
-      name: 'Toys',
-      description: 'Toys and games for all ages',
-      image: '/images/toys.jpg',
-      isActive: true,
-      createdAt: '2024-01-22T14:15:00Z',
-      items: '110 items',
-      productCount: 110,
-      status: 'Active',
-    },
-    {
-      id: 'cat-8',
-      name: 'Automotive',
-      description: 'Car parts and accessories',
-      image: '/images/automotive.jpg',
-      isActive: true,
-      createdAt: '2024-01-28T11:20:00Z',
-      items: '65 items',
-      productCount: 65,
-      status: 'Active',
-    },
-  ]);
+    // ... other fallback categories (keep your existing array)
+  ];
 
-  // Handle category click - FIXED
+  // Process GraphQL data when its available
+  useEffect(() => {
+    if (data?.categories) {
+      const processedCategories = data.categories.map((cat: GraphQLCategory) => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description,
+        image: cat.image,
+        isActive: cat.isActive,
+        createdAt: cat.createdAt,
+        // Add fields that dont exist in GraphQL with default values
+        items: '0 items', // Default value, you might want to calculate this
+        productCount: 0, // Default value
+        status: cat.isActive ? 'Active' : 'Inactive', // Convert boolean to string
+        parentId: undefined, // Optional field
+      }));
+      setCategories(processedCategories);
+    }
+  }, [data]);
+
+  // If loading, show fallback categories
+  useEffect(() => {
+    if (loading || error || !data?.categories) {
+      setCategories(fallbackCategories);
+    }
+  }, [loading, error, data]);
+
+  // Handle category click
   const handleCategoryClick = (categoryName: string) => {
     dispatch(setCategoryFilter(categoryName));
   };
@@ -107,10 +76,34 @@ const CategoryPage: React.FC = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const imgElement = e.currentTarget;
     imgElement.src = '/NoImage.webp';
-    imgElement.onerror = null; // Prevent infinite loop if NoImage.webp also fails
+    imgElement.onerror = null;
   };
 
-  // Compact card render function with minimal padding
+  // Loading state
+  if (loading && categories.length === 0) {
+    return (
+      <div className="container mx-auto p-0">
+        <div className="flex justify-center items-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2">Loading categories...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && categories.length === 0) {
+    console.error('GraphQL Error:', error);
+    return (
+      <div className="container mx-auto p-0">
+        <div className="text-center text-red-600 p-4">
+          Error loading categories. Showing fallback data.
+        </div>
+      </div>
+    );
+  }
+
+  // Compact card render function
   const renderCompactCard = (category: category, index: number) => (
     <div 
       className="bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
@@ -143,19 +136,23 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-0">
-      <SwiperComponent
-        initialCategories={categories}
-        slidesPerView={4}
-        spaceBetween={4}
-        navigation={false}
-        pagination={{ clickable: false }}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
-        loop={true}
-        renderSlide={renderCompactCard}
-        showStatusBadge={false}
-        showProductCount={false}
-        className="compact-swiper"
-      />
+      {categories.length > 0 ? (
+        <SwiperComponent
+          initialCategories={categories}
+          slidesPerView={4}
+          spaceBetween={4}
+          navigation={false}
+          pagination={{ clickable: false }}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          loop={true}
+          renderSlide={renderCompactCard}
+          showStatusBadge={false}
+          showProductCount={false}
+          className="compact-swiper"
+        />
+      ) : (
+        <div className="text-center p-4">No categories available</div>
+      )}
     </div>
   );
 };
