@@ -142,16 +142,12 @@ const CategoryPage: React.FC = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Categories</h2>
-        <p className="text-sm text-gray-600">Browse all product categories</p>
-      </div>
-      
+    <div className="container mx-auto px-2 py-6">
+    
       <SwiperComponent
         initialCategories={categories}
         slidesPerView={4}  // 4 items per view
-        spaceBetween={8}   // Reduced space between items (approximately 2px)
+        spaceBetween={4}   // Reduced space between items (approximately 2px)
         navigation={true}
         pagination={{ clickable: true }}
         autoplay={{ delay: 4000, disableOnInteraction: false }}
@@ -160,41 +156,16 @@ const CategoryPage: React.FC = () => {
         showStatusBadge={false}
         showProductCount={false}
         className="compact-swiper"
-        breakpoints={{
+        /*breakpoints={{
           // Responsive breakpoints with minimal spacing
           320: { slidesPerView: 2, spaceBetween: 4 },  // 2 items on mobile, 1px spacing
           640: { slidesPerView: 3, spaceBetween: 6 },  // 3 items on tablet, 1.5px spacing
           768: { slidesPerView: 4, spaceBetween: 8 },  // 4 items on desktop, 2px spacing
           1024: { slidesPerView: 5, spaceBetween: 8 }, // 5 items on large screens
           1280: { slidesPerView: 6, spaceBetween: 8 }, // 6 items on extra large screens
-        }}
+        }}*/
       />
-      
-      {/* Alternative: Even more compact version */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Ultra Compact View</h3>
-        <SwiperComponent
-          initialCategories={categories}
-          slidesPerView={6}
-          spaceBetween={4} // Even less space
-          navigation={true}
-          renderSlide={(category) => (
-            <div className="text-center p-1">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-1">
-                <span className="font-bold text-blue-600 text-sm">{category.name.charAt(0)}</span>
-              </div>
-              <p className="text-xs font-medium text-gray-700 truncate">{category.name}</p>
-              <p className="text-xs text-gray-500">{category.productCount}</p>
-            </div>
-          )}
-          breakpoints={{
-            320: { slidesPerView: 3, spaceBetween: 2 },
-            640: { slidesPerView: 4, spaceBetween: 3 },
-            768: { slidesPerView: 5, spaceBetween: 4 },
-            1024: { slidesPerView: 6, spaceBetween: 4 },
-          }}
-        />
-      </div>
+    
     </div>
   );
 };
