@@ -136,6 +136,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                           <SwiperSlide key={key}>
                             <Image
                               height={400}
+                              onClick={() => handleQuickView(product)} 
                               width={400}
                               src={image || '/NoImage.webp'}
                               alt={product.name}
@@ -149,6 +150,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                     <Image
                       height={400}
                       width={400}
+                      onClick={() => handleQuickView(product)} 
                       src={'/NoImage.webp'}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -213,14 +215,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                   </div>
                   
                   {/* Add to Cart Button */}
-                  <button 
+                  {/*<button 
                     className="bg-violet-200 hover:bg-violet-300 text-white p-1 xs:p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0"
                     onClick={() => handleAddToCart(product)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                  </button>
+                  </button>*/}
                 </div>
                 
                 {/* Color Options */}
