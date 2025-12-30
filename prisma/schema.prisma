@@ -9,6 +9,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+model Visitor {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String
+  ip        String?
+  page      String
+  referer   String?  @default("direct")
+  userAgent String?
+  country   String?  @default("Unknown")
+  city      String?  @default("Unknown")
+  timestamp DateTime @default(now())
+  
+  @@index([timestamp])
+  @@index([sessionId])
+  @@index([ip])
+  @@index([page])
+  @@map("visitors")
+}
+
+
+
+
+
+
 // User Management
 model User {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
