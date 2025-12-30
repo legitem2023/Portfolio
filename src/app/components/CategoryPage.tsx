@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
-import { GETCATEGORY } from '../../../graphql/query'; // Adjust the import path as needed
+import { GETCATEGORY } from './graphql/query'; // Adjust the import path as needed
 
 // Define the GraphQL response type
 interface GraphQLCategory {
