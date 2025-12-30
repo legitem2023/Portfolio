@@ -6,6 +6,7 @@ import SwiperComponent, { category } from './SwiperComponent';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
 import { GETCATEGORY } from './graphql/query'; // Adjust the import path as needed
+import Image from 'next/image'; // Added Next.js Image component
 
 // Define the GraphQL response type
 interface GraphQLCategory {
@@ -39,10 +40,10 @@ const CategoryPage: React.FC = () => {
         image: cat.image || '/NoImage.webp', // Default image if GraphQL returns empty
         isActive: cat.isActive,
         createdAt: cat.createdAt,
-        // Add fields that dont exist in GraphQL with default values
+        // Add fields that don't exist in GraphQL with proper types
         items: '0 items', // You might want to fetch product count separately
         productCount: 0, // Consider adding productCount to your GraphQL query
-        status: cat.isActive ? 'Active' : 'Inactive',
+        status: cat.isActive ? "Active" as const : "Inactive" as const, // Fixed: Use const assertion
         parentId: undefined,
       }));
       setCategories(processedCategories);
@@ -52,13 +53,6 @@ const CategoryPage: React.FC = () => {
   // Handle category click
   const handleCategoryClick = (categoryName: string) => {
     dispatch(setCategoryFilter(categoryName));
-  };
-
-  // Handle image error
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    const imgElement = e.currentTarget;
-    imgElement.src = '/NoImage.webp';
-    imgElement.onerror = null;
   };
 
   // Loading state - only show loader when loading from GraphQL
@@ -102,7 +96,7 @@ const CategoryPage: React.FC = () => {
     );
   }
 
-  // Compact card render function
+  // Compact card render function - Using Next.js Image component
   const renderCompactCard = (category: category, index: number) => (
     <div 
       className="bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
@@ -110,12 +104,15 @@ const CategoryPage: React.FC = () => {
     >
       <div className="relative aspect-[1/1] bg-gray-50">
         <div className="relative h-full w-full">
-          <img
+          <Image
             src={category.image}
             alt={category.name}
-            className="aspect-[1/1] h-full w-full object-cover"
-            onError={handleImageError}
-            loading="lazy"
+            fill
+            className="object-cover"
+            onError={() => {
+              // You can use state to change the src on error if needed
+            }}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         </div>
         <div className="absolute top-1 right-1">
