@@ -113,7 +113,7 @@ const CategoryPage: React.FC = () => {
   // Compact card render function with minimal padding
   const renderCompactCard = (category: category, index: number) => (
     <div 
-      className="p-0.5 bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
+      className="bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
       onClick={() => handleCategoryClick(category.name)}
     >
       <div className="relative aspect-[1/1] bg-gray-50">
@@ -121,7 +121,7 @@ const CategoryPage: React.FC = () => {
           <img
             src={category.image || '/NoImage.webp'}
             alt={category.name}
-            className="aspect-[1/1] h-full w-full object-cover rounded-t-lg"
+            className="aspect-[1/1] h-full w-full object-cover"
             onError={handleImageError}
             loading="lazy"
           />
