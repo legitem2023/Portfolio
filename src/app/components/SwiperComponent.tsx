@@ -31,7 +31,11 @@ interface SwiperComponentProps {
   spaceBetween?: number;
   navigation?: boolean;
   pagination?: boolean | { clickable: boolean };
-  autoplay?: boolean | { delay: number; disableOnInteraction: boolean };
+  autoplay?: boolean | { 
+    delay: number; 
+    disableOnInteraction?: boolean;
+    pauseOnMouseEnter?: boolean;
+  };
   loop?: boolean;
   breakpoints?: Record<number, { slidesPerView: number; spaceBetween: number }>;
   
@@ -169,6 +173,25 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
     </div>
   );
 
+  // Prepare autoplay config
+  const getAutoplayConfig = () => {
+    if (!autoplay) return false;
+    
+    if (typeof autoplay === 'boolean') {
+      return {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      };
+    }
+    
+    return {
+      delay: autoplay.delay,
+      disableOnInteraction: autoplay.disableOnInteraction ?? false,
+      pauseOnMouseEnter: autoplay.pauseOnMouseEnter ?? true
+    };
+  };
+
   const swiperConfig = {
     modules: [Navigation, Pagination, ...(autoplay ? [Autoplay] : [])],
     spaceBetween,
@@ -179,7 +202,7 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
       prevEl: '.swiper-button-prev',
     } : false,
     pagination: pagination ? (typeof pagination === 'boolean' ? { clickable: true } : pagination) : false,
-    autoplay: autoplay ? (typeof autoplay === 'boolean' ? { delay: 3000, disableOnInteraction: false } : autoplay) : false,
+    autoplay: getAutoplayConfig(),
     onSlideChange: handleSlideChange,
     onSwiper: handleSwiperInit,
     breakpoints,
