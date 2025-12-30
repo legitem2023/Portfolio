@@ -105,7 +105,7 @@ const CategoryPage: React.FC = () => {
           spaceBetween={30}
           navigation={true}
           pagination={{ clickable: true }}
-          autoplay={{ delay: 4000, disableOnInteraction: false }} {/* Fixed this line */}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
           loop={true}
           onClickCategory={handleCategoryClick}
           breakpoints={{
@@ -140,9 +140,9 @@ const CategoryPage: React.FC = () => {
           spaceBetween={24}
           navigation={true}
           breakpoints={{
-            320: { slidesPerView: 1, spaceBetween: 10 }, {/* Fixed: Added spaceBetween */}
-            768: { slidesPerView: 2, spaceBetween: 16 }, {/* Fixed: Added spaceBetween */}
-            1024: { slidesPerView: 3, spaceBetween: 20 }, {/* Fixed: Added spaceBetween */}
+            320: { slidesPerView: 1, spaceBetween: 10 },
+            768: { slidesPerView: 2, spaceBetween: 16 },
+            1024: { slidesPerView: 3, spaceBetween: 20 },
           }}
         />
       </section>
