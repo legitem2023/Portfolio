@@ -17,55 +17,37 @@ interface GraphQLCategory {
   createdAt: string;
 }
 
+// Define the expected GraphQL response structure
+interface CategoriesResponse {
+  categories: GraphQLCategory[];
+}
+
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
   const [categories, setCategories] = useState<category[]>([]);
   
-  // Use the GraphQL query
-  const { loading, error, data } = useQuery(GETCATEGORY);
+  // Use the GraphQL query - only source of data
+  const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY);
 
-  // Fallback categories in case GraphQL fails or is loading
-  const fallbackCategories: category[] = [
-    {
-      id: 'cat-1',
-      name: 'Electronics',
-      description: 'Latest electronic devices and gadgets',
-      image: '/images/electronics.jpg',
-      isActive: true,
-      createdAt: '2024-01-15T10:30:00Z',
-      items: '120 items',
-      productCount: 120,
-      status: 'Active',
-    },
-    // ... other fallback categories (keep your existing array)
-  ];
-
-  // Process GraphQL data when its available
+  // Process GraphQL data when it's available - ONLY SOURCE
   useEffect(() => {
-    if (data?.categories) {
+    if (data?.categories && data.categories.length > 0) {
       const processedCategories = data.categories.map((cat: GraphQLCategory) => ({
         id: cat.id,
         name: cat.name,
         description: cat.description,
-        image: cat.image,
+        image: cat.image || '/NoImage.webp', // Default image if GraphQL returns empty
         isActive: cat.isActive,
         createdAt: cat.createdAt,
         // Add fields that dont exist in GraphQL with default values
-        items: '0 items', // Default value, you might want to calculate this
-        productCount: 0, // Default value
-        status: cat.isActive ? 'Active' : 'Inactive', // Convert boolean to string
-        parentId: undefined, // Optional field
+        items: '0 items', // You might want to fetch product count separately
+        productCount: 0, // Consider adding productCount to your GraphQL query
+        status: cat.isActive ? 'Active' : 'Inactive',
+        parentId: undefined,
       }));
       setCategories(processedCategories);
     }
   }, [data]);
-
-  // If loading, show fallback categories
-  useEffect(() => {
-    if (loading || error || !data?.categories) {
-      setCategories(fallbackCategories);
-    }
-  }, [loading, error, data]);
 
   // Handle category click
   const handleCategoryClick = (categoryName: string) => {
@@ -79,8 +61,8 @@ const CategoryPage: React.FC = () => {
     imgElement.onerror = null;
   };
 
-  // Loading state
-  if (loading && categories.length === 0) {
+  // Loading state - only show loader when loading from GraphQL
+  if (loading) {
     return (
       <div className="container mx-auto p-0">
         <div className="flex justify-center items-center h-40">
@@ -91,13 +73,30 @@ const CategoryPage: React.FC = () => {
     );
   }
 
-  // Error state
-  if (error && categories.length === 0) {
+  // Error state - only show error when GraphQL fails
+  if (error) {
     console.error('GraphQL Error:', error);
     return (
       <div className="container mx-auto p-0">
         <div className="text-center text-red-600 p-4">
-          Error loading categories. Showing fallback data.
+          Error loading categories. Please try again later.
+        </div>
+      </div>
+    );
+  }
+
+  // No data state - when GraphQL returns empty array
+  if (!categories.length) {
+    return (
+      <div className="container mx-auto p-0">
+        <div className="text-center p-4">
+          <div className="text-gray-500 mb-2">No categories found</div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Refresh
+          </button>
         </div>
       </div>
     );
@@ -112,7 +111,7 @@ const CategoryPage: React.FC = () => {
       <div className="relative aspect-[1/1] bg-gray-50">
         <div className="relative h-full w-full">
           <img
-            src={category.image || '/NoImage.webp'}
+            src={category.image}
             alt={category.name}
             className="aspect-[1/1] h-full w-full object-cover"
             onError={handleImageError}
@@ -136,23 +135,19 @@ const CategoryPage: React.FC = () => {
 
   return (
     <div className="container mx-auto p-0">
-      {categories.length > 0 ? (
-        <SwiperComponent
-          initialCategories={categories}
-          slidesPerView={4}
-          spaceBetween={4}
-          navigation={false}
-          pagination={{ clickable: false }}
-          autoplay={{ delay: 4000, disableOnInteraction: false }}
-          loop={true}
-          renderSlide={renderCompactCard}
-          showStatusBadge={false}
-          showProductCount={false}
-          className="compact-swiper"
-        />
-      ) : (
-        <div className="text-center p-4">No categories available</div>
-      )}
+      <SwiperComponent
+        initialCategories={categories}
+        slidesPerView={4}
+        spaceBetween={4}
+        navigation={false}
+        pagination={{ clickable: false }}
+        autoplay={{ delay: 4000, disableOnInteraction: false }}
+        loop={true}
+        renderSlide={renderCompactCard}
+        showStatusBadge={false}
+        showProductCount={false}
+        className="compact-swiper"
+      />
     </div>
   );
 };
