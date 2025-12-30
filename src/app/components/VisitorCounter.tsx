@@ -61,7 +61,7 @@ export default function VisitorCounter() {
     // Update stats every 30 seconds (optional)
     const interval = setInterval(async () => {
       try {
-        const response = await fetch('/api/visit')
+        const response = await fetch('/api/visitor-count')
         const data = await response.json()
         if (data.success) {
           setStats(data.stats)
