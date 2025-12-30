@@ -64,7 +64,7 @@ export default function VisitorCounter() {
         const response = await fetch('/api/visitor-count')
         const data = await response.json()
         if (data.success) {
-          setStats(data.stats)
+          setStats(data.counts)
         }
       } catch (error) {
         console.error('Error updating stats:', error)
