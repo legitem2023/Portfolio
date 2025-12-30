@@ -1,41 +1,58 @@
+// app/api/visitor-count/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient, PrivacySetting } from "@prisma/client";
-const prisma = new PrismaClient();
+
+// Import PrismaClient properly
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Get the request body (optional)
+    const body = await request.json().catch(() => ({}))
+    
     const ip = request.ip || 
                request.headers.get('x-forwarded-for')?.split(',')[0] || 
                'unknown'
     
     const userAgent = request.headers.get('user-agent') || 'unknown'
     const referer = request.headers.get('referer') || 'direct'
+    const page = body.page || '/'
     
-    // Generate a unique session ID (simplified)
+    // Generate a session ID
     const sessionId = generateSessionId(ip, userAgent)
     
-    // Record the visit
-    const visit = await prisma.visitor.create({
-      data: {
-        sessionId,
-        ip: ip === 'unknown' ? null : ip.substring(0, 50),
-        page: body.page || '/',
-        referer: referer.substring(0, 500),
-        userAgent: userAgent.substring(0, 500),
-        country: body.country || 'Unknown',
-        city: body.city || 'Unknown'
+    // Check if this session visited in the last 24 hours
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const existingVisit = await prisma.visitor.findFirst({
+      where: {
+        sessionId: sessionId,
+        timestamp: {
+          gte: oneDayAgo
+        }
       }
     })
     
-    // Get counts
-    const totalVisits = await prisma.visitor.count()
-    const uniqueVisitors = await prisma.visitor.groupBy({
-      by: ['sessionId'],
-      _count: true
-    })
+    let isNewSession = false
     
-    // Get today's visits
+    if (!existingVisit) {
+      // Record the visit for new sessions (once per 24 hours per session)
+      await prisma.visitor.create({
+        data: {
+          sessionId,
+          ip: ip === 'unknown' ? null : ip.substring(0, 50),
+          page: page,
+          referer: referer.substring(0, 200),
+          userAgent: userAgent.substring(0, 200),
+          country: body.country || 'Unknown',
+          city: body.city || 'Unknown'
+        }
+      })
+      isNewSession = true
+    }
+    
+    // Get updated counts
+    const totalVisits = await prisma.visitor.count()
+    
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
@@ -47,20 +64,38 @@ export async function POST(request: NextRequest) {
       }
     })
     
-    return NextResponse.json({
-      success: true,
-      visitId: visit.id,
-      counts: {
-        totalVisits,
-        uniqueVisitors: uniqueVisitors.length,
-        visitsToday
-      }
+    // Get unique visitors in last 24 hours
+    const uniqueVisitors24h = await prisma.visitor.groupBy({
+      by: ['sessionId'],
+      where: {
+        timestamp: {
+          gte: oneDayAgo
+        }
+      },
+      _count: true
     })
     
-  } catch (error) {
+    return NextResponse.json({
+      success: true,
+      isNewSession,
+      counts: {
+        totalVisits,
+        visitsToday,
+        uniqueVisitors24h: uniqueVisitors24h.length
+      },
+      timestamp: new Date().toISOString()
+    })
+    
+  } catch (error: any) {
     console.error('Error recording visit:', error)
+    
+    // Return error response
     return NextResponse.json(
-      { success: false, error: 'Failed to record visit' },
+      { 
+        success: false, 
+        error: 'Failed to record visit',
+        message: error.message 
+      },
       { status: 500 }
     )
   }
@@ -68,8 +103,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    // Simple count query
     const totalVisits = await prisma.visitor.count()
     
+    // Today's visits
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     
@@ -81,61 +118,53 @@ export async function GET() {
       }
     })
     
-    // Get unique visitors (last 24 hours)
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    
-    const recentVisitors = await prisma.visitor.groupBy({
+    // Unique visitors in last 24 hours
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const uniqueVisitors24h = await prisma.visitor.groupBy({
       by: ['sessionId'],
       where: {
         timestamp: {
-          gte: yesterday
+          gte: oneDayAgo
         }
       },
       _count: true
     })
     
-    // Get top pages
-    const topPages = await prisma.visitor.groupBy({
-      by: ['page'],
-      _count: {
-        page: true
-      },
-      orderBy: {
-        _count: {
-          page: 'desc'
-        }
-      },
-      take: 5
-    })
-    
     return NextResponse.json({
       success: true,
-      stats: {
+      counts: {
         totalVisits,
         visitsToday,
-        uniqueVisitors24h: recentVisitors.length,
-        topPages: topPages.map(item => ({
-          page: item.page,
-          visits: item._count.page
-        }))
-      }
+        uniqueVisitors24h: uniqueVisitors24h.length
+      },
+      timestamp: new Date().toISOString()
     })
     
-  } catch (error) {
+  } catch (error: any) {
+    console.error('Error getting visitor count:', error)
+    
     return NextResponse.json(
-      { success: false, error: 'Failed to get stats' },
+      { 
+        success: false, 
+        error: 'Failed to get visitor count',
+        message: error.message 
+      },
       { status: 500 }
     )
   }
 }
 
 function generateSessionId(ip: string, userAgent: string): string {
-  // Create a simple session ID based on IP and user agent
-  const hash = Buffer.from(`${ip}-${userAgent}-${Date.now()}`)
-    .toString('base64')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .substring(0, 32)
+  // Create a stable session ID that doesn't change with Date.now()
+  const data = `${ip}-${userAgent}`
   
-  return `session_${hash}`
+  // Simple hash function for consistency
+  let hash = 0
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash = hash & hash // Convert to 32bit integer
+  }
+  
+  return `sess_${Math.abs(hash)}`
 }
