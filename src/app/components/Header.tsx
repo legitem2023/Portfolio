@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import VisitorCounter from './VisitorCounter';
+import VisitorBadge from './VisitorBadge';
 import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -357,6 +358,8 @@ const handleTabClick = (tabId: number) => {
           </div>
         </>
       )}
+      <VisitorCounter/>
+      <VisitorBadge/>
       {/*<Ads/>*/}
     </div>
   );
