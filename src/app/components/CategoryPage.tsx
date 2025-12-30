@@ -148,7 +148,7 @@ const CategoryPage: React.FC = () => {
         slidesPerView={4}
         spaceBetween={4}
         navigation={false}
-        pagination={{ clickable: true }}
+        pagination={{ clickable: false }}
         autoplay={{ delay: 4000, disableOnInteraction: false }}
         loop={true}
         renderSlide={renderCompactCard}
