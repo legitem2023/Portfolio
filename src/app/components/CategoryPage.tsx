@@ -116,7 +116,7 @@ const CategoryPage: React.FC = () => {
             <img
               src={category.image? category.image : '/NoImage.webp'}
               alt={category.name}
-              className="h-full w-full object-cover rounded-t-lg"
+              className="aspect-[1/1] h-full w-full object-cover rounded-t-lg"
             />
           </div>
         ) : (
