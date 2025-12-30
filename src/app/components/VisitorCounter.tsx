@@ -30,7 +30,7 @@ export default function VisitorCounter() {
         const locationData = locationResponse ? await locationResponse.json() : {}
         
         // Record the visit
-        await fetch('/api/visit', {
+        await fetch('/api/visitor-count', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
