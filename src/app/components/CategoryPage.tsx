@@ -114,7 +114,7 @@ const CategoryPage: React.FC = () => {
           <div className="relative h-full w-full">
             {/* Using img instead of Image for simplicity - you can replace with Next.js Image */}
             <img
-              src={category.image}
+              src={category.image? category.image : '/NoImage.webp'}
               alt={category.name}
               className="h-full w-full object-cover rounded-t-lg"
             />
