@@ -43,7 +43,7 @@ export default function VisitorCounter() {
         })
 
         // Get updated stats
-        const statsResponse = await fetch('/api/visit')
+        const statsResponse = await fetch('/api/visitor-count')
         const statsData = await statsResponse.json()
         
         if (statsData.success) {
