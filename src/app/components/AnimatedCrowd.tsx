@@ -51,7 +51,7 @@ function useIsDecember() {
   return isDecember;
 }
 
-// Fireworks Particle Component
+// Fireworks Particle Component - DOUBLE SIZE
 function FireworkParticle({ 
   x, 
   y, 
@@ -69,10 +69,10 @@ function FireworkParticle({
       style={{
         left: `${x}%`,
         top: `${y}%`,
-        width: `${size}px`,
-        height: `${size}px`,
+        width: `${size * 2}px`, // DOUBLE SIZE
+        height: `${size * 2}px`, // DOUBLE SIZE
         background: color,
-        boxShadow: `0 0 ${size * 2}px ${size}px ${color}40`,
+        boxShadow: `0 0 ${size * 4}px ${size * 2}px ${color}40`, // DOUBLE SIZE
         animation: `particleExplode 1.5s ease-out forwards`,
         opacity: 0,
       }}
@@ -80,7 +80,7 @@ function FireworkParticle({
   );
 }
 
-// Firework Burst Component
+// Firework Burst Component - INFINITE LOOP
 function FireworkBurst({ 
   id,
   isDecember 
@@ -118,12 +118,10 @@ function FireworkBurst({
   useEffect(() => {
     if (!isDecember) return;
 
-    // Random delay before explosion
-    const delay = Math.random() * 5000;
-    const timer = setTimeout(() => {
+    const createExplosion = () => {
       setIsExploding(true);
       
-      // Create particles
+      // Create particles with DOUBLE SIZE
       const particleCount = 30 + Math.floor(Math.random() * 20);
       const newParticles = [];
       const centerX = 50 + (Math.random() * 20 - 10);
@@ -138,18 +136,26 @@ function FireworkBurst({
           x: centerX + Math.cos(angle) * distance,
           y: centerY + Math.sin(angle) * distance,
           color: colors[Math.floor(Math.random() * colors.length)],
-          size: 2 + Math.random() * 3,
+          size: (2 + Math.random() * 3) * 2, // DOUBLE SIZE
         });
       }
       
       setParticles(newParticles);
       
-      // Reset after explosion
+      // Reset and create next explosion - INFINITE LOOP
       setTimeout(() => {
         setIsExploding(false);
         setParticles([]);
+        
+        // Schedule next explosion with random delay
+        const nextDelay = 500 + Math.random() * 3000; // Shorter delay for more frequent fireworks
+        setTimeout(createExplosion, nextDelay);
       }, 2000);
-    }, delay);
+    };
+
+    // Initial explosion with random delay
+    const initialDelay = Math.random() * 3000;
+    const timer = setTimeout(createExplosion, initialDelay);
 
     return () => clearTimeout(timer);
   }, [isDecember]);
@@ -163,8 +169,8 @@ function FireworkBurst({
         style={{
           left: `${50 + (Math.random() * 20 - 10)}%`,
           top: '30%',
-          width: '8px',
-          height: '8px',
+          width: '16px', // DOUBLE SIZE from 8px
+          height: '16px', // DOUBLE SIZE from 8px
           background: colors[Math.floor(Math.random() * colors.length)],
           animation: `fireworkRise 1s ease-out forwards`,
           opacity: 0,
@@ -289,7 +295,7 @@ function EmojioneDepartmentStore({ colorVariant, ...props }: SVGProps<SVGSVGElem
       <path fill="#fff" d="M6 42h2v18H6zm12 0h2v18h-2z"></path>
       <path fill="#b4d7ee" d="M8 42h10v2H8z"></path>
       <path fill="#fff" d="M27 33h30v20H27z"></path>
-      <path fill={currentColors.accent1} d="M59 56c0 .5-.5 1-1 1H26c-.5 0-1-.5-1-1v-2c0-.5.5-1 1-1h32c.5 0 1 .5 1 1z"></path>
+      <path fill={currentColors.accent1} d="M59 56c0 .5-.5 0-1 1H26c-.5 0-1-.5-1-1v-2c0-.5.5-1 1-1h32c.5 0 1 .5 1 1z"></path>
       <path fill={currentColors.light} d="M29 35h26v16H29z"></path>
       <path fill="#b4d7ee" d="M29 35h26v2H29z"></path>
       <path fill={currentColors.main} d="M16 47c-.6 0-1 .6-1 1.3v2c0 .7.4 1.7.8 2.1l.4.4c.4.4.8.2.8-.5v-3.9c0-.8-.5-1.4-1-1.4"></path>
