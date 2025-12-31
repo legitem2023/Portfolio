@@ -1,6 +1,6 @@
 'use client';
 import Ads from './Ads/Ads'
-import React, { useState, useEffect, useRef } from 'react'; // Add useRef
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
@@ -55,7 +55,8 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isSliding, setIsSliding] = useState(false); // Add sliding state
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right'); // Track slide direction
   
   const router = useRouter();
   const pathname = usePathname(); // Get current path
@@ -89,16 +90,30 @@ const DeluxeNavTabs: React.FC = () => {
   }, []);
   
   const handleTabClick = (tabId: number) => {
+    // Determine slide direction based on tab order
+    if (tabId > activeIndex) {
+      setSlideDirection('left');
+    } else {
+      setSlideDirection('right');
+    }
+    
+    // Start sliding animation
+    setIsSliding(true);
+    
     // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
       router.push('/');
       // Optionally, you can set a timeout to dispatch the active index after navigation
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
+        // End sliding animation after a short delay
+        setTimeout(() => setIsSliding(false), 300);
       }, 100);
     } else {
-      // If already on homepage, just update the active tab
+      // If already on homepage, update the active tab
       dispatch(setActiveIndex(tabId));
+      // End sliding animation after a short delay
+      setTimeout(() => setIsSliding(false), 300);
     }
   };
 
@@ -191,11 +206,7 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full mx-auto font-sans z-10">
-       {/* Add ref to the container */}
-       <div 
-         ref={containerRef}
-         className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1"
-       >
+       <div className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1">
         {tabs.slice(0,5).map((tab) => (
           <button
             key={tab.id}
@@ -215,8 +226,13 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      <div className="relative bg-white shadow-lg border border-gray-200 overflow-hidden">
-        {tabs.find((tab) => tab.id === activeIndex)?.content}
+      {/* Add sliding container wrapper */}
+      <div className={`relative bg-white shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
+        isSliding ? (slideDirection === 'left' ? 'slide-out-left' : 'slide-out-right') : ''
+      }`}>
+        <div className={isSliding ? (slideDirection === 'left' ? 'slide-in-right' : 'slide-in-left') : ''}>
+          {tabs.find((tab) => tab.id === activeIndex)?.content}
+        </div>
       </div>
 
       <style jsx>{`
@@ -228,22 +244,72 @@ const DeluxeNavTabs: React.FC = () => {
           display: none;
         }
         
-        /* Invert button colors when container is fixed */
-        .fixed\:md\:static[style*="position: fixed"] button,
-        .fixed\:md\:static:has(style*="position: fixed") button,
-        div[class*="fixed bottom-0"]:not([class*="static"]) button {
-          filter: invert(1);
+        /* Facebook-like sliding animations */
+        .slide-out-left {
+          animation: slideOutLeft 0.3s ease-in-out forwards;
         }
         
-        /* Alternative selector - when container has fixed positioning */
-        div.fixed:not(.md\:static) button,
-        .fixed:not([class*="static"]) button {
-          filter: invert(1);
+        .slide-out-right {
+          animation: slideOutRight 0.3s ease-in-out forwards;
         }
         
-        /* Target the specific fixed container */
-        .fixed.bottom-0.left-0.right-0.w-full button {
-          filter: invert(1);
+        .slide-in-left {
+          animation: slideInLeft 0.3s ease-in-out forwards;
+        }
+        
+        .slide-in-right {
+          animation: slideInRight 0.3s ease-in-out forwards;
+        }
+        
+        @keyframes slideOutLeft {
+          0% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(-100%);
+            opacity: 0.3;
+          }
+        }
+        
+        @keyframes slideOutRight {
+          0% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(100%);
+            opacity: 0.3;
+          }
+        }
+        
+        @keyframes slideInLeft {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes slideInRight {
+          0% {
+            transform: translateX(100%);
+            opacity: 0.3;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        /* Smooth fade transition for non-sliding content */
+        .transition-all {
+          transition-property: all;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          transition-duration: 300ms;
         }
       `}</style>
     </div>
