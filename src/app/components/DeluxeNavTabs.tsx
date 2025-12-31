@@ -246,40 +246,40 @@ const DeluxeNavTabs: React.FC = () => {
         
         /* Facebook-like sliding animations */
         .slide-out-left {
-          animation: slideOutLeft 0.3s ease-in-out forwards;
+          animation: slideOutLeft 0.5s ease-in-out forwards;
         }
         
         .slide-out-right {
-          animation: slideOutRight 0.3s ease-in-out forwards;
+          animation: slideOutRight 0.5s ease-in-out forwards;
         }
         
         .slide-in-left {
-          animation: slideInLeft 0.3s ease-in-out forwards;
+          animation: slideInLeft 0.5s ease-in-out forwards;
         }
         
         .slide-in-right {
-          animation: slideInRight 0.3s ease-in-out forwards;
+          animation: slideInRight 0.5s ease-in-out forwards;
         }
         
         @keyframes slideOutLeft {
           0% {
             transform: translateX(0);
-            opacity: 1;
+            
           }
           100% {
             transform: translateX(-100%);
-            opacity: 0.3;
+            
           }
         }
         
         @keyframes slideOutRight {
           0% {
             transform: translateX(0);
-            opacity: 1;
+            
           }
           100% {
             transform: translateX(100%);
-            opacity: 0.3;
+            
           }
         }
         
