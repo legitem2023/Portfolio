@@ -9,7 +9,6 @@ import MobileMenu from './MobileMenu';
 import HeroCarousel from './HeroCarousel';
 import FeaturedCategories from './FeaturedCategories';
 import FeaturedProducts from './FeaturedProducts';
-import Testimonials from './Testimonials';
 
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -131,7 +130,7 @@ const DeluxeHomePage: React.FC = () => {
           products={products} 
           loading={productLoading} 
         />
-        <Testimonials testimonials={testimonials} />
+        
       </main>
     </div>
   );
