@@ -316,6 +316,7 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
           padding-top: ${isMobile ? '8px' : '15px'} !important;
           padding-bottom: ${isMobile ? '25px' : '35px'} !important;
           font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+          background-color:'#ff9999';
         }
         
         .swiper-wrapper {
