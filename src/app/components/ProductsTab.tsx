@@ -157,7 +157,7 @@ const ProductsTab: React.FC = () => {
 
   return (
     <div className="p-2 bg-white rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-2">
         <div className="flex space-x-2 w-full">
           <input
             type="text"
@@ -178,7 +178,7 @@ const ProductsTab: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-6">  
+      <div className="flex justify-between items-center mb-2">  
         <div className="flex space-x-2 w-full">  
           <select  
             className="w-full px-3 py-2 border border-gray-300 rounded-md"  
@@ -206,7 +206,7 @@ const ProductsTab: React.FC = () => {
         
       </div>  
       <CategoryPage/>
-      <div className="text-sm text-gray-500 mb-4">  
+      <div className="text-sm text-gray-500 mb-2">  
         {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
       </div>  
       
