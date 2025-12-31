@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { Swiper as SwiperType } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -46,10 +47,6 @@ interface SwiperComponentProps {
   showStatusBadge?: boolean;
   showProductCount?: boolean;
   onClickCategory?: (category: category) => void;
-  
-  // Loading props
-  loadingRows?: number;
-  columns?: number; // New prop to control columns in shimmer loader
 }
 
 const SwiperComponent: React.FC<SwiperComponentProps> = ({
@@ -68,8 +65,6 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
   showStatusBadge = true,
   showProductCount = true,
   onClickCategory,
-  loadingRows = 1, // Default to 1 row
-  columns = 3, // Default columns matching slidesPerView
 }) => {
   const [categories, setCategories] = useState<category[]>(initialCategories);
   const [isLoading, setIsLoading] = useState<boolean>(!initialCategories.length);
@@ -198,110 +193,6 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
     };
   };
 
-  // Shimmer Loading Component
-  const ShimmerLoader = () => {
-    // Create an array of shimmer items based on columns and rows
-    const shimmerItems = Array.from({ length: columns * loadingRows }, (_, index) => (
-      <SwiperSlide key={`shimmer-${index}`} className="h-auto">
-        <div className="group relative bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-          {/* Image shimmer */}
-          <div className="relative h-48 w-full bg-gray-200 overflow-hidden">
-            <div className="shimmer-effect absolute inset-0"></div>
-          </div>
-          
-          {/* Content shimmer */}
-          <div className="p-5">
-            {/* Title and badge row */}
-            <div className="flex justify-between items-start mb-3">
-              <div className="w-3/4">
-                <div className="h-5 bg-gray-200 rounded mb-2 overflow-hidden">
-                  <div className="shimmer-effect h-full"></div>
-                </div>
-                <div className="h-4 bg-gray-200 rounded w-1/2 overflow-hidden">
-                  <div className="shimmer-effect h-full"></div>
-                </div>
-              </div>
-              <div className="w-1/4 flex justify-end">
-                <div className="h-6 bg-gray-200 rounded w-16 overflow-hidden">
-                  <div className="shimmer-effect h-full"></div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Description */}
-            <div className="space-y-2 mb-4">
-              <div className="h-3 bg-gray-200 rounded overflow-hidden">
-                <div className="shimmer-effect h-full"></div>
-              </div>
-              <div className="h-3 bg-gray-200 rounded w-5/6 overflow-hidden">
-                <div className="shimmer-effect h-full"></div>
-              </div>
-            </div>
-            
-            {/* Bottom row */}
-            <div className="flex justify-between items-center">
-              <div className="h-3 bg-gray-200 rounded w-1/4 overflow-hidden">
-                <div className="shimmer-effect h-full"></div>
-              </div>
-              <div className="h-3 bg-gray-200 rounded w-1/4 overflow-hidden">
-                <div className="shimmer-effect h-full"></div>
-              </div>
-            </div>
-            
-            {/* Parent ID shimmer (conditional) */}
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="h-3 bg-gray-200 rounded w-1/3 overflow-hidden">
-                <div className="shimmer-effect h-full"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </SwiperSlide>
-    ));
-
-    return (
-      <div className={className}>
-        <Swiper
-          modules={[Navigation, Pagination]}
-          spaceBetween={spaceBetween}
-          slidesPerView={slidesPerView}
-          navigation={navigation ? {
-            nextEl: '.swiper-button-next',
-            prevEl: '.swiper-button-prev',
-          } : false}
-          pagination={false}
-          className={swiperClassName}
-        >
-          {shimmerItems}
-        </Swiper>
-        
-        {/* Navigation buttons for shimmer state */}
-        {navigation && shimmerItems.length > (typeof slidesPerView === 'number' ? slidesPerView : 1) && (
-          <>
-            <button
-              className="swiper-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-lg opacity-50 cursor-not-allowed"
-              aria-label="Previous slide"
-              disabled
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              className="swiper-button-next absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 rounded-full w-10 h-10 flex items-center justify-center shadow-lg opacity-50 cursor-not-allowed"
-              aria-label="Next slide"
-              disabled
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </>
-        )}
-      </div>
-    );
-  };
-
   const swiperConfig = {
     modules: [Navigation, Pagination, ...(autoplay ? [Autoplay] : [])],
     spaceBetween,
@@ -319,7 +210,11 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
   };
 
   if (isLoading && categories.length === 0) {
-    return <ShimmerLoader />;
+    return (
+      <div className={`flex justify-center items-center h-64 ${className}`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
   }
 
   if (error) {
@@ -396,32 +291,5 @@ const SwiperComponent: React.FC<SwiperComponentProps> = ({
     </div>
   );
 };
-
-// Add CSS for shimmer effect
-const shimmerStyles = `
-  .shimmer-effect {
-    position: relative;
-    overflow: hidden;
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-    100% {
-      background-position: 200% 0;
-    }
-  }
-`;
-
-// Inject shimmer styles
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement("style");
-  styleSheet.textContent = shimmerStyles;
-  document.head.appendChild(styleSheet);
-}
 
 export default SwiperComponent;
