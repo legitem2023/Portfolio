@@ -95,7 +95,7 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
             pauseOnMouseEnter: true,
           }}
           loop={true}
-          loopedSlides={5} // Ensure smooth looping with 5 slides
+          
           breakpoints={{
             320: {
               slidesPerView: 1.4,
