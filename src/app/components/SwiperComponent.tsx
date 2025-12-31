@@ -1,365 +1,294 @@
-// components/HeroCarousel3D.tsx
 import React, { useState, useEffect, useRef } from 'react';
+import { Swiper as SwiperType } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Autoplay, EffectCoverflow } from 'swiper/modules';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import 'swiper/css/effect-coverflow';
+import 'swiper/css/pagination';
+import Image from 'next/image';
 
-interface HeroSlide {
-  id: number;
-  title: string;
-  subtitle: string;
+// Your exact category interface
+export interface category {
+  id: string;
+  name: string;
+  description: string;
   image: string;
-  cta: string;
-  bgColor: string;
+  isActive: boolean;
+  createdAt: string;
+  items: string;
+  productCount: number;
+  status: 'Active' | 'Inactive';
+  parentId?: number;
 }
 
-interface HeroCarousel3DProps {
-  slides: HeroSlide[];
+interface SwiperComponentProps {
+  // Data props
+  initialCategories?: category[];
+  fetchCategories?: () => Promise<category[]>;
+  
+  // Swiper configuration
+  slidesPerView?: number | 'auto';
+  spaceBetween?: number;
+  navigation?: boolean;
+  pagination?: boolean | { clickable: boolean };
+  autoplay?: boolean | { 
+    delay: number; 
+    disableOnInteraction?: boolean;
+    pauseOnMouseEnter?: boolean;
+  };
+  loop?: boolean;
+  breakpoints?: Record<number, { slidesPerView: number; spaceBetween: number }>;
+  
+  // Customization
+  renderSlide?: (category: category, index: number) => React.ReactNode;
+  className?: string;
+  swiperClassName?: string;
+  showStatusBadge?: boolean;
+  showProductCount?: boolean;
+  onClickCategory?: (category: category) => void;
 }
 
-const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
-  const [isMobile, setIsMobile] = useState(false);
-  const swiperRef = useRef<any>(null);
+const SwiperComponent: React.FC<SwiperComponentProps> = ({
+  initialCategories = [],
+  fetchCategories,
+  slidesPerView = 3,
+  spaceBetween = 30,
+  navigation = true,
+  pagination = false,
+  autoplay = false,
+  loop = false,
+  breakpoints,
+  renderSlide,
+  className = '',
+  swiperClassName = '',
+  showStatusBadge = true,
+  showProductCount = true,
+  onClickCategory,
+}) => {
+  const [categories, setCategories] = useState<category[]>(initialCategories);
+  const [isLoading, setIsLoading] = useState<boolean>(!initialCategories.length);
+  const [error, setError] = useState<string | null>(null);
+  
+  const swiperRef = useRef<SwiperType | null>(null);
 
+  // Fetch categories if fetchCategories function is provided
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const loadCategories = async () => {
+      if (fetchCategories && categories.length === 0) {
+        setIsLoading(true);
+        try {
+          const data = await fetchCategories();
+          setCategories(data);
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Failed to fetch categories');
+          console.error('Error fetching categories:', err);
+        } finally {
+          setIsLoading(false);
+        }
+      }
     };
+
+    loadCategories();
+  }, [fetchCategories, categories.length]);
+
+  // Filter active categories if needed
+  const activeCategories = categories.filter(cat => cat.isActive || cat.status === 'Active');
+
+  const handleSlideChange = () => {
+    console.log('Slide changed');
+  };
+
+  const handleSwiperInit = (swiper: SwiperType) => {
+    swiperRef.current = swiper;
+  };
+
+  const handleNext = () => swiperRef.current?.slideNext();
+  const handlePrev = () => swiperRef.current?.slidePrev();
+
+  // Default category card renderer
+  const defaultRenderSlide = (category: category, index: number) => (
+    <div 
+      className={`group relative bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 cursor-pointer ${
+        !category.isActive ? 'opacity-70' : ''
+      }`}
+      onClick={() => onClickCategory?.(category)}
+    >
+      {/* Category Image */}
+      <div className="relative h-48 w-full bg-gray-100">
+        {category.image ? (
+          <Image
+            src={category.image}
+            alt={category.name}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-300"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-center">
+            <span className="text-4xl font-bold text-gray-300">
+              {category.name.charAt(0)}
+            </span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        
+        {/* Status Badge */}
+        {showStatusBadge && (
+          <div className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-semibold ${
+            category.status === 'Active' 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {category.status}
+          </div>
+        )}
+      </div>
+      
+      {/* Category Content */}
+      <div className="p-5">
+        <div className="flex justify-between items-start mb-3">
+          <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{category.name}</h3>
+          {showProductCount && (
+            <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-semibold whitespace-nowrap">
+              {category.productCount} products
+            </span>
+          )}
+        </div>
+        
+        <p className="text-gray-600 text-sm line-clamp-2 mb-4">{category.description}</p>
+        
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>Items: {category.items || 'N/A'}</span>
+          <span>{new Date(category.createdAt).toLocaleDateString()}</span>
+        </div>
+        
+        {/* Parent ID indicator */}
+        {category.parentId && (
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <span className="text-xs text-gray-500">Parent ID: {category.parentId}</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Prepare autoplay config
+  const getAutoplayConfig = () => {
+    if (!autoplay) return false;
     
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    if (typeof autoplay === 'boolean') {
+      return {
+        delay: 3000,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true
+      };
+    }
+    
+    return {
+      delay: autoplay.delay,
+      disableOnInteraction: autoplay.disableOnInteraction ?? false,
+      pauseOnMouseEnter: autoplay.pauseOnMouseEnter ?? true
+    };
+  };
+
+  const swiperConfig = {
+    modules: [Navigation, Pagination, ...(autoplay ? [Autoplay] : [])],
+    spaceBetween,
+    slidesPerView,
+    loop,
+    navigation: navigation ? {
+      nextEl: '.swiper-button-next',
+      prevEl: '.swiper-button-prev',
+    } : false,
+    pagination: pagination ? (typeof pagination === 'boolean' ? { clickable: true } : pagination) : false,
+    autoplay: getAutoplayConfig(),
+    onSlideChange: handleSlideChange,
+    onSwiper: handleSwiperInit,
+    breakpoints,
+  };
+
+  if (isLoading && categories.length === 0) {
+    return (
+      <div className={`flex justify-center items-center h-64 ${className}`}>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`flex justify-center items-center h-64 ${className}`}>
+        <div className="text-red-500 text-center">
+          <p className="mb-2">Error loading categories</p>
+          <p className="text-sm mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!categories || categories.length === 0) {
+    return (
+      <div className={`flex flex-col justify-center items-center h-64 ${className}`}>
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <p className="text-gray-500">No categories found</p>
+      </div>
+    );
+  }
 
   return (
-    <div 
-      className="card" 
-      style={{ 
-        width: "100%", 
-        position: "relative", 
-        padding: isMobile ? "10px" : "15px",
-        fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-      }}
-    >
+    <div className={`relative ${className}`}>
       <Swiper
-        ref={swiperRef}
-        effect="coverflow"
-        centeredSlides={true}
-        slidesPerView={isMobile ? 2.5 : 3}
-        spaceBetween={isMobile ? 5 : 12}
-        autoplay={{ 
-          delay: 2500, 
-          disableOnInteraction: false,
-        }}
-        loop={true}
-        navigation={{
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        }}
-        coverflowEffect={{
-          rotate: 0,
-          stretch: isMobile ? 10 : 18,
-          depth: isMobile ? 150 : 180,
-          modifier: isMobile ? 3.5 : 3.8,
-          slideShadows: false,
-        }}
-        modules={[Autoplay, EffectCoverflow, Navigation]}
-        style={{ width: "100%" }}
-        breakpoints={{
-          320: {
-            slidesPerView: 2.2,
-            spaceBetween: 4,
-            coverflowEffect: {
-              rotate: 0,
-              stretch: 8,
-              depth: 120,
-              modifier: 3.2,
-              slideShadows: false,
-            }
-          },
-          480: {
-            slidesPerView: 2.5,
-            spaceBetween: 6,
-            coverflowEffect: {
-              rotate: 0,
-              stretch: 10,
-              depth: 150,
-              modifier: 3.5,
-              slideShadows: false,
-            }
-          },
-          768: {
-            slidesPerView: 2.8,
-            spaceBetween: 10,
-            coverflowEffect: {
-              rotate: 0,
-              stretch: 15,
-              depth: 170,
-              modifier: 3.7,
-              slideShadows: false,
-            }
-          },
-          1024: {
-            slidesPerView: 3,
-            spaceBetween: 12,
-            coverflowEffect: {
-              rotate: 0,
-              stretch: 18,
-              depth: 180,
-              modifier: 3.8,
-              slideShadows: false,
-            }
-          },
-          1280: {
-            slidesPerView: 3.2,
-            spaceBetween: 15,
-            coverflowEffect: {
-              rotate: 0,
-              stretch: 22,
-              depth: 200,
-              modifier: 4,
-              slideShadows: false,
-            }
-          }
-        }}
+        {...swiperConfig}
+        className={`${swiperClassName}`}
       >
-        {slides.slice(0, 5).map((slide, idx) => (
-          <SwiperSlide
-            key={slide.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '0px',
-              backgroundColor: 'transparent'
-            }}
-          >
-            <div 
-              className={`relative rounded-lg overflow-hidden ${slide.bgColor} transition-all duration-300 hover:scale-[1.02] hover:z-10`}
-              style={{
-                width: '100%',
-                aspectRatio: '4 / 3',
-                overflow: 'hidden',
-                borderRadius: '6px',
-                boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.4)'
-              }}
-            >
-              {/* Background Image */}
-              <img
-                src={slide.image}
-                alt={slide.title}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
-              
-              {/* Gradient Overlay */}
-              <div 
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 30%, transparent 60%)'
-                }}
-              />
-              
-              {/* Content */}
-              <div 
-                className="absolute inset-0 flex flex-col justify-end p-3 md:p-4 text-white z-10"
-                style={{
-                  fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-                }}
-              >
-                <div className="transform transition-transform duration-300">
-                  <h3 
-                    className="font-semibold mb-1"
-                    style={{
-                      fontSize: isMobile ? '14px' : '16px',
-                      lineHeight: '1.3',
-                      letterSpacing: '0.2px',
-                      fontWeight: 600,
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.9)',
-                      fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
-                    }}
-                  >
-                    {slide.title}
-                  </h3>
-                  <p 
-                    className="opacity-95 mb-2"
-                    style={{
-                      fontSize: isMobile ? '11px' : '13px',
-                      lineHeight: '1.4',
-                      letterSpacing: '0.1px',
-                      fontWeight: 400,
-                      textShadow: '0.5px 0.5px 1px rgba(0,0,0,0.7)',
-                      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {slide.subtitle}
-                  </p>
-                  <button 
-                    className="px-3 py-1.5 bg-white text-black font-medium rounded-full hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 active:scale-95"
-                    style={{
-                      fontSize: isMobile ? '11px' : '12px',
-                      letterSpacing: '0.3px',
-                      fontWeight: 500,
-                      fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
-                      boxShadow: '0.5px 0.5px 2px rgba(0,0,0,0.3)',
-                      border: 'none',
-                      outline: 'none',
-                      cursor: 'pointer'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ffffff'}
-                  >
-                    {slide.cta}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Slide Number */}
-              <div 
-                className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center z-20"
-                style={{
-                  width: isMobile ? '22px' : '26px',
-                  height: isMobile ? '22px' : '26px',
-                  boxShadow: '0.5px 0.5px 2px rgba(0,0,0,0.5)',
-                  fontFamily: "'Segoe UI', monospace"
-                }}
-              >
-                <span 
-                  className="text-white"
-                  style={{
-                    fontSize: isMobile ? '11px' : '12px',
-                    fontWeight: 600
-                  }}
-                >
-                  {idx + 1}
-                </span>
-              </div>
-            </div>
+        {activeCategories.map((category, index) => (
+          <SwiperSlide key={category.id} className="h-auto">
+            {renderSlide ? renderSlide(category, index) : defaultRenderSlide(category, index)}
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {/* Custom Navigation Buttons */}
-      <button 
-        className="swiper-button-prev absolute left-1 md:left-2 top-1/2 transform -translate-y-1/2 z-50 bg-black/40 backdrop-blur-sm p-1.5 md:p-2 rounded-full hover:bg-black/60 transition-all duration-200 active:scale-95"
-        style={{
-          boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.5)',
-          border: 'none',
-          outline: 'none',
-          cursor: 'pointer',
-          fontFamily: "'Segoe UI', sans-serif"
-        }}
-      >
-        <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-white" />
-      </button>
-      
-      <button 
-        className="swiper-button-next absolute right-1 md:right-2 top-1/2 transform -translate-y-1/2 z-50 bg-black/40 backdrop-blur-sm p-1.5 md:p-2 rounded-full hover:bg-black/60 transition-all duration-200 active:scale-95"
-        style={{
-          boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.5)',
-          border: 'none',
-          outline: 'none',
-          cursor: 'pointer',
-          fontFamily: "'Segoe UI', sans-serif"
-        }}
-      >
-        <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
-      </button>
+      {navigation && activeCategories.length > (typeof slidesPerView === 'number' ? slidesPerView : 1) && (
+        <>
+          <button
+            onClick={handlePrev}
+            className="swiper-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Previous slide"
+            disabled={!loop && swiperRef.current?.isBeginning}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button
+            onClick={handleNext}
+            className="swiper-button-next absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label="Next slide"
+            disabled={!loop && swiperRef.current?.isEnd}
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </>
+      )}
 
-      {/* Global Styles for Swiper */}
-      <style jsx global>{`
-        .swiper {
-          width: 100%;
-          padding-top: ${isMobile ? '8px' : '15px'} !important;
-          padding-bottom: ${isMobile ? '25px' : '35px'} !important;
-          font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-        }
-        
-        .swiper-wrapper {
-          align-items: center;
-          padding: ${isMobile ? '4px 0' : '8px 0'};
-        }
-        
-        .swiper-slide {
-          transition: all 0.3s ease;
-          opacity: 0.7;
-          transform: scale(0.92);
-          filter: brightness(0.85);
-        }
-        
-        .swiper-slide-active {
-          opacity: 1;
-          transform: scale(1);
-          filter: brightness(1);
-          z-index: 10 !important;
-        }
-        
-        .swiper-slide-next,
-        .swiper-slide-prev {
-          opacity: 0.85;
-          transform: scale(0.96);
-          filter: brightness(0.9);
-          z-index: 5 !important;
-        }
-        
-        /* Navigation buttons */
-        .swiper-button-disabled {
-          opacity: 0.2;
-          pointer-events: none;
-        }
-        
-        /* Remove default navigation styles */
-        .swiper-button-next:after,
-        .swiper-button-prev:after {
-          content: none !important;
-        }
-        
-        /* Mobile optimizations */
-        @media (max-width: 767px) {
-          .swiper-3d .swiper-slide-shadow-left,
-          .swiper-3d .swiper-slide-shadow-right {
-            background-image: none !important;
-          }
-          
-          .swiper-slide {
-            height: auto !important;
-            min-height: 180px;
-          }
-        }
-        
-        /* Coverflow effect adjustments */
-        .swiper-3d {
-          perspective: ${isMobile ? '1000px' : '1200px'} !important;
-        }
-        
-        .swiper-slide-shadow-left,
-        .swiper-slide-shadow-right {
-          background-image: linear-gradient(
-            to right,
-            rgba(0, 0, 0, 0.15),
-            rgba(0, 0, 0, 0)
-          ) !important;
-          border-radius: 6px;
-        }
-        
-        /* Consistent font sizing */
-        * {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-      `}</style>
+      {pagination && (
+        <div className="swiper-pagination mt-6 !relative !bottom-0"></div>
+      )}
     </div>
   );
 };
 
-export default HeroCarousel3D;
+export default SwiperComponent;
