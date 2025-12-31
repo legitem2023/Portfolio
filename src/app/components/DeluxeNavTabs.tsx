@@ -1,6 +1,6 @@
 'use client';
 import Ads from './Ads/Ads'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Add useRef
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
@@ -55,6 +55,7 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const pathname = usePathname(); // Get current path
@@ -190,7 +191,11 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full mx-auto font-sans z-10">
-       <div className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1">
+       {/* Add ref to the container */}
+       <div 
+         ref={containerRef}
+         className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1"
+       >
         {tabs.slice(0,5).map((tab) => (
           <button
             key={tab.id}
@@ -221,6 +226,24 @@ const DeluxeNavTabs: React.FC = () => {
         }
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
+        }
+        
+        /* Invert button colors when container is fixed */
+        .fixed\:md\:static[style*="position: fixed"] button,
+        .fixed\:md\:static:has(style*="position: fixed") button,
+        div[class*="fixed bottom-0"]:not([class*="static"]) button {
+          filter: invert(1);
+        }
+        
+        /* Alternative selector - when container has fixed positioning */
+        div.fixed:not(.md\:static) button,
+        .fixed:not([class*="static"]) button {
+          filter: invert(1);
+        }
+        
+        /* Target the specific fixed container */
+        .fixed.bottom-0.left-0.right-0.w-full button {
+          filter: invert(1);
         }
       `}</style>
     </div>
