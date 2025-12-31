@@ -1,11 +1,10 @@
 // components/HeroCarousel3D.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectCoverflow } from 'swiper/modules';
+import { Navigation, Autoplay, EffectCoverflow } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
 
 interface HeroSlide {
@@ -54,16 +53,11 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
         autoplay={{ 
           delay: 2500, 
           disableOnInteraction: false,
-          pauseOnMouseEnter: true 
         }}
         loop={true}
         navigation={{
           nextEl: '.swiper-button-next',
           prevEl: '.swiper-button-prev',
-        }}
-        pagination={{ 
-          dynamicBullets: true,
-          clickable: true 
         }}
         coverflowEffect={{
           rotate: 0,
@@ -72,7 +66,7 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
           modifier: isMobile ? 3.5 : 3.8,
           slideShadows: false,
         }}
-        modules={[Autoplay, EffectCoverflow, Pagination, Navigation]}
+        modules={[Autoplay, EffectCoverflow, Navigation]}
         style={{ width: "100%" }}
         breakpoints={{
           320: {
@@ -282,33 +276,6 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
         <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-white" />
       </button>
 
-      {/* Slide Indicator Dots */}
-      <div 
-        className="flex justify-center mt-3 md:mt-4 space-x-1.5"
-        style={{
-          fontFamily: "'Segoe UI', sans-serif"
-        }}
-      >
-        {slides.slice(0, 5).map((_, index) => (
-          <button
-            key={index}
-            onClick={() => swiperRef.current?.swiper.slideTo(index)}
-            className="rounded-full transition-colors duration-200"
-            style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: 'rgba(255, 255, 255, 0.4)',
-              border: 'none',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.8)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.4)'}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
-
       {/* Global Styles for Swiper */}
       <style jsx global>{`
         .swiper {
@@ -316,7 +283,6 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
           padding-top: ${isMobile ? '8px' : '15px'} !important;
           padding-bottom: ${isMobile ? '25px' : '35px'} !important;
           font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-          background-color:'#ff9999';
         }
         
         .swiper-wrapper {
@@ -344,25 +310,6 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
           transform: scale(0.96);
           filter: brightness(0.9);
           z-index: 5 !important;
-        }
-        
-        /* Pagination bullets */
-        .swiper-pagination {
-          bottom: ${isMobile ? '4px' : '8px'} !important;
-        }
-        
-        .swiper-pagination-bullet {
-          background: rgba(255, 255, 255, 0.5) !important;
-          opacity: 1 !important;
-          width: ${isMobile ? '5px' : '7px'} !important;
-          height: ${isMobile ? '5px' : '7px'} !important;
-          transition: all 0.2s ease !important;
-        }
-        
-        .swiper-pagination-bullet-active {
-          background: white !important;
-          transform: scale(1.4);
-          box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
         }
         
         /* Navigation buttons */
