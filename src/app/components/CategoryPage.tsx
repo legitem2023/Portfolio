@@ -55,16 +55,39 @@ const CategoryPage: React.FC = () => {
     dispatch(setCategoryFilter(categoryName));
   };
 
-  // Loading state - only show loader when loading from GraphQL
-  if (loading) {
+  // Shimmer Loading Component
+  const ShimmerLoader = () => {
     return (
       <div className="container mx-auto p-0">
-        <div className="flex justify-center items-center h-40">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2">Loading categories...</span>
+        <div className="grid grid-cols-4 gap-4 p-4">
+          {[...Array(4)].map((_, index) => (
+            <div 
+              key={index} 
+              className="bg-white shadow-sm border border-gray-100 overflow-hidden"
+            >
+              {/* Image shimmer */}
+              <div className="relative aspect-[1/1] bg-gray-200">
+                <div className="shimmer absolute inset-0"></div>
+              </div>
+              
+              {/* Content shimmer */}
+              <div className="p-1.5">
+                <div className="h-4 bg-gray-200 rounded mb-1 shimmer"></div>
+                <div className="flex justify-between items-center mt-0.5">
+                  <div className="h-3 w-12 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-3 w-3 bg-gray-200 rounded shimmer"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
+  };
+
+  // Loading state - only show loader when loading from GraphQL
+  if (loading) {
+    return <ShimmerLoader />;
   }
 
   // Error state - only show error when GraphQL fails
