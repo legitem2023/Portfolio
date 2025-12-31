@@ -55,8 +55,6 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
-  const [isSliding, setIsSliding] = useState(false); // Add sliding state
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right'); // Track slide direction
   
   const router = useRouter();
   const pathname = usePathname(); // Get current path
@@ -90,30 +88,16 @@ const DeluxeNavTabs: React.FC = () => {
   }, []);
   
   const handleTabClick = (tabId: number) => {
-    // Determine slide direction based on tab order
-    if (tabId > activeIndex) {
-      setSlideDirection('left');
-    } else {
-      setSlideDirection('right');
-    }
-    
-    // Start sliding animation
-    setIsSliding(true);
-    
     // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
       router.push('/');
       // Optionally, you can set a timeout to dispatch the active index after navigation
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
-        // End sliding animation after a short delay
-        setTimeout(() => setIsSliding(false), 300);
       }, 100);
     } else {
       // If already on homepage, update the active tab
       dispatch(setActiveIndex(tabId));
-      // End sliding animation after a short delay
-      setTimeout(() => setIsSliding(false), 300);
     }
   };
 
@@ -226,11 +210,12 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      {/* Add sliding container wrapper */}
-      <div className={`relative bg-white shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 ease-in-out ${
-        isSliding ? (slideDirection === 'left' ? 'slide-out-left' : 'slide-out-right') : ''
-      }`}>
-        <div className={isSliding ? (slideDirection === 'left' ? 'slide-in-right' : 'slide-in-left') : ''}>
+      {/* Smoother sliding content */}
+      <div className="relative bg-white shadow-lg border border-gray-200 overflow-hidden min-h-[500px]">
+        <div 
+          key={activeIndex}
+          className="w-full animate-slide-in"
+        >
           {tabs.find((tab) => tab.id === activeIndex)?.content}
         </div>
       </div>
@@ -244,72 +229,20 @@ const DeluxeNavTabs: React.FC = () => {
           display: none;
         }
         
-        /* Facebook-like sliding animations */
-        .slide-out-left {
-          animation: slideOutLeft 0.5s ease-in-out forwards;
-        }
-        
-        .slide-out-right {
-          animation: slideOutRight 0.5s ease-in-out forwards;
-        }
-        
-        .slide-in-left {
-          animation: slideInLeft 0.5s ease-in-out forwards;
-        }
-        
-        .slide-in-right {
-          animation: slideInRight 0.5s ease-in-out forwards;
-        }
-        
-        @keyframes slideOutLeft {
+        /* Smooth slide animation */
+        @keyframes slideIn {
           0% {
-            transform: translateX(0);
-            
+            opacity: 0;
+            transform: translateY(15px);
           }
           100% {
-            transform: translateX(-100%);
-            
+            opacity: 1;
+            transform: translateY(0);
           }
         }
         
-        @keyframes slideOutRight {
-          0% {
-            transform: translateX(0);
-            
-          }
-          100% {
-            transform: translateX(100%);
-            
-          }
-        }
-        
-        @keyframes slideInLeft {
-          0% {
-            transform: translateX(-100%);
-            
-          }
-          100% {
-            transform: translateX(0);
-            
-          }
-        }
-        
-        @keyframes slideInRight {
-          0% {
-            transform: translateX(100%);
-            
-          }
-          100% {
-            transform: translateX(0);
-            
-          }
-        }
-        
-        /* Smooth fade transition for non-sliding content */
-        .transition-all {
-          transition-property: all;
-          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-          transition-duration: 500ms;
+        .animate-slide-in {
+          animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
       `}</style>
     </div>
