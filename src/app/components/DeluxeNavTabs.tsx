@@ -245,7 +245,7 @@ const DeluxeNavTabs: React.FC = () => {
         
         /* Smoother slide animations with better easing */
         .slide-transition {
-          animation-duration: 0.4s;
+          animation-duration: 0.5s;
           animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
           animation-fill-mode: both;
         }
