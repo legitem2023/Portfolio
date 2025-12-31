@@ -59,7 +59,7 @@ const CategoryPage: React.FC = () => {
   const ShimmerLoader = () => {
     return (
       <div className="container mx-auto p-0">
-        <div className="grid grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-4 gap-4 p-0">
           {[...Array(4)].map((_, index) => (
             <div 
               key={index} 
