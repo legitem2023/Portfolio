@@ -19,13 +19,13 @@
 }
 .card {
   background: radial-gradient(
-    ellipse at center, 
-    #fff6f2 0%,
-    #fde3d9 34%, 
-    #fcd3c6 50%, 
-    #fbc4b5 67%, 
-    #f7b2a4 78%, 
-    #f3a093 100%
+    ellipse at center,
+    #ffffff 0%,
+    #f5f0ff 30%,
+    #e9ddff 50%,
+    #dcc9ff 65%,
+    #cbb2f5 80%,
+    #b89ae6 100%
   );
 }
 .transform-style-preserve-3d {
