@@ -286,22 +286,22 @@ const DeluxeNavTabs: React.FC = () => {
         @keyframes slideInLeft {
           0% {
             transform: translateX(-100%);
-            opacity: 0.3;
+            
           }
           100% {
             transform: translateX(0);
-            opacity: 1;
+            
           }
         }
         
         @keyframes slideInRight {
           0% {
             transform: translateX(100%);
-            opacity: 0.3;
+            
           }
           100% {
             transform: translateX(0);
-            opacity: 1;
+            
           }
         }
         
@@ -309,7 +309,7 @@ const DeluxeNavTabs: React.FC = () => {
         .transition-all {
           transition-property: all;
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-          transition-duration: 300ms;
+          transition-duration: 500ms;
         }
       `}</style>
     </div>
