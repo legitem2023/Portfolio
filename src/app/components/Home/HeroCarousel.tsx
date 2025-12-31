@@ -1,5 +1,6 @@
 // components/HeroCarousel3D.tsx
 import React, { useState, useEffect, useRef } from 'react';
+import Image from 'next/image'; // Add this import
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Autoplay, EffectCoverflow } from 'swiper/modules';
 import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
@@ -147,15 +148,16 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
                 boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.4)'
               }}
             >
-              {/* Background Image */}
-              <img
+              {/* Background Image - Updated to use next/image */}
+              <Image
                 src={slide.image || '/NoImage.webp'}
                 alt={slide.title}
+                fill
+                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 style={{
-                  width: '100%',
-                  height: '100%',
                   objectFit: 'cover',
                 }}
+                priority={idx === 0}
               />
               
               {/* Gradient Overlay - More subtle */}
