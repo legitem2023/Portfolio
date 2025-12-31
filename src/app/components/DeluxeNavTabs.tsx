@@ -1,6 +1,6 @@
 'use client';
 import Ads from './Ads/Ads'
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
@@ -55,6 +55,9 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
+  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
+  const [prevIndex, setPrevIndex] = useState(activeIndex);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const pathname = usePathname(); // Get current path
@@ -86,6 +89,14 @@ const DeluxeNavTabs: React.FC = () => {
     };
     getRole();
   }, []);
+  
+  useEffect(() => {
+    // Determine slide direction when activeIndex changes
+    if (activeIndex !== prevIndex) {
+      setSlideDirection(activeIndex > prevIndex ? 'left' : 'right');
+      setPrevIndex(activeIndex);
+    }
+  }, [activeIndex, prevIndex]);
   
   const handleTabClick = (tabId: number) => {
     // If not on homepage, redirect to homepage first
@@ -211,10 +222,13 @@ const DeluxeNavTabs: React.FC = () => {
       <InstallPWAButton/>
       
       {/* Smoother sliding content */}
-      <div className="relative bg-white shadow-lg border border-gray-200 overflow-hidden min-h-[500px]">
+      <div 
+        ref={contentContainerRef}
+        className="relative bg-white shadow-lg border border-gray-200 overflow-hidden"
+      >
         <div 
           key={activeIndex}
-          className="w-full animate-slide-in"
+          className={`slide-transition ${slideDirection === 'left' ? 'slide-in-left' : 'slide-in-right'}`}
         >
           {tabs.find((tab) => tab.id === activeIndex)?.content}
         </div>
@@ -229,20 +243,59 @@ const DeluxeNavTabs: React.FC = () => {
           display: none;
         }
         
-        /* Smooth slide animation */
-        @keyframes slideIn {
+        /* Smoother slide animations with better easing */
+        .slide-transition {
+          animation-duration: 0.4s;
+          animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation-fill-mode: both;
+        }
+        
+        @keyframes slideInLeft {
           0% {
-            opacity: 0;
-            transform: translateY(15px);
+            transform: translateX(100%);
+            opacity: 0.7;
           }
           100% {
+            transform: translateX(0);
             opacity: 1;
-            transform: translateY(0);
           }
         }
         
-        .animate-slide-in {
-          animation: slideIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        @keyframes slideInRight {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0.7;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        
+        .slide-in-left {
+          animation-name: slideInLeft;
+        }
+        
+        .slide-in-right {
+          animation-name: slideInRight;
+        }
+        
+        /* Optional: Add subtle fade for smoother transitions */
+        .slide-transition::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(
+            90deg,
+            rgba(255,255,255,0.05) 0%,
+            rgba(255,255,255,0) 50%,
+            rgba(255,255,255,0.05) 100%
+          );
+          pointer-events: none;
+          z-index: 1;
         }
       `}</style>
     </div>
