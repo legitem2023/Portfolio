@@ -149,7 +149,7 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
             >
               {/* Background Image */}
               <img
-                src={slide.image}
+                src={slide.image || '/NoImage.webp'}
                 alt={slide.title}
                 style={{
                   width: '100%',
