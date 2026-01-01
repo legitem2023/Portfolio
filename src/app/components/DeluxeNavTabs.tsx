@@ -235,89 +235,51 @@ const DeluxeNavTabs: React.FC = () => {
       </div>
 
       <style jsx>{`
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        
-        /* Smoother slide animations with better easing */
-        .slide-transition {
-          animation-duration: 0.4s;
-          animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-          animation-fill-mode: both;
-        }
-        
-        @keyframes slideInLeft {
-          0% {
-            transform: translateX(100%);
-            opacity: 0.7;
-          }
-          100% {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        @keyframes slideInRight {
-          0% {
-            transform: translateX(-100%);
-            opacity: 0.7;
-          }
-          100% {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-        
-        .slide-in-left {
-          animation-name: slideInLeft;
-        }
-        
-        .slide-in-right {
-          animation-name: slideInRight;
-        }
-        
-        /* KEY FIX: Preserve transforms for modals */
-        .preserve-transform {
-          /* Create a new stacking context */
-          isolation: isolate;
-        }
-        
-        /* Prevent fixed elements from being affected by parent transforms */
-        .slide-transition :global([data-modal]),
-        .slide-transition :global(.modal),
-        .slide-transition :global(.fixed) {
-          transform: none !important;
-        }
-        
-        /* Or more specific if you know your modal classes */
-        .slide-transition :global(.fixed),
-        .slide-transition :global(.modal-container),
-        .slide-transition :global([data-fixed="true"]) {
-          transform: none !important;
-        }
-        
-        /* Optional: Add subtle fade for smoother transitions */
-        .slide-transition::before {
-          content: '';
-          
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(
-            90deg,
-            rgba(255,255,255,0.05) 0%,
-            rgba(255,255,255,0) 50%,
-            rgba(255,255,255,0.05) 100%
-          );
-          pointer-events: none;
-          z-index: 1;
-        }
-      `}</style>
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Slide animation using clip-path instead of transform */
+  .slide-transition {
+    animation-duration: 0.4s;
+    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+    animation-fill-mode: both;
+  }
+  
+  @keyframes slideInLeft {
+    0% {
+      clip-path: inset(0 0 0 100%);
+      opacity: 0.7;
+    }
+    100% {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideInRight {
+    0% {
+      clip-path: inset(0 100% 0 0);
+      opacity: 0.7;
+    }
+    100% {
+      clip-path: inset(0 0 0 0);
+      opacity: 1;
+    }
+  }
+  
+  .slide-in-left {
+    animation-name: slideInLeft;
+  }
+  
+  .slide-in-right {
+    animation-name: slideInRight;
+  }
+`}</style>
     </div>
   );
 };
