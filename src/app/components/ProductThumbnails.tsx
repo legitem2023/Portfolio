@@ -80,7 +80,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
           const uniqueColors = getUniqueColors(product.variants);
           
           return (
-            <div key={product.id} className="group relative bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col h-full">
+            <div key={product.id} className="group bg-white rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 flex flex-col h-full">
               {/* Sale/New Badge */}
               {(product.onSale || product.isNew) && (
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
