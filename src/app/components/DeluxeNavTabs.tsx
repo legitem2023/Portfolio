@@ -1,6 +1,6 @@
 'use client';
 import Ads from './Ads/Ads'
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import UserProfile from './UserProfile';
@@ -55,9 +55,6 @@ const DeluxeNavTabs: React.FC = () => {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
-  const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('right');
-  const [prevIndex, setPrevIndex] = useState(activeIndex);
-  const contentContainerRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const pathname = usePathname(); // Get current path
@@ -90,14 +87,6 @@ const DeluxeNavTabs: React.FC = () => {
     getRole();
   }, []);
   
-  useEffect(() => {
-    // Determine slide direction when activeIndex changes
-    if (activeIndex !== prevIndex) {
-      setSlideDirection(activeIndex > prevIndex ? 'left' : 'right');
-      setPrevIndex(activeIndex);
-    }
-  }, [activeIndex, prevIndex]);
-  
   const handleTabClick = (tabId: number) => {
     // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
@@ -107,7 +96,7 @@ const DeluxeNavTabs: React.FC = () => {
         dispatch(setActiveIndex(tabId));
       }, 100);
     } else {
-      // If already on homepage, update the active tab
+      // If already on homepage, just update the active tab
       dispatch(setActiveIndex(tabId));
     }
   };
@@ -201,7 +190,7 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full mx-auto font-sans z-10">
-       <div className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-100 to-white z-50 md:z-20 md:mb-1">
+       <div className="fixed md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar bg-gradient-to-t from-violet-50 to-white z-50 md:z-20 md:mb-1">
         {tabs.slice(0,5).map((tab) => (
           <button
             key={tab.id}
@@ -221,65 +210,19 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      {/* Modified content container */}
-      <div 
-        ref={contentContainerRef}
-        className="bg-white shadow-lg border border-gray-200 preserve-transform"
-      >
-        <div 
-          key={activeIndex}
-          className={`slide-transition ${slideDirection === 'left' ? 'slide-in-left' : 'slide-in-right'}`}
-        >
-          {tabs.find((tab) => tab.id === activeIndex)?.content}
-        </div>
+      <div className="relative bg-white shadow-lg border border-gray-200 overflow-hidden">
+        {tabs.find((tab) => tab.id === activeIndex)?.content}
       </div>
 
       <style jsx>{`
-  .hide-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .hide-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Slide animation using clip-path instead of transform */
-  .slide-transition {
-    animation-duration: 0.4s;
-    animation-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-    animation-fill-mode: both;
-  }
-  
-  @keyframes slideInLeft {
-    0% {
-      clip-path: inset(0 0 0 100%);
-      opacity: 0.7;
-    }
-    100% {
-      clip-path: inset(0 0 0 0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slideInRight {
-    0% {
-      clip-path: inset(0 100% 0 0);
-      opacity: 0.7;
-    }
-    100% {
-      clip-path: inset(0 0 0 0);
-      opacity: 1;
-    }
-  }
-  
-  .slide-in-left {
-    animation-name: slideInLeft;
-  }
-  
-  .slide-in-right {
-    animation-name: slideInRight;
-  }
-`}</style>
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 };
