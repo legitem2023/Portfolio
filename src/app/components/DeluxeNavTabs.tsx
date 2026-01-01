@@ -235,14 +235,14 @@ const DeluxeNavTabs: React.FC = () => {
       </div>
 
       <style jsx>{`
-        .hide-scrollbar {
+       /* .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }
-        
+        */
         /* Smoother slide animations with better easing */
         .slide-transition {
           animation-duration: 0.5s;
