@@ -323,32 +323,26 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   return (
     <div 
-      className={`fixed h-[100vh] top-0 bottom-0 m-auto inset-0 z-50 flex items-start justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex items-end justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
         isAnimating ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={handleOverlayClick}
     >
+      {/* The modal content container - 80% height at bottom */}
       <div 
         className={`
           relative bg-white w-full max-w-6xl
-          ${isMobile 
-            ? 'h-full rounded-none' 
-            : 'h-[90vh] mt-8 rounded-2xl max-h-[calc(100vh-4rem)]'
-          }
+          h-[80vh] max-h-[80vh]
+          rounded-t-2xl md:rounded-2xl
           overflow-y-auto no-scrollbar
           transition-transform duration-300 ease-out
-          ${isMobile 
-            ? (isAnimating ? 'translate-y-0' : 'translate-y-full') 
-            : (isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0')
-          }
+          ${isAnimating ? 'translate-y-0' : 'translate-y-full'}
         `}
       >
-        {/* Drag handle for mobile - Only show if you want bottom sheet behavior */}
-        {isMobile && (
-          <div className="sticky top-0 left-0 right-0 flex justify-center py-2 z-10 bg-white">
-            <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
-          </div>
-        )}
+        {/* Drag handle for mobile */}
+        <div className="sticky top-0 left-0 right-0 flex justify-center py-2 z-10 bg-white">
+          <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+        </div>
         
         {/* Close Button */}
         <button
@@ -362,7 +356,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} gap-4 md:gap-8 p-4 md:p-6`}>
           {/* Product Media Section with Tabs */}
-          <div className={`${isMobile ? 'h-[50vh]' : 'h-full'}`}>
+          <div className="h-full">
             <LuxuryTabs 
               tabs={productTabs} 
               defaultTab="gallery"
@@ -370,7 +364,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           </div>
 
           {/* Product Details */}
-          <div className={`py-2 md:py-4 ${isMobile ? 'pb-20' : ''}`}>
+          <div className="py-2 md:py-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{product?.name || 'Product Name'}</h2>
             
             {/* Variant-specific details */}
