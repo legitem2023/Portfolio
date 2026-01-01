@@ -103,7 +103,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           <button
             key={index}
             onClick={() => setSelectedImage(index)}
-            className={`aspect-[1/1]  h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
+            className={`aspect-[1/1] h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
               selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
             }`}
           >
@@ -323,23 +323,27 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   return (
     <div 
-      className={`fixed top-0 inset-0 z-50 flex items-end md:items-center justify-end md:justify-center p-0 md:p-4 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex items-start justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
         isAnimating ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={handleOverlayClick}
     >
       <div 
         className={`
-          relative bg-white w-full md:max-w-4xl md:rounded-2xl md:max-h-[90vh] 
-          h-[80vh] overflow-y-auto no-scrollbar rounded-t-2xl
+          relative bg-white w-full max-w-6xl
+          ${isMobile 
+            ? 'h-full rounded-none' 
+            : 'h-[90vh] mt-8 rounded-2xl max-h-[calc(100vh-4rem)]'
+          }
+          overflow-y-auto no-scrollbar
           transition-transform duration-300 ease-out
           ${isMobile 
             ? (isAnimating ? 'translate-y-0' : 'translate-y-full') 
-            : (isAnimating ? 'scale-100' : 'scale-95 opacity-0')
+            : (isAnimating ? 'scale-100 opacity-100' : 'scale-95 opacity-0')
           }
         `}
       >
-        {/* Drag handle for mobile */}
+        {/* Drag handle for mobile - Only show if you want bottom sheet behavior */}
         {isMobile && (
           <div className="sticky top-0 left-0 right-0 flex justify-center py-2 z-10 bg-white">
             <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
@@ -349,16 +353,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 md:top-4 md:right-4 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+          className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 p-4 md:p-6">
+        <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} gap-4 md:gap-8 p-4 md:p-6`}>
           {/* Product Media Section with Tabs */}
-          <div className="space-y-4">
+          <div className={`${isMobile ? 'h-[50vh]' : 'h-full'}`}>
             <LuxuryTabs 
               tabs={productTabs} 
               defaultTab="gallery"
@@ -366,7 +370,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           </div>
 
           {/* Product Details */}
-          <div className="py-2 md:py-4">
+          <div className={`py-2 md:py-4 ${isMobile ? 'pb-20' : ''}`}>
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{product?.name || 'Product Name'}</h2>
             
             {/* Variant-specific details */}
