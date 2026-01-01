@@ -221,10 +221,10 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      {/* Smoother sliding content */}
+      {/* Modified content container */}
       <div 
         ref={contentContainerRef}
-        className="bg-white shadow-lg border border-gray-200"
+        className="bg-white shadow-lg border border-gray-200 preserve-transform"
       >
         <div 
           key={activeIndex}
@@ -278,6 +278,26 @@ const DeluxeNavTabs: React.FC = () => {
         
         .slide-in-right {
           animation-name: slideInRight;
+        }
+        
+        /* KEY FIX: Preserve transforms for modals */
+        .preserve-transform {
+          /* Create a new stacking context */
+          isolation: isolate;
+        }
+        
+        /* Prevent fixed elements from being affected by parent transforms */
+        .slide-transition :global([data-modal]),
+        .slide-transition :global(.modal),
+        .slide-transition :global(.fixed) {
+          transform: none !important;
+        }
+        
+        /* Or more specific if you know your modal classes */
+        .slide-transition :global(.fixed),
+        .slide-transition :global(.modal-container),
+        .slide-transition :global([data-fixed="true"]) {
+          transform: none !important;
         }
         
         /* Optional: Add subtle fade for smoother transitions */
