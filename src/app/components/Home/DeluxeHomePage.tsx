@@ -9,6 +9,7 @@ import MobileMenu from './MobileMenu';
 import HeroCarousel from './HeroCarousel';
 import FeaturedCategories from './FeaturedCategories';
 import FeaturedProducts from './FeaturedProducts';
+import VisitorCounter from '../VisitorCounter';
 
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -121,6 +122,7 @@ const DeluxeHomePage: React.FC = () => {
       <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       <main>
+        <VisitorCounter/>
         <HeroCarousel slides={heroSlides} />
         <FeaturedCategories 
           categories={categories} 
