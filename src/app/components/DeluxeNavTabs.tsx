@@ -224,7 +224,7 @@ const DeluxeNavTabs: React.FC = () => {
       {/* Smoother sliding content */}
       <div 
         ref={contentContainerRef}
-        className="relative bg-white shadow-lg border border-gray-200 overflow-hidden"
+        className="bg-white shadow-lg border border-gray-200"
       >
         <div 
           key={activeIndex}
