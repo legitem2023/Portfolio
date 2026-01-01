@@ -358,7 +358,7 @@ const handleTabClick = (tabId: number) => {
           </div>
         </>
       )}
-      <VisitorCounter/>
+      {/*<VisitorCounter/>*/}
       
       {/*<Ads/>*/}
     </div>
