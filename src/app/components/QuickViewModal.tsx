@@ -73,75 +73,84 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     return variantImages.length > 0 ? variantImages : [product.image || '/NoImage.webp'];
   }, [product, variants, selectedVariant]);
 
+  // Get safe image source
+  const getImageSrc = (index: number) => {
+    const image = additionalImages[index];
+    return image || '/NoImage.webp';
+  };
+
   // 3D Model Component
-  const ModelViewer3D = () => (
+  const ModelViewer3D = useCallback(() => (
     <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg">
       <div className="relative w-full h-64 md:h-80 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-        {/* Placeholder for 3D model - Replace with your actual 3D viewer */}
         <div className="text-center relative">
           <ModelViewer data={product?.model || ''}/>
         </div>
       </div>
     </div>
-  );
+  ), [product?.model]);
 
   // Image Gallery Component
-  const ImageGallery = () => (
-    <div className="space-y-4">
-      <div className="relative flex items-center justify-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
-        <Image
-          src={additionalImages[selectedImage]}
-          alt={product?.name || 'Product'}
-          className="h-full object-cover aspect-[1/1]"
-          width={500}
-          height={500}
-          quality={85}
-          onError={(e) => {
-            e.currentTarget.src = '/NoImage.webp';
-          }}
-        />
-        
-        {/* Sale/New Badge */}
-        {(product?.onSale || product?.isNew) && (
-          <div className="absolute top-3 left-3 flex space-x-2">
-            {product.onSale && (
-              <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
-            )}
-            {product.isNew && (
-              <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Thumbnail Gallery */}
-      <div className="grid grid-cols-4 gap-2">
-        {additionalImages.map((image, index) => (
-          <button
-            key={index}
-            onClick={() => setSelectedImage(index)}
-            className={`aspect-[1/1] h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
-              selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
-            }`}
-          >
-            <div className="relative w-full h-full">
-              <Image
-                src={image}
-                alt={`${product?.name || 'Product'} view ${index + 1}`}
-                className="w-full h-full aspect-[1/1] object-cover"
-                fill
-                sizes="(max-width: 768px) 20vw, 25vw"
-                quality={75}
-                onError={(e) => {
-                  e.currentTarget.src = '/NoImage.webp';
-                }}
-              />
+  const ImageGallery = useCallback(() => {
+    const currentImage = getImageSrc(selectedImage);
+    
+    return (
+      <div className="space-y-4">
+        <div className="relative flex items-center justify-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
+          <Image
+            src={currentImage}
+            alt={product?.name || 'Product'}
+            className="h-full object-cover aspect-[1/1]"
+            width={500}
+            height={500}
+            quality={85}
+            onError={(e) => {
+              e.currentTarget.src = '/NoImage.webp';
+            }}
+          />
+          
+          {/* Sale/New Badge */}
+          {(product?.onSale || product?.isNew) && (
+            <div className="absolute top-3 left-3 flex space-x-2">
+              {product.onSale && (
+                <span className="px-2 py-1 text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
+              )}
+              {product.isNew && (
+                <span className="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
+              )}
             </div>
-          </button>
-        ))}
+          )}
+        </div>
+        
+        {/* Thumbnail Gallery */}
+        <div className="grid grid-cols-4 gap-2">
+          {additionalImages.map((image, index) => (
+            <button
+              key={index}
+              onClick={() => setSelectedImage(index)}
+              className={`aspect-[1/1] h-16 md:h-20 bg-gray-100 rounded-md overflow-hidden border-2 transition-all ${
+                selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
+              }`}
+            >
+              <div className="relative w-full h-full">
+                <Image
+                  src={image || '/NoImage.webp'}
+                  alt={`${product?.name || 'Product'} view ${index + 1}`}
+                  className="w-full h-full aspect-[1/1] object-cover"
+                  fill
+                  sizes="(max-width: 768px) 20vw, 25vw"
+                  quality={75}
+                  onError={(e) => {
+                    e.currentTarget.src = '/NoImage.webp';
+                  }}
+                />
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }, [additionalImages, selectedImage, product]);
 
   // Define tabs for LuxuryTabs component
   const productTabs = useMemo(() => {
@@ -163,7 +172,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     ];
 
     return tabs;
-  }, [additionalImages, selectedImage, product]);
+  }, [ImageGallery, ModelViewer3D, product?.model]);
 
   // Update image when variant changes
   useEffect(() => {
@@ -285,7 +294,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
-        image: additionalImages[0] || product.image || '/NoImage.webp',
+        image: getImageSrc(0) || product.image || '/NoImage.webp',
         quantity: quantity,
         color: selectedColor || 'Unknown',
         size: selectedSize || 'Unknown',
@@ -362,6 +371,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
+          aria-label="Close modal"
         >
           <X className="h-6 w-6 text-gray-600" />
         </button>
@@ -486,6 +496,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                   onClick={decrementQuantity}
                   className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100 transition-colors"
                   disabled={quantity <= 1}
+                  aria-label="Decrease quantity"
                 >
                   <Minus className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
@@ -493,6 +504,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 <button
                   onClick={incrementQuantity}
                   className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100 transition-colors"
+                  aria-label="Increase quantity"
                 >
                   <Plus className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
@@ -513,7 +525,10 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 {selectedVariant ? 'Add to Cart' : 'Select Options'}
               </button>
-              <button className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
+              <button 
+                className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                aria-label="Add to wishlist"
+              >
                 <Heart className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
               </button>
             </div>
