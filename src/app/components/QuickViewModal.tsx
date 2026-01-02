@@ -1,6 +1,20 @@
 // components/QuickViewModal.tsx
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
+import Image from 'next/image';
+import { 
+  X, 
+  Star, 
+  Heart, 
+  ShoppingCart, 
+  Minus, 
+  Plus,
+  Image as ImageIcon,
+  Package,
+  Truck,
+  RefreshCw,
+  Shield
+} from 'lucide-react';
 import { addToCart } from '../../../Redux/cartSlice';
 import { Product, Variant } from '../../../types';
 import LuxuryTabs from './ui/LuxuryTabs';
@@ -75,10 +89,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const ImageGallery = () => (
     <div className="space-y-4">
       <div className="relative flex items-center justify-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
-        <img
+        <Image
           src={additionalImages[selectedImage]}
           alt={product?.name || 'Product'}
           className="h-full object-cover aspect-[1/1]"
+          width={500}
+          height={500}
+          quality={85}
           onError={(e) => {
             e.currentTarget.src = '/NoImage.webp';
           }}
@@ -107,14 +124,19 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               selectedImage === index ? 'border-amber-500 scale-105' : 'border-transparent hover:border-gray-300'
             }`}
           >
-            <img
-              src={image}
-              alt={`${product?.name || 'Product'} view ${index + 1}`}
-              className="w-full h-full aspect-[1/1] object-cover"
-              onError={(e) => {
-                e.currentTarget.src = '/NoImage.webp';
-              }}
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={image}
+                alt={`${product?.name || 'Product'} view ${index + 1}`}
+                className="w-full h-full aspect-[1/1] object-cover"
+                fill
+                sizes="(max-width: 768px) 20vw, 25vw"
+                quality={75}
+                onError={(e) => {
+                  e.currentTarget.src = '/NoImage.webp';
+                }}
+              />
+            </div>
           </button>
         ))}
       </div>
@@ -128,22 +150,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
       {
         id: 'gallery',
         label: 'Image Gallery',
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-        ),
+        icon: <ImageIcon className="w-4 h-4" />,
         content: <ImageGallery />
       },
       // Conditionally include the 3D View tab
       ...(product?.model ? [{
         id: '3d-view',
         label: '3D View',
-        icon: (
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-          </svg>
-        ),
+        icon: <Package className="w-4 h-4" />,
         content: <ModelViewer3D />
       }] : [])  // Empty array if no model
     ];
@@ -349,9 +363,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           onClick={onClose}
           className="absolute top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 transition-colors"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="h-6 w-6 text-gray-600" />
         </button>
 
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} gap-4 md:gap-8 p-4 md:p-6`}>
@@ -380,14 +392,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
             <div className="flex items-center mb-3 md:mb-4">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <svg
+                  <Star
                     key={star}
-                    className={`w-4 h-4 md:w-5 md:h-5 ${star <= Math.round(product?.rating || 0) ? 'text-amber-400' : 'text-gray-300'}`}
+                    className={`w-4 h-4 md:w-5 md:h-5 ${
+                      star <= Math.round(product?.rating || 0) 
+                        ? 'fill-amber-400 text-amber-400' 
+                        : 'text-gray-300'
+                    }`}
                     fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
+                  />
                 ))}
               </div>
               <span className="ml-2 text-xs md:text-sm text-gray-600">({product?.reviewCount || 0} reviews)</span>
@@ -474,18 +487,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                   className="p-2 border border-gray-300 rounded-l-md hover:bg-gray-100 transition-colors"
                   disabled={quantity <= 1}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                  </svg>
+                  <Minus className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
                 <span className="px-3 py-1 border-t border-b border-gray-300 text-center flex-1">{quantity}</span>
                 <button
                   onClick={incrementQuantity}
                   className="p-2 border border-gray-300 rounded-r-md hover:bg-gray-100 transition-colors"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
+                  <Plus className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
               </div>
             </div>
@@ -495,39 +504,50 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
               <button 
                 onClick={handleAddToCartClick}
                 disabled={!selectedVariant}
-                className={`flex-1 font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base ${
+                className={`flex items-center justify-center flex-1 font-medium py-3 px-4 md:px-6 rounded-md transition-colors text-sm md:text-base ${
                   selectedVariant 
                     ? 'bg-amber-600 hover:bg-amber-700 text-white' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
+                <ShoppingCart className="w-4 h-4 mr-2" />
                 {selectedVariant ? 'Add to Cart' : 'Select Options'}
               </button>
               <button className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 md:h-6 md:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <Heart className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
               </button>
             </div>
 
             {/* Additional Info */}
             <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
               <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
-                <div>
-                  <h4 className="font-medium text-gray-900">Free Shipping</h4>
-                  <p className="text-gray-600">On orders over ₱100</p>
+                <div className="flex items-start">
+                  <Truck className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Free Shipping</h4>
+                    <p className="text-gray-600">On orders over ₱100</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Returns</h4>
-                  <p className="text-gray-600">30-day money back guarantee</p>
+                <div className="flex items-start">
+                  <RefreshCw className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Returns</h4>
+                    <p className="text-gray-600">30-day money back guarantee</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Care</h4>
-                  <p className="text-gray-600">Machine wash cold</p>
+                <div className="flex items-start">
+                  <Shield className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Care</h4>
+                    <p className="text-gray-600">Machine wash cold</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Delivery</h4>
-                  <p className="text-gray-600">Within 2-3 business days</p>
+                <div className="flex items-start">
+                  <Package className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-medium text-gray-900">Delivery</h4>
+                    <p className="text-gray-600">Within 2-3 business days</p>
+                  </div>
                 </div>
               </div>
             </div>
