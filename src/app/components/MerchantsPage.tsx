@@ -6,6 +6,7 @@ import { gql } from '@apollo/client';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import CategoryPage from './CategoryPage';
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
   query GetUsers {
@@ -206,16 +207,7 @@ export default function MerchantsPage() {
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-2xl shadow-lg p-3 md:p-6 mb-6 md:mb-8 border border-purple-200">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
-            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  className="px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-purple-300 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-colors whitespace-nowrap text-sm md:text-base"
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+            <CategoryPage/>
             <div className="flex-1">
               <input
                 type="text"
