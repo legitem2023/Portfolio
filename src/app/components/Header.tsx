@@ -18,7 +18,11 @@ import {
   X, 
   ChevronRight,
   Bell,
-  LogOut
+  LogOut,
+  AlertCircle,
+  CheckCircle,
+  Info,
+  Clock
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
 
@@ -32,11 +36,13 @@ import { useAdDrawer } from './hooks/useAdDrawer';
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const bellRef = useRef<HTMLDivElement>(null);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -48,6 +54,42 @@ const Header: React.FC = () => {
   const { data: userData, loading: userLoading, networkStatus } = useQuery(USERS, {
     notifyOnNetworkStatusChange: true
   });
+
+  // Mock notifications data
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: 'New Message',
+      message: 'You have a new message from John Doe',
+      time: '5 minutes ago',
+      read: false,
+      type: 'message'
+    },
+    {
+      id: 2,
+      title: 'Order Shipped',
+      message: 'Your order #12345 has been shipped',
+      time: '2 hours ago',
+      read: false,
+      type: 'order'
+    },
+    {
+      id: 3,
+      title: 'Promotion',
+      message: 'Special 20% off on all products this weekend',
+      time: '1 day ago',
+      read: true,
+      type: 'promo'
+    },
+    {
+      id: 4,
+      title: 'Account Update',
+      message: 'Your profile information has been updated',
+      time: '2 days ago',
+      read: true,
+      type: 'info'
+    }
+  ]);
 
   // Check authentication status
   useEffect(() => {
@@ -105,6 +147,9 @@ const Header: React.FC = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
+        setIsBellPopupOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -122,6 +167,7 @@ const Header: React.FC = () => {
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsModalOpen(false);
+        setIsBellPopupOpen(false);
       }
     };
 
@@ -149,6 +195,63 @@ const Header: React.FC = () => {
       setIsModalOpen(true);
     } else {
       setIsDropdownOpen(!isDropdownOpen);
+    }
+  };
+
+  const handleBellButtonClick = () => {
+    if (isMobile()) {
+      // On mobile, show slide-up popup
+      setIsBellPopupOpen(!isBellPopupOpen);
+    } else {
+      // On desktop, also show slide-up popup
+      setIsBellPopupOpen(!isBellPopupOpen);
+      setIsDropdownOpen(false); // Close user dropdown if open
+    }
+  };
+
+  const markAsRead = (id: number) => {
+    setNotifications(notifications.map(notification => 
+      notification.id === id ? { ...notification, read: true } : notification
+    ));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  };
+
+  const deleteNotification = (id: number) => {
+    setNotifications(notifications.filter(notification => notification.id !== id));
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'message':
+        return <MessageCircle className="w-4 h-4" />;
+      case 'order':
+        return <ShoppingBag className="w-4 h-4" />;
+      case 'promo':
+        return <AlertCircle className="w-4 h-4" />;
+      case 'info':
+        return <Info className="w-4 h-4" />;
+      default:
+        return <Bell className="w-4 h-4" />;
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'message':
+        return 'bg-blue-100 text-blue-600';
+      case 'order':
+        return 'bg-green-100 text-green-600';
+      case 'promo':
+        return 'bg-purple-100 text-purple-600';
+      case 'info':
+        return 'bg-yellow-100 text-yellow-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
     }
   };
 
@@ -180,7 +283,8 @@ const Header: React.FC = () => {
       </div>
     );
   }*/
-const handleTabClick = (tabId: number) => {
+
+  const handleTabClick = (tabId: number) => {
     // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
       router.push('/');
@@ -211,60 +315,220 @@ const handleTabClick = (tabId: number) => {
             />
           </div>
              
-          <div className="z-20 h-[100%] flex items-center" ref={dropdownRef}>
-            <button
-              onClick={handleUserButtonClick}
-              className="mx-2 flex items-center text-sm focus:outline-none"
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <User className="w-5 h-5 text-indigo-600" />
-              </div>
-            </button>
-            <button
-              onClick={handleUserButtonClick}
-              className="mx-2 flex items-center text-sm focus:outline-none"
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <Bell className="w-5 h-5 text-indigo-600" />
-              </div>
-            </button>
-            {/* Desktop Dropdown */}
-            {isDropdownOpen && !isMobile() && (
-              <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
-                <div
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    handleTabClick(7);
-                  }}
-                >
-                  <User className="mr-2 text-gray-400 w-4 h-4" />
-                  Your Profile
+          <div className="z-20 h-[100%] flex items-center space-x-2">
+            {/* Bell Button with Notification Badge */}
+            <div className="relative" ref={bellRef}>
+              <button
+                onClick={handleBellButtonClick}
+                className="relative flex items-center text-sm focus:outline-none"
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
+                  <Bell className="w-5 h-5 text-indigo-600" />
                 </div>
-                <div
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    router.push('/Messaging');
-                  }}
-                >
-                  <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
-                  Messages
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Slide-up Bell Popup */}
+              {isBellPopupOpen && (
+                <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
+                  {/* Backdrop for mobile */}
+                  <div 
+                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm md:hidden"
+                    onClick={() => setIsBellPopupOpen(false)}
+                  />
+                  
+                  {/* Popup Container */}
+                  <div className={`
+                    fixed bottom-0 left-0 right-0 
+                    md:absolute md:bottom-auto md:top-full 
+                    bg-white rounded-t-2xl md:rounded-2xl 
+                    shadow-2xl border border-gray-200 
+                    transform transition-transform duration-300 ease-out
+                    ${isBellPopupOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-2'}
+                    max-h-[80vh] md:max-h-[70vh] flex flex-col
+                  `}>
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
+                      <div className="flex items-center space-x-2">
+                        <Bell className="w-5 h-5 text-purple-600" />
+                        <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setIsBellPopupOpen(false)}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <X className="w-5 h-5 text-gray-500" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Notifications List */}
+                    <div className="flex-1 overflow-y-auto">
+                      {notifications.length > 0 ? (
+                        <div className="divide-y divide-gray-100">
+                          {notifications.map((notification) => (
+                            <div
+                              key={notification.id}
+                              className={`p-4 hover:bg-gray-50 transition-colors ${
+                                !notification.read ? 'bg-blue-50 bg-opacity-50' : ''
+                              }`}
+                            >
+                              <div className="flex items-start space-x-3">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                  {getNotificationIcon(notification.type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                      {notification.title}
+                                    </p>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs text-gray-500 flex items-center">
+                                        <Clock className="w-3 h-3 mr-1" />
+                                        {notification.time}
+                                      </span>
+                                      {!notification.read && (
+                                        <button
+                                          onClick={() => markAsRead(notification.id)}
+                                          className="text-xs text-blue-600 hover:text-blue-800"
+                                        >
+                                          Mark read
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <p className="mt-1 text-sm text-gray-600">
+                                    {notification.message}
+                                  </p>
+                                  <div className="mt-2 flex space-x-2">
+                                    {notification.type === 'message' && (
+                                      <button
+                                        onClick={() => {
+                                          setIsBellPopupOpen(false);
+                                          router.push('/Messaging');
+                                        }}
+                                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                      >
+                                        View Message
+                                      </button>
+                                    )}
+                                    {notification.type === 'order' && (
+                                      <button
+                                        onClick={() => {
+                                          setIsBellPopupOpen(false);
+                                          handleTabClick(10);
+                                        }}
+                                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                                      >
+                                        Track Order
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => deleteNotification(notification.id)}
+                                      className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center p-8 text-center">
+                          <Bell className="w-12 h-12 text-gray-300 mb-4" />
+                          <p className="text-gray-500 font-medium">No notifications</p>
+                          <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-4 border-t border-gray-200 bg-gray-50">
+                      <button
+                        onClick={() => {
+                          setIsBellPopupOpen(false);
+                          // Navigate to full notifications page if you have one
+                          // router.push('/Notifications');
+                        }}
+                        className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium"
+                      >
+                        View all notifications
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
-                  onClick={() => {
-                    setIsDropdownOpen(false);
-                    handleTabClick(10);
-                  }}
-                >
-                  <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
-                  Orders
+              )}
+            </div>
+
+            {/* User Button */}
+            <div ref={dropdownRef}>
+              <button
+                onClick={handleUserButtonClick}
+                className="flex items-center text-sm focus:outline-none"
+              >
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
+                  <User className="w-5 h-5 text-indigo-600" />
                 </div>
-                <div className="border-t border-gray-100 my-1"></div>
-                <LogoutButton/>
-              </div>
-            )}
+              </button>
+              
+              {/* Desktop Dropdown */}
+              {isDropdownOpen && !isMobile() && (
+                <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
+                  <div
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      handleTabClick(7);
+                    }}
+                  >
+                    <User className="mr-2 text-gray-400 w-4 h-4" />
+                    Your Profile
+                  </div>
+                  <div
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      router.push('/Messaging');
+                    }}
+                  >
+                    <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
+                    Messages
+                  </div>
+                  <div
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      handleTabClick(10);
+                    }}
+                  >
+                    <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
+                    Orders
+                  </div>
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <LogoutButton/>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
