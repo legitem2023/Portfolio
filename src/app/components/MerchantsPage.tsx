@@ -178,7 +178,7 @@ export default function MerchantsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-purple-900 font-semibold">Loading merchants...</p>
@@ -189,7 +189,7 @@ export default function MerchantsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6 flex items-center justify-center">
         <div className="text-center text-red-600">
           <p className="text-lg font-semibold">Error loading merchants</p>
           <p className="mt-2">{error.message}</p>
@@ -199,18 +199,18 @@ export default function MerchantsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6">
       <div className="max-w-7xl mx-auto">
 
 
         {/* Search and Filter Bar */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-8 border border-purple-200">
-          <div className="flex flex-col md:flex-row gap-4 md:items-center">
-            <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0">
+        <div className="bg-white rounded-2xl shadow-lg p-3 md:p-6 mb-6 md:mb-8 border border-purple-200">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
               {categories.map((category) => (
                 <button
                   key={category}
-                  className="px-4 py-2 rounded-full border border-purple-300 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-colors whitespace-nowrap"
+                  className="px-3 py-1.5 md:px-4 md:py-2 rounded-full border border-purple-300 text-purple-700 hover:bg-purple-100 hover:border-purple-400 transition-colors whitespace-nowrap text-sm md:text-base"
                 >
                   {category}
                 </button>
@@ -220,32 +220,32 @@ export default function MerchantsPage() {
               <input
                 type="text"
                 placeholder="Search merchants..."
-                className="w-full px-4 py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full px-3 py-1.5 md:px-4 md:py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
               />
             </div>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold">Total Merchants</div>
-            <div className="text-2xl font-bold text-purple-700">{merchants.length}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
+            <div className="text-purple-900 font-semibold text-sm md:text-base">Total Merchants</div>
+            <div className="text-xl md:text-2xl font-bold text-purple-700">{merchants.length}</div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold">Featured</div>
-            <div className="text-2xl font-bold text-purple-700">
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
+            <div className="text-purple-900 font-semibold text-sm md:text-base">Featured</div>
+            <div className="text-xl md:text-2xl font-bold text-purple-700">
               {merchants.filter((m: Merchant) => getIsFeatured(m)).length}
             </div>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold">Avg. Rating</div>
-            <div className="text-2xl font-bold text-purple-700">{averageRating}</div>
+          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
+            <div className="text-purple-900 font-semibold text-sm md:text-base">Avg. Rating</div>
+            <div className="text-xl md:text-2xl font-bold text-purple-700">{averageRating}</div>
           </div>
         </div>
 
         {/* Merchants Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {merchants.map((merchant: Merchant) => {
             const displayName = getDisplayName(merchant);
             const displayCategory = getDisplayCategory(merchant);
@@ -264,35 +264,35 @@ export default function MerchantsPage() {
                 }`}
               >
                 {isFeatured && (
-                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-sm font-semibold py-1 px-4 text-center">
+                  <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs md:text-sm font-semibold py-1 px-3 md:px-4 text-center">
                     ⭐ Featured
                   </div>
                 )}
                 
-                <div className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                <div className="p-4 md:p-6">
+                  <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-base md:text-lg">
                       {displayName.charAt(0)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-1">
-                        <h3 className="text-lg font-bold text-purple-900">{displayName}</h3>
+                        <h3 className="text-base md:text-lg font-bold text-purple-900">{displayName}</h3>
                         {isFeatured && (
                           <span className="text-purple-500">★</span>
                         )}
                       </div>
-                      <span className="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full">
+                      <span className="inline-block bg-purple-100 text-purple-700 text-xs px-2 py-0.5 md:py-1 rounded-full">
                         {displayCategory}
                       </span>
                     </div>
                   </div>
 
-                  <p className="text-purple-700 text-sm mb-4 leading-relaxed">
+                  <p className="text-purple-700 text-xs md:text-sm mb-3 md:mb-4 leading-relaxed">
                     {displayDescription}
                   </p>
 
                   {/* Additional merchant info from GraphQL */}
-                  <div className="mb-4 space-y-1">
+                  <div className="mb-3 md:mb-4 space-y-0.5 md:space-y-1">
                     {merchant.addresses && merchant.addresses.length > 0 && (
                       <p className="text-xs text-purple-600">
                         📍 {merchant.addresses[0].city}, {merchant.addresses[0].state}
@@ -304,22 +304,22 @@ export default function MerchantsPage() {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <div className="flex text-amber-400">
+                    <div className="flex items-center gap-1 md:gap-2">
+                      <div className="flex items-center gap-0.5 md:gap-1">
+                        <div className="flex text-amber-400 text-sm md:text-base">
                           {"★".repeat(Math.floor(displayRating))}
                           {"☆".repeat(5 - Math.floor(displayRating))}
                         </div>
-                        <span className="text-purple-900 font-semibold text-sm">
+                        <span className="text-purple-900 font-semibold text-xs md:text-sm">
                           {displayRating.toFixed(1)}
                         </span>
                       </div>
-                      <span className="text-purple-500 text-sm">
+                      <span className="text-purple-500 text-xs md:text-sm">
                         ({displayReviews} reviews)
                       </span>
                     </div>
                     
-                    <button onClick={()=> redirect(merchant.id)} className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 transform hover:scale-105">
+                    <button onClick={()=> redirect(merchant.id)} className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-semibold transition-all duration-200 transform hover:scale-105">
                       Visit
                     </button>
                   </div>
@@ -331,10 +331,10 @@ export default function MerchantsPage() {
 
         {/* Empty state */}
         {merchants.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-purple-400 text-6xl mb-4">🏪</div>
-            <h3 className="text-xl font-semibold text-purple-900 mb-2">No merchants found</h3>
-            <p className="text-purple-700">Check back later for new local businesses.</p>
+          <div className="text-center py-8 md:py-12">
+            <div className="text-purple-400 text-4xl md:text-6xl mb-3 md:mb-4">🏪</div>
+            <h3 className="text-lg md:text-xl font-semibold text-purple-900 mb-1 md:mb-2">No merchants found</h3>
+            <p className="text-purple-700 text-sm md:text-base">Check back later for new local businesses.</p>
           </div>
         )}
       </div>
