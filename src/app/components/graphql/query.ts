@@ -1,5 +1,62 @@
 import { gql } from '@apollo/client';
 
+// Query to get notifications with pagination
+export const GET_NOTIFICATIONS = gql`
+  query GetNotifications($userId: ID!, $filters: NotificationFilters) {
+    notifications(userId: $userId, filters: $filters) {
+      nodes {
+        id
+        type
+        title
+        message
+        isRead
+        link
+        createdAt
+        user {
+          id
+          email
+          firstName
+          lastName
+          avatar
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      totalCount
+      unreadCount
+    }
+  }
+`;
+
+// Query to get a single notification
+export const GET_NOTIFICATION = gql`
+  query GetNotification($id: ID!) {
+    notification(id: $id) {
+      id
+      type
+      title
+      message
+      isRead
+      link
+      createdAt
+      user {
+        id
+        email
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+// Query to get unread count
+export const GET_UNREAD_COUNT = gql`
+  query GetUnreadNotificationCount($userId: ID!) {
+    unreadNotificationCount(userId: $userId)
+  }
+`;
 
 export const GET_MODELS = gql`
   query GetModels {
