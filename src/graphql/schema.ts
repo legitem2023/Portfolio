@@ -504,6 +504,7 @@ export const typeDefs = gql`
 
   # ================= Queries & Mutations =================
   type Query {
+    notification(userId: String):[Notification]
     # Get messages for current user (both sent and received)
     myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
   
