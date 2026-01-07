@@ -3,10 +3,11 @@
 
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import CategoryPage from './CategoryPage';
+
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
   query GetUsers {
@@ -66,8 +67,9 @@ interface Merchant {
 export default function MerchantsPage() {
   const { loading, error, data } = useQuery(GET_MERCHANTS);
   const dispatch = useDispatch();
-  // Static fallback data that matches GraphQL schema
   const router = useRouter();
+  
+  // Static fallback data that matches GraphQL schema
   const fallbackMerchants: Merchant[] = [
     {
       id: "1",
@@ -125,13 +127,11 @@ export default function MerchantsPage() {
     return `${merchant.firstName} ${merchant.lastName}`;
   };
 
-
   const redirect = (id: string) => {
-  dispatch(setActiveIndex(11));
-  router.push(`?id=${id}`);
-};
+    dispatch(setActiveIndex(11));
+    router.push(`?id=${id}`);
+  };
 
-  
   const getDisplayCategory = (merchant: Merchant) => {
     // Map email domains or other fields to categories
     const domain = merchant.email.split('@')[1];
@@ -170,8 +170,6 @@ export default function MerchantsPage() {
     return merchant.emailVerified && merchant.addresses.length > 0;
   };
 
-  const categories = ["All", "Fashion", "Food & Drink", "Flowers", "Books", "Arts & Crafts", "Groceries", "General"];
-
   // Calculate average rating from display ratings
   const averageRating = merchants.length > 0 
     ? (merchants.reduce((sum: number, merchant: Merchant) => sum + getDisplayRating(merchant), 0) / merchants.length).toFixed(1)
@@ -202,7 +200,6 @@ export default function MerchantsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6">
       <div className="max-w-7xl mx-auto">
-
 
         {/* Search and Filter Bar */}
         <div className="bg-white rounded-2xl shadow-lg p-3 md:p-6 mb-6 md:mb-8 border border-purple-200">
