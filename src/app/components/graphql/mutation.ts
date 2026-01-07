@@ -1,5 +1,56 @@
 import { gql } from "@apollo/client";
 
+// Create notification mutation
+export const CREATE_NOTIFICATION = gql`
+  mutation CreateNotification($input: CreateNotificationInput!) {
+    createNotification(input: $input) {
+      id
+      type
+      title
+      message
+      isRead
+      link
+      createdAt
+      user {
+        id
+        email
+        firstName
+        lastName
+      }
+    }
+  }
+`;
+
+// Mark notification as read mutation
+export const MARK_AS_READ = gql`
+  mutation MarkNotificationAsRead($id: ID!) {
+    markNotificationAsRead(id: $id) {
+      id
+      isRead
+    }
+  }
+`;
+
+// Mark all notifications as read mutation
+export const MARK_ALL_AS_READ = gql`
+  mutation MarkAllNotificationsAsRead($userId: ID!) {
+    markAllNotificationsAsRead(userId: $userId)
+  }
+`;
+
+// Delete notification mutation
+export const DELETE_NOTIFICATION = gql`
+  mutation DeleteNotification($id: ID!) {
+    deleteNotification(id: $id)
+  }
+`;
+
+// Delete all read notifications mutation
+export const DELETE_ALL_READ = gql`
+  mutation DeleteAllReadNotifications($userId: ID!) {
+    deleteAllReadNotifications(userId: $userId)
+  }
+`;
 
 export const UPLOAD_3D_MODEL = gql`
   mutation Upload3DModel($file: Upload, $filename: String, $productId: String) {
