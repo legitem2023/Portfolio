@@ -39,7 +39,7 @@ const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // 
 export const resolvers = {
   Query: {
         // Get notifications for a specific user
-    notifications: async (_, { userId, filters }, context) => {
+    notifications: async (_:any, { userId, filters }:any, context:any) => {
       // Check if user is authenticated
       if (!context.user) {
         throw new Error('Not authenticated');
@@ -100,7 +100,7 @@ export const resolvers = {
     },
 
     // Get a single notification by ID
-    notification: async (_, { id }, context) => {
+    notification: async (_:any, { id }:any, context:any) => {
       if (!context.user) {
         throw new Error('Not authenticated');
       }
@@ -132,7 +132,7 @@ export const resolvers = {
     },
 
     // Get unread notification count for a user
-    unreadNotificationCount: async (_, { userId }, context) => {
+    unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       if (!context.user) {
         throw new Error('Not authenticated');
       }
