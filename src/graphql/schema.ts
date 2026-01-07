@@ -501,10 +501,39 @@ export const typeDefs = gql`
     product: Product!
     variant: ProductVariant
   }
+  
+  type NotificationEdge {
+    node: Notification!
+    cursor: String!
+  }
 
+  type NotificationConnection {
+    edges: [NotificationEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+    unreadCount: Int!
+  }
+
+  input NotificationFilters {
+    isRead: Boolean
+    type: NotificationType
+    limit: Int
+    cursor: String
+  }
+
+  input CreateNotificationInput {
+    userId: ID!
+    type: NotificationType!
+    title: String!
+    message: String!
+    link: String
+  }
   # ================= Queries & Mutations =================
   type Query {
-    notification(userId: String):[Notification]
+    notifications(userId: ID!, filters: NotificationFilters): NotificationConnection!
+    notification(id: ID!): Notification
+    unreadNotificationCount(userId: ID!): Int!
+    
     # Get messages for current user (both sent and received)
     myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
   
@@ -645,6 +674,12 @@ export const typeDefs = gql`
   }
 
   type Mutation {
+    
+    createNotification(input: CreateNotificationInput!): Notification!
+    markNotificationAsRead(id: ID!): Notification!
+    markAllNotificationsAsRead(userId: ID!): Boolean!
+    deleteNotification(id: ID!): Boolean!
+    deleteAllReadNotifications(userId: ID!): Boolean!
     # Send a new message
     sendMessage(input: SendMessageInput): Message
   
