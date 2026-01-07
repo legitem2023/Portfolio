@@ -501,7 +501,12 @@ export const typeDefs = gql`
     product: Product!
     variant: ProductVariant
   }
-  
+  type PageInfo {
+    hasNextPage: Boolean!
+    hasPreviousPage: Boolean!
+    startCursor: String
+    endCursor: String
+  }
   type NotificationEdge {
     node: Notification!
     cursor: String!
