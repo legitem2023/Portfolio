@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
-import { USERS,GET_NOTIFICATIONS } from './graphql/query';
+import { USERS, GET_NOTIFICATIONS } from './graphql/query';
 import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
 import LogoutButton from './LogoutButton';
 import Ads from './Ads/Ads';
@@ -92,7 +92,7 @@ const Header: React.FC = () => {
   const [markAllAsReadMutation] = useMutation(MARK_ALL_AS_READ);
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION);
 
-  // Extract notifications from query result
+  // Extract notifications from query result with proper typing
   const notifications: Notification[] = notificationsData?.notifications?.nodes || [];
   const unreadCount = notificationsData?.notifications?.unreadCount || 0;
 
@@ -255,16 +255,12 @@ const Header: React.FC = () => {
           markAllNotificationsAsRead: true
         },
         update: (cache) => {
-          // Update all notifications in cache
-          const notifications = cache.readQuery({
-            query: GET_NOTIFICATIONS,
-            variables: { userId, filters: { limit: 10 } }
-          });
-
-          if (notifications?.notifications?.nodes) {
-            notifications.notifications.nodes.forEach((notification: any) => {
+          // Safely update all notifications in cache
+          try {
+            // Update each notification individually
+            notifications.forEach((notification) => {
               cache.modify({
-                id: cache.identify(notification),
+                id: cache.identify({ id: notification.id, __typename: 'Notification' }),
                 fields: {
                   isRead: () => true,
                 },
@@ -274,12 +270,16 @@ const Header: React.FC = () => {
             // Update unread count
             cache.modify({
               fields: {
-                notifications: (existing) => ({
-                  ...existing,
-                  unreadCount: 0
-                })
+                notifications: (existing: any, { readField }: any) => {
+                  return {
+                    ...existing,
+                    unreadCount: 0
+                  };
+                }
               }
             });
+          } catch (error) {
+            console.error('Error updating cache:', error);
           }
         }
       });
@@ -353,21 +353,21 @@ const Header: React.FC = () => {
     }
   };
 
-  const getNotificationTitle = (type: NotificationType) => {
-    return type.replace(/_/g, ' ');
-  };
-
   const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      
+      if (diffInSeconds < 60) return 'Just now';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+      if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+      
+      return date.toLocaleDateString();
+    } catch (error) {
+      return 'Recently';
+    }
   };
 
   const handleNotificationClick = async (notification: Notification) => {
