@@ -5,23 +5,28 @@ export const GET_NOTIFICATIONS = gql`
   query GetNotifications($userId: ID!, $filters: NotificationFilters) {
     notifications(userId: $userId, filters: $filters) {
       edges {
-        id
-        type
-        title
-        message
-        isRead
-        link
-        createdAt
-        user {
+        node {
           id
-          email
-          firstName
-          lastName
-          avatar
+          type
+          title
+          message
+          isRead
+          link
+          createdAt
+          user {
+            id
+            email
+            firstName
+            lastName
+            avatar
+          }
         }
+        cursor
       }
       pageInfo {
         hasNextPage
+        hasPreviousPage
+        startCursor
         endCursor
       }
       totalCount
