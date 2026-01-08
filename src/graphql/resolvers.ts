@@ -38,81 +38,95 @@ const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // 
 
 export const resolvers = {
   Query: {
-// In your GraphQL resolver file
+// In your GraphQL resolver file - update the notifications resolver
 notifications: async (_:any, { userId, filters }:any, context:any) => {
-  // Check if user is authenticated
-  if (!context.user) {
-    throw new Error('Not authenticated');
-  }
+  try {
+    // Check if user is authenticated
+    if (!context.user) {
+      throw new Error('Not authenticated');
+    }
 
-  // Users can only access their own notifications
-  if (context.user.id !== userId) {
-    throw new Error('Unauthorized');
-  }
+    // Users can only access their own notifications
+    if (context.user.id !== userId) {
+      throw new Error('Unauthorized');
+    }
 
-  const { isRead, type, limit = 20, cursor } = filters || {};
+    const { isRead, type, limit = 20, cursor } = filters || {};
 
-  const where = {
-    userId,
-    ...(isRead !== undefined && { isRead }),
-    ...(type && { type }),
-  };
+    const where = {
+      userId,
+      ...(isRead !== undefined && { isRead }),
+      ...(type && { type }),
+    };
 
-  // Get notifications from database
-  const notifications = await prisma.notification.findMany({
-    where,
-    take: limit + 1, // Take one extra to check if there's more
-    ...(cursor && {
-      cursor: {
-        id: cursor,
+    const notifications = await prisma.notification.findMany({
+      where,
+      take: limit + 1, // Take one extra to check if there's more
+      ...(cursor && {
+        cursor: {
+          id: cursor,
+        },
+        skip: 1, // Skip the cursor
+      }),
+      orderBy: {
+        createdAt: 'desc',
       },
-      skip: 1, // Skip the cursor
-    }),
-    orderBy: {
-      createdAt: 'desc',
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          avatar: true,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  const hasNextPage = notifications.length > limit;
-  const nodes = hasNextPage ? notifications.slice(0, -1) : notifications;
+    const hasNextPage = notifications.length > limit;
+    const nodes = hasNextPage ? notifications.slice(0, -1) : notifications;
 
-  // Convert to edges format for GraphQL schema
-  const edges = nodes.map((notification) => ({
-    node: notification,
-    cursor: notification.id,
-  }));
+    // CRITICAL FIX: Convert to edges format
+    const edges = nodes.map((notification) => ({
+      node: notification,
+      cursor: notification.id,
+    }));
 
-  // Get counts
-  const [totalCount, unreadCount] = await Promise.all([
-    prisma.notification.count({ where }),
-    prisma.notification.count({
-      where: { ...where, isRead: false },
-    }),
-  ]);
+    const [totalCount, unreadCount] = await Promise.all([
+      prisma.notification.count({ where }),
+      prisma.notification.count({
+        where: { ...where, isRead: false },
+      }),
+    ]);
 
-  // Return the proper NotificationConnection structure
-  return {
-    edges,
-    pageInfo: {
-      hasNextPage,
-      hasPreviousPage: false, // You'll need to implement this if you want backward pagination
-      startCursor: edges.length > 0 ? edges[0].cursor : null,
-      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
-    },
-    totalCount,
-    unreadCount,
-  };
+    // CRITICAL FIX: Return the exact structure that matches GraphQL schema
+    return {
+      edges, // Must be edges, not nodes
+      pageInfo: {
+        hasNextPage,
+        hasPreviousPage: false, // Add this field
+        startCursor: edges.length > 0 ? edges[0].cursor : null,
+        endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+      },
+      totalCount,
+      unreadCount,
+    };
+  } catch (error) {
+    console.error('Error in notifications resolver:', error);
+    // Don't return null, return empty connection structure
+    return {
+      edges: [],
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+        startCursor: null,
+        endCursor: null,
+      },
+      totalCount: 0,
+      unreadCount: 0,
+    };
+  }
 },
 
 // Also add the unreadNotificationCount resolver
