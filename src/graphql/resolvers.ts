@@ -38,66 +38,102 @@ const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // 
 
 export const resolvers = {
   Query: {
-        // Get notifications for a specific user
-    notifications: async (_:any, { userId, filters }:any, context:any) => {
-      // Check if user is authenticated
-      if (!context.user) {
-        throw new Error('Not authenticated');
-      }
+// In your GraphQL resolver file
+notifications: async (_:any, { userId, filters }:any, context:any) => {
+  // Check if user is authenticated
+  if (!context.user) {
+    throw new Error('Not authenticated');
+  }
 
-      // Users can only access their own notifications
-      if (context.user.id !== userId) {
-        throw new Error('Unauthorized');
-      }
+  // Users can only access their own notifications
+  if (context.user.id !== userId) {
+    throw new Error('Unauthorized');
+  }
 
-      const { isRead, type, limit = 20, cursor } = filters || {};
+  const { isRead, type, limit = 20, cursor } = filters || {};
 
-      const where = {
-        userId,
-        ...(isRead !== undefined && { isRead }),
-        ...(type && { type }),
-      };
+  const where = {
+    userId,
+    ...(isRead !== undefined && { isRead }),
+    ...(type && { type }),
+  };
 
-      const notifications = await prisma.notification.findMany({
-        where,
-        take: limit + 1, // Take one extra to check if there's more
-        ...(cursor && {
-          cursor: {
-            id: cursor,
-          },
-          skip: 1, // Skip the cursor
-        }),
-        orderBy: {
-          createdAt: 'desc',
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              firstName: true,
-              lastName: true,
-              avatar: true,
-            },
-          },
-        },
-      });
-
-      const hasNextPage = notifications.length > limit;
-      const nodes = hasNextPage ? notifications.slice(0, -1) : notifications;
-
-      return {
-        nodes,
-        pageInfo: {
-          hasNextPage,
-          endCursor: nodes.length > 0 ? nodes[nodes.length - 1].id : null,
-        },
-        totalCount: await prisma.notification.count({ where }),
-        unreadCount: await prisma.notification.count({
-          where: { ...where, isRead: false },
-        }),
-      };
+  // Get notifications from database
+  const notifications = await prisma.notification.findMany({
+    where,
+    take: limit + 1, // Take one extra to check if there's more
+    ...(cursor && {
+      cursor: {
+        id: cursor,
+      },
+      skip: 1, // Skip the cursor
+    }),
+    orderBy: {
+      createdAt: 'desc',
     },
+    include: {
+      user: {
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          avatar: true,
+        },
+      },
+    },
+  });
+
+  const hasNextPage = notifications.length > limit;
+  const nodes = hasNextPage ? notifications.slice(0, -1) : notifications;
+
+  // Convert to edges format for GraphQL schema
+  const edges = nodes.map((notification) => ({
+    node: notification,
+    cursor: notification.id,
+  }));
+
+  // Get counts
+  const [totalCount, unreadCount] = await Promise.all([
+    prisma.notification.count({ where }),
+    prisma.notification.count({
+      where: { ...where, isRead: false },
+    }),
+  ]);
+
+  // Return the proper NotificationConnection structure
+  return {
+    edges,
+    pageInfo: {
+      hasNextPage,
+      hasPreviousPage: false, // You'll need to implement this if you want backward pagination
+      startCursor: edges.length > 0 ? edges[0].cursor : null,
+      endCursor: edges.length > 0 ? edges[edges.length - 1].cursor : null,
+    },
+    totalCount,
+    unreadCount,
+  };
+},
+
+// Also add the unreadNotificationCount resolver
+unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
+  if (!context.user) {
+    throw new Error('Not authenticated');
+  }
+
+  if (context.user.id !== userId) {
+    throw new Error('Unauthorized');
+  }
+
+  const count = await prisma.notification.count({
+    where: {
+      userId,
+      isRead: false,
+    },
+  });
+
+  return count;
+},
 
     // Get a single notification by ID
     notification: async (_:any, { id }:any, context:any) => {
@@ -131,23 +167,6 @@ export const resolvers = {
       return notification;
     },
 
-    // Get unread notification count for a user
-    unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
-      if (!context.user) {
-        throw new Error('Not authenticated');
-      }
-
-      if (context.user.id !== userId) {
-        throw new Error('Unauthorized');
-      }
-
-      return await prisma.notification.count({
-        where: {
-          userId,
-          isRead: false,
-        },
-      });
-    },
     myMessages: async (_: any, { page = 1, limit = 20, isRead }: any, { userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
       
