@@ -2,15 +2,11 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-
-import VisitorCounter from './VisitorCounter';
-import VisitorBadge from './VisitorBadge';
-import { decryptToken } from '../../../utils/decryptToken';
+import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-import AnimatedCrowd from "./AnimatedCrowd";
-import AnimatedCrowdMenu from "./AnimatedCrowdMenu";
+import { decryptToken } from '../../../utils/decryptToken';
+import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
 import { 
   User, 
   MessageCircle, 
@@ -18,22 +14,14 @@ import {
   X, 
   ChevronRight,
   Bell,
-  LogOut,
   AlertCircle,
   CheckCircle,
   Info,
   Clock
 } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
 
+// Import queries and mutations
 import { USERS, GET_NOTIFICATIONS } from './graphql/query';
-import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
-import LogoutButton from './LogoutButton';
-import Ads from './Ads/Ads';
-import { PromoAd } from './Ads/PromoAd';
-import { useAdDrawer } from './hooks/useAdDrawer';
-
-// Import the notification queries and types
 import { 
   MARK_AS_READ,
   MARK_ALL_AS_READ,
@@ -41,8 +29,21 @@ import {
 } from './graphql/mutation';
 import { 
   NotificationType,
-  type Notification 
+  type Notification,
+  type NotificationEdge,
+  type NotificationConnection,
+  extractNotifications
 } from '../../../types/notification';
+
+// Import local components
+import VisitorCounter from './VisitorCounter';
+import VisitorBadge from './VisitorBadge';
+import AnimatedCrowd from "./AnimatedCrowd";
+import AnimatedCrowdMenu from "./AnimatedCrowdMenu";
+import LogoutButton from './LogoutButton';
+import Ads from './Ads/Ads';
+import { PromoAd } from './Ads/PromoAd';
+import { useAdDrawer } from './hooks/useAdDrawer';
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -62,6 +63,8 @@ const Header: React.FC = () => {
   
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
+  
+  // Get user data
   const { data: userData, loading: userLoading, networkStatus } = useQuery(USERS, {
     notifyOnNetworkStatusChange: true
   });
@@ -93,8 +96,9 @@ const Header: React.FC = () => {
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION);
 
   // Extract notifications from query result with proper typing
-  const notifications: Notification[] = notificationsData?.notifications?.nodes || [];
-  const unreadCount = notificationsData?.notifications?.unreadCount || 0;
+  const notificationsConnection = notificationsData?.notifications as NotificationConnection;
+  const notifications: Notification[] = notificationsConnection ? extractNotifications(notificationsConnection) : [];
+  const unreadCount = notificationsConnection?.unreadCount || 0;
 
   // Check authentication status
   useEffect(() => {
@@ -128,12 +132,8 @@ const Header: React.FC = () => {
     getRole();
   }, []);
 
-  // Check if current route requires authentication - ONLY AFTER everything is loaded
+  // Check if current route requires authentication
   useEffect(() => {
-    // Only check redirect conditions when:
-    // 1. Authentication check is complete (hasCheckedAuth)
-    // 2. User query is not loading (if you're using it)
-    // 3. We're not in a loading state
     if (!hasCheckedAuth || isLoading || networkStatus === NetworkStatus.loading) {
       return;
     }
@@ -179,7 +179,7 @@ const Header: React.FC = () => {
     if (isModalOpen) {
       document.addEventListener('mousedown', handleClickOutside);
       document.addEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
@@ -199,7 +199,7 @@ const Header: React.FC = () => {
   // Check if mobile device
   const isMobile = () => {
     if (typeof window === 'undefined') return false;
-    return window.innerWidth < 768; // 768px is typical breakpoint for md in Tailwind
+    return window.innerWidth < 768;
   };
 
   const handleUserButtonClick = () => {
@@ -212,12 +212,10 @@ const Header: React.FC = () => {
 
   const handleBellButtonClick = () => {
     if (isMobile()) {
-      // On mobile, show slide-up popup
       setIsBellPopupOpen(!isBellPopupOpen);
     } else {
-      // On desktop, also show slide-up popup
       setIsBellPopupOpen(!isBellPopupOpen);
-      setIsDropdownOpen(false); // Close user dropdown if open
+      setIsDropdownOpen(false);
     }
   };
 
@@ -233,13 +231,16 @@ const Header: React.FC = () => {
           }
         },
         update: (cache) => {
-          // Update cache immediately for instant UI feedback
-          cache.modify({
-            id: cache.identify({ id, __typename: 'Notification' }),
-            fields: {
-              isRead: () => true,
-            },
-          });
+          try {
+            cache.modify({
+              id: cache.identify({ id, __typename: 'Notification' }),
+              fields: {
+                isRead: () => true,
+              },
+            });
+          } catch (error) {
+            console.error('Cache update error:', error);
+          }
         }
       });
     } catch (error) {
@@ -255,22 +256,24 @@ const Header: React.FC = () => {
           markAllNotificationsAsRead: true
         },
         update: (cache) => {
-          // Safely update all notifications in cache
           try {
-            // Update each notification individually
             notifications.forEach((notification) => {
-              cache.modify({
-                id: cache.identify({ id: notification.id, __typename: 'Notification' }),
-                fields: {
-                  isRead: () => true,
-                },
-              });
+              try {
+                cache.modify({
+                  id: cache.identify({ id: notification.id, __typename: 'Notification' }),
+                  fields: {
+                    isRead: () => true,
+                  },
+                });
+              } catch (error) {
+                console.error(`Error updating notification ${notification.id}:`, error);
+              }
             });
 
-            // Update unread count
+            // Update unread count in cache
             cache.modify({
               fields: {
-                notifications: (existing: any, { readField }: any) => {
+                notifications: (existing: any) => {
                   return {
                     ...existing,
                     unreadCount: 0
@@ -296,9 +299,12 @@ const Header: React.FC = () => {
           deleteNotification: true
         },
         update: (cache) => {
-          // Remove from cache immediately
-          cache.evict({ id: cache.identify({ id, __typename: 'Notification' }) });
-          cache.gc();
+          try {
+            cache.evict({ id: cache.identify({ id, __typename: 'Notification' }) });
+            cache.gc();
+          } catch (error) {
+            console.error('Cache eviction error:', error);
+          }
         }
       });
     } catch (error) {
@@ -378,7 +384,6 @@ const Header: React.FC = () => {
     if (notification.link) {
       router.push(notification.link);
     } else {
-      // Handle navigation based on notification type
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
           router.push('/Messaging');
@@ -386,14 +391,13 @@ const Header: React.FC = () => {
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
         case NotificationType.ORDER_DELIVERED:
-          handleTabClick(10); // Orders tab
+          handleTabClick(10);
           break;
         case NotificationType.PAYMENT_RECEIVED:
         case NotificationType.PAYMENT_FAILED:
           router.push('/Payments');
           break;
         default:
-          // Default behavior
           break;
       }
     }
@@ -402,15 +406,12 @@ const Header: React.FC = () => {
   };
 
   const handleTabClick = (tabId: number) => {
-    // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
       router.push('/');
-      // Optionally, you can set a timeout to dispatch the active index after navigation
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
       }, 100);
     } else {
-      // If already on homepage, just update the active tab
       dispatch(setActiveIndex(tabId));
     }
   };
@@ -614,7 +615,7 @@ const Header: React.FC = () => {
                         <div className="flex flex-col items-center justify-center p-8 text-center">
                           <Bell className="w-12 h-12 text-gray-300 mb-4" />
                           <p className="text-gray-500 font-medium">No notifications</p>
-                          <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                          <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
                         </div>
                       )}
                     </div>
