@@ -21,19 +21,13 @@ import {
 } from 'lucide-react';
 
 // Import queries and mutations
-import { USERS, GET_NOTIFICATIONS } from './graphql/query';
+import { USERS, GET_HEADER_NOTIFICATIONS } from './graphql/query';
 import { 
   MARK_AS_READ,
   MARK_ALL_AS_READ,
   DELETE_NOTIFICATION
 } from './graphql/mutation';
-import { 
-  NotificationType,
-  type Notification,
-  type NotificationEdge,
-  type NotificationConnection,
-  extractNotifications
-} from '../../../types/notification';
+import { NotificationType } from '../../../types/notification';
 
 // Import local components
 import VisitorCounter from './VisitorCounter';
@@ -44,6 +38,23 @@ import LogoutButton from './LogoutButton';
 import Ads from './Ads/Ads';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
+
+interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  link?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+}
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -72,33 +83,48 @@ const Header: React.FC = () => {
   // Get userId from user data or auth
   const userId = user?.id || userData?.users?.[0]?.id || '';
 
-  // Fetch notifications using the GET_NOTIFICATIONS query
+  // Fetch notifications with error boundary
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
     error: notificationsError,
     refetch: refetchNotifications
-  } = useQuery(GET_NOTIFICATIONS, {
-    variables: {
+  } = useQuery(GET_HEADER_NOTIFICATIONS, {
+    variables: { 
       userId,
-      filters: {
-        limit: 10, // Show last 10 notifications in header
-      },
+      limit: 5 // Reduced limit for header
     },
-    skip: !userId, // Only fetch if we have a userId
+    skip: !userId,
     fetchPolicy: 'cache-and-network',
-    pollInterval: 60000, // Poll every minute for new notifications
+    onError: (error) => {
+      console.error('Notification query error:', error);
+    },
   });
 
   // Notification mutations
-  const [markAsReadMutation] = useMutation(MARK_AS_READ);
-  const [markAllAsReadMutation] = useMutation(MARK_ALL_AS_READ);
-  const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION);
+  const [markAsReadMutation] = useMutation(MARK_AS_READ, {
+    onError: (error) => console.error('Mark as read error:', error)
+  });
+  const [markAllAsReadMutation] = useMutation(MARK_ALL_AS_READ, {
+    onError: (error) => console.error('Mark all as read error:', error)
+  });
+  const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
+    onError: (error) => console.error('Delete notification error:', error)
+  });
 
-  // Extract notifications from query result with proper typing
-  const notificationsConnection = notificationsData?.notifications as NotificationConnection;
-  const notifications: Notification[] = notificationsConnection ? extractNotifications(notificationsConnection) : [];
-  const unreadCount = notificationsConnection?.unreadCount || 0;
+  // Extract notifications safely
+  const extractNotifications = (data: any): Notification[] => {
+    try {
+      if (!data?.notifications?.edges) return [];
+      return data.notifications.edges.map((edge: any) => edge.node);
+    } catch (error) {
+      console.error('Error extracting notifications:', error);
+      return [];
+    }
+  };
+
+  const notifications: Notification[] = notificationsData ? extractNotifications(notificationsData) : [];
+  const unreadCount = notificationsData?.notifications?.unreadCount || 0;
 
   // Check authentication status
   useEffect(() => {
@@ -106,21 +132,24 @@ const Header: React.FC = () => {
       try {
         setIsLoading(true);
         const response = await fetch('/api/protected', {
-          credentials: 'include' // Important: includes cookies
+          credentials: 'include'
         });
         
         if (response.status === 401) {
-          // Handle unauthorized access
           setUser(null);
-          throw new Error('Unauthorized');
+          return;
         }
         
         const data = await response.json();
         const token = data?.user;
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
-        const payload = await decryptToken(token, secret.toString());
-        setUser(payload);
+        if (token) {
+          const payload = await decryptToken(token, secret.toString());
+          setUser(payload);
+        } else {
+          setUser(null);
+        }
       } catch (err) {
         console.error('Error getting role:', err);
         setUser(null);
@@ -230,18 +259,6 @@ const Header: React.FC = () => {
             __typename: 'Notification'
           }
         },
-        update: (cache) => {
-          try {
-            cache.modify({
-              id: cache.identify({ id, __typename: 'Notification' }),
-              fields: {
-                isRead: () => true,
-              },
-            });
-          } catch (error) {
-            console.error('Cache update error:', error);
-          }
-        }
       });
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -255,36 +272,6 @@ const Header: React.FC = () => {
         optimisticResponse: {
           markAllNotificationsAsRead: true
         },
-        update: (cache) => {
-          try {
-            notifications.forEach((notification) => {
-              try {
-                cache.modify({
-                  id: cache.identify({ id: notification.id, __typename: 'Notification' }),
-                  fields: {
-                    isRead: () => true,
-                  },
-                });
-              } catch (error) {
-                console.error(`Error updating notification ${notification.id}:`, error);
-              }
-            });
-
-            // Update unread count in cache
-            cache.modify({
-              fields: {
-                notifications: (existing: any) => {
-                  return {
-                    ...existing,
-                    unreadCount: 0
-                  };
-                }
-              }
-            });
-          } catch (error) {
-            console.error('Error updating cache:', error);
-          }
-        }
       });
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
@@ -298,14 +285,6 @@ const Header: React.FC = () => {
         optimisticResponse: {
           deleteNotification: true
         },
-        update: (cache) => {
-          try {
-            cache.evict({ id: cache.identify({ id, __typename: 'Notification' }) });
-            cache.gc();
-          } catch (error) {
-            console.error('Cache eviction error:', error);
-          }
-        }
       });
     } catch (error) {
       console.error('Error deleting notification:', error);
@@ -439,16 +418,21 @@ const Header: React.FC = () => {
               <button
                 onClick={handleBellButtonClick}
                 className="relative flex items-center text-sm focus:outline-none"
-                disabled={!userId}
+                disabled={!userId || notificationsLoading}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
                   userId ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
                 }`}>
                   <Bell className={`w-5 h-5 ${userId ? 'text-indigo-600' : 'text-gray-400'}`} />
                 </div>
-                {unreadCount > 0 && userId && (
+                {unreadCount > 0 && userId && !notificationsLoading && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                     {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+                {notificationsLoading && (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
                   </span>
                 )}
               </button>
@@ -477,7 +461,7 @@ const Header: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Bell className="w-5 h-5 text-purple-600" />
                         <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
-                        {unreadCount > 0 && (
+                        {unreadCount > 0 && !notificationsLoading && (
                           <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
                             {unreadCount} new
                           </span>
