@@ -38,11 +38,11 @@ import {
   MARK_AS_READ,
   MARK_ALL_AS_READ,
   DELETE_NOTIFICATION
-} from '../../graphql/mutation';
+} from './graphql/mutation';
 import { 
   NotificationType,
   type Notification 
-} from '../../types/notification';
+} from '../../../types/notification';
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
