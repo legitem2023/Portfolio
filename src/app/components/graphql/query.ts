@@ -4,7 +4,7 @@ import { gql } from '@apollo/client';
 export const GET_NOTIFICATIONS = gql`
   query GetNotifications($userId: ID!, $filters: NotificationFilters) {
     notifications(userId: $userId, filters: $filters) {
-      nodes {
+      edges {
         id
         type
         title
