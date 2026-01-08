@@ -38,11 +38,13 @@ export interface NotificationEdge {
 
 export interface PageInfo {
   hasNextPage: boolean;
+  hasPreviousPage: boolean; // Added based on your schema
+  startCursor: string | null;
   endCursor: string | null;
 }
 
 export interface NotificationConnection {
-  edges: Notification[];
+  edges: NotificationEdge[]; // Changed from Notification[] to NotificationEdge[]
   pageInfo: PageInfo;
   totalCount: number;
   unreadCount: number;
@@ -76,6 +78,24 @@ export interface GetUnreadCountResponse {
   unreadNotificationCount: number;
 }
 
+// Helper type for extracting just the notifications array (for convenience)
+export type NotificationsArray = Notification[];
+
+// Helper function to extract notifications from connection
+export const extractNotifications = (connection: NotificationConnection): Notification[] => {
+  return connection.edges.map(edge => edge.node);
+};
+
+// Helper function to extract notifications with cursor
+export const extractNotificationsWithCursor = (
+  connection: NotificationConnection
+): Array<Notification & { cursor: string }> => {
+  return connection.edges.map(edge => ({
+    ...edge.node,
+    cursor: edge.cursor
+  }));
+};
+
 // Mutation Input Types
 export interface CreateNotificationVariables {
   input: CreateNotificationInput;
@@ -95,4 +115,24 @@ export interface DeleteNotificationVariables {
 
 export interface DeleteAllReadVariables {
   userId: string;
+}
+
+// Response types for mutations
+export interface MarkAsReadResponse {
+  markNotificationAsRead: {
+    id: string;
+    isRead: boolean;
+  };
+}
+
+export interface MarkAllAsReadResponse {
+  markAllNotificationsAsRead: boolean;
+}
+
+export interface DeleteNotificationResponse {
+  deleteNotification: boolean;
+}
+
+export interface CreateNotificationResponse {
+  createNotification: Notification;
 }
