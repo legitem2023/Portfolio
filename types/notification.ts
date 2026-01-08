@@ -42,7 +42,7 @@ export interface PageInfo {
 }
 
 export interface NotificationConnection {
-  nodes: Notification[];
+  edges: Notification[];
   pageInfo: PageInfo;
   totalCount: number;
   unreadCount: number;
