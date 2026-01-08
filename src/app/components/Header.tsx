@@ -24,14 +24,25 @@ import {
   Info,
   Clock
 } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
+import { useRouter, usePathname } from 'next/navigation';
 
-import { USERS } from './graphql/query';
-import { useQuery, NetworkStatus } from '@apollo/client';
+import { USERS,GET_NOTIFICATIONS } from './graphql/query';
+import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
 import LogoutButton from './LogoutButton';
 import Ads from './Ads/Ads';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
+
+// Import the notification queries and types
+import { 
+  MARK_AS_READ,
+  MARK_ALL_AS_READ,
+  DELETE_NOTIFICATION
+} from '../../graphql/mutation';
+import { 
+  NotificationType,
+  type Notification 
+} from '../../types/notification';
 
 const Header: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -55,41 +66,35 @@ const Header: React.FC = () => {
     notifyOnNetworkStatusChange: true
   });
 
-  // Mock notifications data
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: 'New Message',
-      message: 'You have a new message from John Doe',
-      time: '5 minutes ago',
-      read: false,
-      type: 'message'
+  // Get userId from user data or auth
+  const userId = user?.id || userData?.users?.[0]?.id || '';
+
+  // Fetch notifications using the GET_NOTIFICATIONS query
+  const { 
+    data: notificationsData, 
+    loading: notificationsLoading, 
+    error: notificationsError,
+    refetch: refetchNotifications
+  } = useQuery(GET_NOTIFICATIONS, {
+    variables: {
+      userId,
+      filters: {
+        limit: 10, // Show last 10 notifications in header
+      },
     },
-    {
-      id: 2,
-      title: 'Order Shipped',
-      message: 'Your order #12345 has been shipped',
-      time: '2 hours ago',
-      read: false,
-      type: 'order'
-    },
-    {
-      id: 3,
-      title: 'Promotion',
-      message: 'Special 20% off on all products this weekend',
-      time: '1 day ago',
-      read: true,
-      type: 'promo'
-    },
-    {
-      id: 4,
-      title: 'Account Update',
-      message: 'Your profile information has been updated',
-      time: '2 days ago',
-      read: true,
-      type: 'info'
-    }
-  ]);
+    skip: !userId, // Only fetch if we have a userId
+    fetchPolicy: 'cache-and-network',
+    pollInterval: 60000, // Poll every minute for new notifications
+  });
+
+  // Notification mutations
+  const [markAsReadMutation] = useMutation(MARK_AS_READ);
+  const [markAllAsReadMutation] = useMutation(MARK_ALL_AS_READ);
+  const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION);
+
+  // Extract notifications from query result
+  const notifications: Notification[] = notificationsData?.notifications?.nodes || [];
+  const unreadCount = notificationsData?.notifications?.unreadCount || 0;
 
   // Check authentication status
   useEffect(() => {
@@ -184,6 +189,13 @@ const Header: React.FC = () => {
     };
   }, [isModalOpen]);
 
+  // Refetch notifications when bell popup opens
+  useEffect(() => {
+    if (isBellPopupOpen && userId) {
+      refetchNotifications();
+    }
+  }, [isBellPopupOpen, userId, refetchNotifications]);
+
   // Check if mobile device
   const isMobile = () => {
     if (typeof window === 'undefined') return false;
@@ -209,80 +221,185 @@ const Header: React.FC = () => {
     }
   };
 
-  const markAsRead = (id: number) => {
-    setNotifications(notifications.map(notification => 
-      notification.id === id ? { ...notification, read: true } : notification
-    ));
+  const markAsRead = async (id: string) => {
+    try {
+      await markAsReadMutation({
+        variables: { id },
+        optimisticResponse: {
+          markNotificationAsRead: {
+            id,
+            isRead: true,
+            __typename: 'Notification'
+          }
+        },
+        update: (cache) => {
+          // Update cache immediately for instant UI feedback
+          cache.modify({
+            id: cache.identify({ id, __typename: 'Notification' }),
+            fields: {
+              isRead: () => true,
+            },
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(notification => ({ ...notification, read: true })));
+  const markAllAsRead = async () => {
+    try {
+      await markAllAsReadMutation({
+        variables: { userId },
+        optimisticResponse: {
+          markAllNotificationsAsRead: true
+        },
+        update: (cache) => {
+          // Update all notifications in cache
+          const notifications = cache.readQuery({
+            query: GET_NOTIFICATIONS,
+            variables: { userId, filters: { limit: 10 } }
+          });
+
+          if (notifications?.notifications?.nodes) {
+            notifications.notifications.nodes.forEach((notification: any) => {
+              cache.modify({
+                id: cache.identify(notification),
+                fields: {
+                  isRead: () => true,
+                },
+              });
+            });
+
+            // Update unread count
+            cache.modify({
+              fields: {
+                notifications: (existing) => ({
+                  ...existing,
+                  unreadCount: 0
+                })
+              }
+            });
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
-  const deleteNotification = (id: number) => {
-    setNotifications(notifications.filter(notification => notification.id !== id));
+  const deleteNotification = async (id: string) => {
+    try {
+      await deleteNotificationMutation({
+        variables: { id },
+        optimisticResponse: {
+          deleteNotification: true
+        },
+        update: (cache) => {
+          // Remove from cache immediately
+          cache.evict({ id: cache.identify({ id, __typename: 'Notification' }) });
+          cache.gc();
+        }
+      });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
-      case 'message':
+      case NotificationType.NEW_MESSAGE:
         return <MessageCircle className="w-4 h-4" />;
-      case 'order':
+      case NotificationType.ORDER_CREATED:
+      case NotificationType.ORDER_UPDATED:
+      case NotificationType.ORDER_DELIVERED:
         return <ShoppingBag className="w-4 h-4" />;
-      case 'promo':
+      case NotificationType.PROMOTIONAL:
         return <AlertCircle className="w-4 h-4" />;
-      case 'info':
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
+      case NotificationType.SYSTEM_ALERT:
         return <Info className="w-4 h-4" />;
+      case NotificationType.PAYMENT_RECEIVED:
+        return <CheckCircle className="w-4 h-4" />;
+      case NotificationType.PAYMENT_FAILED:
+        return <AlertCircle className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
     }
   };
 
-  const getNotificationColor = (type: string) => {
+  const getNotificationColor = (type: NotificationType) => {
     switch (type) {
-      case 'message':
+      case NotificationType.NEW_MESSAGE:
         return 'bg-blue-100 text-blue-600';
-      case 'order':
+      case NotificationType.ORDER_CREATED:
+      case NotificationType.ORDER_UPDATED:
+      case NotificationType.ORDER_DELIVERED:
         return 'bg-green-100 text-green-600';
-      case 'promo':
+      case NotificationType.PROMOTIONAL:
         return 'bg-purple-100 text-purple-600';
-      case 'info':
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
         return 'bg-yellow-100 text-yellow-600';
+      case NotificationType.SYSTEM_ALERT:
+        return 'bg-red-100 text-red-600';
+      case NotificationType.PAYMENT_RECEIVED:
+        return 'bg-emerald-100 text-emerald-600';
+      case NotificationType.PAYMENT_FAILED:
+        return 'bg-orange-100 text-orange-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
   };
 
-  // Show loading state if needed
-  /* if (isLoading || !hasCheckedAuth || networkStatus === NetworkStatus.loading) {
-    return (
-      <div>
-        <div className="relative bg-gradient-to-r from-purple-100 to-indigo-200 animate-pulse bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
-          <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-            <div className="z-20 h-[100%] flex items-center">
-              <Image
-                src="/Vendor.svg"
-                alt="Logo"
-                height={80}
-                width={160}
-                className="h-[100%] w-[auto] drop-shadow-[0.5px_0.5px_2px_black]"
-              />
-            </div>
-            <div className="z-20 h-[100%] flex items-center">
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Ads/>
-      </div>
-    );
-  }*/
+  const getNotificationTitle = (type: NotificationType) => {
+    return type.replace(/_/g, ' ');
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    
+    return date.toLocaleDateString();
+  };
+
+  const handleNotificationClick = async (notification: Notification) => {
+    if (!notification.isRead) {
+      await markAsRead(notification.id);
+    }
+    
+    if (notification.link) {
+      router.push(notification.link);
+    } else {
+      // Handle navigation based on notification type
+      switch (notification.type) {
+        case NotificationType.NEW_MESSAGE:
+          router.push('/Messaging');
+          break;
+        case NotificationType.ORDER_CREATED:
+        case NotificationType.ORDER_UPDATED:
+        case NotificationType.ORDER_DELIVERED:
+          handleTabClick(10); // Orders tab
+          break;
+        case NotificationType.PAYMENT_RECEIVED:
+        case NotificationType.PAYMENT_FAILED:
+          router.push('/Payments');
+          break;
+        default:
+          // Default behavior
+          break;
+      }
+    }
+    
+    setIsBellPopupOpen(false);
+  };
 
   const handleTabClick = (tabId: number) => {
     // If not on homepage, redirect to homepage first
@@ -321,19 +438,22 @@ const Header: React.FC = () => {
               <button
                 onClick={handleBellButtonClick}
                 className="relative flex items-center text-sm focus:outline-none"
+                disabled={!userId}
               >
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                  <Bell className="w-5 h-5 text-indigo-600" />
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
+                  userId ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
+                }`}>
+                  <Bell className={`w-5 h-5 ${userId ? 'text-indigo-600' : 'text-gray-400'}`} />
                 </div>
-                {unreadCount > 0 && (
+                {unreadCount > 0 && userId && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                    {unreadCount}
+                    {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </button>
 
               {/* Slide-up Bell Popup */}
-              {isBellPopupOpen && (
+              {isBellPopupOpen && userId && (
                 <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
                   {/* Backdrop for mobile */}
                   <div 
@@ -363,51 +483,81 @@ const Header: React.FC = () => {
                         )}
                       </div>
                       <div className="flex items-center space-x-2">
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={markAllAsRead}
-                            className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
-                          >
-                            Mark all read
-                          </button>
+                        {notificationsLoading ? (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                        ) : (
+                          <>
+                            {unreadCount > 0 && (
+                              <button
+                                onClick={markAllAsRead}
+                                className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                              >
+                                Mark all read
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setIsBellPopupOpen(false)}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                              <X className="w-5 h-5 text-gray-500" />
+                            </button>
+                          </>
                         )}
-                        <button
-                          onClick={() => setIsBellPopupOpen(false)}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <X className="w-5 h-5 text-gray-500" />
-                        </button>
                       </div>
                     </div>
 
                     {/* Notifications List */}
                     <div className="flex-1 overflow-y-auto">
-                      {notifications.length > 0 ? (
+                      {notificationsLoading ? (
+                        <div className="flex flex-col items-center justify-center p-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
+                          <p className="text-gray-600">Loading notifications...</p>
+                        </div>
+                      ) : notificationsError ? (
+                        <div className="flex flex-col items-center justify-center p-8">
+                          <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+                          <p className="text-gray-600">Failed to load notifications</p>
+                          <button
+                            onClick={() => refetchNotifications()}
+                            className="mt-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-800"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      ) : notifications.length > 0 ? (
                         <div className="divide-y divide-gray-100">
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
-                              className={`p-4 hover:bg-gray-50 transition-colors ${
-                                !notification.read ? 'bg-blue-50 bg-opacity-50' : ''
+                              className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
+                                !notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''
                               }`}
+                              onClick={() => handleNotificationClick(notification)}
                             >
                               <div className="flex items-start space-x-3">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                                  getNotificationColor(notification.type)
+                                }`}>
                                   {getNotificationIcon(notification.type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between">
-                                    <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                    <p className={`text-sm font-medium ${
+                                      !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                                    }`}>
                                       {notification.title}
                                     </p>
                                     <div className="flex items-center space-x-2">
                                       <span className="text-xs text-gray-500 flex items-center">
                                         <Clock className="w-3 h-3 mr-1" />
-                                        {notification.time}
+                                        {getTimeAgo(notification.createdAt)}
                                       </span>
-                                      {!notification.read && (
+                                      {!notification.isRead && (
                                         <button
-                                          onClick={() => markAsRead(notification.id)}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            markAsRead(notification.id);
+                                          }}
                                           className="text-xs text-blue-600 hover:text-blue-800"
                                         >
                                           Mark read
@@ -419,9 +569,10 @@ const Header: React.FC = () => {
                                     {notification.message}
                                   </p>
                                   <div className="mt-2 flex space-x-2">
-                                    {notification.type === 'message' && (
+                                    {notification.type === NotificationType.NEW_MESSAGE && (
                                       <button
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           setIsBellPopupOpen(false);
                                           router.push('/Messaging');
                                         }}
@@ -430,19 +581,25 @@ const Header: React.FC = () => {
                                         View Message
                                       </button>
                                     )}
-                                    {notification.type === 'order' && (
+                                    {(notification.type === NotificationType.ORDER_CREATED || 
+                                      notification.type === NotificationType.ORDER_UPDATED || 
+                                      notification.type === NotificationType.ORDER_DELIVERED) && (
                                       <button
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           setIsBellPopupOpen(false);
                                           handleTabClick(10);
                                         }}
                                         className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                                       >
-                                        Track Order
+                                        View Order
                                       </button>
                                     )}
                                     <button
-                                      onClick={() => deleteNotification(notification.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteNotification(notification.id);
+                                      }}
                                       className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
                                     >
                                       Delete
@@ -457,7 +614,7 @@ const Header: React.FC = () => {
                         <div className="flex flex-col items-center justify-center p-8 text-center">
                           <Bell className="w-12 h-12 text-gray-300 mb-4" />
                           <p className="text-gray-500 font-medium">No notifications</p>
-                          <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                          <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
                         </div>
                       )}
                     </div>
@@ -467,8 +624,7 @@ const Header: React.FC = () => {
                       <button
                         onClick={() => {
                           setIsBellPopupOpen(false);
-                          // Navigate to full notifications page if you have one
-                          // router.push('/Notifications');
+                          router.push('/Notifications');
                         }}
                         className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium"
                       >
