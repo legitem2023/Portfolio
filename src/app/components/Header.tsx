@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 // Import queries and mutations
-import { USERS, GET_HEADER_NOTIFICATIONS } from './graphql/query';
+import { USERS, GET_NOTIFICATIONS } from './graphql/query';
 import { 
   MARK_AS_READ,
   MARK_ALL_AS_READ,
@@ -89,7 +89,7 @@ const Header: React.FC = () => {
     loading: notificationsLoading, 
     error: notificationsError,
     refetch: refetchNotifications
-  } = useQuery(GET_HEADER_NOTIFICATIONS, {
+  } = useQuery(GET_NOTIFICATIONS, {
     variables: { 
       userId,
       limit: 5 // Reduced limit for header
