@@ -116,7 +116,8 @@ export const createNotification = async (
           select: {
             id: true,
             email: true,
-            name: true
+            firstName: true,
+            lastName:true
           }
         }
       }
