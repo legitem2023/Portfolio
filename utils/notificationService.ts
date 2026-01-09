@@ -50,7 +50,8 @@ export interface NotificationWithUser {
   user?: {
     id: string;
     email: string;
-    name: string;
+    firstName: string;
+    lastName: string;
   };
 }
 
