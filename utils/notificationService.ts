@@ -212,7 +212,8 @@ export const markAsRead = async (notificationId: string): Promise<NotificationWi
           select: {
             id: true,
             email: true,
-            name: true
+            firstName: true,
+            lastName:true
           }
         }
       }
