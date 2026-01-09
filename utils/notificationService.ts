@@ -11,15 +11,14 @@ export enum NotificationType {
   SUPPORT = 'SUPPORT'
 }
 
-// Types based on your actual Notification schema
+// Types based on your actual Notification schema - NO metadata
 export interface NotificationInput {
   userId: string; // From relation to User
   type: NotificationType;
   title: string;
   message: string;
-  isRead?: boolean; // Not 'status' but 'isRead'
-  link?: string; // Not 'link?: string | null'
-  metadata?: Record<string, any>; // Optional if you want to keep
+  isRead?: boolean; // Boolean field
+  link?: string; // String field (not nullable in schema)
 }
 
 export interface CreateNotificationOptions {
@@ -45,10 +44,9 @@ export interface NotificationWithUser {
   type: NotificationType;
   title: string;
   message: string;
-  isRead: boolean; // Changed from 'status: string'
-  link: string | null; // Matches your schema
+  isRead: boolean; // Boolean, not string
+  link: string | null; // In DB it might allow null
   createdAt: Date;
-  metadata?: Record<string, any>; // Optional if exists
   user?: {
     id: string;
     email: string;
@@ -75,7 +73,6 @@ export const createNotification = async (
     message,
     link = null,
     isRead = false, // Default to false (unread)
-    metadata = {}
   } = notificationData;
 
   try {
@@ -103,7 +100,7 @@ export const createNotification = async (
       }
     }
 
-    // 3. Create notification
+    // 3. Create notification - NO metadata
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -112,7 +109,6 @@ export const createNotification = async (
         message,
         link,
         isRead,
-        metadata,
         createdAt: new Date()
       },
       include: {
