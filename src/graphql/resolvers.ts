@@ -2164,18 +2164,22 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         link: `/orders/${response.id}`, // Link to the order page
         isRead: false
       });
-      
+    return {
+      statusText: 'Successful!',
+      order: response // Consider returning the order object too
+    };
       console.log(`Notification created for order ${response.orderNumber}`);
     } catch (error: any) {
       console.error('Failed to create order notification:', error);
       // Don't throw here - we still want to return the order success
       // even if notification fails
-    }
-    
-    return {
-      statusText: 'Successful!',
+      return {
+      statusText: 'Failed Notification',
       order: response // Consider returning the order object too
     };
+    }
+    
+    
   }
 },
 
