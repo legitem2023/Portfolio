@@ -4,6 +4,9 @@ import { comparePassword, encryptPassword } from '../../utils/script';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
+import { createNotification } from '../../utils/notificationService.js';
+import { NotificationType } from '../../utils/notificationService.js'; // Import the enum
+
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
   LogoutResponse,
@@ -2151,8 +2154,27 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
   });
   
   if (response) {
+    // Create notification for the order
+    try {
+      await createNotification({
+        userId: userId,
+        type: NotificationType.ORDER_UPDATE, // Use the enum
+        title: "Order Created Successfully",
+        message: `Your order #${response.orderNumber} has been created and is being processed.`,
+        link: `/orders/${response.id}`, // Link to the order page
+        isRead: false
+      });
+      
+      console.log(`Notification created for order ${response.orderNumber}`);
+    } catch (error: any) {
+      console.error('Failed to create order notification:', error);
+      // Don't throw here - we still want to return the order success
+      // even if notification fails
+    }
+    
     return {
-      statusText: 'Successful!'
+      statusText: 'Successful!',
+      order: response // Consider returning the order object too
     };
   }
 },
