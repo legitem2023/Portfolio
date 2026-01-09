@@ -1,23 +1,63 @@
-// services/notificationService.js
-import prisma from '../lib/prisma.js'; // Your Prisma instance
+// services/notificationService.ts
+import { PrismaClient, PrivacySetting } from "@prisma/client";
+const prisma = new PrismaClient();
+
+// Types
+export interface NotificationInput {
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link?: string | null;
+  status?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface CreateNotificationOptions {
+  requireUserExists?: boolean;
+  skipValidation?: boolean;
+}
+
+export interface NotificationResult {
+  success: boolean;
+  notification?: any;
+  error?: string;
+  data?: NotificationInput;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+export interface NotificationWithUser {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  link: string | null;
+  status: string;
+  metadata: Record<string, any>;
+  createdAt: Date;
+  user?: {
+    id: string;
+    email: string;
+    name: string;
+  };
+}
 
 /**
  * Create a notification with validation
- * @param {Object} notificationData - Notification data
- * @param {string} notificationData.userId - User ID
- * @param {string} notificationData.type - Notification type
- * @param {string} notificationData.title - Notification title
- * @param {string} notificationData.message - Notification message
- * @param {string} [notificationData.link] - Optional link
- * @param {string} [notificationData.status] - Status (default: 'UNREAD')
- * @param {Object} [notificationData.metadata] - Additional metadata
- * @param {Object} options - Additional options
- * @param {boolean} [options.requireUserExists=true] - Validate user exists
- * @param {boolean} [options.skipValidation=false] - Skip validation
- * @returns {Promise<Object>} Created notification
+ * @param notificationData - Notification data
+ * @param options - Additional options
+ * @returns Created notification
  * @throws {Error} If validation fails or creation fails
  */
-export const createNotification = async (notificationData, options = {}) => {
+export const createNotification = async (
+  notificationData: NotificationInput,
+  options: CreateNotificationOptions = {}
+): Promise<NotificationWithUser> => {
   const {
     requireUserExists = true,
     skipValidation = false
@@ -79,8 +119,8 @@ export const createNotification = async (notificationData, options = {}) => {
     // 4. Optional: Trigger events or side effects
     // await triggerNotificationEvents(notification);
 
-    return notification;
-  } catch (error) {
+    return notification as NotificationWithUser;
+  } catch (error: any) {
     console.error('Notification creation error:', error);
     throw new Error(`Failed to create notification: ${error.message}`);
   }
@@ -89,15 +129,22 @@ export const createNotification = async (notificationData, options = {}) => {
 /**
  * Helper: Create multiple notifications at once
  */
-export const createMultipleNotifications = async (notificationsArray, options = {}) => {
-  const results = [];
+export const createMultipleNotifications = async (
+  notificationsArray: NotificationInput[],
+  options: CreateNotificationOptions = {}
+): Promise<NotificationResult[]> => {
+  const results: NotificationResult[] = [];
   
   for (const notificationData of notificationsArray) {
     try {
       const notification = await createNotification(notificationData, options);
       results.push({ success: true, notification });
-    } catch (error) {
-      results.push({ success: false, error: error.message, data: notificationData });
+    } catch (error: any) {
+      results.push({ 
+        success: false, 
+        error: error.message, 
+        data: notificationData 
+      });
     }
   }
   
@@ -107,8 +154,8 @@ export const createMultipleNotifications = async (notificationsArray, options = 
 /**
  * Helper: Validate notification data
  */
-export const validateNotificationData = (data) => {
-  const errors = [];
+export const validateNotificationData = (data: NotificationInput): ValidationResult => {
+  const errors: string[] = [];
   
   if (!data.userId) errors.push('userId is required');
   if (!data.type) errors.push('type is required');
@@ -132,7 +179,9 @@ export const validateNotificationData = (data) => {
 /**
  * Create notification with pre-validation
  */
-export const createValidatedNotification = async (notificationData) => {
+export const createValidatedNotification = async (
+  notificationData: NotificationInput
+): Promise<NotificationWithUser> => {
   const validation = validateNotificationData(notificationData);
   
   if (!validation.isValid) {
@@ -141,3 +190,11 @@ export const createValidatedNotification = async (notificationData) => {
   
   return createNotification(notificationData);
 };
+
+// You might also want to add Prisma-generated types if available
+// import { Notification, User } from '@prisma/client';
+
+// Or create a more specific type based on your Prisma schema:
+// export type NotificationWithUser = Notification & {
+//   user?: Pick<User, 'id' | 'email' | 'name'>;
+// };
