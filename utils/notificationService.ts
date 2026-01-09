@@ -2,7 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-// Define NotificationType enum manually based on your schema
+// Define NotificationType manually based on your schema
 export enum NotificationType {
   ORDER_UPDATE = 'ORDER_UPDATE',
   PAYMENT_CONFIRMATION = 'PAYMENT_CONFIRMATION',
@@ -11,15 +11,15 @@ export enum NotificationType {
   SUPPORT = 'SUPPORT'
 }
 
-// Types - Now use our manually defined NotificationType
+// Types based on your actual Notification schema
 export interface NotificationInput {
-  userId: string;
-  type: NotificationType; // Use the manual enum
+  userId: string; // From relation to User
+  type: NotificationType;
   title: string;
   message: string;
-  link?: string | null;
-  status?: string;
-  metadata?: Record<string, any>;
+  isRead?: boolean; // Not 'status' but 'isRead'
+  link?: string; // Not 'link?: string | null'
+  metadata?: Record<string, any>; // Optional if you want to keep
 }
 
 export interface CreateNotificationOptions {
@@ -42,13 +42,13 @@ export interface ValidationResult {
 export interface NotificationWithUser {
   id: string;
   userId: string;
-  type: NotificationType; // Use the manual enum
+  type: NotificationType;
   title: string;
   message: string;
-  link: string | null;
-  status: string;
-  metadata: Record<string, any>;
+  isRead: boolean; // Changed from 'status: string'
+  link: string | null; // Matches your schema
   createdAt: Date;
+  metadata?: Record<string, any>; // Optional if exists
   user?: {
     id: string;
     email: string;
@@ -58,10 +58,6 @@ export interface NotificationWithUser {
 
 /**
  * Create a notification with validation
- * @param notificationData - Notification data
- * @param options - Additional options
- * @returns Created notification
- * @throws {Error} If validation fails or creation fails
  */
 export const createNotification = async (
   notificationData: NotificationInput,
@@ -78,7 +74,7 @@ export const createNotification = async (
     title,
     message,
     link = null,
-    status = 'UNREAD',
+    isRead = false, // Default to false (unread)
     metadata = {}
   } = notificationData;
 
@@ -89,7 +85,7 @@ export const createNotification = async (
         throw new Error('Missing required fields: userId, type, title, or message');
       }
 
-      // Optional: Validate the type is a valid NotificationType
+      // Validate the type is a valid NotificationType
       if (!Object.values(NotificationType).includes(type as NotificationType)) {
         throw new Error(`Invalid notification type: ${type}`);
       }
@@ -115,7 +111,7 @@ export const createNotification = async (
         title,
         message,
         link,
-        status,
+        isRead,
         metadata,
         createdAt: new Date()
       },
@@ -205,4 +201,30 @@ export const createValidatedNotification = async (
   }
   
   return createNotification(notificationData);
+};
+
+/**
+ * Helper: Mark notification as read
+ */
+export const markAsRead = async (notificationId: string): Promise<NotificationWithUser> => {
+  try {
+    const notification = await prisma.notification.update({
+      where: { id: notificationId },
+      data: { isRead: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true
+          }
+        }
+      }
+    });
+    
+    return notification as NotificationWithUser;
+  } catch (error: any) {
+    console.error('Error marking notification as read:', error);
+    throw new Error(`Failed to mark notification as read: ${error.message}`);
+  }
 };
