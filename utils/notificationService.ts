@@ -1,15 +1,15 @@
-// services/notificationService.ts
-import { PrismaClient, NotificationType, NotificationStatus } from "@prisma/client";
+// notificationService.ts
+import { PrismaClient } from "@prisma/client"; // Remove NotificationStatus
 const prisma = new PrismaClient();
 
-// Types - IMPORTANT: Use the actual enums from your Prisma schema
+// Types - Keep everything as string since we don't have the NotificationStatus enum
 export interface NotificationInput {
   userId: string;
-  type: NotificationType; // Use the enum type instead of string
+  type: string; // Changed from NotificationType to string
   title: string;
   message: string;
   link?: string | null;
-  status?: NotificationStatus; // Use the enum type instead of string
+  status?: string; // Already string, keep as is
   metadata?: Record<string, any>;
 }
 
@@ -30,15 +30,14 @@ export interface ValidationResult {
   errors: string[];
 }
 
-// Use Prisma types directly if possible
-export type NotificationWithUser = {
+export interface NotificationWithUser {
   id: string;
   userId: string;
-  type: NotificationType; // Fix: Use enum type
+  type: string; // Changed from NotificationType to string
   title: string;
   message: string;
   link: string | null;
-  status: NotificationStatus; // Fix: Use enum type
+  status: string;
   metadata: Record<string, any>;
   createdAt: Date;
   user?: {
@@ -46,10 +45,14 @@ export type NotificationWithUser = {
     email: string;
     name: string;
   };
-};
+}
 
 /**
  * Create a notification with validation
+ * @param notificationData - Notification data
+ * @param options - Additional options
+ * @returns Created notification
+ * @throws {Error} If validation fails or creation fails
  */
 export const createNotification = async (
   notificationData: NotificationInput,
@@ -66,7 +69,7 @@ export const createNotification = async (
     title,
     message,
     link = null,
-    status = 'UNREAD' as NotificationStatus, // Cast to the enum type
+    status = 'UNREAD',
     metadata = {}
   } = notificationData;
 
@@ -119,8 +122,6 @@ export const createNotification = async (
     throw new Error(`Failed to create notification: ${error.message}`);
   }
 };
-
-// ... rest of your functions remain the same
 
 /**
  * Helper: Create multiple notifications at once
