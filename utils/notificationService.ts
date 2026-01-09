@@ -1,15 +1,15 @@
 // services/notificationService.ts
-import { PrismaClient, PrivacySetting } from "@prisma/client";
+import { PrismaClient, NotificationType, NotificationStatus } from "@prisma/client";
 const prisma = new PrismaClient();
 
-// Types
+// Types - IMPORTANT: Use the actual enums from your Prisma schema
 export interface NotificationInput {
   userId: string;
-  type: string;
+  type: NotificationType; // Use the enum type instead of string
   title: string;
   message: string;
   link?: string | null;
-  status?: string;
+  status?: NotificationStatus; // Use the enum type instead of string
   metadata?: Record<string, any>;
 }
 
@@ -30,14 +30,15 @@ export interface ValidationResult {
   errors: string[];
 }
 
-export interface NotificationWithUser {
+// Use Prisma types directly if possible
+export type NotificationWithUser = {
   id: string;
   userId: string;
-  type: string;
+  type: NotificationType; // Fix: Use enum type
   title: string;
   message: string;
   link: string | null;
-  status: string;
+  status: NotificationStatus; // Fix: Use enum type
   metadata: Record<string, any>;
   createdAt: Date;
   user?: {
@@ -45,14 +46,10 @@ export interface NotificationWithUser {
     email: string;
     name: string;
   };
-}
+};
 
 /**
  * Create a notification with validation
- * @param notificationData - Notification data
- * @param options - Additional options
- * @returns Created notification
- * @throws {Error} If validation fails or creation fails
  */
 export const createNotification = async (
   notificationData: NotificationInput,
@@ -69,7 +66,7 @@ export const createNotification = async (
     title,
     message,
     link = null,
-    status = 'UNREAD',
+    status = 'UNREAD' as NotificationStatus, // Cast to the enum type
     metadata = {}
   } = notificationData;
 
@@ -116,15 +113,14 @@ export const createNotification = async (
       }
     });
 
-    // 4. Optional: Trigger events or side effects
-    // await triggerNotificationEvents(notification);
-
     return notification as NotificationWithUser;
   } catch (error: any) {
     console.error('Notification creation error:', error);
     throw new Error(`Failed to create notification: ${error.message}`);
   }
 };
+
+// ... rest of your functions remain the same
 
 /**
  * Helper: Create multiple notifications at once
@@ -190,11 +186,3 @@ export const createValidatedNotification = async (
   
   return createNotification(notificationData);
 };
-
-// You might also want to add Prisma-generated types if available
-// import { Notification, User } from '@prisma/client';
-
-// Or create a more specific type based on your Prisma schema:
-// export type NotificationWithUser = Notification & {
-//   user?: Pick<User, 'id' | 'email' | 'name'>;
-// };
