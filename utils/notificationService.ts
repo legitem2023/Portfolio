@@ -1,15 +1,24 @@
-// notificationService.ts
-import { PrismaClient } from "@prisma/client"; // Remove NotificationStatus
+// services/notificationService.ts
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-// Types - Keep everything as string since we don't have the NotificationStatus enum
+// Define NotificationType enum manually based on your schema
+export enum NotificationType {
+  ORDER_UPDATE = 'ORDER_UPDATE',
+  PAYMENT_CONFIRMATION = 'PAYMENT_CONFIRMATION',
+  SHIPMENT = 'SHIPMENT',
+  PROMOTIONAL = 'PROMOTIONAL',
+  SUPPORT = 'SUPPORT'
+}
+
+// Types - Now use our manually defined NotificationType
 export interface NotificationInput {
   userId: string;
-  type: string; // Changed from NotificationType to string
+  type: NotificationType; // Use the manual enum
   title: string;
   message: string;
   link?: string | null;
-  status?: string; // Already string, keep as is
+  status?: string;
   metadata?: Record<string, any>;
 }
 
@@ -33,7 +42,7 @@ export interface ValidationResult {
 export interface NotificationWithUser {
   id: string;
   userId: string;
-  type: string; // Changed from NotificationType to string
+  type: NotificationType; // Use the manual enum
   title: string;
   message: string;
   link: string | null;
@@ -78,6 +87,11 @@ export const createNotification = async (
     if (!skipValidation) {
       if (!userId || !type || !title || !message) {
         throw new Error('Missing required fields: userId, type, title, or message');
+      }
+
+      // Optional: Validate the type is a valid NotificationType
+      if (!Object.values(NotificationType).includes(type as NotificationType)) {
+        throw new Error(`Invalid notification type: ${type}`);
       }
 
       // 2. Validate user exists if required
@@ -158,6 +172,11 @@ export const validateNotificationData = (data: NotificationInput): ValidationRes
   if (!data.type) errors.push('type is required');
   if (!data.title) errors.push('title is required');
   if (!data.message) errors.push('message is required');
+  
+  // Validate type is valid
+  if (data.type && !Object.values(NotificationType).includes(data.type as NotificationType)) {
+    errors.push(`Invalid notification type. Must be one of: ${Object.values(NotificationType).join(', ')}`);
+  }
   
   if (data.title && data.title.length > 255) {
     errors.push('title must be less than 255 characters');
