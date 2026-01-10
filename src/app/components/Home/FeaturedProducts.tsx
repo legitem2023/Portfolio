@@ -25,7 +25,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
           <p className="text-gray-600 max-w-2xl mx-auto">{description}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="w-full max-w-7xl grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
           {loading ? (
             <CategoryShimmer count={4} />
           ) : (
