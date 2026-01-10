@@ -7,7 +7,7 @@ import { category, Product } from '../../../../types';
 import React, { useState, useEffect } from 'react';
 import MobileMenu from './MobileMenu';
 import HeroCarousel from './HeroCarousel';
-import FeaturedCategories from './FeaturedCategories';
+import CategoryPage from '../CategoryPage';
 import FeaturedProducts from './FeaturedProducts';
 import VisitorCounter from '../VisitorCounter';
 
@@ -124,10 +124,7 @@ const DeluxeHomePage: React.FC = () => {
       <main>
         <VisitorCounter/>
         <HeroCarousel slides={heroSlides} />
-        <FeaturedCategories 
-          categories={categories} 
-          loading={categoryLoading} 
-        />
+        <CategoryPage />
         <FeaturedProducts 
           products={products} 
           loading={productLoading} 
