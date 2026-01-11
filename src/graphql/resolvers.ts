@@ -2192,7 +2192,7 @@ console.log(`Notification created for order ${response.orderNumber}`);
 
 return {
   success: true,
-  statusText: 'Successful!',
+  statusText: 'Order Successful!',
   order: response
 };
       } catch (error: any) {
