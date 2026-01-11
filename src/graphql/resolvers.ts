@@ -2111,75 +2111,79 @@ deleteProduct: async (_: any, { id }: any) => {
     },
 
 createOrder: async (_: any, { userId, addressId, items }: any) => {
-  // Validate and convert productIds to proper ObjectID format
-  const validItems = items.map((item: any) => {
-    let productId = item.productId;
-    
-    // If it's a numeric string, pad it to 24 hex characters
-    if (/^\d+$/.test(productId)) {
-      productId = productId.padStart(24, '0');
-    }
-    
-    // If it's already a hex string but wrong length, handle it
-    if (productId.length !== 24) {
-      throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
-    }
-    
-    return {
-      productId,
-      quantity: item.quantity,
-      price: item.price,
-    };
-  });
-
-  const response = await prisma.order.create({
-    data: {
-      userId,
-      addressId,
-      orderNumber: `ORD-${Date.now()}`,
-      status: "PENDING",
-      total: items.reduce(
-        (sum: number, item: any) => sum + item.price * item.quantity,
-        0
-      ),
-      subtotal: items.reduce(
-        (sum: number, item: any) => sum + item.price * item.quantity,
-        0
-      ),
-      items: {
-        create: validItems,
-      },
-    },
-    include: { items: true },
-  });
-  
-  if (response) {
-    // Create notification for the order
-    try {
-      await createNotification({
-        userId: userId,
-        type: NotificationType.ORDER_UPDATE, // Use the enum
-        title: "Order Created Successfully",
-        message: `Your order #${response.orderNumber} has been created and is being processed.`,
-        link: `/orders/${response.id}`, // Link to the order page
-        isRead: false
-      });
-    return {
-      statusText: 'Successful!',
-      order: response // Consider returning the order object too
-    };
-      console.log(`Notification created for order ${response.orderNumber}`);
-    } catch (error: any) {
-      console.error('Failed to create order notification:', error);
-      // Don't throw here - we still want to return the order success
-      // even if notification fails
+  try {
+    // Validate and convert productIds to proper ObjectID format
+    const validItems = items.map((item: any) => {
+      let productId = item.productId;
+      
+      // If it's a numeric string, pad it to 24 hex characters
+      if (/^\d+$/.test(productId)) {
+        productId = productId.padStart(24, '0');
+      }
+      
+      // If it's already a hex string but wrong length, handle it
+      if (productId.length !== 24) {
+        throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
+      }
+      
       return {
-      statusText: 'Failed Notification',
-      order: response // Consider returning the order object too
-    };
+        productId,
+        quantity: item.quantity,
+        price: item.price,
+      };
+    });
+
+    const response = await prisma.order.create({
+      data: {
+        userId,
+        addressId,
+        orderNumber: `ORD-${Date.now()}`,
+        status: "PENDING",
+        total: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        subtotal: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        items: {
+          create: validItems,
+        },
+      },
+      include: { items: true },
+    });
+    
+    if (response) {
+      // Create notification for the order
+      try {
+        await createNotification({
+          userId: userId,
+          type: NotificationType.ORDER_UPDATE, // Use the enum
+          title: "Order Created Successfully",
+          message: `Your order #${response.orderNumber} has been created and is being processed.`,
+          link: `/orders/${response.id}`, // Link to the order page
+          isRead: false
+        });
+        console.log(`Notification created for order ${response.orderNumber}`);
+        
+        return {
+          statusText: 'Successful!',
+          order: response // Consider returning the order object too
+        };
+      } catch (error: any) {
+        console.error('Failed to create order notification:', error);
+        // Don't throw here - we still want to return the order success
+        // even if notification fails
+        return {
+          statusText: 'Failed Notification',
+          order: response // Consider returning the order object too
+        };
+      }
     }
-    
-    
+  } catch (error: any) {
+    // Re-throw any errors from the main try block
+    throw error;
   }
 },
 
