@@ -2157,20 +2157,44 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
     if (response) {
       // Create notification for the order
       try {
-        await createNotification({
-          userId: userId,
-          type: NotificationType.ORDER_UPDATE, // Use the enum
-          title: "Order Created Successfully",
-          message: `Your order #${response.orderNumber} has been created and is being processed.`,
-          link: `/orders/${response.id}`, // Link to the order page
-          isRead: false
-        });
-        console.log(`Notification created for order ${response.orderNumber}`);
-        
-        return {
-          statusText: 'Successful!',
-          order: response // Consider returning the order object too
-        };
+        // Try to create notification
+const notificationResult = await createNotification({
+  userId: userId,
+  type: NotificationType.ORDER_UPDATE,
+  title: "Order Created Successfully",
+  message: `Your order #${response.orderNumber} has been created and is being processed.`,
+  link: `/orders/${response.id}`,
+  isRead: false
+});
+
+// Filter: If notification fails, don't return success
+if (!notificationResult.success) {
+  console.error(`Failed to create notification for order ${response.orderNumber}:`, notificationResult.error?.message);
+  
+  // Option 1: Throw an error (revert to throwing)
+  throw new Error(`Order created but notification failed: ${notificationResult.error?.message}`);
+  
+  // Option 2: Return error response
+  return {
+    success: false,
+    statusText: 'Order created but notification failed',
+    order: response,
+    error: {
+      code: 'NOTIFICATION_FAILED',
+      message: notificationResult.error?.message,
+      details: notificationResult.error?.details
+    }
+  };
+}
+
+// Only reach here if notification was successful
+console.log(`Notification created for order ${response.orderNumber}`);
+
+return {
+  success: true,
+  statusText: 'Successful!',
+  order: response
+};
       } catch (error: any) {
         console.error('Failed to create order notification:', error);
         // Don't throw here - we still want to return the order success
