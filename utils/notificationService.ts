@@ -26,18 +26,6 @@ export interface CreateNotificationOptions {
   skipValidation?: boolean;
 }
 
-export interface NotificationResult {
-  success: boolean;
-  notification?: any;
-  error?: string;
-  data?: NotificationInput;
-}
-
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-}
-
 export interface NotificationWithUser {
   id: string;
   userId: string;
@@ -55,13 +43,37 @@ export interface NotificationWithUser {
   };
 }
 
+// New return-based result types
+export interface ServiceResult<T = any> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+}
+
+// Old interface for backward compatibility (if needed)
+export interface NotificationResult {
+  success: boolean;
+  notification?: any;
+  error?: string;
+  data?: NotificationInput;
+}
+
 /**
- * Create a notification with validation
+ * Create a notification with validation - return-based error handling
  */
 export const createNotification = async (
   notificationData: NotificationInput,
   options: CreateNotificationOptions = {}
-): Promise<NotificationWithUser> => {
+): Promise<ServiceResult<NotificationWithUser>> => {
   const {
     requireUserExists = true,
     skipValidation = false
@@ -73,19 +85,33 @@ export const createNotification = async (
     title,
     message,
     link = null,
-    isRead = false, // Default to false (unread)
+    isRead = false,
   } = notificationData;
 
   try {
     // 1. Validate required fields
     if (!skipValidation) {
       if (!userId || !type || !title || !message) {
-        throw new Error('Missing required fields: userId, type, title, or message');
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Missing required fields: userId, type, title, or message',
+            details: { missingFields: { userId: !userId, type: !type, title: !title, message: !message } }
+          }
+        };
       }
 
       // Validate the type is a valid NotificationType
       if (!Object.values(NotificationType).includes(type as NotificationType)) {
-        throw new Error(`Invalid notification type: ${type}`);
+        return {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: `Invalid notification type: ${type}`,
+            details: { validTypes: Object.values(NotificationType) }
+          }
+        };
       }
 
       // 2. Validate user exists if required
@@ -96,7 +122,14 @@ export const createNotification = async (
         });
 
         if (!userExists) {
-          throw new Error('User not found');
+          return {
+            success: false,
+            error: {
+              code: 'USER_NOT_FOUND',
+              message: 'User not found',
+              details: { userId }
+            }
+          };
         }
       }
     }
@@ -118,39 +151,53 @@ export const createNotification = async (
             id: true,
             email: true,
             firstName: true,
-            lastName:true
+            lastName: true
           }
         }
       }
     });
 
-    return notification as NotificationWithUser;
+    return {
+      success: true,
+      data: notification as NotificationWithUser
+    };
   } catch (error: any) {
     console.error('Notification creation error:', error);
-    throw new Error(`Failed to create notification: ${error.message}`);
+    
+    // Handle Prisma specific errors
+    let errorCode = 'DATABASE_ERROR';
+    let errorMessage = error.message;
+    
+    if (error.code) {
+      errorCode = error.code;
+      if (error.code === 'P2003') {
+        errorMessage = 'Foreign key constraint failed - referenced user may not exist';
+      }
+    }
+
+    return {
+      success: false,
+      error: {
+        code: errorCode,
+        message: `Failed to create notification: ${errorMessage}`,
+        details: error
+      }
+    };
   }
 };
 
 /**
- * Helper: Create multiple notifications at once
+ * Helper: Create multiple notifications at once - updated for return-based approach
  */
 export const createMultipleNotifications = async (
   notificationsArray: NotificationInput[],
   options: CreateNotificationOptions = {}
-): Promise<NotificationResult[]> => {
-  const results: NotificationResult[] = [];
+): Promise<ServiceResult<NotificationWithUser>[]> => {
+  const results: ServiceResult<NotificationWithUser>[] = [];
   
   for (const notificationData of notificationsArray) {
-    try {
-      const notification = await createNotification(notificationData, options);
-      results.push({ success: true, notification });
-    } catch (error: any) {
-      results.push({ 
-        success: false, 
-        error: error.message, 
-        data: notificationData 
-      });
-    }
+    const result = await createNotification(notificationData, options);
+    results.push(result);
   }
   
   return results;
@@ -187,24 +234,31 @@ export const validateNotificationData = (data: NotificationInput): ValidationRes
 };
 
 /**
- * Create notification with pre-validation
+ * Create notification with pre-validation - updated for return-based approach
  */
 export const createValidatedNotification = async (
   notificationData: NotificationInput
-): Promise<NotificationWithUser> => {
+): Promise<ServiceResult<NotificationWithUser>> => {
   const validation = validateNotificationData(notificationData);
   
   if (!validation.isValid) {
-    throw new Error(`Invalid notification data: ${validation.errors.join(', ')}`);
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: `Invalid notification data: ${validation.errors.join(', ')}`,
+        details: { errors: validation.errors }
+      }
+    };
   }
   
   return createNotification(notificationData);
 };
 
 /**
- * Helper: Mark notification as read
+ * Helper: Mark notification as read - updated for return-based approach
  */
-export const markAsRead = async (notificationId: string): Promise<NotificationWithUser> => {
+export const markAsRead = async (notificationId: string): Promise<ServiceResult<NotificationWithUser>> => {
   try {
     const notification = await prisma.notification.update({
       where: { id: notificationId },
@@ -215,15 +269,153 @@ export const markAsRead = async (notificationId: string): Promise<NotificationWi
             id: true,
             email: true,
             firstName: true,
-            lastName:true
+            lastName: true
           }
         }
       }
     });
     
-    return notification as NotificationWithUser;
+    return {
+      success: true,
+      data: notification as NotificationWithUser
+    };
   } catch (error: any) {
     console.error('Error marking notification as read:', error);
-    throw new Error(`Failed to mark notification as read: ${error.message}`);
+    
+    let errorCode = 'DATABASE_ERROR';
+    let errorMessage = error.message;
+    
+    if (error.code === 'P2025') {
+      errorCode = 'NOTIFICATION_NOT_FOUND';
+      errorMessage = 'Notification not found';
+    }
+    
+    return {
+      success: false,
+      error: {
+        code: errorCode,
+        message: `Failed to mark notification as read: ${errorMessage}`,
+        details: { notificationId }
+      }
+    };
   }
+};
+
+/**
+ * Additional helper functions that maintain the return-based pattern
+ */
+
+/**
+ * Get notifications for a user
+ */
+export const getUserNotifications = async (
+  userId: string,
+  options: { unreadOnly?: boolean; limit?: number } = {}
+): Promise<ServiceResult<NotificationWithUser[]>> => {
+  const { unreadOnly = false, limit = 50 } = options;
+  
+  try {
+    const whereClause: any = { userId };
+    if (unreadOnly) {
+      whereClause.isRead = false;
+    }
+    
+    const notifications = await prisma.notification.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit
+    });
+    
+    return {
+      success: true,
+      data: notifications as NotificationWithUser[]
+    };
+  } catch (error: any) {
+    console.error('Error getting user notifications:', error);
+    
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: `Failed to get notifications: ${error.message}`,
+        details: { userId }
+      }
+    };
+  }
+};
+
+/**
+ * Delete a notification
+ */
+export const deleteNotification = async (notificationId: string): Promise<ServiceResult<{ deleted: boolean }>> => {
+  try {
+    await prisma.notification.delete({
+      where: { id: notificationId }
+    });
+    
+    return {
+      success: true,
+      data: { deleted: true }
+    };
+  } catch (error: any) {
+    console.error('Error deleting notification:', error);
+    
+    let errorCode = 'DATABASE_ERROR';
+    let errorMessage = error.message;
+    
+    if (error.code === 'P2025') {
+      errorCode = 'NOTIFICATION_NOT_FOUND';
+      errorMessage = 'Notification not found';
+    }
+    
+    return {
+      success: false,
+      error: {
+        code: errorCode,
+        message: `Failed to delete notification: ${errorMessage}`,
+        details: { notificationId }
+      }
+    };
+  }
+};
+
+/**
+ * Compatibility function for backward compatibility (if you need to maintain the old throwing interface)
+ * This can be used temporarily while migrating existing code
+ */
+export const createNotificationLegacy = async (
+  notificationData: NotificationInput,
+  options: CreateNotificationOptions = {}
+): Promise<NotificationWithUser> => {
+  const result = await createNotification(notificationData, options);
+  
+  if (!result.success) {
+    throw new Error(result.error?.message || 'Unknown error creating notification');
+  }
+  
+  return result.data!;
+};
+
+/**
+ * Helper to check if a result is successful (type guard)
+ */
+export const isSuccess = <T>(result: ServiceResult<T>): result is ServiceResult<T> & { success: true; data: T } => {
+  return result.success === true && result.data !== undefined;
+};
+
+/**
+ * Helper to check if a result is an error (type guard)
+ */
+export const isError = <T>(result: ServiceResult<T>): result is ServiceResult<T> & { success: false; error: { code: string; message: string } } => {
+  return result.success === false && result.error !== undefined;
 };
