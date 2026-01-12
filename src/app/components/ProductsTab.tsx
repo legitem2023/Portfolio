@@ -282,7 +282,7 @@ const ProductsTab: React.FC = () => {
 
       {/* Mobile Search Bar (Collapsed State) */}
       {!isSearchExpanded && isMobileSearchExpanded && (
-        <div className="lg:hidden fixed top-0 left-0 right-0 bg-white z-40 border-b border-gray-200 p-4">
+        <div className="lg:hidden fixed top-0 left-0 right-0 bg-white z-40 border-b border-gray-200 p-2">
           <div className="flex items-center">
             <button
               onClick={handleSearchCollapse}
