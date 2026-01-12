@@ -1315,7 +1315,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         
         // Save images
         const imageFile = await saveBase64Image(base64Image, `vendorsify_category_${imageUUID}.webp`);
-        
+        if (!imageFile) return { statusText: "Upload failed!" };
         const updatedProduct = await prisma.category.update({
           where: { id: categoryId },
           data: {
