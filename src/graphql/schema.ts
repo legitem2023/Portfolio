@@ -390,8 +390,8 @@ export const typeDefs = gql`
     growthRate: Float
   }
 
-  type SalesMetrics 
-    revenue: RevenueMetrics!
+  type SalesMetrics {
+    revenue: RevenueMetrics
     orders: OrderMetrics
     customers: CustomerMetrics
   }
