@@ -15,6 +15,12 @@ import {
 
 const prisma = new PrismaClient();
 
+// Add date-fns imports for sales analytics
+import { 
+  startOfDay, endOfDay, subDays, startOfMonth, endOfMonth, 
+  startOfYear, endOfYear, format, subMonths, subYears 
+} from 'date-fns';
+
 // Utility function for authentication
 const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
