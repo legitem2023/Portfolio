@@ -46,12 +46,51 @@ notifications: async (_:any, { userId, filters }:any, context:any) => {
   try {
     // Check if user is authenticated
     if (!context.user) {
-      throw new Error('Not authenticated');
+      console.warn('No authenticated user in context');
+      // Return empty instead of throwing error
+      return {
+        edges: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null,
+        },
+        totalCount: 0,
+        unreadCount: 0,
+      };
+    }
+
+    // Validate userId parameter
+    if (!userId || userId.trim() === '') {
+      console.warn('Empty userId provided');
+      return {
+        edges: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null,
+        },
+        totalCount: 0,
+        unreadCount: 0,
+      };
     }
 
     // Users can only access their own notifications
     if (context.user.id !== userId) {
-      throw new Error('Unauthorized');
+      console.warn(`User ${context.user.id} attempted to access notifications for ${userId}`);
+      return {
+        edges: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null,
+        },
+        totalCount: 0,
+        unreadCount: 0,
+      };
     }
 
     const { isRead, type, limit = 20, cursor } = filters || {};
@@ -80,8 +119,7 @@ notifications: async (_:any, { userId, filters }:any, context:any) => {
             id: true,
             email: true,
             firstName: true,
-            lastName: true,
-            avatar: true,
+            lastName: true
           },
         },
       },
