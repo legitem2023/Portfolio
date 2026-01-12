@@ -246,7 +246,7 @@ const ProductsTab: React.FC = () => {
               {debouncedSearch ? (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Search Results for "{debouncedSearch}"
+                    Search Results for {debouncedSearch}
                   </h3>
                   
                   {/* Results Count */}
@@ -261,7 +261,7 @@ const ProductsTab: React.FC = () => {
                     <ProductThumbnails products={products} />
                   ) : (
                     <div className="text-center py-12 text-gray-500">
-                      No products found for "{debouncedSearch}"
+                      No products found for {debouncedSearch}
                     </div>
                   )}
                 </div>
