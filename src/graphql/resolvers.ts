@@ -36,6 +36,356 @@ interface SetDefaultAddressResponse {
   message?: string;
   address?: any;
 }
+// ================= Sales Analytics Interfaces =================
+interface SalesFilters {
+  status?: OrderStatus;
+  userId?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+interface DateRange {
+  start: Date;
+  end: Date;
+}
+
+const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
+
+// ================= Sales Analytics Utility Functions =================
+function getDateRange(timeframe: string, customRange?: { start: Date; end: Date }): DateRange {
+  const now = new Date();
+  
+  if (customRange) {
+    return customRange;
+  }
+
+  switch (timeframe) {
+    case 'TODAY':
+      return { start: startOfDay(now), end: endOfDay(now) };
+    case 'YESTERDAY':
+      const yesterday = subDays(now, 1);
+      return { start: startOfDay(yesterday), end: endOfDay(yesterday) };
+    case 'LAST_7_DAYS':
+      return { start: startOfDay(subDays(now, 7)), end: endOfDay(now) };
+    case 'LAST_30_DAYS':
+      return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+    case 'THIS_MONTH':
+      return { start: startOfMonth(now), end: endOfDay(now) };
+    case 'LAST_MONTH':
+      const lastMonth = subMonths(now, 1);
+      return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+    case 'THIS_YEAR':
+      return { start: startOfYear(now), end: endOfDay(now) };
+    case 'LAST_YEAR':
+      const lastYear = subYears(now, 1);
+      return { start: startOfYear(lastYear), end: endOfYear(lastYear) };
+    default:
+      return { start: startOfDay(subDays(now, 30)), end: endOfDay(now) };
+  }
+}
+
+function getPreviousDateRange(timeframe: string, currentRange: DateRange): DateRange {
+  const duration = currentRange.end.getTime() - currentRange.start.getTime();
+  return {
+    start: new Date(currentRange.start.getTime() - duration),
+    end: new Date(currentRange.end.getTime() - duration)
+  };
+}
+
+function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
+  const where: any = {
+    createdAt: {
+      gte: dateRange.start,
+      lte: dateRange.end
+    }
+  };
+
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  if (filters?.userId) {
+    where.userId = filters.userId;
+  }
+
+  if (filters?.minAmount !== undefined) {
+    where.total = { gte: filters.minAmount };
+  }
+
+  if (filters?.maxAmount !== undefined) {
+    where.total = { lte: filters.maxAmount };
+  }
+
+  return where;
+}
+
+async function getGroupedSalesData(
+  whereClause: any, 
+  groupBy: string, 
+  dateRange: DateRange
+) {
+  const orders = await prisma.order.findMany({
+    where: whereClause,
+    include: {
+      items: true
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  // Group data based on groupBy parameter
+  const groupedData = groupOrdersByTimeframe(orders, groupBy, dateRange);
+  return groupedData;
+}
+
+function groupOrdersByTimeframe(orders: any[], groupBy: string, dateRange: DateRange) {
+  const formatMap: any = {
+    DAILY: 'yyyy-MM-dd',
+    WEEKLY: 'yyyy-\'W\'II',
+    MONTHLY: 'yyyy-MM',
+    QUARTERLY: 'yyyy-Qq',
+    YEARLY: 'yyyy'
+  };
+
+  const formatString = formatMap[groupBy] || 'yyyy-MM-dd';
+  
+  const groups: { [key: string]: any } = {};
+  
+  orders.forEach((order: any) => {
+    const period = format(order.createdAt, formatString);
+    
+    if (!groups[period]) {
+      groups[period] = {
+        period,
+        date: order.createdAt,
+        revenue: 0,
+        orders: 0,
+        itemsSold: 0
+      };
+    }
+    
+    groups[period].revenue += order.total;
+    groups[period].orders += 1;
+    groups[period].itemsSold += order.items.reduce((sum: number, item: any) => 
+      sum + item.quantity, 0
+    );
+  });
+
+  // Calculate average order value
+  return Object.values(groups).map((group: any) => ({
+    ...group,
+    averageOrderValue: group.orders > 0 ? group.revenue / group.orders : 0
+  }));
+}
+
+async function getSalesSummary(whereClause: any, dateRange: DateRange) {
+  const result = await prisma.order.aggregate({
+    where: whereClause,
+    _sum: {
+      total: true
+    },
+    _count: {
+      id: true
+    },
+    _avg: {
+      total: true
+    }
+  });
+
+  const itemsResult = await prisma.orderItem.aggregate({
+    where: {
+      order: whereClause
+    },
+    _sum: {
+      quantity: true
+    }
+  });
+
+  const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
+  const previousWhereClause = buildWhereClause({}, previousDateRange);
+  const previousResult = await prisma.order.aggregate({
+    where: previousWhereClause,
+    _sum: {
+      total: true
+    }
+  });
+
+  return {
+    totalRevenue: result._sum.total || 0,
+    totalOrders: result._count.id,
+    averageOrderValue: result._avg.total || 0,
+    totalItemsSold: itemsResult._sum.quantity || 0,
+    growthRate: calculateGrowthRate(result._sum.total || 0, previousResult._sum.total || 0)
+  };
+}
+
+async function getBasicMetrics(whereClause: any) {
+  const result = await prisma.order.aggregate({
+    where: whereClause,
+    _sum: {
+      total: true
+    },
+    _count: {
+      id: true
+    },
+    _avg: {
+      total: true
+    }
+  });
+
+  return {
+    totalRevenue: result._sum.total || 0,
+    totalOrders: result._count.id,
+    averageOrderValue: result._avg.total || 0
+  };
+}
+
+async function getOrderStatusBreakdown(whereClause: any) {
+  const statusCounts = await prisma.order.groupBy({
+    by: ['status'],
+    where: whereClause,
+    _count: {
+      id: true
+    }
+  });
+
+  const total = statusCounts.reduce((sum: number, item: any) => sum + item._count.id, 0);
+
+  return statusCounts.map((item: any) => ({
+    status: item.status,
+    count: item._count.id,
+    percentage: total > 0 ? (item._count.id / total) * 100 : 0
+  }));
+}
+/*
+async function getCustomerMetrics(
+  currentWhere: any, 
+  previousWhere: any
+) {
+  const [currentCustomers, previousCustomers, repeatCustomers] = await Promise.all([
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: currentWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: previousWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: currentWhere,
+      having: {
+        userId: {
+          _count: {
+            id: {
+              gt: 1
+            }
+          }
+        }
+      }
+    })
+  ]);
+
+  const totalRevenueResult = await prisma.order.aggregate({
+    where: currentWhere,
+    _sum: {
+      total: true
+    }
+  });
+
+  return {
+    total: currentCustomers.length,
+    repeatCustomers: repeatCustomers.length,
+    newCustomers: currentCustomers.length - repeatCustomers.length,
+    averageSpend: currentCustomers.length > 0 ? 
+      (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
+  };
+}
+*/
+async function getCustomerMetrics(
+  currentWhere: any, 
+  previousWhere: any
+) {
+  const [currentCustomers, previousCustomers, totalRevenueResult] = await Promise.all([
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: currentWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: previousWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.aggregate({
+      where: currentWhere,
+      _sum: {
+        total: true
+      }
+    })
+  ]);
+
+  // Calculate repeat customers (users with more than 1 order)
+  const repeatCustomers = currentCustomers.filter(customer => customer._count.id > 1);
+
+  return {
+    total: currentCustomers.length,
+    repeatCustomers: repeatCustomers.length,
+    newCustomers: currentCustomers.length - repeatCustomers.length,
+    averageSpend: currentCustomers.length > 0 ? 
+      (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
+  };
+}
+async function getSalesTrendData(
+  whereClause: any, 
+  groupBy: string, 
+  dateRange: DateRange
+) {
+  // Implementation for trend data with moving averages
+  const orders = await prisma.order.findMany({
+    where: whereClause,
+    select: {
+      createdAt: true,
+      total: true
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  // This would implement more sophisticated trend calculation
+  // For now, return basic grouped data
+  const grouped = groupOrdersByTimeframe(orders as any, groupBy, dateRange);
+  
+  return grouped.map((point: any, index: number, array: any[]) => ({
+    date: point.date,
+    period: point.period,
+    revenue: point.revenue,
+    orders: point.orders,
+    trend: index > 0 ? 
+      ((point.revenue - array[index - 1].revenue) / array[index - 1].revenue) * 100 : 0
+  }));
+}
+
+function calculateGrowthRate(current: number, previous: number): number {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return ((current - previous) / previous) * 100;
+}
 
 const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
