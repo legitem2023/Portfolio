@@ -80,10 +80,13 @@ const Header: React.FC = () => {
     notifyOnNetworkStatusChange: true
   });
 
-  // Get userId from user data or auth
-  const userId = user?.id || userData?.users?.[0]?.id || '';
+  // Get userId from user data or auth - FIXED: Only get userId if available
+  const userId = user?.id || userData?.users?.[0]?.id || null;
 
-  // Fetch notifications with error boundary
+  // Track overall user loading state
+  const isLoadingUser = userLoading || isLoading || networkStatus === NetworkStatus.loading;
+
+  // Fetch notifications with error boundary - FIXED: skip when no userId
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
@@ -91,10 +94,10 @@ const Header: React.FC = () => {
     refetch: refetchNotifications
   } = useQuery(GET_NOTIFICATIONS, {
     variables: { 
-      userId,
+      userId: userId || '',
       limit: 5 // Reduced limit for header
     },
-    skip: !userId,
+    skip: !userId, // Don't query if no userId
     fetchPolicy: 'cache-and-network',
     onError: (error) => {
       console.error('Notification query error:', error);
@@ -163,17 +166,17 @@ const Header: React.FC = () => {
 
   // Check if current route requires authentication
   useEffect(() => {
-    if (!hasCheckedAuth || isLoading || networkStatus === NetworkStatus.loading) {
+    if (!hasCheckedAuth || isLoadingUser) {
       return;
     }
 
     const protectedIndexes = [5, 7, 8, 9, 10];
     
-    if (protectedIndexes.includes(activeIndex) && !user) {
+    if (protectedIndexes.includes(activeIndex) && !user && !userData?.users?.[0]) {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
-  }, [activeIndex, user, isLoading, hasCheckedAuth, networkStatus, router]);
+  }, [activeIndex, user, userData, isLoadingUser, hasCheckedAuth, router]);
 
   // Close dropdown when clicking outside (desktop)
   useEffect(() => {
@@ -240,6 +243,12 @@ const Header: React.FC = () => {
   };
 
   const handleBellButtonClick = () => {
+    if (!userId) {
+      // If no user, redirect to login
+      router.push('/Login');
+      return;
+    }
+    
     if (isMobile()) {
       setIsBellPopupOpen(!isBellPopupOpen);
     } else {
@@ -413,24 +422,31 @@ const Header: React.FC = () => {
           </div>
              
           <div className="z-20 h-[100%] flex items-center space-x-2">
-            {/* Bell Button with Notification Badge */}
+            {/* Bell Button with Notification Badge - FIXED: Better loading/disabled states */}
             <div className="relative" ref={bellRef}>
               <button
                 onClick={handleBellButtonClick}
                 className="relative flex items-center text-sm focus:outline-none"
-                disabled={!userId || notificationsLoading}
+                disabled={isLoadingUser}
+                title={!userId ? "Sign in to view notifications" : ""}
               >
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
-                  userId ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
+                  userId && !isLoadingUser ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
                 }`}>
-                  <Bell className={`w-5 h-5 ${userId ? 'text-indigo-600' : 'text-gray-400'}`} />
+                  <Bell className={`w-5 h-5 ${
+                    userId && !isLoadingUser ? 'text-indigo-600' : 'text-gray-400'
+                  }`} />
                 </div>
-                {unreadCount > 0 && userId && !notificationsLoading && (
+                {isLoadingUser ? (
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                  </span>
+                ) : unreadCount > 0 && userId && !notificationsLoading ? (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
-                )}
-                {notificationsLoading && (
+                ) : null}
+                {notificationsLoading && userId && (
                   <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
                   </span>
@@ -599,7 +615,7 @@ const Header: React.FC = () => {
                         <div className="flex flex-col items-center justify-center p-8 text-center">
                           <Bell className="w-12 h-12 text-gray-300 mb-4" />
                           <p className="text-gray-500 font-medium">No notifications</p>
-                          <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                          <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
                         </div>
                       )}
                     </div>
@@ -732,7 +748,7 @@ const Header: React.FC = () => {
                     className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
                     onClick={() => {
                       setIsModalOpen(false);
-                      handleTabClick(9);
+                      router.push('/Messaging');
                     }}
                   >
                     <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
