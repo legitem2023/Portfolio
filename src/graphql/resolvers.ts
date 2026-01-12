@@ -1,5 +1,5 @@
 // resolvers.ts
-import { PrismaClient, PrivacySetting } from "@prisma/client";
+import { PrismaClient, PrivacySetting, OrderStatus } from "@prisma/client";
 import { comparePassword, encryptPassword } from '../../utils/script';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
