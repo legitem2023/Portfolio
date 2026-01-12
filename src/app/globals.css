@@ -12,7 +12,21 @@
     @apply antialiased;
   }
 }
+/* If using regular CSS */
+.search-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: white;
+  z-index: 50;
+}
 
+/* Ensure body doesn't scroll when overlay is open */
+body.search-overlay-open {
+  overflow: hidden;
+}
 /* globals.css */
 .perspective-1000 {
   perspective: 1000px;
