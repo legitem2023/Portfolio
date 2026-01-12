@@ -1,4 +1,4 @@
-import { createYoga, createSchema } from "graphql-yoga";
+import { createYoga } from "graphql-yoga";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import { typeDefs } from "../../../graphql/schema";
 import { resolvers } from "../../../graphql/resolvers";
@@ -8,12 +8,20 @@ const schema = makeExecutableSchema({
   resolvers,
 });
 
-const { handleRequest } = createYoga({
+const yoga = createYoga({
   schema,
   graphqlEndpoint: "/api/graphql",
-  fetchAPI: { Response },
   graphiql: true,
-  multipart: true, // Keep this for file uploads
+  multipart: true,
+  cors: {
+    origin: "*", // tighten later
+  },
 });
 
-export { handleRequest as GET, handleRequest as POST };
+export async function GET(request: Request) {
+  return yoga.fetch(request);
+}
+
+export async function POST(request: Request) {
+  return yoga.fetch(request);
+}
