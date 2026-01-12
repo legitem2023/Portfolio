@@ -79,7 +79,6 @@ notifications: async (_:any, { userId, filters }:any, context:any) => {
 
     // Users can only access their own notifications
     if (context.user.id !== userId) {
-      console.warn(`User ${context.user.id} attempted to access notifications for ${userId}`);
       return {
         edges: [],
         pageInfo: {
@@ -1499,7 +1498,7 @@ upload3DModel: async (_: any, args: any) => {
     };
 
   } catch (error: any) {
-    console.error('3D Model upload error:', error);
+    
     
     // Provide more specific error messages for common issues
     let userMessage = error.message || 'An unexpected error occurred during upload';
@@ -1927,7 +1926,6 @@ deleteProduct: async (_: any, { id }: any) => {
     createUser: async (_: any, { email, password, firstName, lastName }: any) => {
       const passwordHash = await encryptPassword(password, 10);
 
-      console.log(email, password, firstName, lastName);
       const result = await prisma.user.create({
         data: { 
           email: email,
@@ -2206,7 +2204,6 @@ const notificationResult = await createNotification({
 
 // Filter: If notification fails, don't return success
 if (!notificationResult.success) {
-  console.error(`Failed to create notification for order ${response.orderNumber}:`, notificationResult.error?.message);
   
   // Option 1: Throw an error (revert to throwing)
   throw new Error(`Order created but notification failed: ${notificationResult.error?.message}`);
@@ -2225,7 +2222,6 @@ if (!notificationResult.success) {
 }
 
 // Only reach here if notification was successful
-console.log(`Notification created for order ${response.orderNumber}`);
 
 return {
   success: true,
@@ -2787,126 +2783,6 @@ return {
         likeCount: updatedPost?._count?.likes || 0,
         commentCount: updatedPost?._count?.comments || 0
       };
-    }
-  },
-
-  // Extend the User type with social fields
-  User: {
-    posts: async (parent: any, _: any, context: any) => {
-      const currentUserId = getUserId(context, false);
-      
-      let whereClause: any = { userId: parent.id };
-      
-      if (currentUserId !== parent.id) {
-        whereClause.OR = [
-          { privacy: PrivacySetting.PUBLIC },
-          {
-            AND: [
-              { privacy: PrivacySetting.FRIENDS },
-              {
-                user: {
-                  followers: {
-                    some: {
-                      followerId: currentUserId
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        ];
-      }
-      
-      const posts = await prisma.post.findMany({
-        where: whereClause,
-        include: {
-          user: true,
-          taggedUsers: {
-            include: {
-              user: true
-            }
-          },
-          comments: {
-            take: 2,
-            include: {
-              user: true
-            }
-          },
-          likes: {
-            where: {
-              userId: currentUserId
-            }
-          },
-          _count: {
-            select: {
-              comments: true,
-              likes: true
-            }
-          }
-        },
-        orderBy: {
-          createdAt: 'desc'
-        }
-      });
-      
-      return posts.map(post => ({
-        ...post,
-        taggedUsers: post.taggedUsers?.map((tu: any) => tu.user) || [],
-        isLikedByMe: (post.likes?.length || 0) > 0,
-        likeCount: post._count?.likes || 0,
-        commentCount: post._count?.comments || 0
-      }));
-    },
-    
-    followers: async (parent: any) => {
-      const followers = await prisma.follow.findMany({
-        where: { followingId: parent?.id },
-        include: {
-          follower: true
-        }
-      });
-      
-      return followers.map(f => f.follower);
-    },
-    
-    following: async (parent: any) => {
-      const following = await prisma.follow.findMany({
-        where: { followerId: parent?.id },
-        include: {
-          following: true
-        }
-      });
-      
-      return following.map(f => f.following);
-    },
-    
-    followerCount: async (parent: any) => {
-      return prisma.follow.count({
-        where: { followingId: parent?.id }
-      });
-    },
-    
-    followingCount: async (parent: any) => {
-      return prisma.follow.count({
-        where: { followerId: parent?.id }
-      });
-    },
-
-    isFollowing: async (parent: any, _: any, context: any) => {
-      const currentUserId = getUserId(context, false);
-      
-      if (!currentUserId || currentUserId === parent.id) {
-        return false;
-      }
-      
-      const follow = await prisma.follow.findFirst({
-        where: {
-          followerId: currentUserId,
-          followingId: parent.id
-        }
-      });
-      
-      return !!follow;
     }
   }
 };
