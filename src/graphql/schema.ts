@@ -367,82 +367,82 @@ export const typeDefs = gql`
 
   # ================= Sales Analytics Types =================
   type SalesDataResponse {
-    data: [SalesDataPoint]!
-    summary: SalesSummary!
-    timeframe: TimeframeInfo!
+    data: [SalesDataPoint]
+    summary: SalesSummary
+    timeframe: TimeframeInfo
   }
 
   type SalesDataPoint {
-    period: String!
-    date: DateTime!
-    revenue: Float!
-    orders: Int!
-    averageOrderValue: Float!
-    itemsSold: Int!
+    period: String
+    date: DateTime
+    revenue: Float
+    orders: Int
+    averageOrderValue: Float
+    itemsSold: Int
   }
 
   type SalesSummary {
-    totalRevenue: Float!
-    totalOrders: Int!
-    averageOrderValue: Float!
-    totalItemsSold: Int!
+    totalRevenue: Float
+    totalOrders: Int
+    averageOrderValue: Float
+    totalItemsSold: Int
     conversionRate: Float
     growthRate: Float
   }
 
-  type SalesMetrics {
+  type SalesMetrics 
     revenue: RevenueMetrics!
-    orders: OrderMetrics!
-    customers: CustomerMetrics!
+    orders: OrderMetrics
+    customers: CustomerMetrics
   }
 
   type RevenueMetrics {
-    total: Float!
-    average: Float!
-    growth: Float!
+    total: Float
+    average: Float
+    growth: Float
     target: Float
   }
 
   type OrderMetrics {
-    total: Int!
-    averageValue: Float!
-    growth: Float!
-    statusBreakdown: [OrderStatusCount]!
+    total: Int
+    averageValue: Float
+    growth: Float
+    statusBreakdown: [OrderStatusCount]
   }
 
   type CustomerMetrics {
-    total: Int!
-    repeatCustomers: Int!
-    newCustomers: Int!
-    averageSpend: Float!
+    total: Int
+    repeatCustomers: Int
+    newCustomers: Int
+    averageSpend: Float
   }
 
   type OrderStatusCount {
-    status: OrderStatus!
-    count: Int!
-    percentage: Float!
+    status: OrderStatus
+    count: Int
+    percentage: Float
   }
 
   type ProductSales {
-    productId: String!
-    productName: String!
-    unitsSold: Int!
-    revenue: Float!
-    percentage: Float!
+    productId: String
+    productName: String
+    unitsSold: Int
+    revenue: Float
+    percentage: Float
   }
 
   type SalesTrendPoint {
-    date: DateTime!
-    period: String!
-    revenue: Float!
-    orders: Int!
-    trend: Float!
+    date: DateTime
+    period: String
+    revenue: Float
+    orders: Int
+    trend: Float
   }
 
   type TimeframeInfo {
-    start: DateTime!
-    end: DateTime!
-    label: String!
+    start: DateTime
+    end: DateTime
+    label: String
   }
 
   # Feed types
@@ -472,19 +472,19 @@ export const typeDefs = gql`
 
   # ================= Sales List Types =================
   type SalesListResponse {
-    orders: [Order]!
-    totalCount: Int!
-    totalPages: Int!
-    currentPage: Int!
-    summary: SalesListSummary!
+    orders: [Order]
+    totalCount: Int
+    totalPages: Int
+    currentPage: Int
+    summary: SalesListSummary
   }
 
   type SalesListSummary {
-    totalRevenue: Float!
-    totalOrders: Int!
-    averageOrderValue: Float!
-    pendingOrders: Int!
-    completedOrders: Int!
+    totalRevenue: Float
+    totalOrders: Int
+    averageOrderValue: Float
+    pendingOrders: Int
+    completedOrders: Int
   }
 
   type OrderDetail {
@@ -575,25 +575,25 @@ export const typeDefs = gql`
 
     # ================= Sales Analytics Queries =================
     salesData(
-      timeframe: Timeframe!
-      groupBy: GroupBy!
+      timeframe: Timeframe
+      groupBy: GroupBy
       filters: SalesFilters
-    ): SalesDataResponse!
+    ): SalesDataResponse
     
     salesMetrics(
-      timeframe: Timeframe!
+      timeframe: Timeframe
       filters: SalesFilters
-    ): SalesMetrics!
+    ): SalesMetrics
     
     topProducts(
-      timeframe: Timeframe!
+      timeframe: Timeframe
       limit: Int
-    ): [ProductSales]!
+    ): [ProductSales]
     
     salesTrend(
-      timeframe: Timeframe!
-      groupBy: TrendGroupBy!
-    ): [SalesTrendPoint]!
+      timeframe: Timeframe
+      groupBy: TrendGroupBy
+    ): [SalesTrendPoint]
     
     # ================= Sales List Queries =================
     salesList(
