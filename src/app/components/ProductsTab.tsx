@@ -198,7 +198,7 @@ const ProductsTab: React.FC = () => {
       {isSearchExpanded && (
         <div className="fixed inset-0 bg-white z-50 flex flex-col">
           {/* Search Header */}
-          <div className="flex items-center p-4 border-b border-gray-200">
+          <div className="flex items-center p-2 border-b border-gray-200">
             {/* Mobile Back Button */}
             <button
               onClick={handleSearchCollapse}
@@ -208,7 +208,7 @@ const ProductsTab: React.FC = () => {
             </button>
             
             {/* Search Input */}
-            <div className="flex-1 flex items-center bg-gray-100 rounded-lg px-4 py-3">
+            <div className="flex-1 flex items-center bg-gray-100 rounded-md px-4 py-3">
               <Search size={20} className="text-gray-500 mr-3" />
               <input
                 ref={searchInputRef}
