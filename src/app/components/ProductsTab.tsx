@@ -214,7 +214,8 @@ const ProductsTab: React.FC = () => {
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search products..."
-                className="flex-1 bg-transparent border-none outline-none px-3 py-2 text-sm"
+                className="flex-1 bg-transparent outline-none px-3 py-1.5 md:px-4 md:py-2 border-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
+
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
@@ -292,7 +293,7 @@ const ProductsTab: React.FC = () => {
             <input
               type="text"
               placeholder="Search..."
-              className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm"
+              className="flex-1 bg-transparent outline-none px-3 py-1.5 md:px-4 md:py-2 border-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
               value={searchTerm}
               onChange={handleSearchChange}
               onFocus={handleSearchFocus}
