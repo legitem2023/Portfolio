@@ -387,7 +387,6 @@ function calculateGrowthRate(current: number, previous: number): number {
   return ((current - previous) / previous) * 100;
 }
 
-const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz'); // ✅ Uint8Array
 
 export const resolvers = {
   Query: {
