@@ -1529,43 +1529,49 @@ upload3DModel: async (_: any, args: any) => {
 },
    
     singleUpload: async (_: any, args: any) => {
-      try {
-        const { base64Image, productId } = args;
-        
-        // Validate required inputs
-        if (!base64Image || !productId) {
-          throw new Error('base64Image and productId are required');
-        }
+  try {
+    const { base64Image, productId } = args;
+    
+    if (!base64Image || !productId) {
+      throw new Error('base64Image and productId are required');
+    }
 
-        const imageUUID = uuidv4();
-        
-        // Save images
-        const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
-        
-        const updatedProduct = await prisma.productVariant.update({
-          where: { id: productId },
-          data: {
-            images: {
-              push: imageFile.url // Or base64Image if storing directly
-            }
-          }
-        });
-        
-        if (!updatedProduct) {
-          return {
-            statusText: "Upload failed!"
-          };
-        }
-        
-        // For this example, we return a success message.
-        return {
-          statusText: "Successfully Uploaded"
-        };
-        
-      } catch (error: any) {
-        console.error('Error in singleUpload:', error);
+    const imageUUID = uuidv4();
+    const imageFile = await saveBase64Image(base64Image, `DVN-product-${imageUUID}.webp`);
+    
+    // First, get the current product to see existing images
+    const existingProduct = await prisma.productVariant.findUnique({
+      where: { id: productId },
+      select: { images: true }
+    });
+
+    if (!existingProduct) {
+      return {
+        statusText: "Upload failed: Product not found"
+      };
+    }
+
+    // Create new images array
+    const updatedImages = [...(existingProduct.images || []), imageFile.url];
+    
+    const updatedProduct = await prisma.productVariant.update({
+      where: { id: productId },
+      data: {
+        images: updatedImages  // Direct array assignment
       }
-    },
+    });
+    
+    return {
+      statusText: "Successfully Uploaded"
+    };
+    
+  } catch (error: any) {
+    console.error('Error in singleUpload:', error);
+    return {
+      statusText: `Upload failed: ${error.message}`
+    };
+  }
+},
 
     sendMessage: async (_: any, args: any): Promise<any> => {
       const { senderId, recipientId, body, subject } = args.input;
