@@ -214,7 +214,7 @@ const ProductsTab: React.FC = () => {
                 ref={searchInputRef}
                 type="text"
                 placeholder="Search products..."
-                className="flex-1 bg-transparent border-none outline-none text-lg"
+                className="flex-1 bg-transparent border-none outline-none text-sm"
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
