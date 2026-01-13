@@ -1913,7 +1913,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
           }
         });
         
-        return result.deletedCount > 0;
+        return result;
       } catch (error:any) {
         throw new Error(`Failed to delete all read notifications: ${error.message}`);
       }
