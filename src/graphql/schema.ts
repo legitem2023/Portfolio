@@ -64,6 +64,48 @@ export const typeDefs = gql`
     SUPPORT
   }
 
+  # ================= API Bill Enums =================
+  enum BillStatus {
+    PENDING
+    PAID
+    OVERDUE
+    CANCELLED
+  }
+
+  enum BillType {
+    MONTHLY
+    QUARTERLY
+    YEARLY
+    USAGE_BASED
+    ONE_TIME
+  }
+
+  enum ApiServiceType {
+    STRIPE
+    TWILIO
+    AWS
+    SENDGRID
+    FIREBASE
+    GOOGLE_CLOUD
+    AZURE
+    MAILGUN
+    SENDINBLUE
+    OTHER
+  }
+
+  enum SortField {
+    AMOUNT
+    DUE_DATE
+    CREATED_AT
+    SERVICE
+    PERIOD
+  }
+
+  enum SortOrder {
+    ASC
+    DESC
+  }
+
   # ================= Social Media Enums =================
   enum PrivacySetting {
     PUBLIC
@@ -318,6 +360,96 @@ export const typeDefs = gql`
     user: User
   }
 
+  # ================= API Bill Types =================
+  type ApiBill {
+    id: ID!
+    service: String!
+    apiName: String!
+    month: Int!
+    year: Int!
+    period: String!
+    amount: Float!
+    currency: String!
+    usage: UsageMetrics
+    status: BillStatus!
+    paidAt: DateTime
+    dueDate: DateTime!
+    invoiceId: String
+    invoiceUrl: String
+    tags: [String!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
+  type UsageMetrics {
+    requests: Int
+    successful: Int
+    failed: Int
+    dataProcessed: Float
+    rate: Float
+    customFields: Json
+  }
+
+  type ApiBillList {
+    items: [ApiBill!]!
+    total: Int!
+    page: Int!
+    pageSize: Int!
+    hasNext: Boolean!
+  }
+
+  type BillingSummary {
+    totalAmount: Float!
+    averageAmount: Float!
+    serviceBreakdown: [ServiceBreakdown!]!
+    statusCount: StatusCount!
+    period: String!
+  }
+
+  type ServiceBreakdown {
+    service: String!
+    totalAmount: Float!
+    count: Int!
+    percentage: Float!
+  }
+
+  type StatusCount {
+    pending: Int!
+    paid: Int!
+    overdue: Int!
+  }
+
+  type MonthlyTrend {
+    month: Int!
+    year: Int!
+    period: String!
+    totalAmount: Float!
+    count: Int!
+    services: [String!]!
+  }
+
+  type ServiceInfo {
+    name: String!
+    totalBills: Int!
+    totalAmount: Float!
+    lastBill: DateTime
+  }
+
+  type DashboardStats {
+    totalPending: Float!
+    totalPaidThisMonth: Float!
+    upcomingDue: Int!
+    services: [ServiceStats!]!
+    recentBills: [ApiBill!]!
+  }
+
+  type ServiceStats {
+    service: String!
+    pendingAmount: Float!
+    paidAmount: Float!
+    billCount: Int!
+  }
+
   # ================= Social Media Types =================
   type Post {
     id: ID
@@ -501,12 +633,14 @@ export const typeDefs = gql`
     product: Product!
     variant: ProductVariant
   }
+  
   type PageInfo {
     hasNextPage: Boolean
     hasPreviousPage: Boolean
     startCursor: String
     endCursor: String
   }
+  
   type NotificationEdge {
     node: Notification
     cursor: String
@@ -519,6 +653,7 @@ export const typeDefs = gql`
     unreadCount: Int
   }
 
+  # ================= Input Types =================
   input NotificationFilters {
     isRead: Boolean
     type: NotificationType
@@ -533,87 +668,66 @@ export const typeDefs = gql`
     message: String
     link: String
   }
-  # ================= Queries & Mutations =================
-  type Query {
-    notifications(userId: ID, filters: NotificationFilters): NotificationConnection
-    notification(id: ID): Notification
-    unreadNotificationCount(userId: ID): Int
-    
-    # Get messages for current user (both sent and received)
-    myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
-  
-    # Get conversation between two users
-    conversation(userId: ID, page: Int, limit: Int): MessageConnection
-  
-    # Get unread message count
-    unreadMessageCount: Int
-  
-    # Get specific message by ID
-    message(id: ID): Message
-  
-    # Get message threads (conversations list)
-    messageThreads(page: Int, limit: Int): MessageThreadConnection
-  
-    users: [User]
-    user(id: ID): User
-    products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
-    product(id: String): Product
-    categories: [Category]
-    orders(userId: ID): [Order]
-    supportTickets: [SupportTicket]
-    getProducts(userId: ID): [Product]
-    
-    # Social media queries
-    posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed
-    post(id: ID): Post
-    comments(postId: ID, page: Int, limit: Int): CommentFeed
-    userFeed(page: Int, limit: Int, userId: String): PostFeed
-    userLikes(userId: ID): [Like]
-    followers(userId: ID): [User]
-    following(userId: ID): [User]
-    searchUsers(query: String, page: Int, limit: Int): UserSearchResult
 
-    # ================= Sales Analytics Queries =================
-    salesData(
-      timeframe: Timeframe
-      groupBy: GroupBy
-      filters: SalesFilters
-    ): SalesDataResponse
-    
-    salesMetrics(
-      timeframe: Timeframe
-      filters: SalesFilters
-    ): SalesMetrics
-    
-    topProducts(
-      timeframe: Timeframe
-      limit: Int
-    ): [ProductSales]
-    
-    salesTrend(
-      timeframe: Timeframe
-      groupBy: TrendGroupBy
-    ): [SalesTrendPoint]
-    
-    # ================= Sales List Queries =================
-    salesList(
-      page: Int = 1
-      limit: Int = 20
-      filters: SalesFilters
-      sortBy: String = "createdAt"
-      sortOrder: String = "DESC"
-    ): SalesListResponse
-    
-    salesOrder(id: ID!): Order
+  # API Bill Input Types
+  input CreateApiBillInput {
+    service: String!
+    apiName: String!
+    month: Int!
+    year: Int!
+    amount: Float!
+    currency: String
+    usage: UsageMetricsInput
+    dueDate: DateTime!
+    invoiceId: String
+    invoiceUrl: String
+    tags: [String!]
   }
 
-  type Response {
-    statusText: String
+  input UpdateApiBillInput {
+    service: String
+    apiName: String
+    month: Int
+    year: Int
+    amount: Float
+    currency: String
+    usage: UsageMetricsInput
+    status: BillStatus
+    dueDate: DateTime
+    invoiceId: String
+    invoiceUrl: String
+    tags: [String!]
   }
-  
-  type Result {
-    token: String
-    statusText: String
+
+  input UsageMetricsInput {
+    requests: Int
+    successful: Int
+    failed: Int
+    dataProcessed: Float
+    rate: Float
+    customFields: Json
+  }
+
+  input ApiBillFilters {
+    service: String
+    year: Int
+    month: Int
+    status: BillStatus
+    tags: [String!]
+    fromDate: DateTime
+    toDate: DateTime
+    minAmount: Float
+    maxAmount: Float
+  }
+
+  input PaginationInput {
+    page: Int = 1
+    pageSize: Int = 20
+  }
+
+  input SortInput {
+    field: SortField = DUE_DATE
+    order: SortOrder = DESC
   }
 
   # ================= Sales Analytics Input Types =================
@@ -678,13 +792,122 @@ export const typeDefs = gql`
     address: Address
   }
 
-  type Mutation {
+  type Response {
+    statusText: String
+  }
+  
+  type Result {
+    token: String
+    statusText: String
+  }
+
+  # ================= Queries & Mutations =================
+  type Query {
+    # Existing queries
+    notifications(userId: ID, filters: NotificationFilters): NotificationConnection
+    notification(id: ID): Notification
+    unreadNotificationCount(userId: ID): Int
     
+    # Get messages for current user (both sent and received)
+    myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
+  
+    # Get conversation between two users
+    conversation(userId: ID, page: Int, limit: Int): MessageConnection
+  
+    # Get unread message count
+    unreadMessageCount: Int
+  
+    # Get specific message by ID
+    message(id: ID): Message
+  
+    # Get message threads (conversations list)
+    messageThreads(page: Int, limit: Int): MessageThreadConnection
+  
+    users: [User]
+    user(id: ID): User
+    products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
+    product(id: String): Product
+    categories: [Category]
+    orders(userId: ID): [Order]
+    supportTickets: [SupportTicket]
+    getProducts(userId: ID): [Product]
+    
+    # Social media queries
+    posts(page: Int, limit: Int, userId: ID, followingOnly: Boolean): PostFeed
+    post(id: ID): Post
+    comments(postId: ID, page: Int, limit: Int): CommentFeed
+    userFeed(page: Int, limit: Int, userId: String): PostFeed
+    userLikes(userId: ID): [Like]
+    followers(userId: ID): [User]
+    following(userId: ID): [User]
+    searchUsers(query: String, page: Int, limit: Int): UserSearchResult
+
+    # Sales Analytics queries
+    salesData(
+      timeframe: Timeframe
+      groupBy: GroupBy
+      filters: SalesFilters
+    ): SalesDataResponse
+    
+    salesMetrics(
+      timeframe: Timeframe
+      filters: SalesFilters
+    ): SalesMetrics
+    
+    topProducts(
+      timeframe: Timeframe
+      limit: Int
+    ): [ProductSales]
+    
+    salesTrend(
+      timeframe: Timeframe
+      groupBy: TrendGroupBy
+    ): [SalesTrendPoint]
+    
+    # Sales List queries
+    salesList(
+      page: Int = 1
+      limit: Int = 20
+      filters: SalesFilters
+      sortBy: String = "createdAt"
+      sortOrder: String = "DESC"
+    ): SalesListResponse
+    
+    salesOrder(id: ID!): Order
+
+    # ================= API Bill Queries =================
+    apiBills(
+      filters: ApiBillFilters
+      pagination: PaginationInput
+      sort: SortInput
+    ): ApiBillList!
+    
+    apiBill(id: ID!): ApiBill
+    
+    billingSummary(
+      service: String
+      year: Int
+      quarter: Int
+    ): BillingSummary!
+    
+    monthlyTrends(
+      service: String
+      year: Int
+    ): [MonthlyTrend!]!
+    
+    apiServices: [ServiceInfo!]!
+    
+    apiDashboardStats: DashboardStats!
+  }
+
+  type Mutation {
+    # Existing mutations
     createNotification(input: CreateNotificationInput!): Notification!
     markNotificationAsRead(id: ID!): Notification!
     markAllNotificationsAsRead(userId: ID!): Boolean!
     deleteNotification(id: ID!): Boolean!
     deleteAllReadNotifications(userId: ID!): Boolean!
+    
     # Send a new message
     sendMessage(input: SendMessageInput): Message
   
@@ -719,6 +942,7 @@ export const typeDefs = gql`
     categoryImageUpload(base64Image: String,categoryId: ID): Result
     createVariant(input: ProductVariantInput): Result
     createAddress(input: AddressInputs): Result
+    
     # Social media mutations
     createPost(input: CreatePostInput): Post
     updatePost(id: ID, input: UpdatePostInput): Post
@@ -736,24 +960,38 @@ export const typeDefs = gql`
     removeTagFromPost(postId: ID, userId: ID): Post
     upload3DModel(file: Upload, filename: String, productId: String): ModelUploadResponse
 
+    # ================= API Bill Mutations =================
+    createApiBill(input: CreateApiBillInput!): ApiBill!
+    updateApiBill(id: ID!, input: UpdateApiBillInput!): ApiBill!
+    deleteApiBill(id: ID!): Boolean!
+    
+    # Bill Actions
+    markApiBillAsPaid(id: ID!, paidAt: DateTime): ApiBill!
+    markApiBillAsOverdue(id: ID!): ApiBill!
+    
+    # Bulk Operations
+    createBulkApiBills(input: [CreateApiBillInput!]!): [ApiBill!]!
+    
+    # Tag Management
+    addApiBillTag(id: ID!, tag: String!): ApiBill!
+    removeApiBillTag(id: ID!, tag: String!): ApiBill!
   }
 
-type ModelUploadResponse {
-  success: Boolean
-  message: String
-  model: Model
-}
+  type ModelUploadResponse {
+    success: Boolean
+    message: String
+    model: Model
+  }
 
-type Model {
-  id: ID
-  filename: String
-  url: String
-  filePath: String
-  size: Int
-  format: String
-  uploadedAt: String
-}
-
+  type Model {
+    id: ID
+    filename: String
+    url: String
+    filePath: String
+    size: Int
+    format: String
+    uploadedAt: String
+  }
 
   # Input Types
   input SendMessageInput {
