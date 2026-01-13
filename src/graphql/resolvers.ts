@@ -1803,31 +1803,41 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     // Resolvers for notification mutations
     
     // 1. Mark single notification as read
-    markNotificationAsRead: async (_:any, { id }:any, context:any) => {
-      try {
-        const { userId } = context; // Assuming authentication context
-        const notification = await prisma.notification.findUnique(id);
-        
-        if (!notification) {
-          throw new Error('Notification not found');
-        }
-        
-        // Check if user owns the notification (optional)
-        if (notification.userId !== userId) {
-          throw new Error('Unauthorized');
-        }
-        
-        // Update notification
-        notification.isRead = true;
-        notification.createdAt = new Date();
-        await notification.save();
-        
-        // Return the updated notification
-        return notification;
-      } catch (error) {
-        throw new Error(`Failed to mark notification as read: ${error.message}`);
-      }
-    },
+markNotificationAsRead: async (_: any, { id }: any, context: any) => {
+  try {
+    const { userId } = context; // Assuming authentication context
+    
+    // 1. First, find the notification to check ownership
+    const notification = await prisma.notification.findUnique({
+      where: { id }
+    });
+    
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+    
+    // 2. Check if user owns the notification
+    if (notification.userId !== userId) {
+      throw new Error('Unauthorized');
+    }
+    
+    // 3. Update notification using Prisma's update method
+    const updatedNotification = await prisma.notification.update({
+      where: { id },
+      data: {
+        isRead: true,
+        // Don't update createdAt - use readAt instead if you have that field
+        // If you want to track when it was read, add a readAt field
+        readAt: new Date(), // Optional: add this field to your schema
+      },
+    });
+    
+    // Return the updated notification
+    return updatedNotification;
+  } catch (error) {
+    throw new Error(`Failed to mark notification as read: ${error.message}`);
+  }
+},
 
     // 2. Mark all notifications as read for a user
     markAllNotificationsAsRead: async (_:any, { userId }:any, context:any) => {
