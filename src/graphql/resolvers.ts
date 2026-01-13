@@ -1863,7 +1863,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
   }
 });
         
-        return result.modifiedCount > 0;
+        return result.length > 0;
       } catch (error:any) {
         throw new Error(`Failed to mark all notifications as read: ${error.message}`);
       }
