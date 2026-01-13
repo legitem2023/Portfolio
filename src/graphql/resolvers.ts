@@ -1806,7 +1806,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     markNotificationAsRead: async (_:any, { id }:any, context:any) => {
       try {
         const { userId } = context; // Assuming authentication context
-        const notification = await prisma.Notification.findUnique(id);
+        const notification = await prisma.notification.findUnique(id);
         
         if (!notification) {
           throw new Error('Notification not found');
@@ -1840,7 +1840,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         }
         
         // Update all unread notifications for this user
-        const result = await prisma.Notification.updateMany(
+        const result = await prisma.notification.updateMany(
           { 
             userId, 
             isRead: false 
@@ -1863,7 +1863,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     deleteNotification: async (_:any, { id }:any, context:any) => {
       try {
         const { userId } = context;
-        const notification = await prisma.Notification.findUnique(id);
+        const notification = await prisma.notification.findUnique(id);
         
         if (!notification) {
           throw new Error('Notification not found');
@@ -1875,7 +1875,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         }
         
         // Delete the notification
-        await prisma.Notification.delete({ _id: id });
+        await prisma.notification.delete({ _id: id });
         
         return true;
       } catch (error) {
@@ -1894,7 +1894,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         }
         
         // Delete all read notifications for this user
-        const result = await prisma.Notification.deleteMany({
+        const result = await prisma.notification.deleteMany({
           userId,
           isRead: true
         });
