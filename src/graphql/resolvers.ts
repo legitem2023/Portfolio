@@ -1819,7 +1819,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         
         // Update notification
         notification.isRead = true;
-        notification.readAt = new Date();
+        notification.createdAt = new Date();
         await notification.save();
         
         // Return the updated notification
@@ -1848,7 +1848,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           { 
             $set: { 
               isRead: true, 
-              readAt: new Date() 
+              createdAt: new Date() 
             } 
           }
         );
