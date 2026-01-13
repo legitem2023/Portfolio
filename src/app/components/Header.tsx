@@ -82,7 +82,7 @@ const Header: React.FC = () => {
 
   // Get userId from user data or auth - FIXED: Only get userId if available
   const userId = user?.userId;
-console.log(user,"<<<<");
+console.log(userId,"<<<<");
   // Track overall user loading state
   const isLoadingUser = userLoading || isLoading || networkStatus === NetworkStatus.loading;
 
@@ -103,7 +103,7 @@ console.log(user,"<<<<");
       console.error('Notification query error:', error);
     },
   });
-
+console.log(userId,notificationsData,"<<<<");
   // Notification mutations
   const [markAsReadMutation] = useMutation(MARK_AS_READ, {
     onError: (error) => console.error('Mark as read error:', error)
