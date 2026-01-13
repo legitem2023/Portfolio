@@ -1800,6 +1800,112 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
   },
 
   Mutation: {
+    // Resolvers for notification mutations
+    
+    // 1. Mark single notification as read
+    markNotificationAsRead: async (_:any, { id }:any, context:any) => {
+      try {
+        const { userId } = context; // Assuming authentication context
+        const notification = await Notification.findById(id);
+        
+        if (!notification) {
+          throw new Error('Notification not found');
+        }
+        
+        // Check if user owns the notification (optional)
+        if (notification.userId !== userId) {
+          throw new Error('Unauthorized');
+        }
+        
+        // Update notification
+        notification.isRead = true;
+        notification.readAt = new Date();
+        await notification.save();
+        
+        // Return the updated notification
+        return notification;
+      } catch (error) {
+        throw new Error(`Failed to mark notification as read: ${error.message}`);
+      }
+    },
+
+    // 2. Mark all notifications as read for a user
+    markAllNotificationsAsRead: async (_:any, { userId }:any, context:any) => {
+      try {
+        const { userId: contextUserId } = context;
+        
+        // Optional: Verify the requesting user matches the userId
+        if (userId !== contextUserId) {
+          throw new Error('Unauthorized');
+        }
+        
+        // Update all unread notifications for this user
+        const result = await Notification.updateMany(
+          { 
+            userId, 
+            isRead: false 
+          },
+          { 
+            $set: { 
+              isRead: true, 
+              readAt: new Date() 
+            } 
+          }
+        );
+        
+        return result.modifiedCount > 0;
+      } catch (error) {
+        throw new Error(`Failed to mark all notifications as read: ${error.message}`);
+      }
+    },
+
+    // 3. Delete a single notification
+    deleteNotification: async (_:any, { id }:any, context:any) => {
+      try {
+        const { userId } = context;
+        const notification = await Notification.findById(id);
+        
+        if (!notification) {
+          throw new Error('Notification not found');
+        }
+        
+        // Check ownership
+        if (notification.userId !== userId) {
+          throw new Error('Unauthorized');
+        }
+        
+        // Delete the notification
+        await Notification.deleteOne({ _id: id });
+        
+        return true;
+      } catch (error) {
+        throw new Error(`Failed to delete notification: ${error.message}`);
+      }
+    },
+
+    // 4. Delete all read notifications for a user
+    deleteAllReadNotifications: async (_:any, { userId }:any, context:any) => {
+      try {
+        const { userId: contextUserId } = context;
+        
+        // Verify ownership
+        if (userId !== contextUserId) {
+          throw new Error('Unauthorized');
+        }
+        
+        // Delete all read notifications for this user
+        const result = await Notification.deleteMany({
+          userId,
+          isRead: true
+        });
+        
+        return result.deletedCount > 0;
+      } catch (error) {
+        throw new Error(`Failed to delete all read notifications: ${error.message}`);
+      }
+    },
+  
+
      categoryImageUpload: async (_: any, args: any) =>{
         try {
         const { base64Image, categoryId } = args;
