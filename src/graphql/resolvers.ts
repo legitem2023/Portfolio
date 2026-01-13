@@ -1834,7 +1834,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
     
     // Return the updated notification
     return updatedNotification;
-  } catch (error) {
+  } catch (error:any) {
     throw new Error(`Failed to mark notification as read: ${error.message}`);
   }
 },
@@ -1864,7 +1864,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         );
         
         return result.modifiedCount > 0;
-      } catch (error) {
+      } catch (error:any) {
         throw new Error(`Failed to mark all notifications as read: ${error.message}`);
       }
     },
@@ -1888,7 +1888,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         await prisma.notification.delete({ _id: id });
         
         return true;
-      } catch (error) {
+      } catch (error:any) {
         throw new Error(`Failed to delete notification: ${error.message}`);
       }
     },
@@ -1910,7 +1910,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         });
         
         return result.deletedCount > 0;
-      } catch (error) {
+      } catch (error:any) {
         throw new Error(`Failed to delete all read notifications: ${error.message}`);
       }
     },
