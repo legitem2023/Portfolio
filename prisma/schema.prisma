@@ -10,6 +10,48 @@ datasource db {
 }
 
 
+model ApiBill {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Service info
+  service     String   // "Stripe", "Twilio", "AWS", "SendGrid", etc.
+  apiName     String   // "Payments", "SMS", "Lambda", "Email"
+  
+  // Billing period
+  month       Int      // 1-12
+  year        Int      // 2024
+  period      String   // "2024-12" or "Q4-2024"
+  
+  // Cost
+  amount      Float
+  currency    String   @default("USD")
+  
+  // Usage metrics (store as embedded object)
+  usage       Json?
+  
+  // Status
+  status      String   @default("pending") // pending, paid, overdue
+  paidAt      DateTime?
+  dueDate     DateTime
+  
+  // Provider invoice info
+  invoiceId   String?
+  invoiceUrl  String?
+  
+  // Tags for filtering
+  tags        String[]
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([service, year, month])
+  @@index([status])
+  @@index([dueDate])
+}
+
+
+
 model Visitor {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionId String
