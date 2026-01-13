@@ -81,7 +81,7 @@ const Header: React.FC = () => {
   });
 
   // Get userId from user data or auth - FIXED: Only get userId if available
-  const userId = user?.id || userData?.users?.[0]?.id || null;
+  const userId = user?.userId;
 console.log(user,"<<<<");
   // Track overall user loading state
   const isLoadingUser = userLoading || isLoading || networkStatus === NetworkStatus.loading;
