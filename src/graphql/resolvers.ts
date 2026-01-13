@@ -1850,18 +1850,18 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         }
         
         // Update all unread notifications for this user
-        const result = await prisma.notification.updateMany(
-          { 
-            userId, 
-            isRead: false 
-          },
-          { 
-            $set: { 
-              isRead: true, 
-              createdAt: new Date() 
-            } 
-          }
-        );
+        
+        const result = await prisma.notification.updateMany({
+  where: {
+    userId: userId,
+    isRead: false
+  },
+  data: {
+    isRead: true,
+    // createdAt: new Date() // Remove this unless you want to update the creation date
+    updatedAt: new Date() // Consider updating updatedAt instead
+  }
+});
         
         return result.modifiedCount > 0;
       } catch (error:any) {
