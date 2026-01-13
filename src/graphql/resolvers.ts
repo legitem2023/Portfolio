@@ -1806,7 +1806,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     markNotificationAsRead: async (_:any, { id }:any, context:any) => {
       try {
         const { userId } = context; // Assuming authentication context
-        const notification = await Notification.findById(id);
+        const notification = await Notification.findUnique(id);
         
         if (!notification) {
           throw new Error('Notification not found');
@@ -1863,7 +1863,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     deleteNotification: async (_:any, { id }:any, context:any) => {
       try {
         const { userId } = context;
-        const notification = await Notification.findById(id);
+        const notification = await Notification.findUnique(id);
         
         if (!notification) {
           throw new Error('Notification not found');
