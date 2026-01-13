@@ -1828,7 +1828,7 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         isRead: true,
         // Don't update createdAt - use readAt instead if you have that field
         // If you want to track when it was read, add a readAt field
-        readAt: new Date(), // Optional: add this field to your schema
+        createdAt: new Date(), // Optional: add this field to your schema
       },
     });
     
