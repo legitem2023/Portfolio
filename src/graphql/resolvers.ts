@@ -1907,8 +1907,10 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         
         // Delete all read notifications for this user
         const result = await prisma.notification.deleteMany({
-          userId,
-          isRead: true
+          where:{
+            userId,
+            isRead: true
+          }
         });
         
         return result.deletedCount > 0;
