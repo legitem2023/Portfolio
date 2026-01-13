@@ -1858,8 +1858,8 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
   },
   data: {
     isRead: true,
-    // createdAt: new Date() // Remove this unless you want to update the creation date
-    updatedAt: new Date() // Consider updating updatedAt instead
+    createdAt: new Date() // Remove this unless you want to update the creation date
+    //updatedAt: new Date() // Consider updating updatedAt instead
   }
 });
         
