@@ -1885,7 +1885,9 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
         }
         
         // Delete the notification
-        await prisma.notification.delete({ _id: id });
+        await prisma.notification.delete({ 
+          where:{ id: id }
+        });
         
         return true;
       } catch (error:any) {
