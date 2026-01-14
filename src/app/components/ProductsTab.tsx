@@ -208,7 +208,7 @@ const ProductsTab: React.FC = () => {
             </button>
             
             {/* Search Input */}
-            <div className="flex-1 flex items-center bg-gray-100 rounded-md px-4 py-3">
+            <div className="flex-1 flex items-center bg-gray-100 rounded-md px-3 py-2">
               <Search size={20} className="text-gray-500 mr-3" />
               <input
                 ref={searchInputRef}
