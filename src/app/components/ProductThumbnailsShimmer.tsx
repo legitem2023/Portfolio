@@ -11,15 +11,7 @@ const ProductThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ cou
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="group bg-white shadow-md border border-gray-100 flex flex-col h-full">
           {/* Sale/New Badge placeholders */}
-          <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-            <div className="w-8 h-4 bg-gray-200 rounded-md shimmer-effect"></div>
-            <div className="w-8 h-4 bg-gray-200 rounded-md shimmer-effect"></div>
-          </div>
-          
-          {/* Featured Badge placeholder */}
-          <div className="absolute top-2 right-2 z-10">
-            <div className="w-14 h-4 bg-gray-200 rounded-md shimmer-effect"></div>
-          </div>
+
           
           {/* Product Image placeholder */}
           <div className="relative overflow-hidden bg-gray-100 flex-grow">
