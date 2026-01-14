@@ -543,7 +543,7 @@ console.log(userId,notificationsData,"<<<<");
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center justify-between">
-                                    <p className={`text-sm font-medium ${
+                                    <p className={`text-xs font-small ${
                                       !notification.isRead ? 'text-gray-900' : 'text-gray-700'
                                     }`}>
                                       {notification.title}
