@@ -77,7 +77,7 @@ export default function ManagementDashboard() {
     getRole();
   }, [router]);
 
-  const { data: productData, loading: productLoading } = useQuery(MANAGEMENTPRODUCTS,{
+  const { data: productData, loading: productLoading,refetch } = useQuery(MANAGEMENTPRODUCTS,{
     variables :{
       userId:userId
     },
@@ -205,6 +205,7 @@ export default function ManagementDashboard() {
         return <ProductsTab 
           supplierId={userId}
           products={products} 
+          refetch={refetch}
           categories={categories}
           newProduct={newProduct}
           setNewProduct={setNewProduct}
