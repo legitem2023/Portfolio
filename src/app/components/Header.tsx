@@ -133,64 +133,71 @@ console.log(userId,notificationsData,"<<<<");
   const unreadCount = notificationsData?.notifications?.unreadCount || 0;
 
   // Function to trigger push notification with appropriate icon
-  const triggerPushNotification = (notification: Notification) => {
-    // Only show push notification for unread notifications that haven't been shown yet
-    if (notification.isRead || shownNotificationIds.has(notification.id)) {
-      return;
+// Find the triggerPushNotification function (around line 184) and replace it:
+
+// Function to trigger push notification with appropriate icon
+const triggerPushNotification = (notification: Notification) => {
+  // Only show push notification for unread notifications that haven't been shown yet
+  if (notification.isRead || shownNotificationIds.has(notification.id)) {
+    return;
+  }
+
+  const getNotificationIconUrl = (type: NotificationType): string => {
+    switch (type) {
+      case NotificationType.NEW_MESSAGE:
+        return 'https://cdn-icons-png.flaticon.com/512/733/733585.png';
+      case NotificationType.ORDER_CREATED:
+      case NotificationType.ORDER_UPDATED:
+      case NotificationType.ORDER_DELIVERED:
+        return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
+      case NotificationType.PROMOTIONAL:
+        return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
+        return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+      case NotificationType.SYSTEM_ALERT:
+        return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
+      case NotificationType.PAYMENT_RECEIVED:
+        return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+      case NotificationType.PAYMENT_FAILED:
+        return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
+      default:
+        return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
     }
-
-    const getNotificationIconUrl = (type: NotificationType): string => {
-      switch (type) {
-        case NotificationType.NEW_MESSAGE:
-          return 'https://cdn-icons-png.flaticon.com/512/733/733585.png';
-        case NotificationType.ORDER_CREATED:
-        case NotificationType.ORDER_UPDATED:
-        case NotificationType.ORDER_DELIVERED:
-          return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
-        case NotificationType.PROMOTIONAL:
-          return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
-        case NotificationType.ACCOUNT_VERIFIED:
-        case NotificationType.PASSWORD_CHANGED:
-          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-        case NotificationType.SYSTEM_ALERT:
-          return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
-        case NotificationType.PAYMENT_RECEIVED:
-          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-        case NotificationType.PAYMENT_FAILED:
-          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
-        default:
-          return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
-      }
-    };
-
-    // Show browser notification
-    showNotification(
-      notification.title,
-      notification.message,
-      getNotificationIconUrl(notification.type),
-      {
-        tag: `notification-${notification.id}`,
-        requireInteraction: false,
-        data: { 
-          notificationId: notification.id,
-          link: notification.link,
-          type: notification.type 
-        }
-      }
-    ).then(result => {
-      console.log(`Push notification shown: ${notification.title}`);
-      
-      // Add to shown notifications set
-      setShownNotificationIds(prev => new Set([...prev, notification.id]));
-      
-      // Handle click on notification
-      if (result.type === 'click' && notification.link) {
-        router.push(notification.link);
-      }
-    }).catch(error => {
-      console.error('Failed to show push notification:', error);
-    });
   };
+
+  // Show browser notification
+  showNotification(
+    notification.title,
+    notification.message,
+    getNotificationIconUrl(notification.type),
+    {
+      tag: `notification-${notification.id}`,
+      requireInteraction: false,
+      data: { 
+        notificationId: notification.id,
+        link: notification.link,
+        type: notification.type 
+      }
+    }
+  ).then(result => {
+    console.log(`Push notification shown: ${notification.title}`);
+    
+    // Add to shown notifications set using non-spread method
+    setShownNotificationIds(prev => {
+      const newSet = new Set(prev);
+      newSet.add(notification.id);
+      return newSet;
+    });
+    
+    // Handle click on notification
+    if (result.type === 'click' && notification.link) {
+      router.push(notification.link);
+    }
+  }).catch(error => {
+    console.error('Failed to show push notification:', error);
+  });
+};
 
   // Polling function to check for new notifications
   const pollForNewNotifications = async () => {
@@ -251,37 +258,41 @@ console.log(userId,notificationsData,"<<<<");
   }, []);
 
   // Start/Stop polling based on user authentication
-  useEffect(() => {
-    if (userId && !notificationsLoading) {
-      // Clear any existing interval
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
+  // Replace the polling useEffect with this:
 
-      // Start polling every 10 seconds
-      const interval = setInterval(() => {
-        pollForNewNotifications();
-      }, 10000); // 10 seconds
-
-      setPollingInterval(interval);
-
-      // Initial poll
-      pollForNewNotifications();
-
-      // Cleanup on unmount
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-        }
-      };
-    } else {
-      // Stop polling if no user
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-        setPollingInterval(null);
-      }
+// Start/Stop polling based on user authentication
+useEffect(() => {
+  if (userId && !notificationsLoading) {
+    // Clear any existing interval
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
     }
-  }, [userId, notificationsLoading]);
+
+    // Start polling every 10 seconds
+    const interval = setInterval(() => {
+      pollForNewNotifications();
+    }, 10000); // 10 seconds
+
+    setPollingInterval(interval);
+
+    // Initial poll
+    pollForNewNotifications();
+
+    // Cleanup on unmount
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  } else {
+    // Stop polling if no user
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [userId, notificationsLoading]);
 
   // Clear shown notifications when user changes
   useEffect(() => {
