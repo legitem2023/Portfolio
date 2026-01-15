@@ -1,3 +1,5 @@
+// utils/notifications.ts
+
 // Type definitions
 export interface NotificationOptions {
     body: string;
@@ -9,7 +11,6 @@ export interface NotificationOptions {
     vibrate?: number[];
     data?: any;
     timestamp?: number;
-    actions?: NotificationAction[];
     image?: string;
 }
 
@@ -121,77 +122,6 @@ function createNotification(
         }, 10000);
     });
 }
-
-// Notification utility class
-export class NotificationService {
-    private defaultIcon: string;
-    private defaultOptions: Partial<NotificationOptions>;
-    
-    constructor(defaultIcon?: string, defaultOptions: Partial<NotificationOptions> = {}) {
-        this.defaultIcon = defaultIcon || "https://cdn-icons-png.flaticon.com/512/1827/1827304.png";
-        this.defaultOptions = defaultOptions;
-    }
-    
-    // Show notification with instance defaults
-    public async show(
-        title: string,
-        message: string,
-        iconUrl?: string,
-        customOptions: Partial<NotificationOptions> = {}
-    ): Promise<NotificationResult> {
-        const finalIcon = iconUrl || this.defaultIcon;
-        const finalOptions = { ...this.defaultOptions, ...customOptions };
-        
-        return showNotification(title, message, finalIcon, finalOptions);
-    }
-    
-    // Check if notifications are supported
-    public static isSupported(): boolean {
-        return "Notification" in window;
-    }
-    
-    // Get current permission status
-    public static getPermissionStatus(): NotificationPermission {
-        return Notification.permission;
-    }
-    
-    // Request permission explicitly
-    public static async requestPermission(): Promise<NotificationPermission> {
-        return Notification.requestPermission();
-    }
-    
-    // Create notification with actions (if supported)
-    public static async showWithActions(
-        title: string,
-        message: string,
-        actions: NotificationAction[],
-        iconUrl?: string
-    ): Promise<NotificationResult> {
-        const options: Partial<NotificationOptions> = {
-            actions: actions,
-            requireInteraction: true
-        };
-        
-        return showNotification(title, message, iconUrl || null, options);
-    }
-}
-
-// Pre-defined notification types
-export const notificationPresets = {
-    success: (title: string, message: string) => 
-        showNotification(title, message, "https://cdn-icons-png.flaticon.com/512/190/190411.png"),
-    
-    error: (title: string, message: string) => 
-        showNotification(title, message, "https://cdn-icons-png.flaticon.com/512/1828/1828843.png", {
-            requireInteraction: true
-        }),
-    
-    warning: (title: string, message: string) => 
-        showNotification(title, message, "https://cdn-icons-png.flaticon.com/512/1828/1828640.png"),
-    
-    info: (title: string, message: string) => 
-        showNotification(title, message, "https://cdn-icons-png.flaticon.com/512/1828/1828795.png")
-};
 
 // Default export
 export default showNotification;
