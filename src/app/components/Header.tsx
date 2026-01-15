@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import { decryptToken } from '../../../utils/decryptToken';
+import { showNotification } from '../../../utils/notifications';
 import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
 import { 
   User, 
