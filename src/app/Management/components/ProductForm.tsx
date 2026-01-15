@@ -81,6 +81,7 @@ export default function ProductForm({
                        data?.createProduct?.message || 
                        'Failed to add product. It might already exist.';
         setErrorMessage(message);
+        console.log(data?.createProduct);
       }
     } catch (err: any) {
       console.error('Error adding product:', err);
