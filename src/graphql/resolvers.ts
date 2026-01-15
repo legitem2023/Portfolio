@@ -1802,12 +1802,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
   Mutation: {
     // Resolvers for notification mutations
     
-    // 1. Mark single notification as read
-markNotificationAsRead: async (_: any, { id }: any, context: any) => {
+    markNotificationAsRead: async (_: any, { id }: any) => {
   try {
-    const { userId } = context; // Assuming authentication context
-    
-    // 1. First, find the notification to check ownership
+    // Find the notification
     const notification = await prisma.notification.findUnique({
       where: { id }
     });
@@ -1816,108 +1813,83 @@ markNotificationAsRead: async (_: any, { id }: any, context: any) => {
       throw new Error('Notification not found');
     }
     
-    // 2. Check if user owns the notification
-    if (notification.userId !== userId) {
-      throw new Error('Unauthorized');
-    }
-    
-    // 3. Update notification using Prisma's update method
+    // Update notification
     const updatedNotification = await prisma.notification.update({
       where: { id },
       data: {
         isRead: true,
-        // Don't update createdAt - use readAt instead if you have that field
-        // If you want to track when it was read, add a readAt field
-        createdAt: new Date(), // Optional: add this field to your schema
-      },
+        // Remove createdAt: new Date() - don't modify creation timestamp
+      }
     });
     
-    // Return the updated notification
     return updatedNotification;
-  } catch (error:any) {
+  } catch (error: any) {
     throw new Error(`Failed to mark notification as read: ${error.message}`);
   }
 },
 
-    // 2. Mark all notifications as read for a user
-    markAllNotificationsAsRead: async (_:any, { userId }:any, context:any) => {
-      try {
-        const { userId: contextUserId } = context;
-        
-        // Optional: Verify the requesting user matches the userId
-        if (userId !== contextUserId) {
-          throw new Error('Unauthorized');
-        }
-        
-        // Update all unread notifications for this user
-        
-        const result = await prisma.notification.updateMany({
-  where: {
-    userId: userId,
-    isRead: false
-  },
-  data: {
-    isRead: true,
-    createdAt: new Date() // Remove this unless you want to update the creation date
-    //updatedAt: new Date() // Consider updating updatedAt instead
+// 2. Mark all notifications as read for a user
+markAllNotificationsAsRead: async (_: any, { userId }: any) => {
+  try {
+    // Update all unread notifications for this user
+    const result = await prisma.notification.updateMany({
+      where: {
+        userId: userId,
+        isRead: false
+      },
+      data: {
+        isRead: true,
+        // Remove createdAt: new Date() - don't modify creation timestamp
+      }
+    });
+    
+    // Return true if at least one notification was updated
+    return result.count > 0;
+  } catch (error: any) {
+    throw new Error(`Failed to mark all notifications as read: ${error.message}`);
   }
-});
-        
-        return result;
-      } catch (error:any) {
-        throw new Error(`Failed to mark all notifications as read: ${error.message}`);
-      }
-    },
+},
 
-    // 3. Delete a single notification
-    deleteNotification: async (_:any, { id }:any, context:any) => {
-      try {
-        const { userId } = context;
-        const notification = await prisma.notification.findUnique(id);
-        
-        if (!notification) {
-          throw new Error('Notification not found');
-        }
-        
-        // Check ownership
-        if (notification.userId !== userId) {
-          throw new Error('Unauthorized');
-        }
-        
-        // Delete the notification
-        await prisma.notification.delete({ 
-          where:{ id: id }
-        });
-        
-        return true;
-      } catch (error:any) {
-        throw new Error(`Failed to delete notification: ${error.message}`);
-      }
-    },
+// 3. Delete a single notification
+deleteNotification: async (_: any, { id }: any) => {
+  try {
+    // Check if notification exists
+    const notification = await prisma.notification.findUnique({
+      where: { id }
+    });
+    
+    if (!notification) {
+      throw new Error('Notification not found');
+    }
+    
+    // Delete the notification
+    await prisma.notification.delete({ 
+      where: { id: id }
+    });
+    
+    return true;
+  } catch (error: any) {
+    throw new Error(`Failed to delete notification: ${error.message}`);
+  }
+},
 
-    // 4. Delete all read notifications for a user
-    deleteAllReadNotifications: async (_:any, { userId }:any, context:any) => {
-      try {
-        const { userId: contextUserId } = context;
-        
-        // Verify ownership
-        if (userId !== contextUserId) {
-          throw new Error('Unauthorized');
-        }
-        
-        // Delete all read notifications for this user
-        const result = await prisma.notification.deleteMany({
-          where:{
-            userId,
-            isRead: true
-          }
-        });
-        
-        return result;
-      } catch (error:any) {
-        throw new Error(`Failed to delete all read notifications: ${error.message}`);
+// 4. Delete all read notifications for a user
+deleteAllReadNotifications: async (_: any, { userId }: any) => {
+  try {
+    // Delete all read notifications for this user
+    const result = await prisma.notification.deleteMany({
+      where: {
+        userId,
+        isRead: true
       }
-    },
+    });
+    
+    // Return true if at least one notification was deleted
+    return result.count > 0;
+  } catch (error: any) {
+    throw new Error(`Failed to delete all read notifications: ${error.message}`);
+  }
+},
   
 
      categoryImageUpload: async (_: any, args: any) =>{
