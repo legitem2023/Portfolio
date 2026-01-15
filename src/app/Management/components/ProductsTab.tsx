@@ -5,6 +5,7 @@ import Tabs from './Tabs';
 interface ProductsTabProps {
   supplierId: String;
   products: Product[];
+  refetch:any;
   categories: category[];
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
@@ -14,6 +15,7 @@ interface ProductsTabProps {
 export default function ProductsTab({
   supplierId,
   products,
+  refetch,
   categories,
   newProduct,
   setNewProduct,
@@ -32,7 +34,7 @@ export default function ProductsTab({
             setNewProduct={setNewProduct}
             categories={categories}
             onProductAdded={() =>{
-              console.log("trial");
+              refetch();
             }}
           />
         </div>
