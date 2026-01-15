@@ -48,11 +48,9 @@ export default function ProductForm({
       });
 
       // Check the response structure - adjust based on your actual GraphQL response
-      if (data?.insertProduct?.success || data?.createProduct?.success || 
-          data?.insertProduct?.statusText === 'Success' || 
-          data?.createProduct?.statusText === 'Success') {
+      if (data?.createProduct?.statusText === 'Product created successfully!') {
         
-        setSuccessMessage('Product added successfully!');
+        setSuccessMessage(data?.createProduct?.statusText);
         
         // Reset form
         setNewProduct({
@@ -77,11 +75,8 @@ export default function ProductForm({
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
         // Handle cases where product might already exist or other issues
-        const message = data?.insertProduct?.message || 
-                       data?.createProduct?.message || 
-                       'Failed to add product. It might already exist.';
+        const message = data?.createProduct?.statusText;
         setErrorMessage(message);
-        console.log(data?.createProduct);
       }
     } catch (err: any) {
       console.error('Error adding product:', err);
