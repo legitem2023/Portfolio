@@ -1,4 +1,4 @@
-// components/Header.tsx
+// components/Header.tsx (updated sections)
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
@@ -590,23 +590,27 @@ useEffect(() => {
                 )}
               </button>
 
-              {/* Slide-up Bell Popup */}
+              {/* Slide-up Bell Popup with enhanced animation */}
               {isBellPopupOpen && userId && (
                 <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
-                  {/* Backdrop for mobile */}
+                  {/* Backdrop for mobile with fade-in animation */}
                   <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm md:hidden"
+                    className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
+                    style={{
+                      opacity: isBellPopupOpen ? 0.5 : 0,
+                      backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
+                    }}
                     onClick={() => setIsBellPopupOpen(false)}
                   />
                   
-                  {/* Popup Container */}
+                  {/* Popup Container with enhanced slide-up animation */}
                   <div className={`
                     fixed bottom-0 left-0 right-0 
                     md:absolute md:bottom-auto md:top-full 
                     bg-white rounded-t-2xl md:rounded-2xl 
                     shadow-2xl border border-gray-200 
-                    transform transition-transform duration-300 ease-out
-                    ${isBellPopupOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-2'}
+                    transform transition-all duration-300 ease-out
+                    ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
                     max-h-[80vh] md:max-h-[70vh] flex flex-col
                   `}>
                     {/* Header */}
@@ -628,14 +632,14 @@ useEffect(() => {
                             {unreadCount > 0 && (
                               <button
                                 onClick={markAllAsRead}
-                                className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
                               >
                                 Mark all read
                               </button>
                             )}
                             <button
                               onClick={() => setIsBellPopupOpen(false)}
-                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
                             >
                               <X className="w-5 h-5 text-gray-500" />
                             </button>
@@ -657,19 +661,25 @@ useEffect(() => {
                           <p className="text-gray-600">Failed to load notifications</p>
                           <button
                             onClick={() => refetchNotifications()}
-                            className="mt-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-800"
+                            className="mt-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200"
                           >
                             Retry
                           </button>
                         </div>
                       ) : notifications.length > 0 ? (
                         <div className="divide-y divide-gray-100">
-                          {notifications.map((notification) => (
+                          {notifications.map((notification, index) => (
                             <div
                               key={notification.id}
-                              className={`p-4 hover:bg-gray-50 transition-colors cursor-pointer ${
-                                !notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''
-                              }`}
+                              className={`
+                                p-4 hover:bg-gray-50 transition-all duration-200 ease-out cursor-pointer
+                                ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                                transform transition-transform duration-300 ease-out
+                                ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
+                              `}
+                              style={{
+                                transitionDelay: `${index * 50}ms`
+                              }}
                               onClick={() => handleNotificationClick(notification)}
                             >
                               <div className="flex items-start space-x-3">
@@ -696,7 +706,7 @@ useEffect(() => {
                                             e.stopPropagation();
                                             markAsRead(notification.id);
                                           }}
-                                          className="text-xs text-blue-600 hover:text-blue-800"
+                                          className="text-xs text-blue-600 hover:text-blue-800 transition-colors duration-200"
                                         >
                                           Mark read
                                         </button>
@@ -714,7 +724,7 @@ useEffect(() => {
                                           setIsBellPopupOpen(false);
                                           router.push('/Messaging');
                                         }}
-                                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
                                       >
                                         View Message
                                       </button>
@@ -728,7 +738,7 @@ useEffect(() => {
                                           setIsBellPopupOpen(false);
                                           handleTabClick(10);
                                         }}
-                                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
+                                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-200"
                                       >
                                         View Order
                                       </button>
@@ -738,7 +748,7 @@ useEffect(() => {
                                         e.stopPropagation();
                                         deleteNotification(notification.id);
                                       }}
-                                      className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors"
+                                      className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200"
                                     >
                                       Delete
                                     </button>
@@ -749,7 +759,7 @@ useEffect(() => {
                           ))}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center justify-center p-8 text-center">
+                        <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
                           <Bell className="w-12 h-12 text-gray-300 mb-4" />
                           <p className="text-gray-500 font-medium">No notifications</p>
                           <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
@@ -764,7 +774,7 @@ useEffect(() => {
                           setIsBellPopupOpen(false);
                           router.push('/Notifications');
                         }}
-                        className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium"
+                        className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
                       >
                         View all notifications
                       </button>
@@ -778,48 +788,58 @@ useEffect(() => {
             <div ref={dropdownRef}>
               <button
                 onClick={handleUserButtonClick}
-                className="flex items-center text-sm focus:outline-none"
+                className="flex items-center text-sm focus:outline-none group"
               >
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200">
-                  <User className="w-5 h-5 text-indigo-600" />
+                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
+                  <User className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </button>
               
-              {/* Desktop Dropdown */}
+              {/* Desktop Dropdown with slide-down animation */}
               {isDropdownOpen && !isMobile() && (
-                <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 translate-y-3/4">
+                <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
+                  style={{
+                    transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
+                    opacity: isDropdownOpen ? 1 : 0
+                  }}
+                >
                   <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                     onClick={() => {
                       setIsDropdownOpen(false);
                       handleTabClick(7);
                     }}
                   >
-                    <User className="mr-2 text-gray-400 w-4 h-4" />
-                    Your Profile
+                    <User className="mr-2 text-gray-400 w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                    <span className="transition-all duration-200">Your Profile</span>
+                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                     onClick={() => {
                       setIsDropdownOpen(false);
                       router.push('/Messaging');
                     }}
                   >
                     <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
-                    Messages
+                    <span className="transition-all duration-200">Messages</span>
+                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                     onClick={() => {
                       setIsDropdownOpen(false);
                       handleTabClick(10);
                     }}
                   >
                     <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
-                    Orders
+                    <span className="transition-all duration-200">Orders</span>
+                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
-                  <div className="border-t border-gray-100 my-1"></div>
-                  <LogoutButton/>
+                  <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
+                  <div className="transform transition-all duration-300 hover:scale-[1.02]">
+                    <LogoutButton/>
+                  </div>
                 </div>
               )}
             </div>
@@ -827,26 +847,31 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Mobile Slide From Left Modal */}
+      {/* Mobile Slide From Left Modal with enhanced animation */}
       {isModalOpen && isMobile() && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop with fade-in animation */}
           <div 
-            className="fixed inset-0 bg-black backdrop-blur-sm bg-opacity-50 z-40 transition-opacity duration-300 md:hidden"
+            className="fixed inset-0 bg-black z-40 md:hidden transition-all duration-300 ease-out"
+            style={{
+              opacity: isModalOpen ? 0.5 : 0,
+              backdropFilter: isModalOpen ? 'blur(4px)' : 'blur(0px)'
+            }}
             onClick={() => setIsModalOpen(false)}
           />
           
-          {/* Modal */}
+          {/* Modal with slide-in animation */}
           <div 
             ref={modalRef}
-            className="fixed top-0 left-0 h-full w-3/4 max-w-sm shadow-2xl z-50 transform transition-transform duration-300 ease-linear md:hidden"
-            style={{ 
-              transform: isModalOpen ? 'translateX(0)' : 'translateX(-100%)'
+            className="fixed top-0 left-0 h-full w-3/4 max-w-sm shadow-2xl z-50 md:hidden"
+            style={{
+              transform: isModalOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
             {/* Header with close button */}
             <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
-              <div className="z-20 h-[100%] flex items-center">
+              <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity.svg" 
                   alt="Logo" 
@@ -859,55 +884,85 @@ useEffect(() => {
               
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-colors duration-200"
+                className="p-2 rounded-full hover:bg-white hover:bg-opacity-50 transition-all duration-300 ease-out hover:rotate-90"
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            {/* Modal content */}
+            {/* Modal content with staggered animation */}
             <div className="overflow-y-auto h-full pb-20 bg-[#f1f1f1]">
               <div className="p-4">
                 <div className="space-y-1">
                   <button
-                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
+                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.1s'
+                    }}
                     onClick={() => {
                       setIsModalOpen(false);
                       handleTabClick(7);
                     }}
                   >
-                    <User className="mr-3 text-gray-400 w-5 h-5" />
-                    <span className="flex-1">Your Profile</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    <User className="mr-3 text-gray-400 w-5 h-5 transform transition-transform duration-300 group-hover:scale-110" />
+                    <span className="flex-1 transition-all duration-300">Your Profile</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
 
                   <button
-                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
+                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.15s'
+                    }}
                     onClick={() => {
                       setIsModalOpen(false);
                       router.push('/Messaging');
                     }}
                   >
                     <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
-                    <span className="flex-1">Messages</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    <span className="flex-1 transition-all duration-300">Messages</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
 
                   <button
-                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors duration-200"
+                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.2s'
+                    }}
                     onClick={() => {
                       setIsModalOpen(false);
                       handleTabClick(10);
                     }}
                   >
                     <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
-                    <span className="flex-1">Orders</span>
-                    <ChevronRight className="text-gray-400 w-4 h-4" />
+                    <span className="flex-1 transition-all duration-300">Orders</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
 
-                  <div className="border-t border-gray-200 my-3"></div>
+                  <div 
+                    className="border-t border-gray-200 my-3 transition-all duration-300"
+                    style={{
+                      transform: isModalOpen ? 'scaleX(1)' : 'scaleX(0)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.25s',
+                      transformOrigin: 'left'
+                    }}
+                  ></div>
 
-                  <div className="px-4 py-3">
+                  <div 
+                    className="px-4 py-3 transform transition-all duration-300"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.3s'
+                    }}
+                  >
                     <LogoutButton/>
                   </div>
                 </div>
