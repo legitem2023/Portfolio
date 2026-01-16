@@ -4,6 +4,7 @@ import { CREATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 
 interface AddVariantFormProps {
   productId: string;
+  refetch:any;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -18,7 +19,7 @@ interface FormData {
   stock: string;
 }
 
-export default function AddVariantForm({ productId, onSuccess, onCancel }: AddVariantFormProps) {
+export default function AddVariantForm({ productId, refetch, onSuccess, onCancel }: AddVariantFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     sku: '',
@@ -32,6 +33,7 @@ export default function AddVariantForm({ productId, onSuccess, onCancel }: AddVa
   const [createVariant, { loading, error }] = useMutation(CREATE_VARIANT_MUTATION, {
     onCompleted: () => {
       onSuccess();
+      refetch();
       setFormData({
         name: '',
         sku: '',
