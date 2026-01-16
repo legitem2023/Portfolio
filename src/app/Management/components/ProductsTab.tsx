@@ -45,7 +45,7 @@ export default function ProductsTab({
       label: 'Data',
       content: (
         <div className="lg:col-span-2">
-          <ProductTable products={products} />
+          <ProductTable products={products} refetch={refetch} />
         </div>
       ),
     }
