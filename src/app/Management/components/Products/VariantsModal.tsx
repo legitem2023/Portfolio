@@ -8,6 +8,7 @@ interface VariantsModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
+  refetch:any;
   onVariantImageUpload: (variantId: string, file: File) => void;
   uploadingVariantId: string | null;
 }
@@ -16,6 +17,7 @@ export default function VariantsModal({
   isOpen, 
   onClose, 
   product, 
+  refetch,
   onVariantImageUpload,
   uploadingVariantId 
 }: VariantsModalProps) {
@@ -84,6 +86,7 @@ export default function VariantsModal({
             <div className="border-b border-gray-200">
               <AddVariantForm 
                 productId={product.id} 
+                refetch={refetch}
                 onSuccess={() => setShowAddForm(false)}
                 onCancel={() => setShowAddForm(false)}
               />
