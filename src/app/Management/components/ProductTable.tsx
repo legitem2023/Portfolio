@@ -11,6 +11,7 @@ import VariantsModal from './Products/VariantsModal';
 import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
+  refetch: any;
   onProductDeleted?: () => void;
 } 
 
@@ -25,7 +26,7 @@ const sortOptions: SortOption[] = [
   { value: 'createdAt-asc', label: 'Oldest First', direction: 'asc' },
 ];
 
-export default function ProductTable({ products, onProductDeleted }: ProductTableProps) {
+export default function ProductTable({ products,refetch, onProductDeleted }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
@@ -235,7 +236,7 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
         {filteredAndSortedProducts.map((product) => (
           <MobileProductCard 
             key={product.id} 
-            product={product} 
+            product={product}
             onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
             onDeleteProduct={handleDelete}
@@ -250,8 +251,9 @@ export default function ProductTable({ products, onProductDeleted }: ProductTabl
 
       <VariantsModal 
         isOpen={isModalOpen} 
-        onClose={closeModal} 
+        onClose={closeModal}
         product={selectedProduct}
+        refetch={refetch}
         onVariantImageUpload={handleVariantImageUpload}
         uploadingVariantId={uploadingVariantId}
       />
