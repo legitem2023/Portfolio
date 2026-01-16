@@ -203,7 +203,9 @@ const DeluxeNavTabs: React.FC = () => {
           >
             <span className="text-xl">{tab.icon}</span>
             <span className="text-xl ml-2 hidden md:inline">{tab.label}</span>
-            {tab.label==='Cart' && (<BellBadge count={10} variant={`danger`}/>)}
+            {tab.label==='Cart' && (
+            <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">0</span>
+          )}
           </button>
         ))}
       </div>
