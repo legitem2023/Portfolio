@@ -449,15 +449,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 <div className="flex space-x-2 flex-wrap">
                   {uniqueColors.map((color, index) => (
                     <button
-                      key={index}
-                      onClick={() => handleColorSelect(color)}
-                      className={`px-6 py-6 text-sm border rounded transition-all ${
+                       key={index}
+                       onClick={() => handleColorSelect(color)}
+                       className={`px-6 py-6 text-sm border rounded transition-all ${
                         selectedColor === color 
-                          ? `border-amber-600 bg-[${color}] text-amber-700 font-semibold` 
-                          : `border-gray-300 bg-[${color}] text-gray-700 hover:border-gray-400`
-                      }`}
-                    >
-                      
+                        ? 'border-amber-600 text-amber-700 font-semibold' 
+                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                        }`}
+                       style={{ backgroundColor: color }}>
                     </button>
                   ))}
                 </div>
