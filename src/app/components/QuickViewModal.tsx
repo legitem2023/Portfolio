@@ -451,7 +451,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                     <span
                        key={index}
                        onClick={() => handleColorSelect(color)}
-                       className={`px-4 py-4 text-sm border rounded transition-all ${
+                       className={`px-5 py-5 text-sm border rounded-full transition-all ${
                         selectedColor === color 
                         ? 'border-amber-600 text-amber-700 font-semibold' 
                         : 'border-gray-300 text-gray-700 hover:border-gray-400'
