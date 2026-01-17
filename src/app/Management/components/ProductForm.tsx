@@ -3,7 +3,8 @@ import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
 import { useState, useRef } from 'react';
-import { EyeDropperIcon, CopyIcon, CheckIcon } from 'lucide-react';
+// ✅ CORRECTED LUCIDE-REACT IMPORTS
+import { Pipette, Copy, Check } from 'lucide-react';
 
 interface ProductFormProps {
   supplierId: String;
@@ -282,7 +283,7 @@ export default function ProductForm({
             />
           </div>
           
-          {/* Color Tools Row */}
+          {/* Color Tools Row - ICONS UPDATED HERE */}
           <div className="flex items-center space-x-2 mt-2">
             <button
               type="button"
@@ -297,7 +298,8 @@ export default function ProductForm({
                 </>
               ) : (
                 <>
-                  <EyeDropperIcon className="w-4 h-4" />
+                  {/* ✅ UPDATED: Using Pipette icon */}
+                  <Pipette className="w-4 h-4" />
                   <span>Pick Color</span>
                 </>
               )}
@@ -311,18 +313,20 @@ export default function ProductForm({
             >
               {copySuccess === 'Copied!' ? (
                 <>
-                  <CheckIcon className="w-4 h-4 text-green-600" />
+                  {/* ✅ UPDATED: Using Check icon */}
+                  <Check className="w-4 h-4 text-green-600" />
                   <span className="text-green-600">Copied!</span>
                 </>
               ) : (
                 <>
-                  <CopyIcon className="w-4 h-4" />
+                  {/* ✅ UPDATED: Using Copy icon */}
+                  <Copy className="w-4 h-4" />
                   <span>Copy</span>
                 </>
               )}
             </button>
             
-            {!window.EyeDropper && (
+            {typeof window !== 'undefined' && !window.EyeDropper && (
               <span className="text-xs text-amber-600">
                 Eye Dropper: Chrome 95+, Edge 96+, Opera 81+
               </span>
