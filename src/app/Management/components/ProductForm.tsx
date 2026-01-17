@@ -2,7 +2,7 @@
 import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ProductFormProps {
   supplierId: String;
@@ -11,6 +11,91 @@ interface ProductFormProps {
   categories: category[];
   onProductAdded: () => void;
 }
+
+// Size data structure
+const sizeOptions = [
+  {
+    parent: "Alpha",
+    values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"],
+    description: "Standard letter sizes"
+  },
+  {
+    parent: "Numeric",
+    values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"],
+    description: "US women's clothing sizes"
+  },
+  {
+    parent: "Shoes (US)",
+    values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"],
+    description: "US shoe sizes"
+  },
+  {
+    parent: "Shoes (EU)",
+    values: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"],
+    description: "European shoe sizes"
+  },
+  {
+    parent: "Men's Pants",
+    values: ["28", "30", "32", "34", "36", "38", "40", "42", "44"],
+    description: "Waist size in inches"
+  },
+  {
+    parent: "Bra (Band)",
+    values: ["30", "32", "34", "36", "38", "40", "42", "44"],
+    description: "Bra band size"
+  },
+  {
+    parent: "Bra (Cup)",
+    values: ["A", "B", "C", "D", "DD", "DDD", "E", "F", "G"],
+    description: "Bra cup size"
+  },
+  {
+    parent: "Kid's",
+    values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"],
+    description: "Children's clothing sizes"
+  },
+  {
+    parent: "Baby",
+    values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"],
+    description: "Infant clothing sizes"
+  },
+  {
+    parent: "Headwear",
+    values: ["S", "M", "L", "XL"],
+    description: "Hat sizes"
+  },
+  {
+    parent: "Gloves",
+    values: ["XS", "S", "M", "L", "XL"],
+    description: "Glove sizes"
+  },
+  {
+    parent: "Jewelry",
+    values: ["4", "5", "6", "7", "8", "9", "10", "11", "12"],
+    description: "US ring sizes"
+  },
+  {
+    parent: "Dimensions",
+    values: ["10x10cm", "15x15cm", "20x20cm", "30x30cm", "50x50cm", "100x100cm"],
+    description: "Common dimension sizes"
+  },
+  {
+    parent: "Generic",
+    values: ["Small", "Medium", "Large", "Extra Large"],
+    description: "Generic size options"
+  },
+  {
+    parent: "One Size",
+    values: ["One Size Fits All"],
+    description: "Single size option"
+  },
+  {
+    parent: "Custom",
+    values: [],
+    description: "Custom size input",
+    customInput: true
+  }
+];
 
 export default function ProductForm({
   supplierId,
@@ -22,10 +107,91 @@ export default function ProductForm({
   const [insertProduct, { loading, error }] = useMutation(INSERTPRODUCT);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedSizeCategory, setSelectedSizeCategory] = useState('');
+  const [selectedSizeValue, setSelectedSizeValue] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customSizeInput, setCustomSizeInput] = useState('');
+
+  // Get the selected size category object
+  const selectedCategory = sizeOptions.find(cat => cat.parent === selectedSizeCategory);
+  
+  // Initialize size from newProduct if it exists
+  useEffect(() => {
+    if (newProduct.size) {
+      // Check if the size matches any predefined value
+      const foundCategory = sizeOptions.find(cat => 
+        cat.values.includes(newProduct.size) || 
+        (cat.customInput && newProduct.size !== '')
+      );
+      
+      if (foundCategory) {
+        if (foundCategory.customInput) {
+          setSelectedSizeCategory('Custom');
+          setCustomSizeInput(newProduct.size);
+          setShowCustomInput(true);
+        } else {
+          setSelectedSizeCategory(foundCategory.parent);
+          setSelectedSizeValue(newProduct.size);
+        }
+      } else {
+        // If not found, treat as custom
+        setSelectedSizeCategory('Custom');
+        setCustomSizeInput(newProduct.size);
+        setShowCustomInput(true);
+      }
+    }
+  }, [newProduct.size]);
+
+  // Handle size category change
+  const handleSizeCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const category = e.target.value;
+    setSelectedSizeCategory(category);
+    setSelectedSizeValue('');
+    setCustomSizeInput('');
+    
+    const selectedCat = sizeOptions.find(cat => cat.parent === category);
+    
+    if (selectedCat?.customInput) {
+      setShowCustomInput(true);
+      // Update product size when custom category is selected
+      setNewProduct({...newProduct, size: customSizeInput});
+    } else {
+      setShowCustomInput(false);
+      // Clear product size when switching categories
+      setNewProduct({...newProduct, size: ''});
+    }
+  };
+
+  // Handle size value change
+  const handleSizeValueChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSelectedSizeValue(value);
+    // Update product size
+    setNewProduct({...newProduct, size: value});
+  };
+
+  // Handle custom size input change
+  const handleCustomSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCustomSizeInput(value);
+    // Update product size
+    setNewProduct({...newProduct, size: value});
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(''); // Clear previous error
+    setErrorMessage('');
+    
+    // Validate size selection if needed
+    if (selectedSizeCategory && !selectedSizeValue && !showCustomInput && selectedCategory?.values.length > 0) {
+      setErrorMessage('Please select a specific size from the selected category.');
+      return;
+    }
+    
+    if (selectedSizeCategory === 'Custom' && !customSizeInput.trim()) {
+      setErrorMessage('Please enter a custom size.');
+      return;
+    }
     
     try {
       const { data } = await insertProduct({
@@ -40,19 +206,16 @@ export default function ProductForm({
           color: newProduct.color,
           size: newProduct.size,
           stock: parseInt(newProduct.stock),
-          // Include these if your mutation expects them
           brand: newProduct.brand,
           isActive: newProduct.isActive,
           featured: newProduct.featured
         }
       });
 
-      // Check the response structure - adjust based on your actual GraphQL response
       if (data?.createProduct?.statusText === 'Product created successfully!') {
-        
         setSuccessMessage(data?.createProduct?.statusText);
         
-        // Reset form
+        // Reset form including size selection
         setNewProduct({
           name: '',
           description: '',
@@ -69,19 +232,21 @@ export default function ProductForm({
           size: ''
         });
         
+        setSelectedSizeCategory('');
+        setSelectedSizeValue('');
+        setShowCustomInput(false);
+        setCustomSizeInput('');
+        
         onProductAdded();
         
-        // Clear success message after 3 seconds
         setTimeout(() => setSuccessMessage(''), 3000);
       } else {
-        // Handle cases where product might already exist or other issues
         const message = data?.createProduct?.statusText;
         setErrorMessage(message);
       }
     } catch (err: any) {
       console.error('Error adding product:', err);
       
-      // Check for specific error messages like duplicate product
       if (err.message.includes('duplicate') || err.message.includes('already exists')) {
         setErrorMessage('This product already exists. Please check the SKU or product name.');
       } else if (err.message.includes('unique constraint')) {
@@ -94,33 +259,28 @@ export default function ProductForm({
     }
   };
 
-  // Common sizes for products
-  const commonSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-
   return (
     <form onSubmit={handleSubmit}>
-      {/* Show GraphQL errors */}
+      {/* Error and success messages */}
       {error && (
         <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
           Error: {error.message}
         </div>
       )}
       
-      {/* Show custom error messages */}
       {errorMessage && (
         <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
           {errorMessage}
         </div>
       )}
       
-      {/* Show success message */}
       {successMessage && (
         <div className="text-green-500 mb-4 p-2 bg-green-100 rounded-md">
           {successMessage}
         </div>
       )}
       
-      {/* Rest of your form remains the same */}
+      {/* Product Name */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
         <input
@@ -129,12 +289,13 @@ export default function ProductForm({
           value={newProduct.name}
           onChange={(e) => {
             setNewProduct({...newProduct, name: e.target.value});
-            setErrorMessage(''); // Clear error when user edits
+            setErrorMessage('');
           }}
           required
         />
       </div>
       
+      {/* Description */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
         <textarea
@@ -146,7 +307,8 @@ export default function ProductForm({
         ></textarea>
       </div>
       
-      <div className="grid grid-cols-1 gap-4 mb-4">
+      {/* Price and Sale Price */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
           <input
@@ -172,7 +334,8 @@ export default function ProductForm({
         </div>
       </div>
       
-      <div className="grid grid-cols-1 gap-4 mb-4">
+      {/* SKU and Stock */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
           <input
@@ -181,7 +344,7 @@ export default function ProductForm({
             value={newProduct.sku}
             onChange={(e) => {
               setNewProduct({...newProduct, sku: e.target.value});
-              setErrorMessage(''); // Clear error when user edits SKU
+              setErrorMessage('');
             }}
             required
           />
@@ -200,7 +363,7 @@ export default function ProductForm({
       </div>
 
       {/* Color and Size Fields */}
-      <div className="grid grid-cols-1 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
           <div className="flex items-center space-x-2">
@@ -221,29 +384,68 @@ export default function ProductForm({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            value={newProduct.size || ''}
-            onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
-          >
-            <option value="">Select size</option>
-            {commonSizes.map(size => (
-              <option key={size} value={size}>{size}</option>
-            ))}
-            <option value="Custom">Custom</option>
-          </select>
-          {newProduct.size === 'Custom' && (
-            <input
-              type="text"
-              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
-              placeholder="Enter custom size"
-              value={newProduct.size || ''}
-              onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
-            />
+          
+          {/* Size Category Selector */}
+          <div className="mb-2">
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+              value={selectedSizeCategory}
+              onChange={handleSizeCategoryChange}
+            >
+              <option value="">Select size category</option>
+              {sizeOptions.map(category => (
+                <option key={category.parent} value={category.parent}>
+                  {category.parent} - {category.description}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Size Value Selector (for non-custom categories) */}
+          {selectedCategory && !selectedCategory.customInput && selectedCategory.values.length > 0 && (
+            <div className="mb-2">
+              <select
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                value={selectedSizeValue}
+                onChange={handleSizeValueChange}
+              >
+                <option value="">Select a size</option>
+                {selectedCategory.values.map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Custom Size Input */}
+          {showCustomInput && (
+            <div className="mb-2">
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                placeholder="Enter custom size (e.g., 15x15cm, 10.5, Custom Fit)"
+                value={customSizeInput}
+                onChange={handleCustomSizeChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Enter any custom size measurement
+              </p>
+            </div>
+          )}
+
+          {/* Current Size Display */}
+          {newProduct.size && (
+            <div className="mt-2 p-2 bg-blue-50 rounded-md">
+              <p className="text-sm text-blue-700">
+                <span className="font-medium">Selected Size:</span> {newProduct.size}
+                {selectedSizeCategory && ` (${selectedSizeCategory})`}
+              </p>
+            </div>
           )}
         </div>
       </div>
       
+      {/* Category */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
         <select
@@ -259,6 +461,7 @@ export default function ProductForm({
         </select>
       </div>
       
+      {/* Brand */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
         <input
@@ -269,6 +472,7 @@ export default function ProductForm({
         />
       </div>
       
+      {/* Active Product Checkbox */}
       <div className="flex items-center mb-4">
         <input
           type="checkbox"
@@ -280,6 +484,7 @@ export default function ProductForm({
         <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Active Product</label>
       </div>
       
+      {/* Featured Product Checkbox */}
       <div className="flex items-center mb-6">
         <input
           type="checkbox"
@@ -291,6 +496,7 @@ export default function ProductForm({
         <label htmlFor="featured" className="ml-2 block text-sm text-gray-700">Featured Product</label>
       </div>
       
+      {/* Submit Button */}
       <button
         type="submit"
         disabled={loading}
@@ -300,4 +506,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-          }
+              }
