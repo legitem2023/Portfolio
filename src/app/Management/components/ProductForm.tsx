@@ -2,7 +2,7 @@
 import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface ProductFormProps {
   supplierId: String;
@@ -10,14 +10,6 @@ interface ProductFormProps {
   setNewProduct: (product: NewProduct) => void;
   categories: category[];
   onProductAdded: () => void;
-}
-
-// Add TypeScript interface for size options
-interface SizeCategory {
-  parent: string;
-  values: string[];
-  description?: string;
-  customInput?: boolean;
 }
 
 export default function ProductForm({
@@ -32,9 +24,12 @@ export default function ProductForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  // NEW: Add state for color picker
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [copySuccess, setCopySuccess] = useState('');
 
-  // SIZE DATA - ADDED ONLY THIS SECTION with proper typing
-  const sizeData: SizeCategory[] = [
+  // SIZE DATA - ADDED ONLY THIS SECTION
+  const sizeData = [
     { parent: "Alpha", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
     { parent: "Numeric", values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"] },
     { parent: "Shoes (US)", values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"] },
@@ -44,7 +39,46 @@ export default function ProductForm({
     { parent: "Kid's", values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"] },
     { parent: "Baby", values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"] },
     { parent: "One Size", values: ["One Size Fits All"] },
-    { parent: "Custom", values: [], customInput: true }
+    { parent: "Custom", values: [] }
+  ];
+
+  // NEW: Function to copy color to clipboard
+  const copyColorToClipboard = async () => {
+    if (newProduct.color) {
+      try {
+        await navigator.clipboard.writeText(newProduct.color);
+        setCopySuccess('Copied!');
+        setTimeout(() => setCopySuccess(''), 2000);
+      } catch (err) {
+        setCopySuccess('Failed to copy');
+        setTimeout(() => setCopySuccess(''), 2000);
+      }
+    }
+  };
+
+  // NEW: Function to handle color change from picker
+  const handleColorChange = (color: string) => {
+    setNewProduct({...newProduct, color});
+    setShowColorPicker(false);
+  };
+
+  // NEW: Predefined color options for quick selection
+  const colorOptions = [
+    '#000000', // Black
+    '#FFFFFF', // White
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    '#FFFF00', // Yellow
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+    '#FFA500', // Orange
+    '#800080', // Purple
+    '#A52A2A', // Brown
+    '#808080', // Gray
+    '#FFC0CB', // Pink
+    '#008000', // Dark Green
+    '#000080', // Navy
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,6 +130,9 @@ export default function ProductForm({
         // Reset size selection - ADDED THIS
         setSelectedSizeParent('');
         setShowCustomInput(false);
+        // Reset color picker state
+        setShowColorPicker(false);
+        setCopySuccess('');
         
         onProductAdded();
         
@@ -231,22 +268,121 @@ export default function ProductForm({
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Color</label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="color"
-              className="border border-gray-300 rounded-md cursor-pointer"
-              value={newProduct.color || '#000000'}
-              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-            />
+          
+          {/* Color Picker Container */}
+          <div className="relative">
+            <div className="flex items-center space-x-2 mb-2">
+              {/* Color Preview with Copy Button */}
+              <div className="flex items-center space-x-2">
+                <div 
+                  className="w-10 h-10 border border-gray-300 rounded-md cursor-pointer"
+                  style={{ backgroundColor: newProduct.color || '#000000' }}
+                  onClick={() => setShowColorPicker(!showColorPicker)}
+                  title="Click to pick color"
+                />
+                
+                {/* Color Value Display with Copy */}
+                <div className="flex items-center space-x-2">
+                  <div className="px-3 py-2 border border-gray-300 rounded-md bg-gray-50 min-w-[120px]">
+                    <code className="text-sm">{newProduct.color || '#000000'}</code>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={copyColorToClipboard}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                    disabled={!newProduct.color}
+                    title="Copy color code"
+                  >
+                    {copySuccess || 'Copy'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Color Picker Popup */}
+            {showColorPicker && (
+              <div className="absolute z-10 mt-2 p-4 bg-white border border-gray-300 rounded-md shadow-lg">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Select Color
+                  </label>
+                  
+                  {/* Custom Color Input */}
+                  <div className="flex items-center space-x-2 mb-4">
+                    <input
+                      type="color"
+                      className="border border-gray-300 rounded-md cursor-pointer"
+                      value={newProduct.color || '#000000'}
+                      onChange={(e) => handleColorChange(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                      placeholder="#000000 or color name"
+                      value={newProduct.color || ''}
+                      onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                    />
+                  </div>
+
+                  {/* Predefined Color Options */}
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">Quick pick:</p>
+                    <div className="grid grid-cols-5 gap-2">
+                      {colorOptions.map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          className="w-8 h-8 rounded-md border border-gray-300 hover:scale-110 transition-transform"
+                          style={{ backgroundColor: color }}
+                          onClick={() => handleColorChange(color)}
+                          title={color}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Common Color Names */}
+                  <div>
+                    <p className="text-sm text-gray-600 mb-2">Common colors:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {['Red', 'Blue', 'Green', 'Yellow', 'Black', 'White', 'Gray', 'Brown', 'Pink', 'Purple', 'Orange'].map(colorName => (
+                        <button
+                          key={colorName}
+                          type="button"
+                          className="px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                          onClick={() => setNewProduct({...newProduct, color: colorName})}
+                        >
+                          {colorName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Close Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowColorPicker(false)}
+                    className="w-full mt-4 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
+                  >
+                    Close Picker
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Original Color Name Input (hidden when picker is open) */}
+          {!showColorPicker && (
             <input
               type="text"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
               placeholder="Color name (optional)"
               value={newProduct.color || ''}
               onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
             />
-          </div>
+          )}
         </div>
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
           
@@ -382,4 +518,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+                            }
