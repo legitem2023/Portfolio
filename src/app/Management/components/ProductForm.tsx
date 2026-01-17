@@ -353,7 +353,7 @@ export default function ProductForm({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-          <div className="flex flex-row" >
+          <div className="flex flex-row gap-2">
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
             value={selectedSizeParent}
@@ -376,7 +376,7 @@ export default function ProductForm({
 
           {selectedSizeParent && selectedSizeParent !== 'Custom' && (
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
               value={newProduct.size || ''}
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
             >
@@ -392,7 +392,7 @@ export default function ProductForm({
           {showCustomInput && (
             <input
               type="text"
-              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
               placeholder="Enter custom size"
               value={newProduct.size || ''}
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
@@ -401,7 +401,7 @@ export default function ProductForm({
 
           {!selectedSizeParent && (
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
               value={newProduct.size || ''}
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
             >
@@ -416,7 +416,7 @@ export default function ProductForm({
           {!selectedSizeParent && newProduct.size === 'Custom' && (
             <input
               type="text"
-              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
               placeholder="Enter custom size"
               value={newProduct.size || ''}
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
