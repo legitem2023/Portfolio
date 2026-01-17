@@ -334,7 +334,7 @@ export default function ProductForm({
           </div>
           
           {/* Quick Color Grid */}
-          <div className="mt-3">
+          {/*<div className="mt-3">
             <p className="text-xs text-gray-600 mb-2">Quick colors:</p>
             <div className="grid grid-cols-5 gap-2">
               {colorOptions.map(color => (
@@ -348,7 +348,7 @@ export default function ProductForm({
                 />
               ))}
             </div>
-          </div>
+          </div>*/}
         </div>
         
         <div>
