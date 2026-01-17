@@ -353,7 +353,7 @@ export default function ProductForm({
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-          
+          <div className="flex flex-row" >
           <select
             className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
             value={selectedSizeParent}
@@ -422,6 +422,7 @@ export default function ProductForm({
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
             />
           )}
+          </div>
         </div>
       </div>
       
