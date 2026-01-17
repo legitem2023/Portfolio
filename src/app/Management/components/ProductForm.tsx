@@ -39,17 +39,48 @@ export default function ProductForm({
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   const sizeData = [
-    { parent: "Alpha", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
-    { parent: "Numeric", values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"] },
-    { parent: "Shoes (US)", values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"] },
-    { parent: "Shoes (EU)", values: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
-    { parent: "Men's Pants", values: ["28", "30", "32", "34", "36", "38", "40", "42", "44"] },
-    { parent: "Bra", values: ["30A", "32A", "34A", "36A", "38A", "30B", "32B", "34B", "36B", "38B", "30C", "32C", "34C", "36C", "38C"] },
-    { parent: "Kid's", values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"] },
-    { parent: "Baby", values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"] },
+    // Clothing & Apparel
+    { parent: "Letter Sizes", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
+    { parent: "Numeric Sizes", values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"] },
+    { parent: "US Shoes", values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"] },
+    { parent: "EU Shoes", values: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
+    { parent: "Men's Waist", values: ["28", "30", "32", "34", "36", "38", "40", "42", "44"] },
+    { parent: "Bra Sizes", values: ["30A", "32A", "34A", "36A", "38A", "30B", "32B", "34B", "36B", "38B", "30C", "32C", "34C", "36C", "38C"] },
+    { parent: "Kids Sizes", values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"] },
+    { parent: "Baby Sizes", values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"] },
+    
+    // Electronics - Mobile Phones
+    { parent: "Phone Screen", values: ["5.0\"", "5.5\"", "6.0\"", "6.1\"", "6.3\"", "6.5\"", "6.7\"", "6.8\"", "7.0\""] },
+    { parent: "Phone Storage", values: ["64GB", "128GB", "256GB", "512GB", "1TB"] },
+    { parent: "Phone RAM", values: ["4GB", "6GB", "8GB", "12GB", "16GB"] },
+    
+    // Electronics - Laptops
+    { parent: "Laptop Screen", values: ["11.6\"", "13.3\"", "14\"", "15.6\"", "16\"", "17.3\""] },
+    { parent: "Laptop Storage", values: ["256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD", "256GB HDD", "512GB HDD", "1TB HDD", "2TB HDD"] },
+    { parent: "Laptop RAM", values: ["4GB", "8GB", "16GB", "32GB", "64GB"] },
+    { parent: "Laptop Processor", values: ["i3", "i5", "i7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "M1", "M2", "M3"] },
+    
+    // Electronics - Tablets
+    { parent: "Tablet Screen", values: ["7.9\"", "8.3\"", "9.7\"", "10.2\"", "10.5\"", "10.9\"", "11\"", "12.9\""] },
+    { parent: "Tablet Storage", values: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"] },
+    
+    // Electronics - Monitors
+    { parent: "Monitor Size", values: ["19\"", "21.5\"", "24\"", "27\"", "32\"", "34\"", "38\"", "43\"", "49\""] },
+    { parent: "Monitor Resolution", values: ["HD (1366x768)", "Full HD (1920x1080)", "2K (2560x1440)", "4K (3840x2160)", "UltraWide (3440x1440)", "5K (5120x2880)"] },
+    { parent: "Refresh Rate", values: ["60Hz", "75Hz", "120Hz", "144Hz", "165Hz", "240Hz", "360Hz"] },
+    
+    // Electronics - TVs
+    { parent: "TV Size", values: ["32\"", "40\"", "43\"", "50\"", "55\"", "65\"", "75\"", "85\"", "98\""] },
+    { parent: "TV Resolution", values: ["HD", "Full HD", "4K UHD", "8K UHD"] },
+    
+    // Electronics - Smartwatches
+    { parent: "Watch Size", values: ["38mm", "40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "47mm"] },
+    { parent: "Watch Band", values: ["S", "M", "L", "XS", "XL"] },
+    
+    // Universal
     { parent: "One Size", values: ["One Size Fits All"] },
     { parent: "Custom", values: [] }
-  ];
+];
 
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
