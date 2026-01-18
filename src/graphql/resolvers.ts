@@ -393,9 +393,60 @@ function calculateGrowthRate(current: number, previous: number): number {
   return ((current - previous) / previous) * 100;
 }
 
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+interface PaginationInput {
+  page?: number;
+  pageSize?: number;
+}
+
+interface SortInput {
+  field?: 'DUE_DATE' | 'AMOUNT' | 'CREATED_AT' | 'UPDATED_AT';
+  order?: 'ASC' | 'DESC';
+}
+
+interface ApiBillFilters {
+  service?: string;
+  year?: number;
+  month?: number;
+  status?: string;
+  tags?: string[];
+  fromDate?: Date;
+  toDate?: Date;
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+interface ApiBillList {
+  data: any[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+
+
 
 export const resolvers = {
   Query: {
+    apiBills: async (
+      _: any,
+      args: {
+        filters?: ApiBillFilters;
+        pagination?: PaginationInput;
+        sort?: SortInput;
+      }
+    ) => {
+      return apiBillsResolver(
+        args.filters || {},
+        args.pagination || {},
+        args.sort || {}
+      );
+    },
+
     // ================= Sales Analytics Queries =================
     salesData: async (
       _: any,
