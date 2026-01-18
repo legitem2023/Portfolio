@@ -393,9 +393,7 @@ function calculateGrowthRate(current: number, previous: number): number {
   return ((current - previous) / previous) * 100;
 }
 
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
 
 interface PaginationInput {
   page?: number;
