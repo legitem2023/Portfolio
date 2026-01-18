@@ -1,4 +1,3 @@
-'use client';
 import React, { useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
@@ -33,7 +32,7 @@ const GET_API_BILLS = gql`
   }
 `;
 
-// Types
+// TypeScript Interfaces
 interface ApiBill {
   id: string;
   service: string;
@@ -84,13 +83,17 @@ interface GetApiBillsResponse {
   apiBills: ApiBillList;
 }
 
-// ... (TypeScript interfaces remain the same as before) ...
-
 const ApiBillsComponent: React.FC = () => {
   const [filters, setFilters] = useState<ApiBillFilters>({});
-  const [pagination, setPagination] = useState<PaginationInput>({ page: 1, pageSize: 10 });
-  const [sort, setSort] = useState<SortInput>({ field: 'DUE_DATE', order: 'DESC' });
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // Mobile filter toggle
+  const [pagination, setPagination] = useState<PaginationInput>({ 
+    page: 1, 
+    pageSize: 10 
+  });
+  const [sort, setSort] = useState<SortInput>({ 
+    field: 'DUE_DATE', 
+    order: 'DESC' 
+  });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { data, loading, error, refetch } = useQuery<GetApiBillsResponse>(
     GET_API_BILLS,
@@ -100,36 +103,97 @@ const ApiBillsComponent: React.FC = () => {
     }
   );
 
-  useEffect(() => { refetch(); }, [filters, pagination, sort, refetch]);
+  useEffect(() => { 
+    refetch(); 
+  }, [filters, pagination, sort, refetch]);
 
-  // Handler functions remain the same ...
+  // Handler Functions
+  const handleServiceFilter = (service: string) => {
+    setFilters(prev => ({
+      ...prev,
+      service: service || undefined,
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleStatusFilter = (status: string) => {
+    setFilters(prev => ({
+      ...prev,
+      status: status as 'pending' | 'paid' | 'overdue' || undefined,
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleAmountFilter = (type: 'min' | 'max', value: string) => {
+    const numValue = value ? parseFloat(value) : undefined;
+    setFilters(prev => ({
+      ...prev,
+      [type === 'min' ? 'minAmount' : 'maxAmount']: numValue,
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleDateFilter = (type: 'from' | 'to', value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [type === 'from' ? 'fromDate' : 'toDate']: value || undefined,
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPagination({ page: 1, pageSize: size });
+  };
+
+  const handleSort = (field: SortInput['field']) => {
+    setSort(prev => ({
+      field,
+      order: prev.field === field && prev.order === 'ASC' ? 'DESC' : 'ASC',
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+    setPagination({ page: 1, pageSize: 10 });
+    setSort({ field: 'DUE_DATE', order: 'DESC' });
+  };
+
+  // Loading and Error States
+  if (loading && !data) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-xl">Loading bills...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4" role="alert">
+        <strong>Error:</strong> {error.message}
+      </div>
+    );
+  }
 
   const bills = data?.apiBills;
   const currentPage = pagination.page || 1;
   const totalPages = bills?.totalPages || 1;
 
-  if (loading && !data) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="text-xl">Loading bills...</div>
-    </div>
-  );
-  if (error) return (
-    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4" role="alert">
-      <strong>Error:</strong> {error.message}
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
-      {/* Header */}
+      {/* Header Section */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">API Bills Dashboard</h1>
         <p className="text-gray-600 mt-2">Manage and monitor all your API service bills</p>
       </div>
 
-      {/* Main Layout: Filters + Table */}
+      {/* Main Layout */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Filter Sidebar - Responsive */}
+        {/* Filter Sidebar */}
         <div className={`lg:w-1/4 ${isFilterOpen ? 'block' : 'hidden'} lg:block`}>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-6">
@@ -142,7 +206,6 @@ const ApiBillsComponent: React.FC = () => {
               </button>
             </div>
 
-            {/* Filter Controls */}
             <div className="space-y-6">
               {/* Service Filter */}
               <div>
@@ -230,7 +293,7 @@ const ApiBillsComponent: React.FC = () => {
 
         {/* Main Content Area */}
         <div className="lg:w-3/4">
-          {/* Stats and Mobile Filter Toggle */}
+          {/* Stats and Controls */}
           <div className="bg-white rounded-xl shadow-sm p-6 mb-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
@@ -265,12 +328,10 @@ const ApiBillsComponent: React.FC = () => {
 
           {/* Bills Table */}
           <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
-            {/* Responsive Table Container */}
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    {/* Sortable headers */}
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('DUE_DATE')}
@@ -308,51 +369,74 @@ const ApiBillsComponent: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {bills?.data.map((bill) => (
-                    <tr key={bill.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">
-                          {new Date(bill.dueDate).toLocaleDateString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                            <span className="text-blue-600 font-semibold">
-                              {bill.service.charAt(0)}
-                            </span>
+                  {bills && bills.data.length > 0 ? (
+                    bills.data.map((bill) => (
+                      <tr key={bill.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {new Date(bill.dueDate).toLocaleDateString()}
                           </div>
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">{bill.service}</div>
-                            <div className="text-sm text-gray-500">{bill.apiName}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                              <span className="text-blue-600 font-semibold">
+                                {bill.service.charAt(0)}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">{bill.service}</div>
+                              <div className="text-sm text-gray-500">{bill.apiName}</div>
+                            </div>
                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-semibold text-gray-900">
+                            ${bill.amount.toFixed(2)} <span className="text-gray-500 text-xs">{bill.currency}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            bill.status === 'paid' 
+                              ? 'bg-green-100 text-green-800'
+                              : bill.status === 'pending'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                          {bill.period}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium hidden lg:table-cell">
+                          <button className="text-blue-600 hover:text-blue-900 mr-4">View</button>
+                          {bill.invoiceUrl && (
+                            <a 
+                              href={bill.invoiceUrl} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-gray-600 hover:text-gray-900"
+                            >
+                              Download
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="px-6 py-12 text-center">
+                        <div className="text-gray-400 mb-4">
+                          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-semibold text-gray-900">
-                          ${bill.amount.toFixed(2)} <span className="text-gray-500 text-xs">{bill.currency}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          bill.status === 'paid' 
-                            ? 'bg-green-100 text-green-800'
-                            : bill.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                        {bill.period}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium hidden lg:table-cell">
-                        <button className="text-blue-600 hover:text-blue-900 mr-4">View</button>
-                        <button className="text-gray-600 hover:text-gray-900">Download</button>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
+                        <p className="text-gray-600">Try adjusting your filters to find what you're looking for.</p>
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -375,10 +459,15 @@ const ApiBillsComponent: React.FC = () => {
                     </button>
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       let pageNum;
-                      if (totalPages <= 5) pageNum = i + 1;
-                      else if (currentPage <= 3) pageNum = i + 1;
-                      else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
-                      else pageNum = currentPage - 2 + i;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
                       
                       return (
                         <button
@@ -406,19 +495,6 @@ const ApiBillsComponent: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Empty State */}
-          {(!bills || bills.data.length === 0) && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
-              <p className="text-gray-600">Try adjusting your filters to find what youre looking for.</p>
-            </div>
-          )}
         </div>
       </div>
     </div>
