@@ -33,6 +33,57 @@ const GET_API_BILLS = gql`
   }
 `;
 
+// Types
+interface ApiBill {
+  id: string;
+  service: string;
+  apiName: string;
+  month: number;
+  year: number;
+  period: string;
+  amount: number;
+  currency: string;
+  status: 'pending' | 'paid' | 'overdue';
+  paidAt?: string;
+  dueDate: string;
+  invoiceUrl?: string;
+  tags: string[];
+}
+
+interface ApiBillFilters {
+  service?: string;
+  year?: number;
+  month?: number;
+  status?: 'pending' | 'paid' | 'overdue';
+  tags?: string[];
+  fromDate?: string;
+  toDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
+}
+
+interface PaginationInput {
+  page?: number;
+  pageSize?: number;
+}
+
+interface SortInput {
+  field?: 'DUE_DATE' | 'AMOUNT' | 'CREATED_AT' | 'UPDATED_AT';
+  order?: 'ASC' | 'DESC';
+}
+
+interface ApiBillList {
+  data: ApiBill[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface GetApiBillsResponse {
+  apiBills: ApiBillList;
+}
+
 // ... (TypeScript interfaces remain the same as before) ...
 
 const ApiBillsComponent: React.FC = () => {
