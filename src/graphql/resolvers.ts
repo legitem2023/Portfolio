@@ -405,6 +405,7 @@ interface SortInput {
   order?: 'ASC' | 'DESC';
 }
 
+
 interface ApiBillFilters {
   service?: string;
   year?: number;
@@ -423,6 +424,116 @@ interface ApiBillList {
   page: number;
   pageSize: number;
   totalPages: number;
+}
+
+export async function apiBillsResolver(
+  filters: ApiBillFilters = {},
+  pagination: PaginationInput = {},
+  sort: SortInput = {}
+): Promise<ApiBillList> {
+  const {
+    page = 1,
+    pageSize = 20
+  } = pagination;
+
+  const {
+    field = 'DUE_DATE',
+    order = 'DESC'
+  } = sort;
+
+  // Build Prisma where clause
+  const where: any = {};
+
+  // Apply filters
+  if (filters.service) {
+    where.service = filters.service;
+  }
+
+  if (filters.year !== undefined) {
+    where.year = filters.year;
+  }
+
+  if (filters.month !== undefined) {
+    where.month = filters.month;
+  }
+
+  if (filters.status) {
+    where.status = filters.status;
+  }
+
+  if (filters.tags && filters.tags.length > 0) {
+    where.tags = {
+      hasEvery: filters.tags
+    };
+  }
+
+  if (filters.fromDate || filters.toDate) {
+    where.dueDate = {};
+    if (filters.fromDate) {
+      where.dueDate.gte = filters.fromDate;
+    }
+    if (filters.toDate) {
+      where.dueDate.lte = filters.toDate;
+    }
+  }
+
+  if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
+    where.amount = {};
+    if (filters.minAmount !== undefined) {
+      where.amount.gte = filters.minAmount;
+    }
+    if (filters.maxAmount !== undefined) {
+      where.amount.lte = filters.maxAmount;
+    }
+  }
+
+  // Build orderBy clause
+  let orderBy: any = {};
+  
+  switch (field) {
+    case 'DUE_DATE':
+      orderBy = { dueDate: order.toLowerCase() };
+      break;
+    case 'AMOUNT':
+      orderBy = { amount: order.toLowerCase() };
+      break;
+    case 'CREATED_AT':
+      orderBy = { createdAt: order.toLowerCase() };
+      break;
+    case 'UPDATED_AT':
+      orderBy = { updatedAt: order.toLowerCase() };
+      break;
+    default:
+      orderBy = { dueDate: 'desc' };
+  }
+
+  try {
+    // Get total count for pagination
+    const total = await prisma.apiBill.count({ where });
+
+    // Calculate skip for pagination
+    const skip = (page - 1) * pageSize;
+    const totalPages = Math.ceil(total / pageSize);
+
+    // Fetch bills with pagination and sorting
+    const bills = await prisma.apiBill.findMany({
+      where,
+      orderBy,
+      skip,
+      take: pageSize,
+    });
+
+    return {
+      data: bills,
+      total,
+      page,
+      pageSize,
+      totalPages
+    };
+  } catch (error) {
+    console.error('Error fetching API bills:', error);
+    throw new Error(`Failed to fetch API bills: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 }
 
 
