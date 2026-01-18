@@ -10,6 +10,7 @@ import ProductsTab from './components/ProductsTab';
 import SalesList from './components/SalesList';
 import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
+import ApiBillsComponent from './components/ApiBillsComponent';
 import LoadingShimmer from './components/LoadingShimmer';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import { decryptToken } from '../../../utils/decryptToken';
@@ -223,7 +224,7 @@ export default function ManagementDashboard() {
       case 'sales':
         return <SalesList/>
       default:
-        return <div>Select a tab</div>;
+        return <ApiBillsComponent/>;
     }
   };
 
