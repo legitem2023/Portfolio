@@ -223,6 +223,8 @@ export default function ManagementDashboard() {
         return <UsersTab/>;
       case 'sales':
         return <SalesList/>
+      case 'bills':
+        return <ApiBillsComponent/>
       default:
         return <ApiBillsComponent/>;
     }
