@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
-// GraphQL Query
+// GraphQL Query - Updated to match your schema
 const GET_API_BILLS = gql`
   query GetApiBills(
     $filters: ApiBillFilters
@@ -18,11 +18,15 @@ const GET_API_BILLS = gql`
         period
         amount
         currency
+        usage
         status
         paidAt
         dueDate
+        invoiceId
         invoiceUrl
         tags
+        createdAt
+        updatedAt
       }
       total
       page
@@ -32,7 +36,7 @@ const GET_API_BILLS = gql`
   }
 `;
 
-// TypeScript Interfaces
+// TypeScript Interfaces - Updated to include new fields
 interface ApiBill {
   id: string;
   service: string;
@@ -42,11 +46,15 @@ interface ApiBill {
   period: string;
   amount: number;
   currency: string;
+  usage?: string; // Added based on your query
   status: 'pending' | 'paid' | 'overdue';
   paidAt?: string;
   dueDate: string;
+  invoiceId?: string; // Added based on your query
   invoiceUrl?: string;
   tags: string[];
+  createdAt: string; // Added based on your query
+  updatedAt: string; // Added based on your query
 }
 
 interface ApiBillFilters {
@@ -103,9 +111,9 @@ const ApiBillsComponent: React.FC = () => {
     }
   );
 
-  useEffect(() => { 
-    refetch(); 
-  }, [filters, pagination, sort, refetch]);
+  // Remove the useEffect that calls refetch on every change
+  // Apollo's useQuery will automatically refetch when variables change
+  // If you need manual refetching, keep the refetch function but remove the useEffect
 
   // Handler Functions
   const handleServiceFilter = (service: string) => {
@@ -117,9 +125,10 @@ const ApiBillsComponent: React.FC = () => {
   };
 
   const handleStatusFilter = (status: string) => {
+    const validStatus = status as 'pending' | 'paid' | 'overdue' | '';
     setFilters(prev => ({
       ...prev,
-      status: status as 'pending' | 'paid' | 'overdue' || undefined,
+      status: validStatus || undefined,
     }));
     setPagination(prev => ({ ...prev, page: 1 }));
   };
@@ -213,6 +222,7 @@ const ApiBillsComponent: React.FC = () => {
                 <select 
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onChange={(e) => handleServiceFilter(e.target.value)}
+                  value={filters.service || ''}
                 >
                   <option value="">All Services</option>
                   <option value="Stripe">Stripe</option>
@@ -228,6 +238,7 @@ const ApiBillsComponent: React.FC = () => {
                 <select 
                   className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onChange={(e) => handleStatusFilter(e.target.value)}
+                  value={filters.status || ''}
                 >
                   <option value="">All Status</option>
                   <option value="pending">Pending</option>
@@ -245,12 +256,14 @@ const ApiBillsComponent: React.FC = () => {
                     placeholder="Min" 
                     className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleAmountFilter('min', e.target.value)}
+                    value={filters.minAmount || ''}
                   />
                   <input 
                     type="number" 
                     placeholder="Max" 
                     className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleAmountFilter('max', e.target.value)}
+                    value={filters.maxAmount || ''}
                   />
                 </div>
               </div>
@@ -263,11 +276,13 @@ const ApiBillsComponent: React.FC = () => {
                     type="date" 
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleDateFilter('from', e.target.value)}
+                    value={filters.fromDate || ''}
                   />
                   <input 
                     type="date" 
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleDateFilter('to', e.target.value)}
+                    value={filters.toDate || ''}
                   />
                 </div>
               </div>
