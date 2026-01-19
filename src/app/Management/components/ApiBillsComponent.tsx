@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
-// GraphQL Query - Updated to match your actual schema
+// GraphQL Query - Fixed to match your schema
 const GET_API_BILLS = gql`
   query GetApiBills(
     $filters: ApiBillFilters
@@ -9,7 +9,7 @@ const GET_API_BILLS = gql`
     $sort: SortInput
   ) {
     apiBills(filters: $filters, pagination: $pagination, sort: $sort) {
-      bills {
+      data {
         id
         service
         apiName
@@ -31,6 +31,7 @@ const GET_API_BILLS = gql`
       total
       page
       pageSize
+      totalPages
     }
   }
 `;
@@ -79,11 +80,11 @@ interface SortInput {
 }
 
 interface ApiBillList {
-  bills: ApiBill[]; // Changed from 'data' to 'bills'
+  data: ApiBill[];
   total: number;
   page: number;
   pageSize: number;
-  // Removed totalPages since it's not in the schema
+  totalPages: number;
 }
 
 interface GetApiBillsResponse {
@@ -183,12 +184,11 @@ const ApiBillsComponent: React.FC = () => {
     );
   }
 
-  const bills = data?.apiBills;
+  const apiBillsData = data?.apiBills;
+  const bills = apiBillsData?.data || [];
   const currentPage = pagination.page || 1;
   const pageSize = pagination.pageSize || 10;
-  
-  // Calculate totalPages manually since it's not in the API response
-  const totalPages = bills ? Math.ceil(bills.total / pageSize) : 1;
+  const totalPages = apiBillsData?.totalPages || 1;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -311,10 +311,10 @@ const ApiBillsComponent: React.FC = () => {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Bills Overview</h2>
-                {bills && (
+                {apiBillsData && (
                   <p className="text-gray-600 mt-1">
-                    Showing <span className="font-semibold">{bills.bills.length}</span> of{' '}
-                    <span className="font-semibold">{bills.total}</span> total bills
+                    Showing <span className="font-semibold">{bills.length}</span> of{' '}
+                    <span className="font-semibold">{apiBillsData.total}</span> total bills
                   </p>
                 )}
               </div>
@@ -382,8 +382,8 @@ const ApiBillsComponent: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {bills && bills.bills.length > 0 ? (
-                    bills.bills.map((bill) => (
+                  {bills.length > 0 ? (
+                    bills.map((bill) => (
                       <tr key={bill.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
@@ -455,7 +455,7 @@ const ApiBillsComponent: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            {bills && bills.total > 0 && (
+            {apiBillsData && apiBillsData.total > 0 && (
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-sm text-gray-700">
