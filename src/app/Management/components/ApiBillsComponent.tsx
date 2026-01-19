@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
-// GraphQL Query - Updated to match your schema
+// GraphQL Query - Updated to match your actual schema
 const GET_API_BILLS = gql`
   query GetApiBills(
     $filters: ApiBillFilters
@@ -9,7 +9,7 @@ const GET_API_BILLS = gql`
     $sort: SortInput
   ) {
     apiBills(filters: $filters, pagination: $pagination, sort: $sort) {
-      data {
+      bills {
         id
         service
         apiName
@@ -31,12 +31,11 @@ const GET_API_BILLS = gql`
       total
       page
       pageSize
-      totalPages
     }
   }
 `;
 
-// TypeScript Interfaces - Updated to include new fields
+// TypeScript Interfaces
 interface ApiBill {
   id: string;
   service: string;
@@ -46,15 +45,15 @@ interface ApiBill {
   period: string;
   amount: number;
   currency: string;
-  usage?: string; // Added based on your query
+  usage?: string;
   status: 'pending' | 'paid' | 'overdue';
   paidAt?: string;
   dueDate: string;
-  invoiceId?: string; // Added based on your query
+  invoiceId?: string;
   invoiceUrl?: string;
   tags: string[];
-  createdAt: string; // Added based on your query
-  updatedAt: string; // Added based on your query
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ApiBillFilters {
@@ -80,11 +79,11 @@ interface SortInput {
 }
 
 interface ApiBillList {
-  data: ApiBill[];
+  bills: ApiBill[]; // Changed from 'data' to 'bills'
   total: number;
   page: number;
   pageSize: number;
-  totalPages: number;
+  // Removed totalPages since it's not in the schema
 }
 
 interface GetApiBillsResponse {
@@ -110,10 +109,6 @@ const ApiBillsComponent: React.FC = () => {
       fetchPolicy: 'cache-and-network',
     }
   );
-
-  // Remove the useEffect that calls refetch on every change
-  // Apollo's useQuery will automatically refetch when variables change
-  // If you need manual refetching, keep the refetch function but remove the useEffect
 
   // Handler Functions
   const handleServiceFilter = (service: string) => {
@@ -190,7 +185,10 @@ const ApiBillsComponent: React.FC = () => {
 
   const bills = data?.apiBills;
   const currentPage = pagination.page || 1;
-  const totalPages = bills?.totalPages || 1;
+  const pageSize = pagination.pageSize || 10;
+  
+  // Calculate totalPages manually since it's not in the API response
+  const totalPages = bills ? Math.ceil(bills.total / pageSize) : 1;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -315,7 +313,7 @@ const ApiBillsComponent: React.FC = () => {
                 <h2 className="text-xl font-semibold text-gray-800">Bills Overview</h2>
                 {bills && (
                   <p className="text-gray-600 mt-1">
-                    Showing <span className="font-semibold">{bills.data.length}</span> of{' '}
+                    Showing <span className="font-semibold">{bills.bills.length}</span> of{' '}
                     <span className="font-semibold">{bills.total}</span> total bills
                   </p>
                 )}
@@ -384,8 +382,8 @@ const ApiBillsComponent: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {bills && bills.data.length > 0 ? (
-                    bills.data.map((bill) => (
+                  {bills && bills.bills.length > 0 ? (
+                    bills.bills.map((bill) => (
                       <tr key={bill.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
