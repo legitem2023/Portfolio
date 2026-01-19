@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
-// GraphQL Query - Fixed to match your schema
+// GraphQL Query - Fixed to match your actual schema
 const GET_API_BILLS = gql`
   query GetApiBills(
     $filters: ApiBillFilters
@@ -9,7 +9,7 @@ const GET_API_BILLS = gql`
     $sort: SortInput
   ) {
     apiBills(filters: $filters, pagination: $pagination, sort: $sort) {
-      data {
+      items {
         id
         service
         apiName
@@ -31,7 +31,7 @@ const GET_API_BILLS = gql`
       total
       page
       pageSize
-      totalPages
+      hasNext
     }
   }
 `;
@@ -80,11 +80,11 @@ interface SortInput {
 }
 
 interface ApiBillList {
-  data: ApiBill[];
+  items: ApiBill[];
   total: number;
   page: number;
   pageSize: number;
-  totalPages: number;
+  hasNext: boolean;
 }
 
 interface GetApiBillsResponse {
@@ -185,10 +185,10 @@ const ApiBillsComponent: React.FC = () => {
   }
 
   const apiBillsData = data?.apiBills;
-  const bills = apiBillsData?.data || [];
+  const bills = apiBillsData?.items || [];
   const currentPage = pagination.page || 1;
   const pageSize = pagination.pageSize || 10;
-  const totalPages = apiBillsData?.totalPages || 1;
+  const totalPages = apiBillsData ? Math.ceil(apiBillsData.total / pageSize) : 1;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -461,6 +461,9 @@ const ApiBillsComponent: React.FC = () => {
                   <div className="text-sm text-gray-700">
                     Page <span className="font-semibold">{currentPage}</span> of{' '}
                     <span className="font-semibold">{totalPages}</span>
+                    {apiBillsData.hasNext && (
+                      <span className="ml-2 text-blue-600">• Has next page</span>
+                    )}
                   </div>
                   <div className="flex items-center space-x-2">
                     <button
