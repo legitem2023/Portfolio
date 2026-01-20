@@ -708,27 +708,9 @@ export const typeDefs = gql`
     customFields: Json
   }
 
-  input ApiBillFilters {
-    service: String
-    year: Int
-    month: Int
-    status: BillStatus
-    tags: [String!]
-    fromDate: DateTime
-    toDate: DateTime
-    minAmount: Float
-    maxAmount: Float
-  }
 
-  input PaginationInput {
-    page: Int = 1
-    pageSize: Int = 20
-  }
 
-  input SortInput {
-    field: SortField = DUE_DATE
-    order: SortOrder = DESC
-  }
+  
 
   # ================= Sales Analytics Input Types =================
   input SalesFilters {
@@ -800,9 +782,43 @@ export const typeDefs = gql`
     token: String
     statusText: String
   }
+  
+  input PaginationInput {
+    page: Int = 1
+    pageSize: Int = 20
+  }
 
+  input SortInput {
+    field: SortField = DUE_DATE
+    order: SortOrder = DESC
+  }
+  input ApiBillFilters {
+    service: String
+    year: Int
+    month: Int
+    status: BillStatus
+    tags: [String!]
+    fromDate: DateTime
+    toDate: DateTime
+    minAmount: Float
+    maxAmount: Float
+  }
   # ================= Queries & Mutations =================
   type Query {
+    apiBills(
+      filters: ApiBillFilters
+      pagination: PaginationInput
+      sort: SortInput
+    ): ApiBillList!
+    
+    apiBill(id: ID!): ApiBill
+    
+    billingSummary(
+      service: String
+      year: Int
+      quarter: Int
+    ): BillingSummary!
+    
     # Existing queries
     notifications(userId: ID, filters: NotificationFilters): NotificationConnection
     notification(id: ID): Notification
@@ -876,20 +892,7 @@ export const typeDefs = gql`
     salesOrder(id: ID!): Order
 
     # ================= API Bill Queries =================
-    apiBills(
-      filters: ApiBillFilters
-      pagination: PaginationInput
-      sort: SortInput
-    ): ApiBillList!
-    
-    apiBill(id: ID!): ApiBill
-    
-    billingSummary(
-      service: String
-      year: Int
-      quarter: Int
-    ): BillingSummary!
-    
+
     monthlyTrends(
       service: String
       year: Int
