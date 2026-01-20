@@ -36,6 +36,17 @@ const GET_API_BILLS = gql`
   }
 `;
 
+interface UsageMetrics {
+    requests: number;
+    successful: number;
+    failed: number;
+    dataProcessed: number;
+    rate: number;
+    customFields: any
+  }
+
+
+
 // TypeScript Interfaces
 interface ApiBill {
   id: string;
@@ -46,7 +57,7 @@ interface ApiBill {
   period: string;
   amount: number;
   currency: string;
-  usage?: string;
+  usage?: UsageMetrics;
   status: 'pending' | 'paid' | 'overdue';
   paidAt?: string;
   dueDate: string;
