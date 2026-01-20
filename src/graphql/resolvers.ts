@@ -1967,29 +1967,29 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       
       // Basic validation
       if (!input.service || !input.service.trim()) {
-        throw new ApolloError('Service is required', 'VALIDATION_ERROR');
+        console.log('Service is required', 'VALIDATION_ERROR');
       }
       
       if (!input.apiName || !input.apiName.trim()) {
-        throw new ApolloError('API name is required', 'VALIDATION_ERROR');
+        console.log('API name is required', 'VALIDATION_ERROR');
       }
       
       if (input.month < 1 || input.month > 12) {
-        throw new ApolloError('Month must be between 1 and 12', 'VALIDATION_ERROR');
+        console.log('Month must be between 1 and 12', 'VALIDATION_ERROR');
       }
       
       if (input.year < 2000 || input.year > 2100) {
-        throw new ApolloError('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
+        console.log('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
       }
       
       if (input.amount <= 0) {
-        throw new ApolloError('Amount must be greater than 0', 'VALIDATION_ERROR');
+        console.log('Amount must be greater than 0', 'VALIDATION_ERROR');
       }
       
       // Check if dueDate is valid
       const dueDate = new Date(input.dueDate);
       if (isNaN(dueDate.getTime())) {
-        throw new ApolloError('Invalid due date', 'VALIDATION_ERROR');
+        console.log('Invalid due date', 'VALIDATION_ERROR');
       }
 
       // Check for duplicate bill
@@ -2003,7 +2003,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
 
       if (existingBill) {
-        throw new ApolloError(
+        console.log(
           `Bill for ${input.service}/${input.apiName} already exists for ${input.month}/${input.year}`,
           'DUPLICATE_BILL'
         );
@@ -2049,7 +2049,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         throw error;
       }
       
-      throw new ApolloError(
+      console.log(
         `Failed to create API bill: ${error.message}`,
         'INTERNAL_SERVER_ERROR'
       );
@@ -2066,22 +2066,22 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
 
       if (!existingBill) {
-        throw new ApolloError(`API bill with ID ${id} not found`, 'NOT_FOUND');
+        console.log(`API bill with ID ${id} not found`, 'NOT_FOUND');
       }
       
       // Validate month if provided
       if (input.month && (input.month < 1 || input.month > 12)) {
-        throw new ApolloError('Month must be between 1 and 12', 'VALIDATION_ERROR');
+        console.log('Month must be between 1 and 12', 'VALIDATION_ERROR');
       }
       
       // Validate year if provided
       if (input.year && (input.year < 2000 || input.year > 2100)) {
-        throw new ApolloError('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
+        console.log('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
       }
       
       // Validate amount if provided
       if (input.amount && input.amount <= 0) {
-        throw new ApolloError('Amount must be greater than 0', 'VALIDATION_ERROR');
+        console.log('Amount must be greater than 0', 'VALIDATION_ERROR');
       }
 
       // Check for duplicate if updating service/apiName/month/year
@@ -2102,7 +2102,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         });
 
         if (duplicateBill) {
-          throw new ApolloError(
+          console.log(
             `Another bill already exists for ${service}/${apiName} for ${month}/${year}`,
             'DUPLICATE_BILL'
           );
@@ -2180,7 +2180,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         throw error;
       }
       
-      throw new ApolloError(
+      console.log(
         `Failed to update API bill: ${error.message}`,
         'INTERNAL_SERVER_ERROR'
       );
@@ -2197,7 +2197,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
 
       if (!existingBill) {
-        throw new ApolloError(`API bill with ID ${id} not found`, 'NOT_FOUND');
+        console.log(`API bill with ID ${id} not found`, 'NOT_FOUND');
       }
 
       // Delete the bill
@@ -2219,7 +2219,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         throw error;
       }
       
-      throw new ApolloError(
+      console.log(
         `Failed to delete API bill: ${error.message}`,
         'INTERNAL_SERVER_ERROR'
       );
