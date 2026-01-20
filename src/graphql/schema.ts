@@ -370,7 +370,7 @@ export const typeDefs = gql`
     period: String!
     amount: Float!
     currency: String!
-    usage: UsageMetrics
+    usage: String
     status: BillStatus!
     paidAt: DateTime
     dueDate: DateTime!
