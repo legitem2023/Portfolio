@@ -2034,10 +2034,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
               customFields: input.usage.customFields || {},
             },
           } : undefined,
-        },
-        include: {
-          usage: true,
-        },
+        }
       });
 
       return newBill;
