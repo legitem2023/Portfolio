@@ -200,14 +200,14 @@ const ApiBillsComponent: React.FC = () => {
   const totalPages = apiBillsData ? Math.ceil(apiBillsData.total / pageSize) : 1;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-6"> {/* Changed p-4 to p-2 for mobile */}
+    <div className="min-h-screen bg-gray-50 p-2 md:p-6">
       {/* Main Layout */}
-      <div className="flex flex-col lg:flex-row gap-2 md:gap-6"> {/* Changed gap-6 to gap-2 for mobile */}
+      <div className="flex flex-col lg:flex-row gap-2 md:gap-6">
         {/* Filter Sidebar */}
         <div className={`lg:w-1/4 ${isFilterOpen ? 'block' : 'hidden'} lg:block`}>
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-200"> {/* Changed p-6 to p-4 for mobile */}
-            <div className="flex justify-between items-center mb-4 md:mb-6"> {/* Changed mb-6 to mb-4 for mobile */}
-              <h2 className="text-lg md:text-xl font-semibold text-gray-800">Filters</h2>
+          <div className="bg-white rounded-xl shadow-sm p-2 md:p-6 border border-gray-200">
+            <div className="flex justify-between items-center mb-2 md:mb-6">
+              <h2 className="text-xl font-semibold text-gray-800">Filters</h2>
               <button 
                 onClick={() => setIsFilterOpen(false)}
                 className="lg:hidden text-gray-500 hover:text-gray-700"
@@ -216,12 +216,12 @@ const ApiBillsComponent: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-4 md:space-y-6"> {/* Changed space-y-6 to space-y-4 for mobile */}
+            <div className="space-y-2 md:space-y-6">
               {/* Service Filter */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Service</label>
                 <select 
-                  className="w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2 md:py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base" /* Added mobile padding */
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onChange={(e) => handleServiceFilter(e.target.value)}
                   value={filters.service || ''}
                 >
@@ -237,7 +237,7 @@ const ApiBillsComponent: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select 
-                  className="w-full rounded-lg border border-gray-300 px-3 md:px-4 py-2 md:py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm md:text-base" /* Added mobile padding */
+                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onChange={(e) => handleStatusFilter(e.target.value)}
                   value={filters.status || ''}
                 >
@@ -251,18 +251,18 @@ const ApiBillsComponent: React.FC = () => {
               {/* Amount Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Amount Range</label>
-                <div className="grid grid-cols-2 gap-2 md:gap-3"> {/* Changed gap-3 to gap-2 for mobile */}
+                <div className="grid grid-cols-2 gap-2 md:gap-3">
                   <input 
                     type="number" 
                     placeholder="Min" 
-                    className="rounded-lg border border-gray-300 px-2 md:px-3 py-1.5 md:py-2 text-sm focus:ring-2 focus:ring-blue-500" /* Reduced mobile padding */
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleAmountFilter('min', e.target.value)}
                     value={filters.minAmount || ''}
                   />
                   <input 
                     type="number" 
                     placeholder="Max" 
-                    className="rounded-lg border border-gray-300 px-2 md:px-3 py-1.5 md:py-2 text-sm focus:ring-2 focus:ring-blue-500" /* Reduced mobile padding */
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleAmountFilter('max', e.target.value)}
                     value={filters.maxAmount || ''}
                   />
@@ -272,16 +272,16 @@ const ApiBillsComponent: React.FC = () => {
               {/* Date Range */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
-                <div className="space-y-2 md:space-y-3"> {/* Changed space-y-3 to space-y-2 for mobile */}
+                <div className="space-y-2 md:space-y-3">
                   <input 
                     type="date" 
-                    className="w-full rounded-lg border border-gray-300 px-2 md:px-3 py-1.5 md:py-2 text-sm focus:ring-2 focus:ring-blue-500" /* Reduced mobile padding */
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleDateFilter('from', e.target.value)}
                     value={filters.fromDate || ''}
                   />
                   <input 
                     type="date" 
-                    className="w-full rounded-lg border border-gray-300 px-2 md:px-3 py-1.5 md:py-2 text-sm focus:ring-2 focus:ring-blue-500" /* Reduced mobile padding */
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                     onChange={(e) => handleDateFilter('to', e.target.value)}
                     value={filters.toDate || ''}
                   />
@@ -289,16 +289,16 @@ const ApiBillsComponent: React.FC = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 md:pt-4 space-y-2 md:space-y-3"> {/* Changed pt-4 to pt-2 and space-y-3 to space-y-2 for mobile */}
+              <div className="pt-2 md:pt-4 space-y-2 md:space-y-3">
                 <button 
                   onClick={clearFilters}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 md:py-2.5 rounded-lg transition duration-200 text-sm md:text-base" /* Added mobile text size */
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-lg transition duration-200"
                 >
                   Clear All Filters
                 </button>
                 <button 
                   onClick={() => refetch()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 md:py-2.5 rounded-lg transition duration-200 text-sm md:text-base" /* Added mobile text size */
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200"
                 >
                   Apply Filters
                 </button>
@@ -310,26 +310,26 @@ const ApiBillsComponent: React.FC = () => {
         {/* Main Content Area */}
         <div className="lg:w-3/4">
           {/* Stats and Controls */}
-          <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 mb-4 md:mb-6 border border-gray-200"> {/* Changed p-6 to p-4, mb-6 to mb-4 for mobile */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4"> {/* Changed gap-4 to gap-3 for mobile */}
+          <div className="bg-white rounded-xl shadow-sm p-2 md:p-6 mb-2 md:mb-6 border border-gray-200">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 md:gap-4">
               <div>
-                <h2 className="text-lg md:text-xl font-semibold text-gray-800">Bills Overview</h2>
+                <h2 className="text-xl font-semibold text-gray-800">Bills Overview</h2>
                 {apiBillsData && (
-                  <p className="text-gray-600 mt-1 text-sm md:text-base"> {/* Added mobile text size */}
+                  <p className="text-gray-600 mt-1">
                     Showing <span className="font-semibold">{bills.length}</span> of{' '}
                     <span className="font-semibold">{apiBillsData.total}</span> total bills
                   </p>
                 )}
               </div>
-              <div className="flex gap-2 md:gap-3 w-full sm:w-auto"> {/* Changed gap-3 to gap-2 for mobile */}
+              <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                 <button 
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="lg:hidden flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 md:px-4 py-2 md:py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 text-sm md:text-base" /* Added mobile text size */
+                  className="lg:hidden flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2"
                 >
                   {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
                 </button>
                 <select 
-                  className="rounded-lg border border-gray-300 px-3 md:px-4 py-2 md:py-2.5 focus:ring-2 focus:ring-blue-500 text-sm md:text-base w-full sm:w-auto" /* Added mobile text size */
+                  className="rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500"
                   value={pagination.pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 >
@@ -349,7 +349,7 @@ const ApiBillsComponent: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th 
-                      className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" /* Reduced mobile padding */
+                      className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('DUE_DATE')}
                     >
                       <div className="flex items-center gap-1">
@@ -359,11 +359,11 @@ const ApiBillsComponent: React.FC = () => {
                         )}
                       </div>
                     </th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Service
                     </th>
                     <th 
-                      className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100" /* Reduced mobile padding */
+                      className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                       onClick={() => handleSort('AMOUNT')}
                     >
                       <div className="flex items-center gap-1">
@@ -373,13 +373,13 @@ const ApiBillsComponent: React.FC = () => {
                         )}
                       </div>
                     </th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                       Period
                     </th>
-                    <th className="px-3 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                    <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                       Actions
                     </th>
                   </tr>
@@ -388,31 +388,31 @@ const ApiBillsComponent: React.FC = () => {
                   {bills.length > 0 ? (
                     bills.map((bill) => (
                       <tr key={bill.id} className="hover:bg-gray-50">
-                        <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap"> {/* Reduced mobile padding */}
+                        <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">
                             {new Date(bill.dueDate).toLocaleDateString()}
                           </div>
                         </td>
-                        <td className="px-3 md:px-6 py-3 md:py-4"> {/* Reduced mobile padding */}
+                        <td className="px-2 md:px-6 py-2 md:py-4">
                           <div className="flex items-center">
-                            <div className="h-8 md:h-10 w-8 md:w-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center mr-2 md:mr-3"> /* Reduced mobile size and margin */
-                              <span className="text-blue-600 font-semibold text-sm md:text-base"> /* Added mobile text size */
+                            <div className="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                              <span className="text-blue-600 font-semibold">
                                 {bill.service.charAt(0)}
                               </span>
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900">{bill.service}</div>
-                              <div className="text-xs md:text-sm text-gray-500">{bill.apiName}</div>
+                              <div className="text-sm text-gray-500">{bill.apiName}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap"> {/* Reduced mobile padding */}
+                        <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
                           <div className="text-sm font-semibold text-gray-900">
                             ${bill.amount.toFixed(2)} <span className="text-gray-500 text-xs">{bill.currency}</span>
                           </div>
                         </td>
-                        <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap"> {/* Reduced mobile padding */}
-                          <span className={`px-2 md:px-3 py-1 rounded-full text-xs font-medium ${ /* Reduced mobile padding */
+                        <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                             bill.status === 'paid' 
                               ? 'bg-green-100 text-green-800'
                               : bill.status === 'pending'
@@ -422,19 +422,17 @@ const ApiBillsComponent: React.FC = () => {
                             {bill.status.charAt(0).toUpperCase() + bill.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                        <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                           {bill.period}
                         </td>
-                        <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap text-sm font-medium hidden lg:table-cell">
-                          <button className="text-blue-600 hover:text-blue-900 mr-3 md:mr-4 text-sm md:text-base"> /* Reduced mobile margin */
-                            View
-                          </button>
+                        <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap text-sm font-medium hidden lg:table-cell">
+                          <button className="text-blue-600 hover:text-blue-900 mr-4">View</button>
                           {bill.invoiceUrl && (
                             <a 
                               href={bill.invoiceUrl} 
                               target="_blank" 
                               rel="noopener noreferrer"
-                              className="text-gray-600 hover:text-gray-900 text-sm md:text-base"
+                              className="text-gray-600 hover:text-gray-900"
                             >
                               Download
                             </a>
@@ -444,14 +442,14 @@ const ApiBillsComponent: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={6} className="px-3 md:px-6 py-8 md:py-12 text-center"> /* Reduced mobile padding */
-                        <div className="text-gray-400 mb-3 md:mb-4"> /* Reduced mobile margin */
-                          <svg className="w-12 md:w-16 h-12 md:h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <td colSpan={6} className="px-2 md:px-6 py-2 md:py-12 text-center">
+                        <div className="text-gray-400 mb-2 md:mb-4">
+                          <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <h3 className="text-base md:text-lg font-medium text-gray-900 mb-1 md:mb-2">No bills found</h3>
-                        <p className="text-gray-600 text-sm md:text-base">Try adjusting your filters to find what youre looking for.</p>
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
+                        <p className="text-gray-600">Try adjusting your filters to find what youre looking for.</p>
                       </td>
                     </tr>
                   )}
@@ -461,20 +459,20 @@ const ApiBillsComponent: React.FC = () => {
 
             {/* Pagination */}
             {apiBillsData && apiBillsData.total > 0 && (
-              <div className="px-3 md:px-6 py-3 md:py-4 bg-gray-50 border-t border-gray-200"> /* Reduced mobile padding */
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 md:gap-4"> /* Reduced mobile gap */
+              <div className="px-2 md:px-6 py-2 md:py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-2 md:gap-4">
                   <div className="text-sm text-gray-700">
                     Page <span className="font-semibold">{currentPage}</span> of{' '}
                     <span className="font-semibold">{totalPages}</span>
                     {apiBillsData.hasNext && (
-                      <span className="ml-1 md:ml-2 text-blue-600 text-xs md:text-sm">• Has next page</span> /* Reduced mobile margin */
+                      <span className="ml-2 text-blue-600">• Has next page</span>
                     )}
                   </div>
-                  <div className="flex items-center space-x-1 md:space-x-2"> /* Reduced mobile spacing */
+                  <div className="flex items-center space-x-2">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage <= 1}
-                      className="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" /* Reduced mobile padding */
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -494,7 +492,7 @@ const ApiBillsComponent: React.FC = () => {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium rounded-lg ${ /* Reduced mobile padding */
+                          className={`px-4 py-2 text-sm font-medium rounded-lg ${
                             currentPage === pageNum
                               ? 'bg-blue-600 text-white'
                               : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -507,7 +505,7 @@ const ApiBillsComponent: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage >= totalPages}
-                      className="px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" /* Reduced mobile padding */
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>
