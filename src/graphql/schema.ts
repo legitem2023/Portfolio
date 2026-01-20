@@ -362,23 +362,23 @@ export const typeDefs = gql`
 
   # ================= API Bill Types =================
   type ApiBill {
-    id: ID!
-    service: String!
-    apiName: String!
-    month: Int!
-    year: Int!
-    period: String!
-    amount: Float!
-    currency: String!
+    id: ID
+    service: String
+    apiName: String
+    month: Int
+    year: Int
+    period: String
+    amount: Float
+    currency: String
     usage: String
-    status: BillStatus!
+    status: BillStatus
     paidAt: DateTime
-    dueDate: DateTime!
+    dueDate: DateTime
     invoiceId: String
     invoiceUrl: String
-    tags: [String!]!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    tags: [String]
+    createdAt: DateTime
+    updatedAt: DateTime
   }
 
   type UsageMetrics {
@@ -391,19 +391,19 @@ export const typeDefs = gql`
   }
 
   type ApiBillList {
-    items: [ApiBill!]!
-    total: Int!
-    page: Int!
-    pageSize: Int!
-    hasNext: Boolean!
+    items: [ApiBill]
+    total: Int
+    page: Int
+    pageSize: Int
+    hasNext: Boolean
   }
 
   type BillingSummary {
-    totalAmount: Float!
-    averageAmount: Float!
-    serviceBreakdown: [ServiceBreakdown!]!
-    statusCount: StatusCount!
-    period: String!
+    totalAmount: Float
+    averageAmount: Float
+    serviceBreakdown: [ServiceBreakdown]
+    statusCount: StatusCount
+    period: String
   }
 
   type ServiceBreakdown {
@@ -797,7 +797,7 @@ export const typeDefs = gql`
     year: Int
     month: Int
     status: BillStatus
-    tags: [String!]
+    tags: [String]
     fromDate: DateTime
     toDate: DateTime
     minAmount: Float
@@ -809,9 +809,9 @@ export const typeDefs = gql`
       filters: ApiBillFilters
       pagination: PaginationInput
       sort: SortInput
-    ): ApiBillList!
+    ): ApiBillList
     
-    apiBill(id: ID!): ApiBill
+    apiBill(id: ID): ApiBill
     
     billingSummary(
       service: String
