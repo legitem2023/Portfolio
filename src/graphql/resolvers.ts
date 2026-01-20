@@ -1961,7 +1961,270 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
 
   Mutation: {
     // Resolvers for notification mutations
-    
+  createApiBill: async (parent: any, args:any) => {
+    try {
+      const { input } = args;
+      
+      // Basic validation
+      if (!input.service || !input.service.trim()) {
+        throw new ApolloError('Service is required', 'VALIDATION_ERROR');
+      }
+      
+      if (!input.apiName || !input.apiName.trim()) {
+        throw new ApolloError('API name is required', 'VALIDATION_ERROR');
+      }
+      
+      if (input.month < 1 || input.month > 12) {
+        throw new ApolloError('Month must be between 1 and 12', 'VALIDATION_ERROR');
+      }
+      
+      if (input.year < 2000 || input.year > 2100) {
+        throw new ApolloError('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
+      }
+      
+      if (input.amount <= 0) {
+        throw new ApolloError('Amount must be greater than 0', 'VALIDATION_ERROR');
+      }
+      
+      // Check if dueDate is valid
+      const dueDate = new Date(input.dueDate);
+      if (isNaN(dueDate.getTime())) {
+        throw new ApolloError('Invalid due date', 'VALIDATION_ERROR');
+      }
+
+      // Check for duplicate bill
+      const existingBill = await prisma.apiBill.findFirst({
+        where: {
+          service: input.service,
+          apiName: input.apiName,
+          month: input.month,
+          year: input.year,
+        },
+      });
+
+      if (existingBill) {
+        throw new ApolloError(
+          `Bill for ${input.service}/${input.apiName} already exists for ${input.month}/${input.year}`,
+          'DUPLICATE_BILL'
+        );
+      }
+
+      // Create new API bill
+      const newBill = await prisma.apiBill.create({
+        data: {
+          service: input.service,
+          apiName: input.apiName,
+          month: input.month,
+          year: input.year,
+          amount: input.amount,
+          currency: input.currency || 'USD',
+          dueDate: input.dueDate,
+          invoiceId: input.invoiceId,
+          invoiceUrl: input.invoiceUrl,
+          tags: input.tags || [],
+          status: 'PENDING',
+          
+          usage: input.usage ? {
+            create: {
+              requests: input.usage.requests || 0,
+              successful: input.usage.successful || 0,
+              failed: input.usage.failed || 0,
+              dataProcessed: input.usage.dataProcessed || 0,
+              rate: input.usage.rate || 0,
+              customFields: input.usage.customFields || {},
+            },
+          } : undefined,
+        },
+        include: {
+          usage: true,
+        },
+      });
+
+      return newBill;
+      
+    } catch (error: any) {
+      console.error('Error creating API bill:', error);
+      
+      if (error instanceof ApolloError) {
+        throw error;
+      }
+      
+      throw new ApolloError(
+        `Failed to create API bill: ${error.message}`,
+        'INTERNAL_SERVER_ERROR'
+      );
+    }
+  },
+  updateApiBill: async (parent: any, args:any) => {
+    try {
+      const { id, input } = args;
+      
+      // Check if bill exists
+      const existingBill = await prisma.apiBill.findUnique({
+        where: { id },
+        include: { usage: true },
+      });
+
+      if (!existingBill) {
+        throw new ApolloError(`API bill with ID ${id} not found`, 'NOT_FOUND');
+      }
+      
+      // Validate month if provided
+      if (input.month && (input.month < 1 || input.month > 12)) {
+        throw new ApolloError('Month must be between 1 and 12', 'VALIDATION_ERROR');
+      }
+      
+      // Validate year if provided
+      if (input.year && (input.year < 2000 || input.year > 2100)) {
+        throw new ApolloError('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
+      }
+      
+      // Validate amount if provided
+      if (input.amount && input.amount <= 0) {
+        throw new ApolloError('Amount must be greater than 0', 'VALIDATION_ERROR');
+      }
+
+      // Check for duplicate if updating service/apiName/month/year
+      if (input.service || input.apiName || input.month || input.year) {
+        const service = input.service || existingBill.service;
+        const apiName = input.apiName || existingBill.apiName;
+        const month = input.month || existingBill.month;
+        const year = input.year || existingBill.year;
+
+        const duplicateBill = await prisma.apiBill.findFirst({
+          where: {
+            service,
+            apiName,
+            month,
+            year,
+            id: { not: id },
+          },
+        });
+
+        if (duplicateBill) {
+          throw new ApolloError(
+            `Another bill already exists for ${service}/${apiName} for ${month}/${year}`,
+            'DUPLICATE_BILL'
+          );
+        }
+      }
+
+      // Prepare update data
+      const updateData: any = {};
+      
+      // Update basic fields
+      const basicFields = ['service', 'apiName', 'month', 'year', 'amount', 'currency', 'status', 'dueDate', 'invoiceId', 'invoiceUrl'];
+      basicFields.forEach(field => {
+        if (input[field as keyof UpdateApiBillInput] !== undefined) {
+          updateData[field] = input[field as keyof UpdateApiBillInput];
+        }
+      });
+
+      // Handle tags update
+      if (input.tags !== undefined) {
+        updateData.tags = input.tags;
+      }
+
+      // Update the bill
+      const updatedBill = await prisma.apiBill.update({
+        where: { id },
+        data: updateData,
+        include: {
+          usage: true,
+        },
+      });
+
+      // Update usage metrics if provided
+      if (input.usage) {
+        if (existingBill.usage) {
+          // Update existing usage
+          await prisma.usageMetrics.update({
+            where: { id: existingBill.usage.id },
+            data: {
+              requests: input.usage.requests !== undefined ? input.usage.requests : existingBill.usage.requests,
+              successful: input.usage.successful !== undefined ? input.usage.successful : existingBill.usage.successful,
+              failed: input.usage.failed !== undefined ? input.usage.failed : existingBill.usage.failed,
+              dataProcessed: input.usage.dataProcessed !== undefined ? input.usage.dataProcessed : existingBill.usage.dataProcessed,
+              rate: input.usage.rate !== undefined ? input.usage.rate : existingBill.usage.rate,
+              customFields: input.usage.customFields !== undefined ? input.usage.customFields : existingBill.usage.customFields,
+            },
+          });
+        } else {
+          // Create new usage metrics
+          await prisma.usageMetrics.create({
+            data: {
+              billId: id,
+              requests: input.usage.requests || 0,
+              successful: input.usage.successful || 0,
+              failed: input.usage.failed || 0,
+              dataProcessed: input.usage.dataProcessed || 0,
+              rate: input.usage.rate || 0,
+              customFields: input.usage.customFields || {},
+            },
+          });
+        }
+      }
+
+      // Fetch the updated bill with usage
+      const finalBill = await prisma.apiBill.findUnique({
+        where: { id },
+        include: { usage: true },
+      });
+
+      return finalBill!;
+      
+    } catch (error: any) {
+      console.error('Error updating API bill:', error);
+      
+      if (error instanceof ApolloError) {
+        throw error;
+      }
+      
+      throw new ApolloError(
+        `Failed to update API bill: ${error.message}`,
+        'INTERNAL_SERVER_ERROR'
+      );
+    }
+  },
+
+  deleteApiBill: async (parent: any, args:any) => {
+    try {
+      const { id } = args;
+      
+      // Check if bill exists
+      const existingBill = await prisma.apiBill.findUnique({
+        where: { id },
+      });
+
+      if (!existingBill) {
+        throw new ApolloError(`API bill with ID ${id} not found`, 'NOT_FOUND');
+      }
+
+      // Delete the bill
+      await prisma.apiBill.delete({
+        where: { id },
+      });
+
+      // Also delete associated usage metrics if they exist
+      await prisma.usageMetrics.deleteMany({
+        where: { billId: id },
+      });
+
+      return true;
+      
+    } catch (error: any) {
+      console.error('Error deleting API bill:', error);
+      
+      if (error instanceof ApolloError) {
+        throw error;
+      }
+      
+      throw new ApolloError(
+        `Failed to delete API bill: ${error.message}`,
+        'INTERNAL_SERVER_ERROR'
+      );
+    }
+  },
     markNotificationAsRead: async (_: any, { id }: any) => {
   try {
     // Find the notification
