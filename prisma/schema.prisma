@@ -27,7 +27,7 @@ model ApiBill {
   currency    String   @default("USD")
   
   // Usage metrics (store as embedded object)
-  usage       String
+  usage       Json?
   
   // Status
   status      String   @default("pending") // pending, paid, overdue
