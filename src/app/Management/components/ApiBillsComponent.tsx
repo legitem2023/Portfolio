@@ -18,7 +18,6 @@ const GET_API_BILLS = gql`
         period
         amount
         currency
-        usage
         status
         paidAt
         dueDate
@@ -57,7 +56,6 @@ interface ApiBill {
   period: string;
   amount: number;
   currency: string;
-  usage?: string;
   status: 'pending' | 'paid' | 'overdue';
   paidAt?: string;
   dueDate: string;
