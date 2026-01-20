@@ -20,7 +20,7 @@ model ApiBill {
   // Billing period
   month       Int      // 1-12
   year        Int      // 2024
-  period      String   // "2024-12" or "Q4-2024"
+  period      String?   // "2024-12" or "Q4-2024"
   
   // Cost
   amount      Float
