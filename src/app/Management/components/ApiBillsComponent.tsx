@@ -202,11 +202,7 @@ const ApiBillsComponent: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">API Bills Dashboard</h1>
-        <p className="text-gray-600 mt-2">Manage and monitor all your API service bills</p>
-      </div>
-
+      
       {/* Main Layout */}
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Filter Sidebar */}
