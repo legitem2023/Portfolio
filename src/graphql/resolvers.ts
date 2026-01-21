@@ -2050,8 +2050,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       
       // Check if bill exists
       const existingBill = await prisma.apiBill.findUnique({
-        where: { id },
-        include: { usage: true },
+        where: { id }
       });
 
       if (!existingBill) {
@@ -2117,10 +2116,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       // Update the bill
       const updatedBill = await prisma.apiBill.update({
         where: { id },
-        data: updateData,
-        include: {
-          usage: true,
-        },
+        data: updateData
       });
 
       // Update usage metrics if provided
@@ -2156,8 +2152,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
 
       // Fetch the updated bill with usage
       const finalBill = await prisma.apiBill.findUnique({
-        where: { id },
-        include: { usage: true },
+        where: { id }
       });
 
       return finalBill!;
@@ -2175,7 +2170,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       
       // Check if bill exists
       const existingBill = await prisma.apiBill.findUnique({
-        where: { id },
+        where: { id }
       });
 
       if (!existingBill) {
@@ -2184,12 +2179,12 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
 
       // Delete the bill
       await prisma.apiBill.delete({
-        where: { id },
+        where: { id }
       });
 
       // Also delete associated usage metrics if they exist
       await prisma.usageMetrics.deleteMany({
-        where: { billId: id },
+        where: { billId: id }
       });
 
       return true;
