@@ -2042,14 +2042,6 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     } catch (error: any) {
       console.error('Error creating API bill:', error);
       
-      if (error instanceof ApolloError) {
-        throw error;
-      }
-      
-      console.log(
-        `Failed to create API bill: ${error.message}`,
-        'INTERNAL_SERVER_ERROR'
-      );
     }
   },
   updateApiBill: async (parent: any, args:any) => {
@@ -2173,14 +2165,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     } catch (error: any) {
       console.error('Error updating API bill:', error);
       
-      if (error instanceof ApolloError) {
-        throw error;
-      }
       
-      console.log(
-        `Failed to update API bill: ${error.message}`,
-        'INTERNAL_SERVER_ERROR'
-      );
     }
   },
 
@@ -2212,14 +2197,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     } catch (error: any) {
       console.error('Error deleting API bill:', error);
       
-      if (error instanceof ApolloError) {
-        throw error;
-      }
-      
-      console.log(
-        `Failed to delete API bill: ${error.message}`,
-        'INTERNAL_SERVER_ERROR'
-      );
+
     }
   },
     markNotificationAsRead: async (_: any, { id }: any) => {
