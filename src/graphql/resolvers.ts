@@ -2103,8 +2103,8 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       // Update basic fields
       const basicFields = ['service', 'apiName', 'month', 'year', 'amount', 'currency', 'status', 'dueDate', 'invoiceId', 'invoiceUrl'];
       basicFields.forEach(field => {
-        if (input[field as keyof UpdateApiBillInput] !== undefined) {
-          updateData[field] = input[field as keyof UpdateApiBillInput];
+        if (input[field] !== undefined) {
+          updateData[field] = input[field];
         }
       });
 
