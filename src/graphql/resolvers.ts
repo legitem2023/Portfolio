@@ -2074,10 +2074,10 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
 
       // Check for duplicate if updating service/apiName/month/year
       if (input.service || input.apiName || input.month || input.year) {
-        const service = input.service || existingBill.service;
-        const apiName = input.apiName || existingBill.apiName;
-        const month = input.month || existingBill.month;
-        const year = input.year || existingBill.year;
+        const service = input.service || existingBill?.service;
+        const apiName = input.apiName || existingBill?.apiName;
+        const month = input.month || existingBill?.month;
+        const year = input.year || existingBill?.year;
 
         const duplicateBill = await prisma.apiBill.findFirst({
           where: {
