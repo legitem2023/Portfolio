@@ -1,6 +1,103 @@
 import { gql } from "@apollo/client";
 
 // Create notification mutation
+
+export const CREATE_API_BILL = gql`
+  mutation CreateApiBill($input: ApiBillInput!) {
+    createApiBill(input: $input) {
+      id
+      service
+      apiName
+      month
+      year
+      amount
+      currency
+      status
+      dueDate
+      invoiceId
+      invoiceUrl
+      tags
+      createdAt
+      updatedAt
+      usage {
+        requests
+        successful
+        failed
+        dataProcessed
+        rate
+        customFields
+      }
+    }
+  }
+`;
+
+export const UPDATE_API_BILL = gql`
+  mutation UpdateApiBill($id: ID!, $input: ApiBillUpdateInput!) {
+    updateApiBill(id: $id, input: $input) {
+      id
+      service
+      apiName
+      month
+      year
+      amount
+      currency
+      status
+      dueDate
+      invoiceId
+      invoiceUrl
+      tags
+      createdAt
+      updatedAt
+      usage
+    }
+  }
+`;
+
+// Define input types based on your GraphQL schema
+export interface ApiBillInput {
+  service: string;
+  apiName: string;
+  month: number;
+  year: number;
+  amount: number;
+  currency?: string;
+  dueDate: string;
+  invoiceId?: string;
+  invoiceUrl?: string;
+  tags?: string[];
+  usage?: {
+    requests?: number;
+    successful?: number;
+    failed?: number;
+    dataProcessed?: number;
+    rate?: number;
+    customFields?: Record<string, any>;
+  };
+}
+
+export interface ApiBillUpdateInput {
+  service?: string;
+  apiName?: string;
+  month?: number;
+  year?: number;
+  amount?: number;
+  currency?: string;
+  dueDate?: string;
+  invoiceId?: string;
+  invoiceUrl?: string;
+  tags?: string[];
+  status?: string;
+  usage?: {
+    requests?: number;
+    successful?: number;
+    failed?: number;
+    dataProcessed?: number;
+    rate?: number;
+    customFields?: Record<string, any>;
+  };
+}
+
+
 export const CREATE_NOTIFICATION = gql`
   mutation CreateNotification($input: CreateNotificationInput!) {
     createNotification(input: $input) {
