@@ -2103,42 +2103,36 @@ updateApiBill: async (parent: any, args: any) => {
       }
     });
 
+    // Handle usage metrics update if provided
+    if (input.usage) {
+      // Type cast the existing usage since it's JSON
+      const existingUsage = existingBill.usage as any;
+      
+      // Merge existing usage with new usage data
+      const usageData = {
+        ...(existingUsage || {}),
+        ...(input.usage || {})
+      };
+      
+      // Set specific fields with defaults
+      updateData.usage = {
+        requests: input.usage.requests ?? existingUsage?.requests ?? 0,
+        successful: input.usage.successful ?? existingUsage?.successful ?? 0,
+        failed: input.usage.failed ?? existingUsage?.failed ?? 0,
+        dataProcessed: input.usage.dataProcessed ?? existingUsage?.dataProcessed ?? 0,
+        rate: input.usage.rate ?? existingUsage?.rate ?? 0,
+        customFields: input.usage.customFields ?? existingUsage?.customFields ?? {},
+      };
+    }
+
     // Update the bill
     const updatedBill = await prisma.apiBill.update({
       where: { id },
       data: updateData
     });
 
-    // Handle usage metrics update if provided
-    if (input.usage) {
-      const usageData = {
-        requests: input.usage.requests ?? existingBill.usage?.requests ?? 0,
-        successful: input.usage.successful ?? existingBill.usage?.successful ?? 0,
-        failed: input.usage.failed ?? existingBill.usage?.failed ?? 0,
-        dataProcessed: input.usage.dataProcessed ?? existingBill.usage?.dataProcessed ?? 0,
-        rate: input.usage.rate ?? existingBill.usage?.rate ?? 0,
-        customFields: input.usage.customFields ?? existingBill.usage?.customFields ?? {},
-      };
-
-      if (existingBill.usage) {
-        await prisma.usageMetrics.update({
-          where: { id: existingBill.usage.id },
-          data: usageData,
-        });
-      } else {
-        await prisma.usageMetrics.create({
-          data: {
-            ...usageData,
-            billId: id,
-          },
-        });
-      }
-    }
-
-    // Return the updated bill with usage
-    return await prisma.apiBill.findUnique({
-      where: { id }
-    });
+    // Return the updated bill
+    return updatedBill;
 
   } catch (error: any) {
     console.error('Error updating API bill:', error);
