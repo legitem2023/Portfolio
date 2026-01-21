@@ -2158,10 +2158,6 @@ updateApiBill: async (parent: any, args: any) => {
         where: { id }
       });
 
-      // Also delete associated usage metrics if they exist
-      await prisma.usageMetrics.deleteMany({
-        where: { billId: id }
-      });
 
       return true;
       
