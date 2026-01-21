@@ -2,7 +2,7 @@ import { gql } from "@apollo/client";
 
 // Create notification mutation
 
-export const CREATE_API_BILL = gql`
+export const CREATE_API_BILL_MUTATION = gql`
   mutation CreateApiBill($input: ApiBillInput!) {
     createApiBill(input: $input) {
       id
