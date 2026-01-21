@@ -2044,125 +2044,109 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       
     }
   },
-  updateApiBill: async (parent: any, args:any) => {
-    try {
-      const { id, input } = args;
-      
-      // Check if bill exists
-      const existingBill = await prisma.apiBill.findUnique({
-        where: { id }
+updateApiBill: async (parent: any, args: any) => {
+  try {
+    const { id, input } = args;
+    
+    // Check if bill exists
+    const existingBill = await prisma.apiBill.findUnique({
+      where: { id },
+      include: { usage: true }
+    });
+
+    if (!existingBill) {
+      throw new Error(`API bill with ID ${id} not found`);
+    }
+
+    // Validate input
+    if (input.month && (input.month < 1 || input.month > 12)) {
+      throw new Error('Month must be between 1 and 12');
+    }
+    
+    if (input.year && (input.year < 2000 || input.year > 2100)) {
+      throw new Error('Year must be between 2000 and 2100');
+    }
+    
+    if (input.amount && input.amount <= 0) {
+      throw new Error('Amount must be greater than 0');
+    }
+
+    // Check for duplicate
+    if (input.service || input.apiName || input.month || input.year) {
+      const service = input.service ?? existingBill.service;
+      const apiName = input.apiName ?? existingBill.apiName;
+      const month = input.month ?? existingBill.month;
+      const year = input.year ?? existingBill.year;
+
+      const duplicateBill = await prisma.apiBill.findFirst({
+        where: {
+          service,
+          apiName,
+          month,
+          year,
+          id: { not: id },
+        },
       });
 
-      if (!existingBill) {
-        console.log(`API bill with ID ${id} not found`, 'NOT_FOUND');
+      if (duplicateBill) {
+        throw new Error(`Another bill already exists for ${service}/${apiName} for ${month}/${year}`);
       }
-      
-      // Validate month if provided
-      if (input.month && (input.month < 1 || input.month > 12)) {
-        console.log('Month must be between 1 and 12', 'VALIDATION_ERROR');
-      }
-      
-      // Validate year if provided
-      if (input.year && (input.year < 2000 || input.year > 2100)) {
-        console.log('Year must be between 2000 and 2100', 'VALIDATION_ERROR');
-      }
-      
-      // Validate amount if provided
-      if (input.amount && input.amount <= 0) {
-        console.log('Amount must be greater than 0', 'VALIDATION_ERROR');
-      }
+    }
 
-      // Check for duplicate if updating service/apiName/month/year
-      if (input.service || input.apiName || input.month || input.year) {
-        const service = input.service || existingBill?.service;
-        const apiName = input.apiName || existingBill?.apiName;
-        const month = input.month || existingBill?.month;
-        const year = input.year || existingBill?.year;
+    // Prepare update data
+    const updateData: any = {};
+    const basicFields = ['service', 'apiName', 'month', 'year', 'amount', 
+                         'currency', 'status', 'dueDate', 'invoiceId', 'invoiceUrl', 'tags'];
+    
+    basicFields.forEach(field => {
+      if (input[field] !== undefined) {
+        updateData[field] = input[field];
+      }
+    });
 
-        const duplicateBill = await prisma.apiBill.findFirst({
-          where: {
-            service,
-            apiName,
-            month,
-            year,
-            id: { not: id },
+    // Update the bill
+    const updatedBill = await prisma.apiBill.update({
+      where: { id },
+      data: updateData
+    });
+
+    // Handle usage metrics update if provided
+    if (input.usage) {
+      const usageData = {
+        requests: input.usage.requests ?? existingBill.usage?.requests ?? 0,
+        successful: input.usage.successful ?? existingBill.usage?.successful ?? 0,
+        failed: input.usage.failed ?? existingBill.usage?.failed ?? 0,
+        dataProcessed: input.usage.dataProcessed ?? existingBill.usage?.dataProcessed ?? 0,
+        rate: input.usage.rate ?? existingBill.usage?.rate ?? 0,
+        customFields: input.usage.customFields ?? existingBill.usage?.customFields ?? {},
+      };
+
+      if (existingBill.usage) {
+        await prisma.usageMetrics.update({
+          where: { id: existingBill.usage.id },
+          data: usageData,
+        });
+      } else {
+        await prisma.usageMetrics.create({
+          data: {
+            ...usageData,
+            billId: id,
           },
         });
-
-        if (duplicateBill) {
-          console.log(
-            `Another bill already exists for ${service}/${apiName} for ${month}/${year}`,
-            'DUPLICATE_BILL'
-          );
-        }
       }
-
-      // Prepare update data
-      const updateData: any = {};
-      
-      // Update basic fields
-      const basicFields = ['service', 'apiName', 'month', 'year', 'amount', 'currency', 'status', 'dueDate', 'invoiceId', 'invoiceUrl'];
-      basicFields.forEach(field => {
-        if (input[field] !== undefined) {
-          updateData[field] = input[field];
-        }
-      });
-
-      // Handle tags update
-      if (input.tags !== undefined) {
-        updateData.tags = input.tags;
-      }
-
-      // Update the bill
-      const updatedBill = await prisma.apiBill.update({
-        where: { id },
-        data: updateData
-      });
-
-      // Update usage metrics if provided
-      if (input.usage) {
-        if (existingBill.usage) {
-          // Update existing usage
-          await prisma.usageMetrics.update({
-            where: { id: existingBill.usage.id },
-            data: {
-              requests: input.usage.requests !== undefined ? input.usage.requests : existingBill.usage.requests,
-              successful: input.usage.successful !== undefined ? input.usage.successful : existingBill.usage.successful,
-              failed: input.usage.failed !== undefined ? input.usage.failed : existingBill.usage.failed,
-              dataProcessed: input.usage.dataProcessed !== undefined ? input.usage.dataProcessed : existingBill.usage.dataProcessed,
-              rate: input.usage.rate !== undefined ? input.usage.rate : existingBill.usage.rate,
-              customFields: input.usage.customFields !== undefined ? input.usage.customFields : existingBill.usage.customFields,
-            },
-          });
-        } else {
-          // Create new usage metrics
-          await prisma.usageMetrics.create({
-            data: {
-              billId: id,
-              requests: input.usage.requests || 0,
-              successful: input.usage.successful || 0,
-              failed: input.usage.failed || 0,
-              dataProcessed: input.usage.dataProcessed || 0,
-              rate: input.usage.rate || 0,
-              customFields: input.usage.customFields || {},
-            },
-          });
-        }
-      }
-
-      // Fetch the updated bill with usage
-      const finalBill = await prisma.apiBill.findUnique({
-        where: { id }
-      });
-
-      return finalBill!;
-      
-    } catch (error: any) {
-      console.error('Error updating API bill:', error);
-      
-      
     }
-  },
+
+    // Return the updated bill with usage
+    return await prisma.apiBill.findUnique({
+      where: { id },
+      include: { usage: true }
+    });
+
+  } catch (error: any) {
+    console.error('Error updating API bill:', error);
+    throw error;
+  }
+},
 
   deleteApiBill: async (parent: any, args:any) => {
     try {
