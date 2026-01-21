@@ -2050,8 +2050,7 @@ updateApiBill: async (parent: any, args: any) => {
     
     // Check if bill exists
     const existingBill = await prisma.apiBill.findUnique({
-      where: { id },
-      include: { usage: true }
+      where: { id }
     });
 
     if (!existingBill) {
@@ -2138,8 +2137,7 @@ updateApiBill: async (parent: any, args: any) => {
 
     // Return the updated bill with usage
     return await prisma.apiBill.findUnique({
-      where: { id },
-      include: { usage: true }
+      where: { id }
     });
 
   } catch (error: any) {
