@@ -14,13 +14,15 @@ interface VariantCardProps {
   onImageUpload: (variantId: string, file: File) => void;
   onImageDelete: (variantId: string, imageIndex: number) => void;
   isUploading: boolean;
+  onEdit?: (variant: Variant) => void; // Add this prop
 }
 
 export default function VariantCard({ 
   variant, 
   onImageUpload,
   onImageDelete,
-  isUploading 
+  isUploading,
+  onEdit // Add this to destructuring
 }: VariantCardProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
@@ -53,6 +55,12 @@ export default function VariantCard({
     setShowDeleteConfirm(null);
   };
 
+  const handleEditClick = () => {
+    if (onEdit) {
+      onEdit(variant);
+    }
+  };
+
   const hasImages = variant.images && variant.images.length > 0;
   const imageCount = variant.images?.length || 0;
 
@@ -64,10 +72,23 @@ export default function VariantCard({
           <h4 className="font-semibold text-gray-900 text-lg truncate">{variant.name}</h4>
           <p className="text-sm text-gray-500 mt-1">SKU: {variant.sku || 'N/A'}</p>
         </div>
-        <div className="flex-shrink-0">
+        <div className="flex items-center space-x-2">
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
             {variant.stock} in stock
           </span>
+          {/* Edit Button - Added here */}
+          {onEdit && (
+            <button
+              onClick={handleEditClick}
+              className="inline-flex items-center justify-center w-8 h-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              title="Edit variant"
+              aria-label="Edit variant"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
       
@@ -298,11 +319,27 @@ export default function VariantCard({
         </div>
       </div>
       
-      {/* Footer */}
+      {/* Footer with Edit Button */}
       <div className="mt-4 pt-3 border-t border-gray-200">
-        <div className="flex justify-between items-center text-xs text-gray-500">
-          <span>Created: {new Date(variant.createdAt || '').toLocaleDateString()}</span>
-          <span>ID: {variant.id.slice(-8)}</span>
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-gray-500">
+            <div>Created: {new Date(variant.createdAt || '').toLocaleDateString()}</div>
+            <div className="mt-1">ID: {variant.id.slice(-8)}</div>
+          </div>
+          
+          {/* Edit Button - Secondary Location */}
+          {onEdit && (
+            <button
+              onClick={handleEditClick}
+              className="inline-flex items-center px-3 py-1.5 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-md transition-colors font-medium"
+              aria-label="Edit variant"
+            >
+              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </button>
+          )}
         </div>
       </div>
     </div>
