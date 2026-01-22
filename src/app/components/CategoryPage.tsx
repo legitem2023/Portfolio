@@ -122,7 +122,14 @@ const CategoryPage: React.FC = () => {
   // Compact card render function - Using Next.js Image component
   const renderCompactCard = (category: category, index: number) => (
     <div 
-      className="bg-white shadow-sm hover:shadow transition-shadow border border-gray-100 cursor-pointer"
+      className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
+              style={{
+                 border:'solid 1px transparent',
+                 borderRadius:'1px',
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
+                 backdropFilter: 'blur(3px)',
+                 WebkitBackdropFilter: 'blur(3px)'
+              }}
       onClick={() => handleCategoryClick(category.id)}
     >
       <div className="relative aspect-[1/1] bg-gray-50">
