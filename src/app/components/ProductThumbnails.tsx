@@ -84,7 +84,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               key={product.id} 
               className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
               style={{
-                 border:'solid 2px transparent',
+                 border:'solid 1px transparent',
+                 borderRadius:'1px',
                  background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
                  backdropFilter: 'blur(3px)',
                  WebkitBackdropFilter: 'blur(3px)'
