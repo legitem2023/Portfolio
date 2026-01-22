@@ -3,12 +3,11 @@ import { Product, Variant } from '../../../../../types';
 import VariantCard from './VariantCard';
 import AddVariantForm from './AddVariantForm';
 
-
 interface VariantsModalProps {
   isOpen: boolean;
   onClose: () => void;
   product: Product | null;
-  refetch:any;
+  refetch: any;
   onVariantImageUpload: (variantId: string, file: File) => void;
   uploadingVariantId: string | null;
 }
@@ -22,6 +21,7 @@ export default function VariantsModal({
   uploadingVariantId 
 }: VariantsModalProps) {
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
   if (!isOpen || !product) return null;
 
@@ -42,6 +42,34 @@ export default function VariantsModal({
     console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
   };
 
+  // Handle edit variant
+  const handleEditVariant = (variant: Variant) => {
+    setEditingVariant(variant);
+    setShowAddForm(true);
+  };
+
+  // Handle form success
+  const handleFormSuccess = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+    refetch(); // Refresh the variant list
+  };
+
+  // Handle form cancel
+  const handleFormCancel = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+  };
+
+  // Toggle add form (for new variant)
+  const toggleAddForm = () => {
+    if (showAddForm) {
+      // If canceling, clear editing state
+      setEditingVariant(null);
+    }
+    setShowAddForm(!showAddForm);
+  };
+
   return (
     <div className={`fixed inset-0 z-50 overflow-y-auto transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <div 
@@ -57,6 +85,7 @@ export default function VariantsModal({
               <h2 className="text-xl font-semibold text-gray-900 truncate">{product.name}</h2>
               <p className="text-sm text-gray-500 mt-1">
                 {safeVariants.length} variant{safeVariants.length !== 1 ? 's' : ''}
+                {editingVariant && ' • Editing'}
               </p>
             </div>
             <button
@@ -72,13 +101,16 @@ export default function VariantsModal({
 
           <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={toggleAddForm}
               className="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-2 font-medium"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>{showAddForm ? 'Cancel Adding Variant' : 'Add New Variant'}</span>
+              <span>
+                {showAddForm ? 'Cancel' : 
+                 editingVariant ? 'Cancel Editing' : 'Add New Variant'}
+              </span>
             </button>
           </div>
 
@@ -87,8 +119,10 @@ export default function VariantsModal({
               <AddVariantForm 
                 productId={product.id} 
                 refetch={refetch}
-                onSuccess={() => setShowAddForm(false)}
-                onCancel={() => setShowAddForm(false)}
+                onSuccess={handleFormSuccess}
+                onCancel={handleFormCancel}
+                editingVariant={editingVariant}
+                setEditingVariant={setEditingVariant}
               />
             </div>
           )}
@@ -110,6 +144,7 @@ export default function VariantsModal({
                         onImageDelete={handleVariantImageDelete}
                         onImageUpload={onVariantImageUpload}
                         isUploading={uploadingVariantId === variant.id}
+                        onEdit={handleEditVariant} // Pass edit handler
                       />
                     </div>
                   ))}
