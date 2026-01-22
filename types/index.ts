@@ -721,3 +721,33 @@ export interface ProductFilters {
   sortBy?: 'price' | 'rating' | 'name';
   sortOrder?: 'asc' | 'desc';
 }
+
+
+// types/product.ts
+export interface ProductVariant {
+  id?: string;
+  color: string;
+  size: string;
+  price: string;
+  stock: string;
+  sku: string;
+  image?: string;
+}
+
+export interface ModifyProduct {
+  id?: string;
+  name: string;
+  description: string;
+  price: string;
+  color: string;
+  size: string;
+  salePrice: string;
+  sku: string;
+  stock: string;
+  categoryId: string;
+  brand: string;
+  isActive: boolean;
+  featured: boolean;
+  variants: ProductVariant[];
+  images?: string[];
+}
