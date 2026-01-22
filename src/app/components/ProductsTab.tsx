@@ -304,7 +304,7 @@ const ProductsTab: React.FC = () => {
       )}
 
       {/* Main Content */}
-      <div className={`p-2 bg-indigo-800 rounded-lg shadow-lg ${isMobileSearchExpanded ? 'lg:mt-0 mt-16' : ''}`}>
+      <div className={`p-2 purplegrad rounded-lg shadow-lg ${isMobileSearchExpanded ? 'lg:mt-0 mt-16' : ''}`}>
         <div className="flex justify-between items-center mb-2">
           <div className="flex space-x-2 w-full">
             {/* Desktop Search Input */}
