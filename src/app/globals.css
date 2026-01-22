@@ -16,12 +16,16 @@
 
 
 .purplegrad {
+  width: 100%;
+  height: auto; /* or specific height if needed */
   background:
     url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR79i3mCvW6dBZ29rLcxjaEtXJUUTYUAAHma5xWmg0WmbP6gcLoG8SdBNG&s=10'),
     linear-gradient(135deg, #000000, #000000, #000000),
     radial-gradient(circle at top right, rgba(0,0,0,0), transparent 60%);
-  background-size:100% 100%;
-  background-position: fixed;
+  background-size: 100% auto; /* 100% width, auto height */
+  background-attachment: fixed; /* Fixes the background image */
+  background-position: center; /* Centers the background */
+  background-repeat: no-repeat;
 }
 /* If using regular CSS */
 .search-overlay {
