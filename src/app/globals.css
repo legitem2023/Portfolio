@@ -17,9 +17,11 @@
 
 .purplegrad {
   background:
+    url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTR79i3mCvW6dBZ29rLcxjaEtXJUUTYUAAHma5xWmg0WmbP6gcLoG8SdBNG&s=10'),
     linear-gradient(135deg, #0b0f3b, #4b1aa3, #9b6cff),
     radial-gradient(circle at top right, rgba(180,120,255,0.4), transparent 60%);
-  background-blend-mode: screen;
+  background-blend-mode: screen, screen;
+  background-size: cover, auto, auto;
 }
 /* If using regular CSS */
 .search-overlay {
