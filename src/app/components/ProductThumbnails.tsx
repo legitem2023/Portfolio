@@ -84,9 +84,9 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               key={product.id} 
               className="group bg-white/70 backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
               style={{
-                background: 'rgba(255, 255, 255, 0.7)',
-                backdropFilter: 'blur(5px)',
-                WebkitBackdropFilter: 'blur(5px)'
+                background: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(3px)',
+                WebkitBackdropFilter: 'blur(3px)'
               }}
             >
               {/* Sale/New Badge */}
