@@ -25,7 +25,6 @@
   background-size: 100% auto; /* 100% width, auto height */
   background-attachment: fixed; /* Fixes the background image */
   background-position: center; /* Centers the background */
-  background-repeat: no-repeat;
 }
 /* If using regular CSS */
 .search-overlay {
