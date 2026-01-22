@@ -1,15 +1,17 @@
 "use client";
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
+import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 // ✅ CORRECTED LUCIDE-REACT IMPORTS
-import { Pipette, Copy, Check } from 'lucide-react';
+import { Pipette, Copy, Check, Edit, Trash2 } from 'lucide-react';
 
 interface AddVariantFormProps {
   productId: string;
   refetch: any;
   onSuccess: () => void;
   onCancel: () => void;
+  editingVariant?: any;
+  setEditingVariant?: (variant: any) => void;
 }
 
 interface FormData {
@@ -28,7 +30,14 @@ declare global {
   }
 }
 
-export default function AddVariantForm({ productId, refetch, onSuccess, onCancel }: AddVariantFormProps) {
+export default function AddVariantForm({ 
+  productId, 
+  refetch, 
+  onSuccess, 
+  onCancel, 
+  editingVariant,
+  setEditingVariant 
+}: AddVariantFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     sku: '',
@@ -46,6 +55,7 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -93,7 +103,15 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
     { parent: "Custom", values: [] }
   ];
 
-  const [createVariant, { loading, error }] = useMutation(CREATE_VARIANT_MUTATION, {
+  const [createVariant, { loading: creating }] = useMutation(CREATE_VARIANT_MUTATION, {
+    refetchQueries: ['GetProducts']
+  });
+
+  const [updateVariant, { loading: updating }] = useMutation(UPDATE_VARIANT_MUTATION, {
+    refetchQueries: ['GetProducts']
+  });
+
+  const [deleteVariant] = useMutation(DELETE_VARIANT_MUTATION, {
     refetchQueries: ['GetProducts']
   });
 
@@ -104,6 +122,28 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
     '#A52A2A', '#808080', '#FFC0CB', '#008000', '#000080',
     '#FF4500', '#32CD32', '#8A2BE2', '#FF69B4', '#DAA520'
   ];
+
+  useEffect(() => {
+    if (editingVariant) {
+      setFormData({
+        name: editingVariant.name || '',
+        sku: editingVariant.sku || '',
+        color: editingVariant.color || '',
+        size: editingVariant.size || '',
+        price: editingVariant.price?.toString() || '',
+        salePrice: editingVariant.salePrice?.toString() || '',
+        stock: editingVariant.stock?.toString() || ''
+      });
+      
+      // Auto-detect size category
+      const detectedParent = sizeData.find(category => 
+        category.values.includes(editingVariant.size)
+      )?.parent || '';
+      
+      setSelectedSizeParent(detectedParent);
+      setShowCustomInput(!detectedParent && editingVariant.size !== '');
+    }
+  }, [editingVariant]);
 
   const copyColorToClipboard = async () => {
     if (formData.color) {
@@ -137,15 +177,11 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
     }
   };
 
-  const handleColorChange = (color: string) => {
-    setFormData({...formData, color});
-    setShowColorPicker(false);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
+    setIsSubmitting(true);
 
     const input = {
       name: formData.name,
@@ -159,36 +195,37 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
     };
 
     try {
-      const { data } = await createVariant({ variables: { input } });
-      
-      if (data?.createVariant?.id) {
-        setSuccessMessage('Variant created successfully!');
-        
-        setFormData({
-          name: '',
-          sku: '',
-          color: '',
-          size: '',
-          price: '',
-          salePrice: '',
-          stock: ''
+      if (editingVariant) {
+        // Update existing variant
+        const { data } = await updateVariant({ 
+          variables: { 
+            id: editingVariant.id,
+            input 
+          } 
         });
         
-        setSelectedSizeParent('');
-        setShowCustomInput(false);
-        setShowColorPicker(false);
-        setCopySuccess('');
-        setIsPickingColor(false);
-        
-        refetch();
-        onSuccess();
-        
-        setTimeout(() => setSuccessMessage(''), 3000);
+        if (data?.updateVariant?.id) {
+          setSuccessMessage('Variant updated successfully!');
+          resetForm();
+          if (setEditingVariant) setEditingVariant(null);
+          refetch();
+          onSuccess();
+        }
       } else {
-        setErrorMessage('Failed to create variant');
+        // Create new variant
+        const { data } = await createVariant({ variables: { input } });
+        
+        if (data?.createVariant?.id) {
+          setSuccessMessage('Variant created successfully!');
+          resetForm();
+          refetch();
+          onSuccess();
+        }
       }
+      
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err: any) {
-      console.error('Error creating variant:', err);
+      console.error('Error saving variant:', err);
       
       if (err.message.includes('duplicate') || err.message.includes('already exists')) {
         setErrorMessage('This variant already exists. Please check the SKU or variant name.');
@@ -199,7 +236,42 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
       } else {
         setErrorMessage(`Error: ${err.message}`);
       }
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!editingVariant || !window.confirm('Are you sure you want to delete this variant?')) return;
+
+    try {
+      await deleteVariant({ variables: { id: editingVariant.id } });
+      setSuccessMessage('Variant deleted successfully!');
+      resetForm();
+      if (setEditingVariant) setEditingVariant(null);
+      refetch();
+      onSuccess();
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err: any) {
+      setErrorMessage(`Error deleting variant: ${err.message}`);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      sku: '',
+      color: '',
+      size: '',
+      price: '',
+      salePrice: '',
+      stock: ''
+    });
+    setSelectedSizeParent('');
+    setShowCustomInput(false);
+    setShowColorPicker(false);
+    setCopySuccess('');
+    setIsPickingColor(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -211,71 +283,141 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
     setErrorMessage('');
   };
 
+  const loading = creating || updating || isSubmitting;
+
   return (
-    <div className="p-4 sm:p-6 border-b border-gray-200 bg-gray-50">
-      <h3 className="text-lg font-medium text-gray-900 mb-3">Add New Variant</h3>
-      
-      {error && (
-        <div className="mb-3 p-2 bg-red-100 text-red-700 text-sm rounded">
-          Error: {error.message}
-        </div>
-      )}
+    <div className="p-6 border border-gray-200 rounded-lg bg-white shadow-sm">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-semibold text-gray-900">
+          {editingVariant ? 'Edit Variant' : 'Add New Variant'}
+        </h3>
+        {editingVariant && (
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+            >
+              <Trash2 className="w-4 h-4 mr-1.5" />
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
       
       {errorMessage && (
-        <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
           {errorMessage}
         </div>
       )}
       
       {successMessage && (
-        <div className="text-green-500 mb-4 p-2 bg-green-100 rounded-md">
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md text-sm">
           {successMessage}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-              Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="Variant name"
-            />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Basic Information */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="Variant name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1.5">
+                SKU
+              </label>
+              <input
+                type="text"
+                id="sku"
+                name="sku"
+                value={formData.sku}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="SKU-001"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Stock *
+              </label>
+              <input
+                type="number"
+                id="stock"
+                name="stock"
+                required
+                value={formData.stock}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="0"
+                min="0"
+              />
+            </div>
           </div>
 
-          <div>
-            <label htmlFor="sku" className="block text-sm font-medium text-gray-700">
-              SKU
-            </label>
-            <input
-              type="text"
-              id="sku"
-              name="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="SKU code"
-            />
+          {/* Pricing */}
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Price ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="price"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="0.00"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-1.5">
+                Sale Price ($)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                id="salePrice"
+                name="salePrice"
+                value={formData.salePrice}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="0.00"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="color" className="block text-sm font-medium text-gray-700">
-              Color
-            </label>
-            <div className="flex items-center space-x-2 mt-1">
+        {/* Color Section */}
+        <div className="border-t border-gray-200 pt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Color
+          </label>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
               <input
                 type="color"
-                className="border border-gray-300 rounded-md cursor-pointer h-10"
+                className="w-12 h-12 border border-gray-300 rounded-lg cursor-pointer shadow-sm"
                 value={formData.color || '#000000'}
                 onChange={(e) => setFormData({...formData, color: e.target.value})}
               />
@@ -283,29 +425,29 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
                 type="text"
                 id="color"
                 name="color"
-                className="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Color name or hex"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                placeholder="#000000 or color name"
                 value={formData.color || ''}
                 onChange={handleChange}
               />
             </div>
             
-            {/* Color Tools Row */}
-            <div className="flex items-center space-x-2 mt-2">
+            {/* Color Tools */}
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={activateEyedropper}
                 disabled={isPickingColor}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPickingColor ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-2"></div>
                     <span>Picking...</span>
                   </>
                 ) : (
                   <>
-                    <Pipette className="w-4 h-4" />
+                    <Pipette className="w-4 h-4 mr-2" />
                     <span>Pick Color</span>
                   </>
                 )}
@@ -315,37 +457,37 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
                 type="button"
                 onClick={copyColorToClipboard}
                 disabled={!formData.color}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {copySuccess === 'Copied!' ? (
                   <>
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 mr-2 text-green-600" />
                     <span className="text-green-600">Copied!</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
+                    <Copy className="w-4 h-4 mr-2" />
                     <span>Copy</span>
                   </>
                 )}
               </button>
               
               {typeof window !== 'undefined' && !window.EyeDropper && (
-                <span className="text-xs text-amber-600">
+                <span className="text-xs text-amber-600 px-2 py-1 bg-amber-50 rounded">
                   Eye Dropper: Chrome 95+, Edge 96+, Opera 81+
                 </span>
               )}
             </div>
             
-            {/* Quick Color Grid */}
-            <div className="mt-3">
-              <p className="text-xs text-gray-600 mb-2">Quick colors:</p>
-              <div className="grid grid-cols-5 gap-2">
+            {/* Quick Colors */}
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700">Quick colors:</p>
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
                 {colorOptions.map(color => (
                   <button
                     key={color}
                     type="button"
-                    className="w-8 h-8 rounded-md border border-gray-300 hover:scale-110 transition-transform"
+                    className="w-10 h-10 rounded-md border border-gray-300 hover:scale-105 hover:shadow-md transition-all duration-200"
                     style={{ backgroundColor: color }}
                     onClick={() => setFormData({...formData, color: color})}
                     title={color}
@@ -354,14 +496,18 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
               </div>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label htmlFor="size" className="block text-sm font-medium text-gray-700">
-              Size
-            </label>
-            <div className="flex flex-col gap-2 mt-1">
+        {/* Size Section */}
+        <div className="border-t border-gray-200 pt-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Size
+          </label>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-600 mb-2">Size Category</label>
               <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                 value={selectedSizeParent}
                 onChange={(e) => {
                   const parent = e.target.value;
@@ -379,125 +525,97 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
                   </option>
                 ))}
               </select>
+            </div>
 
-              {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+            {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Select {selectedSizeParent}
+                </label>
                 <select
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   value={formData.size || ''}
                   onChange={(e) => setFormData({...formData, size: e.target.value})}
                 >
-                  <option value="">Select {selectedSizeParent} size</option>
+                  <option value="">Select a size</option>
                   {sizeData
                     .find(cat => cat.parent === selectedSizeParent)
                     ?.values.map(size => (
                       <option key={size} value={size}>{size}</option>
                     ))}
                 </select>
-              )}
+              </div>
+            )}
 
-              {showCustomInput && (
+            {(showCustomInput || (!selectedSizeParent && formData.size === 'Custom')) && (
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Custom Size
+                </label>
                 <input
                   type="text"
                   id="size"
                   name="size"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   placeholder="Enter custom size"
                   value={formData.size || ''}
                   onChange={handleChange}
                 />
-              )}
+              </div>
+            )}
 
-              {!selectedSizeParent && (
+            {!selectedSizeParent && !showCustomInput && formData.size !== 'Custom' && (
+              <div>
+                <label className="block text-sm text-gray-600 mb-2">
+                  Common Sizes
+                </label>
                 <select
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                   value={formData.size || ''}
-                  onChange={(e) => setFormData({...formData, size: e.target.value})}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({...formData, size: value});
+                    if (value === 'Custom') {
+                      setShowCustomInput(true);
+                    }
+                  }}
                 >
                   <option value="">Select size</option>
                   {commonSizes.map(size => (
                     <option key={size} value={size}>{size}</option>
                   ))}
-                  <option value="Custom">Custom</option>
+                  <option value="Custom">Custom Size</option>
                 </select>
-              )}
-              
-              {!selectedSizeParent && formData.size === 'Custom' && (
-                <input
-                  type="text"
-                  id="size"
-                  name="size"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter custom size"
-                  value={formData.size || ''}
-                  onChange={handleChange}
-                />
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-              Price ($)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="price"
-              name="price"
-              value={formData.price}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="0.00"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
-              Sale Price ($)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              id="salePrice"
-              name="salePrice"
-              value={formData.salePrice}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-              placeholder="0.00"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="stock" className="block text-sm font-medium text-gray-700">
-            Stock *
-          </label>
-          <input
-            type="number"
-            id="stock"
-            name="stock"
-            required
-            value={formData.stock}
-            onChange={handleChange}
-            className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
-            placeholder="0"
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 disabled:bg-indigo-400 transition-colors font-medium"
+            className="flex-1 bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-base flex items-center justify-center"
           >
-            {loading ? 'Creating...' : 'Create Variant'}
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                {editingVariant ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              editingVariant ? 'Update Variant' : 'Create Variant'
+            )}
           </button>
+          
           <button
             type="button"
-            onClick={onCancel}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors font-medium"
+            onClick={() => {
+              resetForm();
+              if (setEditingVariant) setEditingVariant(null);
+              onCancel();
+            }}
+            className="flex-1 bg-gray-200 text-gray-800 py-3 px-6 rounded-lg hover:bg-gray-300 transition-colors font-medium text-base"
           >
             Cancel
           </button>
@@ -505,4 +623,4 @@ export default function AddVariantForm({ productId, refetch, onSuccess, onCancel
       </form>
     </div>
   );
-            }
+          }
