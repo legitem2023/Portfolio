@@ -212,7 +212,7 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      <div className="relative bg-white shadow-lg border border-gray-200 overflow-hidden">
+      <div className="relative bg-white border border-gray-200 overflow-hidden">
         {tabs.find((tab) => tab.id === activeIndex)?.content}
       </div>
 
