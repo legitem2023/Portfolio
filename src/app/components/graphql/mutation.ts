@@ -263,6 +263,13 @@ export const CREATE_VARIANT_MUTATION = gql`
   }
 `;
 
+export const UPDATE_VARIANT_MUTATION = gql`
+mutation UpdateProductVariant($id: String!, $input: ProductVariantInput!) {
+  updateVariant(id: $id, input: $input) {
+    statusText
+  }
+}`
+
 export const INSERTCATEGORY = gql`
   mutation InsertCategory($name: String!, $description: String!, $status: Boolean!) {
     createCategory(description: $description, name: $name, status: $status) {
