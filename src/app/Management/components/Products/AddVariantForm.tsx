@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
+import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 // ✅ CORRECTED LUCIDE-REACT IMPORTS
 import { Pipette, Copy, Check, Edit, Trash2 } from 'lucide-react';
 
