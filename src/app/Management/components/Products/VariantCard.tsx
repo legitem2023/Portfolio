@@ -64,6 +64,17 @@ export default function VariantCard({
   const hasImages = variant.images && variant.images.length > 0;
   const imageCount = variant.images?.length || 0;
 
+  // Format price to Philippine Peso format
+  const formatPrice = (price: number | null | undefined) => {
+    if (!price) return '₱0.00';
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price).replace('PHP', '₱');
+  };
+
   return (
     <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow h-fit">
       {/* Header */}
@@ -307,9 +318,11 @@ export default function VariantCard({
         <div className="flex justify-between sm:block">
           <span className="text-gray-600 font-medium sm:font-normal">Price:</span>
           <div className="text-gray-900">
-            ${variant.price}
+            {formatPrice(variant.price)}
             {variant.salePrice && variant.price && variant.salePrice < variant.price && (
-              <span className="ml-2 text-red-500 line-through text-sm">${variant.salePrice}</span>
+              <span className="ml-2 text-red-500 line-through text-sm">
+                {formatPrice(variant.salePrice)}
+              </span>
             )}
           </div>
         </div>
