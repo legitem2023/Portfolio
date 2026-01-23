@@ -1775,143 +1775,171 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     },
 
     // ================= Sales List Queries =================
-    salesList: async (
-      _: any, 
-      { 
-        page = 1, 
-        limit = 20, 
-        filters, 
-        sortBy = "createdAt", 
-        sortOrder = "DESC" 
-      }: any
-    ) => {
-      try {
-        const skip = (page - 1) * limit;
-        
-        // Build where clause from filters
-        const where: any = {};
-        
-        if (filters) {
-          if (filters.status) {
-            where.status = filters.status;
-          }
-          
-          if (filters.userId) {
-            where.userId = filters.userId;
-          }
-          
-          if (filters.dateRange) {
-            where.createdAt = {
-              gte: new Date(filters.dateRange.start),
-              lte: new Date(filters.dateRange.end)
-            };
-          }
-          
-          if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
-            where.total = {};
-            if (filters.minAmount !== undefined) {
-              where.total.gte = filters.minAmount;
-            }
-            if (filters.maxAmount !== undefined) {
-              where.total.lte = filters.maxAmount;
-            }
-          }
+salesList: async (
+  _: any, 
+  { 
+    page = 1, 
+    limit = 20, 
+    filters, 
+    sortBy = "createdAt", 
+    sortOrder = "DESC" 
+  }: any
+) => {
+  try {
+    const skip = (page - 1) * limit;
+    
+    // Build where clause from filters
+    const where: any = {};
+    
+    if (filters) {
+      if (filters.status) {
+        where.status = filters.status;
+      }
+      
+      if (filters.userId) {
+        where.userId = filters.userId;
+      }
+      
+      if (filters.dateRange) {
+        where.createdAt = {
+          gte: new Date(filters.dateRange.start),
+          lte: new Date(filters.dateRange.end)
+        };
+      }
+      
+      if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
+        where.total = {};
+        if (filters.minAmount !== undefined) {
+          where.total.gte = filters.minAmount;
         }
-        
-        // Build orderBy clause
-        let orderBy: any = {};
-        if (sortBy === "createdAt") {
-          orderBy.createdAt = sortOrder.toLowerCase();
-        } else if (sortBy === "total") {
-          orderBy.total = sortOrder.toLowerCase();
-        } else if (sortBy === "orderNumber") {
-          orderBy.orderNumber = sortOrder.toLowerCase();
-        } else {
-          orderBy.createdAt = 'desc';
+        if (filters.maxAmount !== undefined) {
+          where.total.lte = filters.maxAmount;
         }
-        
-        // Get paginated orders
-        const [orders, totalCount] = await Promise.all([
-          prisma.order.findMany({
-            where,
-            skip,
-            take: limit,
+      }
+    }
+    
+    // Build orderBy clause
+    let orderBy: any = {};
+    if (sortBy === "createdAt") {
+      orderBy.createdAt = sortOrder.toLowerCase();
+    } else if (sortBy === "total") {
+      orderBy.total = sortOrder.toLowerCase();
+    } else if (sortBy === "orderNumber") {
+      orderBy.orderNumber = sortOrder.toLowerCase();
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+    
+    // Get paginated orders with null-safe product inclusion
+    const [orders, totalCount] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true
+            }
+          },
+          address: true,
+          items: {
             include: {
-              user: {
+              product: {
                 select: {
                   id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true,
-                  avatar: true
+                  name: true,
+                  price: true,
+                  images: true
                 }
-              },
-              address: true,
-              items: {
-                include: {
-                  product: {
-                    select: {
-                      id: true,
-                      name: true,
-                      price: true,
-                      images: true
-                    }
-                  }
-                }
-              },
-              payments: true
-            },
-            orderBy
-          }),
-          prisma.order.count({ where })
-        ]);
-        
-        // Calculate summary statistics
-        const [totalRevenue, pendingOrders, completedOrders] = await Promise.all([
-          prisma.order.aggregate({
-            where,
-            _sum: {
-              total: true
+              }
             }
-          }),
-          prisma.order.count({
-            where: {
-              ...where,
-              status: 'PENDING'
-            }
-          }),
-          prisma.order.count({
-            where: {
-              ...where,
-              OR: [
-                { status: 'DELIVERED' },
-                { status: 'SHIPPED' }
-              ]
-            }
-          })
-        ]);
-        
-        const averageOrderValue = totalRevenue._sum.total ? 
-          totalRevenue._sum.total / totalCount : 0;
-        
-        return {
-          orders,
-          totalCount,
-          totalPages: Math.ceil(totalCount / limit),
-          currentPage: page,
-          summary: {
-            totalRevenue: totalRevenue._sum.total || 0,
-            totalOrders: totalCount,
-            averageOrderValue,
-            pendingOrders,
-            completedOrders
-          }
-        };
-      } catch (error) {
-        console.error('Error fetching sales list:', error);
-        throw new Error('Failed to fetch sales list');
+          },
+          payments: true
+        },
+        orderBy
+      }),
+      prisma.order.count({ where })
+    ]);
+    
+    // Calculate summary statistics
+    const [totalRevenue, pendingOrders, completedOrders] = await Promise.all([
+      prisma.order.aggregate({
+        where,
+        _sum: {
+          total: true
+        }
+      }),
+      prisma.order.count({
+        where: {
+          ...where,
+          status: 'PENDING'
+        }
+      }),
+      prisma.order.count({
+        where: {
+          ...where,
+          OR: [
+            { status: 'DELIVERED' },
+            { status: 'SHIPPED' }
+          ]
+        }
+      })
+    ]);
+    
+    const averageOrderValue = totalRevenue._sum.total ? 
+      totalRevenue._sum.total / totalCount : 0;
+    
+    // Process orders to handle null products
+    const processedOrders = orders.map(order => ({
+      ...order,
+      items: order.items.map(item => ({
+        ...item,
+        // Ensure product is not null, provide fallback if it is
+        product: item.product ? {
+          id: item.product.id,
+          name: item.product.name,
+          price: item.product.price,
+          images: item.product.images || []
+        } : {
+          id: item.id, // Use item ID as fallback product ID
+          name: "Product No Longer Available",
+          price: item.price, // Keep the original price from the order item
+          images: []
+        }
+      }))
+    }));
+    
+    return {
+      orders: processedOrders, // Use processed orders instead of raw ones
+      totalCount,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page,
+      summary: {
+        totalRevenue: totalRevenue._sum.total || 0,
+        totalOrders: totalCount,
+        averageOrderValue,
+        pendingOrders,
+        completedOrders
       }
-    },
+    };
+  } catch (error) {
+    console.error('Error fetching sales list:', error);
+    
+    // Provide more specific error handling
+    if (error.code === 'P2025') {
+      throw new Error('Database record not found. Some products may have been deleted.');
+    } else if (error.code === 'P2023') {
+      throw new Error('Invalid data format in the database.');
+    } else {
+      throw new Error('Failed to fetch sales list');
+    }
+  }
+},
     
     salesOrder: async (_: any, { id }: { id: string }) => {
       try {
