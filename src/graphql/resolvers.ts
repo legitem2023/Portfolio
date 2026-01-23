@@ -1927,7 +1927,7 @@ salesList: async (
         completedOrders
       }
     };
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error fetching sales list:', error);
     
     // Provide more specific error handling
