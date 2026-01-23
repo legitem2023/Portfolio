@@ -722,8 +722,8 @@ export const typeDefs = gql`
   }
 
   input DateRangeInput {
-    start: DateTime!
-    end: DateTime!
+    start: DateTime
+    end: DateTime
   }
 
   input LoginInput {
