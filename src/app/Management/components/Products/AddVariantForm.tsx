@@ -370,40 +370,66 @@ export default function AddVariantForm({
             </div>
           </div>
 
-          {/* Pricing */}
+          {/* Pricing - UPDATED WITH PESO FORMAT */}
           <div className="space-y-4">
             <div>
               <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Price ($)
+                Price (₱)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                placeholder="0.00"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">₱</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  className="w-full pl-7 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  placeholder="0.00"
+                />
+              </div>
+              {formData.price && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Formatted: ₱{parseFloat(formData.price).toLocaleString('en-PH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </p>
+              )}
             </div>
 
             <div>
               <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Sale Price ($)
+                Sale Price (₱)
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                id="salePrice"
-                name="salePrice"
-                value={formData.salePrice}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
-                placeholder="0.00"
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">₱</span>
+                </div>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  id="salePrice"
+                  name="salePrice"
+                  value={formData.salePrice}
+                  onChange={handleChange}
+                  className="w-full pl-7 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                  placeholder="0.00"
+                />
+              </div>
+              {formData.salePrice && (
+                <p className="mt-1 text-sm text-gray-500">
+                  Formatted: ₱{parseFloat(formData.salePrice).toLocaleString('en-PH', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </p>
+              )}
             </div>
           </div>
         </div>
