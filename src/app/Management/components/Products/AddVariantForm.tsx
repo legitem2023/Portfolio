@@ -1,7 +1,7 @@
 "use client";
 import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
+import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT } from '../../../components/graphql/mutation';
 // ✅ CORRECTED LUCIDE-REACT IMPORTS
 import { Pipette, Copy, Check, Edit, Trash2 } from 'lucide-react';
 
@@ -111,7 +111,7 @@ export default function AddVariantForm({
     refetchQueries: ['GetProducts']
   });
 
-  const [deleteVariant] = useMutation(DELETE_VARIANT_MUTATION, {
+  const [deleteVariant] = useMutation(DELETE_VARIANT, {
     refetchQueries: ['GetProducts']
   });
 
