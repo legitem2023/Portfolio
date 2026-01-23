@@ -944,6 +944,7 @@ export const typeDefs = gql`
     singleUpload(base64Image: String,productId: ID): Result
     categoryImageUpload(base64Image: String,categoryId: ID): Result
     createVariant(input: ProductVariantInput): Result
+    updateVariant(id: String!, input: ProductVariantInput!): Result
     createAddress(input: AddressInputs): Result
     
     # Social media mutations
