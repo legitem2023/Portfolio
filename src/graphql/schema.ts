@@ -620,17 +620,17 @@ export const typeDefs = gql`
   }
 
   type OrderDetail {
-    order: Order!
-    customer: User!
-    shippingAddress: Address!
+    order: Order
+    customer: User
+    shippingAddress: Address
     billingAddress: Address
-    paymentDetails: [Payment]!
-    orderItems: [OrderItemDetail]!
+    paymentDetails: [Payment]
+    orderItems: [OrderItemDetail]
   }
 
   type OrderItemDetail {
-    item: OrderItem!
-    product: Product!
+    item: OrderItem
+    product: Product
     variant: ProductVariant
   }
   
