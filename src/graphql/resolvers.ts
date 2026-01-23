@@ -1800,11 +1800,14 @@ salesList: async (
         where.userId = filters.userId;
       }
       
-      if (filters.dateRange) {
-        where.createdAt = {
-          gte: new Date(filters.dateRange.start),
-          lte: new Date(filters.dateRange.end)
-        };
+      if (filters.startDate || filters.endDate) {
+        where.createdAt = {};
+        if (filters.startDate) {
+          where.createdAt.gte = new Date(filters.startDate);
+        }
+        if (filters.endDate) {
+          where.createdAt.lte = new Date(filters.endDate);
+        }
       }
       
       if (filters.minAmount !== undefined || filters.maxAmount !== undefined) {
@@ -1830,41 +1833,59 @@ salesList: async (
       orderBy.createdAt = 'desc';
     }
     
-    // Get paginated orders with null-safe product inclusion
-    const [orders, totalCount] = await Promise.all([
-      prisma.order.findMany({
-        where,
-        skip,
-        take: limit,
-        include: {
-          user: {
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              avatar: true
-            }
-          },
-          address: true,
-          items: {
-            include: {
-              product: {
-                select: {
-                  id: true,
-                  name: true,
-                  price: true,
-                  images: true
-                }
-              }
-            }
-          },
-          payments: true
+    // Get paginated orders with proper error handling
+    const orders = await prisma.order.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true
+          }
         },
-        orderBy
-      }),
-      prisma.order.count({ where })
-    ]);
+        address: true,
+        items: {
+          include: {
+            product: true // This will fail if product is null
+          }
+        },
+        payments: true
+      },
+      orderBy
+    });
+    
+    // Process orders to handle null products
+    const processedOrders = orders.map(order => ({
+      ...order,
+      // Transform items to handle null products
+      items: order.items.map(item => {
+        // If product is null, create a fallback product
+        if (!item.product) {
+          return {
+            ...item,
+            product: {
+              id: item.id, // Use item ID as fallback product ID
+              name: "Product Not Available",
+              price: 0, // Use 0 as fallback price
+              images: [], // Empty images array
+              // Add other required product fields if they exist in your schema
+              description: "",
+              category: "",
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          };
+        }
+        return item;
+      })
+    }));
+    
+    const totalCount = await prisma.order.count({ where });
     
     // Calculate summary statistics
     const [totalRevenue, pendingOrders, completedOrders] = await Promise.all([
@@ -1883,10 +1904,7 @@ salesList: async (
       prisma.order.count({
         where: {
           ...where,
-          OR: [
-            { status: 'DELIVERED' },
-            { status: 'SHIPPED' }
-          ]
+          status: 'COMPLETED'
         }
       })
     ]);
@@ -1894,28 +1912,8 @@ salesList: async (
     const averageOrderValue = totalRevenue._sum.total ? 
       totalRevenue._sum.total / totalCount : 0;
     
-    // Process orders to handle null products
-    const processedOrders = orders.map(order => ({
-      ...order,
-      items: order.items.map(item => ({
-        ...item,
-        // Ensure product is not null, provide fallback if it is
-        product: item.product ? {
-          id: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          images: item.product.images || []
-        } : {
-          id: item.id, // Use item ID as fallback product ID
-          name: "Product No Longer Available",
-          price: item.price, // Keep the original price from the order item
-          images: []
-        }
-      }))
-    }));
-    
     return {
-      orders: processedOrders, // Use processed orders instead of raw ones
+      orders: processedOrders,
       totalCount,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
@@ -1929,15 +1927,7 @@ salesList: async (
     };
   } catch (error:any) {
     console.error('Error fetching sales list:', error);
-    
-    // Provide more specific error handling
-    if (error.code === 'P2025') {
-      throw new Error('Database record not found. Some products may have been deleted.');
-    } else if (error.code === 'P2023') {
-      throw new Error('Invalid data format in the database.');
-    } else {
-      throw new Error('Failed to fetch sales list');
-    }
+    throw new Error('Failed to fetch sales list');
   }
 },
     
