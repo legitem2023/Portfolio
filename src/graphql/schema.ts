@@ -4,6 +4,7 @@ export const typeDefs = gql`
   scalar DateTime
   scalar Json
   scalar Upload
+  
   # ================= Enums =================
   enum Role {
     ADMIN
@@ -407,47 +408,47 @@ export const typeDefs = gql`
   }
 
   type ServiceBreakdown {
-    service: String!
-    totalAmount: Float!
-    count: Int!
-    percentage: Float!
+    service: String
+    totalAmount: Float
+    count: Int
+    percentage: Float
   }
 
   type StatusCount {
-    pending: Int!
-    paid: Int!
-    overdue: Int!
+    pending: Int
+    paid: Int
+    overdue: Int
   }
 
   type MonthlyTrend {
-    month: Int!
-    year: Int!
-    period: String!
-    totalAmount: Float!
-    count: Int!
-    services: [String!]!
+    month: Int
+    year: Int
+    period: String
+    totalAmount: Float
+    count: Int
+    services: [String]
   }
 
   type ServiceInfo {
-    name: String!
-    totalBills: Int!
-    totalAmount: Float!
+    name: String
+    totalBills: Int
+    totalAmount: Float
     lastBill: DateTime
   }
 
   type DashboardStats {
-    totalPending: Float!
-    totalPaidThisMonth: Float!
-    upcomingDue: Int!
-    services: [ServiceStats!]!
-    recentBills: [ApiBill!]!
+    totalPending: Float
+    totalPaidThisMonth: Float
+    upcomingDue: Int
+    services: [ServiceStats]
+    recentBills: [ApiBill]
   }
 
   type ServiceStats {
-    service: String!
-    pendingAmount: Float!
-    paidAmount: Float!
-    billCount: Int!
+    service: String
+    pendingAmount: Float
+    paidAmount: Float
+    billCount: Int
   }
 
   # ================= Social Media Types =================
@@ -671,17 +672,17 @@ export const typeDefs = gql`
 
   # API Bill Input Types
   input CreateApiBillInput {
-    service: String!
-    apiName: String!
-    month: Int!
-    year: Int!
-    amount: Float!
+    service: String
+    apiName: String
+    month: Int
+    year: Int
+    amount: Float
     currency: String
     usage: UsageMetricsInput
-    dueDate: DateTime!
+    dueDate: DateTime
     invoiceId: String
     invoiceUrl: String
-    tags: [String!]
+    tags: [String]
   }
 
   input UpdateApiBillInput {
@@ -696,7 +697,7 @@ export const typeDefs = gql`
     dueDate: DateTime
     invoiceId: String
     invoiceUrl: String
-    tags: [String!]
+    tags: [String]
   }
 
   input UsageMetricsInput {
@@ -707,10 +708,6 @@ export const typeDefs = gql`
     rate: Float
     customFields: Json
   }
-
-
-
-  
 
   # ================= Sales Analytics Input Types =================
   input SalesFilters {
@@ -784,14 +781,15 @@ export const typeDefs = gql`
   }
   
   input PaginationInput {
-    page: Int = 1
-    pageSize: Int = 20
+    page: Int
+    pageSize: Int
   }
 
   input SortInput {
-    field: SortField = DUE_DATE
-    order: SortOrder = DESC
+    field: SortField
+    order: SortOrder
   }
+  
   input ApiBillFilters {
     service: String
     year: Int
@@ -803,6 +801,7 @@ export const typeDefs = gql`
     minAmount: Float
     maxAmount: Float
   }
+  
   # ================= Queries & Mutations =================
   type Query {
     apiBills(
@@ -817,7 +816,7 @@ export const typeDefs = gql`
       service: String
       year: Int
       quarter: Int
-    ): BillingSummary!
+    ): BillingSummary
     
     # Existing queries
     notifications(userId: ID, filters: NotificationFilters): NotificationConnection
@@ -882,34 +881,33 @@ export const typeDefs = gql`
     
     # Sales List queries
     salesList(
-      page: Int = 1
-      limit: Int = 20
+      page: Int
+      limit: Int
       filters: SalesFilters
-      sortBy: String = "createdAt"
-      sortOrder: String = "DESC"
+      sortBy: String
+      sortOrder: String
     ): SalesListResponse
     
-    salesOrder(id: ID!): Order
+    salesOrder(id: ID): Order
 
     # ================= API Bill Queries =================
-
     monthlyTrends(
       service: String
       year: Int
-    ): [MonthlyTrend!]!
+    ): [MonthlyTrend]
     
-    apiServices: [ServiceInfo!]!
+    apiServices: [ServiceInfo]
     
-    apiDashboardStats: DashboardStats!
+    apiDashboardStats: DashboardStats
   }
 
   type Mutation {
     # Existing mutations
-    createNotification(input: CreateNotificationInput!): Notification!
-    markNotificationAsRead(id: ID!): Notification!
-    markAllNotificationsAsRead(userId: ID!): Boolean!
-    deleteNotification(id: ID!): Boolean!
-    deleteAllReadNotifications(userId: ID!): Boolean!
+    createNotification(input: CreateNotificationInput): Notification
+    markNotificationAsRead(id: ID): Notification
+    markAllNotificationsAsRead(userId: ID): Boolean
+    deleteNotification(id: ID): Boolean
+    deleteAllReadNotifications(userId: ID): Boolean
     
     # Send a new message
     sendMessage(input: SendMessageInput): Message
@@ -936,15 +934,15 @@ export const typeDefs = gql`
     loginWithFacebook(input: FacebookLoginInput): Result
     createUser(email: String, password: String, firstName: String, lastName: String): Result
     createProduct(id: String, name: String, stock: Int, description: String, color: String, size: String, price: Float, salePrice: Float, sku: String, supplierId: String): Response
-    deleteProduct(id:ID) : Result
-    deleteVariant(id:ID) : Result
+    deleteProduct(id: ID): Result
+    deleteVariant(id: ID): Result
     createCategory(name: String, description: String, status: Boolean): Response
     createOrder(userId: ID, addressId: ID, items: [OrderItemInput]): Result
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
-    singleUpload(base64Image: String,productId: ID): Result
-    categoryImageUpload(base64Image: String,categoryId: ID): Result
+    singleUpload(base64Image: String, productId: ID): Result
+    categoryImageUpload(base64Image: String, categoryId: ID): Result
     createVariant(input: ProductVariantInput): Result
-    updateVariant(id: String!, input: ProductVariantInput!): Result
+    updateVariant(id: String, input: ProductVariantInput): Result
     createAddress(input: AddressInputs): Result
     
     # Social media mutations
@@ -965,20 +963,20 @@ export const typeDefs = gql`
     upload3DModel(file: Upload, filename: String, productId: String): ModelUploadResponse
 
     # ================= API Bill Mutations =================
-    createApiBill(input: CreateApiBillInput!): ApiBill!
-    updateApiBill(id: ID!, input: UpdateApiBillInput!): ApiBill!
-    deleteApiBill(id: ID!): Boolean!
+    createApiBill(input: CreateApiBillInput): ApiBill
+    updateApiBill(id: ID, input: UpdateApiBillInput): ApiBill
+    deleteApiBill(id: ID): Boolean
     
     # Bill Actions
-    markApiBillAsPaid(id: ID!, paidAt: DateTime): ApiBill!
-    markApiBillAsOverdue(id: ID!): ApiBill!
+    markApiBillAsPaid(id: ID, paidAt: DateTime): ApiBill
+    markApiBillAsOverdue(id: ID): ApiBill
     
     # Bulk Operations
-    createBulkApiBills(input: [CreateApiBillInput!]!): [ApiBill!]!
+    createBulkApiBills(input: [CreateApiBillInput]): [ApiBill]
     
     # Tag Management
-    addApiBillTag(id: ID!, tag: String!): ApiBill!
-    removeApiBillTag(id: ID!, tag: String!): ApiBill!
+    addApiBillTag(id: ID, tag: String): ApiBill
+    removeApiBillTag(id: ID, tag: String): ApiBill
   }
 
   type ModelUploadResponse {
