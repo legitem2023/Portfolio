@@ -334,6 +334,7 @@ model Category {
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
+  supplierId  String   @db.ObjectId
   orderNumber String   @unique
   status      OrderStatus
   total       Float
