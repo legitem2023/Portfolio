@@ -144,13 +144,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                         .map(({ image, key }) => (
                           <SwiperSlide key={key}>
                             <Image
-                              height={400}
-                              onClick={() => handleQuickView(product)} 
-                              width={400}
-                              src={image || '/NoImage.webp'}
-                              alt={product.name}
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
+  height={400}
+  width={400}
+  onClick={() => handleQuickView(product)}
+  src={image || '/NoImage.webp'}
+  alt={product.name}
+  quality={50}  // Reduces quality to 50%
+  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+/>
                           </SwiperSlide>
                         ))
                       }
@@ -162,6 +163,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                       onClick={() => handleQuickView(product)} 
                       src={'/NoImage.webp'}
                       alt={product.name}
+                      quality={50}  // Reduces quality to 50%
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   )}
