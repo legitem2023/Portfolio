@@ -149,7 +149,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   onClick={() => handleQuickView(product)}
   src={image || '/NoImage.webp'}
   alt={product.name}
-  quality={50}  // Reduces quality to 50%
+  quality={25}  // Reduces quality to 50%
   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
 />
                           </SwiperSlide>
@@ -163,7 +163,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                       onClick={() => handleQuickView(product)} 
                       src={'/NoImage.webp'}
                       alt={product.name}
-                      quality={50}  // Reduces quality to 50%
+                      quality={25}  // Reduces quality to 50%
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   )}
