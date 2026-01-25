@@ -424,6 +424,8 @@ export enum AddressType {
 export interface Order {
   id: string;
   orderNumber: string;
+  userId: string;
+  supplierId: string;
   status: OrderStatus;
   total: number;
   subtotal: number;
