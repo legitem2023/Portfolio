@@ -253,6 +253,8 @@ export const typeDefs = gql`
   type Order {
     id: ID
     orderNumber: String
+    userId: String
+    supplierId: String
     status: OrderStatus
     total: Float
     subtotal: Float
