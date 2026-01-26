@@ -114,7 +114,7 @@ export interface CartItem {
   supplierId: string;
   sku: string;
   name: string;
-  quantity: number;
+  quantity?: number;
   color?: string;
   size?: string;
   price?: number;
