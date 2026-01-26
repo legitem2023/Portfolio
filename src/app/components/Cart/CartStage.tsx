@@ -82,7 +82,12 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                           <span className="text-xs md:text-sm text-indigo-700">Qty</span>
                           <div className="flex items-center border border-gray-300 rounded-md">
                             <button
-                              onClick={() => onQuantityChange(item?.id, item?.quantity - 1)}
+                              onClick={() => {
+  const quantity = item?.quantity ?? 0;
+  if (item?.id && quantity > 0) {
+    onQuantityChange(item.id, quantity - 1);
+  }
+}}
                               className="h-7 w-7 md:h-8 md:w-8 flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-l-md transition-colors"
                             >
                               <Minus size={12} className="w-3 h-3 md:w-3.5 md:h-3.5" />
