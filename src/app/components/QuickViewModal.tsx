@@ -291,6 +291,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         id: Number(selectedVariant.id) || Date.now(),
         productId: product.id?.toString() || 'unknown',
         userId: 'current-user-id',
+        supplierId:product.supplierId,
         sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
