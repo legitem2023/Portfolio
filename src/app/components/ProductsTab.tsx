@@ -90,7 +90,7 @@ const ProductsTab: React.FC = () => {
 
   const products = data?.products?.items || [];
   const hasMore = data?.products?.hasMore || false;
-
+ console.log(products);
   const handleLoadMore = useCallback(() => {
     if (hasMore && !isFetchingMore) {
       // Set the number of items we expect to fetch
