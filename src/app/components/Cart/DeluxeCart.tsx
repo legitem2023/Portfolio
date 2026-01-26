@@ -15,6 +15,7 @@ import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 import { decryptToken } from '../../../../utils/decryptToken';
 
+import { CartItem } from '../../../../types';
 
 // Update your ShippingInfo interface to include addressId
 export interface ShippingInfo {
@@ -28,17 +29,7 @@ export interface ShippingInfo {
 }
 
 
-export interface CartItem {
-  id: number;
-  images?:string[];
-  name:string;
-  userId: string;
-  sku: string;
-  quantity: number;
-  color: string;
-  size: string;
-  price:number;
-}
+
 
 
 export interface PaymentInfo {
