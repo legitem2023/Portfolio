@@ -71,6 +71,7 @@ const ConfirmationStage = ({
     try {
       const orderItems = cartItems.map(item => ({
         productId: item.id,
+        supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price
       }));
