@@ -152,7 +152,7 @@ const ConfirmationStage = ({
               <h3 className="text-lg font-medium text-gray-900 mb-4">Order Items ({cartItems.length})</h3>
               
               <div className="space-y-4">
-                {cartItems.map((item) => (
+                {cartItems.map((item:any) => (
                   <div key={item.id} className="flex items-start space-x-3 sm:space-x-4 p-3 bg-white rounded-lg border border-gray-200">
                     {/* Product Image */}
                     <div className="flex-shrink-0">
