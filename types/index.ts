@@ -111,6 +111,7 @@ export interface WishlistItem {
 export interface CartItem {
   id: number;
   userId: string;
+  supplierId: string;
   sku: string;
   name: string;
   quantity: number;
