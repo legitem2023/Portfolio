@@ -1,13 +1,13 @@
-// components/Header.tsx (updated sections)
+// components/Header.tsx (OPTIMIZED VERSION)
 "use client";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import { decryptToken } from '../../../utils/decryptToken';
 import { showNotification } from '../../../utils/notifications';
-import { useQuery, useMutation, NetworkStatus } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
 import { 
   User, 
   MessageCircle, 
@@ -64,7 +64,6 @@ const Header: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -79,17 +78,106 @@ const Header: React.FC = () => {
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   
   // Get user data
-  const { data: userData, loading: userLoading, networkStatus } = useQuery(USERS, {
-    notifyOnNetworkStatusChange: true
-  });
+  const { data: userData, loading: userLoading } = useQuery(USERS);
 
-  // Get userId from user data or auth - FIXED: Only get userId if available
+  // Get userId from user data or auth
   const userId = user?.userId;
-console.log(userId,"<<<<");
-  // Track overall user loading state
-  const isLoadingUser = userLoading || isLoading || networkStatus === NetworkStatus.loading;
 
-  // Fetch notifications with error boundary - FIXED: skip when no userId
+  // Track overall user loading state
+  const isLoadingUser = userLoading || isLoading;
+
+  // Function to trigger push notification with appropriate icon
+  const triggerPushNotification = useCallback((notification: Notification) => {
+    // Only show push notification for unread notifications that haven't been shown yet
+    if (notification.isRead || shownNotificationIds.has(notification.id)) {
+      return;
+    }
+
+    const getNotificationIconUrl = (type: NotificationType): string => {
+      switch (type) {
+        case NotificationType.NEW_MESSAGE:
+          return 'https://cdn-icons-png.flaticon.com/512/733/733585.png';
+        case NotificationType.ORDER_CREATED:
+        case NotificationType.ORDER_UPDATED:
+        case NotificationType.ORDER_DELIVERED:
+          return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
+        case NotificationType.PROMOTIONAL:
+          return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
+        case NotificationType.ACCOUNT_VERIFIED:
+        case NotificationType.PASSWORD_CHANGED:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.SYSTEM_ALERT:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
+        case NotificationType.PAYMENT_RECEIVED:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.PAYMENT_FAILED:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
+        default:
+          return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
+      }
+    };
+
+    // Show browser notification
+    showNotification(
+      notification.title,
+      notification.message,
+      getNotificationIconUrl(notification.type),
+      {
+        tag: `notification-${notification.id}`,
+        requireInteraction: false,
+        data: { 
+          notificationId: notification.id,
+          link: notification.link,
+          type: notification.type 
+        }
+      }
+    ).then(result => {
+      console.log(`Push notification shown: ${notification.title}`);
+      
+      // Add to shown notifications set
+      setShownNotificationIds(prev => {
+        const newSet = new Set(prev);
+        newSet.add(notification.id);
+        return newSet;
+      });
+      
+      // Handle click on notification
+      if (result.type === 'click' && notification.link) {
+        router.push(notification.link);
+      }
+    }).catch(error => {
+      console.error('Failed to show push notification:', error);
+    });
+  }, [shownNotificationIds, router]);
+
+  // Extract notifications safely
+  const extractNotifications = useCallback((data: any): Notification[] => {
+    try {
+      if (!data?.notifications?.edges) return [];
+      return data.notifications.edges.map((edge: any) => edge.node);
+    } catch (error) {
+      console.error('Error extracting notifications:', error);
+      return [];
+    }
+  }, []);
+
+  // Handle new notifications from Apollo query
+  const handleNewNotifications = useCallback((data: any) => {
+    const latestNotifications = extractNotifications(data);
+    
+    // Find unread notifications that haven't been shown yet
+    const newNotifications = latestNotifications.filter(
+      (notification: Notification) => 
+        !notification.isRead && !shownNotificationIds.has(notification.id)
+    );
+    
+    // Trigger push notifications for each new notification
+    newNotifications.forEach(notification => {
+      triggerPushNotification(notification);
+    });
+  }, [extractNotifications, shownNotificationIds, triggerPushNotification]);
+
+  // OPTIMIZED: Use Apollo's built-in polling
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
@@ -98,15 +186,34 @@ console.log(userId,"<<<<");
   } = useQuery(GET_NOTIFICATIONS, {
     variables: { 
       userId: userId || '',
-      limit: 5 // Reduced limit for header
+      limit: 5
     },
     skip: !userId, // Don't query if no userId
     fetchPolicy: 'cache-and-network',
+    // Apollo handles polling automatically - more efficient than setInterval
+    pollInterval: userId ? 10000 : 0, // Poll every 10s only when userId exists
     onError: (error) => {
       console.error('Notification query error:', error);
     },
+    onCompleted: (data) => {
+      // Handle new notifications when query completes
+      if (data && userId) {
+        handleNewNotifications(data);
+      }
+    },
   });
-console.log(userId,notificationsData,"<<<<");
+
+  // Memoize expensive calculations for better performance
+  const notifications = useMemo(() => 
+    notificationsData ? extractNotifications(notificationsData) : [], 
+    [notificationsData, extractNotifications]
+  );
+
+  const unreadCount = useMemo(() => 
+    notificationsData?.notifications?.unreadCount || 0, 
+    [notificationsData]
+  );
+
   // Notification mutations
   const [markAsReadMutation] = useMutation(MARK_AS_READ, {
     onError: (error) => console.error('Mark as read error:', error)
@@ -117,110 +224,6 @@ console.log(userId,notificationsData,"<<<<");
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
     onError: (error) => console.error('Delete notification error:', error)
   });
-
-  // Extract notifications safely
-  const extractNotifications = (data: any): Notification[] => {
-    try {
-      if (!data?.notifications?.edges) return [];
-      return data.notifications.edges.map((edge: any) => edge.node);
-    } catch (error) {
-      console.error('Error extracting notifications:', error);
-      return [];
-    }
-  };
-
-  const notifications: Notification[] = notificationsData ? extractNotifications(notificationsData) : [];
-  const unreadCount = notificationsData?.notifications?.unreadCount || 0;
-
-  // Function to trigger push notification with appropriate icon
-// Find the triggerPushNotification function (around line 184) and replace it:
-
-// Function to trigger push notification with appropriate icon
-const triggerPushNotification = (notification: Notification) => {
-  // Only show push notification for unread notifications that haven't been shown yet
-  if (notification.isRead || shownNotificationIds.has(notification.id)) {
-    return;
-  }
-
-  const getNotificationIconUrl = (type: NotificationType): string => {
-    switch (type) {
-      case NotificationType.NEW_MESSAGE:
-        return 'https://cdn-icons-png.flaticon.com/512/733/733585.png';
-      case NotificationType.ORDER_CREATED:
-      case NotificationType.ORDER_UPDATED:
-      case NotificationType.ORDER_DELIVERED:
-        return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
-      case NotificationType.PROMOTIONAL:
-        return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
-      case NotificationType.ACCOUNT_VERIFIED:
-      case NotificationType.PASSWORD_CHANGED:
-        return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-      case NotificationType.SYSTEM_ALERT:
-        return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
-      case NotificationType.PAYMENT_RECEIVED:
-        return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-      case NotificationType.PAYMENT_FAILED:
-        return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
-      default:
-        return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
-    }
-  };
-
-  // Show browser notification
-  showNotification(
-    notification.title,
-    notification.message,
-    getNotificationIconUrl(notification.type),
-    {
-      tag: `notification-${notification.id}`,
-      requireInteraction: false,
-      data: { 
-        notificationId: notification.id,
-        link: notification.link,
-        type: notification.type 
-      }
-    }
-  ).then(result => {
-    console.log(`Push notification shown: ${notification.title}`);
-    
-    // Add to shown notifications set using non-spread method
-    setShownNotificationIds(prev => {
-      const newSet = new Set(prev);
-      newSet.add(notification.id);
-      return newSet;
-    });
-    
-    // Handle click on notification
-    if (result.type === 'click' && notification.link) {
-      router.push(notification.link);
-    }
-  }).catch(error => {
-    console.error('Failed to show push notification:', error);
-  });
-};
-
-  // Polling function to check for new notifications
-  const pollForNewNotifications = async () => {
-    if (!userId || notificationsLoading) return;
-
-    try {
-      const { data } = await refetchNotifications();
-      const latestNotifications = extractNotifications(data);
-      
-      // Find unread notifications that haven't been shown yet
-      const newNotifications = latestNotifications.filter(
-        (notification: Notification) => 
-          !notification.isRead && !shownNotificationIds.has(notification.id)
-      );
-      
-      // Trigger push notifications for each new notification
-      newNotifications.forEach(notification => {
-        triggerPushNotification(notification);
-      });
-    } catch (error) {
-      console.error('Error polling notifications:', error);
-    }
-  };
 
   // Check authentication status
   useEffect(() => {
@@ -256,43 +259,6 @@ const triggerPushNotification = (notification: Notification) => {
     };
     getRole();
   }, []);
-
-  // Start/Stop polling based on user authentication
-  // Replace the polling useEffect with this:
-
-// Start/Stop polling based on user authentication
-useEffect(() => {
-  if (userId && !notificationsLoading) {
-    // Clear any existing interval
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-    }
-
-    // Start polling every 10 seconds
-    const interval = setInterval(() => {
-      pollForNewNotifications();
-    }, 10000); // 10 seconds
-
-    setPollingInterval(interval);
-
-    // Initial poll
-    pollForNewNotifications();
-
-    // Cleanup on unmount
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  } else {
-    // Stop polling if no user
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [userId, notificationsLoading]);
 
   // Clear shown notifications when user changes
   useEffect(() => {
@@ -366,10 +332,10 @@ useEffect(() => {
   }, [isBellPopupOpen, userId, refetchNotifications]);
 
   // Check if mobile device
-  const isMobile = () => {
+  const isMobile = useCallback(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
-  };
+  }, []);
 
   const handleUserButtonClick = () => {
     if (isMobile()) {
@@ -437,7 +403,7 @@ useEffect(() => {
     }
   };
 
-  const getNotificationIcon = (type: NotificationType) => {
+  const getNotificationIcon = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
         return <MessageCircle className="w-4 h-4" />;
@@ -458,9 +424,9 @@ useEffect(() => {
       default:
         return <Bell className="w-4 h-4" />;
     }
-  };
+  }, []);
 
-  const getNotificationColor = (type: NotificationType) => {
+  const getNotificationColor = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
         return 'bg-blue-100 text-blue-600';
@@ -482,9 +448,9 @@ useEffect(() => {
       default:
         return 'bg-gray-100 text-gray-600';
     }
-  };
+  }, []);
 
-  const getTimeAgo = (dateString: string) => {
+  const getTimeAgo = useCallback((dateString: string) => {
     try {
       const date = new Date(dateString);
       const now = new Date();
@@ -499,7 +465,7 @@ useEffect(() => {
     } catch (error) {
       return 'Recently';
     }
-  };
+  }, []);
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
@@ -559,7 +525,7 @@ useEffect(() => {
           </div>
              
           <div className="z-20 h-[100%] flex items-center space-x-2">
-            {/* Bell Button with Notification Badge - FIXED: Better loading/disabled states */}
+            {/* Bell Button with Notification Badge */}
             <div className="relative" ref={bellRef}>
               <button
                 onClick={handleBellButtonClick}
@@ -762,7 +728,7 @@ useEffect(() => {
                         <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
                           <Bell className="w-12 h-12 text-gray-300 mb-4" />
                           <p className="text-gray-500 font-medium">No notifications</p>
-                          <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                          <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
                         </div>
                       )}
                     </div>
