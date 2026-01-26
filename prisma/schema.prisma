@@ -361,6 +361,7 @@ model OrderItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId     String   @db.ObjectId
   productId   String   @db.ObjectId
+  supplierId  String?
   quantity    Int
   price       Float
   variantInfo String?
