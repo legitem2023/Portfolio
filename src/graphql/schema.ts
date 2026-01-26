@@ -1061,6 +1061,7 @@ export const typeDefs = gql`
 
   input OrderItemInput {
     productId: ID
+    supplierId: ID
     quantity: Int
     price: Float
   }
