@@ -42,7 +42,7 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
           <div className="flex-1">
             <div className="flow-root">
               <ul role="list" className="-my-6 divide-y divide-gray-200">
-                {cartItems.map((item) => (
+                {cartItems.map((item:any) => (
                   <li key={item.id} className="flex py-4 md:py-6">
                     {/* Product Image */}
                     <div className="h-16 w-16 md:h-24 md:w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
