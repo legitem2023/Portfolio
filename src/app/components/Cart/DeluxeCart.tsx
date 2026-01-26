@@ -99,7 +99,7 @@ const DeluxeCart = () => {
     };
     getRole();
   }, []);
-  const subtotal = cartItems.reduce((total: number, item: CartItem) => 
+  const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
   const shippingCost = subtotal > 0 ? 5.99 : 0;
