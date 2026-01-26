@@ -47,7 +47,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   // Memoize variants to prevent unnecessary recalculations
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
-console.log(variants);
+
   // Get the currently selected variant based on color and size
   const selectedVariant = useMemo(() => {
     return variants.find((variant) => 
@@ -284,7 +284,7 @@ console.log(variants);
 
   const handleAddToCartClick = () => {
     if (!product || !selectedVariant) return;
-    
+    console.log(product);
     try {
       // Create cart item with variant-specific data and proper error handling
       const cartItem = {
