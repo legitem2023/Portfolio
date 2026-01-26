@@ -70,7 +70,6 @@ export interface Order {
   id: string;
   orderNumber: string;
   userId: string;
-  supplierId: string;
   status: OrderStatus;
   total: number;
   subtotal: number;
@@ -87,6 +86,7 @@ export interface Order {
 export interface OrderItem {
   id: string;
   quantity: number;
+  supplierId: string;
   price: number;
   variantInfo: string;
   product: Product;
