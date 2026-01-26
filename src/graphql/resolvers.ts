@@ -3207,7 +3207,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
     // Validate and convert productIds to proper ObjectID format
     const validItems = items.map((item: any) => {
       let productId = item.productId;
-      
+      let supplierId = item.supplierId;
       // If it's a numeric string, pad it to 24 hex characters
       if (/^\d+$/.test(productId)) {
         productId = productId.padStart(24, '0');
@@ -3220,6 +3220,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
       
       return {
         productId,
+        supplierId,
         quantity: item.quantity,
         price: item.price,
       };
