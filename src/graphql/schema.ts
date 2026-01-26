@@ -254,7 +254,6 @@ export const typeDefs = gql`
     id: ID
     orderNumber: String
     userId: String
-    supplierId: String
     status: OrderStatus
     total: Float
     subtotal: Float
@@ -273,6 +272,7 @@ export const typeDefs = gql`
     id: ID
     quantity: Int
     price: Float
+    supplierId: String
     variantInfo: String
     order: Order
     product: Product
