@@ -89,8 +89,6 @@ interface PaginationInfo {
   page: number;
   pageSize: number;
   totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
 }
 
 interface OrderListResponse {
