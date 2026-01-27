@@ -43,8 +43,6 @@ const ORDER_LIST_QUERY = gql`
         page
         pageSize
         totalPages
-        hasNextPage
-        hasPreviousPage
       }
     }
   }
