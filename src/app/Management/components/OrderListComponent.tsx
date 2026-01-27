@@ -485,25 +485,16 @@ export default function OrderListComponent({
                 {/* Page Navigation */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handlePageChange(paginationInfo.page - 1)}
-                    disabled={!paginationInfo.hasPreviousPage}
-                    className={`px-4 py-2 rounded border ${
-                      paginationInfo.hasPreviousPage
-                        ? 'border-gray-300 hover:bg-gray-50 text-gray-700'
-                        : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                    onClick={() => handlePageChange(paginationInfo.page - 1)}         
+                    className={`px-4 py-2 rounded border-gray-200 text-gray-400 cursor-not-allowed`}
                   >
                     Previous
                   </button>
                   
                   <button
                     onClick={() => handlePageChange(paginationInfo.page + 1)}
-                    disabled={!paginationInfo.hasNextPage}
-                    className={`px-4 py-2 rounded border ${
-                      paginationInfo.hasNextPage
-                        ? 'border-gray-300 hover:bg-gray-50 text-gray-700'
-                        : 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
+                    
+                    className={`px-4 py-2 rounded border-gray-200 text-gray-400 cursor-not-allowed`}
                   >
                     Next
                   </button>
