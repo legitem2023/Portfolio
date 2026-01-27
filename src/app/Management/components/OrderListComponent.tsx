@@ -18,7 +18,7 @@ const ORDER_LIST_QUERY = gql`
         createdAt
         user {
           id
-          name
+          firstName
           email
         }
         items {
