@@ -804,8 +804,26 @@ export const typeDefs = gql`
     maxAmount: Float
   }
   
+type OrderListResponse {
+  orders: [Order]
+  pagination: PaginationInfo
+}
+
+input OrderFilterInput {
+  supplierId: String
+  status: OrderStatus
+}
+
+input OrderPaginationInput {
+  page: Int
+  pageSize: Int
+}
+
+
+  
   # ================= Queries & Mutations =================
   type Query {
+    orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     apiBills(
       filters: ApiBillFilters
       pagination: PaginationInput
