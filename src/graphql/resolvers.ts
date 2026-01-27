@@ -594,7 +594,7 @@ export const resolvers = {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
             email: true
           }
         },
