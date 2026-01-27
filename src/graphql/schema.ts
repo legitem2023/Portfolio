@@ -804,10 +804,10 @@ export const typeDefs = gql`
     maxAmount: Float
   }
   type PaginationInfo {
-  total: Int!
-  page: Int!
-  pageSize: Int!
-  totalPages: Int!
+  total: Int
+  page: Int
+  pageSize: Int
+  totalPages: Int
 }
 type OrderListResponse {
   orders: [Order]
