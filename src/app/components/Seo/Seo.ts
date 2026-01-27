@@ -2,19 +2,18 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'DVN - Digital Vendors Network | Shop Smarter with DVN.com',
+  title: 'VC -  VendorCity | Shop Smarter with VendorCity.net',
   description:
-    'Discover a smarter way to shop online with DVN — your trusted digital vendors network. Explore top brands, unbeatable deals, and fast checkout on DVN.com.',
+    'Discover a smarter way to shop online with VendorCity — your trusted VendorCity. Explore top brands, unbeatable deals, and fast checkout on VendorCity.net',
   manifest: '/manifest.json',
   keywords: [
-    'DVN',
-    'Digital Vendors Network',
-    'dvn.com',
+    'VendorCity',
+    'Vendor',
+    'City',
     'e-commerce',
     'online shopping',
     'shop online',
     'buy products',
-    'digital marketplace',
     'online store',
   ],
   authors: [{ name: 'Robert Marquez', url: 'https://github.com/robertmarquez' }],
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon-32x32.png',
   },
 
-  metadataBase: new URL('https://dvn.com'),
+  metadataBase: new URL('https://VendorCity.net'),
 
   other: {
     'format-detection': 'telephone=no',
