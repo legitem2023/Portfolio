@@ -72,7 +72,7 @@ interface Order {
   createdAt: string;
   user: {
     id: string;
-    fistName: string;
+    firstName: string;
     email: string;
   };
   items: OrderItem[];
