@@ -7,7 +7,7 @@ import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
-import SalesList from './components/SalesList';
+import OrderListComponent from './components/OrderListComponent';
 import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import ApiBillsTab from './components/ApiBillsTab';
@@ -222,7 +222,10 @@ export default function ManagementDashboard() {
       case 'users':
         return <UsersTab/>;
       case 'sales':
-        return <SalesList/>
+        return <OrderListComponent 
+        initialSupplierId={userId}// Optional initial filter
+        initialStatus="PROCESSING" // Optional initial filter
+      />
       case 'bills':
         return <ApiBillsTab/>
       default:
