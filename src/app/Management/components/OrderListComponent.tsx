@@ -394,7 +394,7 @@ export default function OrderListComponent({
                         </span>
                       </div>
                       <p className="text-sm text-gray-500">
-                        Placed on {formatDate(order.createdAt)} by {order.user.name}
+                        Placed on {formatDate(order.createdAt)} by {order.user.firstName}
                       </p>
                     </div>
                     <div className="text-right">
