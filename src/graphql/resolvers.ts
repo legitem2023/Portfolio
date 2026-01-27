@@ -541,6 +541,94 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
+    orderlist: async(_parent:any, args:any) => {
+  // Set default values
+  const filter = args.filter || {};
+  const pagination = args.pagination || {};
+  
+  const page = pagination.page || 1;
+  const pageSize = pagination.pageSize || 10;
+  const skip = (page - 1) * pageSize;
+
+  // Build where clause
+  const where = {};
+
+  // Add status filter if provided
+  if (filter.status) {
+    where.status = filter.status;
+  }
+
+  // Add supplierId filter through OrderItem relation
+  if (filter.supplierId) {
+    where.items = {
+      some: {
+        supplierId: filter.supplierId
+      }
+    };
+  }
+
+  try {
+    // Get orders count
+    const totalCount = await prisma.order.count({ where });
+
+    // Get orders with pagination
+    const orders = await prisma.order.findMany({
+      where,
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        items: {
+          where: filter.supplierId ? { supplierId: filter.supplierId } : {},
+          include: {
+            product: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    // Format the response
+    const formattedOrders = orders.map(order => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      total: order.total,
+      createdAt: order.createdAt.toISOString(),
+      items: order.items.map(item => ({
+        id: item.id,
+        supplierId: item.supplierId,
+        quantity: item.quantity,
+        price: item.price,
+        productName: item.product.name
+      }))
+    }));
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const paginationInfo = {
+      total: totalCount,
+      page,
+      pageSize,
+      totalPages
+    };
+
+    return {
+      orders: formattedOrders,
+      pagination: paginationInfo
+    };
+
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+    },
     apiBills: async (
       _: any,
       args: {
