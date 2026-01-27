@@ -541,7 +541,8 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
-    orderlist: async(_parent:any, args:any) => {
+// Find the orderlist resolver function (around line 550-560)
+ orderlist: async(parent: any, args: any) => {
   // Set default values
   const filter = args.filter || {};
   const pagination = args.pagination || {};
@@ -551,15 +552,15 @@ export const resolvers = {
   const skip = (page - 1) * pageSize;
 
   // Build where clause
-  const where = {};
+  const where: any = {};
 
-  // Add status filter if provided
-  if (filter.status) {
+  // Add status filter if provided - FIX THIS LINE
+  if (filter && filter.status) { // Check if filter exists AND has status
     where.status = filter.status;
   }
 
   // Add supplierId filter through OrderItem relation
-  if (filter.supplierId) {
+  if (filter && filter.supplierId) { // Check if filter exists AND has supplierId
     where.items = {
       some: {
         supplierId: filter.supplierId
@@ -581,7 +582,7 @@ export const resolvers = {
       },
       include: {
         items: {
-          where: filter.supplierId ? { supplierId: filter.supplierId } : {},
+          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
             product: {
               select: {
@@ -589,7 +590,16 @@ export const resolvers = {
               }
             }
           }
-        }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        address: true,
+        payments: true
       }
     });
 
@@ -600,12 +610,17 @@ export const resolvers = {
       status: order.status,
       total: order.total,
       createdAt: order.createdAt.toISOString(),
+      user: order.user,
+      address: order.address,
+      payments: order.payments,
       items: order.items.map(item => ({
         id: item.id,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
-        productName: item.product.name
+        product: {
+          name: item.product?.name || ''
+        }
       }))
     }));
 
@@ -616,7 +631,9 @@ export const resolvers = {
       total: totalCount,
       page,
       pageSize,
-      totalPages
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
     };
 
     return {
@@ -628,7 +645,7 @@ export const resolvers = {
     console.error('Error fetching orders:', error);
     throw new Error('Failed to fetch orders');
   }
-    },
+},
     apiBills: async (
       _: any,
       args: {
