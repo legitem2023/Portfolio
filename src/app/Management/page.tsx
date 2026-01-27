@@ -224,7 +224,7 @@ export default function ManagementDashboard() {
       case 'sales':
         return <OrderListComponent 
         initialSupplierId={userId}// Optional initial filter
-        initialStatus="PROCESSING" // Optional initial filter
+        initialStatus="PENDING" // Optional initial filter
       />
       case 'bills':
         return <ApiBillsTab/>
