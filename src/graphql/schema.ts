@@ -1075,6 +1075,7 @@ input OrderPaginationInput {
   input AddressInputs {
     userId: String
     type: String
+    receiver: String
     street: String
     city: String
     state: String
