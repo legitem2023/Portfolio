@@ -230,7 +230,7 @@ model Address {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String   @db.ObjectId
   type        AddressType
-  receiver    String
+  receiver    String?
   street      String
   city        String
   state       String
