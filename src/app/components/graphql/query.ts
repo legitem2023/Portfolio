@@ -315,6 +315,7 @@ export const USERS = gql`
       lastName
       addresses {
         type
+        receiver
         street
         city
         state
@@ -378,6 +379,7 @@ export const USERS = gql`
       addresses {
         id
         type
+        receiver
         street
         city
         state
@@ -469,6 +471,7 @@ query GetUser($id: ID) {
       addresses {
         id
         type
+        receiver
         street
         city
         state
