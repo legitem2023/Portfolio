@@ -46,6 +46,7 @@ export interface Role {
 export interface Address {
   id: string;
   type: AddressType;
+  receiver: string;
   street: string;
   city: string;
   state: string;
