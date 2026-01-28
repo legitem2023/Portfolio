@@ -181,6 +181,7 @@ export const typeDefs = gql`
   type Address {
     id: ID
     type: AddressType
+    receiver: String
     street: String
     city: String
     state: String
