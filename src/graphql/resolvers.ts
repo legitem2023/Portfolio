@@ -3202,6 +3202,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       const {
         userId,
         type,
+        receiver,
         street,
         city,
         state,
@@ -3214,6 +3215,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         data: {
           userId,
           type,
+          receiver,
           street,
           city,
           state,
