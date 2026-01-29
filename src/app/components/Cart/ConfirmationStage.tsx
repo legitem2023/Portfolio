@@ -231,7 +231,7 @@ const ConfirmationStage = ({
               <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Shipping Address</h3>
                 <div className="text-sm text-gray-600 space-y-2">
-                  <p className="font-medium text-gray-900">{shippingInfo.fullName}</p>
+                  <p className="font-medium text-gray-900">{shippingInfo.receiver}</p>
                   <p className="leading-relaxed">{shippingInfo.address}</p>
                   <p>{shippingInfo.city}, {shippingInfo.zipCode}</p>
                   <p>{shippingInfo.country}</p>
