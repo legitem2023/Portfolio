@@ -46,8 +46,8 @@ export async function generateTrackingNumber(): Promise<string> {
     create: { date: today, counter: 1 }
   });
 
-  const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
-
+ // const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
+  const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
   return `TRK-${dateStr}-${paddedCounter}`;
 }
 
