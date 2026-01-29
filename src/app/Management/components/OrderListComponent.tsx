@@ -449,7 +449,7 @@ export default function OrderListComponent({
 
                   {/* Order Footer */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                    <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                    <div className="flex flex-row sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                       <div className="text-right w-full sm:w-auto">
                       <div className="text-xl sm:text-2xl font-bold text-gray-900">
                         {formatCurrency(order.total)}
