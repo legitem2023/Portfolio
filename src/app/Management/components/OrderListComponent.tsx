@@ -109,6 +109,16 @@ interface OrderListComponentProps {
   initialStatus?: OrderStatus;
 }
 
+// Format currency function for Philippine Peso
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
 export default function OrderListComponent({ 
   initialSupplierId, 
   initialStatus 
@@ -207,7 +217,7 @@ export default function OrderListComponent({
   // Loading state
   if (loading) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <div className="flex flex-col sm:flex-row justify-center items-center h-48 sm:h-64">
           <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
           <span className="ml-3 sm:ml-4 text-sm sm:text-base text-gray-600 mt-3 sm:mt-0">Loading orders...</span>
@@ -219,7 +229,7 @@ export default function OrderListComponent({
   // Error state
   if (error) {
     return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center">
             <div className="text-red-500 mr-0 sm:mr-3 mb-2 sm:mb-0">
@@ -401,7 +411,7 @@ export default function OrderListComponent({
                     </div>
                     <div className="text-right w-full sm:w-auto">
                       <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                        ${order.total.toFixed(2)}
+                        {formatCurrency(order.total)}
                       </div>
                       <p className="text-xs sm:text-sm text-gray-500">Total amount</p>
                     </div>
@@ -431,10 +441,10 @@ export default function OrderListComponent({
                           </div>
                           <div className="text-right sm:text-left">
                             <p className="font-medium text-gray-900 text-sm sm:text-base">
-                              ${item.price.toFixed(2)} × {item.quantity}
+                              {formatCurrency(item.price)} × {item.quantity}
                             </p>
                             <p className="text-xs sm:text-sm text-gray-500">
-                              ${(item.price * item.quantity).toFixed(2)}
+                              {formatCurrency(item.price * item.quantity)}
                             </p>
                           </div>
                         </div>
@@ -521,4 +531,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-            }
+}
