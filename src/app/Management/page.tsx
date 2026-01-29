@@ -221,7 +221,7 @@ export default function ManagementDashboard() {
         />;
       case 'users':
         return <UsersTab/>;
-      case 'sales':
+      case 'orders':
         return <OrderListComponent 
         initialSupplierId={userId}// Optional initial filter
         initialStatus="PENDING" // Optional initial filter
