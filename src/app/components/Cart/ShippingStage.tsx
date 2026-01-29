@@ -1,9 +1,9 @@
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
 import { ShippingInfo } from './DeluxeCart';
 import { useQuery } from '@apollo/client';
-import Image from 'next/image';
-import { GET_USER_PROFILE } from '../graphql/query'; // You'll need to create this query
+import { GET_USER_PROFILE } from '../graphql/query';
 import ShippingStageShimmer from './ShippingStageShimmer';
+
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
   setShippingInfo: (info: ShippingInfo) => void;
@@ -32,7 +32,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
   });
-  console.log(data,"<===");
+  
   // Extract addresses from GraphQL response
   const savedAddresses: Address[] = data?.user.addresses || data?.user?.addresses || [];
 
@@ -44,7 +44,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
         setSelectedAddressId(defaultAddress.id);
         setShippingInfo({
           addressId: defaultAddress.id,
-          fullName: "", // You might want to get this from user profile
+          receiver: defaultAddress.receiver, // Changed from fullName to receiver
           address: defaultAddress.street,
           city: defaultAddress.city,
           zipCode: defaultAddress.zipCode,
@@ -66,7 +66,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
     setSelectedAddressId(address.id);
     setShippingInfo({
       addressId: address.id,
-      fullName: "", // You might need to get this from user profile
+      receiver: address.receiver, // Changed from fullName to receiver
       address: address.street,
       city: address.city,
       zipCode: address.zipCode,
@@ -79,7 +79,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
     setSelectedAddressId(null);
     setShippingInfo({
       addressId: "",
-      fullName: "",
+      receiver: "", // Changed from fullName to receiver
       address: "",
       city: "",
       zipCode: "",
@@ -89,9 +89,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
   };
 
   if (loading) {
-    return (
-      <ShippingStageShimmer/>
-    );
+    return <ShippingStageShimmer/>;
   }
 
   if (error) {
@@ -161,15 +159,15 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
       {/* Shipping Form */}
       <form onSubmit={onSubmit}>
         <div className="mb-5">
-          <label className="block text-indigo-800 font-medium mb-2">Full Name</label>
+          <label className="block text-indigo-800 font-medium mb-2">Receiver Name</label> {/* Updated label */}
           <input
             type="text"
-            name="fullName"
-            value={shippingInfo.fullName}
+            name="receiver" {/* Updated name */}
+            value={shippingInfo.receiver} {/* Updated value */}
             onChange={handleChange}
             required
             className="w-full px-4 py-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-            placeholder="Enter full name"
+            placeholder="Enter receiver's name" {/* Updated placeholder */}
           />
         </div>
         
