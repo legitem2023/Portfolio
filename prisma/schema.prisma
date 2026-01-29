@@ -9,30 +9,29 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model ApiBill {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   
   // Service info
-  service     String   // "Stripe", "Twilio", "AWS", "SendGrid", etc.
-  apiName     String   // "Payments", "SMS", "Lambda", "Email"
+  service     String?
+  apiName     String?
   
   // Billing period
-  month       Int      // 1-12
-  year        Int      // 2024
-  period      String?   // "2024-12" or "Q4-2024"
+  month       Int?
+  year        Int?
+  period      String?
   
   // Cost
-  amount      Float
-  currency    String   @default("USD")
+  amount      Float?
+  currency    String?   @default("USD")
   
   // Usage metrics (store as embedded object)
   usage       Json?
   
   // Status
-  status      String   @default("pending") // pending, paid, overdue
+  status      String?   @default("pending")
   paidAt      DateTime?
-  dueDate     DateTime
+  dueDate     DateTime?
   
   // Provider invoice info
   invoiceId   String?
@@ -42,26 +41,24 @@ model ApiBill {
   tags        String[]
   
   // Timestamps
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
   
   @@index([service, year, month])
   @@index([status])
   @@index([dueDate])
 }
 
-
-
 model Visitor {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  sessionId String
+  sessionId String?
   ip        String?
-  page      String
+  page      String?
   referer   String?  @default("direct")
   userAgent String?
   country   String?  @default("Unknown")
   city      String?  @default("Unknown")
-  timestamp DateTime @default(now())
+  timestamp DateTime? @default(now())
   
   @@index([timestamp])
   @@index([sessionId])
@@ -70,24 +67,19 @@ model Visitor {
   @@map("visitors")
 }
 
-
-
-
-
-
 // User Management
 model User {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
   email           String           @unique
-  password        String
-  firstName       String
-  lastName        String
+  password        String?
+  firstName       String?
+  lastName        String?
   avatar          String?
   phone           String?
-  emailVerified   Boolean          @default(false)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  role            Role             @default(USER)
+  emailVerified   Boolean?         @default(false)
+  createdAt       DateTime?        @default(now())
+  updatedAt       DateTime?        @updatedAt
+  role            Role?            @default(USER)
 
   // Relationships
   addresses       Address[]
@@ -109,22 +101,21 @@ model User {
   likes           Like[]
   followers       Follow[]         @relation("Follower")
   following       Follow[]         @relation("Following")
-  taggedPosts     PostTaggedUser[] // Changed to explicit relation
+  taggedPosts     PostTaggedUser[]
   blacklistedTokens  BlacklistedToken[]
+  
   // Indexes
   @@index([createdAt])
   @@map("users")
-  
 }
-
 
 model BlacklistedToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  expiresAt DateTime
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime? @default(now())
+  expiresAt DateTime?
   @@index([userId])
   @@index([expiresAt])
 }
@@ -132,19 +123,19 @@ model BlacklistedToken {
 // Social Media Models (NEW)
 model Post {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  userId          String          @db.ObjectId
-  content         String
+  userId          String?         @db.ObjectId
+  content         String?
   background      String?
   images          String[]
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
-  privacy         PrivacySetting  @default(PUBLIC)
+  createdAt       DateTime?       @default(now())
+  updatedAt       DateTime?       @updatedAt
+  privacy         PrivacySetting? @default(PUBLIC)
 
   // Relationships
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   comments        Comment[]
   likes           Like[]
-  taggedUsers     PostTaggedUser[] // Changed to explicit relation
+  taggedUsers     PostTaggedUser[]
 
   // Indexes
   @@index([userId])
@@ -156,10 +147,10 @@ model Post {
 // Explicit many-to-many for tagged users (required for MongoDB)
 model PostTaggedUser {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  postId    String   @db.ObjectId
-  userId    String   @db.ObjectId
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId    String?  @db.ObjectId
+  userId    String?  @db.ObjectId
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@unique([postId, userId])
   @@map("post_tagged_users")
@@ -167,16 +158,16 @@ model PostTaggedUser {
 
 model Comment {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  postId          String          @db.ObjectId
-  userId          String          @db.ObjectId
-  content         String
+  postId          String?         @db.ObjectId
+  userId          String?         @db.ObjectId
+  content         String?
   parentId        String?         @db.ObjectId
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime?       @default(now())
+  updatedAt       DateTime?       @updatedAt
 
   // Relationships
-  post            Post            @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post            Post?           @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies         Comment[]       @relation("CommentReplies")
   likes           Like[]
@@ -192,13 +183,13 @@ model Like {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   postId          String?         @db.ObjectId
   commentId       String?         @db.ObjectId
-  userId          String          @db.ObjectId
-  createdAt       DateTime        @default(now())
+  userId          String?         @db.ObjectId
+  createdAt       DateTime?       @default(now())
 
   // Relationships
   post            Post?           @relation(fields: [postId], references: [id], onDelete: Cascade)
   comment         Comment?        @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Ensure a like is for either a post or comment, not both
   @@unique([userId, postId, commentId])
@@ -210,13 +201,13 @@ model Like {
 
 model Follow {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
-  followerId      String          @db.ObjectId
-  followingId     String          @db.ObjectId
-  createdAt       DateTime        @default(now())
+  followerId      String?         @db.ObjectId
+  followingId     String?         @db.ObjectId
+  createdAt       DateTime?       @default(now())
 
   // Relationships
-  follower        User            @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
-  following       User            @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  follower        User?           @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following       User?           @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
   // Ensure unique follow relationships
   @@unique([followerId, followingId])
@@ -228,18 +219,18 @@ model Follow {
 // Address Management
 model Address {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
-  type        AddressType
+  userId      String?  @db.ObjectId
+  type        AddressType?
   receiver    String?
-  street      String
-  city        String
-  state       String
-  zipCode     String
-  country     String
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  street      String?
+  city        String?
+  state       String?
+  zipCode     String?
+  country     String?
+  isDefault   Boolean? @default(false)
+  createdAt   DateTime? @default(now())
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders      Order[]
 
   @@index([userId])
@@ -249,27 +240,27 @@ model Address {
 // Product Catalog
 model Product {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String
-  price       Float
+  name        String?
+  description String?
+  price       Float?
   salePrice   Float?
   sku         String   @unique
-  stock       Int      @default(0)
+  stock       Int?     @default(0)
   images      String[]
-  categoryId  String   @db.ObjectId
+  categoryId  String?  @db.ObjectId
   brand       String?
   weight      Float?
   dimensions  String?
-  isActive    Boolean  @default(true)
-  featured    Boolean  @default(false)
+  isActive    Boolean? @default(true)
+  featured    Boolean? @default(false)
   tags        String[]
   attributes  Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  supplierId  String  @default("68c8c1765038c47a4b9ef519") @db.ObjectId
-  model       String  @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  supplier    User     @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+  supplierId  String? @default("68c8c1765038c47a4b9ef519") @db.ObjectId
+  model       String? @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
+  category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
   variants    ProductVariant[]
   orders      OrderItem[]
@@ -289,39 +280,38 @@ model Product {
 
 model ProductVariant {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId   String   @db.ObjectId
-  name        String
-  sku         String   @unique  // Variant-specific SKU
-  color       String?           // Color option
-  size        String?           // Size option
-  price       Float?            // Optional: override product price
-  salePrice   Float?            // Optional: variant-specific sale price
-  stock       Int      @default(0) // Variant-specific stock
-  weight      Float?            // Variant-specific weight
-  images      String[]          // Variant-specific images
-  model       String  @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
-  isActive    Boolean  @default(true)
-  options     String[]          // Keep for additional options
-  createdAt   DateTime @default(now())
+  productId   String?  @db.ObjectId
+  name        String?
+  sku         String   @unique
+  color       String?
+  size        String?
+  price       Float?
+  salePrice   Float?
+  stock       Int?     @default(0)
+  weight      Float?
+  images      String[]
+  model       String? @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
+  isActive    Boolean? @default(true)
+  options     String[]
+  createdAt   DateTime? @default(now())
 
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
   @@index([color])
   @@index([size])
-  
   @@index([isActive])
   @@map("product_variants")
 }
 
 model Category {
   id        String     @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
+  name      String?
   description String?
   image     String?
   parentId  String?    @db.ObjectId
-  isActive  Boolean    @default(true)
-  createdAt DateTime   @default(now())
+  isActive  Boolean?   @default(true)
+  createdAt DateTime?  @default(now())
 
   parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryHierarchy")
@@ -334,20 +324,20 @@ model Category {
 // Order Management
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
+  userId      String?  @db.ObjectId
   orderNumber String   @unique
-  status      OrderStatus
-  total       Float
-  subtotal    Float
-  tax         Float    @default(0)
-  shipping    Float    @default(0)
-  discount    Float    @default(0)
-  addressId   String   @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status      OrderStatus?
+  total       Float?
+  subtotal    Float?
+  tax         Float?   @default(0)
+  shipping    Float?   @default(0)
+  discount    Float?   @default(0)
+  addressId   String?  @db.ObjectId
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  address     Address  @relation(fields: [addressId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address     Address? @relation(fields: [addressId], references: [id])
   items       OrderItem[]
   payments    Payment[]
 
@@ -359,15 +349,15 @@ model Order {
 
 model OrderItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  orderId     String   @db.ObjectId
-  productId   String   @db.ObjectId
+  orderId     String?  @db.ObjectId
+  productId   String?  @db.ObjectId
   supplierId  String?
-  quantity    Int
-  price       Float
+  quantity    Int?
+  price       Float?
   variantInfo String?
 
-  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product @relation(fields: [productId], references: [id])
+  order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
@@ -377,15 +367,15 @@ model OrderItem {
 // Cart
 model CartItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String   @db.ObjectId
-  productId   String   @db.ObjectId
-  quantity    Int      @default(1)
+  userId      String?  @db.ObjectId
+  productId   String?  @db.ObjectId
+  quantity    Int?     @default(1)
   variantInfo String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
 
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product     Product @relation(fields: [productId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@map("cart_items")
@@ -394,12 +384,12 @@ model CartItem {
 // Wishlist
 model WishlistItem {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  productId String   @db.ObjectId
-  createdAt DateTime @default(now())
+  userId    String?  @db.ObjectId
+  productId String?  @db.ObjectId
+  createdAt DateTime? @default(now())
 
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([productId])
@@ -409,17 +399,17 @@ model WishlistItem {
 // Payments
 model Payment {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
-  orderId       String        @db.ObjectId
-  userId        String        @db.ObjectId
-  amount        Float
-  method        PaymentMethod
-  status        PaymentStatus
+  orderId       String?       @db.ObjectId
+  userId        String?       @db.ObjectId
+  amount        Float?
+  method        PaymentMethod?
+  status        PaymentStatus?
   transactionId String?
   details       String?
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime?     @default(now())
 
-  order         Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user          User  @relation(fields: [userId], references: [id])
+  order         Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user          User?  @relation(fields: [userId], references: [id])
 
   @@index([orderId])
   @@index([userId])
@@ -430,16 +420,16 @@ model Payment {
 // Reviews
 model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @db.ObjectId
-  productId String   @db.ObjectId
-  rating    Int
+  userId    String?  @db.ObjectId
+  productId String?  @db.ObjectId
+  rating    Int?
   title     String?
   comment   String?
-  isApproved Boolean @default(false)
-  createdAt DateTime @default(now())
+  isApproved Boolean? @default(false)
+  createdAt DateTime? @default(now())
 
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
 
   @@index([userId])
   @@index([productId])
@@ -451,16 +441,16 @@ model Review {
 // Messaging
 model Message {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  senderId    String   @db.ObjectId
-  recipientId String   @db.ObjectId
+  senderId    String?  @db.ObjectId
+  recipientId String?  @db.ObjectId
   subject     String?
-  body        String
-  isRead      Boolean  @default(false)
+  body        String?
+  isRead      Boolean? @default(false)
   parentId    String?  @db.ObjectId
-  createdAt   DateTime @default(now())
+  createdAt   DateTime? @default(now())
 
-  sender      User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
-  recipient   User     @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  sender      User?    @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User?    @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
   parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies     Message[] @relation("MessageThread")
 
@@ -475,16 +465,16 @@ model Message {
 // Support
 model SupportTicket {
   id          String         @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String         @db.ObjectId
-  subject     String
-  description String
-  status      TicketStatus   @default(OPEN)
-  priority    TicketPriority @default(MEDIUM)
+  userId      String?        @db.ObjectId
+  subject     String?
+  description String?
+  status      TicketStatus?  @default(OPEN)
+  priority    TicketPriority? @default(MEDIUM)
   assignedTo  String?        @db.ObjectId
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime?      @default(now())
+  updatedAt   DateTime?      @updatedAt
 
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   responses   TicketResponse[]
 
   @@index([userId])
@@ -497,14 +487,14 @@ model SupportTicket {
 
 model TicketResponse {
   id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  ticketId  String        @db.ObjectId
-  userId    String        @db.ObjectId
-  message   String
-  isInternal Boolean      @default(false)
-  createdAt DateTime      @default(now())
+  ticketId  String?       @db.ObjectId
+  userId    String?       @db.ObjectId
+  message   String?
+  isInternal Boolean?     @default(false)
+  createdAt DateTime?     @default(now())
 
-  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user      User          @relation(fields: [userId], references: [id])
+  ticket    SupportTicket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user      User?          @relation(fields: [userId], references: [id])
 
   @@index([ticketId])
   @@index([userId])
@@ -515,15 +505,15 @@ model TicketResponse {
 // Notifications
 model Notification {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String           @db.ObjectId
-  type      NotificationType
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
+  userId    String?          @db.ObjectId
+  type      NotificationType?
+  title     String?
+  message   String?
+  isRead    Boolean?         @default(false)
   link      String?
-  createdAt DateTime         @default(now())
+  createdAt DateTime?        @default(now())
 
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([isRead])
@@ -534,11 +524,11 @@ model Notification {
 
 model TrackingCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  date      DateTime @unique
-  counter   Int
+  date      DateTime? @unique
+  counter   Int?
 }
 
-// Enums
+// Enums remain the same
 enum Role {
   ADMIN
   MANAGER
