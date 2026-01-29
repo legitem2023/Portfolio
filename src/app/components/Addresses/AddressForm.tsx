@@ -1,4 +1,4 @@
-import { useState,ReactNode  } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation'; // Adjust import path
 
@@ -17,9 +17,10 @@ interface FormData {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  receiver: string; // Just this one field
 }
 
-export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate}: AddressFormProps) {
+export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
     street: '',
@@ -28,6 +29,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     zipCode: '',
     country: '',
     isDefault: false,
+    receiver: '', // Initialize it
   });
 
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
@@ -48,7 +50,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       onSuccess?.();
       onAddressUpdate?.();
     } catch (err) {
-      // Error handled by the error state
       console.error('Error creating address:', err);
     }
   };
@@ -93,6 +94,22 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             <option value="BILLING">Billing</option>
             <option value="SHIPPING">Shipping</option>
           </select>
+        </div>
+
+        {/* Receiver Field - Simple addition */}
+        <div>
+          <label htmlFor="receiver" className="block text-sm font-medium text-gray-700 mb-1">
+            Receiver
+          </label>
+          <input
+            type="text"
+            id="receiver"
+            name="receiver"
+            value={formData.receiver}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter receiver name"
+          />
         </div>
 
         {/* Street Address */}
