@@ -20,7 +20,7 @@ import { CartItem } from '../../../../types';
 // Update your ShippingInfo interface to include addressId
 export interface ShippingInfo {
   addressId: string; // Add this field
-  fullName: string;
+  receiver: string;
   address: string;
   city: string;
   state: string;
@@ -51,7 +51,7 @@ const DeluxeCart = () => {
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId:'',
-    fullName: '',
+    receiver: '',
     address: '',
     city: '',
     zipCode: '',
