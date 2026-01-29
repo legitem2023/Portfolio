@@ -12,6 +12,8 @@ import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import ApiBillsTab from './components/ApiBillsTab';
 import LoadingShimmer from './components/LoadingShimmer';
+import SalesList from './components/SalesList';
+
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import { decryptToken } from '../../../utils/decryptToken';
 import UsersTab from './components/UsersTab';
@@ -225,9 +227,11 @@ export default function ManagementDashboard() {
         return <OrderListComponent 
         initialSupplierId={userId}// Optional initial filter
         initialStatus="PENDING" // Optional initial filter
-      />
+      />;
+      case 'sales':
+        return <SalesList/>;
       case 'bills':
-        return <ApiBillsTab/>
+        return <ApiBillsTab/>;
       default:
         return <SalesDashboard/>;
     }
