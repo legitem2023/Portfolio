@@ -457,7 +457,7 @@ export default function OrderListComponent({
                         <p className="text-xs sm:text-sm text-gray-500">Total amount</p>
                       </div>
                       
-                      <div className="flex-1 min-w-0">
+                      <div className="border-t border-gray-200 pt-3 flex-1 min-w-0">
                         <p className="truncate">Customer: {order.user.email}</p>
                         {order.payments.length > 0 && (
                           <p className="mt-1 truncate">
