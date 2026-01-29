@@ -23,6 +23,7 @@ interface Address {
   type: string;
   userId: string;
   zipCode: string;
+  receiver: string; // Added missing receiver property
 }
 
 const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
@@ -44,7 +45,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
         setSelectedAddressId(defaultAddress.id);
         setShippingInfo({
           addressId: defaultAddress.id,
-          receiver: defaultAddress.receiver, // Changed from fullName to receiver
+          receiver: defaultAddress.receiver,
           address: defaultAddress.street,
           city: defaultAddress.city,
           zipCode: defaultAddress.zipCode,
@@ -66,7 +67,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
     setSelectedAddressId(address.id);
     setShippingInfo({
       addressId: address.id,
-      receiver: address.receiver, // Changed from fullName to receiver
+      receiver: address.receiver,
       address: address.street,
       city: address.city,
       zipCode: address.zipCode,
@@ -79,7 +80,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
     setSelectedAddressId(null);
     setShippingInfo({
       addressId: "",
-      receiver: "", // Changed from fullName to receiver
+      receiver: "",
       address: "",
       city: "",
       zipCode: "",
@@ -137,7 +138,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
                 </div>
                 
                 <div className="text-sm text-indigo-700">
-                  <p className="font-medium">{/* Add user name here if available */}</p>
+                  <p className="font-medium">{address.receiver}</p> {/* Display receiver name */}
                   <p>{address.street}</p>
                   <p>{address.city}, {address.state} {address.zipCode}</p>
                   <p>{address.country}</p>
@@ -159,15 +160,15 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
       {/* Shipping Form */}
       <form onSubmit={onSubmit}>
         <div className="mb-5">
-          <label className="block text-indigo-800 font-medium mb-2">Receiver Name</label> {/* Updated label */}
+          <label className="block text-indigo-800 font-medium mb-2">Receiver Name</label>
           <input
             type="text"
-            name="receiver" {/* Updated name */}
-            value={shippingInfo.receiver} {/* Updated value */}
+            name="receiver"
+            value={shippingInfo.receiver}
             onChange={handleChange}
             required
             className="w-full px-4 py-3 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-            placeholder="Enter receiver's name" {/* Updated placeholder */}
+            placeholder="Enter receiver's name"
           />
         </div>
         
