@@ -609,7 +609,7 @@ export const resolvers = {
       orderNumber: order.orderNumber,
       status: order.status,
       total: order.total,
-      createdAt: order.createdAt.toISOString(),
+      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
       user: order.user,
       address: order.address,
       payments: order.payments,
