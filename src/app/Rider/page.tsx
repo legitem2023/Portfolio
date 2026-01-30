@@ -21,14 +21,57 @@ import {
   AlertTriangle,
   MapPin,
   CheckCircle,
-  Power
+  Power,
+  Truck,
+  DollarSign,
+  AlertCircle,
+  ThumbsUp,
+  X
 } from "lucide-react";
 
 export default function RiderDashboard() {
   // State to manage active tab
-  const [activeTab, setActiveTab] = useState("tracking");
+  const [activeTab, setActiveTab] = useState("newDeliveries");
   const [isOnline, setIsOnline] = useState(true);
   const [windowWidth, setWindowWidth] = useState(0);
+  const [newDeliveries, setNewDeliveries] = useState([
+    {
+      id: 1,
+      orderId: "ORD-78947",
+      restaurant: "Burger Palace",
+      customer: "Alex Johnson",
+      distance: "1.2 miles",
+      pickup: "123 Main St",
+      dropoff: "456 Oak Ave",
+      payout: "$8.75",
+      expiresIn: "45s",
+      items: 2
+    },
+    {
+      id: 2,
+      orderId: "ORD-78948",
+      restaurant: "Pizza Corner",
+      customer: "Maria Garcia",
+      distance: "0.8 miles",
+      pickup: "789 Center St",
+      dropoff: "321 Pine Rd",
+      payout: "$12.50",
+      expiresIn: "1m 20s",
+      items: 4
+    },
+    {
+      id: 3,
+      orderId: "ORD-78949",
+      restaurant: "Sushi World",
+      customer: "David Kim",
+      distance: "2.1 miles",
+      pickup: "555 River Blvd",
+      dropoff: "888 Hill St",
+      payout: "$15.25",
+      expiresIn: "2m 10s",
+      items: 3
+    }
+  ]);
   
   // Get window width for responsive behavior
   useEffect(() => {
@@ -41,8 +84,15 @@ export default function RiderDashboard() {
   // Check if device is mobile/tablet
   const isMobile = windowWidth < 1024;
 
-  // Tabs for rider tracking system
+  // Tabs for rider tracking system - New Deliveries first
   const tabs = [
+    { 
+      id: "newDeliveries", 
+      label: "New", 
+      icon: <Bell size={isMobile ? 20 : 24} />,
+      desktopLabel: "New Deliveries",
+      hasNotification: true 
+    },
     { 
       id: "tracking", 
       label: "Tracking", 
@@ -51,7 +101,7 @@ export default function RiderDashboard() {
     },
     { 
       id: "deliveries", 
-      label: "Deliveries", 
+      label: "Active", 
       icon: <Package size={isMobile ? 20 : 24} />,
       desktopLabel: "Active Deliveries" 
     },
@@ -62,29 +112,187 @@ export default function RiderDashboard() {
       desktopLabel: "Navigation Map" 
     },
     { 
-      id: "schedule", 
-      label: "Schedule", 
-      icon: <Calendar size={isMobile ? 20 : 24} />,
-      desktopLabel: "Delivery Schedule" 
-    },
-    { 
       id: "performance", 
       label: "Stats", 
       icon: <BarChart size={isMobile ? 20 : 24} />,
       desktopLabel: "Performance" 
-    },
-    { 
-      id: "messages", 
-      label: "Messages", 
-      icon: <MessageSquare size={isMobile ? 20 : 24} />,
-      desktopLabel: "Messages",
-      hasNotification: true 
     }
   ];
+
+  // Handle accepting a delivery
+  const handleAcceptDelivery = (deliveryId) => {
+    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout`);
+    setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
+  };
+
+  // Handle rejecting a delivery
+  const handleRejectDelivery = (deliveryId) => {
+    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    alert(`Rejected delivery: ${delivery.orderId}`);
+    setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
+  };
 
   // Tab content components
   const renderTabContent = () => {
     switch (activeTab) {
+      case "newDeliveries":
+        return (
+          <div className="p-4 lg:p-6">
+            <div className="flex justify-between items-center mb-4 lg:mb-6">
+              <div>
+                <h2 className="text-xl lg:text-2xl font-bold flex items-center gap-2">
+                  <Bell size={24} className="text-orange-500" />
+                  New Delivery Requests
+                </h2>
+                <p className="text-gray-600 text-sm lg:text-base mt-1">
+                  {newDeliveries.length} pending request{newDeliveries.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <AlertCircle size={16} />
+                <span>Requests auto-expire in 2 minutes</span>
+              </div>
+            </div>
+
+            {newDeliveries.length === 0 ? (
+              <div className="bg-gray-50 rounded-lg p-8 text-center">
+                <Bell size={48} className="mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-600">No New Requests</h3>
+                <p className="text-gray-500 mt-2">New delivery requests will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-4 lg:space-y-6">
+                {newDeliveries.map((delivery) => (
+                  <div key={delivery.id} className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
+                    {/* Header with timer */}
+                    <div className="bg-orange-50 px-4 py-3 border-b border-orange-100">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                          <span className="font-bold text-orange-700">NEW REQUEST</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-orange-100 px-3 py-1 rounded-full">
+                          <Clock size={14} className="text-orange-600" />
+                          <span className="font-bold text-orange-700">{delivery.expiresIn}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 lg:p-6">
+                      {/* Order info */}
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Shield size={18} className="text-blue-500" />
+                            <h3 className="text-lg lg:text-xl font-bold">{delivery.orderId}</h3>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600 mb-1">
+                            <Truck size={16} />
+                            <span className="font-medium">{delivery.restaurant}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <User size={16} />
+                            <span>{delivery.customer}</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl lg:text-3xl font-bold text-green-600">{delivery.payout}</div>
+                          <p className="text-sm text-gray-500">Payout</p>
+                        </div>
+                      </div>
+
+                      {/* Route info */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                        <div className="bg-blue-50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin size={16} className="text-blue-500" />
+                            <span className="font-semibold text-sm">Pickup</span>
+                          </div>
+                          <p className="text-gray-700">{delivery.pickup}</p>
+                        </div>
+                        
+                        <div className="flex items-center justify-center">
+                          <div className="w-full border-t-2 border-dashed border-gray-300 relative">
+                            <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2">
+                              <div className="flex items-center gap-1 text-gray-500">
+                                <Navigation size={14} />
+                                <span className="text-sm font-medium">{delivery.distance}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-green-50 p-3 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin size={16} className="text-green-500" />
+                            <span className="font-semibold text-sm">Dropoff</span>
+                          </div>
+                          <p className="text-gray-700">{delivery.dropoff}</p>
+                        </div>
+                      </div>
+
+                      {/* Additional info */}
+                      <div className="flex flex-wrap gap-4 mb-6">
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <Package size={16} className="text-gray-600" />
+                          <span className="text-sm font-medium">{delivery.items} item{delivery.items !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <Navigation size={16} className="text-gray-600" />
+                          <span className="text-sm font-medium">{delivery.distance} away</span>
+                        </div>
+                        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
+                          <Clock size={16} className="text-gray-600" />
+                          <span className="text-sm font-medium">~15-20 min</span>
+                        </div>
+                      </div>
+
+                      {/* Action buttons */}
+                      <div className="grid grid-cols-2 gap-3 lg:gap-4">
+                        <button
+                          onClick={() => handleRejectDelivery(delivery.id)}
+                          className="bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                        >
+                          <X size={20} />
+                          <span>Reject</span>
+                        </button>
+                        <button
+                          onClick={() => handleAcceptDelivery(delivery.id)}
+                          className="bg-green-500 text-white px-4 py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-2"
+                        >
+                          <ThumbsUp size={20} />
+                          <span>Accept Delivery</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bottom stats */}
+            <div className="mt-6 lg:mt-8 grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+              <div className="bg-blue-50 p-3 lg:p-4 rounded-lg border border-blue-100">
+                <p className="text-sm text-gray-600">Today&apos;s Earnings</p>
+                <p className="text-xl lg:text-2xl font-bold">$86.50</p>
+              </div>
+              <div className="bg-green-50 p-3 lg:p-4 rounded-lg border border-green-100">
+                <p className="text-sm text-gray-600">Acceptance Rate</p>
+                <p className="text-xl lg:text-2xl font-bold">94%</p>
+              </div>
+              <div className="bg-purple-50 p-3 lg:p-4 rounded-lg border border-purple-100">
+                <p className="text-sm text-gray-600">Avg. Payout</p>
+                <p className="text-xl lg:text-2xl font-bold">$12.15</p>
+              </div>
+              <div className="bg-orange-50 p-3 lg:p-4 rounded-lg border border-orange-100">
+                <p className="text-sm text-gray-600">Response Time</p>
+                <p className="text-xl lg:text-2xl font-bold">8s</p>
+              </div>
+            </div>
+          </div>
+        );
+      
       case "tracking":
         return (
           <div className="p-4 lg:p-6">
@@ -114,16 +322,6 @@ export default function RiderDashboard() {
                   <MapPin className="w-16 h-16 lg:w-20 lg:h-20 text-blue-600 mx-auto mb-3 lg:mb-4" />
                   <p className="text-gray-700 font-medium">Live Map View</p>
                   <p className="text-sm text-gray-500 mt-1 lg:mt-2">GPS Tracking Active</p>
-                  <div className="mt-3 lg:mt-4 flex items-center justify-center gap-4 text-sm text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <Wifi size={16} />
-                      <span>Strong</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Battery size={16} />
-                      <span>85%</span>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -141,13 +339,6 @@ export default function RiderDashboard() {
                     Today&apos;s Earnings
                   </h3>
                   <p className="text-2xl lg:text-3xl font-bold mt-2">$86.50</p>
-                </div>
-                <div className="bg-white p-3 lg:p-4 rounded-lg shadow border">
-                  <h3 className="font-semibold text-gray-600 text-sm lg:text-base flex items-center gap-2">
-                    <Clock size={18} />
-                    Avg. Delivery Time
-                  </h3>
-                  <p className="text-2xl lg:text-3xl font-bold mt-2">18min</p>
                 </div>
               </div>
             </div>
@@ -238,45 +429,6 @@ export default function RiderDashboard() {
                 <Map className="w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-3 lg:mb-4 text-blue-400" />
                 <p className="text-lg lg:text-xl font-medium">Full Navigation Map</p>
                 <p className="text-gray-400 mt-1 lg:mt-2">Interactive GPS View</p>
-                <button className="mt-3 lg:mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-lg font-semibold text-sm lg:text-base flex items-center gap-2 mx-auto">
-                  <Map size={18} />
-                  Open Full Screen
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      
-      case "schedule":
-        return (
-          <div className="p-4 lg:p-6">
-            <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 flex items-center gap-2">
-              <Calendar size={24} />
-              Delivery Schedule
-            </h2>
-            <div className="bg-white rounded-lg shadow overflow-hidden border">
-              <div className="divide-y divide-gray-200">
-                {[1, 2, 3, 4].map((item) => (
-                  <div key={item} className="p-3 lg:p-4 flex justify-between items-center hover:bg-gray-50">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${item === 1 ? "bg-blue-100" : item === 2 ? "bg-green-100" : "bg-gray-100"}`}>
-                        <Clock size={20} className={item === 1 ? "text-blue-600" : item === 2 ? "text-green-600" : "text-gray-600"} />
-                      </div>
-                      <div>
-                        <p className="font-medium">ORD-7894{item}</p>
-                        <p className="text-sm text-gray-600">
-                          {item === 1 ? "10:30 AM - Downtown" : 
-                           item === 2 ? "11:15 AM - North District" : 
-                           item === 3 ? "12:00 PM - East Side" : 
-                           "02:30 PM - West End"}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`px-2 lg:px-3 py-1 rounded-full text-xs lg:text-sm font-medium ${item === 1 ? "bg-blue-100 text-blue-800" : item === 2 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
-                      {item === 1 ? "Active" : item === 2 ? "Scheduled" : item === 3 ? "Pending" : "Later"}
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -304,68 +456,6 @@ export default function RiderDashboard() {
                 <h3 className="font-bold text-sm lg:text-lg">On-time Rate</h3>
                 <p className="text-xl lg:text-3xl font-bold mt-1 lg:mt-2">98%</p>
               </div>
-              <div className="bg-white p-4 lg:p-6 rounded-lg shadow border">
-                <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-lg mb-3 lg:mb-4">
-                  <Star size={24} className="text-yellow-600" />
-                </div>
-                <h3 className="font-bold text-sm lg:text-lg">Rating</h3>
-                <p className="text-xl lg:text-3xl font-bold mt-1 lg:mt-2">4.9/5.0</p>
-              </div>
-              <div className="bg-white p-4 lg:p-6 rounded-lg shadow border">
-                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mb-3 lg:mb-4">
-                  <CheckCircle size={24} className="text-purple-600" />
-                </div>
-                <h3 className="font-bold text-sm lg:text-lg">Completed</h3>
-                <p className="text-xl lg:text-3xl font-bold mt-1 lg:mt-2">1,247</p>
-              </div>
-            </div>
-          </div>
-        );
-      
-      case "messages":
-        return (
-          <div className="p-4 lg:p-6">
-            <h2 className="text-xl lg:text-2xl font-bold mb-4 lg:mb-6 flex items-center gap-2">
-              <MessageSquare size={24} />
-              Messages & Alerts
-            </h2>
-            <div className="space-y-3 lg:space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 lg:p-4">
-                <div className="flex">
-                  <div className="flex items-center justify-center w-10 h-10 bg-blue-100 rounded-lg mr-3">
-                    <Bell size={20} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm lg:text-base">System Alert</h4>
-                    <p className="text-gray-700 text-sm lg:text-base">Heavy traffic on Main Street. Consider alternate route.</p>
-                    <p className="text-xs text-gray-500 mt-1 lg:mt-2">2 minutes ago</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white border rounded-lg p-3 lg:p-4">
-                <div className="flex">
-                  <div className="flex items-center justify-center w-10 h-10 bg-gray-100 rounded-lg mr-3">
-                    <User size={20} className="text-gray-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm lg:text-base">John Smith</h4>
-                    <p className="text-gray-700 text-sm lg:text-base">Can you leave the package at the door? Thank you!</p>
-                    <p className="text-xs text-gray-500 mt-1 lg:mt-2">5 minutes ago</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white border rounded-lg p-3 lg:p-4">
-                <div className="flex">
-                  <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-lg mr-3">
-                    <CheckCircle size={20} className="text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-sm lg:text-base">Order Completed</h4>
-                    <p className="text-gray-700 text-sm lg:text-base">ORD-78945 delivered successfully. Earnings: $8.50</p>
-                    <p className="text-xs text-gray-500 mt-1 lg:mt-2">15 minutes ago</p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         );
@@ -392,7 +482,7 @@ export default function RiderDashboard() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   <span className="text-blue-600">VendorCity</span> Rider Portal
                 </h1>
-                <p className="text-gray-600 text-sm">Real-time delivery tracking system</p>
+                <p className="text-gray-600 text-sm">New delivery requests available</p>
               </div>
               
               <div className="flex items-center gap-4">
@@ -430,9 +520,9 @@ export default function RiderDashboard() {
                   >
                     {tab.icon}
                     <span>{tab.desktopLabel}</span>
-                    {tab.hasNotification && activeTab !== tab.id && (
+                    {tab.hasNotification && newDeliveries.length > 0 && activeTab !== tab.id && (
                       <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        2
+                        {newDeliveries.length}
                       </span>
                     )}
                   </button>
@@ -467,6 +557,11 @@ export default function RiderDashboard() {
                   <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                     MR
                   </div>
+                  {newDeliveries.length > 0 && activeTab !== "newDeliveries" && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {newDeliveries.length}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -489,8 +584,8 @@ export default function RiderDashboard() {
               <span className="font-medium">{isOnline ? "Live GPS Tracking Active" : "Tracking Paused"}</span>
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-2">
-              <Clock size={16} />
-              Last Updated: {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              <Bell size={16} />
+              {newDeliveries.length} new request{newDeliveries.length !== 1 ? "s" : ""} available
             </div>
           </div>
         </div>
@@ -513,9 +608,9 @@ export default function RiderDashboard() {
             >
               <div className="relative">
                 {tab.icon}
-                {tab.hasNotification && activeTab !== tab.id && (
+                {tab.hasNotification && newDeliveries.length > 0 && activeTab !== tab.id && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                    2
+                    {newDeliveries.length}
                   </span>
                 )}
               </div>
@@ -526,4 +621,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-      }
+}
