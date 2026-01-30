@@ -60,7 +60,7 @@ export default function RiderDashboard() {
                   <p className="text-2xl lg:text-3xl font-bold">2</p>
                 </div>
                 <div className="bg-white p-3 lg:p-4 rounded-lg shadow">
-                  <h3 className="font-semibold text-gray-600 text-sm lg:text-base">Today's Earnings</h3>
+                  <h3 className="font-semibold text-gray-600 text-sm lg:text-base">Todays Earnings</h3>
                   <p className="text-2xl lg:text-3xl font-bold">$86.50</p>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function RiderDashboard() {
                   <div className="text-xl lg:text-2xl mr-2 lg:mr-3">👤</div>
                   <div>
                     <h4 className="font-bold text-sm lg:text-base">Customer</h4>
-                    <p className="text-gray-700 text-sm lg:text-base">"Leave package at door please"</p>
+                    <p className="text-gray-700 text-sm lg:text-base">Leave package at door please</p>
                   </div>
                 </div>
               </div>
