@@ -325,6 +325,7 @@ model Category {
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String?  @db.ObjectId
+  riderId     String?
   orderNumber String   @unique
   status      OrderStatus?
   total       Float?
