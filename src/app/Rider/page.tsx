@@ -120,14 +120,14 @@ export default function RiderDashboard() {
   ];
 
   // Handle accepting a delivery
-  const handleAcceptDelivery = (deliveryId) => {
+  const handleAcceptDelivery = (deliveryId:any) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout`);
     setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
   };
 
   // Handle rejecting a delivery
-  const handleRejectDelivery = (deliveryId) => {
+  const handleRejectDelivery = (deliveryId:any) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     alert(`Rejected delivery: ${delivery.orderId}`);
     setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
