@@ -3420,7 +3420,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
               title: "Order Created Successfully",
               message: `Your order #${response.orderNumber} has been created and is being processed. Order total: $${response.total}`,
               actionUrl: `/orders/${response.id}`,
-              userName: user.name || 'Customer',
+              userName: user.firstName || 'Customer',
               subject: `Order Confirmation: ${response.orderNumber}`
             });
             
