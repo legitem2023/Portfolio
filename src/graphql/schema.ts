@@ -276,8 +276,8 @@ export const typeDefs = gql`
     supplierId: String
     variantInfo: String
     order: Order
-    product: Product
-    supplier: User
+    product: [Product]
+    supplier: [User]
   }
 
   type CartItem {
