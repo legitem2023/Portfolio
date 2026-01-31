@@ -11,7 +11,7 @@ import {
   ThumbsUp,
   AlertCircle
 } from "lucide-react";
-import { formatPeso } from "@/lib/utils";
+import { formatPeso } from "../lib/utils";
 
 interface DeliveryCardProps {
   delivery: any;
