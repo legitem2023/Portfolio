@@ -1,11 +1,6 @@
 import { transporter } from './transporter';
 import { emailTemplates } from './templates';
 
-/**
- * Send email using reusable templates
- * @param {Object} options - Email options
- * @returns {Promise<Object>} - Send result
- */
 export async function sendEmail(options) {
   try {
     const {
@@ -13,39 +8,30 @@ export async function sendEmail(options) {
       templateName,
       templateData = {},
       subject,
-      cc,
-      bcc,
-      attachments,
       from = `"Your App" <${process.env.YAHOO_EMAIL}>`
     } = options;
 
-    // Get template
     const template = emailTemplates[templateName];
     if (!template) {
       throw new Error(`Template "${templateName}" not found`);
     }
 
-    // Generate HTML from template
     const html = template(templateData);
 
-    // Prepare email
     const mailOptions = {
       from,
       to: Array.isArray(to) ? to.join(', ') : to,
       subject,
-      html,
-      cc,
-      bcc,
-      attachments
+      html
     };
 
-    // Send email
     const info = await transporter.sendMail(mailOptions);
     
     return {
       success: true,
       messageId: info.messageId,
-      previewUrl: nodemailer.getTestMessageUrl(info) // For testing
+      accepted: info.accepted,
+      rejected: info.rejected
     };
   } catch (error) {
     console.error('Email send error:', error);
@@ -53,36 +39,62 @@ export async function sendEmail(options) {
   }
 }
 
-/**
- * Quick send functions for common use cases
- */
-export const emailService = {
-  sendWelcome: async (to, name, email) => {
+// Mutation-specific email functions
+export const emailMutations = {
+  sendWelcomeEmail: async (userData) => {
     return sendEmail({
-      to,
+      to: userData.email,
       templateName: 'welcome',
-      templateData: { name, email },
-      subject: `Welcome to Our Service, ${name}!`
+      templateData: {
+        name: userData.name,
+        email: userData.email,
+        verificationToken: userData.verificationToken
+      },
+      subject: `Welcome to Our App, ${userData.name}!`
     });
   },
 
-  sendPasswordReset: async (to, resetToken) => {
-    const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${resetToken}`;
+  sendPasswordResetEmail: async (userData) => {
+    const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password?token=${userData.resetToken}`;
     
     return sendEmail({
-      to,
+      to: userData.email,
       templateName: 'resetPassword',
-      templateData: { resetLink },
+      templateData: { 
+        name: userData.name,
+        resetLink,
+        expiresIn: '1 hour'
+      },
       subject: 'Password Reset Request'
     });
   },
 
-  sendNotification: async (to, title, message, actionUrl = null) => {
+  sendVerificationEmail: async (userData) => {
+    const verifyLink = `${process.env.NEXT_PUBLIC_SITE_URL}/verify-email?token=${userData.verificationToken}`;
+    
     return sendEmail({
-      to,
+      to: userData.email,
+      templateName: 'verification',
+      templateData: {
+        name: userData.name,
+        verifyLink,
+        expiresIn: '24 hours'
+      },
+      subject: 'Verify Your Email Address'
+    });
+  },
+
+  sendNotificationEmail: async (notificationData) => {
+    return sendEmail({
+      to: notificationData.recipientEmail,
       templateName: 'notification',
-      templateData: { title, message, actionUrl },
-      subject: title
+      templateData: {
+        title: notificationData.title,
+        message: notificationData.message,
+        actionUrl: notificationData.actionUrl,
+        userName: notificationData.userName
+      },
+      subject: notificationData.subject || notificationData.title
     });
   }
 };
