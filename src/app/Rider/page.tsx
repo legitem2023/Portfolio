@@ -125,7 +125,7 @@ export default function RiderDashboard() {
 
   // Handle rejecting a delivery
   const handleRejectDelivery = (deliveryId: string) => {
-    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    const delivery = newDeliveries.find((d:any) => d.id === deliveryId);
     if (delivery) {
       alert(`Rejected delivery: ${delivery.orderId}\nFrom: ${delivery.restaurant}\nCustomer address: ${delivery.dropoff}`);
       refetch();
