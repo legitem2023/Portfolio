@@ -109,6 +109,7 @@ interface Address {
 interface Supplier {
   id: string;
   name: string;
+  firstName?: string;
   addresses: Address[];
 }
 
@@ -164,7 +165,9 @@ interface OrderListResponse {
 }
 
 // Helper function to calculate distance (simplified - in real app use coordinates)
-const calculateDistance = (address1: Address, address2: Address): string => {
+const calculateDistance = (address1?: Address, address2?: Address): string => {
+  if (!address1 || !address2) return "Distance not available";
+  
   // Simple mock distance calculation based on zip codes
   const zip1 = parseInt(address1.zipCode) || 0;
   const zip2 = parseInt(address2.zipCode) || 0;
@@ -177,6 +180,39 @@ const calculateDistance = (address1: Address, address2: Address): string => {
   return "5+ miles";
 };
 
+// Helper function to get primary pickup address
+const getPickupAddress = (order: Order): { address?: Address; supplierName: string; supplier?: Supplier } => {
+  // Try to get supplier address from the first item
+  const primaryItem = order.items.find(item => item.supplier?.addresses?.length > 0);
+  
+  if (primaryItem?.supplier?.addresses?.length > 0) {
+    const supplier = primaryItem.supplier;
+    const address = supplier.addresses[0];
+    const supplierName = supplier.firstName 
+      ? `${supplier.firstName} ${supplier.name}`
+      : supplier.name || primaryItem.product.name || "Supplier";
+    
+    return { address, supplierName, supplier };
+  }
+  
+  // Fallback: check all items for any supplier with address
+  for (const item of order.items) {
+    if (item.supplier?.addresses?.length > 0) {
+      const supplier = item.supplier;
+      const address = supplier.addresses[0];
+      const supplierName = supplier.firstName 
+        ? `${supplier.firstName} ${supplier.name}`
+        : supplier.name || item.product.name || "Supplier";
+      
+      return { address, supplierName, supplier };
+    }
+  }
+  
+  // If no supplier address found, use product name as fallback
+  const productName = order.items[0]?.product?.name || "Restaurant";
+  return { address: undefined, supplierName: productName, supplier: undefined };
+};
+
 // Map GraphQL orders to delivery format
 const mapOrderToDelivery = (order: Order, index: number) => {
   const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -185,28 +221,21 @@ const mapOrderToDelivery = (order: Order, index: number) => {
   
   // Use the actual address from the order for dropoff
   const dropoffAddress = order.address;
-  const dropoffFormatted = dropoffAddress ? 
-    `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}` : 
-    "Address not available";
+  const dropoffFormatted = dropoffAddress?.street 
+    ? `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}`
+    : "Address not available";
   
-  // Get supplier address for pickup (use first item's supplier as primary)
-  const primaryItem = order.items[0];
-  const supplier = primaryItem?.supplier;
-  const supplierAddress = supplier?.addresses?.[0]; // Get first address
-  const supplierName = supplier?.name || primaryItem?.product?.name || "Restaurant";
+  // Get pickup address from supplier
+  const { address: pickupAddress, supplierName, supplier } = getPickupAddress(order);
   
   // Format pickup address
-  let pickupAddress = "Pickup location not available";
-  let pickupFormatted = pickupAddress;
-  let distance = "Distance not available";
-  
-  if (supplierAddress && dropoffAddress) {
-    pickupFormatted = `${supplierAddress.street}, ${supplierAddress.city}, ${supplierAddress.state} ${supplierAddress.zipCode}`;
-    distance = calculateDistance(supplierAddress, dropoffAddress);
-  } else if (supplierAddress) {
-    pickupFormatted = `${supplierAddress.street}, ${supplierAddress.city}, ${supplierAddress.state} ${supplierAddress.zipCode}`;
-    distance = "Distance unknown";
+  let pickupFormatted = "Pickup location not available";
+  if (pickupAddress?.street) {
+    pickupFormatted = `${pickupAddress.street}, ${pickupAddress.city}, ${pickupAddress.state} ${pickupAddress.zipCode}`;
   }
+  
+  // Calculate distance
+  const distance = calculateDistance(pickupAddress, dropoffAddress);
   
   const payout = `$${(order.total * 0.3).toFixed(2)}`; // 30% of total as payout
   
@@ -239,9 +268,9 @@ const mapOrderToDelivery = (order: Order, index: number) => {
     items: itemsCount,
     orderData: order,
     dropoffAddress: order.address,
-    pickupAddress: supplierAddress,
+    pickupAddress,
     supplierName,
-    supplier: supplier
+    supplier
   };
 };
 
@@ -269,6 +298,7 @@ export default function RiderDashboard() {
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.orderlist?.orders?.map(mapOrderToDelivery) || [];
   console.log("New deliveries:", newDeliveries);
+  console.log("Raw order data:", data?.orderlist?.orders);
 
   // Get window width for responsive behavior
   useEffect(() => {
@@ -511,7 +541,7 @@ export default function RiderDashboard() {
                         </div>
                         <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                           <Navigation size={16} className="text-gray-600" />
-                          <span className="text-sm font-medium">{delivery.distance} away</span>
+                          <span className="text-sm font-medium">{delivery.distance}</span>
                         </div>
                         <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
                           <Clock size={16} className="text-gray-600" />
@@ -564,6 +594,7 @@ export default function RiderDashboard() {
           </div>
         );
       
+      // ... rest of the tab content remains the same
       case "tracking":
         return (
           <div className="p-4 lg:p-6">
