@@ -28,7 +28,8 @@ import {
   AlertCircle,
   ThumbsUp,
   X,
-  Loader2
+  Loader2,
+  Building
 } from "lucide-react";
 
 // GraphQL Query with address field
@@ -67,15 +68,16 @@ const ORDER_LIST_QUERY = gql`
             sku
           }
           supplier {
-              
-                addresses {
-                    street
-                    city
-                    state
-                    zipCode
-                    country
-                }
-              }
+            id
+            name
+            addresses {
+              street
+              city
+              state
+              zipCode
+              country
+            }
+          }
         }
         payments {
           id
@@ -96,12 +98,18 @@ const ORDER_LIST_QUERY = gql`
 
 // TypeScript interfaces for the GraphQL response
 interface Address {
-  id: string;
+  id?: string;
   street: string;
   city: string;
   state: string;
   zipCode: string;
   country: string;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  addresses: Address[];
 }
 
 interface OrderItem {
@@ -113,6 +121,7 @@ interface OrderItem {
     name: string;
     sku: string;
   };
+  supplier?: Supplier;
 }
 
 interface Payment {
@@ -135,7 +144,7 @@ interface Order {
   total: number;
   createdAt: string;
   user: OrderUser;
-  address: Address; // Added address field
+  address: Address;
   items: OrderItem[];
   payments: Payment[];
 }
@@ -154,28 +163,51 @@ interface OrderListResponse {
   };
 }
 
+// Helper function to calculate distance (simplified - in real app use coordinates)
+const calculateDistance = (address1: Address, address2: Address): string => {
+  // Simple mock distance calculation based on zip codes
+  const zip1 = parseInt(address1.zipCode) || 0;
+  const zip2 = parseInt(address2.zipCode) || 0;
+  const diff = Math.abs(zip1 - zip2);
+  
+  if (diff < 1000) return "0.5-1 miles";
+  if (diff < 5000) return "1-2 miles";
+  if (diff < 10000) return "2-3 miles";
+  if (diff < 20000) return "3-5 miles";
+  return "5+ miles";
+};
+
 // Map GraphQL orders to delivery format
 const mapOrderToDelivery = (order: Order, index: number) => {
   const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const firstName = order.user?.firstName || "Customer";
   const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
   
-  // Use the actual address from the order
-  const address = order.address;
-  const dropoffAddress = address ? 
-    `${address.street}, ${address.city}, ${address.state} ${address.zipCode}` : 
+  // Use the actual address from the order for dropoff
+  const dropoffAddress = order.address;
+  const dropoffFormatted = dropoffAddress ? 
+    `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}` : 
     "Address not available";
   
-  // Create fake pickup location (in a real app, this would come from supplier/restaurant data)
-  const pickupLocations = [
-    { address: "123 Main St, Restaurant District, NY 10001", distance: "1.2 miles" },
-    { address: "789 Center St, Food Court, NY 10002", distance: "0.8 miles" },
-    { address: "555 River Blvd, Dining Area, NY 10003", distance: "2.1 miles" },
-    { address: "100 Market St, Culinary Square, NY 10004", distance: "1.5 miles" },
-    { address: "300 Broadway, Eatery Lane, NY 10005", distance: "0.5 miles" }
-  ];
+  // Get supplier address for pickup (use first item's supplier as primary)
+  const primaryItem = order.items[0];
+  const supplier = primaryItem?.supplier;
+  const supplierAddress = supplier?.addresses?.[0]; // Get first address
+  const supplierName = supplier?.name || primaryItem?.product?.name || "Restaurant";
   
-  const pickupLocation = pickupLocations[index % pickupLocations.length];
+  // Format pickup address
+  let pickupAddress = "Pickup location not available";
+  let pickupFormatted = pickupAddress;
+  let distance = "Distance not available";
+  
+  if (supplierAddress && dropoffAddress) {
+    pickupFormatted = `${supplierAddress.street}, ${supplierAddress.city}, ${supplierAddress.state} ${supplierAddress.zipCode}`;
+    distance = calculateDistance(supplierAddress, dropoffAddress);
+  } else if (supplierAddress) {
+    pickupFormatted = `${supplierAddress.street}, ${supplierAddress.city}, ${supplierAddress.state} ${supplierAddress.zipCode}`;
+    distance = "Distance unknown";
+  }
+  
   const payout = `$${(order.total * 0.3).toFixed(2)}`; // 30% of total as payout
   
   // Calculate expiration time based on order creation
@@ -197,16 +229,19 @@ const mapOrderToDelivery = (order: Order, index: number) => {
   return {
     id: order.id,
     orderId,
-    restaurant: order.items[0]?.product?.name || "Restaurant",
+    restaurant: supplierName,
     customer: firstName,
-    distance: pickupLocation.distance,
-    pickup: pickupLocation.address,
-    dropoff: dropoffAddress,
+    distance,
+    pickup: pickupFormatted,
+    dropoff: dropoffFormatted,
     payout,
     expiresIn,
     items: itemsCount,
-    orderData: order, // Keep original order data
-    address // Include full address object
+    orderData: order,
+    dropoffAddress: order.address,
+    pickupAddress: supplierAddress,
+    supplierName,
+    supplier: supplier
   };
 };
 
@@ -233,7 +268,8 @@ export default function RiderDashboard() {
 
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.orderlist?.orders?.map(mapOrderToDelivery) || [];
-console.log(newDeliveries);
+  console.log("New deliveries:", newDeliveries);
+
   // Get window width for responsive behavior
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -284,7 +320,7 @@ console.log(newDeliveries);
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-      alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout\nDelivering to: ${delivery.dropoff}`);
+      alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout\nFrom: ${delivery.restaurant}\nTo: ${delivery.dropoff}`);
       
       // In a real app, you would call a mutation here to update order status
       // For now, we'll simulate by refetching
@@ -296,7 +332,7 @@ console.log(newDeliveries);
   const handleRejectDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-      alert(`Rejected delivery: ${delivery.orderId}\nCustomer address: ${delivery.dropoff}`);
+      alert(`Rejected delivery: ${delivery.orderId}\nFrom: ${delivery.restaurant}\nCustomer address: ${delivery.dropoff}`);
       
       // In a real app, you would call a mutation here to update order status
       // For now, we'll simulate by refetching
@@ -305,7 +341,7 @@ console.log(newDeliveries);
   };
 
   // Format address for display
-  const formatAddress = (address: any) => {
+  const formatAddress = (address: Address | undefined) => {
     if (!address) return "Address not available";
     
     const parts = [];
@@ -407,7 +443,7 @@ console.log(newDeliveries);
                             <h3 className="text-lg lg:text-xl font-bold">{delivery.orderId}</h3>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600 mb-1">
-                            <Truck size={16} />
+                            <Building size={16} className="text-blue-400" />
                             <span className="font-medium">{delivery.restaurant}</span>
                           </div>
                           <div className="flex items-center gap-2 text-gray-600">
@@ -426,9 +462,17 @@ console.log(newDeliveries);
                         <div className="bg-blue-50 p-3 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <MapPin size={16} className="text-blue-500" />
-                            <span className="font-semibold text-sm">Pickup</span>
+                            <span className="font-semibold text-sm">Pickup From</span>
                           </div>
                           <p className="text-gray-700 text-sm">{delivery.pickup}</p>
+                          {delivery.supplierName && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Building size={10} />
+                                {delivery.supplierName}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex items-center justify-center">
@@ -445,14 +489,14 @@ console.log(newDeliveries);
                         <div className="bg-green-50 p-3 rounded-lg">
                           <div className="flex items-center gap-2 mb-2">
                             <MapPin size={16} className="text-green-500" />
-                            <span className="font-semibold text-sm">Dropoff</span>
+                            <span className="font-semibold text-sm">Deliver To</span>
                           </div>
                           <p className="text-gray-700 text-sm">{delivery.dropoff}</p>
-                          {delivery.address && (
+                          {delivery.dropoffAddress && (
                             <div className="mt-2 text-xs text-gray-500">
                               <div className="flex items-center gap-1">
-                                <MapPin size={10} />
-                                {delivery.address.city}, {delivery.address.state}
+                                <User size={10} />
+                                {delivery.customer}
                               </div>
                             </div>
                           )}
@@ -850,4 +894,4 @@ console.log(newDeliveries);
       </div>
     </div>
   );
-                }
+}
