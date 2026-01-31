@@ -9,6 +9,9 @@ export const metadata = {
     index: true,
     follow: true,
   },
+  icons:{
+    icon: 'Rider/favicon.ico';
+  }
 };
 
 export default function RiderLayout({
