@@ -183,9 +183,12 @@ const calculateDistance = (address1?: Address, address2?: Address): string => {
 // Helper function to get primary pickup address
 const getPickupAddress = (order: Order): { address?: Address; supplierName: string; supplier?: Supplier } => {
   // Try to get supplier address from the first item
-  const primaryItem = order.items.find(item => item.supplier?.addresses?.length > 0);
+  const primaryItem = order.items.find(item => {
+    const addresses = item.supplier?.addresses;
+    return addresses && addresses.length > 0;
+  });
   
-  if (primaryItem?.supplier?.addresses?.length > 0) {
+  if (primaryItem?.supplier?.addresses && primaryItem.supplier.addresses.length > 0) {
     const supplier = primaryItem.supplier;
     const address = supplier.addresses[0];
     const supplierName = supplier.firstName 
@@ -197,7 +200,7 @@ const getPickupAddress = (order: Order): { address?: Address; supplierName: stri
   
   // Fallback: check all items for any supplier with address
   for (const item of order.items) {
-    if (item.supplier?.addresses?.length > 0) {
+    if (item.supplier?.addresses && item.supplier.addresses.length > 0) {
       const supplier = item.supplier;
       const address = supplier.addresses[0];
       const supplierName = supplier.firstName 
