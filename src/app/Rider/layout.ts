@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function RiderLayout({ children }) {
   return (
-    <div className="rider-layout">
+    <div>
       {children}
     </div>
   );
