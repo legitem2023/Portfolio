@@ -116,7 +116,7 @@ export default function RiderDashboard() {
 
   // Handle accepting a delivery
   const handleAcceptDelivery = (deliveryId: string) => {
-    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    const delivery = newDeliveries.find(d:any => d.id === deliveryId);
     if (delivery) {
       alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout\nFrom: ${delivery.restaurant}\nTo: ${delivery.dropoff}`);
       refetch();
