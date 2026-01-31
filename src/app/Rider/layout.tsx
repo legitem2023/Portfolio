@@ -10,7 +10,7 @@ export const metadata = {
     follow: true,
   },
   icons:{
-    icon: 'Rider/favicon.ico';
+    icon: 'Rider/favicon.ico'
   }
 };
 
