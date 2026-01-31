@@ -607,7 +607,8 @@ export const resolvers = {
                     city: true,
                     state: true,
                     zipCode: true,
-                    country: true
+                    country: true,
+                    isDefault: true
                   }
                 }
               }
