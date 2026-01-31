@@ -121,7 +121,7 @@ interface OrderItem {
     name: string;
     sku: string;
   };
-  supplier?: Supplier;
+  supplier?: Supplier[]; // Changed to array based on your console output
 }
 
 interface Payment {
@@ -181,28 +181,19 @@ const calculateDistance = (address1?: Address, address2?: Address): string => {
 
 // Helper function to get primary pickup address
 const getPickupAddress = (order: Order): { address?: Address; supplierName: string; supplier?: Supplier } => {
-  // Try to get supplier address from the first item
-  const primaryItem = order.items.find(item => {
-    const addresses = item.supplier?.addresses;
-    return addresses && addresses.length > 0;
-  });
-  
-  if (primaryItem?.supplier?.addresses && primaryItem.supplier.addresses.length > 0) {
-    const supplier = primaryItem.supplier;
-    const address = supplier.addresses[0];
-    const supplierName = supplier.firstName || primaryItem.product.name || "Supplier";
-    
-    return { address, supplierName, supplier };
-  }
-  
-  // Fallback: check all items for any supplier with address
+  // Try to get supplier address from any item
   for (const item of order.items) {
-    if (item.supplier?.addresses && item.supplier.addresses.length > 0) {
-      const supplier = item.supplier;
-      const address = supplier.addresses[0];
-      const supplierName = supplier.firstName || item.product.name || "Supplier";
+    // Check if supplier exists and is an array with at least one element
+    if (item.supplier && Array.isArray(item.supplier) && item.supplier.length > 0) {
+      const supplier = item.supplier[0]; // Take first supplier from array
       
-      return { address, supplierName, supplier };
+      // Check if supplier has addresses
+      if (supplier.addresses && supplier.addresses.length > 0) {
+        const address = supplier.addresses[0];
+        const supplierName = supplier.firstName || item.product.name || "Supplier";
+        
+        return { address, supplierName, supplier };
+      }
     }
   }
   
@@ -213,6 +204,9 @@ const getPickupAddress = (order: Order): { address?: Address; supplierName: stri
 
 // Map GraphQL orders to delivery format
 const mapOrderToDelivery = (order: Order, index: number) => {
+  console.log("Processing order:", order);
+  console.log("Order items:", order.items);
+  
   const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const firstName = order.user?.firstName || "Customer";
   const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
@@ -225,6 +219,9 @@ const mapOrderToDelivery = (order: Order, index: number) => {
   
   // Get pickup address from supplier
   const { address: pickupAddress, supplierName, supplier } = getPickupAddress(order);
+  
+  console.log("Pickup address found:", pickupAddress);
+  console.log("Supplier name:", supplierName);
   
   // Format pickup address
   let pickupFormatted = "Pickup location not available";
@@ -923,4 +920,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-                                           }
+                            }
