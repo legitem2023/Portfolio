@@ -6,7 +6,7 @@ import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
 import { createNotification } from '../../utils/notificationService';
 import { NotificationType } from '../../utils/notificationService'; // Import the enum
-import { emailMutations } from '@/lib/email/emailService';
+import { emailMutations } from '../../lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
   LogoutResponse,
