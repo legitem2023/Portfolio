@@ -3387,7 +3387,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
     // First, get user details for email
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, name: true }
+      select: { email: true, firstName: true }
     });
 
     if (!user) {
