@@ -588,6 +588,19 @@ export const resolvers = {
               select: {
                 name: true
               }
+            },
+            supplier: {
+              include:{
+                addresses:{
+                  select: {
+                    street: true,
+                    city: true,
+                    state: true,
+                    zipCode: true,
+                    country: true
+                  }
+                }
+              }
             }
           }
         },
