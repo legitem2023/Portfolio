@@ -574,47 +574,50 @@ export const resolvers = {
 
     // Get orders with pagination
     const orders = await prisma.order.findMany({
-      where,
-      skip,
-      take: pageSize,
-      orderBy: {
-        createdAt: 'desc'
-      },
+  where,
+  skip,
+  take: pageSize,
+  orderBy: {
+    createdAt: 'desc'
+  },
+  include: {
+    items: {
+      where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
       include: {
-        items: {
-          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
+        product: {
+          select: {
+            name: true
+          }
+        },
+        supplier: {
           include: {
-            product: {
+            addresses: {
+              where: {
+                isDefault: true  // Add this filter
+              },
               select: {
-                name: true
-              }
-            },
-            supplier: {
-              include:{
-                addresses:{
-                  select: {
-                    street: true,
-                    city: true,
-                    state: true,
-                    zipCode: true,
-                    country: true
-                  }
-                }
+                street: true,
+                city: true,
+                state: true,
+                zipCode: true,
+                country: true
               }
             }
           }
-        },
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            email: true
-          }
-        },
-        address: true,
-        payments: true
+        }
       }
-    });
+    },
+    user: {
+      select: {
+        id: true,
+        firstName: true,
+        email: true
+      }
+    },
+    address: true,
+    payments: true
+  }
+});
 
     // Format the response
     const formattedOrders = orders.map(order => ({
