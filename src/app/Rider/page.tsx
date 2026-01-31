@@ -57,6 +57,7 @@ const ORDER_LIST_QUERY = gql`
               state
               zipCode
               country
+              isDefault
             }
           }
         }
