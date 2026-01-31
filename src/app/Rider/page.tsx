@@ -108,8 +108,7 @@ interface Address {
 
 interface Supplier {
   id: string;
-  name: string;
-  firstName?: string;
+  firstName: string;
   addresses: Address[];
 }
 
@@ -191,9 +190,7 @@ const getPickupAddress = (order: Order): { address?: Address; supplierName: stri
   if (primaryItem?.supplier?.addresses && primaryItem.supplier.addresses.length > 0) {
     const supplier = primaryItem.supplier;
     const address = supplier.addresses[0];
-    const supplierName = supplier.firstName 
-      ? `${supplier.firstName} ${supplier.name}`
-      : supplier.name || primaryItem.product.name || "Supplier";
+    const supplierName = supplier.firstName || primaryItem.product.name || "Supplier";
     
     return { address, supplierName, supplier };
   }
@@ -203,9 +200,7 @@ const getPickupAddress = (order: Order): { address?: Address; supplierName: stri
     if (item.supplier?.addresses && item.supplier.addresses.length > 0) {
       const supplier = item.supplier;
       const address = supplier.addresses[0];
-      const supplierName = supplier.firstName 
-        ? `${supplier.firstName} ${supplier.name}`
-        : supplier.name || item.product.name || "Supplier";
+      const supplierName = supplier.firstName || item.product.name || "Supplier";
       
       return { address, supplierName, supplier };
     }
@@ -928,4 +923,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-}
+                                           }
