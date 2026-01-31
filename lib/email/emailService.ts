@@ -9,11 +9,12 @@ export interface EmailOptions {
   from?: string;
 }
 
+// Update the EmailResult interface to match what nodemailer actually returns
 export interface EmailResult {
   success: boolean;
   messageId: string;
-  accepted: string[];
-  rejected: string[];
+  accepted: Array<string | { address: string; name?: string }>;
+  rejected: Array<string | { address: string; name?: string }>;
 }
 
 export interface UserData {
@@ -62,6 +63,52 @@ export async function sendEmail(options: EmailOptions): Promise<EmailResult> {
     messageId: info.messageId,
     accepted: info.accepted || [],
     rejected: info.rejected || []
+  };
+}
+
+// Or if you really want only strings in the arrays, you can map them:
+export async function sendEmailStringOnly(options: EmailOptions): Promise<Omit<EmailResult, 'accepted' | 'rejected'> & {
+  accepted: string[];
+  rejected: string[];
+}> {
+  const {
+    to,
+    templateName,
+    templateData = {},
+    subject,
+    from = `"Your App" <${process.env.YAHOO_EMAIL}>`
+  } = options;
+
+  const template = emailTemplates[templateName as keyof typeof emailTemplates];
+  if (!template) {
+    throw new Error(`Template "${templateName}" not found`);
+  }
+
+  const html = template(templateData);
+  
+  const mailOptions = {
+    from,
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject,
+    html
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  
+  // Convert Address objects to strings
+  const accepted = (info.accepted || []).map(addr => 
+    typeof addr === 'string' ? addr : addr.address
+  ).filter(Boolean) as string[];
+  
+  const rejected = (info.rejected || []).map(addr => 
+    typeof addr === 'string' ? addr : addr.address
+  ).filter(Boolean) as string[];
+  
+  return {
+    success: true,
+    messageId: info.messageId,
+    accepted,
+    rejected
   };
 }
 
