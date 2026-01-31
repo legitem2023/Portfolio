@@ -94,7 +94,7 @@ model User {
   supportTickets  SupportTicket[]
   notifications   Notification[]
   ticketResponses TicketResponse[]
-  
+  supplier    OrderItem[]
   // Social features (NEW) - Using explicit relations for MongoDB
   posts           Post[]
   comments        Comment[]
@@ -267,7 +267,7 @@ model Product {
   reviews     Review[]
   wishlist    WishlistItem[]
   cart        CartItem[]
-  supplier    OrderItem[]
+  
   @@index([categoryId])
   @@index([price])
   @@index([brand])
