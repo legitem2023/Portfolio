@@ -3452,7 +3452,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
       // If you also want to notify admin/supplier
       try {
         // Get unique supplier IDs from items - FIXED LINE
-        const supplierIds = Array.from(new Set(validItems.map(item => item.supplierId)));
+        const supplierIds = Array.from(new Set(validItems.map((item:any) => item.supplierId)));
         
         // For each supplier, send notification
         for (const supplierId of supplierIds) {
