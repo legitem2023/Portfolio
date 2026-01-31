@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import Head from "next/head";
 import { useQuery, gql } from "@apollo/client";
 import Header from "./components/Header";
 import DesktopHeader from "./components/DesktopHeader";
@@ -180,11 +179,7 @@ export default function RiderDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Head>
-        <title>VendorCity Rider Dashboard</title>
-        <meta name="description" content="VendorCity Rider Tracking System" />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+
 
       {/* Desktop Header with Top Navigation */}
       <DesktopHeader newDeliveries={newDeliveries} loading={loading} />
