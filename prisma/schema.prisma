@@ -267,7 +267,7 @@ model Product {
   reviews     Review[]
   wishlist    WishlistItem[]
   cart        CartItem[]
-
+  supplier    OrderItem[]
   @@index([categoryId])
   @@index([price])
   @@index([brand])
@@ -352,11 +352,12 @@ model OrderItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId     String?  @db.ObjectId
   productId   String?  @db.ObjectId
-  supplierId  String?
+  supplierId  String?  @db.ObjectId
   quantity    Int?
   price       Float?
   variantInfo String?
   status      OrderStatus?
+  supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
   riderId     String?
