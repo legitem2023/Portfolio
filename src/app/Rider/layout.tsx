@@ -11,7 +11,11 @@ export const metadata = {
   },
 };
 
-export default function RiderLayout({ children }) {
+export default function RiderLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <div>
       {children}
