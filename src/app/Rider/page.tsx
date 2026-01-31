@@ -69,7 +69,7 @@ const ORDER_LIST_QUERY = gql`
           }
           supplier {
             id
-            name
+            firstName
             addresses {
               street
               city
