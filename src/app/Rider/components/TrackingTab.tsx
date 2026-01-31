@@ -1,6 +1,6 @@
 "use client";
 import { Package, Zap, MapPin, AlertTriangle, CheckCircle, Phone, Power, Navigation } from "lucide-react";
-import { formatPeso } from "@/lib/utils";
+import { formatPeso } from "../lib/utils";
 
 interface TrackingTabProps {
   isMobile: boolean;
