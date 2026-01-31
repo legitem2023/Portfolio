@@ -356,7 +356,7 @@ model OrderItem {
   quantity    Int?
   price       Float?
   variantInfo String?
-
+  status      OrderStatus?
   order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
 
