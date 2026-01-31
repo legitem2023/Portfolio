@@ -24,9 +24,7 @@ export const calculateDistance = (address1?: any, address2?: any): string => {
   return "5+ miles";
 };
 
-// Helper function to get primary pickup address
-export const getPickupAddress = (order: Order): { address?: any; supplierName: string; supplier?: any } => {
-// In lib/utils.ts
+
 // Helper function to get primary pickup address (preferring default addresses)
 export const getPickupAddress = (order: Order): { 
   address?: Address; 
