@@ -1,5 +1,5 @@
 export const emailTemplates = {
-  welcome: (data) => `
+  welcome: (data:any) => `
     <!DOCTYPE html>
     <html>
       <head>
@@ -30,7 +30,7 @@ export const emailTemplates = {
     </html>
   `,
 
-  resetPassword: (data) => `
+  resetPassword: (data:any) => `
     <!DOCTYPE html>
     <html>
       <body>
@@ -46,7 +46,7 @@ export const emailTemplates = {
     </html>
   `,
 
-  notification: (data) => `
+  notification: (data:any) => `
     <!DOCTYPE html>
     <html>
       <body>
