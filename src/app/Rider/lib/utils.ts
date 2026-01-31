@@ -1,4 +1,4 @@
-import { Order } from "./types";
+import { Supplier, Address, Order } from "./types";
 
 // Helper function to format money in Philippine Peso
 export const formatPeso = (amount: number): string => {
@@ -27,7 +27,7 @@ export const calculateDistance = (address1?: any, address2?: any): string => {
 
 // Helper function to get primary pickup address (preferring default addresses)
 export const getPickupAddress = (order: Order): { 
-  address?: any; 
+  address?:Address; 
   supplierName: string; 
   supplier?: Supplier 
 } => {
