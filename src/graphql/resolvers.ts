@@ -6,7 +6,7 @@ import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
 import { createNotification } from '../../utils/notificationService';
 import { NotificationType } from '../../utils/notificationService'; // Import the enum
-
+import { emailMutations } from '@/lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import {
   LogoutResponse,
@@ -3359,18 +3359,19 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       }
     },
 
+
+
 createOrder: async (_: any, { userId, addressId, items }: any) => {
   try {
     // Validate and convert productIds to proper ObjectID format
     const validItems = items.map((item: any) => {
       let productId = item.productId;
       let supplierId = item.supplierId;
-      // If it's a numeric string, pad it to 24 hex characters
+      
       if (/^\d+$/.test(productId)) {
         productId = productId.padStart(24, '0');
       }
       
-      // If it's already a hex string but wrong length, handle it
       if (productId.length !== 24) {
         throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
       }
@@ -3382,6 +3383,16 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         price: item.price,
       };
     });
+
+    // First, get user details for email
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, name: true }
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
 
     const response = await prisma.order.create({
       data: {
@@ -3405,57 +3416,84 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
     });
     
     if (response) {
-      // Create notification for the order
+      // Create notification in database
       try {
-        // Try to create notification
-const notificationResult = await createNotification({
-  userId: userId,
-  type: NotificationType.ORDER_UPDATE,
-  title: "Order Created Successfully",
-  message: `Your order #${response.orderNumber} has been created and is being processed.`,
-  link: `/orders/${response.id}`,
-  isRead: false
-});
+        const notificationResult = await createNotification({
+          userId: userId,
+          type: NotificationType.ORDER_UPDATE,
+          title: "Order Created Successfully",
+          message: `Your order #${response.orderNumber} has been created and is being processed.`,
+          link: `/orders/${response.id}`,
+          isRead: false
+        });
 
-// Filter: If notification fails, don't return success
-if (!notificationResult.success) {
-  
-  // Option 1: Throw an error (revert to throwing)
-  throw new Error(`Order created but notification failed: ${notificationResult.error?.message}`);
-  
-  // Option 2: Return error response
-  return {
-    success: false,
-    statusText: 'Order created but notification failed',
-    order: response,
-    error: {
-      code: 'NOTIFICATION_FAILED',
-      message: notificationResult.error?.message,
-      details: notificationResult.error?.details
-    }
-  };
-}
-
-// Only reach here if notification was successful
-
-return {
-  success: true,
-  statusText: 'Order Successful!',
-  order: response
-};
-      } catch (error: any) {
+        if (!notificationResult.success) {
+          console.error('Notification creation failed:', notificationResult.error);
+        }
+      } catch (error) {
         console.error('Failed to create order notification:', error);
-        // Don't throw here - we still want to return the order success
-        // even if notification fails
-        return {
-          statusText: 'Failed Notification',
-          order: response // Consider returning the order object too
-        };
       }
+
+      // Send email notification to user
+      try {
+        await emailMutations.sendNotificationEmail({
+          recipientEmail: user.email,
+          title: `Order Confirmation: #${response.orderNumber}`,
+          message: `Your order has been successfully placed! Total amount: $${response.total.toFixed(2)}. Status: ${response.status}.`,
+          actionUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/orders/${response.id}`,
+          userName: user.name || 'Customer'
+        });
+        
+        console.log(`Order confirmation email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send order confirmation email:', emailError);
+        // Don't fail the order creation if email fails
+      }
+
+      // If you also want to notify admin/supplier
+      try {
+        // Get unique supplier IDs from items
+        const supplierIds = [...new Set(validItems.map(item => item.supplierId))];
+        
+        // For each supplier, send notification
+        for (const supplierId of supplierIds) {
+          const supplier = await prisma.supplier.findUnique({
+            where: { id: supplierId },
+            select: { email: true, name: true }
+          });
+          
+          if (supplier && supplier.email) {
+            // Get items for this supplier
+            const supplierItems = validItems.filter(item => item.supplierId === supplierId);
+            const totalForSupplier = supplierItems.reduce(
+              (sum, item) => sum + (item.price * item.quantity), 0
+            );
+            
+            await emailMutations.sendNotificationEmail({
+              recipientEmail: supplier.email,
+              title: `New Order Received: #${response.orderNumber}`,
+              message: `You have received a new order from ${user.name}. Total value: $${totalForSupplier.toFixed(2)}.`,
+              actionUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/orders/${response.id}`,
+              userName: supplier.name || 'Supplier'
+            });
+            
+            console.log(`Supplier notification sent to ${supplier.email}`);
+          }
+        }
+      } catch (supplierEmailError) {
+        console.error('Failed to send supplier notifications:', supplierEmailError);
+      }
+
+      return {
+        success: true,
+        statusText: 'Order Successful!',
+        order: response,
+        emailSent: true
+      };
     }
   } catch (error: any) {
-    // Re-throw any errors from the main try block
-    throw error;
+    console.error('Order creation error:', error);
+    throw new Error(`Order creation failed: ${error.message}`);
   }
 },
 
