@@ -3439,7 +3439,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         await emailMutations.sendNotificationEmail({
           recipientEmail: user.email,
           title: `Order Confirmation: #${response.orderNumber}`,
-          message: `Your order has been successfully placed! Total amount: $${response.total.toFixed(2)}. Status: ${response.status}.`,
+          message: `Your order has been successfully placed! Total amount: $${response.total ? response.total.toFixed(2) : '0.00'}. Status: ${response.status}.`,
           actionUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/orders/${response.id}`,
           userName: user.name || 'Customer'
         });
