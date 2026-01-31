@@ -26,6 +26,13 @@ export const calculateDistance = (address1?: any, address2?: any): string => {
 
 // Helper function to get primary pickup address
 export const getPickupAddress = (order: Order): { address?: any; supplierName: string; supplier?: any } => {
+// In lib/utils.ts
+// Helper function to get primary pickup address (preferring default addresses)
+export const getPickupAddress = (order: Order): { 
+  address?: Address; 
+  supplierName: string; 
+  supplier?: Supplier 
+} => {
   // Try to get supplier address from any item
   for (const item of order.items) {
     // Check if supplier exists and is an array with at least one element
@@ -34,7 +41,11 @@ export const getPickupAddress = (order: Order): { address?: any; supplierName: s
       
       // Check if supplier has addresses
       if (supplier.addresses && supplier.addresses.length > 0) {
-        const address = supplier.addresses[0];
+        // First, try to find a default address
+        const defaultAddress = supplier.addresses.find(addr => addr.isDefault === true);
+        
+        // If no default address, use the first available address
+        const address = defaultAddress || supplier.addresses[0];
         const supplierName = supplier.firstName || item.product.name || "Supplier";
         
         return { address, supplierName, supplier };
