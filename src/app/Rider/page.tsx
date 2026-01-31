@@ -2,16 +2,16 @@
 import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useQuery, gql } from "@apollo/client";
-import Header from "components/Header";
-import DesktopHeader from "components/DesktopHeader";
-import NavigationTabs from "components/NavigationTabs";
-import StatusFooter from "components/StatusFooter";
-import NewDeliveriesTab from "components/NewDeliveriesTab";
-import TrackingTab from "components/TrackingTab";
-import ActiveDeliveriesTab from "components/ActiveDeliveriesTab";
-import MapTab from "components/MapTab";
-import PerformanceTab from "components/PerformanceTab";
-import { mapOrderToDelivery } from "lib/utils";
+import Header from "./components/Header";
+import DesktopHeader from "./components/DesktopHeader";
+import NavigationTabs from "./components/NavigationTabs";
+import StatusFooter from "./components/StatusFooter";
+import NewDeliveriesTab from "./components/NewDeliveriesTab";
+import TrackingTab from "./components/TrackingTab";
+import ActiveDeliveriesTab from "./components/ActiveDeliveriesTab";
+import MapTab from "./components/MapTab";
+import PerformanceTab from "./components/PerformanceTab";
+import { mapOrderToDelivery } from "./lib/utils";
 
 // GraphQL Query with address field
 const ORDER_LIST_QUERY = gql`
