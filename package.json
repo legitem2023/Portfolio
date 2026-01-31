@@ -1,5 +1,5 @@
 {
-  "name": "Vendorsify",
+  "name": "VendorCity",
   "version": "1.0.0",
   "description": "Luxury e-commerce application with responsive design",
   "private": true,
@@ -35,6 +35,7 @@
     "next": "13.5.6",
     "next-auth": "4.24.5",
     "next-pwa": "^5.6.0",
+    "nodemailer": "^6.9.15",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-icons": "^5.5.0",
