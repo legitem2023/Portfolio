@@ -278,6 +278,7 @@ export const typeDefs = gql`
     order: Order
     product: [Product]
     supplier: [User]
+    isDefault: Boolean
   }
 
   type CartItem {
