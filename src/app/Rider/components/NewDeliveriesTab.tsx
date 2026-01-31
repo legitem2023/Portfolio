@@ -1,6 +1,6 @@
 "use client";
 import { Bell, Loader2, AlertTriangle, AlertCircle } from "lucide-react";
-import { formatPeso } from "@/lib/utils";
+import { formatPeso } from "../lib/utils";
 import DeliveryCard from "./DeliveryCard";
 
 interface NewDeliveriesTabProps {
