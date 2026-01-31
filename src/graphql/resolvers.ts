@@ -554,13 +554,13 @@ export const resolvers = {
   // Build where clause
   const where: any = {};
 
-  // Add status filter if provided - FIX THIS LINE
-  if (filter && filter.status) { // Check if filter exists AND has status
+  // Add status filter if provided
+  if (filter && filter.status) {
     where.status = filter.status;
   }
 
   // Add supplierId filter through OrderItem relation
-  if (filter && filter.supplierId) { // Check if filter exists AND has supplierId
+  if (filter && filter.supplierId) {
     where.items = {
       some: {
         supplierId: filter.supplierId
@@ -572,60 +572,93 @@ export const resolvers = {
     // Get orders count
     const totalCount = await prisma.order.count({ where });
 
-    // Get orders with pagination
+    // Get orders with pagination - COMPLETE QUERY
     const orders = await prisma.order.findMany({
-  where,
-  skip,
-  take: pageSize,
-  orderBy: {
-    createdAt: 'desc'
-  },
-  include: {
-    items: {
-      where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
+      where,
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc'
+      },
       include: {
-        product: {
-          select: {
-            name: true
-          }
-        },
-        supplier: {
+        items: {
+          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
-            addresses: {
-              where: {
-                isDefault: true  // Add this filter
-              },
+            product: {
               select: {
-                street: true,
-                city: true,
-                state: true,
-                zipCode: true,
-                country: true
+                id: true,
+                name: true,
+                sku: true,          // Added for frontend query
+                price: true,
+                salePrice: true,
+                images: true
+              }
+            },
+            supplier: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                addresses: {
+                  // Removed isDefault filter to match frontend query
+                  select: {
+                    street: true,
+                    city: true,
+                    state: true,
+                    zipCode: true,
+                    country: true
+                  }
+                }
               }
             }
           }
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true
+          }
+        },
+        address: {
+          select: {
+            id: true,
+            street: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            country: true
+          }
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            method: true,
+            status: true,
+            transactionId: true,
+            createdAt: true
+          }
         }
       }
-    },
-    user: {
-      select: {
-        id: true,
-        firstName: true,
-        email: true
-      }
-    },
-    address: true,
-    payments: true
-  }
-});
+    });
 
-    // Format the response
+    // Format the response to match GraphQL schema
     const formattedOrders = orders.map(order => ({
       id: order.id,
       orderNumber: order.orderNumber,
+      userId: order.userId,
       status: order.status,
       total: order.total,
+      subtotal: order.subtotal || 0,
+      tax: order.tax || 0,
+      shipping: order.shipping || 0,
+      discount: order.discount || 0,
       createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+      updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
       user: order.user,
       address: order.address,
       payments: order.payments,
@@ -634,9 +667,9 @@ export const resolvers = {
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
-        product: {
-          name: item.product?.name || ''
-        }
+        variantInfo: item.variantInfo,
+        product: [item.product], // Wrap in array to match [Product] type
+        supplier: item.supplier ? [item.supplier] : [] // Wrap in array to match [User] type
       }))
     }));
 
@@ -661,7 +694,7 @@ export const resolvers = {
     console.error('Error fetching orders:', error);
     throw new Error('Failed to fetch orders');
   }
-},
+    },
     apiBills: async (
       _: any,
       args: {
