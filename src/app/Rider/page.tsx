@@ -179,6 +179,14 @@ const calculateDistance = (address1?: Address, address2?: Address): string => {
   return "5+ miles";
 };
 
+// Helper function to format money in Philippine Peso
+const formatPeso = (amount: number): string => {
+  return `₱${amount.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
+};
+
 // Helper function to get primary pickup address
 const getPickupAddress = (order: Order): { address?: Address; supplierName: string; supplier?: Supplier } => {
   // Try to get supplier address from any item
@@ -232,7 +240,9 @@ const mapOrderToDelivery = (order: Order, index: number) => {
   // Calculate distance
   const distance = calculateDistance(pickupAddress, dropoffAddress);
   
-  const payout = `$${(order.total * 0.3).toFixed(2)}`;
+  // Calculate payout in Philippine Peso (30% of total as payout)
+  const payoutAmount = order.total * 0.3;
+  const payout = formatPeso(payoutAmount);
   
   // Calculate expiration time based on order creation
   const createdAt = new Date(order.createdAt);
@@ -259,6 +269,7 @@ const mapOrderToDelivery = (order: Order, index: number) => {
     pickup: pickupFormatted,
     dropoff: dropoffFormatted,
     payout,
+    payoutAmount,
     expiresIn,
     items: itemsCount,
     orderData: order,
@@ -370,6 +381,16 @@ export default function RiderDashboard() {
     if (address.zipCode) parts.push(address.zipCode);
     
     return parts.join(", ");
+  };
+
+  // Format today's earnings in Peso
+  const formatTodayEarnings = (amount: number) => {
+    return formatPeso(amount);
+  };
+
+  // Format average payout in Peso
+  const formatAveragePayout = (amount: number) => {
+    return formatPeso(amount);
   };
 
   // Tab content components
@@ -566,7 +587,7 @@ export default function RiderDashboard() {
             <div className="mt-4 lg:mt-8 grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
               <div className="bg-blue-50 p-2 lg:p-4 rounded-lg border border-blue-100">
                 <p className="text-gray-600 text-xs lg:text-sm">Today&apos;s Earnings</p>
-                <p className="font-bold text-lg lg:text-2xl">$86.50</p>
+                <p className="font-bold text-lg lg:text-2xl">{formatPeso(86.50)}</p>
               </div>
               <div className="bg-green-50 p-2 lg:p-4 rounded-lg border border-green-100">
                 <p className="text-gray-600 text-xs lg:text-sm">Acceptance Rate</p>
@@ -574,7 +595,7 @@ export default function RiderDashboard() {
               </div>
               <div className="bg-purple-50 p-2 lg:p-4 rounded-lg border border-purple-100">
                 <p className="text-gray-600 text-xs lg:text-sm">Avg. Payout</p>
-                <p className="font-bold text-lg lg:text-2xl">$12.15</p>
+                <p className="font-bold text-lg lg:text-2xl">{formatPeso(12.15)}</p>
               </div>
               <div className="bg-orange-50 p-2 lg:p-4 rounded-lg border border-orange-100">
                 <p className="text-gray-600 text-xs lg:text-sm">Response Time</p>
@@ -629,7 +650,7 @@ export default function RiderDashboard() {
                     <Zap size={isMobile ? 16 : 18} />
                     <span className="text-sm lg:text-base">Today&apos;s Earnings</span>
                   </h3>
-                  <p className="font-bold text-xl lg:text-3xl mt-1 lg:mt-2">$86.50</p>
+                  <p className="font-bold text-xl lg:text-3xl mt-1 lg:mt-2">{formatPeso(86.50)}</p>
                 </div>
               </div>
             </div>
@@ -698,7 +719,7 @@ export default function RiderDashboard() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-lg lg:text-2xl">${item === 1 ? "8.50" : "12.00"}</p>
+                      <p className="font-bold text-lg lg:text-2xl">{item === 1 ? formatPeso(8.50) : formatPeso(12.00)}</p>
                       <p className="text-gray-500 text-xs lg:text-sm">Earnings</p>
                     </div>
                   </div>
@@ -914,4 +935,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-      }
+}
