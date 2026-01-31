@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Head from "next/head";
+import { useQuery, gql } from "@apollo/client";
 import { 
   Navigation, 
   Package, 
@@ -26,53 +27,203 @@ import {
   DollarSign,
   AlertCircle,
   ThumbsUp,
-  X
+  X,
+  Loader2
 } from "lucide-react";
+
+// GraphQL Query with address field
+const ORDER_LIST_QUERY = gql`
+  query OrderList(
+    $filter: OrderFilterInput
+    $pagination: OrderPaginationInput
+  ) {
+    orderlist(filter: $filter, pagination: $pagination) {
+      orders {
+        id
+        orderNumber
+        status
+        total
+        createdAt
+        user {
+          id
+          firstName
+          email
+        }
+        address {
+          id
+          street
+          city
+          state
+          zipCode
+          country
+        }
+        items {
+          id
+          supplierId
+          quantity
+          price
+          product {
+            name
+            sku
+          }
+        }
+        payments {
+          id
+          amount
+          method
+          status
+        }
+      }
+      pagination {
+        total
+        page
+        pageSize
+        totalPages
+      }
+    }
+  }
+`;
+
+// TypeScript interfaces for the GraphQL response
+interface Address {
+  id: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+interface OrderItem {
+  id: string;
+  supplierId: string;
+  quantity: number;
+  price: number;
+  product: {
+    name: string;
+    sku: string;
+  };
+}
+
+interface Payment {
+  id: string;
+  amount: number;
+  method: string;
+  status: string;
+}
+
+interface OrderUser {
+  id: string;
+  firstName: string;
+  email: string;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: string;
+  total: number;
+  createdAt: string;
+  user: OrderUser;
+  address: Address; // Added address field
+  items: OrderItem[];
+  payments: Payment[];
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface OrderListResponse {
+  orderlist: {
+    orders: Order[];
+    pagination: Pagination;
+  };
+}
+
+// Map GraphQL orders to delivery format
+const mapOrderToDelivery = (order: Order, index: number) => {
+  const itemsCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
+  const firstName = order.user?.firstName || "Customer";
+  const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
+  
+  // Use the actual address from the order
+  const address = order.address;
+  const dropoffAddress = address ? 
+    `${address.street}, ${address.city}, ${address.state} ${address.zipCode}` : 
+    "Address not available";
+  
+  // Create fake pickup location (in a real app, this would come from supplier/restaurant data)
+  const pickupLocations = [
+    { address: "123 Main St, Restaurant District, NY 10001", distance: "1.2 miles" },
+    { address: "789 Center St, Food Court, NY 10002", distance: "0.8 miles" },
+    { address: "555 River Blvd, Dining Area, NY 10003", distance: "2.1 miles" },
+    { address: "100 Market St, Culinary Square, NY 10004", distance: "1.5 miles" },
+    { address: "300 Broadway, Eatery Lane, NY 10005", distance: "0.5 miles" }
+  ];
+  
+  const pickupLocation = pickupLocations[index % pickupLocations.length];
+  const payout = `$${(order.total * 0.3).toFixed(2)}`; // 30% of total as payout
+  
+  // Calculate expiration time based on order creation
+  const createdAt = new Date(order.createdAt);
+  const expiresAt = new Date(createdAt.getTime() + 2 * 60 * 1000); // 2 minutes from creation
+  const now = new Date();
+  const diffMs = expiresAt.getTime() - now.getTime();
+  const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+  
+  let expiresIn = "";
+  if (diffSec < 60) {
+    expiresIn = `${diffSec}s`;
+  } else {
+    const minutes = Math.floor(diffSec / 60);
+    const seconds = diffSec % 60;
+    expiresIn = `${minutes}m ${seconds}s`;
+  }
+
+  return {
+    id: order.id,
+    orderId,
+    restaurant: order.items[0]?.product?.name || "Restaurant",
+    customer: firstName,
+    distance: pickupLocation.distance,
+    pickup: pickupLocation.address,
+    dropoff: dropoffAddress,
+    payout,
+    expiresIn,
+    items: itemsCount,
+    orderData: order, // Keep original order data
+    address // Include full address object
+  };
+};
 
 export default function RiderDashboard() {
   // State to manage active tab
   const [activeTab, setActiveTab] = useState("newDeliveries");
   const [isOnline, setIsOnline] = useState(true);
   const [windowWidth, setWindowWidth] = useState(0);
-  const [newDeliveries, setNewDeliveries] = useState([
-    {
-      id: 1,
-      orderId: "ORD-78947",
-      restaurant: "Burger Palace",
-      customer: "Alex Johnson",
-      distance: "1.2 miles",
-      pickup: "123 Main St",
-      dropoff: "456 Oak Ave",
-      payout: "$8.75",
-      expiresIn: "45s",
-      items: 2
-    },
-    {
-      id: 2,
-      orderId: "ORD-78948",
-      restaurant: "Pizza Corner",
-      customer: "Maria Garcia",
-      distance: "0.8 miles",
-      pickup: "789 Center St",
-      dropoff: "321 Pine Rd",
-      payout: "$12.50",
-      expiresIn: "1m 20s",
-      items: 4
-    },
-    {
-      id: 3,
-      orderId: "ORD-78949",
-      restaurant: "Sushi World",
-      customer: "David Kim",
-      distance: "2.1 miles",
-      pickup: "555 River Blvd",
-      dropoff: "888 Hill St",
-      payout: "$15.25",
-      expiresIn: "2m 10s",
-      items: 3
-    }
-  ]);
   
+  // GraphQL query for orders
+  const { data, loading, error, refetch } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
+    variables: {
+      filter: {
+        status: "PENDING" // Only show pending orders for new deliveries
+      },
+      pagination: {
+        page: 1,
+        pageSize: 10
+      }
+    },
+    pollInterval: 10000, // Refetch every 10 seconds
+    fetchPolicy: "network-only"
+  });
+
+  // Transform GraphQL data to delivery format
+  const newDeliveries = data?.orderlist?.orders?.map(mapOrderToDelivery) || [];
+
   // Get window width for responsive behavior
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -120,23 +271,75 @@ export default function RiderDashboard() {
   ];
 
   // Handle accepting a delivery
-  const handleAcceptDelivery = (deliveryId:any) => {
-   // const delivery = newDeliveries.find(d => d.id === deliveryId);
-   // alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout`);
-   // setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
+  const handleAcceptDelivery = (deliveryId: string) => {
+    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    if (delivery) {
+      alert(`Accepted delivery: ${delivery.orderId} - ${delivery.payout} payout\nDelivering to: ${delivery.dropoff}`);
+      
+      // In a real app, you would call a mutation here to update order status
+      // For now, we'll simulate by refetching
+      refetch();
+    }
   };
 
   // Handle rejecting a delivery
-  const handleRejectDelivery = (deliveryId:any) => {
-  //  const delivery = newDeliveries.find(d => d.id === deliveryId);
-  //  alert(`Rejected delivery: ${delivery.orderId}`);
-  //  setNewDeliveries(newDeliveries.filter(d => d.id !== deliveryId));
+  const handleRejectDelivery = (deliveryId: string) => {
+    const delivery = newDeliveries.find(d => d.id === deliveryId);
+    if (delivery) {
+      alert(`Rejected delivery: ${delivery.orderId}\nCustomer address: ${delivery.dropoff}`);
+      
+      // In a real app, you would call a mutation here to update order status
+      // For now, we'll simulate by refetching
+      refetch();
+    }
+  };
+
+  // Format address for display
+  const formatAddress = (address: any) => {
+    if (!address) return "Address not available";
+    
+    const parts = [];
+    if (address.street) parts.push(address.street);
+    if (address.city) parts.push(address.city);
+    if (address.state) parts.push(address.state);
+    if (address.zipCode) parts.push(address.zipCode);
+    
+    return parts.join(", ");
   };
 
   // Tab content components
   const renderTabContent = () => {
     switch (activeTab) {
       case "newDeliveries":
+        if (loading) {
+          return (
+            <div className="p-4 lg:p-6 flex flex-col items-center justify-center h-64">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+              <p className="text-gray-600">Loading delivery requests...</p>
+            </div>
+          );
+        }
+
+        if (error) {
+          return (
+            <div className="p-4 lg:p-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h3 className="text-red-800 font-semibold flex items-center gap-2">
+                  <AlertTriangle size={20} />
+                  Error loading orders
+                </h3>
+                <p className="text-red-600 mt-2">{error.message}</p>
+                <button
+                  onClick={() => refetch()}
+                  className="mt-3 bg-red-100 text-red-700 px-4 py-2 rounded-lg font-medium hover:bg-red-200 transition"
+                >
+                  Retry
+                </button>
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="p-4 lg:p-6">
             <div className="flex justify-between items-center mb-4 lg:mb-6">
@@ -152,6 +355,12 @@ export default function RiderDashboard() {
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <AlertCircle size={16} />
                 <span>Requests auto-expire in 2 minutes</span>
+                <button
+                  onClick={() => refetch()}
+                  className="ml-2 text-blue-600 hover:text-blue-800"
+                >
+                  Refresh
+                </button>
               </div>
             </div>
 
@@ -159,7 +368,7 @@ export default function RiderDashboard() {
               <div className="bg-gray-50 rounded-lg p-8 text-center">
                 <Bell size={48} className="mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-600">No New Requests</h3>
-                <p className="text-gray-500 mt-2">New delivery requests will appear here</p>
+                <p className="text-gray-500 mt-2">No pending delivery orders at the moment</p>
               </div>
             ) : (
               <div className="space-y-4 lg:space-y-6">
@@ -209,7 +418,7 @@ export default function RiderDashboard() {
                             <MapPin size={16} className="text-blue-500" />
                             <span className="font-semibold text-sm">Pickup</span>
                           </div>
-                          <p className="text-gray-700">{delivery.pickup}</p>
+                          <p className="text-gray-700 text-sm">{delivery.pickup}</p>
                         </div>
                         
                         <div className="flex items-center justify-center">
@@ -228,7 +437,15 @@ export default function RiderDashboard() {
                             <MapPin size={16} className="text-green-500" />
                             <span className="font-semibold text-sm">Dropoff</span>
                           </div>
-                          <p className="text-gray-700">{delivery.dropoff}</p>
+                          <p className="text-gray-700 text-sm">{delivery.dropoff}</p>
+                          {delivery.address && (
+                            <div className="mt-2 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <MapPin size={10} />
+                                {delivery.address.city}, {delivery.address.state}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -482,7 +699,9 @@ export default function RiderDashboard() {
                 <h1 className="text-2xl font-bold text-gray-900">
                   <span className="text-blue-600">VendorCity</span> Rider Portal
                 </h1>
-                <p className="text-gray-600 text-sm">New delivery requests available</p>
+                <p className="text-gray-600 text-sm">
+                  {loading ? "Loading..." : `${newDeliveries.length} new delivery requests available`}
+                </p>
               </div>
               
               <div className="flex items-center gap-4">
@@ -585,7 +804,7 @@ export default function RiderDashboard() {
             </div>
             <div className="text-sm text-gray-600 flex items-center gap-2">
               <Bell size={16} />
-              {newDeliveries.length} new request{newDeliveries.length !== 1 ? "s" : ""} available
+              {loading ? "Loading..." : `${newDeliveries.length} new request${newDeliveries.length !== 1 ? "s" : ""} available`}
             </div>
           </div>
         </div>
@@ -621,4 +840,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-}
+                }
