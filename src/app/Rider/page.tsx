@@ -66,6 +66,16 @@ const ORDER_LIST_QUERY = gql`
             name
             sku
           }
+          supplier {
+              
+                addresses {
+                    street
+                    city
+                    state
+                    zipCode
+                    country
+                }
+              }
         }
         payments {
           id
@@ -223,7 +233,7 @@ export default function RiderDashboard() {
 
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.orderlist?.orders?.map(mapOrderToDelivery) || [];
-
+console.log(newDeliveries);
   // Get window width for responsive behavior
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
