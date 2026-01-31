@@ -3441,7 +3441,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
           title: `Order Confirmation: #${response.orderNumber}`,
           message: `Your order has been successfully placed! Total amount: $${response.total ? response.total.toFixed(2) : '0.00'}. Status: ${response.status}.`,
           actionUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/orders/${response.id}`,
-          userName: user.name || 'Customer'
+          userName: user.firstName || 'Customer'
         });
         
         console.log(`Order confirmation email sent to ${user.email}`);
