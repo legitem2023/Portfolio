@@ -3360,7 +3360,6 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     },
 
 
-
 createOrder: async (_: any, { userId, addressId, items }: any) => {
   try {
     // Validate and convert productIds to proper ObjectID format
@@ -3452,8 +3451,8 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
 
       // If you also want to notify admin/supplier
       try {
-        // Get unique supplier IDs from items
-        const supplierIds = [...new Set(validItems.map(item => item.supplierId))];
+        // Get unique supplier IDs from items - FIXED LINE
+        const supplierIds = Array.from(new Set(validItems.map(item => item.supplierId)));
         
         // For each supplier, send notification
         for (const supplierId of supplierIds) {
@@ -3472,7 +3471,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
             await emailMutations.sendNotificationEmail({
               recipientEmail: supplier.email,
               title: `New Order Received: #${response.orderNumber}`,
-              message: `You have received a new order from ${user.name}. Total value: $${totalForSupplier.toFixed(2)}.`,
+              message: `You have received a new order from ${user.firstName}. Total value: $${totalForSupplier.toFixed(2)}.`,
               actionUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/admin/orders/${response.id}`,
               userName: supplier.name || 'Supplier'
             });
