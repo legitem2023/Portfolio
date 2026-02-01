@@ -350,7 +350,7 @@ Object.values(itemsBySupplier).forEach((supplierGroup) => {
 });
   
   return deliveries;
-};
+}
 
 export default function RiderDashboard() {
   // State to manage active tab
