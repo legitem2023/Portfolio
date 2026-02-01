@@ -95,6 +95,17 @@ const ORDER_LIST_QUERY = gql`
     }
   }
 `;
+// Add this interface at the top where other interfaces are defined
+interface SupplierGroup {
+  supplierId: string;
+  items: OrderItem[];
+  supplierInfo?: {
+    address?: Address;
+    supplierName: string;
+    supplier?: Supplier;
+  };
+}
+
 
 // TypeScript interfaces for the GraphQL response
 interface Address {
@@ -220,8 +231,8 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   
   // Group items by supplier
-  const itemsBySupplier = new Map<string, SupplierGroup>();
-  
+ // Then in the mapOrdersToDeliveriesBySupplier function, change the Map declaration to:
+const itemsBySupplier = new Map<string, SupplierGroup>();
   order.items.forEach(item => {
     const supplierId = item.supplierId || "unknown";
     const supplierInfo = getSupplierInfo(item);
