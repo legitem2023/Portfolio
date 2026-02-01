@@ -251,7 +251,7 @@ if (!itemsBySupplier[supplierId]) {
 } else {
   itemsBySupplier[supplierId].items.push(item);
 }
-  
+})
   // Create a separate delivery for each supplier
   const deliveries: Array<{
     id: string;
