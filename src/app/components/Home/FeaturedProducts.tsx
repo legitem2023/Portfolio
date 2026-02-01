@@ -1,8 +1,7 @@
 // components/FeaturedProducts.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { addToCart } from '../../../../Redux/cartSlice';
-import QuickViewModal from '../QuickViewModal';
+
 import Image from 'next/image';
 import { showToast } from '../../../../utils/toastify';
 import { Product } from '../../../../types';
@@ -39,43 +38,6 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
 
-  const handleQuickView = (product: Product) => {
-    setSelectedProduct(product);
-    setIsQuickViewOpen(true);
-  };
-
-  const handleCloseQuickView = () => {
-    setIsQuickViewOpen(false);
-    setTimeout(() => setSelectedProduct(null), 300);
-  };
-
-  const handleAddToCart = (product: Product) => {
-    const cartItem = {
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      onSale: product.onSale,
-      isNew: product.isNew,
-      isFeatured: product.isFeatured,
-      originalPrice: product.originalPrice,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      image: product.image,
-      colors: product.colors,
-      description: product.description,
-      productCode: product.productCode,
-      category: product.category,
-      sku: product.sku,
-      variants: product.variants,
-      userId: 'current-user-id',
-      quantity: 1,
-      color: product.colors,
-      size: product.size,
-    };
-    
-    // dispatch(addToCart(cartItem));
-    showToast('Added to Cart', 'success');
-  };
 
   // Helper function to get unique colors from variants
   const getUniqueColors = (variants: Product['variants']) => {
@@ -161,7 +123,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                                   <Image
                                     height={400}
                                     width={400}
-                                    onClick={() => handleQuickView(product)}
+                                    
                                     src={image || '/NoImage.webp'}
                                     alt={product.name}
                                     quality={25}
@@ -175,7 +137,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                           <Image
                             height={400}
                             width={400}
-                            onClick={() => handleQuickView(product)} 
+                            
                             src={product.image || '/NoImage.webp'}
                             alt={product.name}
                             quality={25}
@@ -185,12 +147,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                         
                         {/* Quick View Button */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                          <button 
-                            onClick={() => handleQuickView(product)} 
-                            className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-gray-900 font-medium px-2 py-1 text-[10px] xs:text-xs rounded-md"
-                          >
-                            Quick View
-                          </button>
+                          
                         </div>
                       </div>
                     </div>
@@ -237,15 +194,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                           )}
                         </div>
                         
-                        {/* Add to Cart Button */}
-                        <button 
-                          className="bg-violet-200 hover:bg-violet-300 text-white p-1 xs:p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0"
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                          </svg>
-                        </button>
+                        
                       </div>
                       
                       {/* Color Options */}
@@ -272,13 +221,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
               })}
             </div>
             
-            {/* Quick View Modal */}
-            <QuickViewModal 
-              product={selectedProduct} 
-              isOpen={isQuickViewOpen} 
-              onClose={handleCloseQuickView} 
-              onAddToCart={handleAddToCart}
-            />
+            
           </>
         )}
 
