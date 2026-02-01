@@ -209,7 +209,7 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   
   // Group items by supplier
-  const itemsBySupplier = new Map<string, {
+  const itemsBySupplier:any = new Map<string, {
     supplierId: string;
     items: OrderItem[];
     supplierInfo?: { address?: Address; supplierName: string; supplier?: Supplier };
