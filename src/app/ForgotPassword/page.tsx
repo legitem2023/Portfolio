@@ -61,7 +61,7 @@ export default function ForgotPassword() {
   };
 
   const handleBackToLogin = () => {
-    router.push('/login');
+    router.push('/Login');
   };
 
   const handleResendEmail = () => {
