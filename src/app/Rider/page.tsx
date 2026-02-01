@@ -369,8 +369,7 @@ export default function RiderDashboard() {
         pageSize: 10
       }
     },
-    pollInterval: 10000,
-    fetchPolicy: "network-only"
+    pollInterval: 10000
   });
 
   // Transform GraphQL data to delivery format - split by supplier
