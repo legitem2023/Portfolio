@@ -231,8 +231,8 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   
   // Group items by supplier
- // Then in the mapOrdersToDeliveriesBySupplier function, change the Map declaration to:
-const itemsBySupplier = new Map<string, SupplierGroup>();
+const itemsBySupplier = new Map<string, any>();
+  
   order.items.forEach(item => {
     const supplierId = item.supplierId || "unknown";
     const supplierInfo = getSupplierInfo(item);
