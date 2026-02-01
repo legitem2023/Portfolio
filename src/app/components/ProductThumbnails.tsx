@@ -116,11 +116,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                     <Swiper
                       spaceBetween={10}
                       slidesPerView={1}
-                      autoplay={{
-                        delay: 3000,
-                        disableOnInteraction: false,
-                        pauseOnMouseEnter: true,
-                      }}
+                      
                       pagination={{
                         clickable: true,
                         bulletClass: 'swiper-pagination-bullet',
@@ -129,7 +125,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                           return `<span class="${className} !w-1.5 !h-1.5 !bg-white !opacity-70"></span>`;
                         }
                       }}
-                      modules={[Autoplay, Pagination]}
+                      modules={[Pagination]}
                       className="h-full w-full"
                     >
                       {product.variants
