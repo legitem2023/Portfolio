@@ -231,23 +231,26 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   
   // Group items by supplier
-const itemsBySupplier = new Map<string, any>();
+const itemsBySupplier: Record<string, {
+  supplierId: string;
+  items: OrderItem[];
+  supplierInfo?: { address?: Address; supplierName: string; supplier?: Supplier };
+}> = {};
+  
   
   order.items.forEach(item => {
     const supplierId = item.supplierId || "unknown";
     const supplierInfo = getSupplierInfo(item);
     
-    if (!itemsBySupplier.has(supplierId)) {
-      itemsBySupplier.set(supplierId, {
-        supplierId,
-        items: [item],
-        supplierInfo
-      });
-    } else {
-      const existing = itemsBySupplier.get(supplierId)!;
-      existing.items.push(item);
-    }
-  });
+if (!itemsBySupplier[supplierId]) {
+  itemsBySupplier[supplierId] = {
+    supplierId,
+    items: [item],
+    supplierInfo
+  };
+} else {
+  itemsBySupplier[supplierId].items.push(item);
+}
   
   // Create a separate delivery for each supplier
   const deliveries: Array<{
@@ -276,12 +279,11 @@ const itemsBySupplier = new Map<string, any>();
   }> = [];
   
   let index = 0;
-  
-  itemsBySupplier.forEach((supplierGroup, supplierId) => {
+  Object.values(itemsBySupplier).forEach((supplierGroup) => {
     const { supplierInfo, items } = supplierGroup;
     const pickupAddress = supplierInfo?.address;
     const supplierName = supplierInfo?.supplierName || "Restaurant";
-    const supplier = supplierInfo?.supplier;
+    const supplierId = supplierGroup.supplierId;
     
     // Calculate total quantity and payout for this supplier's items
     const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
