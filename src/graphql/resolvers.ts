@@ -1518,9 +1518,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     getProducts: async (_: any, args: any) => {
       const userId = args.userId;
       const products = await prisma.product.findMany({
-        /*where: {
+        where: {
           supplierId: userId.toString()
-        },*/
+        },
         include: {
           category: true,
           variants: true,
