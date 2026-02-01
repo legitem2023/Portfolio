@@ -163,6 +163,17 @@ interface OrderListResponse {
   };
 }
 
+// Define the type for grouped items by supplier
+interface SupplierGroup {
+  supplierId: string;
+  items: OrderItem[];
+  supplierInfo?: {
+    address?: Address;
+    supplierName: string;
+    supplier?: Supplier;
+  };
+}
+
 // Helper function to calculate distance (simplified - in real app use coordinates)
 const calculateDistance = (address1?: Address, address2?: Address): string => {
   if (!address1 || !address2) return "Distance not available";
@@ -209,11 +220,7 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   
   // Group items by supplier
-  const itemsBySupplier:any = new Map<string, {
-    supplierId: string;
-    items: OrderItem[];
-    supplierInfo?: { address?: Address; supplierName: string; supplier?: Supplier };
-  }>();
+  const itemsBySupplier = new Map<string, SupplierGroup>();
   
   order.items.forEach(item => {
     const supplierId = item.supplierId || "unknown";
@@ -232,7 +239,31 @@ const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   });
   
   // Create a separate delivery for each supplier
-  const deliveries: any[] = [];
+  const deliveries: Array<{
+    id: string;
+    originalOrderId: string;
+    orderId: string;
+    restaurant: string;
+    customer: string;
+    distance: string;
+    pickup: string;
+    dropoff: string;
+    payout: string;
+    payoutAmount: number;
+    expiresIn: string;
+    items: number;
+    orderData: Order;
+    dropoffAddress?: Address;
+    pickupAddress?: Address;
+    supplierName: string;
+    supplier?: Supplier;
+    subtotal: string;
+    supplierItems?: OrderItem[];
+    isPartialDelivery: boolean;
+    totalSuppliersInOrder: number;
+    supplierIndex: number;
+  }> = [];
+  
   let index = 0;
   
   itemsBySupplier.forEach((supplierGroup, supplierId) => {
@@ -996,4 +1027,4 @@ export default function RiderDashboard() {
       </div>
     </div>
   );
-}
+      }
