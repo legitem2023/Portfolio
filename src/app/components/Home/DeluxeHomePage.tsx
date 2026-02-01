@@ -200,7 +200,6 @@ const DeluxeHomePage: React.FC = () => {
           products={featuredProducts} 
           loading={productLoading} 
         />
-        <ProductThumbnails products={featuredProducts}/>
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
         {/* 
         <section className="py-16 bg-gray-50">
