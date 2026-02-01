@@ -68,7 +68,7 @@ export default function ManagementDashboard() {
         
         setUserId(payload.userId);
         setUserRole(payload.role);
-        console.log(payload.role);
+        console.log(payload);
         
       } catch (err) {
         console.error('Error getting role:', err);
