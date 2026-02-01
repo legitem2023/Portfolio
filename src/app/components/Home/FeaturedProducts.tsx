@@ -40,10 +40,10 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
 
 
   // Helper function to get unique colors from variants
-  const getUniqueColors = (variants: Product['variants']) => {
+/*  const getUniqueColors = (variants: Product['variants']) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
-  };
+  };*/
 
   return (
     <section className="py-16 px-4 bg-gray-50">
@@ -59,7 +59,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
           <>
             <div className="w-full max-w-7xl grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
               {products.map((product) => {
-                const uniqueColors = getUniqueColors(product.variants);
+             //   const uniqueColors = getUniqueColors(product.variants);
                 
                 return (
                   <div 
@@ -198,7 +198,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                       </div>
                       
                       {/* Color Options */}
-                      {uniqueColors.length > 0 && (
+                      {/*uniqueColors.length > 0 && (
                         <div className="mt-1 sm:mt-2 flex items-center space-x-1">
                           <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                           <div className="flex space-x-0.5 xs:space-x-1">
@@ -214,7 +214,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                             )}
                           </div>
                         </div>
-                      )}
+                      )*/}
                     </div>
                   </div>
                 );
