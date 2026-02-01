@@ -1,14 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
-import { useSelector, useDispatch } from 'react-redux';
-import { setSearchTerm, setCategoryFilter, setSortBy, clearAllFilters } from '../../../Redux/searchSlice';
-import { GETCATEGORY } from './graphql/query'; // Adjust the import path as needed
-import Image from 'next/image'; // Added Next.js Image component
+import { useDispatch } from 'react-redux';
+import { setCategoryFilter } from '../../../Redux/searchSlice';
+import { GETCATEGORY } from './graphql/query';
+import Image from 'next/image';
 
-// Define the GraphQL response type
 interface GraphQLCategory {
   id: string;
   name: string;
@@ -18,79 +17,83 @@ interface GraphQLCategory {
   createdAt: string;
 }
 
-// Define the expected GraphQL response structure
 interface CategoriesResponse {
   categories: GraphQLCategory[];
 }
 
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
-  const [categories, setCategories] = useState<category[]>([]);
   
-  // Use the GraphQL query - only source of data
   const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY);
 
-  // Process GraphQL data when it's available - ONLY SOURCE
-  useEffect(() => {
-    if (data?.categories && data.categories.length > 0) {
-      const processedCategories = data.categories.map((cat: GraphQLCategory) => ({
-        id: cat.id,
-        name: cat.name,
-        description: cat.description,
-        image: cat.image || '/NoImage.webp', // Default image if GraphQL returns empty
-        isActive: cat.isActive,
-        createdAt: cat.createdAt,
-        // Add fields that don't exist in GraphQL with proper types
-        items: '0 items', // You might want to fetch product count separately
-        productCount: 0, // Consider adding productCount to your GraphQL query
-        status: cat.isActive ? "Active" as const : "Inactive" as const, // Fixed: Use const assertion
-        parentId: undefined,
-      }));
-      setCategories(processedCategories);
-    }
+  const categories = useMemo(() => {
+    if (!data?.categories) return [];
+    
+    return data.categories.map((cat: GraphQLCategory) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description,
+      image: cat.image || '/NoImage.webp',
+      isActive: cat.isActive,
+      createdAt: cat.createdAt,
+      items: '0 items',
+      productCount: 0,
+      status: cat.isActive ? "Active" as const : "Inactive" as const,
+      parentId: undefined,
+    }));
   }, [data]);
 
-  // Handle category click
-  const handleCategoryClick = (categoryName: string) => {
-    dispatch(setCategoryFilter(categoryName));
-  };
+  const handleCategoryClick = useCallback((categoryId: string) => {
+    dispatch(setCategoryFilter(categoryId));
+  }, [dispatch]);
 
-  // Shimmer Loading Component
-  const ShimmerLoader = () => {
-    return (
-      <div className="container mx-auto p-0">
-        <div className="grid grid-cols-4 gap-2 p-0">
-          {[...Array(4)].map((_, index) => (
-            <div 
-              key={index} 
-              className="bg-white shadow-sm border border-gray-100 overflow-hidden"
-            >
-              {/* Image shimmer */}
-              <div className="relative aspect-[1/1] bg-gray-200">
-                <div className="shimmer absolute inset-0"></div>
-              </div>
-              
-              {/* Content shimmer */}
-              <div className="p-1.5">
-                <div className="h-4 bg-gray-200 rounded mb-1 shimmer"></div>
-                <div className="flex justify-between items-center mt-0.5">
-                  <div className="h-3 w-12 bg-gray-200 rounded shimmer"></div>
-                  <div className="h-3 w-3 bg-gray-200 rounded shimmer"></div>
-                </div>
-              </div>
-            </div>
-          ))}
+  const renderCompactCard = useCallback((category: category, index: number) => (
+    <div 
+      className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
+      style={{
+        border:'solid 1px transparent',
+        borderRadius:'1px',
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
+        backdropFilter: 'blur(3px)',
+        WebkitBackdropFilter: 'blur(3px)'
+      }}
+      onClick={() => handleCategoryClick(category.id)}
+    >
+      <div className="relative aspect-[1/1] bg-gray-50">
+        <div className="relative h-full w-full">
+          <Image
+            src={category.image}
+            alt={category.name}
+            fill
+            quality={25}
+            className="object-cover"
+            loading="lazy"
+            priority={index < 4}
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+            onError={(e) => {
+              e.currentTarget.src = '/NoImage.webp';
+            }}
+          />
+        </div>
+        <div className="absolute top-1 right-1">
+          <div className={`w-2 h-2 rounded-full ${category.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
         </div>
       </div>
-    );
-  };
+      
+      <div className="p-1.5">
+        <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
+        <div className="flex justify-between items-center mt-0.5">
+          <span className="text-xs text-gray-500">{category.productCount} items</span>
+          <span className="text-xs text-blue-600 font-medium">→</span>
+        </div>
+      </div>
+    </div>
+  ), [handleCategoryClick]);
 
-  // Loading state - only show loader when loading from GraphQL
   if (loading) {
     return <ShimmerLoader />;
   }
 
-  // Error state - only show error when GraphQL fails
   if (error) {
     console.error('GraphQL Error:', error);
     return (
@@ -102,7 +105,6 @@ const CategoryPage: React.FC = () => {
     );
   }
 
-  // No data state - when GraphQL returns empty array
   if (!categories.length) {
     return (
       <div className="container mx-auto p-0">
@@ -119,48 +121,6 @@ const CategoryPage: React.FC = () => {
     );
   }
 
-  // Compact card render function - Using Next.js Image component
-  const renderCompactCard = (category: category, index: number) => (
-    <div 
-      className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
-              style={{
-                 border:'solid 1px transparent',
-                 borderRadius:'1px',
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
-                 backdropFilter: 'blur(3px)',
-                 WebkitBackdropFilter: 'blur(3px)'
-              }}
-      onClick={() => handleCategoryClick(category.id)}
-    >
-      <div className="relative aspect-[1/1] bg-gray-50">
-        <div className="relative h-full w-full">
-          <Image
-            src={category.image}
-            alt={category.name}
-            fill
-            quality={25}
-            className="object-cover"
-            onError={() => {
-              // You can use state to change the src on error if needed
-            }}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
-        <div className="absolute top-1 right-1">
-          <div className={`w-2 h-2 rounded-full ${category.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
-        </div>
-      </div>
-      
-      <div className="p-1.5">
-        <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
-        <div className="flex justify-between items-center mt-0.5">
-          <span className="text-xs text-gray-500">{category.productCount} items</span>
-          <span className="text-xs text-blue-600 font-medium">→</span>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="container mx-auto p-0">
       <SwiperComponent
@@ -175,6 +135,33 @@ const CategoryPage: React.FC = () => {
         showProductCount={false}
         className="compact-swiper"
       />
+    </div>
+  );
+};
+
+// Keep your ShimmerLoader component as is
+const ShimmerLoader = () => {
+  return (
+    <div className="container mx-auto p-0">
+      <div className="grid grid-cols-4 gap-2 p-0">
+        {[...Array(4)].map((_, index) => (
+          <div 
+            key={index} 
+            className="bg-white shadow-sm border border-gray-100 overflow-hidden"
+          >
+            <div className="relative aspect-[1/1] bg-gray-200">
+              <div className="shimmer absolute inset-0"></div>
+            </div>
+            <div className="p-1.5">
+              <div className="h-4 bg-gray-200 rounded mb-1 shimmer"></div>
+              <div className="flex justify-between items-center mt-0.5">
+                <div className="h-3 w-12 bg-gray-200 rounded shimmer"></div>
+                <div className="h-3 w-3 bg-gray-200 rounded shimmer"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
