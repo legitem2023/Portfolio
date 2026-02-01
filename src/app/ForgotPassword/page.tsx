@@ -120,7 +120,7 @@ export default function ForgotPassword() {
                       </h3>
                       <div className="text-green-700 space-y-2">
                         <p>
-                          We've sent password reset instructions to:
+                          We have sent password reset instructions to:
                         </p>
                         <p className="font-mono bg-green-100 px-3 py-1 rounded-lg inline-block">
                           {email}
@@ -156,7 +156,7 @@ export default function ForgotPassword() {
                       ) : (
                         <Mail className="w-4 h-4 mr-2" />
                       )}
-                      Didn't receive the email? Send again
+                      Didnt receive the email? Send again
                     </button>
                   </div>
                 </div>
@@ -213,7 +213,7 @@ export default function ForgotPassword() {
                         Security Information
                       </p>
                       <p className="text-xs text-blue-700">
-                        The password reset link will be valid for 30 minutes. For security reasons, please check your spam folder if you don't see the email.
+                        The password reset link will be valid for 30 minutes. For security reasons, please check your spam folder if you dont see the email.
                       </p>
                     </div>
                   </div>
