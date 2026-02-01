@@ -279,74 +279,75 @@ if (!itemsBySupplier[supplierId]) {
   }> = [];
   
   let index = 0;
-  Object.values(itemsBySupplier).forEach((supplierGroup) => {
-    const { supplierInfo, items } = supplierGroup;
-    const pickupAddress = supplierInfo?.address;
-    const supplierName = supplierInfo?.supplierName || "Restaurant";
-    const supplierId = supplierGroup.supplierId;
-    
-    // Calculate total quantity and payout for this supplier's items
-    const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const payoutAmount = subtotal * 0.3; // 30% of subtotal
-    
-    // Format pickup address
-    let pickupFormatted = "Pickup location not available";
-    if (pickupAddress?.street) {
-      pickupFormatted = `${pickupAddress.street}, ${pickupAddress.city}, ${pickupAddress.state} ${pickupAddress.zipCode}`;
-    }
-    
-    // Format dropoff address
-    const dropoffFormatted = dropoffAddress?.street 
-      ? `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}`
-      : "Address not available";
-    
-    // Calculate distance
-    const distance = calculateDistance(pickupAddress, dropoffAddress);
-    
-    // Calculate expiration time
-    const createdAt = new Date(order.createdAt);
-    const expiresAt = new Date(createdAt.getTime() + 2 * 60 * 1000);
-    const now = new Date();
-    const diffMs = expiresAt.getTime() - now.getTime();
-    const diffSec = Math.max(0, Math.floor(diffMs / 1000));
-    
-    let expiresIn = "";
-    if (diffSec < 60) {
-      expiresIn = `${diffSec}s`;
-    } else {
-      const minutes = Math.floor(diffSec / 60);
-      const seconds = diffSec % 60;
-      expiresIn = `${minutes}m ${seconds}s`;
-    }
-    
-    deliveries.push({
-      id: `${order.id}-${supplierId}`, // Unique ID for each delivery piece
-      originalOrderId: order.id,
-      orderId,
-      restaurant: supplierName,
-      customer: firstName,
-      distance,
-      pickup: pickupFormatted,
-      dropoff: dropoffFormatted,
-      payout: formatPeso(payoutAmount),
-      payoutAmount,
-      expiresIn,
-      items: itemsCount,
-      orderData: order,
-      dropoffAddress,
-      pickupAddress,
-      supplierName,
-      supplier,
-      subtotal: formatPeso(subtotal),
-      supplierItems: items, // Keep track of which items belong to this supplier
-      isPartialDelivery: itemsBySupplier.size > 1,
-      totalSuppliersInOrder: itemsBySupplier.size,
-      supplierIndex: index + 1
-    });
-    
-    index++;
+Object.values(itemsBySupplier).forEach((supplierGroup) => {
+  const { supplierInfo, items } = supplierGroup;
+  const pickupAddress = supplierInfo?.address;
+  const supplierName = supplierInfo?.supplierName || "Restaurant";
+  const supplier = supplierInfo?.supplier; // Add this line
+  const supplierId = supplierGroup.supplierId;
+  
+  // Calculate total quantity and payout for this supplier's items
+  const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const payoutAmount = subtotal * 0.3; // 30% of subtotal
+  
+  // Format pickup address
+  let pickupFormatted = "Pickup location not available";
+  if (pickupAddress?.street) {
+    pickupFormatted = `${pickupAddress.street}, ${pickupAddress.city}, ${pickupAddress.state} ${pickupAddress.zipCode}`;
+  }
+  
+  // Format dropoff address
+  const dropoffFormatted = dropoffAddress?.street 
+    ? `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}`
+    : "Address not available";
+  
+  // Calculate distance
+  const distance = calculateDistance(pickupAddress, dropoffAddress);
+  
+  // Calculate expiration time
+  const createdAt = new Date(order.createdAt);
+  const expiresAt = new Date(createdAt.getTime() + 2 * 60 * 1000);
+  const now = new Date();
+  const diffMs = expiresAt.getTime() - now.getTime();
+  const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+  
+  let expiresIn = "";
+  if (diffSec < 60) {
+    expiresIn = `${diffSec}s`;
+  } else {
+    const minutes = Math.floor(diffSec / 60);
+    const seconds = diffSec % 60;
+    expiresIn = `${minutes}m ${seconds}s`;
+  }
+  
+  deliveries.push({
+    id: `${order.id}-${supplierId}`, // Unique ID for each delivery piece
+    originalOrderId: order.id,
+    orderId,
+    restaurant: supplierName,
+    customer: firstName,
+    distance,
+    pickup: pickupFormatted,
+    dropoff: dropoffFormatted,
+    payout: formatPeso(payoutAmount),
+    payoutAmount,
+    expiresIn,
+    items: itemsCount,
+    orderData: order,
+    dropoffAddress,
+    pickupAddress,
+    supplierName,
+    supplier, // Now this is defined
+    subtotal: formatPeso(subtotal),
+    supplierItems: items, // Keep track of which items belong to this supplier
+    isPartialDelivery: Object.keys(itemsBySupplier).length > 1, // Fixed
+    totalSuppliersInOrder: Object.keys(itemsBySupplier).length, // Fixed
+    supplierIndex: index + 1
   });
+  
+  index++;
+});
   
   return deliveries;
 };
