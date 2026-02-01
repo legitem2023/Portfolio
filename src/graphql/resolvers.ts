@@ -2943,7 +2943,6 @@ deleteProduct: async (_: any, { id }: any) => {
           })
             .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
             .setIssuedAt()
-            .setExpirationTime('7d')
             .encrypt(secret);
         } catch (err) {
           console.error('Token encryption error:', err);
