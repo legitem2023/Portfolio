@@ -138,6 +138,7 @@ const CategoryPage: React.FC = () => {
             src={category.image}
             alt={category.name}
             fill
+            quality={25}
             className="object-cover"
             onError={() => {
               // You can use state to change the src on error if needed
@@ -168,7 +169,6 @@ const CategoryPage: React.FC = () => {
         spaceBetween={8}
         navigation={false}
         pagination={false}
-        autoplay={{ delay: 4000, disableOnInteraction: false }}
         loop={true}
         renderSlide={renderCompactCard}
         showStatusBadge={false}
