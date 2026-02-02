@@ -1,6 +1,6 @@
 "use client";
-import { Package, Shield, Clock, CheckCircle } from "lucide-react";
-import { formatPeso } from "../lib/utils";
+import { Package, Shield, CheckCircle, Clock } from "lucide-react";
+import { formatPeso } from '@/lib/utils';
 
 interface ActiveDeliveriesTabProps {
   isMobile: boolean;
