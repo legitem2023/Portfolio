@@ -1,4 +1,5 @@
 "use client";
+import React from "react"; // Add this import
 import { 
   Navigation, 
   Package, 
@@ -6,6 +7,8 @@ import {
   BarChart,
   Bell
 } from "lucide-react";
+
+
 import { TabType } from '../lib/types';
 
 interface NavigationTabsProps {
