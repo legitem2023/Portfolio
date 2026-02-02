@@ -263,15 +263,17 @@ const Header: React.FC = () => {
         if (token) {
           const payload = await decryptToken(token, secret.toString());
           setUser(payload);
+          setHasCheckedAuth(true);
         } else {
           setUser(null);
+          setHasCheckedAuth(false);
         }
       } catch (err) {
         console.error('Error getting role:', err);
         setUser(null);
       } finally {
         setIsLoading(false);
-        setHasCheckedAuth(true);
+        
       }
     };
     getRole();
@@ -291,13 +293,12 @@ const Header: React.FC = () => {
     }
 
     const protectedIndexes = [5, 6, 7, 10];
-    console.log("index->",protectedIndexes.includes(activeIndex),"user->",isUserLoggedIn);
     // Redirect to login if trying to access protected index without user
-    if (protectedIndexes.includes(activeIndex) && !isUserLoggedIn) {
+    if (protectedIndexes.includes(activeIndex) && !hasCheckedAuth) {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
-  }, [activeIndex, isUserLoggedIn, isLoadingUser, router]);
+  }, [hasCheckedAuth, activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
   // Close dropdown when clicking outside (desktop)
   useEffect(() => {
