@@ -5,10 +5,10 @@ import { Map, MapPin, Navigation } from "lucide-react";
 import { icon as leafletIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix for default markers in Leaflet
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-import markerIconRetina from 'leaflet/dist/images/marker-icon-2x.png';
+// Use CDN URLs for leaflet markers
+const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
+const markerShadow = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
+const markerIconRetina = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
 
 const defaultIcon = leafletIcon({
   iconUrl: markerIcon,
@@ -174,7 +174,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         >
           <MapCenterController center={mapCenter} zoom={mapZoom} />
           
-          {/* OpenStreetMap Tiles [citation:6][citation:8] */}
+          {/* OpenStreetMap Tiles  */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -327,4 +327,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       </div>
     </div>
   );
-                }
+      }
