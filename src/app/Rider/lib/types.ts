@@ -166,6 +166,7 @@ export interface Delivery {
   orderId: string;
   restaurant: string;
   customer: string;
+  customerId: string;
   distance: string;
   pickup: string;
   dropoff: string;
