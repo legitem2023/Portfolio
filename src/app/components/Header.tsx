@@ -18,7 +18,8 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  Clock
+  Clock,
+  Menu
 } from 'lucide-react';
 
 // Import queries and mutations
@@ -757,7 +758,7 @@ const Header: React.FC = () => {
                 className="flex items-center text-sm focus:outline-none group"
               >
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
-                  <User className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
+                  <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
                 </div>
               </button>
               
