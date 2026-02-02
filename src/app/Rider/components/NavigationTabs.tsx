@@ -1,5 +1,5 @@
 "use client";
-import { TABS } from '@/utils/constants';
+import { TABS } from '../utils/constants';
 
 interface NavigationTabsProps {
   activeTab: string;
