@@ -595,13 +595,13 @@ function OrderLoadingSkeleton() {
 
 function OrderError() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <div className="relative h-6 sm:h-8 bg-purple-200 rounded w-40 sm:w-48 mx-auto mb-1 sm:mb-2 overflow-hidden">
+          <div className="relative h-6 sm:h-8 bg-red-200 rounded w-40 sm:w-48 mx-auto mb-1 sm:mb-2 overflow-hidden">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
-          <div className="relative h-3 sm:h-4 bg-purple-200 rounded w-48 sm:w-64 mx-auto overflow-hidden">
+          <div className="relative h-3 sm:h-4 bg-red-200 rounded w-48 sm:w-64 mx-auto overflow-hidden">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
         </div>
@@ -609,7 +609,7 @@ function OrderError() {
         {/* Tab Loading Skeleton */}
         <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 md:mb-8 px-1">
           {[...Array(7)].map((_, i) => (
-            <div key={i} className="relative h-10 sm:h-12 w-16 sm:w-24 md:w-32 bg-purple-100 rounded-lg overflow-hidden">
+            <div key={i} className="relative h-10 sm:h-12 w-16 sm:w-24 md:w-32 bg-red-100 rounded-lg overflow-hidden">
               <div className="absolute inset-0 shimmer-effect"></div>
             </div>
           ))}
