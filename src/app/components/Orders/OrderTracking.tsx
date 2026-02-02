@@ -521,31 +521,72 @@ function OrderLoadingSkeleton() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <div className="h-6 sm:h-8 bg-purple-200 rounded w-40 sm:w-48 mx-auto mb-1 sm:mb-2"></div>
-          <div className="h-3 sm:h-4 bg-purple-200 rounded w-48 sm:w-64 mx-auto"></div>
+          <div className="relative h-6 sm:h-8 bg-purple-200 rounded w-40 sm:w-48 mx-auto mb-1 sm:mb-2 overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+          <div className="relative h-3 sm:h-4 bg-purple-200 rounded w-48 sm:w-64 mx-auto overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
         </div>
         
         {/* Tab Loading Skeleton */}
         <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 md:mb-8 px-1">
           {[...Array(7)].map((_, i) => (
-            <div key={i} className="h-10 sm:h-12 w-16 sm:w-24 md:w-32 bg-purple-100 rounded-lg animate-pulse"></div>
+            <div key={i} className="relative h-10 sm:h-12 w-16 sm:w-24 md:w-32 bg-purple-100 rounded-lg overflow-hidden">
+              <div className="absolute inset-0 shimmer-effect"></div>
+            </div>
           ))}
         </div>
         
         {/* Cards Loading Skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 animate-pulse">
-              <div className="h-4 sm:h-6 bg-purple-200 rounded mb-3 sm:mb-4"></div>
+            <div key={i} className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
+              <div className="relative h-4 sm:h-6 bg-purple-200 rounded mb-3 sm:mb-4 overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
               <div className="space-y-2 sm:space-y-3">
-                <div className="h-3 sm:h-4 bg-purple-100 rounded"></div>
-                <div className="h-3 sm:h-4 bg-purple-100 rounded"></div>
-                <div className="h-3 sm:h-4 bg-purple-100 rounded w-2/3"></div>
+                <div className="relative h-3 sm:h-4 bg-purple-100 rounded overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+                <div className="relative h-3 sm:h-4 bg-purple-100 rounded overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+                <div className="relative h-3 sm:h-4 bg-purple-100 rounded w-2/3 overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        
+        .shimmer-effect {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          animation: shimmer 1.5s infinite;
+          transform: translateX(-100%);
+        }
+      `}</style>
     </div>
   );
 }
