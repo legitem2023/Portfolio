@@ -1,5 +1,23 @@
+
 import { gql } from "@apollo/client";
 
+export const ACCEPT_BY_RIDER = gql`
+  mutation AcceptByRider(
+    $itemId: ID!
+    $riderId: ID!
+    $supplierId: ID!
+    $userId: ID!
+  ) {
+    acceptByRider(
+      itemId: $itemId
+      riderId: $riderId
+      supplierId: $supplierId
+      userId: $userId
+    ) {
+      statusText
+    }
+  }
+`;
 // GraphQL Query with address field
 export const ORDER_LIST_QUERY = gql`
   query OrderList(
