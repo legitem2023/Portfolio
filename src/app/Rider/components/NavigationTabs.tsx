@@ -1,60 +1,24 @@
 "use client";
-import { 
-  Navigation, 
-  Package, 
-  Map, 
-  BarChart,
-  Bell
-} from "lucide-react";
+import { TABS } from '@/utils/constants';
 
 interface NavigationTabsProps {
-  isMobile: boolean;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  newDeliveries: any[];
+  isMobile: boolean;
+  newDeliveriesCount: number;
 }
 
-export default function NavigationTabs({ isMobile, activeTab, setActiveTab, newDeliveries }: NavigationTabsProps) {
-  const tabs = [
-    { 
-      id: "newDeliveries", 
-      label: "New", 
-      icon: <Bell size={isMobile ? 20 : 24} />,
-      desktopLabel: "New Deliveries",
-      hasNotification: true 
-    },
-    { 
-      id: "tracking", 
-      label: "Tracking", 
-      icon: <Navigation size={isMobile ? 20 : 24} />,
-      desktopLabel: "Live Tracking" 
-    },
-    { 
-      id: "deliveries", 
-      label: "Active", 
-      icon: <Package size={isMobile ? 20 : 24} />,
-      desktopLabel: "Active Deliveries" 
-    },
-    { 
-      id: "map", 
-      label: "Map", 
-      icon: <Map size={isMobile ? 20 : 24} />,
-      desktopLabel: "Navigation Map" 
-    },
-    { 
-      id: "performance", 
-      label: "Stats", 
-      icon: <BarChart size={isMobile ? 20 : 24} />,
-      desktopLabel: "Performance" 
-    }
-  ];
-
-  // Mobile navigation
+export default function NavigationTabs({ 
+  activeTab, 
+  setActiveTab, 
+  isMobile, 
+  newDeliveriesCount 
+}: NavigationTabsProps) {
   if (isMobile) {
     return (
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         <div className="flex justify-around items-center px-1 py-2">
-          {tabs.map((tab) => (
+          {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -67,10 +31,13 @@ export default function NavigationTabs({ isMobile, activeTab, setActiveTab, newD
               `}
             >
               <div className="relative">
-                {tab.icon}
-                {tab.hasNotification && newDeliveries.length > 0 && activeTab !== tab.id && (
+                {isMobile 
+                  ? React.cloneElement(tab.icon as React.ReactElement, { size: 20 })
+                  : tab.icon
+                }
+                {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
-                    {newDeliveries.length}
+                    {newDeliveriesCount}
                   </span>
                 )}
               </div>
@@ -82,13 +49,12 @@ export default function NavigationTabs({ isMobile, activeTab, setActiveTab, newD
     );
   }
 
-  // Desktop navigation
   return (
-    <div className="hidden lg:block max-w-7xl mx-auto px-6 py-4">
+    <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="bg-white rounded-lg shadow">
         <div className="border-b border-gray-200">
           <nav className="flex">
-            {tabs.map((tab) => (
+            {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -102,9 +68,9 @@ export default function NavigationTabs({ isMobile, activeTab, setActiveTab, newD
               >
                 {tab.icon}
                 <span>{tab.desktopLabel}</span>
-                {tab.hasNotification && newDeliveries.length > 0 && activeTab !== tab.id && (
+                {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
                   <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {newDeliveries.length}
+                    {newDeliveriesCount}
                   </span>
                 )}
               </button>
