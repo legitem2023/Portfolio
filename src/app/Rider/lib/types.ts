@@ -28,6 +28,7 @@ export const ORDER_LIST_QUERY = gql`
       orders {
         id
         orderNumber
+        userId
         status
         total
         createdAt
