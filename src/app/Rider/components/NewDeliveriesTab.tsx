@@ -1,27 +1,33 @@
 "use client";
-import { Bell, Loader2, AlertTriangle, AlertCircle } from "lucide-react";
-import { formatPeso } from "../lib/utils";
-import DeliveryCard from "./DeliveryCard";
+import { Bell, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { useQuery } from "@apollo/client";
+import { ORDER_LIST_QUERY, OrderListResponse } from '@/lib/types';
+import { mapOrdersToDeliveriesBySupplier, formatPeso } from '@/lib/utils';
+import DeliveryCard from './DeliveryCard';
 
 interface NewDeliveriesTabProps {
   isMobile: boolean;
-  newDeliveries: any[];
-  loading: boolean;
-  error: any;
-  refetch: () => void;
-  handleAcceptDelivery: (id: string) => void;
-  handleRejectDelivery: (id: string) => void;
+  onAcceptDelivery: (deliveryId: string) => void;
+  onRejectDelivery: (deliveryId: string) => void;
 }
 
-export default function NewDeliveriesTab({
-  isMobile,
-  newDeliveries,
-  loading,
-  error,
-  refetch,
-  handleAcceptDelivery,
-  handleRejectDelivery
-}: NewDeliveriesTabProps) {
+export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: NewDeliveriesTabProps) {
+  const { data, loading, error, refetch } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
+    variables: {
+      filter: {
+        status: "PENDING"
+      },
+      pagination: {
+        page: 1,
+        pageSize: 10
+      }
+    },
+    pollInterval: 10000
+  });
+
+  // Transform GraphQL data to delivery format - split by supplier
+  const newDeliveries = data?.orderlist?.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+
   if (loading) {
     return (
       <div className="p-2 lg:p-6 flex flex-col items-center justify-center h-64">
@@ -60,7 +66,7 @@ export default function NewDeliveriesTab({
             <span className="text-base lg:text-2xl">New Delivery Requests</span>
           </h2>
           <p className="text-gray-600 text-xs lg:text-base mt-1">
-            {newDeliveries.length} pending request{newDeliveries.length !== 1 ? "s" : ""}
+            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.orderlist?.orders?.length || 0} order{data?.orderlist?.orders?.length !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-gray-600">
@@ -89,8 +95,8 @@ export default function NewDeliveriesTab({
               key={delivery.id}
               delivery={delivery}
               isMobile={isMobile}
-              handleAcceptDelivery={handleAcceptDelivery}
-              handleRejectDelivery={handleRejectDelivery}
+              onAccept={onAcceptDelivery}
+              onReject={onRejectDelivery}
             />
           ))}
         </div>
@@ -117,4 +123,4 @@ export default function NewDeliveriesTab({
       </div>
     </div>
   );
-}
+            }
