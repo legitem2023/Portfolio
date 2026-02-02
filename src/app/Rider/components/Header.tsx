@@ -38,8 +38,8 @@ export default function Header({
             
             <div className="flex items-center gap-2">
               <div className="text-right">
-                <p className="font-semibold text-xs">{user.name}</p>
-                <p className="text-gray-500 text-xs">{user.userId}</p>
+                <p className="font-semibold text-xs">{user?.name}</p>
+                <p className="text-gray-500 text-xs">{user?.userId}</p>
               </div>
               <div className="relative">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
@@ -73,8 +73,8 @@ export default function Header({
           
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="font-semibold">{user.name}</p>
-              <p className="font-semibold text-gray-500">{user.userId}</p>
+              <p className="font-semibold">{user?.name}</p>
+              <p className="font-semibold text-gray-500">{user?.userId}</p>
             </div>
             <div className="relative">
               <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
