@@ -168,7 +168,12 @@ export interface Delivery {
 }
 
 // ... other interfaces ...
-
+// Add to existing Delivery interface
+export interface MapDelivery extends Delivery {
+  pickupCoords?: [number, number];
+  dropoffCoords?: [number, number];
+  route?: [number, number][];
+}
 export interface TabType {
   id: string;
   label: string;
