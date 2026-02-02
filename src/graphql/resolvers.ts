@@ -2164,7 +2164,9 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
           message: 'Rider accepted the order'
         }
       });
-
+      return {
+        statusText:"Successfully Accepted!"
+      }
   } catch (error) {
     console.error('Error accepting order:', error);
     return {
