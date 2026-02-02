@@ -83,17 +83,19 @@ const Header: React.FC = () => {
     return ['/Login', '/Signup', '/ForgotPassword'].includes(pathname);
   }, [pathname]);
   
-
-  
-  // Get user data
-  const { data: userData, loading: userLoading } = useQuery(USERS);
-
   // Check if user is logged in
   const isUserLoggedIn = useMemo(() => {
     return !!user || !!userData?.users?.[0];
   }, [user, userData]);
-console.log("index", activeIndex, "user",isUserLoggedIn);
+
+  // Check if current activeIndex requires authentication
+  const isProtectedIndex = useMemo(() => {
+    return [5, 6, 7, 10].includes(activeIndex);
+  }, [activeIndex]);
   
+  // Get user data
+  const { data: userData, loading: userLoading } = useQuery(USERS);
+
   // Get userId from user data or auth
   const userId = user?.userId;
 
@@ -287,13 +289,14 @@ console.log("index", activeIndex, "user",isUserLoggedIn);
       return;
     }
 
-    const protectedIndexes = [5, 7, 8, 9, 10];
+    const protectedIndexes = [5, 6, 7, 10];
     
-    if (protectedIndexes.includes(activeIndex) && !user && !userData?.users?.[0]) {
+    // Redirect to login if trying to access protected index without user
+    if (protectedIndexes.includes(activeIndex) && !isUserLoggedIn) {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
-  }, [activeIndex, user, userData, isLoadingUser, hasCheckedAuth, router]);
+  }, [activeIndex, isUserLoggedIn, isLoadingUser, hasCheckedAuth, router]);
 
   // Close dropdown when clicking outside (desktop)
   useEffect(() => {
@@ -515,6 +518,12 @@ console.log("index", activeIndex, "user",isUserLoggedIn);
   };
 
   const handleTabClick = (tabId: number) => {
+    // Check if this is a protected tab and user is not logged in
+    if ([5, 6, 7, 10].includes(tabId) && !isUserLoggedIn) {
+      router.push('/Login');
+      return;
+    }
+
     if (pathname !== '/') {
       router.push('/');
       setTimeout(() => {
