@@ -931,6 +931,7 @@ input OrderPaginationInput {
 
   type Mutation {
     # Existing mutations
+    acceptByRider(produtId:ID,userId:ID): Result
     createNotification(input: CreateNotificationInput): Notification
     markNotificationAsRead(id: ID): Notification
     markAllNotificationsAsRead(userId: ID): Boolean
