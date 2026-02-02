@@ -794,7 +794,7 @@ const Header: React.FC = () => {
                 </button>
                 
                 {/* Desktop Dropdown with slide-down animation - Only show if user is logged in */}
-                {isDropdownOpen && !isMobile() && isUserLoggedIn && (
+                {isDropdownOpen && !isMobile() && hasCheckedAuth && (
                   <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
                     style={{
                       transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
@@ -847,7 +847,7 @@ const Header: React.FC = () => {
       </div>
 
       {/* Mobile Slide From Left Modal with enhanced animation - Only show if user is logged in */}
-      {isModalOpen && isMobile() && !isAuthPage && isUserLoggedIn && (
+      {isModalOpen && isMobile() && !isAuthPage && hasCheckedAuth && (
         <>
           {/* Backdrop with fade-in animation */}
           <div 
