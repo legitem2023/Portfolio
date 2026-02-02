@@ -10,9 +10,24 @@ import NavigationTabs from './components/NavigationTabs';
 import NewDeliveriesTab from './components/NewDeliveriesTab';
 import TrackingTab from './components/TrackingTab';
 import ActiveDeliveriesTab from './components/ActiveDeliveriesTab';
-import MapTab from './components/MapTab';
 import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
+import dynamic from 'next/dynamic';
+
+// Dynamically import MapTab to avoid SSR
+const MapTab = dynamic(() => import('./components/MapTab'), {
+  ssr: false,
+  loading: () => (
+    <div className="p-2 lg:p-6">
+      <div className="bg-gray-100 h-48 lg:h-96 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 lg:w-16 lg:h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading map...</p>
+        </div>
+      </div>
+    </div>
+  )
+});
 
 export default function RiderDashboard() {
   // State to manage active tab
@@ -78,21 +93,21 @@ export default function RiderDashboard() {
         );
       case "deliveries":
         return <ActiveDeliveriesTab isMobile={isMobile} />;
-case "map":
-  return <MapTab 
-    isMobile={isMobile} 
-    deliveries={newDeliveries.map(d => ({
-      id: d.id,
-      orderId: d.orderId,
-      restaurant: d.restaurant,
-      customer: d.customer,
-      pickup: d.pickup,
-      dropoff: d.dropoff,
-      pickupAddress: d.pickupAddress,
-      dropoffAddress: d.dropoffAddress,
-      status: 'pending' // Default status
-    }))}
-  />;
+      case "map":
+        return <MapTab 
+          isMobile={isMobile} 
+          deliveries={newDeliveries.map(d => ({
+            id: d.id,
+            orderId: d.orderId,
+            restaurant: d.restaurant,
+            customer: d.customer,
+            pickup: d.pickup,
+            dropoff: d.dropoff,
+            pickupAddress: d.pickupAddress,
+            dropoffAddress: d.dropoffAddress,
+            status: 'pending'
+          }))}
+        />;
       case "performance":
         return <PerformanceTab isMobile={isMobile} />;
       default:
