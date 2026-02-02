@@ -228,7 +228,7 @@ const Header: React.FC = () => {
     onError: (error) => console.error('Mark all as read error:', error)
   });
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
-    onError: (error) console.error('Delete notification error:', error)
+    onError: (error) => console.error('Delete notification error:', error)
   });
 
   // Check authentication status
