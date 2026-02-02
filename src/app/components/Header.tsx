@@ -77,6 +77,9 @@ const Header: React.FC = () => {
   
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
+
+// Get user data
+  const { data: userData, loading: userLoading } = useQuery(USERS);
   
   // Check if current route is auth page
   const isAuthPage = useMemo(() => {
@@ -93,9 +96,7 @@ const Header: React.FC = () => {
     return [5, 6, 7, 10].includes(activeIndex);
   }, [activeIndex]);
   
-  // Get user data
-  const { data: userData, loading: userLoading } = useQuery(USERS);
-
+  
   // Get userId from user data or auth
   const userId = user?.userId;
 
