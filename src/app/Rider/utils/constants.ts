@@ -6,7 +6,7 @@ import {
   Bell,
   User
 } from "lucide-react";
-import { TabType } from '@/lib/types';
+import { TabType } from '../lib/types';
 
 export const TABS: TabType[] = [
   { 
