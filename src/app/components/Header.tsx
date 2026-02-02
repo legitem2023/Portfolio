@@ -83,6 +83,11 @@ const Header: React.FC = () => {
     return ['/Login', '/Signup', '/ForgotPassword'].includes(pathname);
   }, [pathname]);
   
+  // Check if user is logged in
+  const isUserLoggedIn = useMemo(() => {
+    return !!user || !!userData?.users?.[0];
+  }, [user, userData]);
+  
   // Get user data
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
@@ -774,8 +779,8 @@ const Header: React.FC = () => {
                   </div>
                 </button>
                 
-                {/* Desktop Dropdown with slide-down animation */}
-                {isDropdownOpen && !isMobile() && (
+                {/* Desktop Dropdown with slide-down animation - Only show if user is logged in */}
+                {isDropdownOpen && !isMobile() && isUserLoggedIn && (
                   <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
                     style={{
                       transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
@@ -827,8 +832,8 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Slide From Left Modal with enhanced animation */}
-      {isModalOpen && isMobile() && !isAuthPage && (
+      {/* Mobile Slide From Left Modal with enhanced animation - Only show if user is logged in */}
+      {isModalOpen && isMobile() && !isAuthPage && isUserLoggedIn && (
         <>
           {/* Backdrop with fade-in animation */}
           <div 
