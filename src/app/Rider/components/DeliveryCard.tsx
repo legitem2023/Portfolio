@@ -1,34 +1,39 @@
 "use client";
 import { 
-  Shield,
-  Building,
-  User,
-  MapPin,
+  Package, 
+  MapPin, 
+  Building, 
+  User, 
+  Shield, 
+  Clock, 
   Navigation,
-  Package,
-  Clock,
-  X,
   ThumbsUp,
-  AlertCircle
+  X
 } from "lucide-react";
-import { formatPeso } from "../lib/utils";
+import { Delivery } from '@/lib/types';
+import { formatPeso } from '@/lib/utils';
 
 interface DeliveryCardProps {
-  delivery: any;
+  delivery: Delivery;
   isMobile: boolean;
-  handleAcceptDelivery: (id: string) => void;
-  handleRejectDelivery: (id: string) => void;
+  onAccept: (deliveryId: string) => void;
+  onReject: (deliveryId: string) => void;
 }
 
-export default function DeliveryCard({ delivery, isMobile, handleAcceptDelivery, handleRejectDelivery }: DeliveryCardProps) {
+export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }: DeliveryCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
-      {/* Header with timer */}
+      {/* Header with timer and order info */}
       <div className="bg-orange-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1 lg:gap-2">
             <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
             <span className="font-bold text-orange-700 text-xs lg:text-sm">NEW REQUEST</span>
+            {delivery.isPartialDelivery && (
+              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
+                Piece {delivery.supplierIndex} of {delivery.totalSuppliersInOrder}
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-1 lg:gap-2 bg-orange-100 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full">
             <Clock size={isMobile ? 12 : 14} className="text-orange-600" />
@@ -43,7 +48,14 @@ export default function DeliveryCard({ delivery, isMobile, handleAcceptDelivery,
           <div>
             <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
               <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
-              <h3 className="font-bold text-base lg:text-xl">{delivery.orderId}</h3>
+              <div>
+                <h3 className="font-bold text-base lg:text-xl">{delivery.orderId}</h3>
+                {delivery.isPartialDelivery && (
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Partial delivery - This order has items from {delivery.totalSuppliersInOrder} different suppliers
+                  </p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
               <Building size={isMobile ? 14 : 16} className="text-blue-400" />
@@ -56,7 +68,29 @@ export default function DeliveryCard({ delivery, isMobile, handleAcceptDelivery,
           </div>
           <div className="text-right">
             <div className="text-xl lg:text-3xl font-bold text-green-600">{delivery.payout}</div>
-            <p className="text-gray-500 text-xs lg:text-sm">Payout</p>
+            <p className="text-gray-500 text-xs lg:text-sm">Payout for this piece</p>
+            {delivery.subtotal && (
+              <p className="text-xs text-gray-400 mt-0.5">Subtotal: {delivery.subtotal}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Item details for this supplier */}
+        <div className="mb-3 lg:mb-4 bg-gray-50 p-2 lg:p-3 rounded-lg">
+          <h4 className="font-semibold text-sm lg:text-base mb-1 lg:mb-2 flex items-center gap-1 lg:gap-2">
+            <Package size={isMobile ? 14 : 16} />
+            Items from this supplier ({delivery.items} item{delivery.items !== 1 ? "s" : ""})
+          </h4>
+          <div className="space-y-1 lg:space-y-2">
+            {delivery.supplierItems?.map((item) => (
+              <div key={item.id} className="flex justify-between text-xs lg:text-sm">
+                <div>
+                  <span className="font-medium">{item.product.name}</span>
+                  <span className="text-gray-600 ml-1">(Qty: {item.quantity})</span>
+                </div>
+                <div className="text-gray-700">{formatPeso(item.price * item.quantity)}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -125,14 +159,14 @@ export default function DeliveryCard({ delivery, isMobile, handleAcceptDelivery,
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <button
-            onClick={() => handleRejectDelivery(delivery.id)}
+            onClick={() => onReject(delivery.id)}
             className="bg-white border border-gray-300 text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base"
           >
             <X size={isMobile ? 18 : 20} />
             <span>Reject</span>
           </button>
           <button
-            onClick={() => handleAcceptDelivery(delivery.id)}
+            onClick={() => onAccept(delivery.id)}
             className="bg-green-500 text-white px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base"
           >
             <ThumbsUp size={isMobile ? 18 : 20} />
