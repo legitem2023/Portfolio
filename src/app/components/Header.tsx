@@ -83,14 +83,17 @@ const Header: React.FC = () => {
     return ['/Login', '/Signup', '/ForgotPassword'].includes(pathname);
   }, [pathname]);
   
-  // Check if user is logged in
-  const isUserLoggedIn = useMemo(() => {
-    return !!user || !!userData?.users?.[0];
-  }, [user, userData]);
+
   
   // Get user data
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
+  // Check if user is logged in
+  const isUserLoggedIn = useMemo(() => {
+    return !!user || !!userData?.users?.[0];
+  }, [user, userData]);
+
+  
   // Get userId from user data or auth
   const userId = user?.userId;
 
