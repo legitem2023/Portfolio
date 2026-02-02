@@ -595,102 +595,46 @@ function OrderLoadingSkeleton() {
 
 function OrderError() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-rose-100 p-2 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 sm:p-4">
       <div className="max-w-7xl mx-auto">
-        {/* Error Header */}
         <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <div className="relative h-8 sm:h-10 bg-red-200 rounded-lg w-48 sm:w-56 mx-auto mb-2 sm:mb-3 overflow-hidden">
+          <div className="relative h-6 sm:h-8 bg-purple-200 rounded w-40 sm:w-48 mx-auto mb-1 sm:mb-2 overflow-hidden">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
-          <div className="relative h-4 sm:h-5 bg-red-200 rounded w-64 sm:w-80 mx-auto mb-1 sm:mb-2 overflow-hidden">
-            <div className="absolute inset-0 shimmer-effect"></div>
-          </div>
-          <div className="relative h-3 sm:h-4 bg-red-100 rounded w-56 sm:w-72 mx-auto overflow-hidden">
+          <div className="relative h-3 sm:h-4 bg-purple-200 rounded w-48 sm:w-64 mx-auto overflow-hidden">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
         </div>
-
-        {/* Error Icon Skeleton */}
-        <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-red-200 rounded-full overflow-hidden">
-            <div className="absolute inset-0 shimmer-effect"></div>
-          </div>
-        </div>
-
-        {/* Error Message Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 px-1 max-w-4xl mx-auto">
-          {/* Error Details Card */}
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
-            <div className="relative h-5 sm:h-6 bg-red-200 rounded mb-3 sm:mb-4 overflow-hidden">
+        
+        {/* Tab Loading Skeleton */}
+        <div className="flex flex-wrap justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 md:mb-8 px-1">
+          {[...Array(7)].map((_, i) => (
+            <div key={i} className="relative h-10 sm:h-12 w-16 sm:w-24 md:w-32 bg-purple-100 rounded-lg overflow-hidden">
               <div className="absolute inset-0 shimmer-effect"></div>
             </div>
-            <div className="space-y-2 sm:space-y-3">
-              <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
-                <div className="absolute inset-0 shimmer-effect"></div>
-              </div>
-              <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
-                <div className="absolute inset-0 shimmer-effect"></div>
-              </div>
-              <div className="relative h-3 sm:h-4 bg-red-100 rounded w-5/6 overflow-hidden">
-                <div className="absolute inset-0 shimmer-effect"></div>
-              </div>
-              <div className="relative h-3 sm:h-4 bg-red-100 rounded w-2/3 overflow-hidden">
-                <div className="absolute inset-0 shimmer-effect"></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons Card */}
-          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
-            <div className="relative h-5 sm:h-6 bg-red-200 rounded mb-3 sm:mb-4 overflow-hidden">
-              <div className="absolute inset-0 shimmer-effect"></div>
-            </div>
-            <div className="space-y-3 sm:space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="relative h-10 sm:h-12 bg-red-100 rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 shimmer-effect"></div>
-                </div>
-              ))}
-            </div>
-          </div>
+          ))}
         </div>
-
-        {/* Error Timeline Skeleton */}
-        <div className="max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-1">
-          <div className="relative h-5 sm:h-6 bg-red-200 rounded w-48 mb-3 sm:mb-4 overflow-hidden">
-            <div className="absolute inset-0 shimmer-effect"></div>
-          </div>
-          <div className="space-y-2 sm:space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-center">
-                <div className="relative w-3 h-3 sm:w-4 sm:h-4 bg-red-200 rounded-full overflow-hidden mr-2 sm:mr-3">
-                  <div className="absolute inset-0 shimmer-effect"></div>
-                </div>
-                <div className="flex-1">
-                  <div className="relative h-3 sm:h-4 bg-red-100 rounded w-3/4 overflow-hidden">
-                    <div className="absolute inset-0 shimmer-effect"></div>
-                  </div>
-                </div>
-                <div className="relative h-3 sm:h-4 bg-red-100 rounded w-16 overflow-hidden ml-2">
-                  <div className="absolute inset-0 shimmer-effect"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Contact Support Skeleton */}
-        <div className="text-center mt-6 sm:mt-8 md:mt-10 px-1">
-          <div className="relative h-4 sm:h-5 bg-red-200 rounded w-64 sm:w-80 mx-auto mb-2 sm:mb-3 overflow-hidden">
-            <div className="absolute inset-0 shimmer-effect"></div>
-          </div>
-          <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="relative h-8 sm:h-10 bg-red-100 rounded-lg w-28 sm:w-32 overflow-hidden">
+        
+        {/* Cards Loading Skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6 px-1">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
+              <div className="relative h-4 sm:h-6 bg-red-200 rounded mb-3 sm:mb-4 overflow-hidden">
                 <div className="absolute inset-0 shimmer-effect"></div>
               </div>
-            ))}
-          </div>
+              <div className="space-y-2 sm:space-y-3">
+                <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+                <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+                <div className="relative h-3 sm:h-4 bg-red-100 rounded w-2/3 overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
