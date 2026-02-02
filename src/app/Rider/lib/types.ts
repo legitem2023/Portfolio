@@ -20,11 +20,11 @@ export const ACCEPT_BY_RIDER = gql`
 `;
 // GraphQL Query with address field
 export const ORDER_LIST_QUERY = gql`
-  query OrderList(
+  query NewOrder(
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
   ) {
-    orderlist(filter: $filter, pagination: $pagination) {
+    neworder(filter: $filter, pagination: $pagination) {
       orders {
         id
         orderNumber
