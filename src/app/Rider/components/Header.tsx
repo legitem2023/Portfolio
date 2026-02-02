@@ -1,17 +1,24 @@
 "use client";
-import { Bell, Power } from "lucide-react";
+import { useState } from "react";
+import { Bell, Package } from "lucide-react";
 
 interface HeaderProps {
   isMobile: boolean;
   isOnline: boolean;
-  newDeliveries: any[];
-  loading: boolean;
-  setIsOnline: (online: boolean) => void;
+  setIsOnline: (isOnline: boolean) => void;
+  activeTab: string;
+  newDeliveriesCount: number;
 }
 
-export default function Header({ isMobile, isOnline, newDeliveries, loading, setIsOnline }: HeaderProps) {
-  return (
-    <div className="lg:hidden">
+export default function Header({ 
+  isMobile, 
+  isOnline, 
+  setIsOnline, 
+  activeTab, 
+  newDeliveriesCount 
+}: HeaderProps) {
+  if (isMobile) {
+    return (
       <header className="bg-white shadow-lg">
         <div className="px-4 py-3">
           <div className="flex justify-between items-center">
@@ -34,9 +41,9 @@ export default function Header({ isMobile, isOnline, newDeliveries, loading, set
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
                   MR
                 </div>
-                {newDeliveries.length > 0 && (
+                {newDeliveriesCount > 0 && activeTab !== "newDeliveries" && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                    {newDeliveries.length}
+                    {newDeliveriesCount}
                   </span>
                 )}
               </div>
@@ -44,6 +51,36 @@ export default function Header({ isMobile, isOnline, newDeliveries, loading, set
           </div>
         </div>
       </header>
-    </div>
+    );
+  }
+
+  return (
+    <header className="bg-white shadow-lg">
+      <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              <span className="text-blue-600">VendorCity</span> Rider Portal
+            </h1>
+            <p className="text-gray-600 text-sm">
+              {newDeliveriesCount} delivery pieces available
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="font-semibold">Michael Rider</p>
+              <p className="text-sm text-gray-500">Vehicle: HD 4587</p>
+            </div>
+            <div className="relative">
+              <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                MR
+              </div>
+              <div className={`absolute -top-1 -right-1 w-5 h-5 rounded-full border-2 border-white ${isOnline ? "bg-green-500" : "bg-red-500"}`}></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }
