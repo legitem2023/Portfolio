@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { Map, MapPin, Navigation, Package } from "lucide-react";
-import { Delivery } from '@/lib/types';
-import { getCoordinatesFromAddress, generateRoutePoints } from '@/lib/mapUtils';
+import { Delivery } from '../lib/types';
+import { getCoordinatesFromAddress, generateRoutePoints } from '../lib/mapUtils';
 
 interface MapTabProps {
   isMobile: boolean;
