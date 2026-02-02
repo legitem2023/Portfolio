@@ -92,7 +92,7 @@ const Header: React.FC = () => {
   const isUserLoggedIn = useMemo(() => {
     return !!user || !!userData?.users?.[0];
   }, [user, userData]);
-console.log("index", activeIndex, "user",iseUserLoggedIn);
+console.log("index", activeIndex, "user",isUserLoggedIn);
   
   // Get userId from user data or auth
   const userId = user?.userId;
