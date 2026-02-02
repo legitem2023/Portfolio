@@ -2170,10 +2170,7 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   } catch (error) {
     console.error('Error accepting order:', error);
     return {
-      success: false,
-      message: 'Failed to accept order',
-      error: error.message,
-      order: null
+      statusText: 'Failed to accept order'
     };
   }
 },
