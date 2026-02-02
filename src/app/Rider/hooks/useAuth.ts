@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import { decryptToken } from '../../../../utils/decryptToken';
 interface User {
-  id: string;
+  userId: string;
   role: string;
-  firstName?: string;
+  name?: string;
   email?: string;
-  // ... other user fields
+  phone: string;  
 }
 
 export const useAuth = () => {
