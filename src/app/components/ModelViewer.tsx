@@ -26,7 +26,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ data }) => {
     camera-controls
     touch-action="pan-y"
     shadow-intensity="2"
-    environment-image="https://portfolio-xi-eight-92.vercel.app/modern_evening_street_2k.hdr"
     skybox-height="1m"
     max-camera-orbit="auto 90deg auto"
     className="aspect-[4/3]"
