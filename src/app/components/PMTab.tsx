@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
+import Header from './Header';
 import { 
   Search, 
   X, 
@@ -680,6 +681,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
+    <div>
+    <Header/>
     <div className="relative top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
@@ -1048,6 +1051,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           background-color: #faf9ff;
         }
       `}</style>
+    </div>
     </div>
   );
 };
