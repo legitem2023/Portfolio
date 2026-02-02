@@ -23,9 +23,9 @@ export default function LogoutButton() {
     setIsLoggingOut(true); 
     await signOut({
       redirect: true,
-      callbackUrl: '/', // Redirect to home after logout
+      callbackUrl: '/Login', // Redirect to Login after logout
     });
-   router.push('https://portfolio-xi-eight-92.vercel.app/Login');
+   router.push('/Login');
   };
   
   return (
