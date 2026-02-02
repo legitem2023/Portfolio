@@ -167,6 +167,8 @@ export interface Delivery {
   supplierIndex: number;
 }
 
+// ... other interfaces ...
+
 export interface TabType {
   id: string;
   label: string;
