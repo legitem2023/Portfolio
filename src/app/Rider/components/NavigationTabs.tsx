@@ -1,5 +1,12 @@
 "use client";
-import { TABS } from '../utils/constants';
+import { 
+  Navigation, 
+  Package, 
+  Map, 
+  BarChart,
+  Bell
+} from "lucide-react";
+import { TabType } from '../lib/types';
 
 interface NavigationTabsProps {
   activeTab: string;
@@ -7,6 +14,40 @@ interface NavigationTabsProps {
   isMobile: boolean;
   newDeliveriesCount: number;
 }
+
+const TABS_WITH_ICONS: TabType[] = [
+  { 
+    id: "newDeliveries", 
+    label: "New", 
+    icon: <Bell />,
+    desktopLabel: "New Deliveries",
+    hasNotification: true 
+  },
+  { 
+    id: "tracking", 
+    label: "Tracking", 
+    icon: <Navigation />,
+    desktopLabel: "Live Tracking" 
+  },
+  { 
+    id: "deliveries", 
+    label: "Active", 
+    icon: <Package />,
+    desktopLabel: "Active Deliveries" 
+  },
+  { 
+    id: "map", 
+    label: "Map", 
+    icon: <Map />,
+    desktopLabel: "Navigation Map" 
+  },
+  { 
+    id: "performance", 
+    label: "Stats", 
+    icon: <BarChart />,
+    desktopLabel: "Performance" 
+  }
+];
 
 export default function NavigationTabs({ 
   activeTab, 
@@ -18,7 +59,7 @@ export default function NavigationTabs({
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
         <div className="flex justify-around items-center px-1 py-2">
-          {TABS.map((tab) => (
+          {TABS_WITH_ICONS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -31,10 +72,7 @@ export default function NavigationTabs({
               `}
             >
               <div className="relative">
-                {isMobile 
-                  ? React.cloneElement(tab.icon as React.ReactElement, { size: 20 })
-                  : tab.icon
-                }
+                {React.cloneElement(tab.icon as React.ReactElement, { size: 20 })}
                 {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
                     {newDeliveriesCount}
@@ -54,7 +92,7 @@ export default function NavigationTabs({
       <div className="bg-white rounded-lg shadow">
         <div className="border-b border-gray-200">
           <nav className="flex">
-            {TABS.map((tab) => (
+            {TABS_WITH_ICONS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -66,7 +104,7 @@ export default function NavigationTabs({
                   }
                 `}
               >
-                {tab.icon}
+                {React.cloneElement(tab.icon as React.ReactElement, { size: 24 })}
                 <span>{tab.desktopLabel}</span>
                 {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
                   <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
