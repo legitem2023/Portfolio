@@ -23,7 +23,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
 
-  if(!data?.user) return "User not found!";
+  if(!data?.user) return <UserProfileShimmer />;
   
   const user: User = data?.user;
   return (
