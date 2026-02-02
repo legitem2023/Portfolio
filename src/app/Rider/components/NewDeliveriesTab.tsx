@@ -1,8 +1,8 @@
 "use client";
 import { Bell, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useQuery } from "@apollo/client";
-import { ORDER_LIST_QUERY, OrderListResponse } from '@/lib/types';
-import { mapOrdersToDeliveriesBySupplier, formatPeso } from '@/lib/utils';
+import { ORDER_LIST_QUERY, OrderListResponse } from '../lib/types';
+import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
 import DeliveryCard from './DeliveryCard';
 
 interface NewDeliveriesTabProps {
