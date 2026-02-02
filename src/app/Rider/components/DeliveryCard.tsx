@@ -10,8 +10,8 @@ import {
   ThumbsUp,
   X
 } from "lucide-react";
-import { Delivery } from '@/lib/types';
-import { formatPeso } from '@/lib/utils';
+import { Delivery } from '../lib/types';
+import { formatPeso } from '../lib/utils';
 
 interface DeliveryCardProps {
   delivery: Delivery;
