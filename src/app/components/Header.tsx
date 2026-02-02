@@ -297,7 +297,7 @@ const Header: React.FC = () => {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
-  }, [protectedIndexes,activeIndex, isUserLoggedIn, isLoadingUser, router]);
+  }, [activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
   // Close dropdown when clicking outside (desktop)
   useEffect(() => {
