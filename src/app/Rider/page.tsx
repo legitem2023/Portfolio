@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Head from "next/head";
 import { useQuery } from "@apollo/client";
-import { ORDER_LIST_QUERY, OrderListResponse } from './lib/types';
+import { ACCEPT_BY_RIDER, ORDER_LIST_QUERY, OrderListResponse } from './lib/types';
 import { mapOrdersToDeliveriesBySupplier } from './lib/utils';
 import { useWindowSize } from './hooks/useWindowSize';
 import Header from './components/Header';
