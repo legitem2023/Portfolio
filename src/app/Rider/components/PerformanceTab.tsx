@@ -1,6 +1,6 @@
 "use client";
 import { BarChart, Zap, Target, Star, Truck, DollarSign, Clock } from "lucide-react";
-import { formatPeso } from '@/lib/utils';
+import { formatPeso } from '../lib/utils';
 
 interface PerformanceTabProps {
   isMobile: boolean;
