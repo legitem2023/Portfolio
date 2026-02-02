@@ -1,11 +1,11 @@
 "use client";
-import { Package, Zap, MapPin, AlertTriangle, CheckCircle, Phone, Power, Navigation } from "lucide-react";
-import { formatPeso } from "../lib/utils";
+import { Package, Zap, MapPin, AlertTriangle, CheckCircle, Phone, Power } from "lucide-react";
+import { formatPeso } from '@/lib/utils';
 
 interface TrackingTabProps {
   isMobile: boolean;
   isOnline: boolean;
-  setIsOnline: (online: boolean) => void;
+  setIsOnline: (isOnline: boolean) => void;
 }
 
 export default function TrackingTab({ isMobile, isOnline, setIsOnline }: TrackingTabProps) {
