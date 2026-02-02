@@ -78,6 +78,11 @@ const Header: React.FC = () => {
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   
+  // Check if current route is auth page
+  const isAuthPage = useMemo(() => {
+    return ['/Login', '/Signup', '/ForgotPassword'].includes(pathname);
+  }, [pathname]);
+  
   // Get user data
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
@@ -223,7 +228,7 @@ const Header: React.FC = () => {
     onError: (error) => console.error('Mark all as read error:', error)
   });
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
-    onError: (error) => console.error('Delete notification error:', error)
+    onError: (error) console.error('Delete notification error:', error)
   });
 
   // Check authentication status
@@ -339,6 +344,8 @@ const Header: React.FC = () => {
   }, []);
 
   const handleUserButtonClick = () => {
+    if (isAuthPage) return; // Don't open on auth pages
+    
     if (isMobile()) {
       setIsModalOpen(true);
     } else {
@@ -347,6 +354,8 @@ const Header: React.FC = () => {
   };
 
   const handleBellButtonClick = () => {
+    if (isAuthPage) return; // Don't open on auth pages
+    
     if (!userId) {
       // If no user, redirect to login
       router.push('/Login');
@@ -526,296 +535,300 @@ const Header: React.FC = () => {
           </div>
              
           <div className="z-20 h-[100%] flex items-center space-x-2">
-            {/* Bell Button with Notification Badge */}
-            <div className="relative" ref={bellRef}>
-              <button
-                onClick={handleBellButtonClick}
-                className="relative flex items-center text-sm focus:outline-none"
-                disabled={isLoadingUser}
-                title={!userId ? "Sign in to view notifications" : ""}
-              >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
-                  userId && !isLoadingUser ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
-                }`}>
-                  <Bell className={`w-5 h-5 ${
-                    userId && !isLoadingUser ? 'text-indigo-600' : 'text-gray-400'
-                  }`} />
-                </div>
-                {isLoadingUser ? (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                  </span>
-                ) : unreadCount > 0 && userId && !notificationsLoading ? (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                ) : null}
-                {notificationsLoading && userId && (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-                  </span>
-                )}
-              </button>
+            {/* Bell Button with Notification Badge - Hidden on auth pages */}
+            {!isAuthPage && (
+              <div className="relative" ref={bellRef}>
+                <button
+                  onClick={handleBellButtonClick}
+                  className="relative flex items-center text-sm focus:outline-none"
+                  disabled={isLoadingUser}
+                  title={!userId ? "Sign in to view notifications" : ""}
+                >
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border ${
+                    userId && !isLoadingUser ? 'bg-purple-100 border-indigo-200' : 'bg-gray-100 border-gray-200'
+                  }`}>
+                    <Bell className={`w-5 h-5 ${
+                      userId && !isLoadingUser ? 'text-indigo-600' : 'text-gray-400'
+                    }`} />
+                  </div>
+                  {isLoadingUser ? (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                    </span>
+                  ) : unreadCount > 0 && userId && !notificationsLoading ? (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  ) : null}
+                  {notificationsLoading && userId && (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                    </span>
+                  )}
+                </button>
 
-              {/* Slide-up Bell Popup with enhanced animation */}
-              {isBellPopupOpen && userId && (
-                <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
-                  {/* Backdrop for mobile with fade-in animation */}
-                  <div 
-                    className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
-                    style={{
-                      opacity: isBellPopupOpen ? 0.5 : 0,
-                      backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
-                    }}
-                    onClick={() => setIsBellPopupOpen(false)}
-                  />
-                  
-                  {/* Popup Container with enhanced slide-up animation */}
-                  <div className={`
-                    fixed bottom-0 left-0 right-0 
-                    md:absolute md:bottom-auto md:top-full 
-                    bg-white rounded-t-2xl md:rounded-2xl 
-                    shadow-2xl border border-gray-200 
-                    transform transition-all duration-300 ease-out
-                    ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
-                    max-h-[80vh] md:max-h-[70vh] flex flex-col
-                  `}>
-                    {/* Header */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
-                      <div className="flex items-center space-x-2">
-                        <Bell className="w-5 h-5 text-purple-600" />
-                        <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
-                        {unreadCount > 0 && !notificationsLoading && (
-                          <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
-                            {unreadCount} new
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {notificationsLoading ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-                        ) : (
-                          <>
-                            {unreadCount > 0 && (
+                {/* Slide-up Bell Popup with enhanced animation */}
+                {isBellPopupOpen && userId && (
+                  <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
+                    {/* Backdrop for mobile with fade-in animation */}
+                    <div 
+                      className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
+                      style={{
+                        opacity: isBellPopupOpen ? 0.5 : 0,
+                        backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
+                      }}
+                      onClick={() => setIsBellPopupOpen(false)}
+                    />
+                    
+                    {/* Popup Container with enhanced slide-up animation */}
+                    <div className={`
+                      fixed bottom-0 left-0 right-0 
+                      md:absolute md:bottom-auto md:top-full 
+                      bg-white rounded-t-2xl md:rounded-2xl 
+                      shadow-2xl border border-gray-200 
+                      transform transition-all duration-300 ease-out
+                      ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
+                      max-h-[80vh] md:max-h-[70vh] flex flex-col
+                    `}>
+                      {/* Header */}
+                      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
+                        <div className="flex items-center space-x-2">
+                          <Bell className="w-5 h-5 text-purple-600" />
+                          <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+                          {unreadCount > 0 && !notificationsLoading && (
+                            <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                              {unreadCount} new
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {notificationsLoading ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
+                          ) : (
+                            <>
+                              {unreadCount > 0 && (
+                                <button
+                                  onClick={markAllAsRead}
+                                  className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+                                >
+                                  Mark all read
+                                </button>
+                              )}
                               <button
-                                onClick={markAllAsRead}
-                                className="px-3 py-1 text-sm text-purple-600 hover:bg-purple-50 rounded-lg transition-colors duration-200"
+                                onClick={() => setIsBellPopupOpen(false)}
+                                className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
                               >
-                                Mark all read
+                                <X className="w-5 h-5 text-gray-500" />
                               </button>
-                            )}
-                            <button
-                              onClick={() => setIsBellPopupOpen(false)}
-                              className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
-                            >
-                              <X className="w-5 h-5 text-gray-500" />
-                            </button>
-                          </>
-                        )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Notifications List */}
-                    <div className="flex-1 overflow-y-auto">
-                      {notificationsLoading ? (
-                        <div className="flex flex-col items-center justify-center p-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
-                          <p className="text-gray-600">Loading notifications...</p>
-                        </div>
-                      ) : notificationsError ? (
-                        <div className="flex flex-col items-center justify-center p-8">
-                          <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
-                          <p className="text-gray-600">Failed to load notifications</p>
-                          <button
-                            onClick={() => refetchNotifications()}
-                            className="mt-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200"
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      ) : notifications.length > 0 ? (
-                        <div className="divide-y divide-gray-100">
-                          {notifications.map((notification, index) => (
-                            <div
-                              key={notification.id}
-                              className={`
-                                p-4 hover:bg-gray-50 transition-all duration-200 ease-out cursor-pointer
-                                ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
-                                transform transition-transform duration-300 ease-out
-                                ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
-                              `}
-                              style={{
-                                transitionDelay: `${index * 50}ms`
-                              }}
-                              onClick={() => handleNotificationClick(notification)}
+                      {/* Notifications List */}
+                      <div className="flex-1 overflow-y-auto">
+                        {notificationsLoading ? (
+                          <div className="flex flex-col items-center justify-center p-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-4"></div>
+                            <p className="text-gray-600">Loading notifications...</p>
+                          </div>
+                        ) : notificationsError ? (
+                          <div className="flex flex-col items-center justify-center p-8">
+                            <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+                            <p className="text-gray-600">Failed to load notifications</p>
+                            <button
+                              onClick={() => refetchNotifications()}
+                              className="mt-2 px-4 py-2 text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200"
                             >
-                              <div className="flex items-start space-x-3">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                                  getNotificationColor(notification.type)
-                                }`}>
-                                  {getNotificationIcon(notification.type)}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center justify-between">
-                                    <p className={`text-xs font-small ${
-                                      !notification.isRead ? 'text-gray-900' : 'text-gray-700'
-                                    }`}>
-                                      {notification.title}
+                              Retry
+                            </button>
+                          </div>
+                        ) : notifications.length > 0 ? (
+                          <div className="divide-y divide-gray-100">
+                            {notifications.map((notification, index) => (
+                              <div
+                                key={notification.id}
+                                className={`
+                                  p-4 hover:bg-gray-50 transition-all duration-200 ease-out cursor-pointer
+                                  ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                                  transform transition-transform duration-300 ease-out
+                                  ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
+                                `}
+                                style={{
+                                  transitionDelay: `${index * 50}ms`
+                                }}
+                                onClick={() => handleNotificationClick(notification)}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                                    getNotificationColor(notification.type)
+                                  }`}>
+                                    {getNotificationIcon(notification.type)}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <p className={`text-xs font-small ${
+                                        !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                                      }`}>
+                                        {notification.title}
+                                      </p>
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-xs text-gray-500 flex items-center">
+                                          <Clock className="w-3 h-3 mr-1" />
+                                          {getTimeAgo(notification.createdAt)}
+                                        </span>
+                                        {!notification.isRead && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              markAsRead(notification.id);
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                          >
+                                            Mark read
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <p className="mt-1 text-sm text-gray-600">
+                                      {notification.message}
                                     </p>
-                                    <div className="flex items-center space-x-2">
-                                      <span className="text-xs text-gray-500 flex items-center">
-                                        <Clock className="w-3 h-3 mr-1" />
-                                        {getTimeAgo(notification.createdAt)}
-                                      </span>
-                                      {!notification.isRead && (
+                                    <div className="mt-2 flex space-x-2">
+                                      {notification.type === NotificationType.NEW_MESSAGE && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            markAsRead(notification.id);
+                                            setIsBellPopupOpen(false);
+                                            router.push('/Messaging');
                                           }}
-                                          className="text-xs text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
                                         >
-                                          Mark read
+                                          View Message
                                         </button>
                                       )}
+                                      {(notification.type === NotificationType.ORDER_CREATED || 
+                                        notification.type === NotificationType.ORDER_UPDATED || 
+                                        notification.type === NotificationType.ORDER_DELIVERED) && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsBellPopupOpen(false);
+                                            handleTabClick(10);
+                                          }}
+                                          className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-200"
+                                        >
+                                          View Order
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          deleteNotification(notification.id);
+                                        }}
+                                        className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200"
+                                      >
+                                        Delete
+                                      </button>
                                     </div>
-                                  </div>
-                                  <p className="mt-1 text-sm text-gray-600">
-                                    {notification.message}
-                                  </p>
-                                  <div className="mt-2 flex space-x-2">
-                                    {notification.type === NotificationType.NEW_MESSAGE && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setIsBellPopupOpen(false);
-                                          router.push('/Messaging');
-                                        }}
-                                        className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
-                                      >
-                                        View Message
-                                      </button>
-                                    )}
-                                    {(notification.type === NotificationType.ORDER_CREATED || 
-                                      notification.type === NotificationType.ORDER_UPDATED || 
-                                      notification.type === NotificationType.ORDER_DELIVERED) && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setIsBellPopupOpen(false);
-                                          handleTabClick(10);
-                                        }}
-                                        className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-200"
-                                      >
-                                        View Order
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        deleteNotification(notification.id);
-                                      }}
-                                      className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200"
-                                    >
-                                      Delete
-                                    </button>
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
-                          <Bell className="w-12 h-12 text-gray-300 mb-4" />
-                          <p className="text-gray-500 font-medium">No notifications</p>
-                          <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
-                        </div>
-                      )}
-                    </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
+                            <Bell className="w-12 h-12 text-gray-300 mb-4" />
+                            <p className="text-gray-500 font-medium">No notifications</p>
+                            <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                          </div>
+                        )}
+                      </div>
 
-                    {/* Footer */}
-                    <div className="p-4 border-t border-gray-200 bg-gray-50">
-                      <button
-                        onClick={() => {
-                          setIsBellPopupOpen(false);
-                          router.push('/Notifications');
-                        }}
-                        className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
-                      >
-                        View all notifications
-                      </button>
+                      {/* Footer */}
+                      <div className="p-4 border-t border-gray-200 bg-gray-50">
+                        <button
+                          onClick={() => {
+                            setIsBellPopupOpen(false);
+                            router.push('/Notifications');
+                          }}
+                          className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
+                        >
+                          View all notifications
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
-            {/* User Button */}
-            <div ref={dropdownRef}>
-              <button
-                onClick={handleUserButtonClick}
-                className="flex items-center text-sm focus:outline-none group"
-              >
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
-                  <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
-                </div>
-              </button>
-              
-              {/* Desktop Dropdown with slide-down animation */}
-              {isDropdownOpen && !isMobile() && (
-                <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
-                  style={{
-                    transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
-                    opacity: isDropdownOpen ? 1 : 0
-                  }}
+            {/* User Button - Hidden on auth pages */}
+            {!isAuthPage && (
+              <div ref={dropdownRef}>
+                <button
+                  onClick={handleUserButtonClick}
+                  className="flex items-center text-sm focus:outline-none group"
                 >
-                  <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      handleTabClick(7);
+                  <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
+                    <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                </button>
+                
+                {/* Desktop Dropdown with slide-down animation */}
+                {isDropdownOpen && !isMobile() && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
+                    style={{
+                      transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
+                      opacity: isDropdownOpen ? 1 : 0
                     }}
                   >
-                    <User className="mr-2 text-gray-400 w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
-                    <span className="transition-all duration-200">Your Profile</span>
-                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleTabClick(7);
+                      }}
+                    >
+                      <User className="mr-2 text-gray-400 w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                      <span className="transition-all duration-200">Your Profile</span>
+                      <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        router.push('/Messaging');
+                      }}
+                    >
+                      <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
+                      <span className="transition-all duration-200">Messages</span>
+                      <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleTabClick(10);
+                      }}
+                    >
+                      <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
+                      <span className="transition-all duration-200">Orders</span>
+                      <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
+                    <div className="transform transition-all duration-300 hover:scale-[1.02]">
+                      <LogoutButton/>
+                    </div>
                   </div>
-                  <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      router.push('/Messaging');
-                    }}
-                  >
-                    <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
-                    <span className="transition-all duration-200">Messages</span>
-                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <div
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      handleTabClick(10);
-                    }}
-                  >
-                    <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
-                    <span className="transition-all duration-200">Orders</span>
-                    <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
-                  <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                    <LogoutButton/>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Mobile Slide From Left Modal with enhanced animation */}
-      {isModalOpen && isMobile() && (
+      {isModalOpen && isMobile() && !isAuthPage && (
         <>
           {/* Backdrop with fade-in animation */}
           <div 
