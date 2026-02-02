@@ -2,16 +2,16 @@
 import { useState } from "react";
 import Head from "next/head";
 import { useQuery } from "@apollo/client";
-import { ORDER_LIST_QUERY, OrderListResponse } from '@/lib/types';
-import { mapOrdersToDeliveriesBySupplier } from '@/lib/utils';
-import { useWindowSize } from '@/hooks/useWindowSize';
-import Header from '@/components/Header';
-import NavigationTabs from '@/components/NavigationTabs';
-import NewDeliveriesTab from '@/components/NewDeliveriesTab';
-import TrackingTab from '@/components/TrackingTab';
-import ActiveDeliveriesTab from '@/components/ActiveDeliveriesTab';
-import MapTab from '@/components/MapTab';
-import PerformanceTab from '@/components/PerformanceTab';
+import { ORDER_LIST_QUERY, OrderListResponse } from './lib/types';
+import { mapOrdersToDeliveriesBySupplier } from './lib/utils';
+import { useWindowSize } from './hooks/useWindowSize';
+import Header from './components/Header';
+import NavigationTabs from './components/NavigationTabs';
+import NewDeliveriesTab from './components/NewDeliveriesTab';
+import TrackingTab from './components/TrackingTab';
+import ActiveDeliveriesTab from './components/ActiveDeliveriesTab';
+import MapTab from './components/MapTab';
+import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
 
 export default function RiderDashboard() {
