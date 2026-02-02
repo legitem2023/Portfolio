@@ -76,7 +76,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   };
 
   if (loading) return <OrderLoadingSkeleton />;
-  if (error) return <OrderError error={error} />;
+  if (error) return <OrderError />;
 
   const orders: Order[] = data.orders;
   
@@ -592,20 +592,136 @@ function OrderLoadingSkeleton() {
 }
 
 // Error Component - Responsive
-function OrderError({ error }: { error: any }) {
+// components/OrderError.tsx
+'use client';
+
+function OrderError() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 md:p-8 max-w-sm sm:max-w-md w-full text-center">
-        <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4">😔</div>
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-purple-900 mb-1 sm:mb-2">Unable to Load Orders</h2>
-        <p className="text-sm sm:text-base text-purple-600 mb-3 sm:mb-4">{error.message}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 sm:px-6 rounded-lg font-medium transition-colors duration-200 text-sm sm:text-base"
-        >
-          Try Again
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-rose-100 p-2 sm:p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Error Header */}
+        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <div className="relative h-8 sm:h-10 bg-red-200 rounded-lg w-48 sm:w-56 mx-auto mb-2 sm:mb-3 overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+          <div className="relative h-4 sm:h-5 bg-red-200 rounded w-64 sm:w-80 mx-auto mb-1 sm:mb-2 overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+          <div className="relative h-3 sm:h-4 bg-red-100 rounded w-56 sm:w-72 mx-auto overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+        </div>
+
+        {/* Error Icon Skeleton */}
+        <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-red-200 rounded-full overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+        </div>
+
+        {/* Error Message Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4 md:gap-6 px-1 max-w-4xl mx-auto">
+          {/* Error Details Card */}
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
+            <div className="relative h-5 sm:h-6 bg-red-200 rounded mb-3 sm:mb-4 overflow-hidden">
+              <div className="absolute inset-0 shimmer-effect"></div>
+            </div>
+            <div className="space-y-2 sm:space-y-3">
+              <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
+              <div className="relative h-3 sm:h-4 bg-red-100 rounded overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
+              <div className="relative h-3 sm:h-4 bg-red-100 rounded w-5/6 overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
+              <div className="relative h-3 sm:h-4 bg-red-100 rounded w-2/3 overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons Card */}
+          <div className="bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 md:p-5 relative overflow-hidden">
+            <div className="relative h-5 sm:h-6 bg-red-200 rounded mb-3 sm:mb-4 overflow-hidden">
+              <div className="absolute inset-0 shimmer-effect"></div>
+            </div>
+            <div className="space-y-3 sm:space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="relative h-10 sm:h-12 bg-red-100 rounded-lg overflow-hidden">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Timeline Skeleton */}
+        <div className="max-w-4xl mx-auto mt-6 sm:mt-8 md:mt-10 px-1">
+          <div className="relative h-5 sm:h-6 bg-red-200 rounded w-48 mb-3 sm:mb-4 overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+          <div className="space-y-2 sm:space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center">
+                <div className="relative w-3 h-3 sm:w-4 sm:h-4 bg-red-200 rounded-full overflow-hidden mr-2 sm:mr-3">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+                <div className="flex-1">
+                  <div className="relative h-3 sm:h-4 bg-red-100 rounded w-3/4 overflow-hidden">
+                    <div className="absolute inset-0 shimmer-effect"></div>
+                  </div>
+                </div>
+                <div className="relative h-3 sm:h-4 bg-red-100 rounded w-16 overflow-hidden ml-2">
+                  <div className="absolute inset-0 shimmer-effect"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Contact Support Skeleton */}
+        <div className="text-center mt-6 sm:mt-8 md:mt-10 px-1">
+          <div className="relative h-4 sm:h-5 bg-red-200 rounded w-64 sm:w-80 mx-auto mb-2 sm:mb-3 overflow-hidden">
+            <div className="absolute inset-0 shimmer-effect"></div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+            {[...Array(2)].map((_, i) => (
+              <div key={i} className="relative h-8 sm:h-10 bg-red-100 rounded-lg w-28 sm:w-32 overflow-hidden">
+                <div className="absolute inset-0 shimmer-effect"></div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        
+        .shimmer-effect {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          animation: shimmer 1.5s infinite;
+          transform: translateX(-100%);
+        }
+      `}</style>
     </div>
   );
 }
