@@ -38,13 +38,15 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
     const itemId = delivery.id; // Assuming delivery.id is the itemId
     const supplierId = delivery.supplierItems?.[0]?.supplierId; // Get supplierId from first supplier item
 
+    console.log(delivery);
+    
     if (!itemId || !supplierId) {
       console.error('Missing itemId or supplierId', { itemId, supplierId });
       return;
     }
 
     try {
-      const { data } = await acceptDelivery({
+      /*const { data } = await acceptDelivery({
         variables: {
           itemId: itemId,
           riderId: user.id,
@@ -55,7 +57,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
 
       if (data?.acceptByRider?.statusText === 'success') {
         onAccept(delivery.id);
-      }
+      }*/
     } catch (error) {
       console.error('Error accepting delivery:', error);
     }
