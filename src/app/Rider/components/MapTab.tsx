@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { Map, MapPin, Navigation } from "lucide-react";
-import { icon as leafletIcon } from 'leaflet';
+import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 // Use CDN URLs for leaflet markers
@@ -67,7 +67,7 @@ const geocodeAddress = (address: string, type: 'pickup' | 'dropoff') => {
 };
 
 // Component to center map on selected delivery
-const MapCenterController = ({ center, zoom }: { center: [number, number]; zoom: number }) => {
+const MapCenterController = ({ center, zoom }: { center: LatLngExpression; zoom: number }) => {
   const map = useMap();
   useEffect(() => {
     map.setView(center, zoom);
@@ -78,7 +78,7 @@ const MapCenterController = ({ center, zoom }: { center: [number, number]; zoom:
 export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const [selectedDelivery, setSelectedDelivery] = useState<string | null>(null);
   const [mapZoom, setMapZoom] = useState(13);
-  const [riderLocation, setRiderLocation] = useState<[number, number]>([14.5995, 120.9842]);
+  const [riderLocation, setRiderLocation] = useState<LatLngTuple>([14.5995, 120.9842]);
 
   // Process deliveries for map display
   const mapDeliveries = deliveries.map(delivery => {
@@ -92,19 +92,20 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
 
     return {
       ...delivery,
-      pickupCoords: [pickupCoords.lat, pickupCoords.lng] as [number, number],
-      dropoffCoords: [dropoffCoords.lat, dropoffCoords.lng] as [number, number],
+      pickupCoords: [pickupCoords.lat, pickupCoords.lng] as LatLngTuple,
+      dropoffCoords: [dropoffCoords.lat, dropoffCoords.lng] as LatLngTuple,
       route: [
         [pickupCoords.lat, pickupCoords.lng],
         [dropoffCoords.lat, dropoffCoords.lng]
-      ] as [number, number][]
+      ] as LatLngTuple[]
     };
   });
 
-  // Calculate map center
-  const mapCenter = selectedDelivery 
-    ? mapDeliveries.find(d => d.id === selectedDelivery)?.pickupCoords || [14.5995, 120.9842]
-    : [14.5995, 120.9842];
+  // Calculate map center - FIXED: Ensure it's always LatLngTuple
+  const defaultCenter: LatLngTuple = [14.5995, 120.9842];
+  const mapCenter: LatLngExpression = selectedDelivery 
+    ? mapDeliveries.find(d => d.id === selectedDelivery)?.pickupCoords || defaultCenter
+    : defaultCenter;
 
   // Mock rider location updates
   useEffect(() => {
