@@ -10,8 +10,8 @@ const UserProfileShimmer = () => {
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-gray-300/20 to-transparent"></div>
         
         {/* Profile Picture Shimmer */}
-        <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
-          <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300">
+        <div className="z-50 absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
+          <div className="z-50 relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
         </div>
