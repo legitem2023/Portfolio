@@ -47,18 +47,18 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
     }
 
     try {
-      /*const { data } = await acceptDelivery({
+      const { data } = await acceptDelivery({
         variables: {
           itemId: itemId,
-          riderId: user.id,
+          riderId: riderId,
           supplierId: supplierId,
-          userId: user.id
+          userId: userId,
         }
       });
 
-      if (data?.acceptByRider?.statusText === 'success') {
+      if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
         onAccept(delivery.id);
-      }*/
+      }
     } catch (error) {
       console.error('Error accepting delivery:', error);
     }
