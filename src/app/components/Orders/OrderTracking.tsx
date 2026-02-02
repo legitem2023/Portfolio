@@ -592,8 +592,6 @@ function OrderLoadingSkeleton() {
 }
 
 // Error Component - Responsive
-// components/OrderError.tsx
-'use client';
 
 function OrderError() {
   return (
