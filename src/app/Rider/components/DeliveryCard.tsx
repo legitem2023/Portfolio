@@ -35,10 +35,10 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
 
     // Get itemId and supplierId from parent data
     // Since it's an array from parent, we need to extract them from delivery
-    const itemId = delivery.id; // Assuming delivery.id is the itemId
+    const itemId = delivery.supplierItems?.[0]?.id // Assuming delivery.id is the itemId
     const supplierId = delivery.supplierItems?.[0]?.supplierId; // Get supplierId from first supplier item
-
-    console.log(delivery);
+    const riderId = user.id;
+    console.log('itemid',itemId,'supplierId',supplierId,'riderId',riderId);
     
     if (!itemId || !supplierId) {
       console.error('Missing itemId or supplierId', { itemId, supplierId });
