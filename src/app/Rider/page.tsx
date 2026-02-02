@@ -78,7 +78,7 @@ export default function RiderDashboard() {
         );
       case "deliveries":
         return <ActiveDeliveriesTab isMobile={isMobile} />;
-      case "map":
+case "map":
   return <MapTab 
     isMobile={isMobile} 
     deliveries={newDeliveries.map(d => ({
@@ -90,7 +90,7 @@ export default function RiderDashboard() {
       dropoff: d.dropoff,
       pickupAddress: d.pickupAddress,
       dropoffAddress: d.dropoffAddress,
-      status: 'pending' // You can get this from your GraphQL data
+      status: 'pending' // Default status
     }))}
   />;
       case "performance":
