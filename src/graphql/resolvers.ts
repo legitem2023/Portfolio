@@ -2134,6 +2134,47 @@ salesList: async (
 
   Mutation: {
     // Resolvers for notification mutations
+acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
+  try {  
+    const rider = await prisma.user.findUnique({
+      where: { id: riderId },
+      select: { firstName: true, email:true }
+    });
+
+    const updatedOrder = await prisma.orderItem.update({
+        where: { id:itemId },
+        data: {
+          status: 'PROCESSING',
+          riderId: riderId,
+        }});
+
+     await prisma.notification.create({
+        data: { 
+          userId: supplierId,
+          title: 'RIDER_ACCEPTED',
+          message: 'Rider accepted the order'
+        }
+      });
+    
+      // Create delivery record
+    await prisma.notification.create({
+        data: { 
+          userId: userId,
+          title: 'RIDER_ACCEPTED',
+          message: 'Rider accepted the order'
+        }
+      });
+
+  } catch (error) {
+    console.error('Error accepting order:', error);
+    return {
+      success: false,
+      message: 'Failed to accept order',
+      error: error.message,
+      order: null
+    };
+  }
+},
   createApiBill: async (parent: any, args:any) => {
     try {
       const { input } = args;
