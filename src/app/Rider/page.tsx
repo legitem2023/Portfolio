@@ -52,6 +52,7 @@ export default function RiderDashboard() {
     pollInterval: 10000
   });
 
+  console.log(data);
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.orders?.neworder?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
   const newDeliveriesCount = newDeliveries.length;
