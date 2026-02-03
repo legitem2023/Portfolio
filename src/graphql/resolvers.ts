@@ -584,6 +584,7 @@ export const resolvers = {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
+            orderId:true,
             product: {
               select: {
                 id: true,
@@ -738,6 +739,7 @@ export const resolvers = {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
+            orderId:true,
             product: {
               select: {
                 id: true,
@@ -892,6 +894,7 @@ export const resolvers = {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
+            orderId:true,
             product: {
               select: {
                 id: true,
