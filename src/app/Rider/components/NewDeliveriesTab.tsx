@@ -26,7 +26,7 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
   });
 
   // Transform GraphQL data to delivery format - split by supplier
-  const newDeliveries = data?.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+  const newDeliveries = data?.orders?.neworder.flatMap(mapOrdersToDeliveriesBySupplier) || [];
 
   if (loading) {
     return (
