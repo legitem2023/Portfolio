@@ -275,6 +275,7 @@ export const typeDefs = gql`
     price: Float
     supplierId: String
     variantInfo: String
+    orderId: String
     order: Order
     product: [Product]
     supplier: [User]
