@@ -1,31 +1,31 @@
 {
-  "theme_color": "#004d00",
-  "background_color": "#004d00",
+  "theme_color": "#d8bfd8",
+  "background_color": "#d8bfd8",
   "display": "fullscreen",
   "scope": "/",
   "start_url": "/",
-  "name": "DVN",
-  "short_name": "DVN",
+  "name": "VendorCity",
+  "short_name": "VendorCity",
   "icons": [
     {
-      "src": "Dlogo.svg",
+      "src": "VendorCity.svg",
       "sizes": "192x192",
-      "type": "image/svg"
+      "type": "image/svg+xml"
     },
     {
-      "src": "Dlogo.svg",
+      "src": "VendorCity.svg",
       "sizes": "256x256",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "Dlogo.svg",
+      "src": "VendorCity.svg",
       "sizes": "384x384",
-      "type": "image/png"
+      "type": "image/svg+xml"
     },
     {
-      "src": "Dlogo.svg",
+      "src": "VendorCity.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg+xml"
     }
   ]
 }
