@@ -54,7 +54,7 @@ export default function RiderDashboard() {
 
   console.log(data);
   // Transform GraphQL data to delivery format
-  const newDeliveries = data?.orders?.neworder.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+  const newDeliveries = data?.orderlist?.neworder.flatMap(mapOrdersToDeliveriesBySupplier) || [];
   const newDeliveriesCount = newDeliveries.length;
 
   // Handle accepting a delivery
