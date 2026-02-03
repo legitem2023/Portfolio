@@ -24,8 +24,8 @@ export const ORDER_LIST_QUERY = gql`
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
   ) {
-    orderlist(filter: $filter, pagination: $pagination) {
-      neworder {
+    neworder(filter: $filter, pagination: $pagination) {
+      orders {
         id
         orderNumber
         status
