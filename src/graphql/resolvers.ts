@@ -556,7 +556,7 @@ export const resolvers = {
 
   // Add status filter if provided
   if (filter && filter.status) {
-    where.status = 'PENDING'
+    where.status = filter.status;
   }
 
   // Add supplierId filter through OrderItem relation
