@@ -3879,6 +3879,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         supplierId,
         quantity: item.quantity,
         price: item.price,
+        status: "PENDING",
       };
     });
 
