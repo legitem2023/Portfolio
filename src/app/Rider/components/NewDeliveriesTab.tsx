@@ -26,7 +26,7 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
   });
 
   // Transform GraphQL data to delivery format - split by supplier
-  const newDeliveries = data?.orderlist?.neworder.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+  const newDeliveries = data?.neworder.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
 
   if (loading) {
     return (
@@ -66,7 +66,7 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
             <span className="text-base lg:text-2xl">New Delivery Requests</span>
           </h2>
           <p className="text-gray-600 text-xs lg:text-base mt-1">
-            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.orderlist.neworder?.length || 0} order{data?.orderlist.neworder?.length !== 1 ? "s" : ""}
+            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.neworder.orders?.length || 0} order{data?.neworder.orders?.length !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-gray-600">
