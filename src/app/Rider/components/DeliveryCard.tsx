@@ -36,7 +36,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
 
     // Get itemId and supplierId from parent data
     // Since it's an array from parent, we need to extract them from delivery
-    const itemId = delivery.supplierItems?.[0]?.id // Assuming delivery.id is the itemId
+    const itemId = delivery.orderParentId;// Assuming delivery.id is the itemId
     const supplierId = delivery.supplierItems?.[0]?.supplierId; // Get supplierId from first supplier item
     const riderId = user.userId;
     const userId = delivery.customerId;
@@ -48,7 +48,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
     }
 
     try {
-     /* const { data } = await acceptDelivery({
+      const { data } = await acceptDelivery({
         variables: {
           itemId: itemId,
           riderId: riderId,
@@ -59,7 +59,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
 
       if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
         onAccept(delivery.id);
-      }*/
+      }
     } catch (error) {
       console.error('Error accepting delivery:', error);
     }
