@@ -145,8 +145,8 @@ export interface Pagination {
 }
 
 export interface OrderListResponse {
-  neworder: {
-    orders: Order[];
+  orders: {
+    neworder: Order[];
     pagination: Pagination;
   };
 }
