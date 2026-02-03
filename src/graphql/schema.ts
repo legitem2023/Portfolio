@@ -837,7 +837,7 @@ input OrderPaginationInput {
   
   # ================= Queries & Mutations =================
   type Query {
-    neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): newOrderListResponse
+    neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     apiBills(
