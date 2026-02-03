@@ -711,9 +711,8 @@ export const resolvers = {
 
   // Add status filter if provided
   if (filter && filter.status) {
-    where.status = '!PENDING || !CANCELLED || !DELIVERED || !REFUNDED
-  }
-
+  where.status = Not(In(['PENDING', 'CANCELLED', 'DELIVERED', 'REFUNDED']));
+}
   // Add supplierId filter through OrderItem relation
   if (filter && filter.supplierId) {
     where.items = {
