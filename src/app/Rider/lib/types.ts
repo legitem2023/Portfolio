@@ -165,6 +165,7 @@ export interface Delivery {
   id: string;
   originalOrderId: string;
   orderId: string;
+  orderParentId: string
   restaurant: string;
   customer: string;
   customerId: string;
