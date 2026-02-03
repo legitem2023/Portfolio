@@ -44,6 +44,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const firstName = order.user?.firstName || "Customer";
   const userId = order.user?.id;
   const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
+  const orderParentId = order.orderId;
   const dropoffAddress = order.address;
   
   // Group items by supplier
@@ -73,6 +74,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     id: string;
     originalOrderId: string;
     orderId: string;
+    orderParentId: string;
     restaurant: string;
     customer: string;
     customerId: string;
@@ -142,6 +144,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       id: `${order.id}-${supplierId}`,
       originalOrderId: order.id,
       orderId,
+      orderParentId,
       restaurant: supplierName,
       customer: firstName,
       customerId: userId,
