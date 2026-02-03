@@ -46,6 +46,7 @@ export const ORDER_LIST_QUERY = gql`
         }
         items {
           id
+          orderId
           supplierId
           quantity
           price
