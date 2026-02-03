@@ -2453,8 +2453,10 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
       select: { firstName: true, email:true }
     });
 
-    const updatedOrder = await prisma.orderItem.update({
-        where: { orderId:itemId },
+    const updatedOrder = await prisma.orderItem.updateMany({
+        where: { orderId:itemId,
+                 supplierId:supplierId
+               },
         data: {
           status: 'PROCESSING',
           riderId: riderId,
