@@ -558,18 +558,19 @@ neworder: async(parent: any, args: any) => {
     // Get ALL orders count (no filtering)
     const totalCount = await prisma.order.count({ where });
 
-    // Build where clause for ITEMS ONLY
-    const itemWhere: any = {};
+      // Add supplierId filter through OrderItem relation
+  if (filter && filter.status) {
+    where.status = filter.status
+  }
     
-    // Apply supplier filter to items if provided
-    if (filter && filter.supplierId) {
-      itemWhere.supplierId = filter.supplierId;
-    }
-    
-    // Apply status filter to ITEMS ONLY
-    if (filter && filter.status) {
-      itemWhere.status = filter.status;
-    }
+      // Add supplierId filter through OrderItem relation
+  if (filter && filter.supplierId) {
+    where.items = {
+      some: {
+        supplierId: filter.supplierId
+      }
+    };
+  }
 
     // Get orders with pagination
     const orders = await prisma.order.findMany({
@@ -581,7 +582,7 @@ neworder: async(parent: any, args: any) => {
       },
       include: {
         items: {
-          where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
+          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
             product: {
               select: {
