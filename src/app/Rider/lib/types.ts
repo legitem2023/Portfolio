@@ -127,6 +127,7 @@ export interface OrderUser {
 export interface Order {
   id: string;
   orderNumber: string;
+  orderId: string;
   status: string;
   total: number;
   createdAt: string;
