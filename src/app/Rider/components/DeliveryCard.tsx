@@ -25,6 +25,7 @@ interface DeliveryCardProps {
 
 export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }: DeliveryCardProps) {
   const { user } = useAuth();
+  
   const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_BY_RIDER);
 
   const handleAccept = async () => {
