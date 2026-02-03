@@ -818,6 +818,11 @@ type OrderListResponse {
   pagination: PaginationInfo
 }
 
+type newOrderListResponse {
+  neworder: [Order]
+  pagination: PaginationInfo
+}
+
 input OrderFilterInput {
   supplierId: String
   status: OrderStatus
@@ -832,7 +837,7 @@ input OrderPaginationInput {
   
   # ================= Queries & Mutations =================
   type Query {
-    neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
+    neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): newOrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     apiBills(
