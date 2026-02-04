@@ -96,11 +96,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     
     return (
       <div className="space-y-4">
-        <div className="relative flex items-center justify-center aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden">
+        <div className="relative flex items-center justify-center bg-gray-100 rounded-lg">
           <Image
             src={currentImage}
             alt={product?.name || 'Product'}
-            className="h-full object-cover aspect-[1/1]"
+            className="h-full object-cover"
             width={500}
             height={500}
             quality={85}
