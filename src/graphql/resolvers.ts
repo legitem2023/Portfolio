@@ -2592,6 +2592,22 @@ salesList: async (
   },
 
   Mutation: {
+rejectByRider: async (_:any,{itemId,riderId}:any) = > {
+
+  const rejected = await prisma.orderItem.update({
+          where: { id: itemId },
+          data: {
+            rejectedBy: {
+              push:riderId
+            }
+        }
+    });
+  if(rejected){
+   return {
+      statusText:"Successful Rejected!"
+   }
+  }
+},
     // Resolvers for notification mutations
 acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   try {  
