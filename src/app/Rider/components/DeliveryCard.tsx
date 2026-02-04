@@ -70,7 +70,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
     }
 
     // Get itemId from delivery
-    const itemId = delivery.orderParentId;
+    const itemId = delivery.supplierItems?.[0]?.id
     const riderId = user.userId;
     
     if (!itemId) {
