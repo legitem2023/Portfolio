@@ -715,84 +715,93 @@ neworder: async(parent: any, args: any) => {
     // Build where clause for ITEMS ONLY
     const itemWhere: any = {};
     
-    // Apply status filter to ITEMS ONLY
-    if (filter && filter.status) {
-      itemWhere.status = filter.status;
-    }
+// Apply status filter to ITEMS ONLY
+if (filter && filter.status) {
+  itemWhere.status = filter.status;
+}
 
-    // Get orders with pagination
-    const orders = await prisma.order.findMany({
-      where, // No filtering at order level
-      skip,
-      take: pageSize,
-      orderBy: {
-        createdAt: 'desc'
-      },
+// Filter out items where riderId is in the rejectedBy array
+if (filter && filter.riderId) {
+  itemWhere.rejectedBy = {
+    not: {
+      has: filter.riderId
+    }
+  };
+}
+
+// Get orders with pagination
+const orders = await prisma.order.findMany({
+  where, // No filtering at order level
+  skip,
+  take: pageSize,
+  orderBy: {
+    createdAt: 'desc'
+  },
+  include: {
+    items: {
+      where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
       include: {
-        items: {
-          where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                price: true,
-                salePrice: true,
-                images: true
-              }
-            },
-            supplier: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                addresses: {
-                  select: {
-                    street: true,
-                    city: true,
-                    state: true,
-                    zipCode: true,
-                    country: true,
-                    isDefault: true
-                  }
-                }
-              }
-            }
+        product: {
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+            price: true,
+            salePrice: true,
+            images: true
           }
         },
-        user: {
+        supplier: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
             email: true,
-            phone: true
-          }
-        },
-        address: {
-          select: {
-            id: true,
-            street: true,
-            city: true,
-            state: true,
-            zipCode: true,
-            country: true
-          }
-        },
-        payments: {
-          select: {
-            id: true,
-            amount: true,
-            method: true,
-            status: true,
-            transactionId: true,
-            createdAt: true
+            addresses: {
+              select: {
+                street: true,
+                city: true,
+                state: true,
+                zipCode: true,
+                country: true,
+                isDefault: true
+              }
+            }
           }
         }
       }
-    });
+    },
+    user: {
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true
+      }
+    },
+    address: {
+      select: {
+        id: true,
+        street: true,
+        city: true,
+        state: true,
+        zipCode: true,
+        country: true
+      }
+    },
+    payments: {
+      select: {
+        id: true,
+        amount: true,
+        method: true,
+        status: true,
+        transactionId: true,
+        createdAt: true
+      }
+    }
+  }
+});
 
     // Format the response
     const formattedOrders = orders.map(order => ({
