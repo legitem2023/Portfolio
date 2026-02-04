@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client";
 import { ORDER_LIST_QUERY, OrderListResponse } from '../lib/types';
 import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
 import DeliveryCard from './DeliveryCard';
+import { useAuth } from '../hooks/useAuth';
 
 interface NewDeliveriesTabProps {
   isMobile: boolean;
@@ -12,10 +13,13 @@ interface NewDeliveriesTabProps {
 }
 
 export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: NewDeliveriesTabProps) {
+ const { user } = useAuth();
+  
   const { data, loading, error, refetch } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: "PENDING"
+        status: "PENDING",
+        riderId: user.userId
       },
       pagination: {
         page: 1,
