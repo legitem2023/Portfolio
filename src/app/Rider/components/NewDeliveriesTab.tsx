@@ -19,7 +19,7 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
     variables: {
       filter: {
         status: "PENDING",
-        riderId: user.userId
+        riderId: user?.userId
       },
       pagination: {
         page: 1,
