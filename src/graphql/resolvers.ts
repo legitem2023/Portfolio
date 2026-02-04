@@ -2592,23 +2592,49 @@ salesList: async (
   },
 
   Mutation: {
-rejectByRider: async (_:any,{itemId,riderId}:any) = > {
+rejectByRider: async (_: any, { itemId, riderId }: any) => {
+  try {
+    // Validate inputs
+    if (!itemId || !riderId) {
+      throw new Error('itemId and riderId are required');
+    }
 
-  const rejected = await prisma.orderItem.update({
-          where: { id: itemId },
-          data: {
-            rejectedBy: {
-              push:riderId
-            }
-        }
+    // Check if rider has already rejected this item
+    const existingItem = await prisma.orderItem.findUnique({
+      where: { id: itemId },
+      select: { rejectedBy: true }
     });
-  if(rejected){
-   return {
-      statusText:"Successful Rejected!"
-   }
+
+    if (!existingItem) {
+      throw new Error('Order item not found');
+    }
+
+    // Prevent duplicate rejections
+    if (existingItem.rejectedBy.includes(riderId)) {
+      return {
+        statusText: "Rider has already rejected this item"
+      };
+    }
+
+    // Update the order item
+    const updatedItem = await prisma.orderItem.update({
+      where: { id: itemId },
+      data: {
+        rejectedBy: {
+          push: riderId
+        }
+      }
+    });
+
+    return {
+      statusText: "Successfully rejected!",
+      item: updatedItem
+    };
+  } catch (error) {
+    console.error('Error in rejectByRider:', error);
+    throw new Error(`Failed to reject item: ${error.message}`);
   }
 },
-    // Resolvers for notification mutations
 acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   try {  
     const rider = await prisma.user.findUnique({
