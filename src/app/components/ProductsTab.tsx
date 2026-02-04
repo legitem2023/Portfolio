@@ -366,7 +366,7 @@ const ProductsTab: React.FC = () => {
             </select>  
           </div>  
         </div>  
-        <CategoryPage/>
+        {/* <CategoryPage/>*/}
         <div className="text-sm text-gray-500 mb-2">  
           {isRefetching ? 'Filtering...' : `${products.length} ${products.length === 1 ? 'product' : 'products'} shown`}
         </div>  
