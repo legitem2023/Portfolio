@@ -13,7 +13,7 @@ import {
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
-import { ACCEPT_BY_RIDER } from '../lib/types';
+import { ACCEPT_BY_RIDER, REJECT_BY_RIDER_MUTATION } from '../lib/types'; // Get both from types
 import { useAuth } from '../hooks/useAuth';
 
 interface DeliveryCardProps {
@@ -27,6 +27,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
   const { user } = useAuth();
   
   const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_BY_RIDER);
+  const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
 
   const handleAccept = async () => {
     if (!user) {
@@ -34,13 +35,10 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
       return;
     }
 
-    // Get itemId and supplierId from parent data
-    // Since it's an array from parent, we need to extract them from delivery
-    const itemId = delivery.orderParentId;// Assuming delivery.id is the itemId
-    const supplierId = delivery.supplierItems?.[0]?.supplierId; // Get supplierId from first supplier item
+    const itemId = delivery.orderParentId;
+    const supplierId = delivery.supplierItems?.[0]?.supplierId;
     const riderId = user.userId;
     const userId = delivery.customerId;
-    console.log(delivery);
     
     if (!itemId || !supplierId) {
       console.error('Missing itemId or supplierId', { itemId, supplierId });
@@ -64,6 +62,56 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
       console.error('Error accepting delivery:', error);
     }
   };
+
+  const handleReject = async () => {
+    if (!user) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    // Get itemId from delivery
+    const itemId = delivery.orderParentId;
+    const riderId = user.userId;
+    
+    if (!itemId) {
+      console.error('Missing itemId');
+      return;
+    }
+
+    // Confirmation dialog
+    const confirmed = window.confirm(
+      'Are you sure you want to reject this delivery?'
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      const { data } = await rejectDelivery({
+        variables: {
+          itemId: itemId,
+          riderId: riderId,
+        }
+      });
+
+      if (data?.rejectByRider?.statusText) {
+        console.log('Rejection status:', data.rejectByRider.statusText);
+        
+        // Call parent's onReject callback to update UI
+        onReject(delivery.id);
+        
+        // Show success message if not already shown by parent
+        if (data.rejectByRider.statusText.includes('Successfully') || 
+            data.rejectByRider.statusText.includes('Successful')) {
+          alert(data.rejectByRider.statusText);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error rejecting delivery:', error);
+      alert(`Failed to reject delivery: ${error.message}`);
+    }
+  };
+
+  const isLoading = acceptLoading || rejectLoading;
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-orange-200 overflow-hidden">
@@ -200,24 +248,35 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
           </div>
         </div>
 
+        {/* Error messages */}
+        {(acceptError || rejectError) && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm">
+              {acceptError?.message || rejectError?.message}
+            </p>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <button
-            onClick={() => onReject(delivery.id)}
-            className="bg-white border border-gray-300 text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base"
+            onClick={handleReject}
+            disabled={isLoading}
+            className={`bg-white border ${rejectLoading ? 'border-yellow-300' : 'border-gray-300'} text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <X size={isMobile ? 18 : 20} />
-            <span>Reject</span>
+            <span>{rejectLoading ? 'Rejecting...' : 'Reject'}</span>
           </button>
           <button
             onClick={handleAccept}
-            className="bg-green-500 text-white px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base"
+            disabled={isLoading}
+            className={`bg-green-500 text-white px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <ThumbsUp size={isMobile ? 18 : 20} />
-            <span>Accept Delivery</span>
+            <span>{acceptLoading ? 'Accepting...' : 'Accept Delivery'}</span>
           </button>
         </div>
       </div>
     </div>
   );
-}
+      }
