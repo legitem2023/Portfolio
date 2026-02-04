@@ -710,8 +710,9 @@ neworder: async(parent: any, args: any) => {
 
   try {
     // Get ALL orders count (no filtering)
-const totalCount = await prisma.order.count({ where });
 const where: any = {};
+const totalCount = await prisma.order.count({ where });
+
 const itemWhere: any = {};
 // Apply status filter to ITEMS ONLY
 if (filter && filter.status) {
