@@ -16,18 +16,19 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
  const { user } = useAuth();
   
   const { data, loading, error, refetch } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
-    variables: {
-      filter: {
-        status: "PENDING",
-        riderId: user?.userId
-      },
-      pagination: {
-        page: 1,
-        pageSize: 10
-      }
+  variables: {
+    filter: {
+      status: "PENDING",
+      riderId: user?.userId
     },
-    pollInterval: 10000
-  });
+    pagination: {
+      page: 1,
+      pageSize: 10
+    }
+  },
+  fetchPolicy: "no-cache", // Disables caching completely
+  pollInterval: 10000 // Keeps polling every 10 seconds
+});
 
   // Transform GraphQL data to delivery format - split by supplier
   const newDeliveries = data?.neworder.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
