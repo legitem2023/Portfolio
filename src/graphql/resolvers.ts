@@ -2628,9 +2628,8 @@ rejectByRider: async (_: any, { itemId, riderId }: any) => {
 
     return {
       statusText: "Successfully rejected!",
-      item: updatedItem
     };
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in rejectByRider:', error);
     throw new Error(`Failed to reject item: ${error.message}`);
   }
