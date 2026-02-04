@@ -725,17 +725,15 @@ if (filter && filter.riderId) {
   itemWhere.OR = [
     { rejectedBy: { isEmpty: true } },
     { 
-      rejectedBy: {
-        // This filters arrays that exist but don't contain the riderId
-        // Note: This is the proper way to exclude a value from scalar list
-        not: {
+      // Correct way: Use NOT operator to wrap the has condition
+      NOT: {
+        rejectedBy: {
           has: filter.riderId
         }
       }
     }
   ];
-}
-
+      }
 // Get orders with pagination
 const orders = await prisma.order.findMany({
   where, // No filtering at order level
