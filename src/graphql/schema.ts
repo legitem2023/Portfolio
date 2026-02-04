@@ -281,6 +281,7 @@ export const typeDefs = gql`
     product: [Product]
     supplier: [User]
     isDefault: Boolean
+    rejectedBy: [String]
   }
 
   type CartItem {
