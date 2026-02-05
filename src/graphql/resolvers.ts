@@ -711,6 +711,7 @@ neworder: async(parent: any, args: any) => {
   try {
     // Get ALL orders count (no filtering)
 const where: any = {};
+const where: any = {};
 const totalCount = await prisma.order.count({ where });
 
 const itemWhere: any = {};
@@ -722,12 +723,33 @@ if (filter && filter.status) {
 // Filter items where riderId is NOT in rejectedBy array
 if (filter && filter.riderId) {
   itemWhere.NOT = {
-    OR: [
-      { rejectedBy: { has: filter.riderId } },
-      { rejectedBy: { isEmpty: true } }
-    ]
+    // This correctly filters items where the riderId is NOT in rejectedBy array
+    // It also includes items where rejectedBy is empty/null
+    rejectedBy: {
+      has: filter.riderId
+    }
   };
+  // Note: You don't need the `isEmpty: true` check here because 
+  // if rejectedBy is empty, it won't "has" the riderId anyway
 }
+
+// Alternative approach if you want to be more explicit:
+if (filter && filter.riderId) {
+  itemWhere.OR = [
+    // Items where rejectedBy doesn't exist or is empty
+    { rejectedBy: { equals: [] } },
+    { rejectedBy: null },
+    // Items where rejectedBy exists but doesn't contain the riderId
+    {
+      AND: [
+        { rejectedBy: { not: null } },
+        { rejectedBy: { not: { equals: [] } } },
+        { rejectedBy: { not: { has: filter.riderId } } }
+      ]
+    }
+  ];
+}
+
 // Get orders with pagination
 const orders = await prisma.order.findMany({
   where, // No filtering at order level
