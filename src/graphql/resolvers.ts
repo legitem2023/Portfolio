@@ -720,12 +720,20 @@ if (filter && filter.status) {
 }
 
 if (filter && filter.riderId) {
-  itemWhere.OR = [
-    { rejectedBy: { equals: [] } },
-    { rejectedBy: { not: { has: filter.riderId } } }
-  ];
+  // Get all items
+  // Then exclude items where rejectedBy has riderId
+  // But include items where rejectedBy is empty
+  
+  // This is the correct filter:
+  itemWhere.NOT = {
+    rejectedBy: {
+      has: filter.riderId
+    }
+  };
+  
+  // Wait, this excludes items with empty arrays too... 
+  // Actually no, empty arrays don't "have" the riderId, so they pass!
 }
-
 // Get orders with pagination
 const orders = await prisma.order.findMany({
   where, // No filtering at order level
