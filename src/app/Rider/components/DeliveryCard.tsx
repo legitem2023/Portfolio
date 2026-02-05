@@ -64,28 +64,39 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
   };
 
   const handleReject = async () => {
-    if (!user) {
-      console.error('User not authenticated');
-      return;
-    }
+  if (!user) {
+    console.error('User not authenticated');
+    return;
+  }
 
-    // Get itemId from delivery
-    const itemId = delivery.supplierItems?.[0]?.id
-    const riderId = user.userId;
-    
-    if (!itemId) {
-      console.error('Missing itemId');
-      return;
-    }
+  // Get all itemIds from delivery
+  const supplierItems = delivery.supplierItems || [];
+  const riderId = user.userId;
+  
+  if (!supplierItems.length) {
+    console.error('No supplier items found');
+    return;
+  }
 
-    // Confirmation dialog
-    const confirmed = window.confirm(
-      'Are you sure you want to reject this delivery?'
-    );
-    
-    if (!confirmed) return;
+  // Confirmation dialog
+  const confirmed = window.confirm(
+    'Are you sure you want to reject this delivery?'
+  );
+  
+  if (!confirmed) return;
 
-    try {
+  try {
+    // Loop through all supplier items
+    for (const item of supplierItems) {
+      const itemId = item.id;
+      
+      if (!itemId) {
+        console.warn('Skipping item with missing ID');
+        continue;
+      }
+
+      console.log(`Processing rejection for item: ${itemId}`);
+      
       const { data } = await rejectDelivery({
         variables: {
           itemId: itemId,
@@ -94,22 +105,27 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
       });
 
       if (data?.rejectByRider?.statusText) {
-        console.log('Rejection status:', data.rejectByRider.statusText);
+        console.log(`Rejection status for item ${itemId}:`, data.rejectByRider.statusText);
         
-        // Call parent's onReject callback to update UI
-        onReject(delivery.id);
-        
-        // Show success message if not already shown by parent
-        if (data.rejectByRider.statusText.includes('Successfully') || 
-            data.rejectByRider.statusText.includes('Successful')) {
-          alert(data.rejectByRider.statusText);
+        // You might want to handle individual item responses differently
+        if (data.rejectByRider.statusText.includes('Error') || 
+            data.rejectByRider.statusText.includes('Failed')) {
+          console.error(`Failed to reject item ${itemId}`);
         }
       }
-    } catch (error: any) {
-      console.error('Error rejecting delivery:', error);
-      alert(`Failed to reject delivery: ${error.message}`);
     }
-  };
+    
+    // Call parent's onReject callback to update UI once all items are processed
+    onReject(delivery.id);
+    
+    // Show a general success message
+    alert('All items have been rejected successfully');
+    
+  } catch (error: any) {
+    console.error('Error rejecting delivery:', error);
+    alert(`Failed to reject delivery: ${error.message}`);
+  }
+};
 
   const isLoading = acceptLoading || rejectLoading;
 
