@@ -720,16 +720,11 @@ if (filter && filter.status) {
 }
 
 if (filter && filter.riderId) {
-  // Include items where either:
-  // 1. rejectedBy is null
-  // 2. rejectedBy is an empty array
-  // 3. rejectedBy does NOT contain the riderId
   itemWhere.OR = [
-    { rejectedBy: null },
     { rejectedBy: { equals: [] } },
     { rejectedBy: { not: { has: filter.riderId } } }
   ];
-    }
+}
 
 // Get orders with pagination
 const orders = await prisma.order.findMany({
