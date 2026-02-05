@@ -13,7 +13,7 @@ import ActiveDeliveriesTab from './components/ActiveDeliveriesTab';
 import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
 import dynamic from 'next/dynamic';
-
+import { useAuth } from './hooks/useAuth';
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
   ssr: false,
@@ -33,7 +33,7 @@ export default function RiderDashboard() {
   // State to manage active tab
   const [activeTab, setActiveTab] = useState("newDeliveries");
   const [isOnline, setIsOnline] = useState(true);
-
+  const { user } = useAuth();
   // Get window size
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
@@ -42,7 +42,8 @@ export default function RiderDashboard() {
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: "PENDING"
+        status: "PENDING",
+        riderId: user?.userId
       },
       pagination: {
         page: 1,
