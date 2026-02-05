@@ -711,26 +711,12 @@ neworder: async(parent: any, args: any) => {
   try {
     // Get ALL orders count (no filtering)
 const where: any = {};
-const where: any = {};
 const totalCount = await prisma.order.count({ where });
 
 const itemWhere: any = {};
 // Apply status filter to ITEMS ONLY
 if (filter && filter.status) {
   itemWhere.status = filter.status;
-}
-
-// Filter items where riderId is NOT in rejectedBy array
-if (filter && filter.riderId) {
-  itemWhere.NOT = {
-    // This correctly filters items where the riderId is NOT in rejectedBy array
-    // It also includes items where rejectedBy is empty/null
-    rejectedBy: {
-      has: filter.riderId
-    }
-  };
-  // Note: You don't need the `isEmpty: true` check here because 
-  // if rejectedBy is empty, it won't "has" the riderId anyway
 }
 
 // Alternative approach if you want to be more explicit:
