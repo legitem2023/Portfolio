@@ -721,11 +721,11 @@ if (filter && filter.status) {
 
 // Filter items where riderId is NOT in rejectedBy array
 if (filter && filter.riderId) {
-  // This should work - it excludes records where the array contains the riderId
   itemWhere.NOT = {
-    rejectedBy: {
-      has: filter.riderId
-    }
+    OR: [
+      { rejectedBy: { has: filter.riderId } },
+      { rejectedBy: { isEmpty: true } }
+    ]
   };
 }
 // Get orders with pagination
