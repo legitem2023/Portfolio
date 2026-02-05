@@ -26,7 +26,7 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
       pageSize: 10
     }
   },
- // fetchPolicy: "no-cache", // Disables caching completely
+  fetchPolicy: "no-cache", // Disables caching completely
   pollInterval: 10000 // Keeps polling every 10 seconds
 });
 
