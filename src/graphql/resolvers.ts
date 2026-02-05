@@ -722,7 +722,7 @@ if (filter && filter.status) {
 // Filter items where riderId is NOT in rejectedBy array
 if (filter && filter.riderId) {
   // Use isEmpty: true OR array doesn't contain the riderId
-  itemWhere.OR = [
+  itemWhere.AND = [
     { rejectedBy: { isEmpty: true } },
     { 
       // Correct way: Use NOT operator to wrap the has condition
