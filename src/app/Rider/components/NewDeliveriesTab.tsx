@@ -5,7 +5,7 @@ import { ORDER_LIST_QUERY, OrderListResponse } from '../lib/types';
 import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
 import DeliveryCard from './DeliveryCard';
 import { useAuth } from '../hooks/useAuth';
-
+import NewDeliveriesTabSkeleton from './NewDeliveriesTabSkeleton';
 interface NewDeliveriesTabProps {
   isMobile: boolean;
   onAcceptDelivery: (deliveryId: string) => void;
@@ -33,34 +33,13 @@ export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectD
   // Transform GraphQL data to delivery format - split by supplier
   const newDeliveries = data?.neworder.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
 
-  if (loading) {
-    return (
-      <div className="p-2 lg:p-6 flex flex-col items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-4" />
-        <p className="text-gray-600">Loading delivery requests...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-2 lg:p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 lg:p-4">
-          <h3 className="text-red-800 font-semibold flex items-center gap-2 text-sm lg:text-base">
-            <AlertTriangle size={isMobile ? 18 : 20} />
-            Error loading orders
-          </h3>
-          <p className="text-red-600 mt-2 text-sm lg:text-base">{error.message}</p>
-          <button
-            onClick={() => refetch()}
-            className="mt-3 bg-red-100 text-red-700 px-3 lg:px-4 py-1 lg:py-2 rounded-lg font-medium hover:bg-red-200 transition text-sm lg:text-base"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
+  
+if (loading) {
+  return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
+}
+if (error) {
+  return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
+}
 
   return (
     <div className="p-2 lg:p-6">
