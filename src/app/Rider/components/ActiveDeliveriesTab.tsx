@@ -3,7 +3,7 @@ import { Package, Shield, CheckCircle, Clock } from "lucide-react";
 import { formatPeso } from '../lib/utils';
 import { useQuery } from '@apollo/client';
 import { ACTIVE_ORDER_LIST } from '../lib/types'; // Adjust the import path
-
+import { useAuth } from '../hooks/useAuth';
 interface ActiveDeliveriesTabProps {
   isMobile: boolean;
 }
@@ -78,11 +78,12 @@ interface ActiveOrderData {
 
 export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabProps) {
   // Use the GraphQL query with Apollo Client
+ const { user } = useAuth();
   const { loading, error, data } = useQuery<ActiveOrderData>(ACTIVE_ORDER_LIST, {
     variables: {
       filter: {
-        // Add your filter criteria here
-        status: "PROCESSING" // Example: only get active orders
+        status: "PROCESSING",
+        riderId: user?.userId
       },
       pagination: {
         page: 1,
