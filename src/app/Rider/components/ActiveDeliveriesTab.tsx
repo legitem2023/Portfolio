@@ -93,6 +93,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   });
 
   if (loading) {
+    
     return (
       <div className="p-2 lg:p-6">
         <h2 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-6 flex items-center gap-1 lg:gap-2">
@@ -117,7 +118,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   }
 
   const orders = data?.activeorder?.orders || [];
-
+console.log(orders);
   // Format the createdAt date to show time ago or relative time
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
