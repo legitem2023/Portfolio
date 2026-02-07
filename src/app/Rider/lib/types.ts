@@ -26,6 +26,71 @@ export const ACCEPT_BY_RIDER = gql`
     }
   }
 `;
+
+export const ACTIVE_ORDER_LIST = gql`
+  query ActiveOrder(
+    $filter: OrderFilterInput
+    $pagination: OrderPaginationInput
+  ) {
+    activeorder(filter: $filter, pagination: $pagination) {
+      orders {
+        id
+        orderNumber
+        status
+        total
+        createdAt
+        user {
+          id
+          firstName
+          email
+        }
+        address {
+          id
+          street
+          city
+          state
+          zipCode
+          country
+        }
+        items {
+          id
+          orderId
+          supplierId
+          quantity
+          price
+          product {
+            name
+            sku
+          }
+          supplier {
+            id
+            firstName
+            addresses {
+              street
+              city
+              state
+              zipCode
+              country
+            }
+          }
+        }
+        payments {
+          id
+          amount
+          method
+          status
+        }
+      }
+      pagination {
+        total
+        page
+        pageSize
+        totalPages
+      }
+    }
+  }
+`;
+
 // GraphQL Query with address field
 export const ORDER_LIST_QUERY = gql`
   query NewOrder(
