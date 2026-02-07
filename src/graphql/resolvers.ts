@@ -868,15 +868,15 @@ const orders = await prisma.order.findMany({
 
   // Build where clause
   const where: any = {};
-
+  const itemWhere: any = {};
   // Add status filter if provided
 if (filter && filter.status) {
-    where.status = filter.status;
+    itemWhere.status = filter.status;
 }
     
   // Add supplierId filter through OrderItem relation
   if (filter && filter.supplierId) {
-    where.items = {
+    itemWhere.items = {
       some: {
         supplierId: filter.supplierId
       }
@@ -897,7 +897,7 @@ if (filter && filter.status) {
       },
       include: {
         items: {
-          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
+          where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
           include: {
             
             product: {
