@@ -187,6 +187,8 @@ export const typeDefs = gql`
     state: String
     zipCode: String
     country: String
+    lat: Float
+    lng: Float
     isDefault: Boolean
     createdAt: DateTime
     user: User
