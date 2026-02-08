@@ -227,6 +227,8 @@ model Address {
   state       String?
   zipCode     String?
   country     String?
+  lat         Float?
+  lng         Float? 
   isDefault   Boolean? @default(false)
   createdAt   DateTime? @default(now())
 
