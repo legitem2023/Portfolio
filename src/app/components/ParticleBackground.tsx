@@ -21,6 +21,9 @@ interface ParticleBackgroundProps {
   className?: string;
 }
 
+// Type for parameters array
+type ParticleParameter = [number[], THREE.Texture, number];
+
 const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   intensity = 0.0008,
   backgroundColor = '#000000',
@@ -102,24 +105,6 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         // Create materials with base64 textures
         const textureLoader = new THREE.TextureLoader();
         
-        // Create circle textures if base64 fails
-        const createCircleTexture = (size: number) => {
-          const canvas = document.createElement('canvas');
-          canvas.width = size;
-          canvas.height = size;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) return null;
-          
-          ctx.beginPath();
-          ctx.arc(size / 2, size / 2, size / 4, 0, Math.PI * 2);
-          ctx.fillStyle = particleColor;
-          ctx.fill();
-          
-          const texture = new THREE.CanvasTexture(canvas);
-          texture.colorSpace = THREE.SRGBColorSpace;
-          return texture;
-        };
-
         // Try to load base64 textures, fall back to circles
         const textures = [
           textureLoader.load(SNOWFLAKE_BASE64.snowflake1),
@@ -129,8 +114,8 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
           textureLoader.load(SNOWFLAKE_BASE64.snowflake5)
         ];
 
-        // Parameters for particle groups
-        const parameters = [
+        // Parameters for particle groups - explicitly typed
+        const parameters: ParticleParameter[] = [
           [[1.0, 0.2, 0.5], textures[1], 20],
           [[0.95, 0.1, 0.5], textures[2], 15],
           [[0.90, 0.05, 0.5], textures[0], 10],
@@ -138,11 +123,23 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
           [[0.80, 0, 0.5], textures[3], 5]
         ];
 
+        // Clear previous particles
+        particlesRef.current.forEach(particles => {
+          scene.remove(particles);
+          if (particles.geometry) particles.geometry.dispose();
+        });
+        materialsRef.current.forEach(material => {
+          if (material.map) material.map.dispose();
+          material.dispose();
+        });
+        particlesRef.current = [];
+        materialsRef.current = [];
+
         // Create particle groups
         parameters.forEach((params, i) => {
           const color = params[0];
           const sprite = params[1];
-          const size = params[2] as number;
+          const size = params[2];
 
           const material = new THREE.PointsMaterial({
             size: size,
@@ -271,7 +268,9 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
 
     // Cleanup
     return () => {
-      cancelAnimationFrame(animationRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -283,6 +282,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         if (canvas && canvas.parentNode === container) {
           container.removeChild(canvas);
         }
+        rendererRef.current = null;
       }
 
       materialsRef.current.forEach(material => {
@@ -292,7 +292,9 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
 
       particlesRef.current.forEach(particles => {
         if (particles.geometry) particles.geometry.dispose();
-        scene.remove(particles);
+        if (sceneRef.current) {
+          sceneRef.current.remove(particles);
+        }
       });
 
       particlesRef.current = [];
