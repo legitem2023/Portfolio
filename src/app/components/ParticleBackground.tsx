@@ -1,27 +1,56 @@
 // components/MinimalParticles.tsx
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
 export default function ParticleBackground() {
   const mountRef = useRef<HTMLDivElement>(null);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (!mountRef.current) return;
+
+    // Get container dimensions
+    const updateContainerSize = () => {
+      if (mountRef.current) {
+        const { width, height } = mountRef.current.getBoundingClientRect();
+        setContainerSize({ width, height });
+      }
+    };
+
+    // Initial size
+    updateContainerSize();
+
+    // Create ResizeObserver to track container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      updateContainerSize();
+    });
+
+    if (mountRef.current) {
+      resizeObserver.observe(mountRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mountRef.current || containerSize.width === 0 || containerSize.height === 0) return;
 
     // Setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050520); // Deep blue winter night
     
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    const camera = new THREE.PerspectiveCamera(75, containerSize.width / containerSize.height, 1, 1000);
     camera.position.z = 400;
     
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
       alpha: true 
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(containerSize.width, containerSize.height);
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mountRef.current.appendChild(renderer.domElement);
@@ -117,21 +146,30 @@ export default function ParticleBackground() {
       return texture;
     };
     
-    // Create particle system
+    // Create particle system - adjust particle count based on container size
     const createParticleSystem = () => {
-      const particleCount = 1500;
+      // Calculate particle count based on container size
+      const baseParticles = 1000;
+      const density = (containerSize.width * containerSize.height) / (1920 * 1080); // Relative to 1080p
+      const particleCount = Math.max(500, Math.min(2000, Math.floor(baseParticles * density)));
+      
       const geometry = new THREE.BufferGeometry();
       const positions = new Float32Array(particleCount * 3);
       const colors = new Float32Array(particleCount * 3);
       const sizes = new Float32Array(particleCount);
       
+      // Calculate bounds based on container size
+      const widthBound = containerSize.width * 2;
+      const heightBound = containerSize.height * 2;
+      const depthBound = 1000;
+      
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
         
-        // Spread particles
-        positions[i3] = (Math.random() - 0.5) * 2000;
-        positions[i3 + 1] = (Math.random() - 0.5) * 2000;
-        positions[i3 + 2] = (Math.random() - 0.5) * 1000;
+        // Spread particles within container bounds
+        positions[i3] = (Math.random() - 0.5) * widthBound;
+        positions[i3 + 1] = (Math.random() - 0.5) * heightBound;
+        positions[i3 + 2] = (Math.random() - 0.5) * depthBound;
         
         // Winter blue color
         const colorIndex = Math.floor(Math.random() * winterColors.length);
@@ -147,8 +185,9 @@ export default function ParticleBackground() {
         colors[i3 + 1] = color.g;
         colors[i3 + 2] = color.b;
         
-        // Size variation
-        sizes[i] = 6 + Math.random() * 10;
+        // Size variation - adjust based on container size
+        const baseSize = Math.min(15, Math.max(5, containerSize.width / 100));
+        sizes[i] = baseSize + Math.random() * (baseSize * 0.5);
       }
       
       geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -161,9 +200,12 @@ export default function ParticleBackground() {
     // Create texture
     const snowflakeTexture = createSnowflakeTexture();
     
+    // Adjust material size based on container
+    const baseSize = Math.min(20, Math.max(8, containerSize.width / 80));
+    
     // Create material with glow
     const material = new THREE.PointsMaterial({
-      size: 15,
+      size: baseSize,
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
@@ -182,7 +224,7 @@ export default function ParticleBackground() {
     // Create glow particles (larger, more transparent)
     const glowGeometry = createParticleSystem();
     const glowMaterial = new THREE.PointsMaterial({
-      size: 30, // Much larger for glow
+      size: baseSize * 2, // Much larger for glow
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
@@ -203,14 +245,16 @@ export default function ParticleBackground() {
     const ambientLight = new THREE.AmbientLight(0x88aaff, 0.4);
     scene.add(ambientLight);
     
-    // Add point lights that move around
+    // Add point lights that move around - scale with container
     const pointLights: THREE.PointLight[] = [];
+    const lightRange = Math.min(containerSize.width, containerSize.height) * 0.5;
+    
     for (let i = 0; i < 3; i++) {
-      const light = new THREE.PointLight(0xaaddff, 0.7, 200);
+      const light = new THREE.PointLight(0xaaddff, 0.7, lightRange);
       light.position.set(
-        Math.random() * 300 - 150,
-        Math.random() * 300 - 150,
-        Math.random() * 200 - 100
+        Math.random() * lightRange - lightRange / 2,
+        Math.random() * lightRange - lightRange / 2,
+        Math.random() * lightRange * 0.5 - lightRange * 0.25
       );
       scene.add(light);
       pointLights.push(light);
@@ -228,18 +272,21 @@ export default function ParticleBackground() {
       const positions = geometry.attributes.position.array as Float32Array;
       const glowPositions = glowGeometry.attributes.position.array as Float32Array;
       
+      // Adjust fall speed based on container height
+      const fallSpeed = containerSize.height * 0.001;
+      
       for (let i = 0; i < positions.length; i += 3) {
         // Gentle falling motion
-        positions[i + 1] -= 0.5 + Math.random() * 0.5;
+        positions[i + 1] -= fallSpeed * (0.8 + Math.random() * 0.4);
         
         // Gentle swaying
         positions[i] += Math.sin(time * 0.5 + i * 0.001) * 0.2;
         positions[i + 2] += Math.cos(time * 0.3 + i * 0.001) * 0.1;
         
-        // Reset if fallen too far
-        if (positions[i + 1] < -500) {
-          positions[i + 1] = 500;
-          positions[i] = (Math.random() - 0.5) * 2000;
+        // Reset if fallen too low (use container height as reference)
+        if (positions[i + 1] < -containerSize.height) {
+          positions[i + 1] = containerSize.height;
+          positions[i] = (Math.random() - 0.5) * containerSize.width * 2;
           positions[i + 2] = (Math.random() - 0.5) * 1000;
         }
         
@@ -256,11 +303,12 @@ export default function ParticleBackground() {
       particles.rotation.y = time * 0.02;
       glowParticles.rotation.y = time * 0.02;
       
-      // Animate lights
+      // Animate lights - scale movement with container
+      const lightMovement = Math.min(containerSize.width, containerSize.height) * 0.3;
       pointLights.forEach((light, index) => {
-        light.position.x = Math.sin(time * 0.3 + index) * 150;
-        light.position.y = Math.cos(time * 0.4 + index) * 100;
-        light.position.z = Math.sin(time * 0.5 + index) * 80;
+        light.position.x = Math.sin(time * 0.3 + index) * lightMovement;
+        light.position.y = Math.cos(time * 0.4 + index) * lightMovement * 0.7;
+        light.position.z = Math.sin(time * 0.5 + index) * lightMovement * 0.4;
       });
       
       renderer.render(scene, camera);
@@ -269,18 +317,35 @@ export default function ParticleBackground() {
     // Start animation
     animate();
     
-    // Handle resize
+    // Handle container resize
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (!mountRef.current) return;
+      
+      const { width, height } = mountRef.current.getBoundingClientRect();
+      
+      if (width > 0 && height > 0) {
+        // Update camera aspect ratio
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+        
+        // Update renderer size
+        renderer.setSize(width, height);
+        
+        // Update particle bounds if needed (simpler approach - just resize)
+        // Note: For a perfect solution, you might want to recreate the particle system
+        // But this keeps it simple and responsive
+      }
     };
     
-    window.addEventListener('resize', handleResize);
+    // Create ResizeObserver for the container
+    const containerResizeObserver = new ResizeObserver(handleResize);
+    if (mountRef.current) {
+      containerResizeObserver.observe(mountRef.current);
+    }
     
     // Cleanup
     return () => {
-      window.removeEventListener('resize', handleResize);
+      containerResizeObserver.disconnect();
       if (animationId) cancelAnimationFrame(animationId);
       
       if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
@@ -297,7 +362,7 @@ export default function ParticleBackground() {
       pointLights.forEach(light => light.dispose());
       renderer.dispose();
     };
-  }, []);
+  }, [containerSize]); // Re-run when container size changes
 
   return (
     <div 
@@ -308,10 +373,10 @@ export default function ParticleBackground() {
         top: 0,
         left: 0,
         width: '100vw',
-        height: '80vh',
+        height: '80vh', // This sets the container height
         zIndex: 0,
         background: 'linear-gradient(to bottom, #050520 0%, #0a0a30 30%, #1a1a40 100%)'
       }}
     />
   );
-          }
+                      }
