@@ -30,7 +30,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   return (
     <div className="min-h-screen p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
-      <div className="h-36 bg-gradient-to-r from-violet-100 to-indigo-100 relative overflow">
+      <div className="h-36 relative overflow">
         <ParticleBackground/>
         <div className="absolute bottom-0 w-full h-1/2"></div>
         
