@@ -18,13 +18,12 @@ import {
 const EcommercePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+     <ParticleBackground/>
       <Header/>
-   
-      
       <DeluxeNavTabs />
   
       {/* Footer */}
-   <Footer/>
+      <Footer/>
     </div>
   );
 };
