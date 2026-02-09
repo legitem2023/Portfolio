@@ -247,7 +247,7 @@ export default function ParticleBackground() {
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.2, // More transparent and subtle
+      opacity: 0.8, // More transparent and subtle
       blending: THREE.AdditiveBlending,
       map: snowflakeTexture,
       alphaTest: 0.005, // Very low for soft fade
