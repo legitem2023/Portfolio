@@ -40,7 +40,7 @@ const ProductThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ cou
             {/* Rating placeholder */}
             <div className="flex items-center mb-1 sm:mb-2 overflow-hidden">
               <div className="flex items-center overflow-hidden">
-                {[1, 2, 3, 4, 5].map((star) => (
+                {[1, 2, 3, 4].map((star) => (
                   <div
                     key={star}
                     className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 bg-gray-200 rounded-full shimmer-effect flex-shrink-0"
