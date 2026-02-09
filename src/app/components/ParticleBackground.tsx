@@ -3,26 +3,30 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 
-// Snowflake texture paths - you'll need to add these to your public folder
-const SNOWFLAKE_TEXTURES = [
-  '/textures/sprites/snowflake1.png',
-  '/textures/sprites/snowflake2.png',
-  '/textures/sprites/snowflake3.png',
-  '/textures/sprites/snowflake4.png',
-  '/textures/sprites/snowflake5.png'
-];
+// Simple snowflake textures as base64 to avoid external dependencies
+const SNOWFLAKE_BASE64 = {
+  snowflake1: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAI0lEQVQ4jWNkYGBg+M8wPMEIBgYGBgaG////MzAwMDAwAAAEXwH5C6QMRgAAAABJRU5ErkJggg==',
+  snowflake2: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAJklEQVQ4jWNkYGBg+M8wPMEIBgYGBgaG////MzAwMDAwAAAAqAF5Cy6jgQAAAABJRU5ErkJggg==',
+  snowflake3: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIklEQVQ4jWNkYGBg+M8wPMEIBgYGBgaG////MzAwMDAwAAAAggF5C8nEgQAAAABJRU5ErkJggg==',
+  snowflake4: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAJUlEQVQ4jWNkYGBg+M8wPMEIBgYGBgaG////MzAwMDAwAAAAwgF5CzDEgQAAAABJRU5ErkJggg==',
+  snowflake5: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAKElEQVQ4jWNkYGBg+M8wPMEIBgYGBgaG////MzAwMDAwAAAA+AF5C0NmgQAAAABJRU5ErkJggg=='
+};
 
 interface ParticleBackgroundProps {
   intensity?: number;
-  color?: string;
+  backgroundColor?: string;
+  particleColor?: string;
   enableMouseInteraction?: boolean;
+  particleCount?: number;
   className?: string;
 }
 
 const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   intensity = 0.0008,
-  color = '#000000',
+  backgroundColor = '#000000',
+  particleColor = '#ffffff',
   enableMouseInteraction = true,
+  particleCount = 5000,
   className = ''
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -36,110 +40,152 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
   const windowHalfRef = useRef({ x: 0, y: 0 });
 
   const [isLoaded, setIsLoaded] = useState(false);
-  const parametersRef = useRef<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     const container = containerRef.current;
+    
+    // Clear any existing canvas
+    const existingCanvas = container.querySelector('canvas');
+    if (existingCanvas) {
+      container.removeChild(existingCanvas);
+    }
+
     const width = container.clientWidth;
     const height = container.clientHeight;
 
-    // Initialize Three.js
+    // Initialize scene
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(parseInt(color.replace('#', '0x'), 16), intensity);
+    sceneRef.current = scene;
 
+    // Initialize camera
     const camera = new THREE.PerspectiveCamera(75, width / height, 1, 2000);
     camera.position.z = 1000;
+    cameraRef.current = camera;
 
+    // Initialize renderer
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
       alpha: true,
       powerPreference: "high-performance"
     });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.setClearColor(0x000000, 0); // Transparent background
-    
-    // Set SRGB encoding for better color accuracy
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-
+    
     container.appendChild(renderer.domElement);
-
-    // Store references
-    sceneRef.current = scene;
-    cameraRef.current = camera;
     rendererRef.current = renderer;
+
     windowHalfRef.current = { x: width / 2, y: height / 2 };
 
     // Create particle system
-    const createParticles = async () => {
-      const geometry = new THREE.BufferGeometry();
-      const vertices = [];
+    const createParticles = () => {
+      try {
+        // Create geometry with vertices
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
 
-      // Create 10,000 particles
-      for (let i = 0; i < 10000; i++) {
-        const x = Math.random() * 2000 - 1000;
-        const y = Math.random() * 2000 - 1000;
-        const z = Math.random() * 2000 - 1000;
-        vertices.push(x, y, z);
-      }
+        // Create particles
+        for (let i = 0; i < particleCount; i++) {
+          const x = Math.random() * 2000 - 1000;
+          const y = Math.random() * 2000 - 1000;
+          const z = Math.random() * 2000 - 1000;
+          vertices.push(x, y, z);
+        }
 
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
 
-      // Load textures
-      const textureLoader = new THREE.TextureLoader();
-      const textures = await Promise.all(
-        SNOWFLAKE_TEXTURES.map(path => 
-          new Promise<THREE.Texture>((resolve) => {
-            textureLoader.load(path, (texture) => {
-              texture.colorSpace = THREE.SRGBColorSpace;
-              resolve(texture);
-            });
-          })
-        )
-      );
+        // Create materials with base64 textures
+        const textureLoader = new THREE.TextureLoader();
+        
+        // Create circle textures if base64 fails
+        const createCircleTexture = (size: number) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return null;
+          
+          ctx.beginPath();
+          ctx.arc(size / 2, size / 2, size / 4, 0, Math.PI * 2);
+          ctx.fillStyle = particleColor;
+          ctx.fill();
+          
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.colorSpace = THREE.SRGBColorSpace;
+          return texture;
+        };
 
-      // Parameters for different particle groups
-      parametersRef.current = [
-        [[1.0, 0.2, 0.5], textures[1], 20],
-        [[0.95, 0.1, 0.5], textures[2], 15],
-        [[0.90, 0.05, 0.5], textures[0], 10],
-        [[0.85, 0, 0.5], textures[4], 8],
-        [[0.80, 0, 0.5], textures[3], 5]
-      ];
+        // Try to load base64 textures, fall back to circles
+        const textures = [
+          textureLoader.load(SNOWFLAKE_BASE64.snowflake1),
+          textureLoader.load(SNOWFLAKE_BASE64.snowflake2),
+          textureLoader.load(SNOWFLAKE_BASE64.snowflake3),
+          textureLoader.load(SNOWFLAKE_BASE64.snowflake4),
+          textureLoader.load(SNOWFLAKE_BASE64.snowflake5)
+        ];
 
-      // Create materials and particles
-      parametersRef.current.forEach((params, i) => {
-        const color = params[0];
-        const sprite = params[1];
-        const size = params[2];
+        // Parameters for particle groups
+        const parameters = [
+          [[1.0, 0.2, 0.5], textures[1], 20],
+          [[0.95, 0.1, 0.5], textures[2], 15],
+          [[0.90, 0.05, 0.5], textures[0], 10],
+          [[0.85, 0, 0.5], textures[4], 8],
+          [[0.80, 0, 0.5], textures[3], 5]
+        ];
 
-        const material = new THREE.PointsMaterial({
-          size: size,
-          map: sprite,
-          blending: THREE.AdditiveBlending,
-          depthTest: false,
-          transparent: true,
-          opacity: 0.8
+        // Create particle groups
+        parameters.forEach((params, i) => {
+          const color = params[0];
+          const sprite = params[1];
+          const size = params[2] as number;
+
+          const material = new THREE.PointsMaterial({
+            size: size,
+            map: sprite,
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            transparent: true,
+            opacity: 0.8,
+            sizeAttenuation: true
+          });
+          
+          // Convert hex color to HSL
+          const hexColor = parseInt(particleColor.replace('#', ''), 16);
+          const threeColor = new THREE.Color(hexColor);
+          const hsl = { h: 0, s: 0, l: 0 };
+          threeColor.getHSL(hsl);
+          
+          material.color.setHSL(hsl.h, hsl.s * color[1], hsl.l * color[2]);
+
+          const particles = new THREE.Points(geometry, material);
+          
+          // Random initial rotation
+          particles.rotation.x = Math.random() * 6;
+          particles.rotation.y = Math.random() * 6;
+          particles.rotation.z = Math.random() * 6;
+
+          scene.add(particles);
+          particlesRef.current.push(particles);
+          materialsRef.current.push(material);
         });
-        
-        material.color.setHSL(color[0], color[1], color[2]);
-        material.toneMapped = false; // Disable tone mapping for better control
 
-        const particles = new THREE.Points(geometry, material);
-        
-        // Random initial rotation
-        particles.rotation.x = Math.random() * 6;
-        particles.rotation.y = Math.random() * 6;
-        particles.rotation.z = Math.random() * 6;
+        // Add fog
+        const fogColor = new THREE.Color(backgroundColor);
+        scene.fog = new THREE.FogExp2(fogColor.getHex(), intensity);
 
-        scene.add(particles);
-        particlesRef.current.push(particles);
-        materialsRef.current.push(material);
-      });
+        setIsLoaded(true);
+        setError(null);
 
-      setIsLoaded(true);
+      } catch (err) {
+        console.error('Error creating particles:', err);
+        setError('Failed to create particle effect');
+        setIsLoaded(false);
+      }
     };
 
     createParticles();
@@ -170,11 +216,8 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
 
       // Update colors over time
       materialsRef.current.forEach((material, i) => {
-        if (parametersRef.current[i]) {
-          const color = parametersRef.current[i][0];
-          const h = (360 * (color[0] + time) % 360) / 360;
-          material.color.setHSL(h, color[1], color[2]);
-        }
+        const h = ((Date.now() * 0.0001) % 1);
+        material.color.setHSL(h, 0.5, 0.5);
       });
 
       rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -236,8 +279,9 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
       // Dispose Three.js resources
       if (rendererRef.current) {
         rendererRef.current.dispose();
-        if (container.contains(rendererRef.current.domElement)) {
-          container.removeChild(rendererRef.current.domElement);
+        const canvas = rendererRef.current.domElement;
+        if (canvas && canvas.parentNode === container) {
+          container.removeChild(canvas);
         }
       }
 
@@ -251,11 +295,14 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         scene.remove(particles);
       });
 
+      particlesRef.current = [];
+      materialsRef.current = [];
+      
       if (sceneRef.current) {
         sceneRef.current.clear();
       }
     };
-  }, [intensity, color, enableMouseInteraction]);
+  }, [intensity, backgroundColor, particleColor, enableMouseInteraction, particleCount]);
 
   return (
     <div 
@@ -267,12 +314,20 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: 0,
-        pointerEvents: enableMouseInteraction ? 'auto' : 'none'
+        zIndex: -1,
+        pointerEvents: enableMouseInteraction ? 'auto' : 'none',
+        backgroundColor: backgroundColor
       }}
     >
-      {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-white bg-red-500/50 p-4 rounded">
+            {error}
+          </div>
+        </div>
+      )}
+      {!isLoaded && !error && (
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-white">Loading particles...</div>
         </div>
       )}
