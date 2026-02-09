@@ -239,11 +239,11 @@ export default function ParticleBackground() {
     scene.add(glowParticles);
     
     // Add fog for depth
-    scene.fog = new THREE.FogExp2(0x050520, 0.001);
+    //scene.fog = new THREE.FogExp2(0x050520, 0.001);
     
     // Add lights for glow effect
     const ambientLight = new THREE.AmbientLight(0x88aaff, 0.4);
-    scene.add(ambientLight);
+   // scene.add(ambientLight);
     
     // Add point lights that move around - scale with container
     const pointLights: THREE.PointLight[] = [];
