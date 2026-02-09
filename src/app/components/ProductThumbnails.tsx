@@ -86,7 +86,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               style={{
                  border:'solid 1px transparent',
                  borderRadius:'1px',
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(200,180,255,0.5) 100%)',
                  backdropFilter: 'blur(3px)',
                  WebkitBackdropFilter: 'blur(3px)'
               }}>
