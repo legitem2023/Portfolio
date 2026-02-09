@@ -1,6 +1,8 @@
 // pages/index.tsx (or wherever you want to use the component)
 import React from 'react';
 import DeluxeNavTabs from './components/DeluxeNavTabs';
+import ParticleBackground from './components/ParticleBackground';
+
 import Footer from './components/Footer';
 import Header from './components/Header';
 import Image from 'next/image';
@@ -18,7 +20,12 @@ const EcommercePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
       <Header/>
       <DeluxeNavTabs />
-      
+      <ParticleBackground 
+        intensity={0.0008}
+        color="#000000"
+        enableMouseInteraction={true}
+        className="fixed inset-0"
+      />
       {/* Footer */}
    <Footer/>
     </div>
