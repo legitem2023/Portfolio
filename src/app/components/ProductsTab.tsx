@@ -340,7 +340,7 @@ const ProductsTab: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-2">  
+        <div className="bg-violet-50 flex justify-between items-center mb-2">  
           <div className="flex space-x-2 w-full">  
             <select  
               className="w-full px-3 py-2 border border-gray-300 rounded-md"  
