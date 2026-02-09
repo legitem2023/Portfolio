@@ -18,7 +18,7 @@ import {
 const EcommercePage: React.FC = () => {
   return (
     <div className="min-h-screen p-0">
-     <ParticleBackground/>
+      
       <Header/>
       <DeluxeNavTabs />
   
