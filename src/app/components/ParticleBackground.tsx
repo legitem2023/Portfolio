@@ -367,11 +367,8 @@ export default function ParticleBackground() {
   return (
     <div 
       ref={mountRef} 
-      className="fixed inset-0 pointer-events-none"
-      style={{ 
-        position: 'fixed',
-        top: 0,
-        left: 0,
+      className="relative inset-0 pointer-events-none"
+      style={{
         width: '100vw',
         height: '36vh', // This sets the container height
         zIndex: 1,
@@ -379,4 +376,4 @@ export default function ParticleBackground() {
       }}
     />
   );
-                      }
+}
