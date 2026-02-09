@@ -8,6 +8,7 @@ import { Post, User } from '../../../types';
 import UserProfileShimmer from './UserProfileShimmer';
 import UserProfileShimmerRed from './UserProfileShimmerRed';
 import ProfileTabs from './ProfileTabs';
+import ParticleBackground from './ParticleBackground';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -29,7 +30,8 @@ const UserProfile = ({ userId }: { userId: string }) => {
   return (
     <div className="min-h-screen p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
-      <div className="h-36 bg-gradient-to-r from-violet-100 to-indigo-100 relative">
+      <div className="h-36 bg-gradient-to-r from-violet-100 to-indigo-100 relative overflow">
+        <ParticleBackground/>
         <div className="absolute bottom-0 w-full h-1/2"></div>
         
         {/* Profile Picture */}
