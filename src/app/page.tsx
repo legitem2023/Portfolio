@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 const EcommercePage: React.FC = () => {
   return (
-    <div className="min-h-screen p-0">
+    <div className="bg-black min-h-screen p-0">
       
       <Header/>
       <DeluxeNavTabs />
