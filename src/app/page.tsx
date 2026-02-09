@@ -20,14 +20,7 @@ const EcommercePage: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
       <Header/>
    
-      <ParticleBackground 
-        intensity={0.0005}
-        backgroundColor="#000011"
-        particleColor="#88ccff"
-        enableMouseInteraction={true}
-        particleCount={3000}
-        className="fixed inset-0"
-      />
+      
       <DeluxeNavTabs />
   
       {/* Footer */}
