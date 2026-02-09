@@ -11,6 +11,7 @@ import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
+import ParticleBackground from './ParticleBackground';
 
 import {
   Home,
@@ -212,7 +213,13 @@ const DeluxeNavTabs: React.FC = () => {
       <Ads/>
       <InstallPWAButton/>
       
-      <div className="relative bg-white border border-gray-200 overflow-hidden">
+      <div className="relative border border-gray-200 overflow-hidden">
+    <ParticleBackground 
+        intensity={0.0008}
+        color="#000000"
+        enableMouseInteraction={true}
+        className="fixed inset-0"
+      />
         {tabs.find((tab) => tab.id === activeIndex)?.content}
       </div>
 
