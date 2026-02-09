@@ -214,6 +214,14 @@ const DeluxeNavTabs: React.FC = () => {
       <InstallPWAButton/>
       
       <div className="relative border border-gray-200 overflow-hidden">
+        <ParticleBackground 
+        intensity={0.0005}
+        backgroundColor="#000011"
+        particleColor="#88ccff"
+        enableMouseInteraction={true}
+        particleCount={3000}
+        className="fixed inset-0"
+      />
         {tabs.find((tab) => tab.id === activeIndex)?.content}
       </div>
 
