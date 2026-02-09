@@ -26,22 +26,22 @@ export default function ParticleBackground() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mountRef.current.appendChild(renderer.domElement);
     
+    // Different neon colors for winter theme
+    const neonColors = [
+      new THREE.Color(0x00ffff), // Cyan
+      new THREE.Color(0xff00ff), // Magenta
+      new THREE.Color(0x00ff00), // Green
+      new THREE.Color(0xffff00), // Yellow
+      new THREE.Color(0xff1493), // Deep Pink
+      new THREE.Color(0x00ced1), // Dark Turquoise
+      new THREE.Color(0x9370db), // Medium Purple
+    ];
+    
     // Create snowflake-like particles with different shapes
-    const createSnowflakeGeometry = (type: number) => {
+    const createSnowflakeGeometry = (type: number): THREE.BufferGeometry => {
       const geometry = new THREE.BufferGeometry();
-      const vertices = [];
-      const colors = [];
-      
-      // Different neon colors for winter theme
-      const neonColors = [
-        new THREE.Color(0x00ffff), // Cyan
-        new THREE.Color(0xff00ff), // Magenta
-        new THREE.Color(0x00ff00), // Green
-        new THREE.Color(0xffff00), // Yellow
-        new THREE.Color(0xff1493), // Deep Pink
-        new THREE.Color(0x00ced1), // Dark Turquoise
-        new THREE.Color(0x9370db), // Medium Purple
-      ];
+      const vertices: number[] = [];
+      const colors: number[] = [];
       
       for (let i = 0; i < 150; i++) {
         const x = Math.random() * 1000 - 500;
@@ -81,7 +81,8 @@ export default function ParticleBackground() {
         
         // Assign random neon color
         const color = neonColors[Math.floor(Math.random() * neonColors.length)];
-        for (let j = 0; j < (type === 0 ? 6 : type === 1 ? 8 : 4); j++) {
+        const pointsCount = type === 0 ? 6 : type === 1 ? 8 : 4;
+        for (let j = 0; j < pointsCount; j++) {
           colors.push(color.r, color.g, color.b);
         }
       }
@@ -91,35 +92,15 @@ export default function ParticleBackground() {
       return geometry;
     };
     
-    // Create multiple particle systems with different snowflake types
-    const particles:any = [];
-    const materials:any = [];
-    
-    for (let i = 0; i < 3; i++) {
-      const geometry = createSnowflakeGeometry(i);
-      
-      const material = new THREE.PointsMaterial({
-        size: i === 0 ? 3 : i === 1 ? 4 : 2,
-        sizeAttenuation: true,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.8,
-        blending: THREE.AdditiveBlending,
-        map: createTexture(i)
-      });
-      
-      const particleSystem = new THREE.Points(geometry, material);
-      scene.add(particleSystem);
-      particles.push(particleSystem);
-      materials.push(material);
-    }
-    
     // Create texture function for snowflakes
-    function createTexture(type: number) {
+    const createTexture = (type: number): THREE.Texture => {
       const canvas = document.createElement('canvas');
       canvas.width = 64;
       canvas.height = 64;
-      const context = canvas.getContext('2d')!;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        return new THREE.Texture();
+      }
       
       // Clear canvas
       context.clearRect(0, 0, 64, 64);
@@ -172,6 +153,29 @@ export default function ParticleBackground() {
       
       const texture = new THREE.CanvasTexture(canvas);
       return texture;
+    };
+    
+    // Create multiple particle systems with different snowflake types
+    const particles: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>[] = [];
+    const materials: THREE.PointsMaterial[] = [];
+    
+    for (let i = 0; i < 3; i++) {
+      const geometry = createSnowflakeGeometry(i);
+      
+      const material = new THREE.PointsMaterial({
+        size: i === 0 ? 3 : i === 1 ? 4 : 2,
+        sizeAttenuation: true,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+        map: createTexture(i)
+      });
+      
+      const particleSystem = new THREE.Points(geometry, material);
+      scene.add(particleSystem);
+      particles.push(particleSystem);
+      materials.push(material);
     }
     
     // Add subtle ambient light for depth
@@ -184,15 +188,23 @@ export default function ParticleBackground() {
     scene.add(directionalLight);
     
     // Individual rotation speeds and directions for each particle system
-    const rotationSpeeds = [
+    interface RotationSpeed {
+      x: number;
+      y: number;
+      z: number;
+    }
+    
+    const rotationSpeeds: RotationSpeed[] = [
       { x: 0.0001, y: 0.0003, z: 0.0002 },
       { x: 0.0002, y: 0.0001, z: 0.0003 },
       { x: 0.0003, y: 0.0002, z: 0.0001 }
     ];
     
     // Animation loop
+    let animationId: number;
+    
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       
       // Rotate each particle system at different speeds
       particles.forEach((particleSystem, index) => {
@@ -202,7 +214,8 @@ export default function ParticleBackground() {
         particleSystem.rotation.z += speed.z;
         
         // Gentle floating motion
-        particleSystem.position.y = Math.sin(Date.now() * 0.001 + index) * 5;
+        const time = Date.now() * 0.001 + index;
+        particleSystem.position.y = Math.sin(time) * 5;
         particleSystem.position.x = Math.cos(Date.now() * 0.0005 + index) * 3;
       });
       
@@ -223,6 +236,8 @@ export default function ParticleBackground() {
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
+      cancelAnimationFrame(animationId);
+      
       if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
         mountRef.current.removeChild(renderer.domElement);
       }
@@ -235,6 +250,9 @@ export default function ParticleBackground() {
         if (material.map) material.map.dispose();
         material.dispose();
       });
+      
+      ambientLight.dispose();
+      directionalLight.dispose();
       renderer.dispose();
     };
   }, []);
@@ -254,4 +272,4 @@ export default function ParticleBackground() {
       }}
     />
   );
-        }
+                                      }
