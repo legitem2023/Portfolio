@@ -92,8 +92,8 @@ export default function ParticleBackground() {
     };
     
     // Create multiple particle systems with different snowflake types
-    const particles = [];
-    const materials = [];
+    const particles:any = [];
+    const materials:any = [];
     
     for (let i = 0; i < 3; i++) {
       const geometry = createSnowflakeGeometry(i);
