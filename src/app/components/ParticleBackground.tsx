@@ -79,14 +79,28 @@ export default function ParticleBackground() {
       context.clearRect(0, 0, size, size);
       const center = size / 2;
       
-      // Create hexagonal snowflake
+      // Create softer hexagonal snowflake
       context.beginPath();
-      context.fillStyle = 'rgba(255, 255, 255, 0.95)';
+      context.fillStyle = 'rgba(255, 255, 255, 0.7)'; // Less opaque
       
-      // Main hexagon
+      // Main hexagon - smaller core
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI * 2 * i) / 6;
-        const radius = 80;
+        const radius = 60;
+        const x = center + Math.cos(angle) * radius;
+        const y = center + Math.sin(angle) * radius;
+        if (i === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      }
+      context.closePath();
+      context.fill();
+      
+      // Draw a second, slightly larger hexagon for soft edge
+      context.beginPath();
+      context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI * 2 * i) / 6;
+        const radius = 70;
         const x = center + Math.cos(angle) * radius;
         const y = center + Math.sin(angle) * radius;
         if (i === 0) context.moveTo(x, y);
@@ -96,13 +110,13 @@ export default function ParticleBackground() {
       context.fill();
       
       // Add arms/points to make it look like a snowflake
-      context.lineWidth = 6;
-      context.strokeStyle = 'rgba(220, 240, 255, 0.9)';
+      context.lineWidth = 4; // Thinner
+      context.strokeStyle = 'rgba(220, 240, 255, 0.6)'; // More transparent
       
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI * 2 * i) / 6;
-        const innerRadius = 40;
-        const outerRadius = 110;
+        const innerRadius = 30;
+        const outerRadius = 90;
         
         const x1 = center + Math.cos(angle) * innerRadius;
         const y1 = center + Math.sin(angle) * innerRadius;
@@ -116,10 +130,10 @@ export default function ParticleBackground() {
         
         // Add branches
         const branchAngle = angle + Math.PI / 6;
-        const branchX1 = x1 + Math.cos(branchAngle) * 30;
-        const branchY1 = y1 + Math.sin(branchAngle) * 30;
-        const branchX2 = x1 - Math.cos(branchAngle) * 30;
-        const branchY2 = y1 - Math.sin(branchAngle) * 30;
+        const branchX1 = x1 + Math.cos(branchAngle) * 25;
+        const branchY1 = y1 + Math.sin(branchAngle) * 25;
+        const branchX2 = x1 - Math.cos(branchAngle) * 25;
+        const branchY2 = y1 - Math.sin(branchAngle) * 25;
         
         context.beginPath();
         context.moveTo(x1, y1);
@@ -129,16 +143,21 @@ export default function ParticleBackground() {
         context.stroke();
       }
       
-      // Add intense glow
+      // Add smooth fade glow
       context.beginPath();
-      context.arc(center, center, 120, 0, Math.PI * 2);
+      context.arc(center, center, 140, 0, Math.PI * 2);
       const gradient = context.createRadialGradient(
-        center, center, 20,
-        center, center, 120
+        center, center, 10,     // Smaller inner radius
+        center, center, 140     // Larger outer radius
       );
-      gradient.addColorStop(0, 'rgba(170, 220, 255, 0.8)');
-      gradient.addColorStop(0.3, 'rgba(170, 220, 255, 0.4)');
-      gradient.addColorStop(1, 'rgba(170, 220, 255, 0)');
+      
+      // Softer, more gradual fade
+      gradient.addColorStop(0, 'rgba(200, 230, 255, 0.95)');
+      gradient.addColorStop(0.1, 'rgba(180, 220, 255, 0.8)');
+      gradient.addColorStop(0.3, 'rgba(150, 200, 255, 0.5)');
+      gradient.addColorStop(0.6, 'rgba(120, 180, 255, 0.2)');
+      gradient.addColorStop(0.8, 'rgba(100, 160, 255, 0.05)');
+      gradient.addColorStop(1, 'rgba(80, 140, 255, 0)');
       context.fillStyle = gradient;
       context.fill();
       
@@ -203,16 +222,16 @@ export default function ParticleBackground() {
     // Adjust material size based on container
     const baseSize = Math.min(20, Math.max(8, containerSize.width / 80));
     
-    // Create material with glow
+    // Create material with glow - lower alphaTest for smoother edges
     const material = new THREE.PointsMaterial({
       size: baseSize,
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.8, // Slightly less opaque
       blending: THREE.AdditiveBlending,
       map: snowflakeTexture,
-      alphaTest: 0.1,
+      alphaTest: 0.01, // Lower for smoother edges
       depthWrite: false
     });
     
@@ -221,17 +240,17 @@ export default function ParticleBackground() {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
     
-    // Create glow particles (larger, more transparent)
+    // Create glow particles (larger, more transparent) - very soft
     const glowGeometry = createParticleSystem();
     const glowMaterial = new THREE.PointsMaterial({
-      size: baseSize * 2, // Much larger for glow
+      size: baseSize * 2.5, // Slightly larger ratio
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9, // More transparent
+      opacity: 0.2, // More transparent and subtle
       blending: THREE.AdditiveBlending,
       map: snowflakeTexture,
-      alphaTest: 0.05,
+      alphaTest: 0.005, // Very low for soft fade
       depthWrite: false
     });
     
