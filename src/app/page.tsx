@@ -17,10 +17,9 @@ import {
 } from 'lucide-react';
 const EcommercePage: React.FC = () => {
   return (
-    <div className="min-h-screen p-0">
+    <div className="bg-violet-50 min-h-screen p-0">
       <Header/>
       <DeluxeNavTabs />
-      <ParticleBackground/>
       {/* Footer */}
       <Footer/>
     </div>
