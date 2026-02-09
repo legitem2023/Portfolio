@@ -371,7 +371,7 @@ export default function ParticleBackground() {
       style={{
         width: '100vw',
         height: '36vh', // This sets the container height
-        zIndex: 1,
+        zIndex: 0,
         background: 'linear-gradient(to bottom, #050520 0%, #0a0a30 30%, #1a1a40 100%)'
       }}
     />
