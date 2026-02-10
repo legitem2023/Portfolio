@@ -251,6 +251,13 @@ export default function MerchantsPage() {
                     ? 'border-purple-500 shadow-purple-200' 
                     : 'border-purple-200'
                 }`}
+                style={{
+                 border:'solid 1px transparent',
+                 borderRadius:'3px',
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
+                 backdropFilter: 'blur(2px)',
+                 WebkitBackdropFilter: 'blur(2px)'
+              }}
               >
                 {isFeatured && (
                   <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs md:text-sm font-semibold py-1 px-3 md:px-4 text-center">
