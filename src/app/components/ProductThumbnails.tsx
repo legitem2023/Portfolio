@@ -85,10 +85,10 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
               className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
               style={{
                  border:'solid 1px transparent',
-                 borderRadius:'1px',
+                 borderRadius:'3px',
                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
-                 backdropFilter: 'blur(3px)',
-                 WebkitBackdropFilter: 'blur(3px)'
+                 backdropFilter: 'blur(2px)',
+                 WebkitBackdropFilter: 'blur(2px)'
               }}>
               {/* Sale/New Badge */}
               {(product.onSale || product.isNew) && (
