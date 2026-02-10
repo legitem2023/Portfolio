@@ -388,38 +388,11 @@ const CityScape = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-screen bg-black">
+    <div className="ratio-[5/1] relative w-full h-screen bg-black">
       <div 
         ref={mountRef} 
         className="absolute inset-0"
-      />
-      
-      {/* Info panel */}
-      <div className="absolute top-4 left-4 text-white font-sans pointer-events-none">
-        <div className="flex items-center space-x-2 mb-2">
-          <a 
-            href="https://threejs.org/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-400 hover:text-blue-300 pointer-events-auto"
-          >
-            three.js
-          </a>
-          <span className="text-gray-400">Cityscape with Fog</span>
-        </div>
-        <small className="text-gray-400 block">
-          Organized city grid with animated windows
-        </small>
-        <small className="text-gray-500 block mt-1">
-          Buildings: 2000 | Render ratio: 1.5:1
-        </small>
-      </div>
-      
-      {/* Instructions */}
-      <div className="absolute bottom-4 left-4 text-white text-sm text-gray-300 pointer-events-none">
-        <div>Drag to rotate • Scroll to zoom • Auto-rotating</div>
-        <div className="text-xs text-gray-500 mt-1">Window lights animate over time</div>
-      </div>
+      />  
     </div>
   );
 };
