@@ -198,11 +198,11 @@ export default function MerchantsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2">
       <div className="max-w-7xl mx-auto">
         <CategoryPage/>
         {/* Merchants Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {merchants.map((merchant: Merchant) => {
             const displayName = getDisplayName(merchant);
             const displayCategory = getDisplayCategory(merchant);
