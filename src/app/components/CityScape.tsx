@@ -2,16 +2,15 @@
 
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const CityScape = () => {
   const canvasRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const controlsRef = useRef<OrbitControls | null>(null);
   const animationIdRef = useRef<number>(0);
-  const buildingsRef = useRef<THREE.InstancedMesh | null>(null);
+  const cameraAngleRef = useRef<number>(0);
+  const buildingsRef = useRef<THREE.Group[]>([]);
 
   const getTimeOfDay = () => {
     const now = new Date();
@@ -21,41 +20,116 @@ const CityScape = () => {
   };
 
   const getSkyColor = (time: number) => {
-    // 6AM to 6PM: Sky blue gradient
     if (time >= 6 && time <= 18) {
-      const progress = (time - 6) / 12; // 0 at 6AM, 1 at 6PM
-      // Sky blue gradient from light to medium blue
+      const progress = (time - 6) / 12;
+      // Sky blue gradient
       const r = 135 + 40 * (1 - progress);
       const g = 206 + 49 * (1 - progress);
       const b = 235;
       return new THREE.Color(r / 255, g / 255, b / 255);
-    } 
-    // 6PM to 6AM: Dark indigo to light gradient
-    else {
+    } else {
       let progress;
       if (time > 18) {
-        progress = (time - 18) / 12; // 0 at 6PM, 1 at 6AM
+        progress = (time - 18) / 12;
       } else {
-        progress = (time + 6) / 12; // For hours 0-6AM
+        progress = (time + 6) / 12;
       }
       
-      // Dark indigo to lighter gradient
+      // Dark indigo to light blue gradient
       const r = 25 + 30 * progress;
-      const g = 0 + 20 * progress;
-      const b = 50 + 100 * progress;
+      const g = 0 + 40 * progress;
+      const b = 50 + 150 * progress;
       return new THREE.Color(r / 255, g / 255, b / 255);
     }
   };
 
-  const getAmbientLightColor = (time: number) => {
-    // Brighter during day, darker at night
-    if (time >= 6 && time <= 18) {
-      const progress = (time - 6) / 12;
-      const intensity = 0.5 + 0.3 * Math.sin(progress * Math.PI);
-      return new THREE.Color(intensity, intensity, intensity);
-    } else {
-      return new THREE.Color(0.1, 0.1, 0.15);
-    }
+  const createSimpleBuilding = (x: number, z: number, height: number) => {
+    const group = new THREE.Group();
+    
+    // Random building width/depth
+    const width = 2 + Math.random() * 3;
+    const depth = 2 + Math.random() * 3;
+    
+    // Main building structure
+    const buildingGeometry = new THREE.BoxGeometry(width, height, depth);
+    
+    // Create building color with variation
+    const hue = 0.1 + Math.random() * 0.1; // Grayish tones
+    const saturation = 0.1;
+    const lightness = 0.1 + Math.random() * 0.1;
+    const buildingColor = new THREE.Color().setHSL(hue, saturation, lightness);
+    
+    const buildingMaterial = new THREE.MeshPhongMaterial({
+      color: buildingColor,
+      shininess: 10
+    });
+    
+    const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+    building.castShadow = true;
+    building.receiveShadow = true;
+    building.position.y = height / 2;
+    group.add(building);
+
+    // Create window texture
+    const createWindowTexture = (isDayTime: boolean) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      
+      // Fill with building color
+      ctx.fillStyle = `rgb(${Math.floor(buildingColor.r * 255)}, ${Math.floor(buildingColor.g * 255)}, ${Math.floor(buildingColor.b * 255)})`;
+      ctx.fillRect(0, 0, 64, 64);
+      
+      // Draw window grid
+      ctx.strokeStyle = '#222222';
+      ctx.lineWidth = 2;
+      
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          const x = i * 16;
+          const y = j * 16;
+          
+          // Window frame
+          ctx.strokeRect(x + 2, y + 2, 12, 12);
+          
+          // Random lit windows
+          if (Math.random() > 0.7) {
+            if (isDayTime) {
+              ctx.fillStyle = '#666666';
+            } else {
+              // Yellow window lights at night
+              ctx.fillStyle = Math.random() > 0.5 ? '#ffaa33' : '#ffcc66';
+            }
+            ctx.fillRect(x + 4, y + 4, 8, 8);
+          } else {
+            ctx.fillStyle = '#111111';
+            ctx.fillRect(x + 4, y + 4, 8, 8);
+          }
+        }
+      }
+      
+      return canvas;
+    };
+
+    const isDayTime = getTimeOfDay() >= 6 && getTimeOfDay() <= 18;
+    const windowTexture = createWindowTexture(isDayTime);
+    const texture = new THREE.CanvasTexture(windowTexture);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(2, Math.ceil(height / 3));
+
+    // Apply window texture to all sides
+    const buildingMaterialWithWindows = new THREE.MeshPhongMaterial({
+      map: texture,
+      color: buildingColor,
+      shininess: 10
+    });
+
+    building.material = buildingMaterialWithWindows;
+
+    group.position.set(x, 0, z);
+    return group;
   };
 
   const init = () => {
@@ -65,278 +139,166 @@ const CityScape = () => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    // Camera
+    // Camera - Fixed 5:1 aspect ratio
+    const aspectRatio = 5 / 1;
     const camera = new THREE.PerspectiveCamera(
       45,
-      window.innerWidth / window.innerHeight,
+      aspectRatio,
       1,
-      600
+      2000
     );
-    camera.position.set(30, 15, 30);
+    camera.position.set(150, 80, 150);
     cameraRef.current = camera;
 
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Renderer with 5:1 aspect ratio
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      alpha: true
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1)); // Lower for performance
+    renderer.setSize(window.innerWidth, window.innerWidth / 5); // 5:1 aspect ratio
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    canvasRef.current.appendChild(renderer.domElement);
+    renderer.shadowMap.type = THREE.BasicShadowMap; // Simpler shadows for performance
     rendererRef.current = renderer;
 
-    // Controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 2, 0);
-    controls.minDistance = 7;
-    controls.maxDistance = 100;
-    controls.maxPolarAngle = Math.PI / 2;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.1;
-    controlsRef.current = controls;
+    // Clear existing content
+    while (canvasRef.current.firstChild) {
+      canvasRef.current.removeChild(canvasRef.current.firstChild);
+    }
+    canvasRef.current.appendChild(renderer.domElement);
 
-    // Create buildings
-    const createBuildings = () => {
-      const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
-      const buildingMaterial = new THREE.MeshPhongMaterial({
-        color: 0x333333,
-        shininess: 30,
-      });
-
-      const buildingCount = 4000;
-      const buildingMesh = new THREE.InstancedMesh(
-        buildingGeometry,
-        buildingMaterial,
-        buildingCount
-      );
-      buildingMesh.castShadow = true;
-      buildingMesh.receiveShadow = true;
-      scene.add(buildingMesh);
-      buildingsRef.current = buildingMesh;
-
-      const dummy = new THREE.Object3D();
-      const center = new THREE.Vector3();
-
-      for (let i = 0; i < buildingCount; i++) {
-        const scaleY = Math.random() * 7 + 0.5;
-
-        dummy.position.x = Math.random() * 600 - 300;
-        dummy.position.z = Math.random() * 600 - 300;
-
-        const distance = Math.max(dummy.position.distanceTo(center) * 0.012, 1);
-        dummy.position.y = 0.5 * scaleY * distance;
-
-        dummy.scale.x = dummy.scale.z = Math.random() * 3 + 0.5;
-        dummy.scale.y = scaleY * distance;
-
-        dummy.updateMatrix();
-        buildingMesh.setMatrixAt(i, dummy.matrix);
-      }
-
-      // Update windows based on time
-      updateBuildingWindows();
-    };
-
-    // Update building window lights based on time of day
-    const updateBuildingWindows = () => {
-      const time = getTimeOfDay();
-      const buildingMesh = buildingsRef.current;
-      if (!buildingMesh) return;
-
-      const colors = [];
-      const color = new THREE.Color();
+    // Create city grid with buildings
+    const createCity = () => {
+      buildingsRef.current = [];
       
-      for (let i = 0; i < buildingMesh.count; i++) {
-        const isWindowLit = Math.random() > 0.7; // 30% of windows are lit
-        
-        if (time >= 6 && time <= 18) {
-          // Daytime: fewer lit windows
-          if (isWindowLit && Math.random() > 0.8) {
-            color.setHex(0xffdd99); // Warm yellow for daytime lights
-          } else {
-            color.setHex(0x666666); // Dark gray for unlit windows
-          }
-        } else {
-          // Nighttime: more lit windows
-          if (isWindowLit || Math.random() > 0.6) {
-            // Variety of warm window colors at night
-            const colorChoice = Math.random();
-            if (colorChoice < 0.33) {
-              color.setHex(0xffaa33); // Warm orange
-            } else if (colorChoice < 0.66) {
-              color.setHex(0xffdd99); // Soft yellow
-            } else {
-              color.setHex(0x99ccff); // Cool blue
-            }
-          } else {
-            color.setHex(0x333333); // Very dark for unlit windows
-          }
+      // Create buildings in a grid pattern
+      const gridSize = 20;
+      const spacing = 6;
+      
+      for (let i = -gridSize; i <= gridSize; i++) {
+        for (let j = -gridSize; j <= gridSize; j++) {
+          // Skip some positions for streets
+          if (Math.random() > 0.3) continue;
+          
+          const x = i * spacing + (Math.random() - 0.5) * 2;
+          const z = j * spacing + (Math.random() - 0.5) * 2;
+          
+          // Vary building heights
+          const height = 5 + Math.random() * 20 + Math.sqrt(i*i + j*j) * 0.5;
+          
+          const building = createSimpleBuilding(x, z, height);
+          scene.add(building);
+          buildingsRef.current.push(building);
         }
-        
-        colors.push(color.r, color.g, color.b);
       }
-
-      // Update instance colors
-      const colorAttribute = new THREE.InstancedBufferAttribute(
-        new Float32Array(colors),
-        3
-      );
-      buildingMesh.geometry.setAttribute('instanceColor', colorAttribute);
-      
-      // Update material to use instance colors
-      const material = buildingMesh.material as THREE.MeshPhongMaterial;
-      material.onBeforeCompile = (shader) => {
-        shader.vertexShader = shader.vertexShader.replace(
-          '#include <common>',
-          `
-            #include <common>
-            attribute vec3 instanceColor;
-            varying vec3 vInstanceColor;
-          `
-        );
-        
-        shader.vertexShader = shader.vertexShader.replace(
-          '#include <begin_vertex>',
-          `
-            #include <begin_vertex>
-            vInstanceColor = instanceColor;
-          `
-        );
-        
-        shader.fragmentShader = shader.fragmentShader.replace(
-          '#include <common>',
-          `
-            #include <common>
-            varying vec3 vInstanceColor;
-          `
-        );
-        
-        shader.fragmentShader = shader.fragmentShader.replace(
-          'vec4 diffuseColor = vec4( diffuse, opacity );',
-          `
-            vec3 finalColor = diffuse * vInstanceColor;
-            vec4 diffuseColor = vec4( finalColor, opacity );
-          `
-        );
-      };
-      material.needsUpdate = true;
     };
 
-    // Ground
+    // Create ground
     const createGround = () => {
-      const groundGeometry = new THREE.PlaneGeometry(200, 200, 50, 50);
+      const groundGeometry = new THREE.PlaneGeometry(300, 300);
       const groundMaterial = new THREE.MeshPhongMaterial({
-        color: 0x222222,
-        side: THREE.DoubleSide,
+        color: 0x111111,
+        shininess: 5
       });
       const ground = new THREE.Mesh(groundGeometry, groundMaterial);
       ground.rotation.x = -Math.PI / 2;
-      ground.scale.multiplyScalar(3);
       ground.receiveShadow = true;
       scene.add(ground);
-
-      // Add subtle grid texture to ground
-      const gridGeometry = new THREE.PlaneGeometry(600, 600, 60, 60);
-      const gridMaterial = new THREE.LineBasicMaterial({
-        color: 0x333333,
-        transparent: true,
-        opacity: 0.1,
-      });
-      const grid = new THREE.LineSegments(
-        new THREE.WireframeGeometry(gridGeometry),
-        gridMaterial
-      );
-      grid.rotation.x = -Math.PI / 2;
-      grid.position.y = 0.01;
-      scene.add(grid);
     };
 
-    // Lighting
-    const updateLighting = () => {
+    // Setup lighting
+    const setupLighting = () => {
       const time = getTimeOfDay();
-      const skyColor = getSkyColor(time);
-      const ambientColor = getAmbientLightColor(time);
-
+      const isDayTime = time >= 6 && time <= 18;
+      
       // Clear existing lights
       scene.children = scene.children.filter(
-        (child) => !(child instanceof THREE.Light)
+        child => !(child instanceof THREE.Light)
       );
 
-      // Set scene background
-      scene.background = skyColor;
-
-      // Hemisphere light for ambient illumination
-      const hemisphereLight = new THREE.HemisphereLight(
-        0xffffff,
-        0x444444,
-        time >= 6 && time <= 18 ? 0.6 : 0.3
-      );
-      scene.add(hemisphereLight);
+      // Set sky color
+      scene.background = getSkyColor(time);
 
       // Main directional light (sun/moon)
       const mainLight = new THREE.DirectionalLight(
-        time >= 6 && time <= 18 ? 0xffffff : 0x4466aa,
-        time >= 6 && time <= 18 ? 1.0 : 0.5
+        isDayTime ? 0xffffff : 0x4466aa,
+        isDayTime ? 1.0 : 0.5
       );
       mainLight.position.set(50, 100, 50);
       mainLight.castShadow = true;
-      mainLight.shadow.mapSize.width = 2048;
-      mainLight.shadow.mapSize.height = 2048;
-      mainLight.shadow.camera.near = 0.5;
-      mainLight.shadow.camera.far = 500;
-      mainLight.shadow.camera.left = -100;
-      mainLight.shadow.camera.right = 100;
-      mainLight.shadow.camera.top = 100;
-      mainLight.shadow.camera.bottom = -100;
+      mainLight.shadow.mapSize.width = 1024; // Reduced for performance
+      mainLight.shadow.mapSize.height = 1024;
       scene.add(mainLight);
 
-      // Add some point lights for building windows at night
-      if (time < 6 || time > 18) {
-        for (let i = 0; i < 20; i++) {
-          const windowLight = new THREE.PointLight(0xffaa33, 0.5, 50);
-          windowLight.position.set(
-            Math.random() * 400 - 200,
-            Math.random() * 50 + 5,
-            Math.random() * 400 - 200
-          );
-          scene.add(windowLight);
-        }
-      }
+      // Ambient light
+      const ambientLight = new THREE.AmbientLight(
+        isDayTime ? 0x404040 : 0x222233,
+        isDayTime ? 0.5 : 0.3
+      );
+      scene.add(ambientLight);
     };
 
     // Initialize scene
-    createBuildings();
+    createCity();
     createGround();
-    updateLighting();
+    setupLighting();
+
+    // Camera animation for circling the city
+    const updateCamera = () => {
+      cameraAngleRef.current += 0.002; // Slower rotation
+      
+      const radius = 150;
+      const height = 80;
+      
+      // Calculate camera position in a circle
+      const x = Math.cos(cameraAngleRef.current) * radius;
+      const z = Math.sin(cameraAngleRef.current) * radius;
+      
+      camera.position.x = x;
+      camera.position.z = z;
+      camera.position.y = height;
+      
+      // Make camera look at center of city
+      camera.lookAt(0, 20, 0);
+      
+      // Add slight up/down movement for more dynamic feel
+      camera.position.y += Math.sin(cameraAngleRef.current * 0.5) * 10;
+    };
 
     // Animation loop
     const animate = () => {
       animationIdRef.current = requestAnimationFrame(animate);
-
-      const time = getTimeOfDay();
       
-      // Update sky and lighting every frame for smooth transitions
-      updateLighting();
-      updateBuildingWindows();
-
-      // Slowly rotate scene for dynamic feel
-      if (sceneRef.current) {
-        sceneRef.current.rotation.y += 0.0001;
+      // Update camera position
+      updateCamera();
+      
+      // Slowly rotate buildings for variation
+      buildingsRef.current.forEach((building, index) => {
+        building.rotation.y += 0.0001 * (index % 3 + 1);
+      });
+      
+      // Update lighting based on time (less frequently for performance)
+      if (Math.random() > 0.98) { // Only update 2% of frames
+        setupLighting();
       }
-
-      controlsRef.current?.update();
-      rendererRef.current?.render(scene, camera);
+      
+      renderer.render(scene, camera);
     };
 
     // Handle window resize
     const handleResize = () => {
       if (!cameraRef.current || !rendererRef.current) return;
 
-      cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+      const newWidth = window.innerWidth;
+      const newHeight = newWidth / 5; // Maintain 5:1 aspect ratio
+      
+      cameraRef.current.aspect = 5 / 1;
       cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      rendererRef.current.setSize(newWidth, newHeight);
     };
 
     window.addEventListener('resize', handleResize);
+    handleResize(); // Initial size set
     animate();
 
     // Cleanup
@@ -346,10 +308,26 @@ const CityScape = () => {
       
       if (rendererRef.current) {
         rendererRef.current.dispose();
-        rendererRef.current.domElement.remove();
+        if (rendererRef.current.domElement.parentNode) {
+          rendererRef.current.domElement.parentNode.removeChild(rendererRef.current.domElement);
+        }
       }
       
-      controlsRef.current?.dispose();
+      // Dispose geometries and materials
+      buildingsRef.current.forEach(building => {
+        building.traverse(child => {
+          if (child instanceof THREE.Mesh) {
+            child.geometry.dispose();
+            if (Array.isArray(child.material)) {
+              child.material.forEach(material => material.dispose());
+            } else {
+              child.material.dispose();
+            }
+          }
+        });
+      });
+      
+      buildingsRef.current = [];
     };
   };
 
@@ -359,25 +337,22 @@ const CityScape = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full" style={{ height: 'calc(100vw / 5)' }}>
       <div 
         ref={canvasRef} 
         className="absolute inset-0"
       />
-      <div className="absolute bottom-4 left-4 text-white bg-black/50 p-3 rounded-lg">
-        <div className="text-sm font-mono">
-          Time-based Sky: 
-          <span className="ml-2">
-            {(() => {
-              const now = new Date();
-              const hours = now.getHours();
-              const minutes = now.getMinutes().toString().padStart(2, '0');
-              return `${hours}:${minutes}`;
-            })()}
-          </span>
+      <div className="absolute top-4 left-4 text-white bg-black/70 p-2 rounded-lg text-xs">
+        <div className="font-mono">
+          {(() => {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+          })()}
         </div>
-        <div className="text-xs mt-1 opacity-75">
-          6AM-6PM: Sky Blue • 6PM-6AM: Dark Indigo Gradient
+        <div className=" opacity-75">
+          Camera circling city • 5:1 aspect ratio
         </div>
       </div>
     </div>
