@@ -18,22 +18,24 @@ const CityScape = () => {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     
-    // Camera
+    // Camera - adjust FOV for wide aspect ratio
     const camera = new THREE.PerspectiveCamera(
-      45,
+      30, // Reduced FOV for wider view
       mount.clientWidth / mount.clientHeight,
       1,
-      600
+      800 // Increased far plane for wider view
     );
-    camera.position.set(50, 30, 50);
+    camera.position.set(80, 40, 0); // Position camera to the side for wide view
+    camera.lookAt(0, 20, 0);
     
-    // Renderer with optimized pixel ratio 5:1
+    // Renderer with optimized pixel ratio for header
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
-      powerPreference: 'high-performance'
+      powerPreference: 'high-performance',
+      alpha: true // Allow transparency for header overlay
     });
     rendererRef.current = renderer;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Reduced from default
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -45,7 +47,7 @@ const CityScape = () => {
     const groundColor = new THREE.Color(0xd0dee7);
     
     // Create fog
-    const fog = new THREE.Fog(skyColor, 1, 400);
+    const fog = new THREE.Fog(skyColor, 1, 600); // Increased fog distance for wide view
     scene.fog = fog;
     
     // Background gradient
@@ -70,7 +72,6 @@ const CityScape = () => {
         ctx.fillRect(0, 0, 64, 64);
         
         // Draw windows in grid pattern
-        ctx.fillStyle = '#ffaa33';
         const windowSize = 8;
         const spacing = 16;
         
@@ -94,7 +95,7 @@ const CityScape = () => {
       const windowTexture = new THREE.CanvasTexture(windowCanvas);
       windowTexture.wrapS = THREE.RepeatWrapping;
       windowTexture.wrapT = THREE.RepeatWrapping;
-      windowTexture.repeat.set(4, 8); // More windows on taller buildings
+      windowTexture.repeat.set(4, 8);
       
       const buildingMaterial = new THREE.MeshPhongMaterial({
         map: windowTexture,
@@ -102,7 +103,9 @@ const CityScape = () => {
         specular: 0x111111,
         shininess: 30,
         emissive: 0x222222,
-        emissiveIntensity: 0.1
+        emissiveIntensity: 0.1,
+        transparent: true,
+        opacity: 0.95
       });
       
       return { geometry, material: buildingMaterial, texture: windowTexture };
@@ -115,9 +118,9 @@ const CityScape = () => {
       { color: 0x444444, windowColor: 0xff8888, scaleMod: 1.2 },
     ];
     
-    const buildingCount = 2000; // Half of original 4000
-    const gridSize = 50;
-    const spacing = 12;
+    const buildingCount = 1500; // Optimized for header
+    const gridSize = 60; // Wider grid for 5:1 aspect
+    const spacing = 10; // Closer spacing for denser look
     
     // Create organized rows of buildings
     const buildings: THREE.InstancedMesh[] = [];
@@ -130,36 +133,36 @@ const CityScape = () => {
       const dummy = new THREE.Object3D();
       const center = new THREE.Vector3();
       
-      // Calculate grid positions
-      const rows = Math.floor(Math.sqrt(buildingCount / 3));
-      const cols = rows;
+      // Calculate grid positions for wide aspect ratio
+      const cols = Math.floor(Math.sqrt(buildingCount / 3) * 2); // More columns for width
+      const rows = Math.floor((buildingCount / 3) / cols);
       
       for (let i = 0; i < buildingMesh.count; i++) {
         const row = Math.floor(i / cols);
         const col = i % cols;
         
-        // Position buildings in organized grid with slight randomness
-        const x = (col - cols / 2) * spacing + (Math.random() * 4 - 2);
-        const z = (row - rows / 2) * spacing + (Math.random() * 4 - 2);
+        // Position buildings in wide grid
+        const x = (col - cols / 2) * spacing * 1.2; // Wider spread
+        const z = (row - rows / 2) * spacing * 0.6; // Less depth
         
-        // Height variation based on position from center
-        const distanceFromCenter = Math.sqrt(x * x + z * z);
-        const baseHeight = Math.random() * 6 + 3;
-        const heightMod = 1 + (distanceFromCenter * 0.002);
+        // Height variation - taller in center
+        const distanceFromCenter = Math.sqrt(x * x * 0.5 + z * z * 2); // Adjusted for wide view
+        const baseHeight = Math.random() * 8 + 4; // Taller buildings
+        const heightMod = 1.5 - (distanceFromCenter * 0.001); // Taller in center
         
-        // Vary building widths slightly
-        const widthScale = Math.random() * 2 + 1.5;
+        // Wider buildings for header view
+        const widthScale = Math.random() * 3 + 2;
         
         dummy.position.set(x, 0, z);
         dummy.scale.set(
           widthScale * type.scaleMod,
           baseHeight * heightMod * type.scaleMod,
-          widthScale * type.scaleMod
+          widthScale * 0.7 * type.scaleMod // Less depth for wide view
         );
         
-        // Alternate building rotations for visual variety
-        if (col % 3 === 0) {
-          dummy.rotation.y = Math.PI / 4;
+        // Alternate building rotations
+        if (col % 4 === 0) {
+          dummy.rotation.y = Math.PI / 6;
         }
         
         // Set height after scale
@@ -177,38 +180,35 @@ const CityScape = () => {
       (buildingMesh as any).texture = texture;
     });
     
-    // Add some skyscrapers in the center
+    // Add skyscrapers along the horizon
     const skyscraperGeometry = new THREE.BoxGeometry(1, 1, 1);
     const skyscraperMaterial = new THREE.MeshPhongMaterial({
       color: 0x1a1a1a,
       emissive: 0x333333,
-      emissiveIntensity: 0.2,
-      specular: 0x666666
+      emissiveIntensity: 0.3,
+      specular: 0x666666,
+      transparent: true,
+      opacity: 0.9
     });
     
-    const skyscraperCount = 20;
+    const skyscraperCount = 15;
     const skyscraperMesh = new THREE.InstancedMesh(skyscraperGeometry, skyscraperMaterial, skyscraperCount);
     
     const skyscraperDummy = new THREE.Object3D();
-    const centerRingRadius = 30;
     
     for (let i = 0; i < skyscraperCount; i++) {
-      const angle = (i / skyscraperCount) * Math.PI * 2;
-      const radius = centerRingRadius + Math.random() * 10 - 5;
+      // Distribute skyscrapers along wider horizontal range
+      const x = (i - skyscraperCount / 2) * 25;
+      const z = -30 + Math.random() * 10; // Place in background
       
-      skyscraperDummy.position.set(
-        Math.cos(angle) * radius,
-        0,
-        Math.sin(angle) * radius
-      );
+      skyscraperDummy.position.set(x, 0, z);
       
-      const height = 15 + Math.random() * 10;
-      const width = 2 + Math.random() * 1;
+      const height = 25 + Math.random() * 15;
+      const width = 3 + Math.random() * 2;
       
-      skyscraperDummy.scale.set(width, height, width);
+      skyscraperDummy.scale.set(width, height, width * 0.8);
       skyscraperDummy.position.y = height / 2;
       
-      skyscraperDummy.rotation.y = angle;
       skyscraperDummy.updateMatrix();
       skyscraperMesh.setMatrixAt(i, skyscraperDummy.matrix);
     }
@@ -216,95 +216,80 @@ const CityScape = () => {
     skyscraperMesh.instanceMatrix.needsUpdate = true;
     scene.add(skyscraperMesh);
     
-    // Ground plane
-    const groundGeometry = new THREE.PlaneGeometry(400, 400);
+    // Ground plane - much wider for 5:1 aspect
+    const groundGeometry = new THREE.PlaneGeometry(800, 200); // Wider, less deep
     const groundMaterial = new THREE.MeshPhongMaterial({
       color: 0x666666,
       side: THREE.DoubleSide,
-      shininess: 10
+      shininess: 10,
+      transparent: true,
+      opacity: 0.8
     });
     
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
-    ground.scale.multiplyScalar(1.5);
+    ground.position.z = -50; // Move back to show more foreground
     ground.receiveShadow = true;
     scene.add(ground);
     
-    // Add road grid lines
-    const roadGeometry = new THREE.PlaneGeometry(1, 400);
+    // Add road grid lines - optimized for wide view
+    const roadGeometry = new THREE.PlaneGeometry(1, 300); // Longer roads
     const roadMaterial = new THREE.MeshBasicMaterial({
-      color: 0x444444
+      color: 0x444444,
+      transparent: true,
+      opacity: 0.7
     });
     
-    for (let i = -gridSize * spacing / 2; i <= gridSize * spacing / 2; i += spacing) {
-      // Horizontal roads
+    for (let i = -150; i <= 150; i += spacing * 2) {
+      // Horizontal roads (main roads)
       const roadH = new THREE.Mesh(roadGeometry, roadMaterial);
       roadH.rotation.x = -Math.PI / 2;
-      roadH.position.set(i, 0.01, 0);
-      roadH.scale.set(0.5, 1, 1);
+      roadH.position.set(i * 1.5, 0.01, 0);
+      roadH.scale.set(0.3, 1, 1);
       scene.add(roadH);
-      
-      // Vertical roads
-      const roadV = new THREE.Mesh(roadGeometry, roadMaterial);
-      roadV.rotation.x = -Math.PI / 2;
-      roadV.rotation.z = Math.PI / 2;
-      roadV.position.set(0, 0.01, i);
-      roadV.scale.set(0.5, 1, 1);
-      scene.add(roadV);
     }
     
     // Lights
-    const ambientLight = new THREE.HemisphereLight(skyColor.getHex(), groundColor.getHex(), 0.6);
+    const ambientLight = new THREE.HemisphereLight(skyColor.getHex(), groundColor.getHex(), 0.7);
     scene.add(ambientLight);
     
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.7);
-    directionalLight.position.set(100, 150, 100);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(50, 100, -50);
     directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 1024; // Reduced for performance
+    directionalLight.shadow.mapSize.width = 1024;
     directionalLight.shadow.mapSize.height = 1024;
-    directionalLight.shadow.camera.left = -200;
-    directionalLight.shadow.camera.right = 200;
+    directionalLight.shadow.camera.left = -300; // Wider shadow camera
+    directionalLight.shadow.camera.right = 300;
     directionalLight.shadow.camera.top = 200;
     directionalLight.shadow.camera.bottom = -200;
     directionalLight.shadow.camera.near = 0.5;
-    directionalLight.shadow.camera.far = 500;
+    directionalLight.shadow.camera.far = 600;
     scene.add(directionalLight);
     
-    // Add street lights
-    const streetLightGeometry = new THREE.CylinderGeometry(0.1, 0.2, 2, 8);
-    const streetLightMaterial = new THREE.MeshPhongMaterial({
-      color: 0xaaaaaa,
-      emissive: 0xffffaa,
-      emissiveIntensity: 0.5
-    });
-    
-    const streetLightCount = 40;
-    for (let i = 0; i < streetLightCount; i++) {
-      const angle = (i / streetLightCount) * Math.PI * 2;
-      const radius = 100;
+    // Add distant lights for atmosphere
+    const distantLightCount = 20;
+    for (let i = 0; i < distantLightCount; i++) {
+      const angle = (i / distantLightCount) * Math.PI * 2;
+      const radius = 200;
       
-      const light = new THREE.Mesh(streetLightGeometry, streetLightMaterial);
-      light.position.set(
+      const pointLight = new THREE.PointLight(0xffffaa, 0.5, 100);
+      pointLight.position.set(
         Math.cos(angle) * radius,
-        1,
-        Math.sin(angle) * radius
+        20 + Math.random() * 10,
+        Math.sin(angle) * radius - 100
       );
-      scene.add(light);
-      
-      // Add point light at top
-      const pointLight = new THREE.PointLight(0xffffaa, 0.8, 30);
-      pointLight.position.set(light.position.x, 3, light.position.z);
       scene.add(pointLight);
     }
     
-    // Controls
+    // Controls - minimal auto-rotation for header
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 10, 0);
-    controls.minDistance = 10;
-    controls.maxDistance = 200;
-    controls.maxPolarAngle = Math.PI / 2;
+    controls.target.set(0, 15, -20);
+    controls.enableZoom = false;
+    controls.enablePan = false;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.05;
+    controls.autoRotateSpeed = 0.02; // Slower rotation for header
     
     // Handle window resize
     const handleResize = () => {
@@ -317,7 +302,7 @@ const CityScape = () => {
     
     window.addEventListener('resize', handleResize);
     
-    // Animation for window lights
+    // Animation
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
       
@@ -326,23 +311,25 @@ const CityScape = () => {
       // Animate fog color
       const fogColor = skyColor.clone().lerp(
         new THREE.Color(0xd0dee7), 
-        Math.sin(time * 0.1) * 0.1 + 0.5
+        Math.sin(time * 0.05) * 0.1 + 0.5
       );
       
       if (scene.fog) {
         scene.fog.color = fogColor;
       }
       
-      // Slowly rotate camera around city
+      // Slowly animate camera for dynamic header
       controls.update();
       
-      // Animate window lights (simulate lights turning on/off)
-      if (time % 10 < 0.1) { // Every 10 seconds, update some windows
+      // Subtle camera movement for header
+      camera.position.x = 80 + Math.sin(time * 0.02) * 10;
+      camera.position.y = 40 + Math.sin(time * 0.03) * 3;
+      
+      // Animate window lights
+      if (time % 5 < 0.1) {
         buildings.forEach(building => {
-          if (building.material instanceof THREE.MeshPhongMaterial && building.material.map) {
-            // This would require updating the window texture canvas
-            // For performance, we'll just update the emissive intensity
-            building.material.emissiveIntensity = 0.1 + Math.sin(time) * 0.05;
+          if (building.material instanceof THREE.MeshPhongMaterial) {
+            building.material.emissiveIntensity = 0.1 + Math.sin(time * 2) * 0.05;
           }
         });
       }
@@ -363,10 +350,8 @@ const CityScape = () => {
         mount.removeChild(rendererRef.current.domElement);
       }
       
-      // Dispose of all resources
       renderer.dispose();
       
-      // Dispose buildings and their textures
       buildings.forEach(building => {
         building.geometry.dispose();
         if (building.material instanceof THREE.Material) {
@@ -381,18 +366,23 @@ const CityScape = () => {
       skyscraperMaterial.dispose();
       groundGeometry.dispose();
       groundMaterial.dispose();
-      streetLightGeometry.dispose();
-      streetLightMaterial.dispose();
       if (bgTexture) bgTexture.dispose();
     };
   }, []);
 
   return (
-    <div className="aspect-ratio-[5/1] relative w-full h-screen bg-black overflow">
+    <div className="relative w-full overflow-hidden bg-black" style={{ aspectRatio: '5/1' }}>
       <div 
         ref={mountRef} 
         className="absolute inset-0"
-      />  
+      />
+      {/* Optional overlay for website header content */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="container mx-auto h-full flex items-center">
+          {/* Your website header content can go here */}
+          {/* <h1 className="text-white text-4xl font-bold">Your Website Title</h1> */}
+        </div>
+      </div>
     </div>
   );
 };
@@ -401,34 +391,37 @@ const CityScape = () => {
 const createGradientTexture = (topColor: THREE.Color, bottomColor: THREE.Color): THREE.CanvasTexture | null => {
   try {
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024; // Wider for 5:1 aspect
+    canvas.height = 256;
     const context = canvas.getContext('2d');
     
     if (!context) {
       return null;
     }
     
-    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, `#${topColor.getHexString()}`);
-    gradient.addColorStop(0.5, `#${topColor.clone().multiplyScalar(0.9).getHexString()}`);
+    // Create horizontal gradient for wide aspect
+    const gradient = context.createLinearGradient(0, 0, canvas.width, 0);
+    gradient.addColorStop(0, `#${topColor.clone().multiplyScalar(0.8).getHexString()}`);
+    gradient.addColorStop(0.3, `#${topColor.getHexString()}`);
+    gradient.addColorStop(0.7, `#${topColor.getHexString()}`);
     gradient.addColorStop(1, `#${bottomColor.getHexString()}`);
     
     context.fillStyle = gradient;
     context.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add some subtle noise for atmosphere
-    context.globalAlpha = 0.02;
-    for (let i = 0; i < canvas.width * canvas.height * 0.01; i++) {
-      const x = Math.floor(Math.random() * canvas.width);
-      const y = Math.floor(Math.random() * canvas.height);
-      context.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
-      context.fillRect(x, y, 1, 1);
-    }
+    // Add subtle horizontal gradient from dark to light
+    const overlayGradient = context.createLinearGradient(0, 0, canvas.width, 0);
+    overlayGradient.addColorStop(0, 'rgba(0, 0, 0, 0.1)');
+    overlayGradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+    overlayGradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+    
+    context.globalAlpha = 0.3;
+    context.fillStyle = overlayGradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
     
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
-    texture.wrapT = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
     
     return texture;
   } catch (error) {
