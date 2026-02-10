@@ -8,17 +8,20 @@ const CityScape = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    const mount = mountRef.current;
+    if (!mount) return;
 
     // Scene setup
     const scene = new THREE.Scene();
+    sceneRef.current = scene;
     
     // Camera
     const camera = new THREE.PerspectiveCamera(
       45,
-      mountRef.current.clientWidth / mountRef.current.clientHeight,
+      mount.clientWidth / mount.clientHeight,
       1,
       600
     );
@@ -28,10 +31,10 @@ const CityScape = () => {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     rendererRef.current = renderer;
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    mountRef.current.appendChild(renderer.domElement);
+    mount.appendChild(renderer.domElement);
     
     // Custom fog effect
     const skyColor = new THREE.Color(0xf0f5f5);
@@ -43,7 +46,9 @@ const CityScape = () => {
     
     // Background gradient
     const bgTexture = createGradientTexture(skyColor, groundColor);
-    scene.background = bgTexture;
+    if (bgTexture) {
+      scene.background = bgTexture;
+    }
     
     // Buildings
     const buildingGeometry = new THREE.BoxGeometry(1, 1, 1);
@@ -153,11 +158,11 @@ const CityScape = () => {
     
     // Handle window resize
     const handleResize = () => {
-      if (!mountRef.current) return;
+      if (!mount) return;
       
-      camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+      camera.aspect = mount.clientWidth / mount.clientHeight;
       camera.updateProjectionMatrix();
-      renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
     };
     
     window.addEventListener('resize', handleResize);
@@ -191,8 +196,8 @@ const CityScape = () => {
         cancelAnimationFrame(animationRef.current);
       }
       
-      if (rendererRef.current && mountRef.current && mountRef.current.contains(rendererRef.current.domElement)) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
+      if (rendererRef.current && mount && mount.contains(rendererRef.current.domElement)) {
+        mount.removeChild(rendererRef.current.domElement);
       }
       
       // Dispose of resources
@@ -239,28 +244,33 @@ const CityScape = () => {
 };
 
 // Helper function to create gradient background
-const createGradientTexture = (topColor: THREE.Color, bottomColor: THREE.Color): THREE.CanvasTexture => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const context = canvas.getContext('2d');
-  
-  if (!context) {
-    return new THREE.Texture();
+const createGradientTexture = (topColor: THREE.Color, bottomColor: THREE.Color): THREE.CanvasTexture | null => {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    
+    if (!context) {
+      return null;
+    }
+    
+    const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, `#${topColor.getHexString()}`);
+    gradient.addColorStop(1, `#${bottomColor.getHexString()}`);
+    
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    
+    return texture;
+  } catch (error) {
+    console.error('Failed to create gradient texture:', error);
+    return null;
   }
-  
-  const gradient = context.createLinearGradient(0, 0, 0, canvas.height);
-  gradient.addColorStop(0, `#${topColor.getHexString()}`);
-  gradient.addColorStop(1, `#${bottomColor.getHexString()}`);
-  
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  
-  return texture;
 };
 
 export default CityScape;
