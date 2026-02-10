@@ -9,6 +9,7 @@ import UserProfileShimmer from './UserProfileShimmer';
 import UserProfileShimmerRed from './UserProfileShimmerRed';
 import ProfileTabs from './ProfileTabs';
 import ParticleBackground from './ParticleBackground';
+import CityScape from './CityScape';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -32,7 +33,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
       <div className="h-36 relative overflow">
         <div className="absolute bottom-0 w-full h-1/2"></div>
-        <ParticleBackground/>
+        <CityScape/>
         {/* Profile Picture */}
         <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none">
           
