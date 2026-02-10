@@ -388,7 +388,7 @@ const CityScape = () => {
   }, []);
 
   return (
-    <div className="ratio-[5/1] relative w-full h-screen bg-black">
+    <div className="aspect-ratio-[5/1] relative w-full h-screen bg-black overflow">
       <div 
         ref={mountRef} 
         className="absolute inset-0"
