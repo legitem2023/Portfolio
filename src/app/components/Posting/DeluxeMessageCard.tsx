@@ -147,7 +147,15 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
  }
   return (
     <>
-      <div className={`max-w-2xl mx-auto bg-white shadow-lg overflow-hidden mb-0 ${className}`}>
+      <div className={`max-w-2xl mx-auto shadow-lg overflow-hidden mb-0 ${className}`}
+        style={{
+                 border:'solid 1px transparent',
+                 borderRadius:'3px',
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
+                 backdropFilter: 'blur(2px)',
+                 WebkitBackdropFilter: 'blur(2px)'
+              }}
+        >
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
