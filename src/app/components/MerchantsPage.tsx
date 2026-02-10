@@ -200,32 +200,7 @@ export default function MerchantsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6">
       <div className="max-w-7xl mx-auto">
-
-        {/* Search and Filter Bar */}
-        <div className="bg-white rounded-md shadow-lg p-2 border border-purple-200">
-          <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
-            <CategoryPage/>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
-          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold text-sm md:text-base">Total Merchants</div>
-            <div className="text-xl md:text-2xl font-bold text-purple-700">{merchants.length}</div>
-          </div>
-          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold text-sm md:text-base">Featured</div>
-            <div className="text-xl md:text-2xl font-bold text-purple-700">
-              {merchants.filter((m: Merchant) => getIsFeatured(m)).length}
-            </div>
-          </div>
-          <div className="bg-white rounded-xl p-3 md:p-4 shadow-md border border-purple-200">
-            <div className="text-purple-900 font-semibold text-sm md:text-base">Avg. Rating</div>
-            <div className="text-xl md:text-2xl font-bold text-purple-700">{averageRating}</div>
-          </div>
-        </div>
-
+        <CategoryPage/>
         {/* Merchants Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {merchants.map((merchant: Merchant) => {
