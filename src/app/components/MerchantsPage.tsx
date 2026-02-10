@@ -202,16 +202,9 @@ export default function MerchantsPage() {
       <div className="max-w-7xl mx-auto">
 
         {/* Search and Filter Bar */}
-        <div className="bg-white rounded-2xl shadow-lg p-3 md:p-6 mb-6 md:mb-8 border border-purple-200">
+        <div className="bg-white rounded-md shadow-lg p-2 border border-purple-200">
           <div className="flex flex-col md:flex-row gap-3 md:gap-4 md:items-center">
             <CategoryPage/>
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search merchants..."
-                className="w-full px-3 py-1.5 md:px-4 md:py-2 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm md:text-base"
-              />
-            </div>
           </div>
         </div>
 
