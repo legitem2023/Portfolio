@@ -202,7 +202,7 @@ export default function MerchantsPage() {
       <div className="max-w-7xl mx-auto">
         <CategoryPage/>
         {/* Merchants Grid */}
-        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {merchants.map((merchant: Merchant) => {
             const displayName = getDisplayName(merchant);
             const displayCategory = getDisplayCategory(merchant);
@@ -214,7 +214,7 @@ export default function MerchantsPage() {
             return (
               <div
                 key={merchant.id}
-                className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                className={`bg-white rounded-2xl shadow-lg overflow-hidden border-2 transition-all duration-300 ${
                   isFeatured 
                     ? 'border-purple-500 shadow-purple-200' 
                     : 'border-purple-200'
