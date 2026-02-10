@@ -4,12 +4,10 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-// Note: For Three.js TSL features, you'd need to use WebGPU renderer
-// This is a WebGL version that works in Next.js with Three.js
-
 const CityScape = () => {
   const mountRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
 
   useEffect(() => {
     if (!mountRef.current) return;
@@ -28,17 +26,18 @@ const CityScape = () => {
     
     // Renderer (WebGL version for broader compatibility)
     const renderer = new THREE.WebGLRenderer({ antialias: true });
+    rendererRef.current = renderer;
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mountRef.current.appendChild(renderer.domElement);
     
-    // Custom fog effect (simulated without TSL)
+    // Custom fog effect
     const skyColor = new THREE.Color(0xf0f5f5);
     const groundColor = new THREE.Color(0xd0dee7);
     
-    // Create fog with gradient
+    // Create fog
     const fog = new THREE.Fog(skyColor, 1, 500);
     scene.fog = fog;
     
@@ -71,21 +70,18 @@ const CityScape = () => {
       const distance = Math.max(dummy.position.distanceTo(center) * 0.012, 1);
       dummy.position.y = 0.5 * scaleY * distance;
       
-      // Create some variation in building widths
       const widthScale = Math.random() * 3 + 0.5;
       dummy.scale.x = widthScale;
       dummy.scale.z = widthScale;
       dummy.scale.y = scaleY * distance;
       
-      // Add some rotation variation for more organic feel
       dummy.rotation.y = Math.random() * Math.PI * 2;
       
       dummy.updateMatrix();
       buildingMesh.setMatrixAt(i, dummy.matrix);
     }
     
-    // Add windows to buildings using a different approach
-    // We'll create emissive materials for some buildings to simulate lights
+    // Add light buildings
     const lightBuildingCount = Math.floor(buildingCount * 0.3);
     const lightBuildings = new THREE.InstancedMesh(
       buildingGeometry,
@@ -110,8 +106,6 @@ const CityScape = () => {
       dummy.scale.x = widthScale;
       dummy.scale.z = widthScale;
       dummy.scale.y = scaleY * distance;
-      
-      // Make light buildings shorter for variety
       dummy.scale.y *= 0.7;
       
       dummy.rotation.y = Math.random() * Math.PI * 2;
@@ -137,7 +131,6 @@ const CityScape = () => {
     const ambientLight = new THREE.HemisphereLight(skyColor.getHex(), groundColor.getHex(), 0.5);
     scene.add(ambientLight);
     
-    // Directional light for shadows
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(50, 100, 50);
     directionalLight.castShadow = true;
@@ -173,12 +166,18 @@ const CityScape = () => {
     const animate = () => {
       animationRef.current = requestAnimationFrame(animate);
       
-      // Update building materials for a "breathing" fog effect
+      // Update fog color with animation
       const time = Date.now() * 0.001;
-      const fogColor = skyColor.clone().lerp(new THREE.Color(0xd0dee7), Math.sin(time * 0.2) * 0.2 + 0.5);
-      scene.fog.color = fogColor;
+      const fogColor = skyColor.clone().lerp(
+        new THREE.Color(0xd0dee7), 
+        Math.sin(time * 0.2) * 0.2 + 0.5
+      );
       
-      // Auto-rotate
+      // Type guard: check if fog exists before accessing
+      if (scene.fog) {
+        scene.fog.color = fogColor;
+      }
+      
       controls.update();
       renderer.render(scene, camera);
     };
@@ -192,8 +191,8 @@ const CityScape = () => {
         cancelAnimationFrame(animationRef.current);
       }
       
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (rendererRef.current && mountRef.current && mountRef.current.contains(rendererRef.current.domElement)) {
+        mountRef.current.removeChild(rendererRef.current.domElement);
       }
       
       // Dispose of resources
@@ -202,7 +201,7 @@ const CityScape = () => {
       buildingMaterial.dispose();
       groundGeometry.dispose();
       groundMaterial.dispose();
-      bgTexture.dispose();
+      if (bgTexture) bgTexture.dispose();
     };
   }, []);
 
