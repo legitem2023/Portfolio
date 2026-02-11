@@ -46,13 +46,11 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
   };*/
 
   return (
-    <section className="py-3 px-3 bg-violet-50">
+    <div className="py-2 px-2 bg-violet-50">
       <div className="container mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
-          
+        <div className="text-center mb-6">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>  
         </div>
-
         {loading ? (
           <CategoryShimmer count={4} />
         ) : (
@@ -219,19 +217,11 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
                   </div>
                 );
               })}
-            </div>
-            
-            
+            </div>    
           </>
         )}
-
-        <div className="text-center mt-12">
-          <button className="bg-gray-900 text-white px-8 py-3 rounded-full font-medium hover:bg-gray-800 transition-colors">
-            View All Products
-          </button>
-        </div>
       </div>
-    </section>
+    </div>
   );
 };
 
