@@ -5,7 +5,6 @@ import { Map, MapPin, Navigation } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Use CDN URLs for leaflet markers
 const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
 const markerShadow = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
 const markerIconRetina = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
@@ -47,26 +46,34 @@ interface MapTabProps {
   }>;
 }
 
-// Function to geocode address to coordinates (mock - in production use real geocoding service)
-const geocodeAddress = (address: string, type: 'pickup' | 'dropoff') => {
-  // Mock geocoding - generate coordinates based on address hash
-  const hash = address.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
-  // Base coordinates for Metro Manila area
-  const baseLat = 14.5995;
-  const baseLng = 120.9842;
-  
-  // Add variation based on hash
-  const latVariation = ((hash % 1000) / 100000) * (type === 'pickup' ? 1 : -1);
-  const lngVariation = ((hash % 10000) / 100000) * (type === 'pickup' ? 0.5 : 1.5);
-  
-  return {
-    lat: baseLat + latVariation,
-    lng: baseLng + lngVariation
-  };
+const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
+
+const geocodeAddress = async (address: string) => {
+  try {
+    const encoded = encodeURIComponent(address);
+    const response = await fetch(
+      `${NOMINATIM_URL}?format=json&q=${encoded}&limit=1`,
+      {
+        headers: {
+          'User-Agent': 'DeliveryTracker/1.0'
+        }
+      }
+    );
+    const data = await response.json();
+    
+    if (data && data[0]) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon)
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Geocoding failed:', address, error);
+    return null;
+  }
 };
 
-// Component to center map on selected delivery
 const MapCenterController = ({ center, zoom }: { center: LatLngExpression; zoom: number }) => {
   const map = useMap();
   useEffect(() => {
@@ -79,35 +86,46 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const [selectedDelivery, setSelectedDelivery] = useState<string | null>(null);
   const [mapZoom, setMapZoom] = useState(13);
   const [riderLocation, setRiderLocation] = useState<LatLngTuple>([14.5995, 120.9842]);
-
-  // Process deliveries for map display
-  const mapDeliveries = deliveries.map(delivery => {
-    const pickupCoords = delivery.pickupAddress 
-      ? geocodeAddress(`${delivery.pickupAddress.street}, ${delivery.pickupAddress.city}`, 'pickup')
-      : geocodeAddress(delivery.pickup, 'pickup');
-    
-    const dropoffCoords = delivery.dropoffAddress
-      ? geocodeAddress(`${delivery.dropoffAddress.street}, ${delivery.dropoffAddress.city}`, 'dropoff')
-      : geocodeAddress(delivery.dropoff, 'dropoff');
-
-    return {
-      ...delivery,
-      pickupCoords: [pickupCoords.lat, pickupCoords.lng] as LatLngTuple,
-      dropoffCoords: [dropoffCoords.lat, dropoffCoords.lng] as LatLngTuple,
-      route: [
-        [pickupCoords.lat, pickupCoords.lng],
-        [dropoffCoords.lat, dropoffCoords.lng]
-      ] as LatLngTuple[]
-    };
-  });
-
-  // Calculate map center - FIXED: Ensure it's always LatLngTuple
+  const [mapDeliveries, setMapDeliveries] = useState<Array<any>>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const defaultCenter: LatLngTuple = [14.5995, 120.9842];
-  const mapCenter: LatLngExpression = selectedDelivery 
-    ? mapDeliveries.find(d => d.id === selectedDelivery)?.pickupCoords || defaultCenter
-    : defaultCenter;
 
-  // Mock rider location updates
+  useEffect(() => {
+    const geocodeAllAddresses = async () => {
+      setIsLoading(true);
+      const geocodedResults = await Promise.all(
+        deliveries.map(async (delivery) => {
+          const pickupAddress = delivery.pickupAddress 
+            ? `${delivery.pickupAddress.street}, ${delivery.pickupAddress.city}, ${delivery.pickupAddress.state} ${delivery.pickupAddress.zipCode}, ${delivery.pickupAddress.country}`
+            : delivery.pickup;
+          
+          const dropoffAddress = delivery.dropoffAddress
+            ? `${delivery.dropoffAddress.street}, ${delivery.dropoffAddress.city}, ${delivery.dropoffAddress.state} ${delivery.dropoffAddress.zipCode}, ${delivery.dropoffAddress.country}`
+            : delivery.dropoff;
+
+          const pickupCoords = await geocodeAddress(pickupAddress);
+          const dropoffCoords = await geocodeAddress(dropoffAddress);
+
+          return {
+            ...delivery,
+            pickupCoords: pickupCoords ? [pickupCoords.lat, pickupCoords.lng] as LatLngTuple : defaultCenter,
+            dropoffCoords: dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] as LatLngTuple : defaultCenter,
+            route: [
+              pickupCoords ? [pickupCoords.lat, pickupCoords.lng] : defaultCenter,
+              dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] : defaultCenter
+            ] as LatLngTuple[]
+          };
+        })
+      );
+      setMapDeliveries(geocodedResults);
+      setIsLoading(false);
+    };
+
+    if (deliveries.length > 0) {
+      geocodeAllAddresses();
+    }
+  }, [deliveries]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setRiderLocation(prev => [
@@ -115,14 +133,16 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         prev[1] + (Math.random() - 0.5) * 0.001
       ]);
     }, 5000);
-
     return () => clearInterval(interval);
   }, []);
+
+  const mapCenter: LatLngExpression = selectedDelivery && mapDeliveries.length > 0
+    ? mapDeliveries.find(d => d.id === selectedDelivery)?.pickupCoords || defaultCenter
+    : defaultCenter;
 
   const handleZoomIn = () => setMapZoom(prev => Math.min(prev + 1, 18));
   const handleZoomOut = () => setMapZoom(prev => Math.max(prev - 1, 10));
 
-  // Custom icons
   const pickupIcon = leafletIcon({
     ...defaultIcon.options,
     className: 'pickup-marker'
@@ -143,7 +163,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
-  // Add CSS for custom markers
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -152,11 +171,27 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       .leaflet-container { font-family: inherit; }
     `;
     document.head.appendChild(style);
-    
     return () => {
       document.head.removeChild(style);
     };
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="p-2 lg:p-6">
+        <h2 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-6 flex items-center gap-1 lg:gap-2">
+          <Map size={isMobile ? 20 : 24} />
+          <span className="text-base lg:text-2xl">Live Delivery Map</span>
+        </h2>
+        <div className="bg-gray-900 rounded-lg flex items-center justify-center" style={{ height: isMobile ? '400px' : '600px' }}>
+          <div className="text-white text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+            <p>Loading map locations...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-2 lg:p-6">
@@ -165,7 +200,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         <span className="text-base lg:text-2xl">Live Delivery Map</span>
       </h2>
 
-      {/* Leaflet Map Container */}
       <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ height: isMobile ? '400px' : '600px' }}>
         <MapContainer
           center={mapCenter}
@@ -175,13 +209,11 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         >
           <MapCenterController center={mapCenter} zoom={mapZoom} />
           
-          {/* OpenStreetMap Tiles  */}
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
 
-          {/* Rider Location */}
           <Marker position={riderLocation} icon={riderIcon}>
             <Popup>
               <div className="font-semibold">Your Location</div>
@@ -190,10 +222,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
             </Popup>
           </Marker>
 
-          {/* Delivery Markers and Routes */}
           {mapDeliveries.map((delivery) => (
             <div key={delivery.id}>
-              {/* Route Line */}
               <Polyline
                 positions={delivery.route}
                 pathOptions={{
@@ -205,7 +235,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                 }}
               />
 
-              {/* Pickup Marker */}
               <Marker 
                 position={delivery.pickupCoords} 
                 icon={pickupIcon}
@@ -221,7 +250,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                 </Popup>
               </Marker>
 
-              {/* Dropoff Marker */}
               <Marker 
                 position={delivery.dropoffCoords} 
                 icon={dropoffIcon}
@@ -240,7 +268,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           ))}
         </MapContainer>
 
-        {/* Map Controls */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
           <button 
             onClick={handleZoomIn}
@@ -256,7 +283,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           </button>
         </div>
 
-        {/* Legend */}
         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg z-[1000] max-w-xs">
           <h4 className="font-semibold text-sm mb-2">Map Legend</h4>
           <div className="space-y-1 text-xs">
@@ -284,7 +310,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         </div>
       </div>
 
-      {/* Delivery List */}
       <div className="mt-4 space-y-2">
         <h3 className="font-semibold text-gray-700">Active Deliveries</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -328,4 +353,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       </div>
     </div>
   );
-      }
+            }
