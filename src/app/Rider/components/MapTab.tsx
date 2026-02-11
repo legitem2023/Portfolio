@@ -51,15 +51,25 @@ const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 
 const geocodeAddress = async (address: string) => {
   try {
-    const encoded = encodeURIComponent(address);
+    const cleanAddress = address.replace(/#/g, 'Unit').trim();
+    const encoded = encodeURIComponent(cleanAddress);
+    
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     const response = await fetch(
-      `${NOMINATIM_URL}?format=json&q=${encoded}&limit=1`,
+      `${NOMINATIM_URL}?format=json&q=${encoded}&limit=1&countrycodes=ph`,
       {
         headers: {
-          'User-Agent': 'DeliveryTracker/1.0'
+          'Accept': 'application/json',
+          'User-Agent': 'DeliveryTracker/1.0 (your-email@example.com)'
         }
       }
     );
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const data = await response.json();
     
     if (data && data[0]) {
@@ -68,6 +78,26 @@ const geocodeAddress = async (address: string) => {
         lng: parseFloat(data[0].lon)
       };
     }
+    
+    const fallbackResponse = await fetch(
+      `${NOMINATIM_URL}?format=json&q=${encoded}&limit=1`,
+      {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'DeliveryTracker/1.0 (your-email@example.com)'
+        }
+      }
+    );
+    const fallbackData = await fallbackResponse.json();
+    
+    if (fallbackData && fallbackData[0]) {
+      return {
+        lat: parseFloat(fallbackData[0].lat),
+        lng: parseFloat(fallbackData[0].lon)
+      };
+    }
+    
+    console.warn('Address not found:', address);
     return null;
   } catch (error) {
     console.error('Geocoding failed:', address, error);
@@ -88,6 +118,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const [mapZoom, setMapZoom] = useState(13);
   const [mapDeliveries, setMapDeliveries] = useState<Array<any>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
   
   const userLocation = useGeolocation();
   const defaultCenter: LatLngTuple = userLocation.coords 
@@ -101,31 +132,41 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   useEffect(() => {
     const geocodeAllAddresses = async () => {
       setIsLoading(true);
-      const geocodedResults = await Promise.all(
-        deliveries.map(async (delivery) => {
-          const pickupAddress = delivery.pickupAddress 
-            ? `${delivery.pickupAddress.street}, ${delivery.pickupAddress.city}, ${delivery.pickupAddress.state} ${delivery.pickupAddress.zipCode}, ${delivery.pickupAddress.country}`
-            : delivery.pickup;
-          
-          const dropoffAddress = delivery.dropoffAddress
-            ? `${delivery.dropoffAddress.street}, ${delivery.dropoffAddress.city}, ${delivery.dropoffAddress.state} ${delivery.dropoffAddress.zipCode}, ${delivery.dropoffAddress.country}`
-            : delivery.dropoff;
+      setGeocodingProgress({ current: 0, total: deliveries.length * 2 });
+      
+      const results = [];
+      
+      for (let i = 0; i < deliveries.length; i++) {
+        const delivery = deliveries[i];
+        
+        const pickupAddress = delivery.pickupAddress 
+          ? `${delivery.pickupAddress.street}, ${delivery.pickupAddress.city}, ${delivery.pickupAddress.state} ${delivery.pickupAddress.zipCode}, ${delivery.pickupAddress.country}`
+          : delivery.pickup;
+        
+        const dropoffAddress = delivery.dropoffAddress
+          ? `${delivery.dropoffAddress.street}, ${delivery.dropoffAddress.city}, ${delivery.dropoffAddress.state} ${delivery.dropoffAddress.zipCode}, ${delivery.dropoffAddress.country}`
+          : delivery.dropoff;
 
-          const pickupCoords = await geocodeAddress(pickupAddress);
-          const dropoffCoords = await geocodeAddress(dropoffAddress);
+        setGeocodingProgress(prev => ({ ...prev, current: prev.current + 1 }));
+        const pickupCoords = await geocodeAddress(pickupAddress);
+        
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        setGeocodingProgress(prev => ({ ...prev, current: prev.current + 1 }));
+        const dropoffCoords = await geocodeAddress(dropoffAddress);
 
-          return {
-            ...delivery,
-            pickupCoords: pickupCoords ? [pickupCoords.lat, pickupCoords.lng] as LatLngTuple : defaultCenter,
-            dropoffCoords: dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] as LatLngTuple : defaultCenter,
-            route: [
-              pickupCoords ? [pickupCoords.lat, pickupCoords.lng] : defaultCenter,
-              dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] : defaultCenter
-            ] as LatLngTuple[]
-          };
-        })
-      );
-      setMapDeliveries(geocodedResults);
+        results.push({
+          ...delivery,
+          pickupCoords: pickupCoords ? [pickupCoords.lat, pickupCoords.lng] as LatLngTuple : defaultCenter,
+          dropoffCoords: dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] as LatLngTuple : defaultCenter,
+          route: [
+            pickupCoords ? [pickupCoords.lat, pickupCoords.lng] : defaultCenter,
+            dropoffCoords ? [dropoffCoords.lat, dropoffCoords.lng] : defaultCenter
+          ] as LatLngTuple[]
+        });
+      }
+      
+      setMapDeliveries(results);
       setIsLoading(false);
     };
 
@@ -184,7 +225,23 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         <div className="bg-gray-900 rounded-lg flex items-center justify-center" style={{ height: isMobile ? '400px' : '600px' }}>
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p>{userLocation.loading ? 'Getting your location...' : 'Loading map locations...'}</p>
+            <p className="text-lg mb-2">
+              {userLocation.loading ? 'Getting your location...' : 'Loading map locations...'}
+            </p>
+            {geocodingProgress.total > 0 && (
+              <div className="w-64 mx-auto">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Geocoding addresses</span>
+                  <span>{geocodingProgress.current} / {geocodingProgress.total}</span>
+                </div>
+                <div className="w-full bg-gray-700 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(geocodingProgress.current / geocodingProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
