@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-
 import { Map, MapPin, Navigation } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import useGeolocation from '../hooks/useGeolocation';
 
 const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
 const markerShadow = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
@@ -85,10 +86,17 @@ const MapCenterController = ({ center, zoom }: { center: LatLngExpression; zoom:
 export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const [selectedDelivery, setSelectedDelivery] = useState<string | null>(null);
   const [mapZoom, setMapZoom] = useState(13);
-  const [riderLocation, setRiderLocation] = useState<LatLngTuple>([14.5995, 120.9842]);
   const [mapDeliveries, setMapDeliveries] = useState<Array<any>>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const defaultCenter: LatLngTuple = [14.5995, 120.9842];
+  
+  const userLocation = useGeolocation();
+  const defaultCenter: LatLngTuple = userLocation.coords 
+    ? [userLocation.coords.lat, userLocation.coords.lng]
+    : [14.5995, 120.9842];
+  
+  const riderLocation: LatLngTuple = userLocation.coords 
+    ? [userLocation.coords.lat, userLocation.coords.lng]
+    : [14.5995, 120.9842];
 
   useEffect(() => {
     const geocodeAllAddresses = async () => {
@@ -124,17 +132,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     if (deliveries.length > 0) {
       geocodeAllAddresses();
     }
-  }, [deliveries]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRiderLocation(prev => [
-        prev[0] + (Math.random() - 0.5) * 0.001,
-        prev[1] + (Math.random() - 0.5) * 0.001
-      ]);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [deliveries, defaultCenter]);
 
   const mapCenter: LatLngExpression = selectedDelivery && mapDeliveries.length > 0
     ? mapDeliveries.find(d => d.id === selectedDelivery)?.pickupCoords || defaultCenter
@@ -176,7 +174,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     };
   }, []);
 
-  if (isLoading) {
+  if (userLocation.loading || isLoading) {
     return (
       <div className="p-2 lg:p-6">
         <h2 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-6 flex items-center gap-1 lg:gap-2">
@@ -186,11 +184,15 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         <div className="bg-gray-900 rounded-lg flex items-center justify-center" style={{ height: isMobile ? '400px' : '600px' }}>
           <div className="text-white text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <p>Loading map locations...</p>
+            <p>{userLocation.loading ? 'Getting your location...' : 'Loading map locations...'}</p>
           </div>
         </div>
       </div>
     );
+  }
+
+  if (userLocation.error) {
+    console.warn('Using default location - Geolocation error:', userLocation.error);
   }
 
   return (
@@ -219,6 +221,9 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
               <div className="font-semibold">Your Location</div>
               <div className="text-sm text-gray-600">Rider: Michael</div>
               <div className="text-xs text-blue-600 mt-1">Vehicle: HD 4587</div>
+              {userLocation.error && (
+                <div className="text-xs text-red-600 mt-1">Using approximate location</div>
+              )}
             </Popup>
           </Marker>
 
@@ -353,4 +358,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       </div>
     </div>
   );
-            }
+      }
