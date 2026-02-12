@@ -76,6 +76,24 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const useGoogleMaps = !!googleMapsApiKey;
 
+  const getDirections = React.useCallback((origin: {lat: number, lng: number}, destination: {lat: number, lng: number}) => {
+    if (!useGoogleMaps) return;
+    
+    const directionsService = new google.maps.DirectionsService();
+    directionsService.route(
+      {
+        origin,
+        destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          setDirections(result);
+        }
+      }
+    );
+  }, [useGoogleMaps]);
+
   useEffect(() => {
     const processDeliveries = () => {
       const results = deliveries
@@ -118,25 +136,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     };
 
     processDeliveries();
-  }, [deliveries, selectedDelivery, useGoogleMaps]);
-
-  const getDirections = (origin: {lat: number, lng: number}, destination: {lat: number, lng: number}) => {
-    if (!useGoogleMaps) return;
-    
-    const directionsService = new google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin,
-        destination,
-        travelMode: google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === google.maps.DirectionsStatus.OK) {
-          setDirections(result);
-        }
-      }
-    );
-  };
+  }, [deliveries, selectedDelivery, useGoogleMaps, getDirections]);
 
   const getMapCenter = (): LatLngExpression | { lat: number; lng: number } => {
     if (selectedDelivery) {
@@ -188,7 +188,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
-  const googleMapsLibraries: Libraries = ["geometry", "places", "directions"];
+  // Fix: Remove "directions" from libraries array as it's not a valid library
+  const googleMapsLibraries: Libraries = ["geometry", "places"];
   
   // Google Maps Marker Icons
   const googlePickupIcon = {
@@ -563,4 +564,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       )}
     </div>
   );
-                }
+}
