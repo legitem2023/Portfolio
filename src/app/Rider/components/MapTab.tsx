@@ -1,5 +1,5 @@
 "use client";
-import React,{ useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline as LeafletPolyline, useMap } from 'react-leaflet';
 import { Map, MapPin } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
@@ -188,7 +188,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
-  // Fix: Remove "directions" from libraries array as it's not a valid library
+  // Valid Google Maps libraries
   const googleMapsLibraries: Libraries = ["geometry", "places"];
   
   // Google Maps Marker Icons
@@ -333,7 +333,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                                    delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
                         strokeWeight: 3,
                         strokeOpacity: 0.6,
-                        strokeDashArray: delivery.status === 'pending' ? '5 10' : undefined,
+                        // Fix: Use strokeDash for Google Maps Polyline, not strokeDashArray
+                        strokeDash: delivery.status === 'pending' ? [5, 10] : undefined,
                         geodesic: false,
                         zIndex: 1,
                       }}
@@ -564,4 +565,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       )}
     </div>
   );
-}
+                        }
