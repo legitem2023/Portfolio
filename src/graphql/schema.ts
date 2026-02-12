@@ -1098,6 +1098,8 @@ input OrderPaginationInput {
     state: String
     zipCode: String
     country: String
+    lat: Float
+    lng: Float
     isDefault: Boolean
   }
 
