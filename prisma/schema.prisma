@@ -539,6 +539,22 @@ model Notification {
   @@map("notifications")
 }
 
+model VehicleType {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String   @unique
+  maxCapacityKg Float?
+  maxVolumeM3   Float?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  icon          String?
+  cost          Float?
+  perKmRate     Float?
+  rushTimeAdd   Float?
+}
+
+
+
 model TrackingCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   date      DateTime? @unique
