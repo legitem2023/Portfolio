@@ -51,6 +51,8 @@ export const ACTIVE_ORDER_LIST = gql`
           state
           zipCode
           country
+          lat
+          lng
         }
         items {
           id
@@ -71,6 +73,8 @@ export const ACTIVE_ORDER_LIST = gql`
               state
               zipCode
               country
+              lat
+              lng
             }
           }
         }
@@ -116,6 +120,8 @@ export const ORDER_LIST_QUERY = gql`
           state
           zipCode
           country
+          lat
+          lng
         }
         items {
           id
@@ -136,6 +142,8 @@ export const ORDER_LIST_QUERY = gql`
               state
               zipCode
               country
+              lat
+              lng
             }
           }
         }
@@ -164,6 +172,8 @@ export interface Address {
   state: string;
   zipCode: string;
   country: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface Supplier {
