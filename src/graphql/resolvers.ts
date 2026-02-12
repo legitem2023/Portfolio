@@ -769,7 +769,9 @@ const orders = await prisma.order.findMany({
                 state: true,
                 zipCode: true,
                 country: true,
-                isDefault: true
+                isDefault: true,
+                lat: true,
+                lng: true
               }
             }
           }
@@ -792,7 +794,9 @@ const orders = await prisma.order.findMany({
         city: true,
         state: true,
         zipCode: true,
-        country: true
+        country: true,
+        lat: true,
+        lng: true
       }
     },
     payments: {
@@ -924,7 +928,9 @@ if (filter && filter.status) {
                     state: true,
                     zipCode: true,
                     country: true,
-                    isDefault: true
+                    isDefault: true,
+                    lat: true,
+                    lng: true
                   }
                 }
               }
@@ -947,7 +953,9 @@ if (filter && filter.status) {
             city: true,
             state: true,
             zipCode: true,
-            country: true
+            country: true,
+            lat: true,
+            lng: true
           }
         },
         payments: {
@@ -1078,7 +1086,9 @@ if (filter && filter.status) {
                     state: true,
                     zipCode: true,
                     country: true,
-                    isDefault: true
+                    isDefault: true,
+                    lat: true,
+                    lng: true
                   }
                 }
               }
@@ -1101,7 +1111,9 @@ if (filter && filter.status) {
             city: true,
             state: true,
             zipCode: true,
-            country: true
+            country: true,
+            lat: true,
+            lng: true
           }
         },
         payments: {
