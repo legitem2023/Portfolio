@@ -49,7 +49,7 @@ interface MapTabProps {
       lat: number | null;
       lng: number | null;
     };
-    status: 'pending' | 'accepted' | 'in_progress';
+    status: 'PENDING' | 'PROCESSING' | 'in_progress';
   }>;
 }
 
@@ -329,12 +329,12 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                         { lat: delivery.dropoffLatLng.lat, lng: delivery.dropoffLatLng.lng }
                       ]}
                       options={{
-                        strokeColor: delivery.status === 'pending' ? '#F59E0B' : 
-                                   delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
+                        strokeColor: delivery.status === 'PENDING' ? '#F59E0B' : 
+                                   delivery.status === 'PROCESSING' ? '#10B981' : '#3B82F6',
                         strokeWeight: 3,
                         strokeOpacity: 0.6,
                         // Fix: Use strokeDash for Google Maps Polyline, not strokeDashArray
-                        strokeDash: delivery.status === 'pending' ? [5, 10] : undefined,
+                        //strokeDash: delivery.status === 'pending' ? [5, 10] : undefined,
                         geodesic: false,
                         zIndex: 1,
                       }}
