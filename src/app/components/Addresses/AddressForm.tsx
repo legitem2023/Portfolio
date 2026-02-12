@@ -22,6 +22,19 @@ interface FormData {
   lng: number | null;
 }
 
+interface GeocodeResult {
+  lat: number;
+  lng: number;
+}
+
+interface ReverseGeocodeResult {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
@@ -38,14 +51,15 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [activeApi, setActiveApi] = useState<'google' | 'osm'>('google');
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // Geocode address using Google Maps API
-  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+  // ============ GOOGLE MAPS API METHODS ============
+  const geocodeWithGoogle = async (address: string): Promise<GeocodeResult | null> => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
     if (!apiKey) {
-      setLocationError('Google Maps API key is missing');
+      console.log('Google Maps API key missing, skipping...');
       return null;
     }
 
@@ -57,16 +71,188 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
       if (data.status === 'OK' && data.results.length > 0) {
         const { lat, lng } = data.results[0].geometry.location;
+        setActiveApi('google');
         return { lat, lng };
-      } else {
-        setLocationError('Could not find location for this address');
-        return null;
       }
+      return null;
     } catch (error) {
-      console.error('Geocoding error:', error);
-      setLocationError('Error geocoding address');
+      console.error('Google geocoding error:', error);
       return null;
     }
+  };
+
+  const reverseGeocodeWithGoogle = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      console.log('Google Maps API key missing, skipping...');
+      return null;
+    }
+
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results.length > 0) {
+        const result = data.results[0];
+        const addressComponents = result.address_components;
+        
+        let street = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+        let country = '';
+
+        addressComponents.forEach((component: any) => {
+          const types = component.types;
+          
+          if (types.includes('street_number')) {
+            street = component.long_name + ' ' + street;
+          }
+          if (types.includes('route')) {
+            street += component.long_name;
+          }
+          if (types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          }
+          if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+          if (types.includes('country')) {
+            country = component.long_name;
+          }
+        });
+
+        street = street.trim();
+        setActiveApi('google');
+        
+        return {
+          street: street || result.formatted_address.split(',')[0],
+          city,
+          state,
+          zipCode,
+          country
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Google reverse geocoding error:', error);
+      return null;
+    }
+  };
+
+  // ============ OPENSTREETMAP (NOMINATIM) API METHODS ============
+  const geocodeWithOSM = async (address: string): Promise<GeocodeResult | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'YourAppName/1.0' // Replace with your app name
+          }
+        }
+      );
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        setActiveApi('osm');
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon)
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('OSM geocoding error:', error);
+      return null;
+    }
+  };
+
+  const reverseGeocodeWithOSM = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'YourAppName/1.0' // Replace with your app name
+          }
+        }
+      );
+      const data = await response.json();
+
+      if (data && data.address) {
+        const address = data.address;
+        
+        // Construct street address
+        let street = '';
+        if (address.road) {
+          street = address.road;
+          if (address.house_number) {
+            street = `${address.house_number} ${street}`;
+          }
+        } else if (address.pedestrian) {
+          street = address.pedestrian;
+        } else if (address.footway) {
+          street = address.footway;
+        }
+
+        setActiveApi('osm');
+        
+        return {
+          street: street || data.display_name.split(',')[0],
+          city: address.city || address.town || address.village || address.municipality || '',
+          state: address.state || '',
+          zipCode: address.postcode || '',
+          country: address.country || ''
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('OSM reverse geocoding error:', error);
+      return null;
+    }
+  };
+
+  // ============ WRAPPER METHODS WITH FALLBACK ============
+  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number; api: string } | null> => {
+    // Try Google first
+    const googleResult = await geocodeWithGoogle(address);
+    if (googleResult) {
+      return { ...googleResult, api: 'google' };
+    }
+
+    // Fallback to OpenStreetMap
+    const osmResult = await geocodeWithOSM(address);
+    if (osmResult) {
+      return { ...osmResult, api: 'osm' };
+    }
+
+    setLocationError('Could not find location for this address with any geocoding service');
+    return null;
+  };
+
+  const reverseGeocode = async (lat: number, lng: number): Promise<{ address: ReverseGeocodeResult; api: string } | null> => {
+    // Try Google first
+    const googleResult = await reverseGeocodeWithGoogle(lat, lng);
+    if (googleResult) {
+      return { address: googleResult, api: 'google' };
+    }
+
+    // Fallback to OpenStreetMap
+    const osmResult = await reverseGeocodeWithOSM(lat, lng);
+    if (osmResult) {
+      return { address: osmResult, api: 'osm' };
+    }
+
+    setLocationError('Could not get address from location with any geocoding service');
+    return null;
   };
 
   // Get current device location
@@ -87,12 +273,12 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         },
         (error) => {
           console.error('Error getting location:', error);
-          setLocationError('Could not get your current location');
+          setLocationError('Could not get your current location. Please enable location services.');
           resolve(null);
         },
         {
           enableHighAccuracy: true,
-          timeout: 5000,
+          timeout: 10000,
           maximumAge: 0
         }
       );
@@ -124,13 +310,26 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     setLocationError(null);
     
     try {
+      // First get current coordinates
       const location = await getCurrentLocation();
       if (location) {
+        // Set coordinates immediately
         setFormData(prev => ({
           ...prev,
           lat: location.lat,
           lng: location.lng
         }));
+
+        // Then get address from coordinates
+        const result = await reverseGeocode(location.lat, location.lng);
+        if (result) {
+          setFormData(prev => ({
+            ...prev,
+            ...result.address,
+            lat: location.lat,
+            lng: location.lng
+          }));
+        }
       }
     } finally {
       setIsGeocoding(false);
@@ -183,6 +382,13 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       {locationError && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {locationError}
+        </div>
+      )}
+
+      {/* Active API indicator */}
+      {formData.lat && formData.lng && activeApi && (
+        <div className="mb-4 p-2 bg-blue-50 border border-blue-200 text-blue-700 rounded text-xs">
+          🗺️ Location data provided by: {activeApi === 'google' ? 'Google Maps' : 'OpenStreetMap'}
         </div>
       )}
 
@@ -341,7 +547,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             disabled={isGeocoding}
             className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isGeocoding ? 'Getting Location...' : '📱 Use My Current Location'}
+            {isGeocoding ? 'Getting Location...' : '📱 Auto-fill from Current Location'}
           </button>
         </div>
 
