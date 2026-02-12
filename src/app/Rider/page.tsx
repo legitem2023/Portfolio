@@ -106,7 +106,7 @@ export default function RiderDashboard() {
             dropoff: d.dropoff,
             pickupAddress: d.pickupAddress,
             dropoffAddress: d.dropoffAddress,
-            status: 'pending'
+            status: 'PENDING'
           }))}
         />;
       case "performance":
