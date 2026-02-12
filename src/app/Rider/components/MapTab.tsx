@@ -6,7 +6,7 @@ import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useGeolocation from '../hooks/useGeolocation';
 import { GoogleMap, LoadScript, DirectionsRenderer, Marker as GoogleMarker } from '@react-google-maps/api';
-
+import { Libraries } from "@react-google-maps/api";
 const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
 const markerShadow = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
 const markerIconRetina = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
@@ -187,8 +187,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
-  const googleMapsLibraries: ("places" | "directions" | "geometry")[] = ['places', 'directions'];
-
+ // const googleMapsLibraries: ("places" | "directions" | "geometry")[] = ['places', 'directions'];
+const googleMapsLibraries: Libraries = ["geometry", "places"];
   // Google Maps Marker Icons
   const googlePickupIcon = {
     url: 'data:image/svg+xml;base64,' + btoa(`
