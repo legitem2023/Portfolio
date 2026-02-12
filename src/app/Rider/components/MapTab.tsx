@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline as LeafletPolyline, useMap } from 'react-leaflet';
 import { Map, MapPin } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useGeolocation from '../hooks/useGeolocation';
-import { GoogleMap, LoadScript, DirectionsRenderer, Marker as GoogleMarker } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, DirectionsRenderer, Marker as GoogleMarker, Polyline } from '@react-google-maps/api';
 import { Libraries } from "@react-google-maps/api";
+
 const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
 const markerShadow = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png';
 const markerIconRetina = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
@@ -187,8 +188,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
- // const googleMapsLibraries: ("places" | "directions" | "geometry")[] = ['places', 'directions'];
-const googleMapsLibraries: Libraries = ["geometry", "places"];
+  const googleMapsLibraries: Libraries = ["geometry", "places", "directions"];
+  
   // Google Maps Marker Icons
   const googlePickupIcon = {
     url: 'data:image/svg+xml;base64,' + btoa(`
@@ -320,18 +321,20 @@ const googleMapsLibraries: Libraries = ["geometry", "places"];
                       }}
                     />
                   ) : (
-                    // Show straight line for non-selected deliveries
+                    /* Show straight line for non-selected deliveries */
                     <Polyline
-                      positions={[
+                      path={[
                         { lat: delivery.pickupLatLng.lat, lng: delivery.pickupLatLng.lng },
                         { lat: delivery.dropoffLatLng.lat, lng: delivery.dropoffLatLng.lng }
                       ]}
-                      pathOptions={{
-                        color: delivery.status === 'pending' ? '#F59E0B' : 
-                               delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
-                        weight: 3,
-                        opacity: 0.6,
-                        dashArray: delivery.status === 'pending' ? '5, 10' : undefined,
+                      options={{
+                        strokeColor: delivery.status === 'pending' ? '#F59E0B' : 
+                                   delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
+                        strokeWeight: 3,
+                        strokeOpacity: 0.6,
+                        strokeDashArray: delivery.status === 'pending' ? '5 10' : undefined,
+                        geodesic: false,
+                        zIndex: 1,
                       }}
                     />
                   )}
@@ -384,7 +387,7 @@ const googleMapsLibraries: Libraries = ["geometry", "places"];
             {/* Delivery Routes */}
             {mapDeliveries.map((delivery) => (
               <div key={delivery.id}>
-                <Polyline
+                <LeafletPolyline
                   positions={delivery.route}
                   pathOptions={{
                     color: delivery.status === 'pending' ? '#F59E0B' : 
@@ -560,4 +563,4 @@ const googleMapsLibraries: Libraries = ["geometry", "places"];
       )}
     </div>
   );
-    }
+                }
