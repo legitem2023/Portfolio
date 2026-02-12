@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React,{ useState, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline as LeafletPolyline, useMap } from 'react-leaflet';
 import { Map, MapPin } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
@@ -76,7 +76,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const useGoogleMaps = !!googleMapsApiKey;
 
-  const getDirections = React.useCallback((origin: {lat: number, lng: number}, destination: {lat: number, lng: number}) => {
+  const getDirections = useCallback((origin: {lat: number, lng: number}, destination: {lat: number, lng: number}) => {
     if (!useGoogleMaps) return;
     
     const directionsService = new google.maps.DirectionsService();
