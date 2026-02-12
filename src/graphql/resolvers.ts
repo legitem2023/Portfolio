@@ -3811,6 +3811,8 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         zipCode,
         country,
         isDefault,
+        lat,
+        lng
       } = args.input;
 
       const response = await prisma.address.create({
@@ -3824,6 +3826,8 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           zipCode,
           country,
           isDefault,
+          lat,
+          lng
         },
       });
       return {
