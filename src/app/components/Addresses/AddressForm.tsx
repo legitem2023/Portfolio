@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_ADDRESS } from '../graphql/mutation'; // Adjust import path
+import { CREATE_ADDRESS } from '../graphql/mutation';
 
 interface AddressFormProps {
   userId: string;
@@ -17,9 +17,9 @@ interface FormData {
   zipCode: string;
   country: string;
   isDefault: boolean;
-  receiver: string; // Just this one field
-  lat: number;
-  lng: number;
+  receiver: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
@@ -31,12 +31,111 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     zipCode: '',
     country: '',
     isDefault: false,
-    receiver: '', // Initialize it,
+    receiver: '',
     lat: null,
     lng: null
   });
 
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
+
+  // Geocode address using Google Maps API
+  const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | null> => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      setLocationError('Google Maps API key is missing');
+      return null;
+    }
+
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry.location;
+        return { lat, lng };
+      } else {
+        setLocationError('Could not find location for this address');
+        return null;
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      setLocationError('Error geocoding address');
+      return null;
+    }
+  };
+
+  // Get current device location
+  const getCurrentLocation = async (): Promise<{ lat: number; lng: number } | null> => {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) {
+        setLocationError('Geolocation is not supported by this browser');
+        resolve(null);
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationError('Could not get your current location');
+          resolve(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    });
+  };
+
+  const handleGeocodeFromAddress = async () => {
+    const fullAddress = `${formData.street}, ${formData.city}, ${formData.state} ${formData.zipCode}, ${formData.country}`;
+    
+    setIsGeocoding(true);
+    setLocationError(null);
+    
+    try {
+      const location = await geocodeAddress(fullAddress);
+      if (location) {
+        setFormData(prev => ({
+          ...prev,
+          lat: location.lat,
+          lng: location.lng
+        }));
+      }
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  const handleGetCurrentLocation = async () => {
+    setIsGeocoding(true);
+    setLocationError(null);
+    
+    try {
+      const location = await getCurrentLocation();
+      if (location) {
+        setFormData(prev => ({
+          ...prev,
+          lat: location.lat,
+          lng: location.lng
+        }));
+      }
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +168,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
+  const isAddressComplete = formData.street && formData.city && formData.state && formData.zipCode && formData.country;
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Address</h2>
@@ -76,6 +177,28 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           Error: {error.message}
+        </div>
+      )}
+
+      {locationError && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {locationError}
+        </div>
+      )}
+
+      {/* Display coordinates if available */}
+      {formData.lat && formData.lng && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded flex justify-between items-center">
+          <span>
+            📍 Location set: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
+          </span>
+          <button
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, lat: null, lng: null }))}
+            className="text-green-700 hover:text-green-900 font-bold"
+          >
+            ✕
+          </button>
         </div>
       )}
 
@@ -100,7 +223,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </select>
         </div>
 
-        {/* Receiver Field - Simple addition */}
+        {/* Receiver Field */}
         <div>
           <label htmlFor="receiver" className="block text-sm font-medium text-gray-700 mb-1">
             Receiver
@@ -135,7 +258,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
         {/* City, State, Zip Code Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* City */}
           <div>
             <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
               City
@@ -152,7 +274,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             />
           </div>
 
-          {/* State */}
           <div>
             <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
               State
@@ -169,7 +290,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             />
           </div>
 
-          {/* Zip Code */}
           <div>
             <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
               ZIP Code
@@ -202,6 +322,27 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             placeholder="Country"
             required
           />
+        </div>
+
+        {/* Location Buttons */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button
+            type="button"
+            onClick={handleGeocodeFromAddress}
+            disabled={isGeocoding || !isAddressComplete}
+            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isGeocoding ? 'Finding Location...' : '📍 Get Location from Address'}
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleGetCurrentLocation}
+            disabled={isGeocoding}
+            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isGeocoding ? 'Getting Location...' : '📱 Use My Current Location'}
+          </button>
         </div>
 
         {/* Default Address Checkbox */}
