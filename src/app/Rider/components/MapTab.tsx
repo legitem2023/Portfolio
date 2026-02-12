@@ -36,6 +36,8 @@ interface MapTabProps {
       state: string;
       zipCode: string;
       country: string;
+      lat: number | null;
+      lng: number | null;
     };
     dropoffAddress?: {
       street: string;
@@ -43,6 +45,8 @@ interface MapTabProps {
       state: string;
       zipCode: string;
       country: string;
+      lat: number | null;
+      lng: number | null;
     };
     status: 'pending' | 'accepted' | 'in_progress';
   }>;
