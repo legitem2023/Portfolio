@@ -18,6 +18,8 @@ interface FormData {
   country: string;
   isDefault: boolean;
   receiver: string; // Just this one field
+  lat: number;
+  lng: number;
 }
 
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
@@ -29,7 +31,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     zipCode: '',
     country: '',
     isDefault: false,
-    receiver: '', // Initialize it
+    receiver: '', // Initialize it,
+    lat: null,
+    lng: null
   });
 
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
