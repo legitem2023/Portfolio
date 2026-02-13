@@ -915,7 +915,16 @@ if (filter && filter.status) {
         items: {
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
           select: {
-            status: true,
+            id: true,
+        orderId: true,
+        supplierId: true,
+        quantity: true,
+        price: true,
+        variantInfo: true,
+        status: true, // STATUS IS HERE
+        riderId: true,
+        recipientName: true,
+        rejectedBy: true,
             product: {
               select: {
                 id: true,
