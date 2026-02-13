@@ -745,7 +745,18 @@ const orders = await prisma.order.findMany({
   include: {
     items: {
       where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
-      include: {
+      // REPLACE include+select with a single select
+      select: {
+        id: true,
+        orderId: true,
+        supplierId: true,
+        quantity: true,
+        price: true,
+        variantInfo: true,
+        status: true, // STATUS IS HERE
+        riderId: true,
+        recipientName: true,
+        rejectedBy: true,
         product: {
           select: {
             id: true,
@@ -776,9 +787,6 @@ const orders = await prisma.order.findMany({
             }
           }
         }
-      },
-      select: {
-        status: true,
       }
     },
     user: {
@@ -906,7 +914,8 @@ if (filter && filter.status) {
       include: {
         items: {
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
-          include: {
+          select: {
+            status: true,
             product: {
               select: {
                 id: true,
@@ -938,10 +947,7 @@ if (filter && filter.status) {
                 }
               }
             }
-          },
-      select: {
-        status: true,
-      }
+          }
         },
         user: {
           select: {
@@ -1068,8 +1074,8 @@ if (filter && filter.status) {
       include: {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
-          include: {
-            
+          select: {
+            status: true,
             product: {
               select: {
                 id: true,
@@ -1101,10 +1107,7 @@ if (filter && filter.status) {
                 }
               }
             }
-          },
-      select: {
-        status: true,
-      }
+          }
         },
         user: {
           select: {
