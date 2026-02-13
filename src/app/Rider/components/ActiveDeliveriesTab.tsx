@@ -87,7 +87,7 @@ interface SupplierGroup {
   totalItems: number;
   subtotal: number;
   status: string; // Overall status for this supplier's items
-  itemStatuses: { [status: string]: number }; // Count of items by status
+  itemStatuses: Record<string, number>; // Count of items by status
 }
 
 enum OrderStatus {
@@ -125,6 +125,16 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   const groupItemsBySupplier = (items: OrderItem[]): SupplierGroup[] => {
     const groups = new Map<string, SupplierGroup>();
     
+    // Define status priority with proper typing
+    const statusPriority: Record<string, number> = {
+      [OrderStatus.PENDING]: 1,
+      [OrderStatus.PROCESSING]: 2,
+      [OrderStatus.SHIPPED]: 3,
+      [OrderStatus.DELIVERED]: 4,
+      [OrderStatus.CANCELLED]: 5,
+      [OrderStatus.REFUNDED]: 6
+    };
+    
     items.forEach(item => {
       const supplierId = item.supplierId;
       
@@ -138,7 +148,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           items: [],
           totalItems: 0,
           subtotal: 0,
-          status: item.status, // Will be updated as we add items
+          status: item.status,
           itemStatuses: {
             [OrderStatus.PENDING]: 0,
             [OrderStatus.PROCESSING]: 0,
@@ -155,20 +165,13 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       group.totalItems += item.quantity;
       group.subtotal += item.price * item.quantity;
       
-      // Count items by status
-      group.itemStatuses[item.status] = (group.itemStatuses[item.status] || 0) + 1;
+      // Count items by status - with proper typing
+      if (item.status in group.itemStatuses) {
+        group.itemStatuses[item.status] = (group.itemStatuses[item.status] || 0) + 1;
+      }
       
       // Determine group status (lowest priority status wins)
       // Priority: PENDING > PROCESSING > SHIPPED > DELIVERED > CANCELLED > REFUNDED
-      const statusPriority = {
-        [OrderStatus.PENDING]: 1,
-        [OrderStatus.PROCESSING]: 2,
-        [OrderStatus.SHIPPED]: 3,
-        [OrderStatus.DELIVERED]: 4,
-        [OrderStatus.CANCELLED]: 5,
-        [OrderStatus.REFUNDED]: 6
-      };
-      
       if (statusPriority[item.status] < statusPriority[group.status]) {
         group.status = item.status;
       }
@@ -223,9 +226,12 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   };
 
   const handleFailed = (orderId: string, group?: SupplierGroup) => {
-    setSelectedOrder(orders.find(o => o.id === orderId) || null);
-    if (group) setSelectedSupplier(group);
-    setShowFailureModal(true);
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      setSelectedOrder(order);
+      if (group) setSelectedSupplier(group);
+      setShowFailureModal(true);
+    }
   };
 
   const handleCancel = (orderId: string, supplierId?: string) => {
@@ -652,4 +658,4 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       )}
     </div>
   );
-                 }
+  }
