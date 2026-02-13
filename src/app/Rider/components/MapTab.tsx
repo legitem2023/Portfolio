@@ -1,11 +1,11 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline as LeafletPolyline, useMap } from 'react-leaflet';
 import { Map, MapPin } from "lucide-react";
 import { icon as leafletIcon, LatLngExpression, LatLngTuple } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import useGeolocation from '../hooks/useGeolocation';
-import { GoogleMap, LoadScript, DirectionsRenderer, Marker as GoogleMarker } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker as GoogleMarker } from '@react-google-maps/api';
 import { Libraries } from "@react-google-maps/api";
 
 const markerIcon = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png';
@@ -49,7 +49,7 @@ interface MapTabProps {
       lat: number | null;
       lng: number | null;
     };
-    status: 'PENDING' | 'PROCESSING' | 'in_progress';
+    status: 'pending' | 'accepted' | 'in_progress';
   }>;
 }
 
@@ -63,25 +63,65 @@ const MapCenterController = ({ center, zoom }: { center: LatLngExpression; zoom:
   return null;
 };
 
-// Separate component for Google Maps content to handle loading state
-const GoogleMapsContent = ({ 
-  mapCenter, 
-  mapZoom, 
+// Simple Google Maps component
+const GoogleMapsView = ({ 
+  center, 
+  zoom, 
   userLocation, 
-  mapDeliveries, 
-  selectedDelivery, 
-  setSelectedDelivery,
-  directions,
-  getDirections,
-  googleRiderIcon,
-  googlePickupIcon,
-  googleDropoffIcon
-}: any) => {
+  deliveries, 
+  selectedDelivery,
+  onMarkerClick 
+}: { 
+  center: { lat: number; lng: number }; 
+  zoom: number; 
+  userLocation: any; 
+  deliveries: any[]; 
+  selectedDelivery: string | null;
+  onMarkerClick: (id: string) => void;
+}) => {
+  const mapRef = useRef<google.maps.Map | null>(null);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  // Create icon URLs
+  const riderIcon = {
+    url: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3B82F6">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle cx="12" cy="9" r="3" fill="white"/>
+      </svg>
+    `),
+    scaledSize: new google.maps.Size(40, 40)
+  };
+
+  const pickupIcon = {
+    url: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F59E0B">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle cx="12" cy="9" r="3" fill="white"/>
+      </svg>
+    `),
+    scaledSize: new google.maps.Size(40, 40)
+  };
+
+  const dropoffIcon = {
+    url: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EF4444">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+        <circle cx="12" cy="9" r="3" fill="white"/>
+      </svg>
+    `),
+    scaledSize: new google.maps.Size(40, 40)
+  };
+
   return (
     <GoogleMap
       mapContainerStyle={{ width: '100%', height: '100%' }}
-      center={mapCenter as google.maps.LatLngLiteral}
-      zoom={mapZoom}
+      center={center}
+      zoom={zoom}
+      onLoad={onLoad}
       options={{
         zoomControl: false,
         streetViewControl: false,
@@ -89,62 +129,25 @@ const GoogleMapsContent = ({
         fullscreenControl: false,
       }}
     >
-      {/* Rider Location */}
-      {userLocation.coords && (
+      {userLocation?.coords && (
         <GoogleMarker
           position={{ lat: userLocation.coords.lat, lng: userLocation.coords.lng }}
-          icon={googleRiderIcon}
+          icon={riderIcon}
           title="Your Location"
         />
       )}
 
-      {/* Delivery Routes */}
-      {mapDeliveries.map((delivery: any) => (
+      {deliveries.map((delivery) => (
         <div key={delivery.id}>
-          {/* Show directions for selected delivery */}
-          {selectedDelivery === delivery.id && directions ? (
-            <DirectionsRenderer
-              directions={directions}
-              options={{
-                polylineOptions: {
-                  strokeColor: delivery.status === 'PENDING' ? '#F59E0B' : 
-                             delivery.status === 'PROCESSING' ? '#10B981' : '#3B82F6',
-                  strokeWeight: 5,
-                  strokeOpacity: 0.8,
-                },
-                suppressMarkers: true,
-              }}
-            />
-          ) : (
-            /* Show straight line for non-selected deliveries */
-            <Polyline
-              path={[
-                { lat: delivery.pickupLatLng.lat, lng: delivery.pickupLatLng.lng },
-                { lat: delivery.dropoffLatLng.lat, lng: delivery.dropoffLatLng.lng }
-              ]}
-              options={{
-                strokeColor: delivery.status === 'PENDING' ? '#F59E0B' : 
-                           delivery.status === 'PROCESSING' ? '#10B981' : '#3B82F6',
-                strokeWeight: 3,
-                strokeOpacity: 0.6,
-                geodesic: false,
-                zIndex: 1,
-              }}
-            />
-          )}
-
-          {/* Pickup Marker */}
           <GoogleMarker
             position={delivery.pickupLatLng}
-            icon={googlePickupIcon}
-            onClick={() => setSelectedDelivery(delivery.id === selectedDelivery ? null : delivery.id)}
+            icon={pickupIcon}
+            onClick={() => onMarkerClick(delivery.id)}
           />
-
-          {/* Dropoff Marker */}
           <GoogleMarker
             position={delivery.dropoffLatLng}
-            icon={googleDropoffIcon}
-            onClick={() => setSelectedDelivery(delivery.id === selectedDelivery ? null : delivery.id)}
+            icon={dropoffIcon}
+            onClick={() => onMarkerClick(delivery.id)}
           />
         </div>
       ))}
@@ -157,8 +160,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const [mapZoom, setMapZoom] = useState(13);
   const [mapDeliveries, setMapDeliveries] = useState<Array<any>>([]);
   const [hasValidLocations, setHasValidLocations] = useState(false);
-  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   
   const userLocation = useGeolocation();
   
@@ -166,23 +167,14 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
   const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const useGoogleMaps = !!googleMapsApiKey;
 
-  const getDirections = useCallback((origin: {lat: number, lng: number}, destination: {lat: number, lng: number}) => {
-    if (!useGoogleMaps || !window.google) return;
-    
-    const directionsService = new window.google.maps.DirectionsService();
-    directionsService.route(
-      {
-        origin,
-        destination,
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === window.google.maps.DirectionsStatus.OK) {
-          setDirections(result);
-        }
-      }
-    );
-  }, [useGoogleMaps]);
+  const googleMapsLibraries: Libraries = ["geometry", "places"];
+  
+  // Use the hook to check if Google Maps is loaded
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: googleMapsApiKey || '',
+    libraries: googleMapsLibraries,
+  });
 
   useEffect(() => {
     const processDeliveries = () => {
@@ -215,18 +207,10 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       
       setMapDeliveries(results);
       setHasValidLocations(results.length > 0);
-      
-      // Get directions for selected delivery if using Google Maps and it's loaded
-      if (useGoogleMaps && window.google && results.length > 0 && selectedDelivery) {
-        const delivery = results.find(d => d.id === selectedDelivery);
-        if (delivery) {
-          getDirections(delivery.pickupLatLng, delivery.dropoffLatLng);
-        }
-      }
     };
 
     processDeliveries();
-  }, [deliveries, selectedDelivery, useGoogleMaps, getDirections]);
+  }, [deliveries]);
 
   const getMapCenter = (): LatLngExpression | { lat: number; lng: number } => {
     if (selectedDelivery) {
@@ -278,50 +262,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     iconAnchor: [15, 15]
   });
 
-  // Valid Google Maps libraries
-  const googleMapsLibraries: Libraries = ["geometry", "places"];
-  
-  // Google Maps Marker Icons (defined as objects without using google.maps)
-  const googlePickupIcon = {
-    url: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#F59E0B">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="white"/>
-      </svg>
-    `),
-    scaledSize: { width: 40, height: 40 } // Use object instead of google.maps.Size
-  };
-
-  const googleDropoffIcon = {
-    url: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#EF4444">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="white"/>
-      </svg>
-    `),
-    scaledSize: { width: 40, height: 40 }
-  };
-
-  const googleRiderIcon = {
-    url: 'data:image/svg+xml;base64,' + btoa(`
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#3B82F6">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-        <circle cx="12" cy="9" r="3" fill="white"/>
-      </svg>
-    `),
-    scaledSize: { width: 40, height: 40 }
-  };
-
-  // Polyline component for Google Maps
-  const Polyline = ({ path, options }: any) => {
-    if (!window.google) return null;
-    
-    return (
-      <google.maps.Polyline
-        path={path}
-        options={options}
-      />
-    );
+  const handleMarkerClick = (id: string) => {
+    setSelectedDelivery(id === selectedDelivery ? null : id);
   };
 
   useEffect(() => {
@@ -337,7 +279,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     };
   }, []);
 
-  // If no valid locations, show message
   if (!hasValidLocations && !userLocation.coords) {
     return (
       <div className="p-2 lg:p-6">
@@ -366,7 +307,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           <span className="text-base lg:text-2xl">Live Delivery Map</span>
         </h2>
         
-        {/* Map Provider Indicator */}
         <div className="flex items-center gap-2">
           <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
             {useGoogleMaps ? '🚀 Google Maps' : '🍃 OpenStreetMap'}
@@ -380,35 +320,25 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       </div>
 
       <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ height: isMobile ? '400px' : '600px' }}>
-        {/* Google Maps */}
         {useGoogleMaps ? (
-          <LoadScript
-            googleMapsApiKey={googleMapsApiKey!}
-            libraries={googleMapsLibraries}
-            onLoad={() => setIsGoogleMapsLoaded(true)}
-          >
-            {isGoogleMapsLoaded ? (
-              <GoogleMapsContent
-                mapCenter={mapCenter}
-                mapZoom={mapZoom}
-                userLocation={userLocation}
-                mapDeliveries={mapDeliveries}
-                selectedDelivery={selectedDelivery}
-                setSelectedDelivery={setSelectedDelivery}
-                directions={directions}
-                getDirections={getDirections}
-                googleRiderIcon={googleRiderIcon}
-                googlePickupIcon={googlePickupIcon}
-                googleDropoffIcon={googleDropoffIcon}
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                <div className="text-white">Loading Google Maps...</div>
+          isLoaded ? (
+            <GoogleMapsView
+              center={mapCenter as { lat: number; lng: number }}
+              zoom={mapZoom}
+              userLocation={userLocation}
+              deliveries={mapDeliveries}
+              selectedDelivery={selectedDelivery}
+              onMarkerClick={handleMarkerClick}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p>Loading Google Maps...</p>
               </div>
-            )}
-          </LoadScript>
+            </div>
+          )
         ) : (
-          /* Leaflet/OpenStreetMap Fallback */
           <MapContainer
             center={mapCenter as LatLngExpression}
             zoom={mapZoom}
@@ -422,7 +352,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Rider Location */}
             {userLocation.coords && (
               <Marker 
                 position={[userLocation.coords.lat, userLocation.coords.lng]} 
@@ -435,17 +364,16 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
               </Marker>
             )}
 
-            {/* Delivery Routes */}
             {mapDeliveries.map((delivery) => (
               <div key={delivery.id}>
                 <LeafletPolyline
                   positions={delivery.route}
                   pathOptions={{
-                    color: delivery.status === 'PENDING' ? '#F59E0B' : 
-                           delivery.status === 'PROCESSING' ? '#10B981' : '#3B82F6',
+                    color: delivery.status === 'pending' ? '#F59E0B' : 
+                           delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
                     weight: 4,
                     opacity: 0.8,
-                    dashArray: delivery.status === 'PENDING' ? '5, 10' : undefined,
+                    dashArray: delivery.status === 'pending' ? '5, 10' : undefined,
                   }}
                 />
 
@@ -483,7 +411,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           </MapContainer>
         )}
 
-        {/* Map Controls - Shared for both map types */}
         <div className="absolute top-4 right-4 flex flex-col gap-2 z-[1000]">
           <button 
             onClick={handleZoomIn} 
@@ -501,7 +428,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           </button>
         </div>
 
-        {/* Legend */}
         <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg z-[1000] max-w-xs">
           <h4 className="font-semibold text-sm mb-2">
             {useGoogleMaps ? '🚀 Google Maps' : '🍃 OpenStreetMap'} Route Legend
@@ -527,23 +453,16 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-1 bg-green-500"></div>
-              <span>Processing</span>
+              <span>Accepted</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-6 h-1 bg-blue-500"></div>
               <span>In Progress</span>
             </div>
-            {useGoogleMaps && selectedDelivery && (
-              <div className="flex items-center gap-2 mt-2 text-green-600">
-                <span>🛣️</span>
-                <span>Optimized route</span>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Delivery List - Same for both map types */}
       {mapDeliveries.length > 0 && (
         <div className="mt-4 space-y-2">
           <h3 className="font-semibold text-gray-700">Active Deliveries with Routes</h3>
@@ -557,9 +476,6 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                 onClick={() => {
                   setSelectedDelivery(delivery.id === selectedDelivery ? null : delivery.id);
                   setMapZoom(14);
-                  if (useGoogleMaps && window.google) {
-                    getDirections(delivery.pickupLatLng, delivery.dropoffLatLng);
-                  }
                 }}
               >
                 <div className="flex justify-between items-start">
@@ -567,8 +483,8 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                     <div className="flex items-center justify-between">
                       <h4 className="font-semibold text-sm">{delivery.orderId}</h4>
                       <div className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        delivery.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        delivery.status === 'PROCESSING' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                        delivery.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        delivery.status === 'accepted' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
                       }`}>
                         {delivery.status.replace('_', ' ')}
                       </div>
@@ -599,11 +515,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
 
                     <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
                       <MapPin size={12} />
-                      <span>
-                        {useGoogleMaps && selectedDelivery === delivery.id 
-                          ? '🛣️ Following road network' 
-                          : '📍 Straight line route'}
-                      </span>
+                      <span>📍 Straight line route</span>
                     </div>
                   </div>
                 </div>
@@ -614,4 +526,4 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
       )}
     </div>
   );
-                }
+        }
