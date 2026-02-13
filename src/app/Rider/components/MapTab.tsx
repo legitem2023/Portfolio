@@ -49,7 +49,7 @@ interface MapTabProps {
       lat: number | null;
       lng: number | null;
     };
-    status: 'pending' | 'accepted' | 'in_progress';
+    status: 'PENDING' | 'PROCESSING' | 'in_progress';
   }>;
 }
 
@@ -369,11 +369,11 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
                 <LeafletPolyline
                   positions={delivery.route}
                   pathOptions={{
-                    color: delivery.status === 'pending' ? '#F59E0B' : 
-                           delivery.status === 'accepted' ? '#10B981' : '#3B82F6',
+                    color: delivery.status === 'PENDING' ? '#F59E0B' : 
+                           delivery.status === 'PROCESSING' ? '#10B981' : '#3B82F6',
                     weight: 4,
                     opacity: 0.8,
-                    dashArray: delivery.status === 'pending' ? '5, 10' : undefined,
+                    dashArray: delivery.status === 'PENDING' ? '5, 10' : undefined,
                   }}
                 />
 
