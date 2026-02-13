@@ -98,7 +98,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   const { loading, error, data } = useQuery<ActiveOrderData>(ACTIVE_ORDER_LIST, {
     variables: {
       filter: {
-        status: ["PROCESSING", "PICKED_UP", "IN_TRANSIT", "ARRIVED"],
+        status: "PROCESSING",
         riderId: user?.userId
       },
       pagination: {
