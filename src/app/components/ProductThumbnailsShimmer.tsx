@@ -7,7 +7,7 @@ interface ProductThumbnailsShimmerProps {
 
 const ProductThumbnailsShimmer: React.FC<ProductThumbnailsShimmerProps> = ({ count = 20 }) => {
   return (
-    <div className="w-full max-w-7xl grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
+    <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="group bg-white shadow-md border border-gray-100 flex flex-col h-full overflow-hidden">
           {/* Sale/New Badge placeholders */}
