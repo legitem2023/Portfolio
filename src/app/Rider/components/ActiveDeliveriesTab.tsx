@@ -43,7 +43,7 @@ interface Payment {
 interface Order {
   id: string;
   orderNumber: string;
-  status: string;
+  status: string; // This will be one of: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
   total: number;
   createdAt: string;
   user: {
@@ -77,17 +77,15 @@ interface ActiveOrderData {
   };
 }
 
-// Status constants
-const ORDER_STATUS = {
-  PROCESSING: 'PROCESSING',
-  PICKED_UP: 'PICKED_UP',
-  IN_TRANSIT: 'IN_TRANSIT',
-  ARRIVED: 'ARRIVED',
-  DELIVERED: 'DELIVERED',
-  FAILED: 'FAILED',
-  CANCELLED: 'CANCELLED',
-  RETURNED: 'RETURNED'
-};
+// Status enum to match your GraphQL
+enum OrderStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
+}
 
 export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabProps) {
   const { user } = useAuth();
@@ -98,7 +96,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   const { loading, error, data } = useQuery<ActiveOrderData>(ACTIVE_ORDER_LIST, {
     variables: {
       filter: {
-        status: "PROCESSING",
+        status: "PROCESSING", // Filter for orders ready for pickup
         riderId: user?.userId
       },
       pagination: {
@@ -108,30 +106,12 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     }
   });
 
-  // Just the UI handlers - no actual GraphQL mutations yet
+  // UI handlers
   const handlePickup = (orderId: string) => {
     if (confirm('Confirm pickup from supplier?')) {
       setProcessingOrderId(orderId);
-      // TODO: Add confirmPickup mutation
+      // TODO: Add mutation to change status from PROCESSING to SHIPPED
       console.log('Pickup confirmed for:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
-    }
-  };
-
-  const handleStartDelivery = (orderId: string) => {
-    if (confirm('Start delivery to customer?')) {
-      setProcessingOrderId(orderId);
-      // TODO: Add updateStatus mutation
-      console.log('Delivery started for:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
-    }
-  };
-
-  const handleArrived = (orderId: string) => {
-    if (confirm('Mark as arrived at customer location?')) {
-      setProcessingOrderId(orderId);
-      // TODO: Add updateStatus mutation
-      console.log('Arrived at location for:', orderId);
       setTimeout(() => setProcessingOrderId(null), 1000);
     }
   };
@@ -139,7 +119,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   const handleDelivered = (orderId: string) => {
     if (confirm('Confirm order delivered to customer?')) {
       setProcessingOrderId(orderId);
-      // TODO: Add updateStatus mutation
+      // TODO: Add mutation to change status from SHIPPED to DELIVERED
       console.log('Delivered order:', orderId);
       setTimeout(() => setProcessingOrderId(null), 1000);
     }
@@ -150,11 +130,20 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     setShowFailureModal(true);
   };
 
-  const handleReturn = (orderId: string) => {
-    if (confirm('Confirm return to supplier?')) {
+  const handleCancel = (orderId: string) => {
+    if (confirm('Cancel this order?')) {
       setProcessingOrderId(orderId);
-      // TODO: Add updateStatus mutation
-      console.log('Return initiated for:', orderId);
+      // TODO: Add mutation to change status to CANCELLED
+      console.log('Order cancelled:', orderId);
+      setTimeout(() => setProcessingOrderId(null), 1000);
+    }
+  };
+
+  const handleRefund = (orderId: string) => {
+    if (confirm('Process refund for this order?')) {
+      setProcessingOrderId(orderId);
+      // TODO: Add mutation to change status to REFUNDED
+      console.log('Order refunded:', orderId);
       setTimeout(() => setProcessingOrderId(null), 1000);
     }
   };
@@ -163,7 +152,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     if (!selectedOrder) return;
     
     setProcessingOrderId(selectedOrder.id);
-    // TODO: Add failed status mutation with reason and notes
+    // TODO: Add mutation to change status to CANCELLED or REFUNDED based on reason
     console.log('Failed order:', selectedOrder.id, 'Reason:', reason, 'Notes:', notes);
     
     setTimeout(() => {
@@ -181,6 +170,26 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     if (diffMins < 60) return `${diffMins} min ago`;
     if (diffMins < 1440) return `${Math.floor(diffMins / 60)} hours ago`;
     return `${Math.floor(diffMins / 1440)} days ago`;
+  };
+
+  // Get badge color based on status
+  const getStatusBadgeClass = (status: string) => {
+    switch(status) {
+      case OrderStatus.PENDING:
+        return 'bg-yellow-100 text-yellow-800';
+      case OrderStatus.PROCESSING:
+        return 'bg-blue-100 text-blue-800';
+      case OrderStatus.SHIPPED:
+        return 'bg-purple-100 text-purple-800';
+      case OrderStatus.DELIVERED:
+        return 'bg-green-100 text-green-800';
+      case OrderStatus.CANCELLED:
+        return 'bg-red-100 text-red-800';
+      case OrderStatus.REFUNDED:
+        return 'bg-orange-100 text-orange-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   if (loading) {
@@ -259,18 +268,47 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                     <p className="font-bold text-lg lg:text-2xl">{formatPeso(totalEarnings || order.total)}</p>
                     <p className="text-gray-500 text-xs">Earnings</p>
                     <div className="mt-1">
-                      <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
                         {order.status}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* STATUS BUTTONS - Different buttons based on current status */}
+                {/* STATUS BUTTONS - Based on your enum */}
                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
                   
-                  {/* BUTTONS FOR PROCESSING STATUS (Ready for Pickup) */}
-                  {order.status === 'PROCESSING' && (
+                  {/* PENDING Status - Order placed, waiting to be processed */}
+                  {order.status === OrderStatus.PENDING && (
+                    <>
+                      <button
+                        onClick={() => handlePickup(order.id)}
+                        disabled={processingOrderId === order.id}
+                        className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                      >
+                        {processingOrderId === order.id ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          <>
+                            <Package size={14} />
+                            <span>Accept Order</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <button
+                        onClick={() => handleCancel(order.id)}
+                        disabled={processingOrderId === order.id}
+                        className="flex-1 min-w-[120px] bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                      >
+                        <XCircle size={14} />
+                        <span>Decline</span>
+                      </button>
+                    </>
+                  )}
+
+                  {/* PROCESSING Status - Ready for pickup */}
+                  {order.status === OrderStatus.PROCESSING && (
                     <button
                       onClick={() => handlePickup(order.id)}
                       disabled={processingOrderId === order.id}
@@ -287,66 +325,8 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                     </button>
                   )}
 
-                  {/* BUTTONS FOR PICKED_UP STATUS (Has items, ready to deliver) */}
-                  {order.status === 'PICKED_UP' && (
-                    <>
-                      <button
-                        onClick={() => handleStartDelivery(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        {processingOrderId === order.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <Clock size={14} />
-                            <span>Start Delivery</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleFailed(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        <XCircle size={14} />
-                        <span>Failed</span>
-                      </button>
-                    </>
-                  )}
-
-                  {/* BUTTONS FOR IN_TRANSIT STATUS (On the way) */}
-                  {order.status === 'IN_TRANSIT' && (
-                    <>
-                      <button
-                        onClick={() => handleArrived(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        {processingOrderId === order.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <MapPin size={14} />
-                            <span>Arrived</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleFailed(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        <XCircle size={14} />
-                        <span>Failed</span>
-                      </button>
-                    </>
-                  )}
-
-                  {/* BUTTONS FOR ARRIVED STATUS (At location) */}
-                  {order.status === 'ARRIVED' && (
+                  {/* SHIPPED Status - Out for delivery */}
+                  {order.status === OrderStatus.SHIPPED && (
                     <>
                       <button
                         onClick={() => handleDelivered(order.id)}
@@ -358,7 +338,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                         ) : (
                           <>
                             <CheckCircle size={14} />
-                            <span>Delivered</span>
+                            <span>Mark Delivered</span>
                           </>
                         )}
                       </button>
@@ -369,26 +349,54 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                         className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
                       >
                         <XCircle size={14} />
-                        <span>Failed</span>
+                        <span>Delivery Failed</span>
                       </button>
                     </>
                   )}
 
-                  {/* BUTTONS FOR FAILED STATUS (Can return) */}
-                  {order.status === 'FAILED' && (
+                  {/* DELIVERED Status - Completed */}
+                  {order.status === OrderStatus.DELIVERED && (
                     <button
-                      onClick={() => handleReturn(order.id)}
-                      disabled={processingOrderId === order.id}
-                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                      disabled
+                      className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
                     >
-                      {processingOrderId === order.id ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <>
+                      <CheckCircle size={14} />
+                      <span>Delivered</span>
+                    </button>
+                  )}
+
+                  {/* CANCELLED Status */}
+                  {order.status === OrderStatus.CANCELLED && (
+                    <>
+                      <button
+                        disabled
+                        className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
+                      >
+                        <XCircle size={14} />
+                        <span>Cancelled</span>
+                      </button>
+                      
+                      {order.payments?.some(p => p.status === 'COMPLETED') && (
+                        <button
+                          onClick={() => handleRefund(order.id)}
+                          disabled={processingOrderId === order.id}
+                          className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1"
+                        >
                           <AlertTriangle size={14} />
-                          <span>Return to Supplier</span>
-                        </>
+                          <span>Process Refund</span>
+                        </button>
                       )}
+                    </>
+                  )}
+
+                  {/* REFUNDED Status */}
+                  {order.status === OrderStatus.REFUNDED && (
+                    <button
+                      disabled
+                      className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
+                    >
+                      <AlertTriangle size={14} />
+                      <span>Refunded</span>
                     </button>
                   )}
                 </div>
@@ -398,7 +406,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         </div>
       )}
 
-      {/* FAILURE MODAL - Simple version */}
+      {/* FAILURE MODAL */}
       {showFailureModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
@@ -463,4 +471,4 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       )}
     </div>
   );
-                  }
+                      }
