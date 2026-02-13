@@ -188,6 +188,7 @@ export interface OrderItem {
   supplierId: string;
   quantity: number;
   price: number;
+  status: string;
   product: {
     name: string;
     sku: string;
