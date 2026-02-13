@@ -60,6 +60,7 @@ export const ACTIVE_ORDER_LIST = gql`
           supplierId
           quantity
           price
+          status
           product {
             name
             sku
