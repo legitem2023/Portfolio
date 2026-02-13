@@ -1084,7 +1084,16 @@ if (filter && filter.status) {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           select: {
-            status: true,
+            id: true,
+        orderId: true,
+        supplierId: true,
+        quantity: true,
+        price: true,
+        variantInfo: true,
+        status: true, // STATUS IS HERE
+        riderId: true,
+        recipientName: true,
+        rejectedBy: true,
             product: {
               select: {
                 id: true,
