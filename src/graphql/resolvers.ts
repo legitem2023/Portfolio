@@ -746,7 +746,6 @@ const orders = await prisma.order.findMany({
     items: {
       where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
       include: {
-        status: true,
         product: {
           select: {
             id: true,
@@ -777,6 +776,9 @@ const orders = await prisma.order.findMany({
             }
           }
         }
+      },
+      select: {
+        status: true,
       }
     },
     user: {
@@ -831,6 +833,7 @@ const orders = await prisma.order.findMany({
       payments: order.payments,
       items: order.items.map(item => ({
         id: item.id,
+        status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
@@ -904,7 +907,6 @@ if (filter && filter.status) {
         items: {
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
           include: {
-            status: true,
             product: {
               select: {
                 id: true,
@@ -936,7 +938,10 @@ if (filter && filter.status) {
                 }
               }
             }
-          }
+          },
+      select: {
+        status: true,
+      }
         },
         user: {
           select: {
@@ -990,6 +995,7 @@ if (filter && filter.status) {
       payments: order.payments,
       items: order.items.map(item => ({
         id: item.id,
+        status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
@@ -1063,7 +1069,7 @@ if (filter && filter.status) {
         items: {
           where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
           include: {
-            status: true,
+            
             product: {
               select: {
                 id: true,
@@ -1095,7 +1101,10 @@ if (filter && filter.status) {
                 }
               }
             }
-          }
+          },
+      select: {
+        status: true,
+      }
         },
         user: {
           select: {
@@ -1149,6 +1158,7 @@ if (filter && filter.status) {
       payments: order.payments,
       items: order.items.map(item => ({
         id: item.id,
+        status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
