@@ -1,5 +1,5 @@
 "use client";
-import { Package, Shield, CheckCircle, Clock, XCircle, AlertTriangle, MapPin } from "lucide-react";
+import { Package, Shield, CheckCircle, Clock, XCircle, AlertTriangle, MapPin, Store } from "lucide-react";
 import { formatPeso } from '../lib/utils';
 import { useQuery } from '@apollo/client';
 import { ACTIVE_ORDER_LIST } from '../lib/types';
@@ -16,6 +16,7 @@ interface OrderItem {
   supplierId: string;
   quantity: number;
   price: number;
+  status: string; // Each item has its own status: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
   product: {
     name: string;
     sku: string;
@@ -43,7 +44,7 @@ interface Payment {
 interface Order {
   id: string;
   orderNumber: string;
-  status: string; // This will be one of: PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED, REFUNDED
+  status: string; // Overall order status
   total: number;
   createdAt: string;
   user: {
@@ -59,7 +60,7 @@ interface Order {
     zipCode: string;
     country: string;
   };
-  items: OrderItem[];
+  items: OrderItem[]; // Each with its own status
   payments: Payment[];
 }
 
@@ -77,7 +78,18 @@ interface ActiveOrderData {
   };
 }
 
-// Status enum to match your GraphQL
+// Group items by supplier
+interface SupplierGroup {
+  supplierId: string;
+  supplierName: string;
+  supplierAddress: string;
+  items: OrderItem[];
+  totalItems: number;
+  subtotal: number;
+  status: string; // Overall status for this supplier's items
+  itemStatuses: { [status: string]: number }; // Count of items by status
+}
+
 enum OrderStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -90,13 +102,16 @@ enum OrderStatus {
 export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabProps) {
   const { user } = useAuth();
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
+  const [processingSupplierId, setProcessingSupplierId] = useState<string | null>(null);
   const [showFailureModal, setShowFailureModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierGroup | null>(null);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   
   const { loading, error, data } = useQuery<ActiveOrderData>(ACTIVE_ORDER_LIST, {
     variables: {
       filter: {
-        status: "PROCESSING", // Filter for orders ready for pickup
+        status: "PROCESSING",
         riderId: user?.userId
       },
       pagination: {
@@ -106,45 +121,144 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     }
   });
 
+  // Group items by supplier and calculate status
+  const groupItemsBySupplier = (items: OrderItem[]): SupplierGroup[] => {
+    const groups = new Map<string, SupplierGroup>();
+    
+    items.forEach(item => {
+      const supplierId = item.supplierId;
+      
+      if (!groups.has(supplierId)) {
+        groups.set(supplierId, {
+          supplierId,
+          supplierName: item.supplier.firstName,
+          supplierAddress: item.supplier.addresses[0] 
+            ? `${item.supplier.addresses[0].street}, ${item.supplier.addresses[0].city}`
+            : 'Address not available',
+          items: [],
+          totalItems: 0,
+          subtotal: 0,
+          status: item.status, // Will be updated as we add items
+          itemStatuses: {
+            [OrderStatus.PENDING]: 0,
+            [OrderStatus.PROCESSING]: 0,
+            [OrderStatus.SHIPPED]: 0,
+            [OrderStatus.DELIVERED]: 0,
+            [OrderStatus.CANCELLED]: 0,
+            [OrderStatus.REFUNDED]: 0
+          }
+        });
+      }
+      
+      const group = groups.get(supplierId)!;
+      group.items.push(item);
+      group.totalItems += item.quantity;
+      group.subtotal += item.price * item.quantity;
+      
+      // Count items by status
+      group.itemStatuses[item.status] = (group.itemStatuses[item.status] || 0) + 1;
+      
+      // Determine group status (lowest priority status wins)
+      // Priority: PENDING > PROCESSING > SHIPPED > DELIVERED > CANCELLED > REFUNDED
+      const statusPriority = {
+        [OrderStatus.PENDING]: 1,
+        [OrderStatus.PROCESSING]: 2,
+        [OrderStatus.SHIPPED]: 3,
+        [OrderStatus.DELIVERED]: 4,
+        [OrderStatus.CANCELLED]: 5,
+        [OrderStatus.REFUNDED]: 6
+      };
+      
+      if (statusPriority[item.status] < statusPriority[group.status]) {
+        group.status = item.status;
+      }
+    });
+    
+    return Array.from(groups.values());
+  };
+
+  // Check if all items from a supplier are in a specific status
+  const areAllItemsInStatus = (group: SupplierGroup, status: string): boolean => {
+    return group.items.every(item => item.status === status);
+  };
+
+  // Check if any items from a supplier are in a specific status
+  const areAnyItemsInStatus = (group: SupplierGroup, status: string): boolean => {
+    return group.items.some(item => item.status === status);
+  };
+
   // UI handlers
-  const handlePickup = (orderId: string) => {
-    if (confirm('Confirm pickup from supplier?')) {
+  const handlePickup = (orderId: string, supplierId?: string) => {
+    const message = supplierId 
+      ? 'Confirm pickup from this supplier?' 
+      : 'Confirm pickup from all suppliers?';
+    
+    if (confirm(message)) {
       setProcessingOrderId(orderId);
-      // TODO: Add mutation to change status from PROCESSING to SHIPPED
-      console.log('Pickup confirmed for:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
+      if (supplierId) setProcessingSupplierId(supplierId);
+      // TODO: Add mutation to update item status from PROCESSING to SHIPPED
+      console.log('Pickup confirmed for:', orderId, 'Supplier:', supplierId || 'all');
+      setTimeout(() => {
+        setProcessingOrderId(null);
+        setProcessingSupplierId(null);
+      }, 1000);
     }
   };
 
-  const handleDelivered = (orderId: string) => {
-    if (confirm('Confirm order delivered to customer?')) {
+  const handleDelivered = (orderId: string, supplierId?: string) => {
+    const message = supplierId 
+      ? 'Confirm delivery for items from this supplier?' 
+      : 'Confirm full order delivered?';
+    
+    if (confirm(message)) {
       setProcessingOrderId(orderId);
-      // TODO: Add mutation to change status from SHIPPED to DELIVERED
-      console.log('Delivered order:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
+      if (supplierId) setProcessingSupplierId(supplierId);
+      // TODO: Add mutation to update item status from SHIPPED to DELIVERED
+      console.log('Delivered:', orderId, 'Supplier:', supplierId || 'all');
+      setTimeout(() => {
+        setProcessingOrderId(null);
+        setProcessingSupplierId(null);
+      }, 1000);
     }
   };
 
-  const handleFailed = (orderId: string) => {
+  const handleFailed = (orderId: string, group?: SupplierGroup) => {
     setSelectedOrder(orders.find(o => o.id === orderId) || null);
+    if (group) setSelectedSupplier(group);
     setShowFailureModal(true);
   };
 
-  const handleCancel = (orderId: string) => {
-    if (confirm('Cancel this order?')) {
+  const handleCancel = (orderId: string, supplierId?: string) => {
+    const message = supplierId 
+      ? 'Cancel items from this supplier?' 
+      : 'Cancel entire order?';
+    
+    if (confirm(message)) {
       setProcessingOrderId(orderId);
-      // TODO: Add mutation to change status to CANCELLED
-      console.log('Order cancelled:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
+      if (supplierId) setProcessingSupplierId(supplierId);
+      // TODO: Add mutation to update item status to CANCELLED
+      console.log('Cancelled:', orderId, 'Supplier:', supplierId || 'all');
+      setTimeout(() => {
+        setProcessingOrderId(null);
+        setProcessingSupplierId(null);
+      }, 1000);
     }
   };
 
-  const handleRefund = (orderId: string) => {
-    if (confirm('Process refund for this order?')) {
+  const handleRefund = (orderId: string, supplierId?: string) => {
+    const message = supplierId 
+      ? 'Process refund for items from this supplier?' 
+      : 'Process refund for entire order?';
+    
+    if (confirm(message)) {
       setProcessingOrderId(orderId);
-      // TODO: Add mutation to change status to REFUNDED
-      console.log('Order refunded:', orderId);
-      setTimeout(() => setProcessingOrderId(null), 1000);
+      if (supplierId) setProcessingSupplierId(supplierId);
+      // TODO: Add mutation to update item status to REFUNDED
+      console.log('Refunded:', orderId, 'Supplier:', supplierId || 'all');
+      setTimeout(() => {
+        setProcessingOrderId(null);
+        setProcessingSupplierId(null);
+      }, 1000);
     }
   };
 
@@ -152,13 +266,17 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     if (!selectedOrder) return;
     
     setProcessingOrderId(selectedOrder.id);
-    // TODO: Add mutation to change status to CANCELLED or REFUNDED based on reason
-    console.log('Failed order:', selectedOrder.id, 'Reason:', reason, 'Notes:', notes);
+    if (selectedSupplier) setProcessingSupplierId(selectedSupplier.supplierId);
+    
+    // TODO: Add mutation to update item status to CANCELLED or REFUNDED based on reason
+    console.log('Failed:', selectedOrder.id, 'Supplier:', selectedSupplier?.supplierId, 'Reason:', reason, 'Notes:', notes);
     
     setTimeout(() => {
       setProcessingOrderId(null);
+      setProcessingSupplierId(null);
       setShowFailureModal(false);
       setSelectedOrder(null);
+      setSelectedSupplier(null);
     }, 1000);
   };
 
@@ -172,7 +290,6 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     return `${Math.floor(diffMins / 1440)} days ago`;
   };
 
-  // Get badge color based on status
   const getStatusBadgeClass = (status: string) => {
     switch(status) {
       case OrderStatus.PENDING:
@@ -190,6 +307,29 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       default:
         return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch(status) {
+      case OrderStatus.PENDING:
+        return Clock;
+      case OrderStatus.PROCESSING:
+        return Package;
+      case OrderStatus.SHIPPED:
+        return Package;
+      case OrderStatus.DELIVERED:
+        return CheckCircle;
+      case OrderStatus.CANCELLED:
+        return XCircle;
+      case OrderStatus.REFUNDED:
+        return AlertTriangle;
+      default:
+        return Clock;
+    }
+  };
+
+  const toggleOrderExpand = (orderId: string) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
 
   if (loading) {
@@ -238,186 +378,225 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
             const totalEarnings = order.payments
               .filter(p => p.status === 'COMPLETED')
               .reduce((sum, p) => sum + p.amount, 0);
+            
+            const supplierGroups = groupItemsBySupplier(order.items);
+            const hasMultipleSuppliers = supplierGroups.length > 1;
+            const isExpanded = expandedOrderId === order.id;
 
             return (
-              <div key={order.id} className="bg-white p-2 lg:p-4 rounded-lg shadow border-l-4 border-blue-500">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1 lg:gap-2">
-                      <Shield size={isMobile ? 14 : 16} className="text-blue-500" />
-                      <h3 className="font-bold text-base lg:text-lg">{order.orderNumber}</h3>
+              <div key={order.id} className="bg-white rounded-lg shadow border-l-4 border-blue-500 overflow-hidden">
+                {/* Order Header - Always Visible */}
+                <div 
+                  className="p-2 lg:p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => toggleOrderExpand(order.id)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1 lg:gap-2">
+                        <Shield size={isMobile ? 14 : 16} className="text-blue-500" />
+                        <h3 className="font-bold text-base lg:text-lg">{order.orderNumber}</h3>
+                        {hasMultipleSuppliers && (
+                          <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                            {supplierGroups.length} suppliers
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm lg:text-base mt-0.5 lg:mt-1">
+                        Deliver to: {order.address?.street}, {order.address?.city}
+                      </p>
+                      
+                      <p className="text-gray-500 text-xs mt-0.5">
+                        Customer: {order.user?.firstName} • Total items: {order.items.reduce((sum, item) => sum + item.quantity, 0)}
+                      </p>
+                      
+                      <div className="mt-1 lg:mt-2 flex flex-wrap items-center gap-1 lg:gap-2">
+                        <span className="text-gray-500 text-xs flex items-center gap-0.5">
+                          <Clock size={10} />
+                          {formatTimeAgo(order.createdAt)}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {isExpanded ? '▼' : '▶'} {isExpanded ? 'Hide details' : 'View details'}
+                        </span>
+                      </div>
                     </div>
                     
-                    <p className="text-gray-600 text-sm lg:text-base mt-0.5 lg:mt-1">
-                      {order.address?.street}, {order.address?.city}
-                    </p>
-                    
-                    <p className="text-gray-500 text-xs mt-0.5">
-                      Customer: {order.user?.firstName} • {order.items.length} items
-                    </p>
-                    
-                    <div className="mt-1 lg:mt-2 flex flex-wrap items-center gap-1 lg:gap-2">
-                      <span className="text-gray-500 text-xs flex items-center gap-0.5">
-                        <Clock size={10} />
-                        {formatTimeAgo(order.createdAt)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right ml-2 min-w-[100px]">
-                    <p className="font-bold text-lg lg:text-2xl">{formatPeso(totalEarnings || order.total)}</p>
-                    <p className="text-gray-500 text-xs">Earnings</p>
-                    <div className="mt-1">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
-                        {order.status}
-                      </span>
+                    <div className="text-right ml-2 min-w-[100px]">
+                      <p className="font-bold text-lg lg:text-2xl">{formatPeso(totalEarnings || order.total)}</p>
+                      <p className="text-gray-500 text-xs">Total</p>
+                      <div className="mt-1">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${getStatusBadgeClass(order.status)}`}>
+                          {order.status}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* STATUS BUTTONS - Based on your enum */}
-                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
-                  
-                  {/* PENDING Status - Order placed, waiting to be processed */}
-                  {order.status === OrderStatus.PENDING && (
-                    <>
-                      <button
-                        onClick={() => handlePickup(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 min-w-[120px] bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        {processingOrderId === order.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <Package size={14} />
-                            <span>Accept Order</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleCancel(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 min-w-[120px] bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        <XCircle size={14} />
-                        <span>Decline</span>
-                      </button>
-                    </>
-                  )}
+                {/* Expanded Details - Shows supplier groups with item-level status */}
+                {isExpanded && (
+                  <div className="px-2 lg:px-4 pb-3 border-t border-gray-100">
+                    {/* Supplier Groups */}
+                    <div className="space-y-3 mt-3">
+                      {supplierGroups.map((group) => {
+                        const StatusIcon = getStatusIcon(group.status);
+                        
+                        return (
+                          <div key={group.supplierId} className="bg-gray-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <Store size={16} className="text-gray-500 mt-0.5" />
+                              <div className="flex-1">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h4 className="font-medium text-sm">{group.supplierName}</h4>
+                                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${getStatusBadgeClass(group.status)}`}>
+                                        <StatusIcon size={10} />
+                                        <span>{group.status}</span>
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-0.5">{group.supplierAddress}</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="font-semibold text-sm">{formatPeso(group.subtotal)}</p>
+                                    <p className="text-xs text-gray-500">{group.totalItems} items</p>
+                                  </div>
+                                </div>
+                                
+                                {/* Items from this supplier with their individual status */}
+                                <div className="mt-2 space-y-2">
+                                  {group.items.map((item) => {
+                                    const ItemStatusIcon = getStatusIcon(item.status);
+                                    
+                                    return (
+                                      <div key={item.id} className="flex justify-between items-center text-xs border-b border-gray-200 last:border-0 pb-1 last:pb-0">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-gray-600">
+                                              {item.quantity}x {item.product.name}
+                                            </span>
+                                            <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] ${getStatusBadgeClass(item.status)}`}>
+                                              <ItemStatusIcon size={8} />
+                                              <span>{item.status}</span>
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <span className="text-gray-800 font-medium">
+                                          {formatPeso(item.price * item.quantity)}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
 
-                  {/* PROCESSING Status - Ready for pickup */}
-                  {order.status === OrderStatus.PROCESSING && (
-                    <button
-                      onClick={() => handlePickup(order.id)}
-                      disabled={processingOrderId === order.id}
-                      className="flex-1 min-w-[120px] bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                    >
-                      {processingOrderId === order.id ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <>
-                          <Package size={14} />
-                          <span>Confirm Pickup</span>
-                        </>
-                      )}
-                    </button>
-                  )}
+                                {/* Supplier-level actions based on item statuses */}
+                                <div className="flex flex-wrap gap-2 mt-3">
+                                  {/* Show pickup button if any items are PROCESSING */}
+                                  {areAnyItemsInStatus(group, OrderStatus.PROCESSING) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handlePickup(order.id, group.supplierId);
+                                      }}
+                                      disabled={processingOrderId === order.id && processingSupplierId === group.supplierId}
+                                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-1.5 px-2 rounded transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                                    >
+                                      {processingOrderId === order.id && processingSupplierId === group.supplierId ? (
+                                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      ) : (
+                                        <>
+                                          <Package size={12} />
+                                          <span>Pickup {group.itemStatuses[OrderStatus.PROCESSING]} item(s)</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
 
-                  {/* SHIPPED Status - Out for delivery */}
-                  {order.status === OrderStatus.SHIPPED && (
-                    <>
-                      <button
-                        onClick={() => handleDelivered(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        {processingOrderId === order.id ? (
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        ) : (
-                          <>
-                            <CheckCircle size={14} />
-                            <span>Mark Delivered</span>
-                          </>
-                        )}
-                      </button>
-                      
-                      <button
-                        onClick={() => handleFailed(order.id)}
-                        disabled={processingOrderId === order.id}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
-                      >
-                        <XCircle size={14} />
-                        <span>Delivery Failed</span>
-                      </button>
-                    </>
-                  )}
+                                  {/* Show deliver button if any items are SHIPPED */}
+                                  {areAnyItemsInStatus(group, OrderStatus.SHIPPED) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDelivered(order.id, group.supplierId);
+                                      }}
+                                      disabled={processingOrderId === order.id && processingSupplierId === group.supplierId}
+                                      className="flex-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-1.5 px-2 rounded transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                                    >
+                                      {processingOrderId === order.id && processingSupplierId === group.supplierId ? (
+                                        <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                      ) : (
+                                        <>
+                                          <CheckCircle size={12} />
+                                          <span>Deliver {group.itemStatuses[OrderStatus.SHIPPED]} item(s)</span>
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
 
-                  {/* DELIVERED Status - Completed */}
-                  {order.status === OrderStatus.DELIVERED && (
-                    <button
-                      disabled
-                      className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
-                    >
-                      <CheckCircle size={14} />
-                      <span>Delivered</span>
-                    </button>
-                  )}
+                                  {/* Show failed button if any items are in progress */}
+                                  {(areAnyItemsInStatus(group, OrderStatus.PROCESSING) || 
+                                    areAnyItemsInStatus(group, OrderStatus.SHIPPED)) && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleFailed(order.id, group);
+                                      }}
+                                      disabled={processingOrderId === order.id}
+                                      className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1.5 px-2 rounded transition-colors flex items-center justify-center gap-1 disabled:bg-gray-400"
+                                    >
+                                      <XCircle size={12} />
+                                      <span>Report Issue</span>
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                  {/* CANCELLED Status */}
-                  {order.status === OrderStatus.CANCELLED && (
-                    <>
-                      <button
-                        disabled
-                        className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
-                      >
-                        <XCircle size={14} />
-                        <span>Cancelled</span>
-                      </button>
-                      
-                      {order.payments?.some(p => p.status === 'COMPLETED') && (
-                        <button
-                          onClick={() => handleRefund(order.id)}
-                          disabled={processingOrderId === order.id}
-                          className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center gap-1"
-                        >
-                          <AlertTriangle size={14} />
-                          <span>Process Refund</span>
-                        </button>
-                      )}
-                    </>
-                  )}
-
-                  {/* REFUNDED Status */}
-                  {order.status === OrderStatus.REFUNDED && (
-                    <button
-                      disabled
-                      className="flex-1 bg-gray-400 text-white text-sm font-medium py-2 px-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-1"
-                    >
-                      <AlertTriangle size={14} />
-                      <span>Refunded</span>
-                    </button>
-                  )}
-                </div>
+                    {/* Order-level summary */}
+                    <div className="mt-4 pt-3 border-t border-gray-200">
+                      <p className="text-xs text-gray-500 mb-2">Order Summary by Status:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {Object.values(OrderStatus).map(status => {
+                          const count = order.items.filter(item => item.status === status).length;
+                          if (count === 0) return null;
+                          const StatusIcon = getStatusIcon(status);
+                          
+                          return (
+                            <span key={status} className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${getStatusBadgeClass(status)}`}>
+                              <StatusIcon size={10} />
+                              <span>{status}: {count}</span>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
 
-      {/* FAILURE MODAL */}
+      {/* Failure Modal */}
       {showFailureModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-bold mb-4">Report Delivery Failure</h3>
+            <h3 className="text-lg font-bold mb-4">
+              Report Issue
+              {selectedSupplier && ` for ${selectedSupplier.supplierName}`}
+            </h3>
             <p className="text-sm text-gray-600 mb-4">
               Order: {selectedOrder.orderNumber}
             </p>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Reason for Failure
+                Reason
               </label>
               <select
                 id="failure-reason"
@@ -429,6 +608,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                 <option value="WRONG_ADDRESS">Wrong address</option>
                 <option value="CUSTOMER_REFUSED">Customer refused order</option>
                 <option value="PACKAGE_DAMAGED">Package damaged</option>
+                <option value="SUPPLIER_ISSUE">Supplier issue</option>
                 <option value="OTHER">Other reason</option>
               </select>
             </div>
@@ -460,6 +640,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                 onClick={() => {
                   setShowFailureModal(false);
                   setSelectedOrder(null);
+                  setSelectedSupplier(null);
                 }}
                 className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg"
               >
@@ -471,4 +652,4 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       )}
     </div>
   );
-                      }
+                 }
