@@ -890,7 +890,7 @@ const orders = await prisma.order.findMany({
     itemWhere.status = filter.status;
 }*/
 if (filter && filter.status) {
-   itemsWhere = {
+   itemWhere = {
     AND: [
         {
             status: {
