@@ -143,10 +143,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onRej
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 lg:gap-2 bg-orange-100 px-2 lg:px-3 py-0.5 lg:py-1 rounded-full">
-            <Clock size={isMobile ? 12 : 14} className="text-orange-600" />
-            <span className="font-bold text-orange-700 text-xs lg:text-sm">{delivery.expiresIn}</span>
-          </div>
+          
         </div>
       </div>
 
