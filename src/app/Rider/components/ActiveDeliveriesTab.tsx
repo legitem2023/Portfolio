@@ -41,7 +41,7 @@ if (loading) {
 if (error) {
   return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
 }
-const handleTab(Tab:number)=>{
+const handleTab = (Tab:number) => {
   if(Tab===1){
     setStat("PROCESSING");
     refetch();
