@@ -27,6 +27,7 @@ interface OrderItem {
   supplierId: string;
   quantity: number;
   price: number;
+  status: OrderStatus; // Added status field to OrderItem - use this for display in active user
   product: {
     name: string;
     sku: string;
@@ -54,7 +55,7 @@ interface Payment {
 interface Order {
   id: string;
   orderNumber: string;
-  status: OrderStatus; // Use the enum here
+  status: OrderStatus; // This is the overall order status (not used for display in active user)
   total: number;
   createdAt: string;
   user: {
@@ -70,7 +71,7 @@ interface Order {
     zipCode: string;
     country: string;
   };
-  items: OrderItem[];
+  items: OrderItem[]; // Each item now has its own status
   payments: Payment[];
 }
 
@@ -96,7 +97,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   const { loading, error, data } = useQuery<ActiveOrderData>(ACTIVE_ORDER_LIST, {
     variables: {
       filter: {
-        status: OrderStatus.PROCESSING, // Use enum here
+        status: OrderStatus.PROCESSING, // Filter by order status but display item status
         riderId: user?.userId
       },
       pagination: {
@@ -174,6 +175,12 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
     return Math.max(5, baseETA - diffMins + randomAdjustment); // Minimum 5 minutes
   };
 
+  // Get the status to display (from first item's status, not order.status)
+  const getDisplayStatus = (order: Order): OrderStatus => {
+    // Use the first item's status for display, fallback to order status if no items
+    return order.items[0]?.status || order.status;
+  };
+
   return (
     <div className="p-2 lg:p-6">
       <h2 className="text-lg lg:text-2xl font-bold mb-3 lg:mb-6 flex items-center gap-1 lg:gap-2">
@@ -197,6 +204,9 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
             const totalEarnings = order.payments
               .filter(p => p.status === 'COMPLETED')
               .reduce((sum, payment) => sum + payment.amount, 0);
+            
+            // Get the display status from item status (not order status)
+            const displayStatus = getDisplayStatus(order);
 
             return (
               <div key={order.id} className="bg-white p-2 lg:p-4 rounded-lg shadow border-l-4 border-blue-500">
@@ -226,42 +236,60 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
                       </span>
                     </div>
                     
-                    {/* Display first product as summary */}
-                    {order.items[0] && (
-                      <div className="mt-2 text-xs text-gray-600">
-                        <span className="font-medium">{order.items[0].product.name}</span>
-                        {order.items.length > 1 && (
-                          <span className="ml-1">+ {order.items.length - 1} more</span>
-                        )}
-                      </div>
-                    )}
+                    {/* Display all items with their individual statuses */}
+                    <div className="mt-2 space-y-1">
+                      {order.items.map((item, idx) => (
+                        <div key={item.id} className="text-xs">
+                          <span className="font-medium">{item.product.name}</span>
+                          <span className="mx-1 text-gray-400">x{item.quantity}</span>
+                          <span className={`ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            item.status === OrderStatus.DELIVERED 
+                              ? 'bg-green-100 text-green-800'
+                              : item.status === OrderStatus.PENDING
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : item.status === OrderStatus.PROCESSING
+                              ? 'bg-blue-100 text-blue-800'
+                              : item.status === OrderStatus.SHIPPED
+                              ? 'bg-purple-100 text-purple-800'
+                              : item.status === OrderStatus.CANCELLED
+                              ? 'bg-red-100 text-red-800'
+                              : item.status === OrderStatus.REFUNDED
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                   
                   <div className="text-right ml-2">
                     <p className="font-bold text-lg lg:text-2xl">{formatPeso(totalEarnings || order.total)}</p>
                     <p className="text-gray-500 text-xs lg:text-sm">Earnings</p>
                     <div className="mt-1">
+                      {/* Display using item status (displayStatus) not order.status */}
                       <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                        order.status === OrderStatus.DELIVERED 
+                        displayStatus === OrderStatus.DELIVERED 
                           ? 'bg-green-100 text-green-800'
-                          : order.status === OrderStatus.PENDING
+                          : displayStatus === OrderStatus.PENDING
                           ? 'bg-yellow-100 text-yellow-800'
-                          : order.status === OrderStatus.PROCESSING
+                          : displayStatus === OrderStatus.PROCESSING
                           ? 'bg-blue-100 text-blue-800'
-                          : order.status === OrderStatus.SHIPPED
+                          : displayStatus === OrderStatus.SHIPPED
                           ? 'bg-purple-100 text-purple-800'
-                          : order.status === OrderStatus.CANCELLED
+                          : displayStatus === OrderStatus.CANCELLED
                           ? 'bg-red-100 text-red-800'
-                          : order.status === OrderStatus.REFUNDED
+                          : displayStatus === OrderStatus.REFUNDED
                           ? 'bg-orange-100 text-orange-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {order.status}
+                        {displayStatus}
                       </span>
                     </div>
 
-                    {/* PICKUP BUTTON - Only show for PROCESSING status */}
-                    {order.status === OrderStatus.PROCESSING && (
+                    {/* PICKUP BUTTON - Only show for PROCESSING status (using displayStatus) */}
+                    {displayStatus === OrderStatus.PROCESSING && (
                       <button
                         onClick={() => handleConfirmPickup(order.id)}
                         disabled={processingOrderId === order.id}
@@ -286,4 +314,4 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
       )}
     </div>
   );
-    }
+                          }
