@@ -15,7 +15,7 @@ interface ActiveDeliveriesTabProps {
 export default function ActiveDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: ActiveDeliveriesTabProps) {
  const { user } = useAuth();
   
-  const { data, loading, error, refetch } = useQuery<OrderListResponse>(ACTIVE_ORDER_LIST, {
+  const { data, loading, error, refetch } = useQuery<ActiveOrderListResponse>(ACTIVE_ORDER_LIST, {
   variables: {
     filter: {
       status: "PROCESSING",
