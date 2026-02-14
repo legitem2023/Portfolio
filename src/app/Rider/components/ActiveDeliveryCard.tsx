@@ -17,12 +17,22 @@ import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-//import toast from 'react-hot-toast';
+import toast from 'react-hot-toast';
 
 interface ActiveDeliveryCardProps {
   delivery: Delivery;
   isMobile: boolean;
   onReset: () => void;
+}
+
+// OrderStatus enum matching your backend
+enum OrderStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
 }
 
 export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: ActiveDeliveryCardProps) {
@@ -32,9 +42,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
   // Set up the mutation
   const [updateOrderStatus, { loading: pickupLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
-      const successMessage = data.updateOrderStatus?.statusText || 'Successfully picked up!';
+      const successMessage = data.updateOrderStatus?.statusText || 'Order marked as shipped!';
       setMessage({ type: 'success', text: successMessage });
-      //toast.success(successMessage);
+      toast.success(successMessage);
       
       setTimeout(() => {
         onReset();
@@ -42,9 +52,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
       }, 2000);
     },
     onError: (error) => {
-      const errorMessage = error.message || 'Failed to pickup item';
+      const errorMessage = error.message || 'Failed to update order status';
       setMessage({ type: 'error', text: errorMessage });
-      //toast.error(errorMessage);
+      toast.error(errorMessage);
       setTimeout(() => setMessage(null), 5000);
     }
   });
@@ -53,14 +63,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     if (!user) {
       const errorMsg = 'User not authenticated';
       setMessage({ type: 'error', text: errorMsg });
-      //toast.error(errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
     if (!delivery.orderParentId) {
       const errorMsg = 'Order ID is missing';
       setMessage({ type: 'error', text: errorMsg });
-      //toast.error(errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
@@ -69,11 +79,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     const riderId = user.userId;
     const userId = delivery.customerId;
     
-    // Static notification messages (no restaurant data)
+    // Static notification messages
     const supplierTitle = `Order Ready for Pickup`;
     const supplierMessage = `Your items are ready for pickup by rider`;
     
-    const customerTitle = `Order Picked Up`;
+    const customerTitle = `Order Shipped`;
     const customerMessage = `Your order has been picked up and is on the way!`;
     
     try {
@@ -83,13 +93,13 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           riderId,
           supplierId,
           userId,
-          status: 'SHIPPING',
+          status: OrderStatus.SHIPPED, // Using SHIPPED for pickup
           title: customerTitle,
           message: customerMessage
         }
       });
     } catch (error) {
-      console.error('Error picking up delivery:', error);
+      console.error('Error updating order status:', error);
     }
   };
 
@@ -259,7 +269,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           >
             <Grab size={isMobile ? 18 : 20} className={isLoading ? 'animate-bounce' : ''} />
             <span>
-              {isLoading ? 'Picking up...' : 'Confirm Pickup'}
+              {isLoading ? 'Processing...' : 'Mark as Shipped'}
             </span>
           </button>
           
@@ -274,4 +284,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
       </div>
     </div>
   );
-      }
+}
