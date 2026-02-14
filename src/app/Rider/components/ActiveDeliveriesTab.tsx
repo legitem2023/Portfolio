@@ -3,7 +3,7 @@ import { Bell, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useQuery } from "@apollo/client";
 import { ACTIVE_ORDER_LIST, ActiveOrderListResponse } from '../lib/types';
 import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
-import DeliveryCard from './DeliveryCard';
+import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { useAuth } from '../hooks/useAuth';
 import NewDeliveriesTabSkeleton from './NewDeliveriesTabSkeleton';
 interface ActiveDeliveriesTabProps {
@@ -75,7 +75,7 @@ if (error) {
       ) : (
         <div className="space-y-3 lg:space-y-6">
           {newDeliveries.map((delivery) => (
-            <DeliveryCard
+            <ActiveDeliveryCard
               key={delivery.id}
               delivery={delivery}
               isMobile={isMobile}
