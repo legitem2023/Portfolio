@@ -887,13 +887,13 @@ const orders = await prisma.order.findMany({
   let itemWhere: any = {};
   
   if(filter && filter.status) {
-    itemWhere = {
-      NOT: [
-         { status: 'PENDING' },
-         { status: 'DELIVERED' },
-         { status: 'CANCELED' }
-      ]
-    };
+     itemWhere = {
+    status: {
+        not: {
+            in: ['PENDING', 'DELIVERED', 'CANCELED']
+        }
+    }
+   };
   }
 
     
