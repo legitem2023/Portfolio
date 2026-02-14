@@ -17,7 +17,7 @@ import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+//import toast from 'react-hot-toast';
 
 interface ActiveDeliveryCardProps {
   delivery: Delivery;
@@ -44,7 +44,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     onCompleted: (data) => {
       const successMessage = data.updateOrderStatus?.statusText || 'Order marked as shipped!';
       setMessage({ type: 'success', text: successMessage });
-      toast.success(successMessage);
+     // toast.success(successMessage);
       
       setTimeout(() => {
         onReset();
@@ -54,7 +54,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     onError: (error) => {
       const errorMessage = error.message || 'Failed to update order status';
       setMessage({ type: 'error', text: errorMessage });
-      toast.error(errorMessage);
+     // toast.error(errorMessage);
       setTimeout(() => setMessage(null), 5000);
     }
   });
@@ -63,14 +63,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     if (!user) {
       const errorMsg = 'User not authenticated';
       setMessage({ type: 'error', text: errorMsg });
-      toast.error(errorMsg);
+    //  toast.error(errorMsg);
       return;
     }
 
     if (!delivery.orderParentId) {
       const errorMsg = 'Order ID is missing';
       setMessage({ type: 'error', text: errorMsg });
-      toast.error(errorMsg);
+    //  toast.error(errorMsg);
       return;
     }
 
