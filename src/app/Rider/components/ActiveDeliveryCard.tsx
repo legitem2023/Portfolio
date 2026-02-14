@@ -9,7 +9,7 @@ import {
   Navigation,
   ThumbsUp,
   X,
-  Hand
+  Grab
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -278,7 +278,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onRej
             disabled={isLoading}
             className={`bg-white border ${rejectLoading ? 'border-yellow-300' : 'border-gray-300'} text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            <Hand size={isMobile ? 18 : 20} />
+            <Grab size={isMobile ? 18 : 20} />
             <span>{rejectLoading ? 'Loading...' : 'Pickup'}</span>
           </button>
           
