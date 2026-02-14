@@ -14,7 +14,7 @@ import {
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
-import { ACCEPT_BY_RIDER, REJECT_BY_RIDER_MUTATION } from '../lib/types'; // Get both from types
+import { UPDATE_ORDER_STATUS } from '../lib/types'; // Get both from types
 import { useAuth } from '../hooks/useAuth';
 
 interface ActiveDeliveryCardProps {
