@@ -883,8 +883,8 @@ const orders = await prisma.order.findMany({
   const skip = (page - 1) * pageSize;
 
   // Build where clause
-  const where: any = {};
-  const itemWhere: any = {};
+  let where: any = {};
+  let itemWhere: any = {};
   // Add status filter if provided
 /*if (filter && filter.status) {
     itemWhere.status = filter.status;
