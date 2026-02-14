@@ -886,28 +886,29 @@ const orders = await prisma.order.findMany({
   let where: any = {};
   let itemWhere: any = {};
   // Add status filter if provided
-/*if (filter && filter.status) {
-    itemWhere.status = filter.status;
-}*/
+
 
  
-
 if (filter?.status) {
-  itemWhere = {
-    status: {
-        not: {
-            in: ['PENDING', 'DELIVERED', 'CANCELED']
-        }
-    }
-  }
+    // When a specific status is provided
     itemWhere = {
-        AND: [
-            { status: filter.status },
-            itemWhere
+        status: filter.status,
+        NOT: [
+            { status: 'PENDING' },
+            { status: 'DELIVERED' },
+            { status: 'CANCELED' }
         ]
     };
-}  
-
+} else {
+    // When just excluding statuses
+    itemWhere = {
+        NOT: [
+            { status: 'PENDING' },
+            { status: 'DELIVERED' },
+            { status: 'CANCELED' }
+        ]
+    };
+}
 
     
   // Add supplierId filter through OrderItem relation
