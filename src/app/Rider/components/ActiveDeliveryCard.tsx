@@ -20,17 +20,14 @@ import { useAuth } from '../hooks/useAuth';
 interface ActiveDeliveryCardProps {
   delivery: Delivery;
   isMobile: boolean;
-  onAccept: (deliveryId: string) => void;
-  onReject: (deliveryId: string) => void;
+  onReset: () => void;
 }
 
-export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onReject }: ActiveDeliveryCardProps) {
+export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: ActiveDeliveryCardProps) {
   const { user } = useAuth();
   
-  const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_BY_RIDER);
-  const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
-
-  const handleAccept = async () => {
+  
+  const handlePickup = async () => {
     if (!user) {
       console.error('User not authenticated');
       return;
@@ -41,92 +38,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onRej
     const riderId = user.userId;
     const userId = delivery.customerId;
     
-    if (!itemId || !supplierId) {
-      console.error('Missing itemId or supplierId', { itemId, supplierId });
-      return;
-    }
-
     try {
-      const { data } = await acceptDelivery({
-        variables: {
-          itemId: itemId,
-          riderId: riderId,
-          supplierId: supplierId,
-          userId: userId,
-        }
-      });
-
-      if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
-        onAccept(delivery.id);
-      }
+      onReset();
     } catch (error) {
       console.error('Error accepting delivery:', error);
     }
   };
 
-  const handleReject = async () => {
-  if (!user) {
-    console.error('User not authenticated');
-    return;
-  }
 
-  // Get all itemIds from delivery
-  const supplierItems = delivery.supplierItems || [];
-  const riderId = user.userId;
-  
-  if (!supplierItems.length) {
-    console.error('No supplier items found');
-    return;
-  }
-
-  // Confirmation dialog
-  const confirmed = window.confirm(
-    'Are you sure you want to reject this delivery?'
-  );
-  
-  if (!confirmed) return;
-
-  try {
-    // Loop through all supplier items
-    for (const item of supplierItems) {
-      const itemId = item.id;
-      
-      if (!itemId) {
-        console.warn('Skipping item with missing ID');
-        continue;
-      }
-
-      console.log(`Processing rejection for item: ${itemId}`);
-      
-      const { data } = await rejectDelivery({
-        variables: {
-          itemId: itemId,
-          riderId: riderId,
-        }
-      });
-
-      if (data?.rejectByRider?.statusText) {
-        console.log(`Rejection status for item ${itemId}:`, data.rejectByRider.statusText);
-        
-        // You might want to handle individual item responses differently
-        if (data.rejectByRider.statusText.includes('Error') || 
-            data.rejectByRider.statusText.includes('Failed')) {
-          console.error(`Failed to reject item ${itemId}`);
-        }
-      }
-    }
-    
-    // Call parent's onReject callback to update UI once all items are processed
-    onReject(delivery.id);
-    
-    // Show a general success message
-    alert('All items have been rejected successfully');
-    
-  } catch (error: any) {
-    console.error('Error rejecting delivery:', error);
-    alert(`Failed to reject delivery: ${error.message}`);
-  }
-};
 
   const isLoading = acceptLoading || rejectLoading;
 
@@ -274,7 +193,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onRej
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <button
-            onClick={handleReject}
+            onClick={handlePickup}
             disabled={isLoading}
             className={`bg-white border ${rejectLoading ? 'border-yellow-300' : 'border-gray-300'} text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
           >
