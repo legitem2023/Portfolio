@@ -890,21 +890,21 @@ const orders = await prisma.order.findMany({
 if (filter?.status) {
     // When a specific status is provided
     itemWhere = {
-        AND: [
-            { status: filter.status },
-            { status: { not: 'PENDING' } },
-            { status: { not: 'DELIVERED' } },
-            { status: { not: 'CANCELED' } }
-        ]
+        status: filter.status,
+        NOT: {
+            status: {
+                in: ['PENDING','DELIVERED','CANCELED','REFUNDED']
+            }
+        }
     };
 } else {
     // When just excluding statuses
     itemWhere = {
-        AND: [
-            { status: { not: 'PENDING' } },
-            { status: { not: 'DELIVERED' } },
-            { status: { not: 'CANCELED' } }
-        ]
+        NOT: {
+            status: {
+                in: ['PENDING','DELIVERED','CANCELED','REFUNDED']
+            }
+        }
     };
 }
 
