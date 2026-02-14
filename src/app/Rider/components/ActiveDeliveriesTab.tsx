@@ -61,7 +61,8 @@ const handleTab = (Tab:number) => {
           </h2>
           
         </div>
-
+          <button onClick={() => handleTab(1)}>Processing</button>
+          <button onClick={() => handleTab(2)}>Shipped</button>
       </div>
 
       {newDeliveries.length === 0 ? (
@@ -72,8 +73,7 @@ const handleTab = (Tab:number) => {
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
-          <button onClick={() => handleTab(1)}>Processing</button>
-          <button onClick={() => handleTab(2)}>Shipped</button>
+
           {newDeliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
