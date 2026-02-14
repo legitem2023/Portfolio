@@ -61,10 +61,10 @@ const handleTab = (Tab:number) => {
           </h2>
           
         </div>
+          
+      </div>
           <button onClick={() => handleTab(1)}>Processing</button>
           <button onClick={() => handleTab(2)}>Shipped</button>
-      </div>
-
       {newDeliveries.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-4 lg:p-8 text-center">
           <Bell size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-3 lg:mb-4" />
