@@ -15,7 +15,7 @@ interface ActiveDeliveriesTabProps {
 
 export default function ActiveDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: ActiveDeliveriesTabProps) {
  const { user } = useAuth();
-  const { useStat, setStat } = useState("PROCESSING");
+  const [ useStat, setStat ] = useState("PROCESSING");
   const { data, loading, error, refetch } = useQuery<ActiveOrderListResponse>(ACTIVE_ORDER_LIST, {
   variables: {
     filter: {
