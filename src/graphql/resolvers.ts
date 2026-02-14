@@ -2653,6 +2653,45 @@ salesList: async (
   },
 
   Mutation: {
+    updateOrderStatus: async (_: any, { itemId,riderId,supplierId,userId,status,title,message }: any) => {
+      try {
+    // Validate inputs
+    if (!itemId || !status) {
+      throw new Error('itemId and riderId are required');
+    }
+
+    // Update the order item
+    const updatedItem = await prisma.orderItem.update({
+      where: { id: itemId },
+      data: {
+        status:status
+      }
+    });
+     await prisma.notification.create({
+        data: { 
+          userId: supplierId,
+          title: title,
+          message: message
+        }
+      });
+    
+      // Create delivery record
+    await prisma.notification.create({
+        data: { 
+          userId: userId,
+          title: title,
+          message: message
+        }
+      });
+        
+    return {
+      statusText: "Successfully Pickup!",
+    };
+  } catch (error:any) {
+    console.error('Error in Pickup:', error);
+    throw new Error(`Failed to Pickup item: ${error.message}`);
+      }  
+    },
 rejectByRider: async (_: any, { itemId, riderId }: any) => {
   try {
     // Validate inputs
