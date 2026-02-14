@@ -1,6 +1,31 @@
 
 import { gql } from "@apollo/client";
 
+export const UPDATE_ORDER_STATUS = gql`
+  mutation UpdateOrderStatus(
+    $itemId: ID!, 
+    $riderId: ID, 
+    $supplierId: ID, 
+    $userId: ID!, 
+    $status: String!, 
+    $title: String!, 
+    $message: String!
+  ) {
+    updateOrderStatus(
+      itemId: $itemId
+      riderId: $riderId
+      supplierId: $supplierId
+      userId: $userId
+      status: $status
+      title: $title
+      message: $message
+    ) {
+      statusText
+    }
+  }
+`;
+
+
 export const REJECT_BY_RIDER_MUTATION = gql`
   mutation RejectByRider($itemId: ID!, $riderId: ID!) {
     rejectByRider(itemId: $itemId, riderId: $riderId) {
