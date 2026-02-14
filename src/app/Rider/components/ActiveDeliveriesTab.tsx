@@ -49,21 +49,9 @@ if (error) {
             <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
             <span className="text-base lg:text-2xl">Active Delivery</span>
           </h2>
-          <p className="text-gray-600 text-xs lg:text-base mt-1">
-            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.activeorder.orders?.length || 0} order{data?.activeorder.orders?.length !== 1 ? "s" : ""}
-          </p>
+          
         </div>
-        <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-gray-600">
-          <AlertCircle size={isMobile ? 14 : 16} />
-          <span className="hidden sm:inline">Requests auto-expire in 2 minutes</span>
-          <span className="sm:hidden">2 min expiry</span>
-          <button
-            onClick={() => refetch()}
-            className="ml-1 lg:ml-2 text-blue-600 hover:text-blue-800 text-xs lg:text-sm"
-          >
-            Refresh
-          </button>
-        </div>
+
       </div>
 
       {newDeliveries.length === 0 ? (
