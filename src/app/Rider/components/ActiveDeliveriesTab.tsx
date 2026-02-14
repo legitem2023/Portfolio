@@ -47,10 +47,10 @@ if (error) {
         <div>
           <h2 className="text-lg lg:text-2xl font-bold flex items-center gap-1 lg:gap-2">
             <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
-            <span className="text-base lg:text-2xl">New Delivery Requests</span>
+            <span className="text-base lg:text-2xl">Active Delivery</span>
           </h2>
           <p className="text-gray-600 text-xs lg:text-base mt-1">
-            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.neworder.orders?.length || 0} order{data?.neworder.orders?.length !== 1 ? "s" : ""}
+            {newDeliveries.length} delivery piece{newDeliveries.length !== 1 ? "s" : ""} from {data?.activeorder.orders?.length || 0} order{data?.activeorder.orders?.length !== 1 ? "s" : ""}
           </p>
         </div>
         <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-gray-600">
