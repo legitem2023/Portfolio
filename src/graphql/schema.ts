@@ -944,6 +944,7 @@ input OrderPaginationInput {
 
   type Mutation {
     # Existing mutations
+    updateOrderStatus:(itemId:ID,status:String):Result
     rejectByRider(itemId:ID,riderId:ID):Result
     acceptByRider(itemId:ID, riderId:ID, supplierId:ID, userId:ID ): Result
     createNotification(input: CreateNotificationInput): Notification
