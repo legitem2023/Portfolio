@@ -896,10 +896,10 @@ const orders = await prisma.order.findMany({
 
     
   // Add supplierId filter through OrderItem relation
-  if (filter && filter.supplierId) {
+  if (filter && filter.riderId) {
     itemWhere.items = {
       some: {
-        supplierId: filter.supplierId
+        riderId: filter.riderId
       }
     };
   }
