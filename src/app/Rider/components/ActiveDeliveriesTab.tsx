@@ -67,8 +67,7 @@ if (error) {
               key={delivery.id}
               delivery={delivery}
               isMobile={isMobile}
-              onAccept={onAcceptDelivery}
-              onReject={onRejectDelivery}
+              onReset={refetch}
             />
           ))}
         </div>
