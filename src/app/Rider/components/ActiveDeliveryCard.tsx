@@ -74,20 +74,23 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
       return;
     }
 
-    const itemId = delivery.orderParentId;
-    const supplierId = delivery.supplierItems?.[0]?.supplierId;
-    const riderId = user.userId;
-    const userId = delivery.customerId;
     
+
     // Static notification messages
     const supplierTitle = `Order Ready for Pickup`;
     const supplierMessage = `Your items are ready for pickup by rider`;
     
     const customerTitle = `Order Shipped`;
     const customerMessage = `Your order has been picked up and is on the way!`;
+    const supplierItems = delivery.supplierItems || [];
     
     try {
-      await updateOrderStatus({
+      for (const item of supplierItems) {
+      const riderId = user.userId;
+      const userId = delivery.customerId;
+      const itemId = item.id;
+      const supplierId = item.supplierId;
+        await updateOrderStatus({
         variables: {
           itemId,
           riderId,
@@ -98,6 +101,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           message: customerMessage
         }
       });
+      }
+      
     } catch (error) {
       console.error('Error updating order status:', error);
     }
