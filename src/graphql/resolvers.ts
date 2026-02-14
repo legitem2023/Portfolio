@@ -887,25 +887,10 @@ const orders = await prisma.order.findMany({
   let itemWhere: any = {};
 
 // Define the enum values that match your Prisma schema
-const OrderStatusEnum = {
-  PENDING: 'PENDING',
-  DELIVERED: 'DELIVERED',
-  CANCELED: 'CANCELED',
-  REFUNDED: 'REFUNDED',
-  // Add other status values as needed
-} as const;
-
   
   if(filter && filter.status) {
       itemWhere = {
-        status: {
-           notIn: [
-             OrderStatusEnum.PENDING,
-             OrderStatusEnum.DELIVERED,
-             OrderStatusEnum.CANCELED,
-             OrderStatusEnum.REFUNDED
-            ]
-        }
+        status: filter.status
      };
   }
 
