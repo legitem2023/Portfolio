@@ -93,7 +93,11 @@ console.log(newDeliveries);
           />
         );
       case "deliveries":
-        return <ActiveDeliveriesTab isMobile={isMobile} />;
+        return <ActiveDeliveriesTab 
+                 isMobile={isMobile} 
+                 onAcceptDelivery={handleAcceptDelivery}
+                 onRejectDelivery={handleRejectDelivery}
+                />;
       case "map":
         return <MapTab 
           isMobile={isMobile} 
