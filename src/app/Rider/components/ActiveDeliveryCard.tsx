@@ -7,15 +7,17 @@ import {
   Shield, 
   Clock, 
   Navigation,
-  ThumbsUp,
-  X,
-  Grab
+  Grab,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
-import { UPDATE_ORDER_STATUS } from '../lib/types'; // Get both from types
+import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
+import { useState } from 'react';
+//import toast from 'react-hot-toast';
 
 interface ActiveDeliveryCardProps {
   delivery: Delivery;
@@ -25,11 +27,40 @@ interface ActiveDeliveryCardProps {
 
 export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: ActiveDeliveryCardProps) {
   const { user } = useAuth();
-  
-  
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Set up the mutation
+  const [updateOrderStatus, { loading: pickupLoading }] = useMutation(UPDATE_ORDER_STATUS, {
+    onCompleted: (data) => {
+      const successMessage = data.updateOrderStatus?.statusText || 'Successfully picked up!';
+      setMessage({ type: 'success', text: successMessage });
+      //toast.success(successMessage);
+      
+      setTimeout(() => {
+        onReset();
+        setMessage(null);
+      }, 2000);
+    },
+    onError: (error) => {
+      const errorMessage = error.message || 'Failed to pickup item';
+      setMessage({ type: 'error', text: errorMessage });
+      //toast.error(errorMessage);
+      setTimeout(() => setMessage(null), 5000);
+    }
+  });
+
   const handlePickup = async () => {
     if (!user) {
-      console.error('User not authenticated');
+      const errorMsg = 'User not authenticated';
+      setMessage({ type: 'error', text: errorMsg });
+      //toast.error(errorMsg);
+      return;
+    }
+
+    if (!delivery.orderParentId) {
+      const errorMsg = 'Order ID is missing';
+      setMessage({ type: 'error', text: errorMsg });
+      //toast.error(errorMsg);
       return;
     }
 
@@ -38,20 +69,35 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     const riderId = user.userId;
     const userId = delivery.customerId;
     
+    // Static notification messages (no restaurant data)
+    const supplierTitle = `Order Ready for Pickup`;
+    const supplierMessage = `Your items are ready for pickup by rider`;
+    
+    const customerTitle = `Order Picked Up`;
+    const customerMessage = `Your order has been picked up and is on the way!`;
+    
     try {
-      onReset();
+      await updateOrderStatus({
+        variables: {
+          itemId,
+          riderId,
+          supplierId,
+          userId,
+          status: 'SHIPPING',
+          title: customerTitle,
+          message: customerMessage
+        }
+      });
     } catch (error) {
-      console.error('Error accepting delivery:', error);
+      console.error('Error picking up delivery:', error);
     }
   };
 
-
-
-  const isLoading = acceptLoading || rejectLoading;
+  const isLoading = pickupLoading;
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-indigo-200 overflow-hidden">
-      {/* Header with timer and order info */}
+      {/* Header */}
       <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1 lg:gap-2">
@@ -63,7 +109,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
               </span>
             )}
           </div>
-          
         </div>
       </div>
 
@@ -100,7 +145,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           </div>
         </div>
 
-        {/* Item details for this supplier */}
+        {/* Item details */}
         <div className="mb-3 lg:mb-4 bg-gray-50 p-2 lg:p-3 rounded-lg">
           <h4 className="font-semibold text-sm lg:text-base mb-1 lg:mb-2 flex items-center gap-1 lg:gap-2">
             <Package size={isMobile ? 14 : 16} />
@@ -181,11 +226,18 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           </div>
         </div>
 
-        {/* Error messages */}
-        {(acceptError || rejectError) && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">
-              {acceptError?.message || rejectError?.message}
+        {/* Status/Error Messages */}
+        {message && (
+          <div className={`mb-4 p-3 rounded-lg flex items-center gap-2 ${
+            message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
+          }`}>
+            {message.type === 'success' ? (
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+            )}
+            <p className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
+              {message.text}
             </p>
           </div>
         )}
@@ -194,13 +246,30 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
           <button
             onClick={handlePickup}
-            disabled={isLoading}
-            className={`bg-white border ${rejectLoading ? 'border-yellow-300' : 'border-gray-300'} text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+            disabled={isLoading || !!message}
+            className={`
+              px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold 
+              transition flex items-center justify-center gap-1 lg:gap-2 
+              text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed
+              ${isLoading 
+                ? 'bg-yellow-500 text-white cursor-wait' 
+                : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
+              }
+            `}
           >
-            <Grab size={isMobile ? 18 : 20} />
-            <span>{rejectLoading ? 'Loading...' : 'Pickup'}</span>
+            <Grab size={isMobile ? 18 : 20} className={isLoading ? 'animate-bounce' : ''} />
+            <span>
+              {isLoading ? 'Picking up...' : 'Confirm Pickup'}
+            </span>
           </button>
           
+          <button
+            disabled={isLoading}
+            className="bg-white border border-gray-300 text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50"
+          >
+            <AlertCircle size={isMobile ? 18 : 20} />
+            <span>Report Issue</span>
+          </button>
         </div>
       </div>
     </div>
