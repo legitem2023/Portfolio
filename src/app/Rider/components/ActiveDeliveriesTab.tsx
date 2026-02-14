@@ -1,4 +1,5 @@
 "use client";
+import { useState } from 'react';
 import { Bell, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useQuery } from "@apollo/client";
 import { ACTIVE_ORDER_LIST, ActiveOrderListResponse } from '../lib/types';
@@ -14,11 +15,11 @@ interface ActiveDeliveriesTabProps {
 
 export default function ActiveDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: ActiveDeliveriesTabProps) {
  const { user } = useAuth();
-  
+  const { useStat, setStat } = useState("PROCESSING");
   const { data, loading, error, refetch } = useQuery<ActiveOrderListResponse>(ACTIVE_ORDER_LIST, {
   variables: {
     filter: {
-      status: "PROCESSING",
+      status: useStat,
       riderId: user?.userId
     },
     pagination: {
@@ -62,6 +63,8 @@ if (error) {
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
+          <button onClick={setStat("PROCESSING")}>Processing</button>
+          <button onClick={setStat("SHIPPED")}>Shipped</button>
           {newDeliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
