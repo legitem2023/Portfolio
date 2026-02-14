@@ -235,7 +235,12 @@ export interface OrderListResponse {
     pagination: Pagination;
   };
 }
-
+export interface ActiveOrderListResponse {
+  activeorder: {
+    orders: Order[];
+    pagination: Pagination;
+  };
+}
 export interface SupplierGroup {
   supplierId: string;
   items: OrderItem[];
