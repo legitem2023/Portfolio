@@ -41,7 +41,16 @@ if (loading) {
 if (error) {
   return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
 }
-
+const handleTab(Tab:number)=>{
+  if(Tab===1){
+    setStat("PROCESSING");
+    refetch();
+  }
+  if(Tab===2){
+    setStat("SHIPPED");
+    refetch();
+  }
+}
   return (
     <div className="p-2 lg:p-6">
       <div className="flex justify-between items-center mb-3 lg:mb-6">
@@ -63,8 +72,8 @@ if (error) {
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
-          <button onClick={setStat("PROCESSING")}>Processing</button>
-          <button onClick={setStat("SHIPPED")}>Shipped</button>
+          <button onClick={() => handleTab(1)}>Processing</button>
+          <button onClick={() => handleTab(2)}>Shipped</button>
           {newDeliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
