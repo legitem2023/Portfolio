@@ -1,7 +1,7 @@
 "use client";
 import { Bell, AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { useQuery } from "@apollo/client";
-import { ACTIVE_ORDER_LIST, OrderListResponse } from '../lib/types';
+import { ACTIVE_ORDER_LIST, ActiveOrderListResponse } from '../lib/types';
 import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
 import DeliveryCard from './DeliveryCard';
 import { useAuth } from '../hooks/useAuth';
