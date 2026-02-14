@@ -135,8 +135,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onAccept, onRej
       <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1 lg:gap-2">
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-            <span className="font-bold text-orange-700 text-xs lg:text-sm">Active Order</span>
+            <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+            <span className="font-bold text-indigo-700 text-xs lg:text-sm">Active Order</span>
             {delivery.isPartialDelivery && (
               <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
                 Piece {delivery.supplierIndex} of {delivery.totalSuppliersInOrder}
