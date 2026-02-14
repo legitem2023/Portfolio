@@ -889,17 +889,13 @@ const orders = await prisma.order.findMany({
 // Define the enum values that match your Prisma schema
   
   if(filter && filter.status) {
-      itemWhere = {
-        status: filter.status
-     };
+      itemWhere.status = filter.status 
   }
 
     
   // Add supplierId filter through OrderItem relation
   if (filter && filter.riderId) {
-    itemWhere = {
-        riderId: filter.riderId
-    };
+    itemWhere.riderId = filter.riderId  
   }
 
   try {
