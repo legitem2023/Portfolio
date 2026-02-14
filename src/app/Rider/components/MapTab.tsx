@@ -231,7 +231,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
         : mapDeliveries[0].pickupCoords;
     }
     
-    if (userLocation.coords) {
+    if (userLocation?.coords) {
       return useGoogleMaps
         ? { lat: userLocation.coords.lat, lng: userLocation.coords.lng }
         : [userLocation.coords.lat, userLocation.coords.lng];
@@ -273,6 +273,14 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     }
   };
 
+  const handleCenterOnUser = () => {
+    if (userLocation?.coords) {
+      // The map center will be updated by the MapCenterController
+      // when the userLocation changes in getMapCenter
+      setMapZoom(15);
+    }
+  };
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -287,7 +295,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
     };
   }, [isMobile]);
 
-  if (!hasValidLocations && !userLocation.coords) {
+  if (!hasValidLocations && !userLocation?.coords) {
     return (
       <div className="px-3 py-4 sm:p-6">
         <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-6 flex items-center gap-2">
@@ -380,7 +388,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {userLocation.coords && (
+            {userLocation?.coords && (
               <Marker 
                 position={[userLocation.coords.lat, userLocation.coords.lng]} 
                 icon={riderIcon}
@@ -457,18 +465,10 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
           </button>
         </div>
 
-        {/* Location Button */}
-        {userLocation.coords && (
+        {/* Location Button - Fixed with optional chaining */}
+        {userLocation?.coords && (
           <button 
-            onClick={() => {
-              if (useGoogleMaps) {
-                // Handle Google Maps center
-              } else {
-                const center = [userLocation.coords.lat, userLocation.coords.lng];
-                // Map center update handled by MapCenterController
-              }
-              setMapZoom(15);
-            }}
+            onClick={handleCenterOnUser}
             className="absolute bottom-4 left-4 bg-white w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-lg flex items-center justify-center hover:bg-gray-100 active:bg-gray-200 transition-colors z-[1000]"
             aria-label="Center on my location"
           >
@@ -489,7 +489,7 @@ export default function MapTab({ isMobile, deliveries }: MapTabProps) {
             )}
           </div>
           <div className="space-y-1 text-[10px] sm:text-xs">
-            {userLocation.coords && (
+            {userLocation?.coords && (
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-600 animate-pulse"></div>
                 <span className="truncate">Your Location</span>
