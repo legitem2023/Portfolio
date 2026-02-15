@@ -226,11 +226,12 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         <div className="space-y-3 lg:space-y-6">
           {deliveries.map((delivery) => (
             <ActiveDeliveryCard
-              key={delivery.id}
-              delivery={delivery}
-              isMobile={isMobile}
-              onReset={refetch}
-            />
+      key={delivery.id}
+  delivery={delivery}
+  isMobile={isMobile}
+  currentStatus={activeTab} // Pass the current tab status
+  onReset={refetch}
+/>
           ))}
         </div>
       )}
