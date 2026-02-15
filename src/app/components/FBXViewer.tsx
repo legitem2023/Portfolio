@@ -34,7 +34,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.set(30, 20, 30); // Better initial position
-    camera.lookAt(0, 5, 0);
+    camera.lookAt(0, 0, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ 
@@ -60,11 +60,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ ENHANCED LIGHTING ============
     // Ambient light for base illumination
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+    const ambientLight = new THREE.AmbientLight(0x404060, 2);
     scene.add(ambientLight);
 
     // Hemisphere light for sky/ground bounce
-    const hemiLight = new THREE.HemisphereLight(0x443333, 0x111122, 1.2);
+    const hemiLight = new THREE.HemisphereLight(0x443333, 0x111122, 3.2);
     scene.add(hemiLight);
 
     // Main directional light (simulating sun)
@@ -248,14 +248,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         let cameraDistance = maxDim2 / (2 * Math.tan(fov / 2));
         cameraDistance *= 1.5; // Add padding
         
-        camera.position.set(
+        /*camera.position.set(
           newCenter.x + cameraDistance,
           newCenter.y + cameraDistance * 0.6,
           newCenter.z + cameraDistance
-        );
+        );*/
         camera.lookAt(newCenter);
         
-        controls.target.copy(newCenter);
+        //controls.target.copy(newCenter);
         controls.update();
         
         setDebug('Model positioned and ready');
