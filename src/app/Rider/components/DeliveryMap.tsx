@@ -1,25 +1,12 @@
 // components/DeliveryMap.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigation, MapPin, Loader2, X } from 'lucide-react';
-
-// Dynamic imports for Leaflet (to avoid SSR issues)
-const loadLeaflet = () => import('leaflet').then(mod => {
-  // Fix for Leaflet marker icons
-  delete (mod.Icon.Default.prototype as any)._getIconUrl;
-  mod.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  });
-  return mod;
-});
 
 interface DeliveryMapProps {
   pickupAddress: string;
   dropoffAddress: string;
-  currentLocation?: { lat: number; lng: number };
   status: 'PROCESSING' | 'SHIPPED' | 'DELIVERED';
   isMobile: boolean;
   onClose: () => void;
@@ -27,255 +14,29 @@ interface DeliveryMapProps {
   customer?: string;
 }
 
-// Cache for geocoding results
-const geocodeCache = new Map<string, { lat: number; lng: number }>();
-
 export default function DeliveryMap({ 
   pickupAddress, 
   dropoffAddress, 
-  currentLocation: initialLocation,
   status,
   isMobile,
   onClose,
   restaurant,
   customer 
 }: DeliveryMapProps) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [locations, setLocations] = useState<{
-    pickup?: { lat: number; lng: number };
-    dropoff?: { lat: number; lng: number };
-    current?: { lat: number; lng: number };
-  }>({});
-  const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
 
   // Determine destination based on status
   const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
+  const origin = 'Current+Location'; // Google Maps will use browser's current location
   const destinationLabel = status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location';
   const destinationName = status === 'PROCESSING' ? restaurant : customer;
 
-  // Load Leaflet dynamically
-  useEffect(() => {
-    loadLeaflet().then(() => {
-      setLeafletLoaded(true);
-    }).catch(err => {
-      setError('Failed to load map library');
-      console.error(err);
-    });
-  }, []);
+  // Create Google Maps embed URL
+  const mapSrc = `https://www.google.com/maps/embed/v1/directions?key=YOUR_API_KEY&origin=${origin}&destination=${encodeURIComponent(destination)}&maptype=roadmap`;
 
-  // Get current location
-  useEffect(() => {
-    if (initialLocation) {
-      setLocations(prev => ({ ...prev, current: initialLocation }));
-      setLoading(false);
-    } else {
-      // Try to get user's current location
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            setLocations(prev => ({ 
-              ...prev, 
-              current: { 
-                lat: position.coords.latitude, 
-                lng: position.coords.longitude 
-              } 
-            }));
-            setLoading(false);
-          },
-          (err) => {
-            console.warn('Geolocation error:', err);
-            // Default to a reasonable location if geolocation fails
-            setLocations(prev => ({ 
-              ...prev, 
-              current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
-            }));
-            setLoading(false);
-          }
-        );
-      } else {
-        // Default location if geolocation not supported
-        setLocations(prev => ({ 
-          ...prev, 
-          current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
-        }));
-        setLoading(false);
-      }
-    }
-  }, [initialLocation]);
-
-  // Geocode with Leaflet (Nominatim)
-  useEffect(() => {
-    if (!leafletLoaded || !locations.current) return;
-
-    const geocodeWithLeaflet = async () => {
-      try {
-        setLoading(true);
-
-        const geocodeAddress = async (address: string) => {
-          // Check cache first
-          if (geocodeCache.has(address)) {
-            return geocodeCache.get(address)!;
-          }
-
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`,
-            {
-              headers: {
-                'User-Agent': 'VendorCity/1.0' // Required by Nominatim
-              }
-            }
-          );
-          const data = await response.json();
-          
-          if (data && data[0]) {
-            const location = {
-              lat: parseFloat(data[0].lat),
-              lng: parseFloat(data[0].lon)
-            };
-            geocodeCache.set(address, location);
-            return location;
-          }
-          throw new Error(`Could not geocode: ${address}`);
-        };
-
-        const [pickupLoc, dropoffLoc] = await Promise.all([
-          geocodeAddress(pickupAddress),
-          geocodeAddress(dropoffAddress)
-        ]);
-
-        setLocations(prev => ({
-          ...prev,
-          pickup: pickupLoc,
-          dropoff: dropoffLoc
-        }));
-      } catch (err) {
-        setError('Failed to load map locations. Please check the addresses.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    geocodeWithLeaflet();
-  }, [leafletLoaded, pickupAddress, dropoffAddress, locations.current]);
-
-  // Initialize Leaflet Map
-  useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff) {
-      return;
-    }
-
-    const initLeafletMap = async () => {
-      try {
-        const L = await loadLeaflet();
-        
-        // Check if mapRef.current is still valid
-        if (!mapRef.current) return;
-        
-        // Clean up existing map instance
-        if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove();
-        }
-        
-        const map = L.map(mapRef.current).setView(
-          [locations.current!.lat, locations.current!.lng], 
-          14
-        );
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        }).addTo(map);
-
-        // Add current location marker
-        L.marker([locations.current!.lat, locations.current!.lng], {
-          icon: L.divIcon({
-            className: 'custom-div-icon',
-            html: '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white;"></div>',
-            iconSize: [22, 22],
-            iconAnchor: [11, 11]
-          })
-        })
-        .addTo(map)
-        .bindTooltip('Your Location');
-
-        // Determine which destination to show based on status
-        const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
-        const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
-        
-        if (targetLocation) {
-          const markerColor = status === 'PROCESSING' ? '#3B82F6' : '#10B981';
-          
-          // Add destination marker (highlighted)
-          L.marker([targetLocation.lat, targetLocation.lng], {
-            icon: L.divIcon({
-              className: 'custom-div-icon',
-              html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-              iconSize: [26, 26],
-              iconAnchor: [13, 13]
-            })
-          })
-          .addTo(map)
-          .bindPopup(`
-            <strong>${destinationLabel}</strong><br>
-            ${destinationName}<br>
-            ${destination}
-          `)
-          .openPopup(); // Auto-open popup for destination
-
-          // Add the other location as a secondary marker (grayed out)
-          if (otherLocation) {
-            L.marker([otherLocation.lat, otherLocation.lng], {
-              icon: L.divIcon({
-                className: 'custom-div-icon',
-                html: '<div style="background-color: #9CA3AF; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; opacity: 0.7;"></div>',
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
-              })
-            })
-            .addTo(map)
-            .bindPopup(`
-              <strong>${status === 'PROCESSING' ? 'Dropoff Location' : 'Pickup Location'}</strong><br>
-              ${status === 'PROCESSING' ? customer : restaurant}<br>
-              ${status === 'PROCESSING' ? dropoffAddress : pickupAddress}
-            `);
-          }
-
-          // Draw route from current to target destination
-          const points: [number, number][] = [
-            [locations.current!.lat, locations.current!.lng],
-            [targetLocation.lat, targetLocation.lng]
-          ];
-          
-          L.polyline(points, {
-            color: markerColor,
-            weight: 4,
-            opacity: 0.7,
-            dashArray: '10, 10'
-          }).addTo(map);
-
-          // Fit bounds to show both points
-          const bounds = L.latLngBounds(points);
-          map.fitBounds(bounds, { padding: [50, 50] });
-        }
-
-        mapInstanceRef.current = map;
-      } catch (err) {
-        setError('Failed to initialize map');
-        console.error(err);
-      }
-    };
-
-    initLeafletMap();
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-      }
-    };
-  }, [leafletLoaded, locations, status, loading, destinationLabel, destination, destinationName, restaurant, customer, pickupAddress, dropoffAddress]);
+  // Fallback to directions URL if iframe fails
+  const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -302,9 +63,9 @@ export default function DeliveryMap({
         </div>
 
         {/* Map Container */}
-        <div className="flex-1 relative min-h-[400px]">
+        <div className="flex-1 relative min-h-[400px] bg-gray-100">
           {loading && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100">
               <div className="text-center">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
                 <p className="text-gray-600">Loading map...</p>
@@ -312,21 +73,38 @@ export default function DeliveryMap({
             </div>
           )}
 
-          {error && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-              <div className="text-center text-red-600">
-                <p>{error}</p>
-                <button 
-                  onClick={onClose}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg"
+          {mapError ? (
+            <div className="absolute inset-0 flex items-center justify-center z-10 bg-gray-100">
+              <div className="text-center p-6">
+                <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600 mb-4">Unable to load map</p>
+                <a
+                  href={directionsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                 >
-                  Close
-                </button>
+                  <Navigation size={16} />
+                  Open in Google Maps
+                </a>
               </div>
             </div>
+          ) : (
+            <iframe
+              title="Google Maps"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              allowFullScreen
+              src={mapSrc}
+              onLoad={() => setLoading(false)}
+              onError={() => {
+                setMapError(true);
+                setLoading(false);
+              }}
+            />
           )}
-
-          <div ref={mapRef} className="w-full h-full min-h-[400px]" />
         </div>
 
         {/* Bottom Info */}
@@ -339,6 +117,7 @@ export default function DeliveryMap({
               <div>
                 <p className="text-xs text-gray-500">Your Location</p>
                 <p className="text-sm font-medium">Current Position</p>
+                <p className="text-xs text-gray-400 mt-1">(Using browser location)</p>
               </div>
             </div>
 
@@ -358,6 +137,13 @@ export default function DeliveryMap({
             </div>
           </div>
 
+          {/* Address Details */}
+          <div className="mt-4 text-xs text-gray-500 space-y-1">
+            <p className="font-medium text-gray-700">Full Addresses:</p>
+            <p>📍 Pickup: {pickupAddress}</p>
+            <p>📦 Dropoff: {dropoffAddress}</p>
+          </div>
+
           {/* Quick Actions */}
           <div className="mt-4 flex gap-2 justify-end">
             <button
@@ -367,17 +153,17 @@ export default function DeliveryMap({
               Close
             </button>
             <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`}
+              href={directionsUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1"
             >
               <Navigation size={14} />
-              Open in Google Maps
+              Open in Google Maps App
             </a>
           </div>
         </div>
       </div>
     </div>
   );
-              }
+}
