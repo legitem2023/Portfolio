@@ -139,10 +139,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         const percentComplete = (progress.loaded / progress.total) * 100;
         console.log(`Loading model: ${Math.round(percentComplete)}%`);
       },
-      (error) => {
+      (error:any) => {
         // Error callback
         setLoading(false);
-        setError(`Failed to load model: ${error.message}`);
+        setError(`Failed to load model`);
         console.error('FBX loading error:', error);
       }
     );
