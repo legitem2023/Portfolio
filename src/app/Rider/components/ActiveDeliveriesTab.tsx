@@ -69,7 +69,7 @@ const handleTab = (Tab:number) => {
       ) : (
         <div className="space-y-3 lg:space-y-6">
           {
-            loading?(<ActiveDeliveryCardSkeleton/>):
+            loading?(<ActiveDeliveryCardSkeleton isMobile={isMobile}/>):
             newDeliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
