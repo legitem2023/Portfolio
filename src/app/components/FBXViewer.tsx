@@ -177,7 +177,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       // Ground plane (semi-transparent for debugging)
       const planeGeometry = new THREE.PlaneGeometry(500, 500);
       const planeMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x707070, 
+        color: 0x000000, 
         side: THREE.DoubleSide,
         transparent:false,
         opacity: 1
