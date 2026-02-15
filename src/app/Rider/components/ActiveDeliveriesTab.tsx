@@ -6,7 +6,7 @@ import { ACTIVE_ORDER_LIST, ActiveOrderListResponse } from '../lib/types';
 import { mapOrdersToDeliveriesBySupplier, formatPeso } from '../lib/utils';
 import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { useAuth } from '../hooks/useAuth';
-import NewDeliveriesTabSkeleton from './NewDeliveriesTabSkeleton';
+import ActiveDeliveryCardSkeleton from './ActiveDeliveryCardSkeleton';
 interface ActiveDeliveriesTabProps {
   isMobile: boolean;
   onAcceptDelivery: (deliveryId: string) => void;
@@ -35,12 +35,6 @@ export default function ActiveDeliveriesTab({ isMobile, onAcceptDelivery, onReje
   const newDeliveries = data?.activeorder.orders?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
 
   
-if (loading) {
-  return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
-}
-if (error) {
-  return <NewDeliveriesTabSkeleton isMobile={isMobile} />;
-}
 const handleTab = (Tab:number) => {
   if(Tab===1){
     setStat("PROCESSING");
@@ -65,7 +59,8 @@ const handleTab = (Tab:number) => {
       </div>
           <button onClick={() => handleTab(1)}>Processing</button>
           <button onClick={() => handleTab(2)}>Shipped</button>
-      {newDeliveries.length === 0 ? (
+      {
+        newDeliveries.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-4 lg:p-8 text-center">
           <Bell size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-3 lg:mb-4" />
           <h3 className="text-base lg:text-lg font-semibold text-gray-600">No New Requests</h3>
@@ -73,8 +68,9 @@ const handleTab = (Tab:number) => {
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
-
-          {newDeliveries.map((delivery) => (
+          {
+            loading?(<ActiveDeliveryCardSkeleton/>):
+            newDeliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
               delivery={delivery}
