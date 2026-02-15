@@ -346,7 +346,7 @@ scene.add(object);
 
   // Styles for the container
   const containerStyle: React.CSSProperties = {
-    position: 'fixed',
+    position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
