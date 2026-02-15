@@ -9,7 +9,10 @@ import {
   Navigation,
   Grab,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Truck,
+  Home,
+  XCircle
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -17,11 +20,14 @@ import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-//import toast from 'react-hot-toast';
 
 interface ActiveDeliveryCardProps {
-  delivery: Delivery;
+  delivery: Delivery & { status?: string };
   isMobile: boolean;
+  onPickup?: () => void;
+  onDelivered?: () => void;
+  onCancel?: () => void;
+  isUpdating?: boolean;
   onReset: () => void;
 }
 
@@ -35,16 +41,25 @@ enum OrderStatus {
   REFUNDED = 'REFUNDED'
 }
 
-export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: ActiveDeliveryCardProps) {
+export default function ActiveDeliveryCard({ 
+  delivery, 
+  isMobile, 
+  onPickup, 
+  onDelivered, 
+  onCancel,
+  isUpdating = false,
+  onReset 
+}: ActiveDeliveryCardProps) {
   const { user } = useAuth();
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showCancelReason, setShowCancelReason] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
 
   // Set up the mutation
-  const [updateOrderStatus, { loading: pickupLoading }] = useMutation(UPDATE_ORDER_STATUS, {
+  const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
-      const successMessage = data.updateOrderStatus?.statusText || 'Order marked as shipped!';
+      const successMessage = data.updateOrderStatus?.statusText || 'Status updated successfully!';
       setMessage({ type: 'success', text: successMessage });
-     // toast.success(successMessage);
       
       setTimeout(() => {
         onReset();
@@ -54,61 +69,227 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
     onError: (error) => {
       const errorMessage = error.message || 'Failed to update order status';
       setMessage({ type: 'error', text: errorMessage });
-     // toast.error(errorMessage);
       setTimeout(() => setMessage(null), 5000);
     }
   });
 
+  const isLoading = mutationLoading || isUpdating;
+
   const handlePickup = async () => {
     if (!user) {
-      const errorMsg = 'User not authenticated';
-      setMessage({ type: 'error', text: errorMsg });
-    //  toast.error(errorMsg);
+      setMessage({ type: 'error', text: 'User not authenticated' });
       return;
     }
 
     if (!delivery.orderParentId) {
-      const errorMsg = 'Order ID is missing';
-      setMessage({ type: 'error', text: errorMsg });
-    //  toast.error(errorMsg);
+      setMessage({ type: 'error', text: 'Order ID is missing' });
       return;
     }
 
-    
-
-    // Static notification messages
-    const supplierTitle = `Order Ready for Pickup`;
-    const supplierMessage = `Your items are ready for pickup by rider`;
-    
-    const customerTitle = `Order Shipped`;
-    const customerMessage = `Your order has been picked up and is on the way!`;
-    const supplierItems = delivery.supplierItems || [];
-    
-    try {
-      for (const item of supplierItems) {
-      const riderId = user.userId;
-      const userId = delivery.customerId;
-      const itemId = item.id;
-      const supplierId = item.supplierId;
-        await updateOrderStatus({
-        variables: {
-          itemId,
-          riderId,
-          supplierId,
-          userId,
-          status: OrderStatus.SHIPPED, // Using SHIPPED for pickup
-          title: customerTitle,
-          message: customerMessage
-        }
-      });
-      }
+    if (onPickup) {
+      onPickup();
+    } else {
+      // Fallback to direct mutation if onPickup not provided
+      const supplierItems = delivery.supplierItems || [];
       
-    } catch (error) {
-      console.error('Error updating order status:', error);
+      try {
+        for (const item of supplierItems) {
+          await updateOrderStatus({
+            variables: {
+              itemId: item.id,
+              riderId: user.userId,
+              supplierId: item.supplierId,
+              userId: delivery.customerId,
+              status: OrderStatus.SHIPPED,
+              title: "Order On The Way",
+              message: "Your order has been picked up and is on the way!"
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error updating order status:', error);
+      }
     }
   };
 
-  const isLoading = pickupLoading;
+  const handleDelivered = async () => {
+    if (!user) {
+      setMessage({ type: 'error', text: 'User not authenticated' });
+      return;
+    }
+
+    if (onDelivered) {
+      onDelivered();
+    } else {
+      const supplierItems = delivery.supplierItems || [];
+      
+      try {
+        for (const item of supplierItems) {
+          await updateOrderStatus({
+            variables: {
+              itemId: item.id,
+              riderId: user.userId,
+              supplierId: item.supplierId,
+              userId: delivery.customerId,
+              status: OrderStatus.DELIVERED,
+              title: "Order Delivered",
+              message: "Your order has been successfully delivered!"
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error updating order status:', error);
+      }
+    }
+  };
+
+  const handleCancel = async () => {
+    if (!user) {
+      setMessage({ type: 'error', text: 'User not authenticated' });
+      return;
+    }
+
+    if (!cancelReason.trim()) {
+      setMessage({ type: 'error', text: 'Please provide a reason for cancellation' });
+      return;
+    }
+
+    if (onCancel) {
+      onCancel();
+    } else {
+      const supplierItems = delivery.supplierItems || [];
+      
+      try {
+        for (const item of supplierItems) {
+          await updateOrderStatus({
+            variables: {
+              itemId: item.id,
+              riderId: user.userId,
+              supplierId: item.supplierId,
+              userId: delivery.customerId,
+              status: OrderStatus.CANCELLED,
+              title: "Order Cancelled",
+              message: cancelReason
+            }
+          });
+        }
+        setShowCancelReason(false);
+        setCancelReason('');
+      } catch (error) {
+        console.error('Error cancelling order:', error);
+      }
+    }
+  };
+
+  // Determine which actions to show based on status
+  const getActionButtons = () => {
+    const status = delivery.status || OrderStatus.PROCESSING;
+
+    switch (status) {
+      case OrderStatus.PROCESSING:
+        return (
+          <>
+            <button
+              onClick={handlePickup}
+              disabled={isLoading || !!message}
+              className={`
+                flex-1 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold 
+                transition flex items-center justify-center gap-1 lg:gap-2 
+                text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed
+                ${isLoading 
+                  ? 'bg-yellow-500 text-white cursor-wait' 
+                  : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
+                }
+              `}
+            >
+              <Grab size={isMobile ? 18 : 20} className={isLoading ? 'animate-bounce' : ''} />
+              <span>{isLoading ? 'Processing...' : 'Mark as Picked Up'}</span>
+            </button>
+            <button
+              onClick={() => setShowCancelReason(true)}
+              disabled={isLoading}
+              className="flex-1 bg-white border border-red-300 text-red-600 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50"
+            >
+              <XCircle size={isMobile ? 18 : 20} />
+              <span>Cancel Order</span>
+            </button>
+          </>
+        );
+
+      case OrderStatus.SHIPPED:
+        return (
+          <>
+            <button
+              onClick={handleDelivered}
+              disabled={isLoading || !!message}
+              className={`
+                flex-1 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold 
+                transition flex items-center justify-center gap-1 lg:gap-2 
+                text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed
+                ${isLoading 
+                  ? 'bg-yellow-500 text-white cursor-wait' 
+                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                }
+              `}
+            >
+              <Home size={isMobile ? 18 : 20} className={isLoading ? 'animate-bounce' : ''} />
+              <span>{isLoading ? 'Processing...' : 'Mark as Delivered'}</span>
+            </button>
+            <button
+              onClick={() => setShowCancelReason(true)}
+              disabled={isLoading}
+              className="flex-1 bg-white border border-red-300 text-red-600 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-red-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50"
+            >
+              <XCircle size={isMobile ? 18 : 20} />
+              <span>Report Issue</span>
+            </button>
+          </>
+        );
+
+      case OrderStatus.DELIVERED:
+        return (
+          <div className="col-span-2 bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center gap-2 text-green-700">
+              <CheckCircle size={isMobile ? 20 : 24} />
+              <span className="font-semibold">Order Delivered Successfully</span>
+            </div>
+          </div>
+        );
+
+      case OrderStatus.CANCELLED:
+        return (
+          <div className="col-span-2 bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center gap-2 text-red-700">
+              <XCircle size={isMobile ? 20 : 24} />
+              <span className="font-semibold">Order Cancelled</span>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  // Get status badge color
+  const getStatusBadge = () => {
+    const status = delivery.status || OrderStatus.PROCESSING;
+    
+    switch (status) {
+      case OrderStatus.PROCESSING:
+        return { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Ready for Pickup' };
+      case OrderStatus.SHIPPED:
+        return { bg: 'bg-blue-100', text: 'text-blue-700', label: 'On Delivery' };
+      case OrderStatus.DELIVERED:
+        return { bg: 'bg-green-100', text: 'text-green-700', label: 'Delivered' };
+      case OrderStatus.CANCELLED:
+        return { bg: 'bg-red-100', text: 'text-red-700', label: 'Cancelled' };
+      default:
+        return { bg: 'bg-gray-100', text: 'text-gray-700', label: status };
+    }
+  };
+
+  const statusBadge = getStatusBadge();
 
   return (
     <div className="bg-white rounded-lg shadow-lg border border-indigo-200 overflow-hidden">
@@ -117,13 +298,19 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1 lg:gap-2">
             <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-            <span className="font-bold text-indigo-700 text-xs lg:text-sm">Active Order</span>
+            <span className="font-bold text-indigo-700 text-xs lg:text-sm">
+              {delivery.status === OrderStatus.SHIPPED ? 'On Delivery' : 'Active Order'}
+            </span>
             {delivery.isPartialDelivery && (
               <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-medium">
                 Piece {delivery.supplierIndex} of {delivery.totalSuppliersInOrder}
               </span>
             )}
           </div>
+          {/* Status Badge */}
+          <span className={`${statusBadge.bg} ${statusBadge.text} text-xs px-2 py-1 rounded-full font-medium`}>
+            {statusBadge.label}
+          </span>
         </div>
       </div>
 
@@ -257,34 +444,41 @@ export default function ActiveDeliveryCard({ delivery, isMobile, onReset }: Acti
           </div>
         )}
 
+        {/* Cancel Reason Modal */}
+        {showCancelReason && (
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <h4 className="font-semibold text-sm mb-2">Cancel Order</h4>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Please provide a reason for cancellation..."
+              className="w-full p-2 border border-gray-300 rounded-lg text-sm mb-2"
+              rows={3}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleCancel}
+                disabled={isLoading || !cancelReason.trim()}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
+              >
+                Confirm Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowCancelReason(false);
+                  setCancelReason('');
+                }}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg font-semibold text-sm"
+              >
+                Back
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Action buttons */}
         <div className="grid grid-cols-2 gap-2 lg:gap-4">
-          <button
-            onClick={handlePickup}
-            disabled={isLoading || !!message}
-            className={`
-              px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold 
-              transition flex items-center justify-center gap-1 lg:gap-2 
-              text-sm lg:text-base disabled:opacity-50 disabled:cursor-not-allowed
-              ${isLoading 
-                ? 'bg-yellow-500 text-white cursor-wait' 
-                : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
-              }
-            `}
-          >
-            <Grab size={isMobile ? 18 : 20} className={isLoading ? 'animate-bounce' : ''} />
-            <span>
-              {isLoading ? 'Processing...' : 'Mark as Shipped'}
-            </span>
-          </button>
-          
-          <button
-            disabled={isLoading}
-            className="bg-white border border-gray-300 text-gray-700 px-3 lg:px-4 py-2 lg:py-3 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-1 lg:gap-2 text-sm lg:text-base disabled:opacity-50"
-          >
-            <AlertCircle size={isMobile ? 18 : 20} />
-            <span>Report Issue</span>
-          </button>
+          {getActionButtons()}
         </div>
       </div>
     </div>
