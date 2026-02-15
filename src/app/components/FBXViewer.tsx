@@ -307,7 +307,8 @@ scene.add(object);
       // Animate sun sphere (subtle pulsing)
       const time = Date.now() * 0.001;
       sunSphere.scale.setScalar(1 + Math.sin(time) * 0.1);
-      
+     console.log(camera.position);
+     console.log(controls);
       // Render scene
       renderer.render(scene, camera);
     };
