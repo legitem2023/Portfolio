@@ -7,7 +7,7 @@ import { mapOrdersToDeliveriesBySupplier } from '../lib/utils';
 import ActiveDeliveryCard from './ActiveDeliveryCard';
 import { useAuth } from '../hooks/useAuth';
 import ActiveDeliveryCardSkeleton from './ActiveDeliveryCardSkeleton';
-
+import ActiveDeliveryCardSkelitonError from './ActiveDeliveryCardSkelitonError';
 interface ActiveDeliveriesTabProps {
   isMobile: boolean;
   onAcceptDelivery?: (deliveryId: string) => void;
@@ -96,34 +96,40 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
 
   // Error state
   if (error) {
-    return (
+        return (
       <div className="p-2 lg:p-6">
         <div className="flex justify-between items-center mb-3 lg:mb-6">
           <h2 className="text-lg lg:text-2xl font-bold flex items-center gap-1 lg:gap-2">
             <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
             <span className="text-base lg:text-2xl">Active Deliveries</span>
           </h2>
-          <button 
-            onClick={handleRefresh}
-            className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
-          >
-            <Package size={18} />
-          </button>
         </div>
         
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-          <p className="text-sm text-red-700">
-            Failed to load deliveries. Please try again.
-          </p>
+        {/* Tab Buttons Skeleton */}
+        <div className="flex gap-2 mb-4 lg:mb-6">
+          <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
+          <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
+          <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
         </div>
-        
-        <button 
-          onClick={handleRefresh}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-        >
-          Retry
-        </button>
+
+        {/* Skeleton Cards */}
+        <div className="space-y-3 lg:space-y-6">
+          {[1, 2, 3].map((i) => (
+            <ActiveDeliveryCardSkelitonError key={i} isMobile={isMobile} />
+          ))}
+        </div>
+
+        <style jsx>{`
+          @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+          }
+          .shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
+            background-size: 1000px 100%;
+          }
+        `}</style>
       </div>
     );
   }
