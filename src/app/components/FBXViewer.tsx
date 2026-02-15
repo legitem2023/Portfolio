@@ -173,54 +173,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // ============ DEBUG AIDS ============
     // Add test objects to verify rendering works
     const addTestObjects = () => {
-      // Red cube - should be visible at (-15, 2.5, 0)
-      const geometry1 = new THREE.BoxGeometry(5, 5, 5);
-      const material1 = new THREE.MeshStandardMaterial({ 
-        color: 0xff0000,
-        emissive: 0x220000,
-        roughness: 0.3,
-        metalness: 0.1
-      });
-      const cube1 = new THREE.Mesh(geometry1, material1);
-      cube1.castShadow = true;
-      cube1.receiveShadow = true;
-      cube1.position.set(-15, 2.5, 0);
-      scene.add(cube1);
-
-      // Blue sphere - should be visible at (15, 3, 0)
-      const geometry2 = new THREE.SphereGeometry(3, 32, 32);
-      const material2 = new THREE.MeshStandardMaterial({ 
-        color: 0x0066ff,
-        emissive: 0x001122,
-        roughness: 0.2,
-        metalness: 0.3
-      });
-      const sphere = new THREE.Mesh(geometry2, material2);
-      sphere.castShadow = true;
-      sphere.receiveShadow = true;
-      sphere.position.set(15, 3, 0);
-      scene.add(sphere);
-
-      // Yellow cylinder - should be visible at (0, 2.5, -15)
-      const geometry3 = new THREE.CylinderGeometry(2, 2, 5, 32);
-      const material3 = new THREE.MeshStandardMaterial({ 
-        color: 0xffaa00,
-        emissive: 0x221100,
-        roughness: 0.4
-      });
-      const cylinder = new THREE.Mesh(geometry3, material3);
-      cylinder.castShadow = true;
-      cylinder.receiveShadow = true;
-      cylinder.position.set(0, 2.5, -15);
-      scene.add(cylinder);
 
       // Ground plane (semi-transparent for debugging)
       const planeGeometry = new THREE.PlaneGeometry(100, 100);
       const planeMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x88AA88, 
+        color: 0x707070, 
         side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.2
+        transparent:false,
+        opacity: 1
       });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = Math.PI / 2;
@@ -231,9 +191,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     addTestObjects();
 
-    // Enhanced grid helper with brighter colors
-    const gridHelper = new THREE.GridHelper(120, 30, 0x88AAFF, 0x4466AA);
-    scene.add(gridHelper);
 
     setDebug('Loading FBX model...');
 
