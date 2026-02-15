@@ -34,7 +34,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const height = 400; // Fixed height for better visibility
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(30, 0, 30); // Better initial position
+    camera.position.set(7, 24, 37); // Better initial position
     camera.lookAt(0, 0, 0);
 
     // Renderer
