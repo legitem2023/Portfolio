@@ -234,30 +234,26 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         );
         
         // Enable shadows and enhance materials for better light response
-        object.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-            
-            // Enhance materials for better visibility and brighter appearance
-            if (child.material) {
-              const materials = Array.isArray(child.material) ? child.material : [child.material];
-              materials.forEach(material => {
-                // Make materials more reflective and brighter
-                material.roughness = 0.4;
-                material.metalness = 0.1;
-                material.emissive = new THREE.Color(0x112233);
-                material.emissiveIntensity = 0.2;
-                material.color.multiplyScalar(1.2); // Brighten colors
-                
-                // Ensure material is responsive to lights
-                material.needsUpdate = true;
-              });
-            }
-          }
-        });
-        
-        scene.add(object);
+        // Enable shadows and apply gray material
+object.traverse((child) => {
+  if (child instanceof THREE.Mesh) {
+    child.castShadow = true;
+    child.receiveShadow = true;
+    
+    // Create and apply a gray material
+    const grayMaterial = new THREE.MeshStandardMaterial({
+      color: 0x888888, // Medium gray
+      roughness: 0.4,
+      metalness: 0.1,
+      emissive: new THREE.Color(0x112233),
+      emissiveIntensity: 0.2
+    });
+    
+    child.material = grayMaterial;
+  }
+});
+
+scene.add(object);
         
         // Adjust camera to frame the model
         const newBox = new THREE.Box3().setFromObject(object);
