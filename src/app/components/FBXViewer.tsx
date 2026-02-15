@@ -23,9 +23,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup
+    // Scene setup with sky blue background
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111122); // Dark blueish background
+    scene.background = new THREE.Color(0x87CEEB); // Sky blue background
+    scene.fog = new THREE.Fog(0x87CEEB, 50, 200); // Add fog for depth
 
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
@@ -45,6 +46,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5; // Increase exposure for brighter scene
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -58,43 +61,114 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.autoRotateSpeed = 1.0;
     controls.target.set(0, 5, 0);
 
-    // ============ ENHANCED LIGHTING ============
-    // Ambient light for base illumination
-    const ambientLight = new THREE.AmbientLight(0x404060, 2);
-    scene.add(ambientLight);
-
-    // Hemisphere light for sky/ground bounce
-    const hemiLight = new THREE.HemisphereLight(0x443333, 0x111122, 3.2);
+    // ============ ENHANCED BRIGHT LIGHTING FOR SKY EFFECT ============
+    
+    // 1. Hemisphere light for sky/ground bounce (very bright)
+    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x44AA88, 3.0);
     scene.add(hemiLight);
 
-    // Main directional light (simulating sun)
-    const dirLight = new THREE.DirectionalLight(0xffeedd, 1.5);
-    dirLight.position.set(20, 30, 20);
+    // 2. Main directional light (simulating bright sun)
+    const dirLight = new THREE.DirectionalLight(0xFFEECC, 2.5);
+    dirLight.position.set(50, 100, 50);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
+    dirLight.shadow.mapSize.width = 4096;
+    dirLight.shadow.mapSize.height = 4096;
     dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 100;
-    dirLight.shadow.camera.left = -50;
-    dirLight.shadow.camera.right = 50;
-    dirLight.shadow.camera.top = 50;
-    dirLight.shadow.camera.bottom = -50;
+    dirLight.shadow.camera.far = 200;
+    dirLight.shadow.camera.left = -80;
+    dirLight.shadow.camera.right = 80;
+    dirLight.shadow.camera.top = 80;
+    dirLight.shadow.camera.bottom = -80;
+    dirLight.shadow.bias = -0.0005;
+    
+    // Add a second directional light from opposite side for fill
+    const dirLight2 = new THREE.DirectionalLight(0xCCDDFF, 1.5);
+    dirLight2.position.set(-30, 40, -30);
+    scene.add(dirLight2);
+    
     scene.add(dirLight);
 
-    // Fill light 1 (cool)
-    const fillLight1 = new THREE.PointLight(0x4466ff, 0.8);
-    fillLight1.position.set(-20, 15, 20);
-    scene.add(fillLight1);
+    // 3. Multiple point lights for ambient brightness
+    const pointLight1 = new THREE.PointLight(0x88AAFF, 1.5, 100);
+    pointLight1.position.set(20, 30, 20);
+    scene.add(pointLight1);
 
-    // Fill light 2 (warm)
-    const fillLight2 = new THREE.PointLight(0xffaa66, 0.6);
-    fillLight2.position.set(20, 10, -20);
-    scene.add(fillLight2);
+    const pointLight2 = new THREE.PointLight(0xFFAA88, 1.2, 100);
+    pointLight2.position.set(-20, 20, -20);
+    scene.add(pointLight2);
 
-    // Back light
-    const backLight = new THREE.PointLight(0xffffff, 0.4);
-    backLight.position.set(-10, 10, -30);
-    scene.add(backLight);
+    const pointLight3 = new THREE.PointLight(0x88FFAA, 1.0, 100);
+    pointLight3.position.set(30, 15, -30);
+    scene.add(pointLight3);
+
+    // 4. Ambient light with sky color
+    const ambientLight = new THREE.AmbientLight(0x404060, 2.5);
+    scene.add(ambientLight);
+
+    // 5. Add some colored lights for visual interest
+    const colorLight1 = new THREE.PointLight(0xFF8855, 1.2);
+    colorLight1.position.set(40, 20, 40);
+    scene.add(colorLight1);
+
+    const colorLight2 = new THREE.PointLight(0x55AAFF, 1.2);
+    colorLight2.position.set(-40, 15, 30);
+    scene.add(colorLight2);
+
+    // 6. Add a subtle blue tint light from above
+    const topLight = new THREE.PointLight(0xAACCFF, 1.8);
+    topLight.position.set(0, 60, 0);
+    scene.add(topLight);
+
+    // 7. Add a ring of lights around the scene for even illumination
+    const ringRadius = 80;
+    const ringHeight = 30;
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2;
+      const x = Math.cos(angle) * ringRadius;
+      const z = Math.sin(angle) * ringRadius;
+      
+      const ringLight = new THREE.PointLight(0xCCDDFF, 0.8);
+      ringLight.position.set(x, ringHeight, z);
+      scene.add(ringLight);
+    }
+
+    // ============ VISUAL ENHANCEMENTS ============
+    
+    // Add a sun sphere for visual effect
+    const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
+    const sunMaterial = new THREE.MeshBasicMaterial({
+      color: 0xFFAA55,
+      emissive: 0xFF5500,
+      transparent: true,
+      opacity: 0.3
+    });
+    const sunSphere = new THREE.Mesh(sunGeometry, sunMaterial);
+    sunSphere.position.set(100, 80, 100);
+    scene.add(sunSphere);
+
+    // Add some floating particles to simulate atmosphere
+    const particleCount = 500;
+    const particleGeometry = new THREE.BufferGeometry();
+    const particlePositions = new Float32Array(particleCount * 3);
+    
+    for (let i = 0; i < particleCount; i++) {
+      particlePositions[i * 3] = (Math.random() - 0.5) * 200;
+      particlePositions[i * 3 + 1] = Math.random() * 80;
+      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 200;
+    }
+    
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    
+    const particleMaterial = new THREE.PointsMaterial({
+      color: 0x88AAFF,
+      size: 0.2,
+      transparent: true,
+      opacity: 0.3,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const particles = new THREE.Points(particleGeometry, particleMaterial);
+    scene.add(particles);
 
     // ============ DEBUG AIDS ============
     // Add test objects to verify rendering works
@@ -143,10 +217,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       // Ground plane (semi-transparent for debugging)
       const planeGeometry = new THREE.PlaneGeometry(100, 100);
       const planeMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x336633, 
+        color: 0x88AA88, 
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.2
       });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = Math.PI / 2;
@@ -157,18 +231,9 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     addTestObjects();
 
-    // Grid helper (enhanced)
-    const gridHelper = new THREE.GridHelper(100, 20, 0x88aaff, 0x335588);
+    // Enhanced grid helper with brighter colors
+    const gridHelper = new THREE.GridHelper(120, 30, 0x88AAFF, 0x4466AA);
     scene.add(gridHelper);
-
-    // Axis helper (optional - uncomment if needed)
-    // const axesHelper = new THREE.AxesHelper(20);
-    // scene.add(axesHelper);
-
-    // Add a simple point light at origin to see if lighting works
-    const originLight = new THREE.PointLight(0xffffff, 0.5);
-    originLight.position.set(0, 5, 0);
-    scene.add(originLight);
 
     setDebug('Loading FBX model...');
 
@@ -203,6 +268,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         object.scale.set(scale * 20, scale * 20, scale * 20);
         
         object.rotation.x = -(90 * Math.PI / 180);  // Formula: degrees * PI/180
+        
         // Center the model
         object.position.set(
           -center.x * scale,
@@ -210,20 +276,22 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Enable shadows and enhance materials
+        // Enable shadows and enhance materials for better light response
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Enhance materials for better visibility
+            // Enhance materials for better visibility and brighter appearance
             if (child.material) {
               const materials = Array.isArray(child.material) ? child.material : [child.material];
               materials.forEach(material => {
-                material.roughness = 0.6;
-                material.metalness = 0.2;
-                material.emissive = new THREE.Color(0x111111);
-                material.emissiveIntensity = 0.1;
+                // Make materials more reflective and brighter
+                material.roughness = 0.4;
+                material.metalness = 0.1;
+                material.emissive = new THREE.Color(0x112233);
+                material.emissiveIntensity = 0.2;
+                material.color.multiplyScalar(1.2); // Brighten colors
                 
                 // Ensure material is responsive to lights
                 material.needsUpdate = true;
@@ -233,10 +301,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         });
         
         scene.add(object);
-        
-        // Remove test objects after model loads (optional)
-        // You can comment this out if you want to keep test objects for comparison
-        // scene.remove(cube1, sphere, cylinder, plane);
         
         // Adjust camera to frame the model
         const newBox = new THREE.Box3().setFromObject(object);
@@ -284,6 +348,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       // Update controls
       controls.update();
       
+      // Animate particles (subtle movement)
+      particles.rotation.y += 0.0005;
+      
+      // Animate sun sphere (subtle pulsing)
+      const time = Date.now() * 0.001;
+      sunSphere.scale.setScalar(1 + Math.sin(time) * 0.1);
+      
       // Render scene
       renderer.render(scene, camera);
     };
@@ -323,7 +394,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
   const containerStyle: React.CSSProperties = {
     width: '100%',
     position: 'relative',
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#87CEEB', // Sky blue background
     borderRadius: '8px',
     overflow: 'hidden',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -346,7 +417,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(135, 206, 235, 0.7)', // Semi-transparent sky blue
     color: 'white',
     fontSize: '1.2rem',
     zIndex: 10,
@@ -373,7 +444,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       {loading && (
         <div style={overlayStyle}>
           <div>Loading city model...</div>
-          <div style={{ fontSize: '0.9rem', marginTop: '8px', color: '#aaa' }}>
+          <div style={{ fontSize: '0.9rem', marginTop: '8px', color: '#333' }}>
             {debug}
           </div>
         </div>
@@ -391,4 +462,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-              }
+            }
