@@ -54,6 +54,7 @@ export default function DeliveryMap({
   // Determine destination based on status
   const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
   const destinationLabel = status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location';
+  const destinationName = status === 'PROCESSING' ? restaurant : customer;
 
   // Load Leaflet dynamically
   useEffect(() => {
@@ -200,30 +201,52 @@ export default function DeliveryMap({
         .addTo(map)
         .bindTooltip('Your Location');
 
-        // Add destination marker
-        const destLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
-        if (destLocation) {
+        // Determine which destination to show based on status
+        const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
+        const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
+        
+        if (targetLocation) {
           const markerColor = status === 'PROCESSING' ? '#3B82F6' : '#10B981';
           
-          L.marker([destLocation.lat, destLocation.lng], {
+          // Add destination marker (highlighted)
+          L.marker([targetLocation.lat, targetLocation.lng], {
             icon: L.divIcon({
               className: 'custom-div-icon',
-              html: `<div style="background-color: ${markerColor}; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white;"></div>`,
-              iconSize: [22, 22],
-              iconAnchor: [11, 11]
+              html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+              iconSize: [26, 26],
+              iconAnchor: [13, 13]
             })
           })
           .addTo(map)
           .bindPopup(`
             <strong>${destinationLabel}</strong><br>
-            ${status === 'PROCESSING' ? restaurant : customer}<br>
+            ${destinationName}<br>
             ${destination}
-          `);
+          `)
+          .openPopup(); // Auto-open popup for destination
 
-          // Draw route (simplified - just a straight line for Leaflet)
+          // Add the other location as a secondary marker (grayed out)
+          if (otherLocation) {
+            L.marker([otherLocation.lat, otherLocation.lng], {
+              icon: L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div style="background-color: #9CA3AF; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; opacity: 0.7;"></div>',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11]
+              })
+            })
+            .addTo(map)
+            .bindPopup(`
+              <strong>${status === 'PROCESSING' ? 'Dropoff Location' : 'Pickup Location'}</strong><br>
+              ${status === 'PROCESSING' ? customer : restaurant}<br>
+              ${status === 'PROCESSING' ? dropoffAddress : pickupAddress}
+            `);
+          }
+
+          // Draw route from current to target destination
           const points: [number, number][] = [
             [locations.current!.lat, locations.current!.lng],
-            [destLocation.lat, destLocation.lng]
+            [targetLocation.lat, targetLocation.lng]
           ];
           
           L.polyline(points, {
@@ -233,9 +256,9 @@ export default function DeliveryMap({
             dashArray: '10, 10'
           }).addTo(map);
 
-          // Fit bounds
+          // Fit bounds to show both points
           const bounds = L.latLngBounds(points);
-          map.fitBounds(bounds);
+          map.fitBounds(bounds, { padding: [50, 50] });
         }
 
         mapInstanceRef.current = map;
@@ -252,7 +275,7 @@ export default function DeliveryMap({
         mapInstanceRef.current.remove();
       }
     };
-  }, [leafletLoaded, locations, status, loading, destinationLabel, destination, restaurant, customer]);
+  }, [leafletLoaded, locations, status, loading, destinationLabel, destination, destinationName, restaurant, customer, pickupAddress, dropoffAddress]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -262,7 +285,9 @@ export default function DeliveryMap({
           <div className="flex items-center gap-2">
             <Navigation size={isMobile ? 20 : 24} />
             <div>
-              <h3 className="font-bold text-lg">Delivery Route</h3>
+              <h3 className="font-bold text-lg">
+                {status === 'PROCESSING' ? 'Route to Pickup' : 'Route to Delivery'}
+              </h3>
               <p className="text-xs opacity-90">
                 {status === 'PROCESSING' ? 'Head to pickup location' : 'Deliver to customer'}
               </p>
@@ -327,9 +352,7 @@ export default function DeliveryMap({
               </div>
               <div>
                 <p className="text-xs text-gray-500">{destinationLabel}</p>
-                <p className="text-sm font-medium">
-                  {status === 'PROCESSING' ? restaurant : customer}
-                </p>
+                <p className="text-sm font-medium">{destinationName}</p>
                 <p className="text-xs text-gray-600 mt-1">{destination}</p>
               </div>
             </div>
@@ -357,4 +380,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-            }
+              }
