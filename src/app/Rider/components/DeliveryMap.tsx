@@ -185,7 +185,7 @@ export default function DeliveryMap({
           </div>
 
           <p className="text-xs text-gray-400 text-center mt-3">
-            ⚠️ Map preview may be limited. Click "Get Directions" for turn-by-turn navigation.
+            ⚠️ Map preview may be limited. Click Get Directions for turn-by-turn navigation.
           </p>
         </div>
       </div>
