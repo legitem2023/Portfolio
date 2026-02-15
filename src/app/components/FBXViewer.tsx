@@ -242,7 +242,7 @@ object.traverse((child) => {
     
     // Create and apply a gray material
     const grayMaterial = new THREE.MeshStandardMaterial({
-      color: 0x888888, // Medium gray
+      color: 0x000000, // Medium gray
       roughness: 0.4,
       metalness: 0.1,
       emissive: new THREE.Color(0x112233),
@@ -350,7 +350,7 @@ scene.add(object);
     aspectRatio: 5/1,
     position: 'relative',
     backgroundColor: '#87CEEB', // Sky blue background
-    borderRadius: '8px',
+    borderRadius: '0px',
     overflow: 'hidden',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
   };
@@ -394,7 +394,7 @@ scene.add(object);
   return (
     <div style={containerStyle}>
       <div style={canvasWrapperStyle} ref={containerRef} />
-      <div style={debugStyle}>Debug: {debug}</div>
+      
       {loading && (
         <div style={overlayStyle}>
           <div>Loading city model...</div>
