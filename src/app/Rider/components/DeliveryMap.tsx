@@ -74,12 +74,12 @@ export default function DeliveryMap({
   // Determine destination based on status
   const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
   const destinationLabel = status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location';
-  const destinationIcon = status === 'PROCESSING' ? '🏪' : '🏠';
 
   // Get current location
   useEffect(() => {
     if (initialLocation) {
       setLocations(prev => ({ ...prev, current: initialLocation }));
+      setLoading(false);
     } else {
       // Try to get user's current location
       if (navigator.geolocation) {
@@ -92,6 +92,7 @@ export default function DeliveryMap({
                 lng: position.coords.longitude 
               } 
             }));
+            setLoading(false);
           },
           (err) => {
             console.warn('Geolocation error:', err);
@@ -100,15 +101,23 @@ export default function DeliveryMap({
               ...prev, 
               current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
             }));
+            setLoading(false);
           }
         );
+      } else {
+        // Default location if geolocation not supported
+        setLocations(prev => ({ 
+          ...prev, 
+          current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
+        }));
+        setLoading(false);
       }
     }
   }, [initialLocation]);
 
   // Geocode addresses with Google
   useEffect(() => {
-    if (!isLoaded || !locations.current) return;
+    if (!isLoaded || !locations.current || !useGoogle) return;
 
     const geocodeAddresses = async () => {
       try {
@@ -163,15 +172,14 @@ export default function DeliveryMap({
     };
 
     geocodeAddresses();
-  }, [isLoaded, pickupAddress, dropoffAddress, locations.current]);
+  }, [isLoaded, pickupAddress, dropoffAddress, locations.current, useGoogle]);
 
   // Geocode with Leaflet (Nominatim)
   useEffect(() => {
     if (!useGoogle || !leafletLoaded) return;
+    if (!locations.current) return;
 
     const geocodeWithLeaflet = async () => {
-      if (!locations.current) return;
-
       try {
         setLoading(true);
 
@@ -220,7 +228,9 @@ export default function DeliveryMap({
 
   // Initialize Google Map
   useEffect(() => {
-    if (!isLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || !useGoogle) return;
+    if (!isLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || !useGoogle) {
+      return;
+    }
 
     try {
       const map = new window.google.maps.Map(mapRef.current, {
@@ -291,24 +301,26 @@ export default function DeliveryMap({
         }
       });
 
-      directionsService.route(
-        {
-          origin: locations.current,
-          destination: destLocation!,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-        },
-        (result, status) => {
-          if (status === 'OK') {
-            directionsRenderer.setDirections(result);
+      if (destLocation) {
+        directionsService.route(
+          {
+            origin: locations.current,
+            destination: destLocation,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+          },
+          (result, status) => {
+            if (status === 'OK') {
+              directionsRenderer.setDirections(result);
+            }
           }
-        }
-      );
+        );
 
-      // Fit bounds to show both points
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend(locations.current);
-      if (destLocation) bounds.extend(destLocation);
-      map.fitBounds(bounds);
+        // Fit bounds to show both points
+        const bounds = new window.google.maps.LatLngBounds();
+        bounds.extend(locations.current);
+        bounds.extend(destLocation);
+        map.fitBounds(bounds);
+      }
 
       setMapInstance(map);
     } catch (err) {
@@ -319,11 +331,16 @@ export default function DeliveryMap({
 
   // Initialize Leaflet Map
   useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || useGoogle) return;
+    if (!leafletLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || useGoogle) {
+      return;
+    }
 
     const initLeafletMap = async () => {
       try {
         const L = await loadLeaflet();
+        
+        // Check if mapRef.current is still valid
+        if (!mapRef.current) return;
         
         const map = L.map(mapRef.current).setView(
           [locations.current!.lat, locations.current!.lng], 
@@ -398,9 +415,9 @@ export default function DeliveryMap({
         mapInstance.remove();
       }
     };
-  }, [leafletLoaded, locations, status, useGoogle, loading, destinationLabel, destination, restaurant, customer]);
+  }, [leafletLoaded, locations, status, useGoogle, loading, destinationLabel, destination, restaurant, customer, mapInstance]);
 
-  if (loadError) {
+  if (loadError && useGoogle) {
     setUseGoogle(false);
   }
 
@@ -507,4 +524,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-}
+              }
