@@ -3,7 +3,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Navigation, MapPin, Loader2, X } from 'lucide-react';
-import { useLoadScript } from '@react-google-maps/api';
 
 // Dynamic imports for Leaflet (to avoid SSR issues)
 const loadLeaflet = () => import('leaflet').then(mod => {
@@ -31,9 +30,6 @@ interface DeliveryMapProps {
 // Cache for geocoding results
 const geocodeCache = new Map<string, { lat: number; lng: number }>();
 
-// Google Maps libraries
-const libraries: ("places")[] = ['places'];
-
 export default function DeliveryMap({ 
   pickupAddress, 
   dropoffAddress, 
@@ -45,35 +41,29 @@ export default function DeliveryMap({
   customer 
 }: DeliveryMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [useGoogle, setUseGoogle] = useState(true);
   const [locations, setLocations] = useState<{
     pickup?: { lat: number; lng: number };
     dropoff?: { lat: number; lng: number };
     current?: { lat: number; lng: number };
   }>({});
-  const [mapInstance, setMapInstance] = useState<any>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
-
-  // Load Google Maps script
-  const { isLoaded, loadError } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
-    libraries,
-  });
-
-  // Load Leaflet dynamically
-  useEffect(() => {
-    if (!useGoogle) {
-      loadLeaflet().then(() => {
-        setLeafletLoaded(true);
-      });
-    }
-  }, [useGoogle]);
 
   // Determine destination based on status
   const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
   const destinationLabel = status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location';
+
+  // Load Leaflet dynamically
+  useEffect(() => {
+    loadLeaflet().then(() => {
+      setLeafletLoaded(true);
+    }).catch(err => {
+      setError('Failed to load map library');
+      console.error(err);
+    });
+  }, []);
 
   // Get current location
   useEffect(() => {
@@ -115,69 +105,9 @@ export default function DeliveryMap({
     }
   }, [initialLocation]);
 
-  // Geocode addresses with Google
-  useEffect(() => {
-    if (!isLoaded || !locations.current || !useGoogle) return;
-
-    const geocodeAddresses = async () => {
-      try {
-        setLoading(true);
-        
-        const geocoder = new window.google.maps.Geocoder();
-        
-        const geocodePromise = (address: string) => {
-          return new Promise<{ lat: number; lng: number }>((resolve, reject) => {
-            // Check cache first
-            if (geocodeCache.has(address)) {
-              resolve(geocodeCache.get(address)!);
-              return;
-            }
-
-            geocoder.geocode({ address }, (results, status) => {
-              if (status === 'OK' && results && results[0]) {
-                const location = {
-                  lat: results[0].geometry.location.lat(),
-                  lng: results[0].geometry.location.lng()
-                };
-                geocodeCache.set(address, location);
-                resolve(location);
-              } else {
-                reject(new Error(`Geocoding failed for: ${address}`));
-              }
-            });
-          });
-        };
-
-        try {
-          const [pickupLoc, dropoffLoc] = await Promise.all([
-            geocodePromise(pickupAddress),
-            geocodePromise(dropoffAddress)
-          ]);
-
-          setLocations(prev => ({
-            ...prev,
-            pickup: pickupLoc,
-            dropoff: dropoffLoc
-          }));
-        } catch (err) {
-          console.warn('Google geocoding failed, falling back to Leaflet', err);
-          setUseGoogle(false);
-        }
-      } catch (err) {
-        setError('Failed to load map locations');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    geocodeAddresses();
-  }, [isLoaded, pickupAddress, dropoffAddress, locations.current, useGoogle]);
-
   // Geocode with Leaflet (Nominatim)
   useEffect(() => {
-    if (!useGoogle || !leafletLoaded) return;
-    if (!locations.current) return;
+    if (!leafletLoaded || !locations.current) return;
 
     const geocodeWithLeaflet = async () => {
       try {
@@ -190,7 +120,12 @@ export default function DeliveryMap({
           }
 
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`,
+            {
+              headers: {
+                'User-Agent': 'VendorCity/1.0' // Required by Nominatim
+              }
+            }
           );
           const data = await response.json();
           
@@ -216,7 +151,7 @@ export default function DeliveryMap({
           dropoff: dropoffLoc
         }));
       } catch (err) {
-        setError('Failed to load map locations');
+        setError('Failed to load map locations. Please check the addresses.');
         console.error(err);
       } finally {
         setLoading(false);
@@ -224,114 +159,11 @@ export default function DeliveryMap({
     };
 
     geocodeWithLeaflet();
-  }, [useGoogle, leafletLoaded, pickupAddress, dropoffAddress, locations.current]);
-
-  // Initialize Google Map
-  useEffect(() => {
-    if (!isLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || !useGoogle) {
-      return;
-    }
-
-    try {
-      const map = new window.google.maps.Map(mapRef.current, {
-        center: locations.current,
-        zoom: 14,
-        styles: [
-          {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }]
-          }
-        ]
-      });
-
-      // Add current location marker
-      new window.google.maps.Marker({
-        position: locations.current,
-        map: map,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#4285F4",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-        title: "Your Location"
-      });
-
-      // Add destination marker
-      const destLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
-      if (destLocation) {
-        const marker = new window.google.maps.Marker({
-          position: destLocation,
-          map: map,
-          icon: {
-            url: status === 'PROCESSING' 
-              ? 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-              : 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
-          },
-          title: destinationLabel
-        });
-
-        // Add info window
-        const infoWindow = new window.google.maps.InfoWindow({
-          content: `
-            <div style="padding: 8px;">
-              <strong>${destinationLabel}</strong><br>
-              ${status === 'PROCESSING' ? restaurant : customer}<br>
-              ${destination}
-            </div>
-          `
-        });
-        
-        marker.addListener('click', () => {
-          infoWindow.open(map, marker);
-        });
-      }
-
-      // Draw route
-      const directionsService = new window.google.maps.DirectionsService();
-      const directionsRenderer = new window.google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: status === 'PROCESSING' ? '#3B82F6' : '#10B981',
-          strokeWeight: 5
-        }
-      });
-
-      if (destLocation) {
-        directionsService.route(
-          {
-            origin: locations.current,
-            destination: destLocation,
-            travelMode: window.google.maps.TravelMode.DRIVING,
-          },
-          (result, status) => {
-            if (status === 'OK') {
-              directionsRenderer.setDirections(result);
-            }
-          }
-        );
-
-        // Fit bounds to show both points
-        const bounds = new window.google.maps.LatLngBounds();
-        bounds.extend(locations.current);
-        bounds.extend(destLocation);
-        map.fitBounds(bounds);
-      }
-
-      setMapInstance(map);
-    } catch (err) {
-      console.error('Error initializing Google Map:', err);
-      setUseGoogle(false);
-    }
-  }, [isLoaded, locations, status, useGoogle, loading, destinationLabel, destination, restaurant, customer]);
+  }, [leafletLoaded, pickupAddress, dropoffAddress, locations.current]);
 
   // Initialize Leaflet Map
   useEffect(() => {
-    if (!leafletLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff || useGoogle) {
+    if (!leafletLoaded || !mapRef.current || loading || !locations.current || !locations.pickup || !locations.dropoff) {
       return;
     }
 
@@ -341,6 +173,11 @@ export default function DeliveryMap({
         
         // Check if mapRef.current is still valid
         if (!mapRef.current) return;
+        
+        // Clean up existing map instance
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.remove();
+        }
         
         const map = L.map(mapRef.current).setView(
           [locations.current!.lat, locations.current!.lng], 
@@ -401,7 +238,7 @@ export default function DeliveryMap({
           map.fitBounds(bounds);
         }
 
-        setMapInstance(map);
+        mapInstanceRef.current = map;
       } catch (err) {
         setError('Failed to initialize map');
         console.error(err);
@@ -411,15 +248,11 @@ export default function DeliveryMap({
     initLeafletMap();
 
     return () => {
-      if (mapInstance && mapInstance.remove) {
-        mapInstance.remove();
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
       }
     };
-  }, [leafletLoaded, locations, status, useGoogle, loading, destinationLabel, destination, restaurant, customer, mapInstance]);
-
-  if (loadError && useGoogle) {
-    setUseGoogle(false);
-  }
+  }, [leafletLoaded, locations, status, loading, destinationLabel, destination, restaurant, customer]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -524,4 +357,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-              }
+            }
