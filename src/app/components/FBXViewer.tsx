@@ -200,13 +200,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         console.log(`Applying scale factor: ${scale} (from ${maxDim} to ${targetSize})`);
         
         // Apply scale
-        object.scale.set(scale * 5, scale * 5, scale * 5);
+        object.scale.set(scale * 10, scale * 10, scale * 10);
         
         object.rotation.x = -(90 * Math.PI / 180);  // Formula: degrees * PI/180
         // Center the model
         object.position.set(
           -center.x * scale,
-          10,
+          5,
           -center.z * scale
         );
         
