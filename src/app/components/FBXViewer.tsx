@@ -175,7 +175,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const addTestObjects = () => {
 
       // Ground plane (semi-transparent for debugging)
-      const planeGeometry = new THREE.PlaneGeometry(100, 100);
+      const planeGeometry = new THREE.PlaneGeometry(500, 500);
       const planeMaterial = new THREE.MeshStandardMaterial({ 
         color: 0x707070, 
         side: THREE.DoubleSide,
@@ -184,7 +184,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = Math.PI / 2;
-      plane.position.y = 0.5;
+      plane.position.y = 0;
       plane.receiveShadow = true;
       scene.add(plane);
     };
