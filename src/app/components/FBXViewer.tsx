@@ -51,11 +51,11 @@ if (context) {
     scene.background = gradientTexture;
 
     // Optional: Update fog to match the bottom color for better depth
-   // scene.fog = new THREE.Fog(0xD8BFD8, 50, 100); // Light purple fog
+    scene.fog = new THREE.Fog(0xD8BFD8, 10, 50); // Light purple fog
 } else {
     // Fallback if canvas context is not available
     scene.background = new THREE.Color(0x800080); // Purple fallback
-   // scene.fog = new THREE.Fog(0x800080, 50, 100);
+    scene.fog = new THREE.Fog(0x800080, 10, 50);
 }
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
