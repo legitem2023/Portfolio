@@ -199,7 +199,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           }`}
         >
           <CheckCircle size={isMobile ? 16 : 18} />
-          <span>Completed</span>
+          <span></span>
           {activeTab === "DELIVERED" && deliveries.length > 0 && (
             <span className="bg-white text-green-500 px-2 py-0.5 rounded-full text-xs font-bold">
               {deliveries.length}
