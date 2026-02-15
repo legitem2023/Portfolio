@@ -184,7 +184,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = Math.PI / 2;
-      plane.position.y = 0;
+      plane.position.y = 5;
       plane.receiveShadow = true;
       scene.add(plane);
     };
