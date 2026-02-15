@@ -346,12 +346,12 @@ scene.add(object);
   // Styles for the container
   const containerStyle: React.CSSProperties = {
     width: '100%',
+    aspectRatio: 5/1,
     position: 'relative',
     backgroundColor: '#87CEEB', // Sky blue background
     borderRadius: '8px',
     overflow: 'hidden',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    minHeight: '400px',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
   };
 
   const canvasWrapperStyle: React.CSSProperties = {
