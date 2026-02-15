@@ -25,40 +25,45 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // Scene setup with sky blue background
     const scene = new THREE.Scene();
-   // scene.background = new THREE.Color(0x87CEEB); // Sky blue background
-   // scene.fog = new THREE.Fog(0x87CEEB, 50, 100); // Add fog for depth
 // Create a gradient texture for the background
 const canvas = document.createElement('canvas');
 canvas.width = 1;
 canvas.height = 2;
 const context = canvas.getContext('2d');
 
-// Create gradient from purple (top) to light purple (bottom)
-const gradient = context.createLinearGradient(0, 0, 0, 2);
-gradient.addColorStop(0, '#800080'); // Purple at top
-gradient.addColorStop(1, '#D8BFD8'); // Light purple at bottom
+// Check if context exists before using it
+if (context) {
+    // Create gradient from purple (top) to light purple (bottom)
+    const gradient = context.createLinearGradient(0, 0, 0, 2);
+    gradient.addColorStop(0, '#800080'); // Purple at top
+    gradient.addColorStop(1, '#D8BFD8'); // Light purple at bottom
 
-context.fillStyle = gradient;
-context.fillRect(0, 0, 1, 2);
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 1, 2);
 
-// Create texture from canvas
-const gradientTexture = new THREE.CanvasTexture(canvas);
-gradientTexture.wrapS = THREE.RepeatWrapping;
-gradientTexture.wrapT = THREE.RepeatWrapping;
-gradientTexture.repeat.set(1, 1);
+    // Create texture from canvas
+    const gradientTexture = new THREE.CanvasTexture(canvas);
+    gradientTexture.wrapS = THREE.RepeatWrapping;
+    gradientTexture.wrapT = THREE.RepeatWrapping;
+    gradientTexture.repeat.set(1, 1);
 
-// Set as scene background
-scene.background = gradientTexture;
+    // Set as scene background
+    scene.background = gradientTexture;
 
-// Optional: Update fog to match the bottom color for better depth
-scene.fog = new THREE.Fog(0xD8BFD8, 50, 100); // Light purple fog
+    // Optional: Update fog to match the bottom color for better depth
+    scene.fog = new THREE.Fog(0xD8BFD8, 50, 100); // Light purple fog
+} else {
+    // Fallback if canvas context is not available
+    scene.background = new THREE.Color(0x800080); // Purple fallback
+    scene.fog = new THREE.Fog(0x800080, 50, 100);
+}
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = 400; // Fixed height for better visibility
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(7, 28, 37); // Better initial position
+    camera.position.set(7, 29, 37); // Better initial position
     camera.lookAt(0, 0, 0);
 
     // Renderer
