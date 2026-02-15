@@ -26,7 +26,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // Scene setup with sky blue background
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB); // Sky blue background
-    scene.fog = new THREE.Fog(0x87CEEB, 50, 200); // Add fog for depth
+    scene.fog = new THREE.Fog(0x87CEEB, 50, 100); // Add fog for depth
 
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
@@ -56,9 +56,9 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = true;
     controls.maxPolarAngle = Math.PI / 2;
-    controls.enableZoom = true;
+    controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0;
+    controls.autoRotateSpeed = 2.0;
     controls.target.set(0, 5, 0);
 
     // ============ ENHANCED BRIGHT LIGHTING FOR SKY EFFECT ============
