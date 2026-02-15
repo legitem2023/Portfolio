@@ -351,7 +351,6 @@ scene.add(object);
     left: 0,
     width: '100%',
     aspectRatio: 5/1,
-    position: 'relative',
     backgroundColor: '#87CEEB', // Sky blue background
     borderRadius: '0px',
     overflow: 'hidden',
@@ -397,15 +396,6 @@ scene.add(object);
   return (
     <div style={containerStyle}>
       <div style={canvasWrapperStyle} ref={containerRef} />
-      
-      {loading && (
-        <div style={overlayStyle}>
-          <div>Loading city model...</div>
-          <div style={{ fontSize: '0.9rem', marginTop: '8px', color: '#333' }}>
-            {debug}
-          </div>
-        </div>
-      )}
       {error && (
         <div style={{ ...overlayStyle, backgroundColor: 'rgba(255, 0, 0, 0.3)' }}>
           <div style={{ color: '#ff6b6b', textAlign: 'center' }}>
