@@ -138,7 +138,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
     const sunMaterial = new THREE.MeshBasicMaterial({
       color: 0xFFAA55,
-      emissive: 0xFF5500,
+      
       transparent: true,
       opacity: 0.3
     });
