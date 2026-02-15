@@ -350,7 +350,7 @@ scene.add(object);
     top: 0,
     left: 0,
     width: '100%',
-    aspectRatio: 5/1,
+    aspectRatio: 4/1,
     backgroundColor: '#87CEEB', // Sky blue background
     borderRadius: '0px',
     overflow: 'hidden',
