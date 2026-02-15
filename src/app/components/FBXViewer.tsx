@@ -202,11 +202,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         // Apply scale
         object.scale.set(scale, scale, scale);
         
-        object.rotation.x = 90 * Math.PI / 180;  // Formula: degrees * PI/180
+        object.rotation.x = -(90 * Math.PI / 180);  // Formula: degrees * PI/180
         // Center the model
         object.position.set(
           -center.x * scale,
-          -center.y * scale,
+          0,
           -center.z * scale
         );
         
