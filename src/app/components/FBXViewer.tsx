@@ -188,6 +188,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     backgroundColor: '#1a1a2e',
     borderRadius: '8px',
     overflow: 'hidden',
+    zIndex:100,
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
   };
 
