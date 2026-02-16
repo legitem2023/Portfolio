@@ -51,11 +51,11 @@ if (context) {
     scene.background = gradientTexture;
 
     // Optional: Update fog to match the bottom color for better depth
-    scene.fog = new THREE.Fog(0xD8BFD8, 100, 500); // Light purple fog
+    scene.fog = new THREE.Fog(0xD8BFD8, 50, 300); // Light purple fog
 } else {
     // Fallback if canvas context is not available
     scene.background = new THREE.Color(0x800080); // Purple fallback
-    scene.fog = new THREE.Fog(0x800080, 100, 500);
+    scene.fog = new THREE.Fog(0x800080, 50, 300);
 }
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
@@ -206,10 +206,11 @@ if (context) {
       // Ground plane (semi-transparent for debugging)
       const planeGeometry = new THREE.PlaneGeometry(500, 500);
       const planeMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x000000, 
-        side: THREE.DoubleSide,
-        transparent:false,
-        opacity: 1
+      color: 0x707070, // Medium gray
+      roughness: 0.4,
+      metalness: 0.1,
+      emissive: new THREE.Color(0x112233),
+      emissiveIntensity: 0.2
       });
       const plane = new THREE.Mesh(planeGeometry, planeMaterial);
       plane.rotation.x = Math.PI / 2;
@@ -271,7 +272,7 @@ object.traverse((child) => {
     
     // Create and apply a gray material
     const grayMaterial = new THREE.MeshStandardMaterial({
-      color: 0x000000, // Medium gray
+      color: 0x707070, // Medium gray
       roughness: 0.4,
       metalness: 0.1,
       emissive: new THREE.Color(0x112233),
