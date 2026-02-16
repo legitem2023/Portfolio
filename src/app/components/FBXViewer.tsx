@@ -195,7 +195,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     if (waterCtx) {
       // Base blue color
-      waterCtx.fillStyle = '#3a6ea5';
+      waterCtx.fillStyle = '#707070';
       waterCtx.fillRect(0, 0, 256, 256);
       
       // Draw wave patterns
@@ -220,8 +220,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const waterGeometry = new THREE.CircleGeometry(waterRadius, 64);
     const waterMaterial = new THREE.MeshStandardMaterial({
       map: waterTexture,
-      color: 0x4a7db0,
-      emissive: new THREE.Color(0x1a3a5a),
+      color: 0x707070,
+      emissive: new THREE.Color(0x707070),
       transparent: true,
       opacity: 0.7,
       side: THREE.DoubleSide
