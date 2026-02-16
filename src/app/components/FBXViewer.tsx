@@ -96,7 +96,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const ambientLight = new THREE.AmbientLight(0x6a6a9a, 1.0);
     scene.add(ambientLight);
 
-    // ============ ANIMATED GROUND PLANE ============
+    // ============ ROUND/CIRCULAR ANIMATED GROUND ============
+    
+    // Create a circular ground using CircleGeometry instead of PlaneGeometry
+    const groundRadius = 500; // Large radius for the ground
+    const groundSegments = 64; // High segment count for smooth edge
     
     // Create a canvas for the ground texture
     const groundCanvas = document.createElement('canvas');
@@ -105,23 +109,35 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Draw a grid pattern for the ground
+      // Draw a circular/radial pattern for the ground
       groundCtx.fillStyle = '#2a2a2a';
       groundCtx.fillRect(0, 0, 512, 512);
       
-      // Draw grid lines
+      // Draw concentric circles for radial pattern
       groundCtx.strokeStyle = '#4a4a4a';
       groundCtx.lineWidth = 2;
       
-      for (let i = 0; i <= 512; i += 32) {
+      const centerX = 256;
+      const centerY = 256;
+      const maxRadius = 256;
+      
+      // Draw concentric circles
+      for (let r = 40; r <= maxRadius; r += 40) {
         groundCtx.beginPath();
-        groundCtx.moveTo(i, 0);
-        groundCtx.lineTo(i, 512);
+        groundCtx.arc(centerX, centerY, r, 0, Math.PI * 2);
+        groundCtx.strokeStyle = `rgba(74, 74, 74, ${0.7 - r/maxRadius * 0.3})`;
         groundCtx.stroke();
-        
+      }
+      
+      // Draw radial lines
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
         groundCtx.beginPath();
-        groundCtx.moveTo(0, i);
-        groundCtx.lineTo(512, i);
+        groundCtx.moveTo(centerX, centerY);
+        groundCtx.lineTo(
+          centerX + Math.cos(angle) * maxRadius,
+          centerY + Math.sin(angle) * maxRadius
+        );
+        groundCtx.strokeStyle = 'rgba(74, 74, 74, 0.3)';
         groundCtx.stroke();
       }
       
@@ -129,10 +145,20 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       const imageData = groundCtx.getImageData(0, 0, 512, 512);
       const data = imageData.data;
       for (let i = 0; i < data.length; i += 4) {
-        // Add slight random variation
-        data[i] += Math.random() * 20;     // R
-        data[i+1] += Math.random() * 20;   // G
-        data[i+2] += Math.random() * 20;   // B
+        // Add slight random variation, but fade towards edges for circular effect
+        const x = (i / 4) % 512;
+        const y = Math.floor((i / 4) / 512);
+        const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+        
+        if (distFromCenter < maxRadius) {
+          // Inside circle - normal texture
+          data[i] += Math.random() * 20;     // R
+          data[i+1] += Math.random() * 20;   // G
+          data[i+2] += Math.random() * 20;   // B
+        } else {
+          // Outside circle - make transparent (alpha 0)
+          data[i+3] = 0;
+        }
       }
       groundCtx.putImageData(imageData, 0, 0);
     }
@@ -140,23 +166,24 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundTexture = new THREE.CanvasTexture(groundCanvas);
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(20, 20);
+    groundTexture.repeat.set(4, 4); // Adjust tiling for circular pattern
     
-    const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
-    const planeMaterial = new THREE.MeshStandardMaterial({ 
+    // Use CircleGeometry for round ground
+    const groundGeometry = new THREE.CircleGeometry(groundRadius, groundSegments);
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
       color: 0x888888,
       roughness: 0.8,
       metalness: 0.1,
-      emissive: new THREE.Color(0x111111)
+      emissive: new THREE.Color(0x111111),
+      side: THREE.DoubleSide // Show both sides
     });
     
-    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.scale.set(1000, 1000, 1000);
-    plane.rotation.x = Math.PI / 2;
-    plane.position.y = 0;
-    plane.receiveShadow = true;
-    scene.add(plane);
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+    ground.position.y = 0;
+    ground.receiveShadow = true;
+    scene.add(ground);
 
     // ============ ANIMATED WATER PLANE ============
     
@@ -186,10 +213,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const waterTexture = new THREE.CanvasTexture(waterCanvas);
     waterTexture.wrapS = THREE.RepeatWrapping;
     waterTexture.wrapT = THREE.RepeatWrapping;
-    waterTexture.repeat.set(10, 10);
+    waterTexture.repeat.set(8, 8);
     
-    // Create water plane (slightly above ground)
-    const waterGeometry = new THREE.PlaneGeometry(600, 600);
+    // Create circular water plane (smaller than ground)
+    const waterRadius = 400;
+    const waterGeometry = new THREE.CircleGeometry(waterRadius, 64);
     const waterMaterial = new THREE.MeshStandardMaterial({
       map: waterTexture,
       color: 0x4a7db0,
@@ -200,10 +228,23 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     });
     
     const waterPlane = new THREE.Mesh(waterGeometry, waterMaterial);
-    waterPlane.rotation.x = Math.PI / 2;
+    waterPlane.rotation.x = -Math.PI / 2;
     waterPlane.position.y = 0.1; // Slightly above ground
     waterPlane.receiveShadow = true;
     scene.add(waterPlane);
+
+    // Add a subtle rim light/edge highlight for the ground
+    const edgeGeometry = new THREE.TorusGeometry(groundRadius, 1, 16, 100);
+    const edgeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4a4a8a,
+      emissive: new THREE.Color(0x1a1a3a),
+      transparent: true,
+      opacity: 0.3
+    });
+    const edgeRing = new THREE.Mesh(edgeGeometry, edgeMaterial);
+    edgeRing.rotation.x = Math.PI / 2;
+    edgeRing.position.y = 0.05;
+    scene.add(edgeRing);
 
     setDebug('Loading FBX model...');
 
@@ -277,21 +318,21 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       requestAnimationFrame(animate);
       
       const delta = clock.getDelta();
-      const elapsedTime = performance.now() / 1000; // seconds
+      const elapsedTime = performance.now() / 1000;
       
-      // Animate ground texture (slow scrolling)
+      // Animate ground texture (slow rotation for circular effect)
       if (groundTexture) {
-        groundTexture.offset.x += 0.001;
-        groundTexture.offset.y += 0.0005;
+        groundTexture.offset.x += 0.0005;
+        groundTexture.offset.y += 0.0003;
       }
       
-      // Animate water texture (faster, wave-like motion)
+      // Animate water texture
       if (waterTexture) {
         waterTexture.offset.x += 0.005;
         waterTexture.offset.y += 0.002;
       }
       
-      // Animate water plane slightly (bobbing motion)
+      // Animate water plane
       if (waterPlane) {
         waterPlane.position.y = 0.1 + Math.sin(elapsedTime * 2) * 0.05;
       }
@@ -374,4 +415,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-                             }
+}
