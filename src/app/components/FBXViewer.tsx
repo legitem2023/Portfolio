@@ -23,10 +23,31 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with dark night sky
+    // Scene setup with indigo gradient sky
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a1a);
-    scene.fog = new THREE.Fog(0x0a0a1a, 50, 200);
+    
+    // Create a gradient texture for the background
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 2;
+    const context = canvas.getContext('2d');
+
+    if (context) {
+      // Create gradient from dark indigo (top) to light indigo (bottom)
+      const gradient = context.createLinearGradient(0, 0, 0, 2);
+      gradient.addColorStop(0, '#1a1a4a'); // Dark indigo at top
+      gradient.addColorStop(1, '#4a4a8a'); // Light indigo at bottom
+
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 1, 2);
+
+      const gradientTexture = new THREE.CanvasTexture(canvas);
+      scene.background = gradientTexture;
+      scene.fog = new THREE.Fog(0x4a4a8a, 50, 300); // Light indigo fog
+    } else {
+      scene.background = new THREE.Color(0x2a2a6a); // Indigo fallback
+      scene.fog = new THREE.Fog(0x2a2a6a, 50, 300);
+    }
 
     // Camera setup
     const container = containerRef.current;
@@ -38,10 +59,16 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     camera.lookAt(0, 0, 0);
 
     // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      powerPreference: "high-performance"
+    });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(1); // Fixed pixel ratio for performance
-    renderer.shadowMap.enabled = false; // Disable shadows completely
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5;
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -55,56 +82,40 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.autoRotateSpeed = 2.0;
     controls.target.set(0, 5, 0);
 
-    // ============ SIMPLE NIGHT LIGHTING ============
+    // ============ AFTERNOON LIGHTING WITH INDIGO TINT ============
     
-    // Just two lights for performance
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+    // Hemisphere light with indigo tint
+    const hemiLight = new THREE.HemisphereLight(0x4a4a8a, 0x8a6a4a, 1.2);
+    scene.add(hemiLight);
+
+    // Main directional light (warm afternoon sun)
+    const dirLight = new THREE.DirectionalLight(0xffcc88, 1.8);
+    dirLight.position.set(50, 80, 50);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    scene.add(dirLight);
+
+    // Fill light with indigo tint
+    const fillLight = new THREE.DirectionalLight(0x8a8acc, 0.8);
+    fillLight.position.set(-30, 40, -30);
+    scene.add(fillLight);
+
+    // Ambient light with indigo tint
+    const ambientLight = new THREE.AmbientLight(0x6a6a9a, 1.2);
     scene.add(ambientLight);
 
-    const moonLight = new THREE.DirectionalLight(0x8899aa, 0.3);
-    moonLight.position.set(-30, 40, 40);
-    scene.add(moonLight);
-
-    // ============ SIMPLE GROUND LIGHTS ============
-    
-    const groundLights = new THREE.Group();
-    
-    // Single geometry reused
-    const lightGeometry = new THREE.SphereGeometry(1.2, 4, 4); // Bigger, low poly
-    
-    // Just 30 lights max
-    const lightCount = 30;
-    
-    for (let i = 0; i < lightCount; i++) {
-      // Random positions in a circle
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 20 + Math.random() * 30;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      
-      // Warm color
-      const color = new THREE.Color().setHSL(0.1, 1, 0.6);
-      
-      // Single sphere with emissive material (no separate glow)
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        emissive: color,
-        emissiveIntensity: 2.0
-      });
-      
-      const light = new THREE.Mesh(lightGeometry, material);
-      light.position.set(x, 0.3, z);
-      groundLights.add(light);
-    }
-
-    scene.add(groundLights);
-
-    // Simple ground plane
+    // Ground plane
     const planeGeometry = new THREE.PlaneGeometry(500, 500);
-    const planeMaterial = new THREE.MeshStandardMaterial({ color: 0x111122 });
+    const planeMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x6a6a8a,
+      roughness: 0.5,
+      metalness: 0.1
+    });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = Math.PI / 2;
     plane.position.y = 0;
+    plane.receiveShadow = true;
     scene.add(plane);
 
     setDebug('Loading FBX model...');
@@ -135,18 +146,25 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Simple materials
+        // Building materials with slight indigo tint
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
             child.material = new THREE.MeshStandardMaterial({
-              color: 0x2a2a3a
+              color: 0x9a9ab0,
+              roughness: 0.4,
+              metalness: 0.1
             });
           }
         });
 
         scene.add(object);
         
-        const newCenter = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
+        const newBox = new THREE.Box3().setFromObject(object);
+        const newCenter = newBox.getCenter(new THREE.Vector3());
+        
         camera.lookAt(newCenter);
         controls.update();
         
@@ -161,10 +179,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         const errorMsg = error?.message || 'Unknown error';
         setError(`Failed to load model: ${errorMsg}`);
         setDebug(`Error: ${errorMsg}`);
+        console.error('FBX loading error details:', error);
       }
     );
 
-    // Simple animation
+    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -173,7 +192,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     animate();
 
-    // Handle resize
+    // Handle window resize
     const handleResize = () => {
       if (!containerRef.current) return;
       
@@ -205,7 +224,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     left: 0,
     width: '100%',
     aspectRatio: 4/1,
-    backgroundColor: '#0a0a1a',
+    backgroundColor: '#2a2a6a',
     overflow: 'hidden'
   };
 
@@ -215,14 +234,34 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     position: 'relative',
   };
 
+  const overlayStyle: React.CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(42, 42, 106, 0.7)',
+    color: 'white',
+    fontSize: '1.2rem',
+    zIndex: 10,
+    pointerEvents: 'none',
+  };
+
   return (
     <div style={containerStyle}>
       <div style={canvasWrapperStyle} ref={containerRef} />
       {error && (
-        <div style={{ position: 'absolute', top: 0, left: 0, color: 'red' }}>
-          {error}
+        <div style={{ ...overlayStyle, backgroundColor: 'rgba(255, 0, 0, 0.3)' }}>
+          <div style={{ color: '#ff6b6b', textAlign: 'center' }}>
+            <div>⚠️ Error loading model</div>
+            <div style={{ fontSize: '0.9rem', marginTop: '8px' }}>{error}</div>
+          </div>
         </div>
       )}
     </div>
   );
-}
+       }
