@@ -64,7 +64,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Soft shadows
-    renderer.shadowMap.bias = 0.0001;
+    //renderer.shadowMap.bias = 0.0001;
     renderer.toneMapping = THREE.ACESFilmicToneMapping; // Film-like tone mapping
     renderer.toneMappingExposure = 1.5; // Balanced exposure
     renderer.outputEncoding = THREE.sRGBEncoding; // Correct color space
