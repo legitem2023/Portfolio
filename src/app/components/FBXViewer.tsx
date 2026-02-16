@@ -252,25 +252,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         // Realistic color palette based on real building materials
         const realisticColors = [
           // Concrete variations
-          0x7A7A70, 0x6A6A60, 0x5A5A50, 0x8A8A80, 0x9A9A90,
-          // Brick variations
-          0x8A5A4A, 0x7A4A3A, 0x9A6A5A, 0x6A4A3A, 0x5A3A2A,
-          // Stone variations
-          0x8A7A6A, 0x9A8A7A, 0x7A6A5A, 0x6A5A4A, 0x5A4A3A,
-          // Weathered metal
-          0x6A6A70, 0x5A5A60, 0x7A7A80, 0x4A4A50,
-          // Dark glass
-          0x1A2A3A, 0x2A3A4A, 0x3A4A5A,
-          // Terracotta
-          0x9A6A4A, 0x8A5A3A, 0x7A4A2A,
-          // Limestone
-          0x9A928A, 0x8A827A, 0x7A726A,
-          // Granite
-          0x6A6A6A, 0x7A7A7A, 0x5A5A5A,
-          // Sandstone
-          0x9A8A6A, 0x8A7A5A, 0x7A6A4A,
-          // Slate
-          0x4A505A, 0x5A606A, 0x6A707A
+          0x7A7A70, 0x006666
         ];
         
         console.log(`Using ${realisticColors.length} realistic building colors`);
