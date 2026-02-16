@@ -132,7 +132,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ REALISTIC GROUND ============
     
-    const groundRadius = 600; // Mas malaki para hindi kita ang edge
+    const groundRadius = 400; // Mas malaki para hindi kita ang edge
     const groundSegments = 64;
     
     // Create realistic ground texture (asphalt/concrete with wear)
@@ -202,7 +202,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       map: groundTexture,
       color: 0x5A6050,
       roughness: 0.9, // Napaka-rough (asphalt)
-      metalness: 0.0,
+      metalness: 0.5,
       emissive: new THREE.Color(0x000000),
       bumpMap: groundTexture, // Same texture as bump for depth
       bumpScale: 0.5
