@@ -252,7 +252,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         // Realistic color palette based on real building materials
         const realisticColors = [
           // Concrete variations
-          0x7A7A70, 0x006666
+          0x7A7A70, 0x003333,0x001a1a,0x002233
         ];
         
         console.log(`Using ${realisticColors.length} realistic building colors`);
