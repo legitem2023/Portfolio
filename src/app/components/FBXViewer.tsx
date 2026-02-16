@@ -236,7 +236,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         
-        const scale = 500 / Math.max(size.x, size.y, size.z);
+        const scale = 700 / Math.max(size.x, size.y, size.z);
         
         object.scale.set(scale, scale, scale);
         object.rotation.x = -(90 * Math.PI / 180);
