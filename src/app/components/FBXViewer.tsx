@@ -79,7 +79,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // ============ LIGHTING ============
     
     // Main sun light (with cyan tint para tugma)
-    const sunLight = new THREE.DirectionalLight(0xCCFFEE, 2.5); // Cyan-tinted light
+    const sunLight = new THREE.DirectionalLight(0xCCFFEE, 2.5);
     sunLight.position.set(40, 50, 40);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -264,7 +264,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         
         // ============ 200+ DARK CYAN COLORS ============
         
-        const darkCyans = [];
+        const darkCyans: number[] = [];
         
         // Generate systematic dark cyan shades
         for (let r = 0; r <= 50; r += 5) {
@@ -313,8 +313,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         
         specificShades.forEach(color => darkCyans.push(color));
         
-        // Remove duplicates
-        const uniqueCyans = [...new Set(darkCyans)];
+        // Remove duplicates - FIXED: Hindi na gumagamit ng Set spread
+        const uniqueCyans: number[] = [];
+        darkCyans.forEach(color => {
+          if (!uniqueCyans.includes(color)) {
+            uniqueCyans.push(color);
+          }
+        });
         
         // Shuffle para hindi magkakasunod ang similar colors
         for (let i = uniqueCyans.length - 1; i > 0; i--) {
@@ -324,7 +329,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         
         console.log(`Generated ${uniqueCyans.length} dark cyan colors`);
         
-        // ===== FIX: SIGURADUHING LAHAT NG MESH AY MAPALITAN =====
+        // ===== SIGURADUHING LAHAT NG MESH AY MAPALITAN =====
         let meshCount = 0;
         
         object.traverse((child) => {
@@ -344,7 +349,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
             // I-set ang bagong material
             if (Array.isArray(child.material)) {
               // Kung maraming materials, palitan lahat
-              child.material = child.material.map(mat => 
+              child.material = child.material.map(() => 
                 new THREE.MeshStandardMaterial({
                   color: randomColor,
                   roughness: roughness,
@@ -461,4 +466,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-      }
+                                     }
