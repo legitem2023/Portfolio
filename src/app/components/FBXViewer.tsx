@@ -187,44 +187,16 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ ANIMATED WATER PLANE ============
     
-    // Create water texture
-    const waterCanvas = document.createElement('canvas');
-    waterCanvas.width = 256;
-    waterCanvas.height = 256;
-    const waterCtx = waterCanvas.getContext('2d');
-    
-    if (waterCtx) {
-      // Base blue color
-      waterCtx.fillStyle = '#707070';
-      waterCtx.fillRect(0, 0, 256, 256);
-      
-      // Draw wave patterns
-      waterCtx.strokeStyle = '#5a8ec9';
-      waterCtx.lineWidth = 2;
-      
-      for (let i = 0; i < 10; i++) {
-        waterCtx.beginPath();
-        waterCtx.arc(128, 128, 30 + i * 20, 0, Math.PI * 2);
-        waterCtx.strokeStyle = `rgba(90, 142, 201, ${0.3 - i * 0.03})`;
-        waterCtx.stroke();
-      }
-    }
-    
-    const waterTexture = new THREE.CanvasTexture(waterCanvas);
-    waterTexture.wrapS = THREE.RepeatWrapping;
-    waterTexture.wrapT = THREE.RepeatWrapping;
-    waterTexture.repeat.set(8, 8);
-    
+
+     
     // Create circular water plane (smaller than ground)
     const waterRadius = 400;
     const waterGeometry = new THREE.CircleGeometry(waterRadius, 64);
     const waterMaterial = new THREE.MeshStandardMaterial({
-      map: waterTexture,
-      color: 0x707070,
-      emissive: new THREE.Color(0x707070),
+      color: 0x4a4a8a,
+      emissive: new THREE.Color(0x1a1a3a),
       transparent: true,
-      opacity: 0.7,
-      side: THREE.DoubleSide
+      opacity: 0.3
     });
     
     const waterPlane = new THREE.Mesh(waterGeometry, waterMaterial);
@@ -326,11 +298,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         groundTexture.offset.y += 0.0003;
       }
       
-      // Animate water texture
-      if (waterTexture) {
-        waterTexture.offset.x += 0.005;
-        waterTexture.offset.y += 0.002;
-      }
+      
       
       // Animate water plane
       if (waterPlane) {
