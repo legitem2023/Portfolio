@@ -43,13 +43,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       scene.background = gradientTexture;
     }
 
-    // Camera setup - ORIGINAL POSITION PRESERVED
+    // Camera setup - ORIGINAL POSITION
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = 400;
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(7, 21, 37); // ORIGINAL POSITION
+    camera.position.set(7, 21, 37);
     camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -62,10 +62,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.8; // Medyo balanced na brightness
+    renderer.toneMappingExposure = 1.8;
     container.appendChild(renderer.domElement);
 
-    // Controls - ORIGINAL SETTINGS PRESERVED
+    // Controls - FIXED: Hindi magbabago ang target after model load
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
@@ -73,12 +73,12 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.maxPolarAngle = Math.PI / 2;
     controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 2.0; // ORIGINAL SPEED
-    controls.target.set(0, 5, 0); // ORIGINAL TARGET
+    controls.autoRotateSpeed = 2.0;
+    controls.target.set(0, 5, 0); // FIXED TARGET - hindi na magbabago
 
-    // ============ REALISTIC LIGHTING (MEDYO DARK) ============
+    // ============ REALISTIC LIGHTING ============
     
-    // Main sun light (medyo dim para realistic)
+    // Main sun light
     const sunLight = new THREE.DirectionalLight(0xFFE6CC, 1.2);
     sunLight.position.set(40, 50, 40);
     sunLight.castShadow = true;
@@ -88,16 +88,52 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     sunLight.shadow.normalBias = 0.02;
     scene.add(sunLight);
 
-    // Ambient light (mas dark)
+    // ============ SUN HELPER (NEON COLOR SPHERE) ============
+    // Lumilikha ng sphere sa position ng sun para makita kung saan galing ang liwanag
+    
+    const sunSphereGeometry = new THREE.SphereGeometry(2, 16, 16);
+    const sunSphereMaterial = new THREE.MeshStandardMaterial({
+      color: 0xFF5500, // Neon orange
+      emissive: 0xFF3300, // Red-orange glow
+      emissiveIntensity: 2.0,
+      roughness: 0.1,
+      metalness: 0.1
+    });
+    
+    const sunSphere = new THREE.Mesh(sunSphereGeometry, sunSphereMaterial);
+    sunSphere.position.copy(sunLight.position); // Same position as sun light
+    scene.add(sunSphere);
+    
+    // Add a point light sa sphere para mag-glow talaga
+    const sunGlowLight = new THREE.PointLight(0xFF5500, 1.5, 30);
+    sunGlowLight.position.copy(sunLight.position);
+    scene.add(sunGlowLight);
+    
+    // Add a small ring/aura around the sun
+    const sunRingGeometry = new THREE.TorusGeometry(2.5, 0.1, 16, 32);
+    const sunRingMaterial = new THREE.MeshStandardMaterial({
+      color: 0xFFAA00,
+      emissive: 0xFF5500,
+      emissiveIntensity: 1.5,
+      transparent: true,
+      opacity: 0.7
+    });
+    const sunRing = new THREE.Mesh(sunRingGeometry, sunRingMaterial);
+    sunRing.position.copy(sunLight.position);
+    sunRing.rotation.x = Math.PI / 2;
+    sunRing.rotation.z = Date.now() * 0.001;
+    scene.add(sunRing);
+
+    // Ambient light
     const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
     scene.add(ambientLight);
 
-    // Fill light from clouds/indirect
+    // Fill light
     const fillLight = new THREE.DirectionalLight(0xCCDDE0, 0.4);
     fillLight.position.set(-30, 20, 30);
     scene.add(fillLight);
 
-    // Soft back light
+    // Back light
     const backLight = new THREE.DirectionalLight(0xE0E0F0, 0.3);
     backLight.position.set(-20, 30, -40);
     scene.add(backLight);
@@ -107,14 +143,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundRadius = 500;
     const groundSegments = 32;
     
-    // Ground texture (mas dark)
+    // Ground texture
     const groundCanvas = document.createElement('canvas');
     groundCanvas.width = 512;
     groundCanvas.height = 512;
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Base color (dark earth tone)
+      // Base color
       groundCtx.fillStyle = '#4A4035';
       groundCtx.fillRect(0, 0, 512, 512);
       
@@ -123,7 +159,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       const data = imageData.data;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Dark variation
         const variation = (Math.random() - 0.5) * 20;
         data[i] = Math.min(200, Math.max(60, data[i] + variation));
         data[i+1] = Math.min(180, Math.max(50, data[i+1] + variation * 0.8));
@@ -132,7 +167,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       
       groundCtx.putImageData(imageData, 0, 0);
       
-      // Very subtle grid lines
+      // Subtle grid lines
       groundCtx.strokeStyle = '#5A5045';
       groundCtx.lineWidth = 1;
       
@@ -172,7 +207,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Edge ring (mas dark)
+    // Edge ring
     const edgeRing = new THREE.Mesh(
       new THREE.TorusGeometry(groundRadius, 1.5, 8, 48),
       new THREE.MeshStandardMaterial({
@@ -186,7 +221,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     edgeRing.position.y = 0.05;
     scene.add(edgeRing);
 
-    // Fog (mas atmospheric)
+    // Fog
     scene.fog = new THREE.FogExp2(0x9AA9B5, 0.0012);
 
     setDebug('Loading FBX model...');
@@ -216,9 +251,9 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // ============ 200+ BUILDING COLORS (LAHAT DARK) ============
+        // ============ 200+ BUILDING COLORS ============
         
-        // Grayscale colors (dark)
+        // Grayscale colors
         const grays = [
           0x303030, 0x343434, 0x383838, 0x3C3C3C, 0x404040, 0x444444, 0x484848, 0x4C4C4C, 0x505050, 0x545454,
           0x585858, 0x5C5C5C, 0x606060, 0x646464, 0x686868, 0x6C6C6C, 0x707070, 0x747474, 0x787878, 0x7C7C7C,
@@ -244,13 +279,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           0x2A3440, 0x2E3844, 0x323C48, 0x36404C, 0x3A4450, 0x3E4854, 0x424C58, 0x46505C, 0x4A5460, 0x4E5864
         ];
         
-        // Green-grays (weathered copper, moss)
+        // Green-grays
         const greens = [
           0x2A3A30, 0x2E3E34, 0x324238, 0x36463C, 0x3A4A40, 0x3E4E44, 0x425248, 0x46564C, 0x4A5A50, 0x4E5E54,
           0x2A342C, 0x2E3830, 0x323C34, 0x364038, 0x3A443C, 0x3E4840, 0x424C44, 0x465048, 0x4A544C, 0x4E5850
         ];
         
-        // Purplish grays (limestone, concrete)
+        // Purplish grays
         const purples = [
           0x302A30, 0x342E34, 0x383238, 0x3C363C, 0x403A40, 0x443E44, 0x484248, 0x4C464C, 0x504A50, 0x544E54,
           0x2A242A, 0x2E282E, 0x322C32, 0x363036, 0x3A343A, 0x3E383E, 0x423C42, 0x464046, 0x4A444A, 0x4E484E
@@ -273,9 +308,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           ...yellows
         ];
         
-        // Additional variations para umabot ng 200+
+        // Additional variations
         for (let i = 0; i < 30; i++) {
-          // Add more random dark colors
           const r = Math.floor(30 + Math.random() * 50);
           const g = Math.floor(30 + Math.random() * 45);
           const b = Math.floor(30 + Math.random() * 40);
@@ -283,21 +317,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           buildingColors.push(color);
         }
         
-        console.log(`Generated ${buildingColors.length} building colors`);
-        
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Random na pumili ng building color
             const randomColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
-            
-            // Random material properties (mas rough para realistic)
-            const roughness = 0.6 + Math.random() * 0.3; // Mas rough
-            const metalness = Math.random() * 0.2; // Konting metalness lang
-            
-            // Random kung magkakaroon ng bahagyang emissive (para sa windows)
+            const roughness = 0.6 + Math.random() * 0.3;
+            const metalness = Math.random() * 0.2;
             const hasEmissive = Math.random() > 0.7;
             
             child.material = new THREE.MeshStandardMaterial({
@@ -313,11 +340,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
         scene.add(object);
         
-        // Update controls target to center of model but keep original camera position
-        const newBox = new THREE.Box3().setFromObject(object);
-        const newCenter = newBox.getCenter(new THREE.Vector3());
-        controls.target.set(newCenter.x, 5, newCenter.z); // Keep y at 5 like original
-        controls.update();
+        // IMPORTANT: HUWAG baguhin ang controls.target para hindi gumalaw ang camera!
+        // Ang target ay naka-set na sa (0,5,0) sa simula pa lang
         
         setDebug('Ready');
       },
@@ -338,6 +362,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
+      
+      // I-rotate ang sun ring para gumalaw ng konti
+      if (sunRing) {
+        sunRing.rotation.y += 0.005;
+        sunRing.rotation.x = Math.PI / 2 + Math.sin(Date.now() * 0.001) * 0.1;
+      }
+      
       controls.update();
       renderer.render(scene, camera);
     };
@@ -402,4 +433,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-}
+      }
