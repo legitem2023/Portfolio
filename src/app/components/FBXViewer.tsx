@@ -43,13 +43,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       scene.background = gradientTexture;
     }
 
-    // Camera setup
+    // Camera setup - ORIGINAL POSITION PRESERVED
     const container = containerRef.current;
     const width = container.clientWidth;
     const height = 400;
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(10, 25, 45);
+    camera.position.set(7, 21, 37); // ORIGINAL POSITION
+    camera.lookAt(0, 0, 0);
 
     // Renderer
     const renderer = new THREE.WebGLRenderer({ 
@@ -64,15 +65,16 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.toneMappingExposure = 2.2; // Mas maliwanag
     container.appendChild(renderer.domElement);
 
-    // Controls
+    // Controls - ORIGINAL SETTINGS PRESERVED
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = true;
     controls.maxPolarAngle = Math.PI / 2;
     controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.2;
-    controls.target.set(0, 8, 0);
+    controls.autoRotateSpeed = 2.0; // ORIGINAL SPEED
+    controls.target.set(0, 5, 0); // ORIGINAL TARGET
 
     // ============ MALIWANAG NA LIGHTING ============
     
@@ -277,13 +279,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
         scene.add(object);
         
-        // Adjust camera target sa taas ng buildings
+        // Update controls target to center of model but keep original camera position
         const newBox = new THREE.Box3().setFromObject(object);
         const newCenter = newBox.getCenter(new THREE.Vector3());
-        const newSize = newBox.getSize(new THREE.Vector3());
-        
-        // Itaas ng konti ang target para kita ang buildings
-        controls.target.set(newCenter.x, newSize.y * 0.4, newCenter.z);
+        controls.target.set(newCenter.x, 5, newCenter.z); // Keep y at 5 like original
         controls.update();
         
         setDebug('Ready');
@@ -369,4 +368,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-      }
+            }
