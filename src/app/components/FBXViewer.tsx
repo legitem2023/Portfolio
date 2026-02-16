@@ -23,12 +23,12 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with dark evening sky
+    // Scene setup with bright afternoon sky
     const scene = new THREE.Scene();
     
-    // Simple solid color background (much lighter than gradient)
-    scene.background = new THREE.Color(0x1a1a2e); // Dark blue
-    scene.fog = new THREE.Fog(0x1a1a2e, 80, 250); // Increased fog start for better performance
+    // Bright afternoon sky blue
+    scene.background = new THREE.Color(0x87CEEB); // Sky blue
+    scene.fog = new THREE.Fog(0x87CEEB, 100, 300); // Light fog for depth
 
     // Camera setup
     const container = containerRef.current;
@@ -45,11 +45,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       powerPreference: "high-performance"
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.5; // Brighter exposure
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -63,17 +63,17 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.autoRotateSpeed = 2.0;
     controls.target.set(0, 5, 0);
 
-    // ============ OPTIMIZED EVENING LIGHTING ============
+    // ============ AFTERNOON LIGHTING ============
     
-    // Single hemisphere light
-    const hemiLight = new THREE.HemisphereLight(0x1a2b4a, 0x4a2a1a, 0.8);
+    // Bright hemisphere light for sky/ground bounce
+    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x44AA88, 1.5);
     scene.add(hemiLight);
 
-    // Main directional light (low sun)
-    const dirLight = new THREE.DirectionalLight(0xffaa66, 0.8);
-    dirLight.position.set(-30, 20, 40);
+    // Main directional light (bright afternoon sun)
+    const dirLight = new THREE.DirectionalLight(0xFFEECC, 2.0);
+    dirLight.position.set(50, 100, 50);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048; // Reduced shadow map size
+    dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 200;
@@ -83,117 +83,21 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     dirLight.shadow.camera.bottom = -80;
     scene.add(dirLight);
 
-    // Single fill light (instead of multiple)
-    const fillLight = new THREE.DirectionalLight(0x88aaff, 0.3);
-    fillLight.position.set(20, 10, -30);
+    // Fill light from opposite side
+    const fillLight = new THREE.DirectionalLight(0xCCDDFF, 1.0);
+    fillLight.position.set(-30, 40, -30);
     scene.add(fillLight);
 
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x2a2a4a, 1.0);
+    // Ambient light for base illumination
+    const ambientLight = new THREE.AmbientLight(0x404060, 1.5);
     scene.add(ambientLight);
-
-    // ============ OPTIMIZED TINY GROUND LIGHTS ============
-    // Use instanced mesh for better performance
-    
-    const groundLights = new THREE.Group();
-    
-    // Create a single geometry and material for all light spheres
-    const lightGeometry = new THREE.SphereGeometry(0.15, 4, 4); // Lower poly sphere
-    const lightMaterial = new THREE.MeshStandardMaterial({
-      emissive: new THREE.Color(0xffaa66),
-      emissiveIntensity: 1.5
-    });
-
-    // Reduce number of lights significantly
-    const lightPositions = [];
-    
-    // Add lights in a sparse grid pattern
-    for (let x = -40; x <= 40; x += 8) { // Increased spacing
-      for (let z = -40; z <= 40; z += 8) {
-        // Add only 30% of possible positions
-        if (Math.random() > 0.3) continue;
-        
-        lightPositions.push({ x, z, color: 0xffaa66 });
-      }
-    }
-    
-    // Add some random lights
-    for (let i = 0; i < 30; i++) { // Reduced from 200 to 30
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 20 + Math.random() * 30;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      lightPositions.push({ x, z, color: 0x88aaff });
-    }
-
-    // Create lights from positions
-    lightPositions.forEach(pos => {
-      // Light sphere
-      const material = lightMaterial.clone();
-      material.color.setHex(pos.color);
-      material.emissive.setHex(pos.color);
-      
-      const lightSphere = new THREE.Mesh(lightGeometry, material);
-      lightSphere.position.set(pos.x, 0.15, pos.z);
-      groundLights.add(lightSphere);
-      
-      // Point light (reduced intensity and range)
-      const pointLight = new THREE.PointLight(pos.color, 0.4, 8); // Reduced range
-      pointLight.position.set(pos.x, 1, pos.z);
-      groundLights.add(pointLight);
-    });
-
-    scene.add(groundLights);
-
-    // ============ SIMPLIFIED EVENING ATMOSPHERE ============
-    
-    // Simple moon (just a sphere, no glow)
-    const moonGeometry = new THREE.SphereGeometry(3, 16, 16); // Lower poly
-    const moonMaterial = new THREE.MeshStandardMaterial({
-      color: 0xeeeeee,
-      emissive: 0x444466,
-      emissiveIntensity: 0.2
-    });
-    const moonSphere = new THREE.Mesh(moonGeometry, moonMaterial);
-    moonSphere.position.set(-60, 40, -60);
-    scene.add(moonSphere);
-
-    // Reduced number of stars
-    const starCount = 200; // Reduced from 800
-    const starGeometry = new THREE.BufferGeometry();
-    const starPositions = new Float32Array(starCount * 3);
-    
-    for (let i = 0; i < starCount; i++) {
-      const radius = 120;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI * 0.4;
-      
-      starPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * radius;
-      starPositions[i * 3 + 1] = Math.cos(phi) * radius + 20;
-      starPositions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * radius;
-    }
-    
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    
-    const starMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.3,
-      transparent: true,
-      opacity: 0.6
-    });
-    
-    const stars = new THREE.Points(starGeometry, starMaterial);
-    scene.add(stars);
-
-    // Remove mist particles entirely for performance
 
     // ============ GROUND PLANE ============
     const planeGeometry = new THREE.PlaneGeometry(500, 500);
     const planeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x1a1a2a,
-      roughness: 0.7,
-      emissive: new THREE.Color(0x0a0a1a),
-      emissiveIntensity: 0.1
+      color: 0x707070, // Medium gray
+      roughness: 0.5,
+      metalness: 0.1
     });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane.rotation.x = Math.PI / 2;
@@ -229,16 +133,15 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Simplified materials
+        // Apply materials to buildings
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Simple material without emissive for better performance
             child.material = new THREE.MeshStandardMaterial({
-              color: 0x3a3a4a,
-              roughness: 0.6,
+              color: 0x9a9a9a, // Lighter gray for afternoon
+              roughness: 0.4,
               metalness: 0.1
             });
           }
@@ -270,12 +173,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      
       controls.update();
-      
-      // Simple star rotation (no mist or light pulsing for performance)
-      stars.rotation.y += 0.0002;
-      
       renderer.render(scene, camera);
     };
     
@@ -305,14 +203,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         container.removeChild(renderer.domElement);
       }
       
-      // Dispose geometries and materials
       planeGeometry.dispose();
       planeMaterial.dispose();
-      moonGeometry.dispose();
-      moonMaterial.dispose();
-      starGeometry.dispose();
-      starMaterial.dispose();
-      lightGeometry.dispose();
       
       renderer.dispose();
     };
@@ -325,10 +217,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     left: 0,
     width: '100%',
     aspectRatio: 4/1,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#87CEEB', // Sky blue
     borderRadius: '0px',
     overflow: 'hidden',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
   };
 
   const canvasWrapperStyle: React.CSSProperties = {
@@ -347,7 +239,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(26, 26, 46, 0.7)',
+    backgroundColor: 'rgba(135, 206, 235, 0.7)',
     color: 'white',
     fontSize: '1.2rem',
     zIndex: 10,
