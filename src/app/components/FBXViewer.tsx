@@ -75,7 +75,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = true;
-    controls.maxPolarAngle = Math.PI / 2.5; // Limit angle para realistic
+   // controls.maxPolarAngle = Math.PI / 2.5; // Limit angle para realistic
     controls.minDistance = 20;
     controls.maxDistance = 60;
     controls.enableZoom = true;
@@ -132,7 +132,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ REALISTIC GROUND ============
     
-    const groundRadius = 800; // Mas malaki para hindi kita ang edge
+    const groundRadius = 600; // Mas malaki para hindi kita ang edge
     const groundSegments = 64;
     
     // Create realistic ground texture (asphalt/concrete with wear)
