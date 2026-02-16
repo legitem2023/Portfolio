@@ -111,7 +111,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       metalness: 0.1
     });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-    plane.scale.set(5, 5, 5); // Scale 5x
+    plane.scale.set(1000, 1000, 1000); // Scale 5x
     plane.rotation.x = Math.PI / 2;
     plane.position.y = 0;
     plane.receiveShadow = true;
