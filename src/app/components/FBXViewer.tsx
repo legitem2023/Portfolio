@@ -62,7 +62,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 2.2; // TINAASAN KO PA (from 1.8 to 2.2)
+    renderer.toneMappingExposure = 2.2;
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -78,8 +78,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ MALIWANAG NA LIGHTING ============
     
-    // Main sun light (TINAASAN KO intensity)
-    const sunLight = new THREE.DirectionalLight(0xFFE6AA, 2.5); // from 1.2 to 2.5
+    // Main sun light
+    const sunLight = new THREE.DirectionalLight(0xFFE6AA, 2.5);
     sunLight.position.set(40, 50, 40);
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
@@ -93,7 +93,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const sunSphereMaterial = new THREE.MeshStandardMaterial({
       color: 0xFFAA00,
       emissive: 0xFF6600,
-      emissiveIntensity: 3.0, // TINAASAN KO glow
+      emissiveIntensity: 3.0,
       roughness: 0.1,
       metalness: 0.1
     });
@@ -102,7 +102,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     sunSphere.position.copy(sunLight.position);
     scene.add(sunSphere);
     
-    const sunGlowLight = new THREE.PointLight(0xFFAA00, 2.5, 40); // TINAASAN KO
+    const sunGlowLight = new THREE.PointLight(0xFFAA00, 2.5, 40);
     sunGlowLight.position.copy(sunLight.position);
     scene.add(sunGlowLight);
     
@@ -119,33 +119,31 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     sunRing.rotation.x = Math.PI / 2;
     scene.add(sunRing);
 
-    // Ambient light (TINAASAN KO)
-    const ambientLight = new THREE.AmbientLight(0xA0B0C0, 0.9); // from 0.6 to 0.9, mas blue-white
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0xA0B0C0, 0.9);
     scene.add(ambientLight);
 
-    // Fill light (TINAASAN KO)
-    const fillLight = new THREE.DirectionalLight(0xE0F0FF, 0.8); // from 0.4 to 0.8
+    // Fill light
+    const fillLight = new THREE.DirectionalLight(0xE0F0FF, 0.8);
     fillLight.position.set(-30, 30, 40);
     scene.add(fillLight);
 
-    // Back light (TINAASAN KO)
-    const backLight = new THREE.DirectionalLight(0xFFFFFF, 0.6); // from 0.3 to 0.6
+    // Back light
+    const backLight = new THREE.DirectionalLight(0xFFFFFF, 0.6);
     backLight.position.set(-20, 40, -40);
     scene.add(backLight);
 
-    // ADDITIONAL LIGHTS PARA MAS MALIWANAG
-    
     // Front fill light
     const frontLight = new THREE.DirectionalLight(0xFFF0E0, 0.7);
     frontLight.position.set(20, 30, 50);
     scene.add(frontLight);
     
-    // Top light para sa general brightness
+    // Top light
     const topLight = new THREE.DirectionalLight(0xFFFFFF, 0.5);
     topLight.position.set(0, 80, 0);
     scene.add(topLight);
     
-    // Additional point light sa gitna
+    // Center point light
     const centerLight = new THREE.PointLight(0xFFFFFF, 0.6, 100);
     centerLight.position.set(0, 20, 0);
     scene.add(centerLight);
@@ -155,15 +153,15 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundRadius = 500;
     const groundSegments = 32;
     
-    // Ground texture (MEDYO PINAPUTI KO ONTIIII)
+    // Ground texture
     const groundCanvas = document.createElement('canvas');
     groundCanvas.width = 512;
     groundCanvas.height = 512;
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Base color - pinaputi ko nang bahagya para sumasalamin sa liwanag
-      groundCtx.fillStyle = '#5A5045'; // from #4A4035
+      // Base color - dark cyan/gray
+      groundCtx.fillStyle = '#2A403F';
       groundCtx.fillRect(0, 0, 512, 512);
       
       // Add texture
@@ -172,23 +170,22 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       
       for (let i = 0; i < data.length; i += 4) {
         const variation = (Math.random() - 0.5) * 25;
-        // TINAASAN KO ang minimum para mas maliwanag
-        data[i] = Math.min(220, Math.max(80, data[i] + variation));
-        data[i+1] = Math.min(200, Math.max(70, data[i+1] + variation * 0.8));
-        data[i+2] = Math.min(180, Math.max(60, data[i+2] + variation * 0.6));
+        data[i] = Math.min(200, Math.max(50, data[i] + variation));
+        data[i+1] = Math.min(190, Math.max(60, data[i+1] + variation * 0.9));
+        data[i+2] = Math.min(180, Math.max(70, data[i+2] + variation * 0.8));
       }
       
       groundCtx.putImageData(imageData, 0, 0);
       
-      // Grid lines - pinaputi ko rin
-      groundCtx.strokeStyle = '#7A6A55';
+      // Grid lines
+      groundCtx.strokeStyle = '#3A5A55';
       groundCtx.lineWidth = 1;
       
       for (let i = 0; i < 512; i += 64) {
         groundCtx.beginPath();
         groundCtx.moveTo(i, 0);
         groundCtx.lineTo(i, 512);
-        groundCtx.strokeStyle = 'rgba(122, 106, 85, 0.15)'; // opacity from 0.1 to 0.15
+        groundCtx.strokeStyle = 'rgba(58, 90, 85, 0.15)';
         groundCtx.stroke();
         
         groundCtx.beginPath();
@@ -205,9 +202,9 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      color: 0x6A6055, // from 0x5A5045
-      roughness: 0.8, // from 0.9 (medyo pinakintab ko para sumasalamin)
-      metalness: 0.05,
+      color: 0x3A5A55,
+      roughness: 0.8,
+      metalness: 0.1,
       emissive: new THREE.Color(0x000000)
     });
     
@@ -224,8 +221,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const edgeRing = new THREE.Mesh(
       new THREE.TorusGeometry(groundRadius, 1.5, 8, 48),
       new THREE.MeshStandardMaterial({
-        color: 0x5A5045, // from 0x4A4035
-        emissive: new THREE.Color(0x2A251F),
+        color: 0x2A504A,
+        emissive: new THREE.Color(0x1A3530),
         transparent: true,
         opacity: 0.3
       })
@@ -234,8 +231,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     edgeRing.position.y = 0.05;
     scene.add(edgeRing);
 
-    // Fog - binawasan ko para mas malinaw
-    scene.fog = new THREE.FogExp2(0x9AA9B5, 0.0008); // from 0.0012 to 0.0008
+    // Fog
+    scene.fog = new THREE.FogExp2(0x9AA9B5, 0.0008);
 
     setDebug('Loading FBX model...');
 
@@ -264,94 +261,134 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // ============ 200+ BUILDING COLORS ============
+        // ============ 200+ DARK CYAN COLORS ============
         
-        // Grayscale colors (dark parin pero may konting bright variations)
-        const grays = [
-          0x303030, 0x343434, 0x383838, 0x3C3C3C, 0x404040, 0x444444, 0x484848, 0x4C4C4C, 0x505050, 0x545454,
-          0x585858, 0x5C5C5C, 0x606060, 0x646464, 0x686868, 0x6C6C6C, 0x707070, 0x747474, 0x787878, 0x7C7C7C,
-          0x2A2A2A, 0x2E2E2E, 0x323232, 0x363636, 0x3A3A3A, 0x3E3E3E, 0x424242, 0x464646, 0x4A4A4A, 0x4E4E4E,
-          // Dagdag ng lighter grays
-          0x808080, 0x848484, 0x888888
-        ];
+        const darkCyans = [];
         
-        // Brown tones
-        const browns = [
-          0x3A2E25, 0x3E3229, 0x42362D, 0x463A31, 0x4A3E35, 0x4E4239, 0x52463D, 0x564A41, 0x5A4E45, 0x5E5249,
-          0x4A382A, 0x4E3C2E, 0x524032, 0x564436, 0x58483A, 0x5C4C3E, 0x605042, 0x645446, 0x68584A, 0x6C5C4E,
-          0x3A2C1E, 0x3E3022, 0x423426, 0x46382A, 0x4A3C2E, 0x4E4032, 0x524436, 0x56483A, 0x5A4C3E, 0x5E5042
-        ];
+        // Generate 200+ dark cyan shades
+        // Dark cyan range: R low (0-80), G medium (60-140), B medium-high (80-160)
         
-        // Red brick / terracotta
-        const reds = [
-          0x3A2620, 0x3E2A24, 0x422E28, 0x46322C, 0x4A3630, 0x4E3A34, 0x523E38, 0x56423C, 0x5A4640, 0x5E4A44,
-          0x442E24, 0x483228, 0x4C362C, 0x503A30, 0x543E34, 0x584238, 0x5A463C, 0x5E4A40, 0x624E44, 0x665248
-        ];
-        
-        // Blue-grays
-        const bluegrays = [
-          0x2A3A40, 0x2E3E44, 0x324248, 0x36464C, 0x3A4A50, 0x3E4E54, 0x425258, 0x46565C, 0x4A5A60, 0x4E5E64,
-          0x2A3440, 0x2E3844, 0x323C48, 0x36404C, 0x3A4450, 0x3E4854, 0x424C58, 0x46505C, 0x4A5460, 0x4E5864
-        ];
-        
-        // Green-grays
-        const greens = [
-          0x2A3A30, 0x2E3E34, 0x324238, 0x36463C, 0x3A4A40, 0x3E4E44, 0x425248, 0x46564C, 0x4A5A50, 0x4E5E54,
-          0x2A342C, 0x2E3830, 0x323C34, 0x364038, 0x3A443C, 0x3E4840, 0x424C44, 0x465048, 0x4A544C, 0x4E5850
-        ];
-        
-        // Purplish grays
-        const purples = [
-          0x302A30, 0x342E34, 0x383238, 0x3C363C, 0x403A40, 0x443E44, 0x484248, 0x4C464C, 0x504A50, 0x544E54,
-          0x2A242A, 0x2E282E, 0x322C32, 0x363036, 0x3A343A, 0x3E383E, 0x423C42, 0x464046, 0x4A444A, 0x4E484E
-        ];
-        
-        // Yellow ochre / sandstone
-        const yellows = [
-          0x3A3420, 0x3E3824, 0x423C28, 0x46402C, 0x4A4430, 0x4E4834, 0x524C38, 0x56503C, 0x5A5440, 0x5E5844,
-          0x3A301A, 0x3E341E, 0x423822, 0x463C26, 0x4A402A, 0x4E442E, 0x524832, 0x564C36, 0x5A503A, 0x5E543E
-        ];
-        
-        // Combine all colors
-        const buildingColors = [
-          ...grays,
-          ...browns,
-          ...reds,
-          ...bluegrays,
-          ...greens,
-          ...purples,
-          ...yellows
-        ];
-        
-        // Additional variations
-        for (let i = 0; i < 30; i++) {
-          const r = Math.floor(40 + Math.random() * 70); // from 30-80 to 40-110 (mas bright)
-          const g = Math.floor(35 + Math.random() * 65);
-          const b = Math.floor(30 + Math.random() * 60);
-          const color = (r << 16) | (g << 8) | b;
-          buildingColors.push(color);
+        for (let r = 0; r <= 60; r += 5) {
+          for (let g = 50; g <= 120; g += 5) {
+            for (let b = 70; b <= 150; b += 5) {
+              // Para hindi masyadong marami, magdagdag lang kapag nasa dark cyan range
+              if (b > g && g > r) {
+                const color = (r << 16) | (g << 8) | b;
+                darkCyans.push(color);
+              }
+            }
+          }
         }
+        
+        // Add more variations with different combinations
+        for (let i = 0; i < 100; i++) {
+          const r = Math.floor(Math.random() * 50); // 0-49
+          const g = Math.floor(50 + Math.random() * 70); // 50-119
+          const b = Math.floor(80 + Math.random() * 70); // 80-149
+          
+          // Ensure cyan characteristics (blue >= green > red)
+          if (b >= g && g > r) {
+            const color = (r << 16) | (g << 8) | b;
+            darkCyans.push(color);
+          } else {
+            // Adjust to make it cyan
+            const adjustedR = Math.floor(Math.random() * 40);
+            const adjustedG = Math.floor(60 + Math.random() * 50);
+            const adjustedB = Math.floor(adjustedG + 10 + Math.random() * 30);
+            const color = (adjustedR << 16) | (adjustedG << 8) | adjustedB;
+            darkCyans.push(color);
+          }
+        }
+        
+        // Specific dark cyan ranges
+        const cyanRanges = [
+          // Deep teals
+          { r: 0, g: 60, b: 80 }, { r: 5, g: 65, b: 85 }, { r: 10, g: 70, b: 90 }, { r: 15, g: 75, b: 95 },
+          { r: 0, g: 70, b: 100 }, { r: 5, g: 75, b: 105 }, { r: 10, g: 80, b: 110 }, { r: 15, g: 85, b: 115 },
+          
+          // Dark blue-greens
+          { r: 20, g: 80, b: 100 }, { r: 25, g: 85, b: 105 }, { r: 30, g: 90, b: 110 }, { r: 35, g: 95, b: 115 },
+          { r: 20, g: 90, b: 120 }, { r: 25, g: 95, b: 125 }, { r: 30, g: 100, b: 130 }, { r: 35, g: 105, b: 135 },
+          
+          // Forest cyans
+          { r: 40, g: 100, b: 110 }, { r: 45, g: 105, b: 115 }, { r: 50, g: 110, b: 120 }, { r: 55, g: 115, b: 125 },
+          { r: 40, g: 110, b: 130 }, { r: 45, g: 115, b: 135 }, { r: 50, g: 120, b: 140 }, { r: 55, g: 125, b: 145 },
+          
+          // Steel cyans
+          { r: 30, g: 70, b: 90 }, { r: 35, g: 75, b: 95 }, { r: 40, g: 80, b: 100 }, { r: 45, g: 85, b: 105 },
+          { r: 30, g: 80, b: 110 }, { r: 35, g: 85, b: 115 }, { r: 40, g: 90, b: 120 }, { r: 45, g: 95, b: 125 },
+          
+          // Ocean depths
+          { r: 0, g: 50, b: 90 }, { r: 5, g: 55, b: 95 }, { r: 10, g: 60, b: 100 }, { r: 15, g: 65, b: 105 },
+          { r: 0, g: 60, b: 110 }, { r: 5, g: 65, b: 115 }, { r: 10, g: 70, b: 120 }, { r: 15, g: 75, b: 125 },
+          
+          // Mossy cyans
+          { r: 40, g: 80, b: 90 }, { r: 45, g: 85, b: 95 }, { r: 50, g: 90, b: 100 }, { r: 55, g: 95, b: 105 },
+          { r: 40, g: 90, b: 110 }, { r: 45, g: 95, b: 115 }, { r: 50, g: 100, b: 120 }, { r: 55, g: 105, b: 125 },
+          
+          // Deep turquoise
+          { r: 20, g: 70, b: 100 }, { r: 25, g: 75, b: 105 }, { r: 30, g: 80, b: 110 }, { r: 35, g: 85, b: 115 },
+          { r: 20, g: 80, b: 120 }, { r: 25, g: 85, b: 125 }, { r: 30, g: 90, b: 130 }, { r: 35, g: 95, b: 135 },
+          
+          // Shadow cyans
+          { r: 10, g: 40, b: 70 }, { r: 15, g: 45, b: 75 }, { r: 20, g: 50, b: 80 }, { r: 25, g: 55, b: 85 },
+          { r: 10, g: 50, b: 90 }, { r: 15, g: 55, b: 95 }, { r: 20, g: 60, b: 100 }, { r: 25, g: 65, b: 105 }
+        ];
+        
+        // Add from predefined ranges
+        cyanRanges.forEach(range => {
+          const color = (range.r << 16) | (range.g << 8) | range.b;
+          darkCyans.push(color);
+          
+          // Add slight variations
+          for (let v = 0; v < 3; v++) {
+            const varR = Math.min(60, Math.max(0, range.r + (Math.random() * 10 - 5)));
+            const varG = Math.min(130, Math.max(40, range.g + (Math.random() * 10 - 5)));
+            const varB = Math.min(150, Math.max(60, range.b + (Math.random() * 10 - 5)));
+            const varColor = (Math.floor(varR) << 16) | (Math.floor(varG) << 8) | Math.floor(varB);
+            darkCyans.push(varColor);
+          }
+        });
+        
+        // Remove duplicates and ensure we have at least 200
+        const uniqueCyans = [...new Set(darkCyans)];
+        
+        // If we need more, generate more random ones
+        while (uniqueCyans.length < 220) {
+          const r = Math.floor(Math.random() * 45);
+          const g = Math.floor(50 + Math.random() * 70);
+          const b = Math.floor(g + 10 + Math.random() * 40);
+          const color = (r << 16) | (g << 8) | b;
+          if (!uniqueCyans.includes(color)) {
+            uniqueCyans.push(color);
+          }
+        }
+        
+        console.log(`Generated ${uniqueCyans.length} dark cyan colors`);
         
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            const randomColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
-            const roughness = 0.5 + Math.random() * 0.3; // from 0.6-0.9 to 0.5-0.8 (mas makintab konti)
-            const metalness = Math.random() * 0.2;
-            
-            // Bawasan ang emissive para hindi lumiwanag ang buildings mismo
-            const hasEmissive = Math.random() > 0.8; // from 0.7 to 0.8 (mas konti ang may emissive)
+            const randomColor = uniqueCyans[Math.floor(Math.random() * uniqueCyans.length)];
+            const roughness = 0.5 + Math.random() * 0.3;
+            const metalness = 0.1 + Math.random() * 0.2; // Slightly metallic para sa cyan buildings
             
             child.material = new THREE.MeshStandardMaterial({
               color: randomColor,
               roughness: roughness,
               metalness: metalness,
-              emissive: hasEmissive ? new THREE.Color(0x111111) : new THREE.Color(0x000000),
-              emissiveIntensity: hasEmissive ? 0.05 : 0, // from 0.1 to 0.05
+              emissive: new THREE.Color(0x000000),
+              emissiveIntensity: 0,
               flatShading: false
             });
+            
+            // Optional: Add slight emissive for windows effect
+            if (Math.random() > 0.85) {
+              child.material.emissive = new THREE.Color(0x112233);
+              child.material.emissiveIntensity = 0.1;
+            }
           }
         });
 
@@ -447,4 +484,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-          }
+            }
