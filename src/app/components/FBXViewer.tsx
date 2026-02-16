@@ -34,8 +34,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     if (context) {
       const gradient = context.createLinearGradient(0, 0, 0, 2);
-      gradient.addColorStop(0, '#1E3B5C'); // Deep blue at top
-      gradient.addColorStop(0.6, '#7BA9C9'); // Mid blue
+      gradient.addColorStop(0, '#0B3B5C'); // Deep blue at top
+      gradient.addColorStop(0.5, '#4A90E2'); // Bright blue mid
       gradient.addColorStop(1, '#F5E6D3'); // Warm horizon
       context.fillStyle = gradient;
       context.fillRect(0, 0, 2, 2);
@@ -49,19 +49,19 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const height = 400;
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(7, 21, 37);
+    camera.position.set(10, 25, 45);
 
-    // Renderer with optimized settings
+    // Renderer
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
-      powerPreference: "default" // Less aggressive power usage
+      powerPreference: "default"
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Lower pixel ratio for performance
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
-    renderer.toneMapping = THREE.ReinhardToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 2.2; // Mas maliwanag
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -71,70 +71,88 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.maxPolarAngle = Math.PI / 2;
     controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.5;
-    controls.target.set(0, 5, 0);
+    controls.autoRotateSpeed = 1.2;
+    controls.target.set(0, 8, 0);
 
-    // ============ OPTIMIZED REALISTIC LIGHTING ============
+    // ============ MALIWANAG NA LIGHTING ============
     
-    // Single sun light (main source)
-    const sunLight = new THREE.DirectionalLight(0xFFF5E6, 1.8);
-    sunLight.position.set(30, 50, 30);
+    // Main sun light (mas maliwanag)
+    const sunLight = new THREE.DirectionalLight(0xFFF5E6, 2.5);
+    sunLight.position.set(40, 60, 40);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 1024; // Reduced for performance
-    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
     sunLight.shadow.bias = -0.0005;
     sunLight.shadow.normalBias = 0.02;
     scene.add(sunLight);
 
-    // Simple ambient + hemisphere combined
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+    // Additional key light para sa front illumination
+    const keyLight = new THREE.DirectionalLight(0xFFE6CC, 1.5);
+    keyLight.position.set(20, 30, 50);
+    scene.add(keyLight);
+
+    // Ambient light (mas maliwanag)
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 1.2);
     scene.add(ambientLight);
 
-    // One fill light
-    const fillLight = new THREE.DirectionalLight(0xC0D0E0, 0.5);
-    fillLight.position.set(-20, 20, -20);
-    scene.add(fillLight);
+    // Fill light from multiple directions
+    const fillLight1 = new THREE.DirectionalLight(0xCCE5FF, 0.8);
+    fillLight1.position.set(-30, 20, 30);
+    scene.add(fillLight1);
 
-    // ============ REALISTIC GROUND (LIGHTWEIGHT) ============
+    const fillLight2 = new THREE.DirectionalLight(0xFFE6CC, 0.6);
+    fillLight2.position.set(10, 15, -30);
+    scene.add(fillLight2);
+
+    // Back light para sa rim lighting
+    const backLight = new THREE.DirectionalLight(0xE6F0FF, 0.7);
+    backLight.position.set(-20, 30, -40);
+    scene.add(backLight);
+
+    // Point light para sa general brightness
+    const pointLight = new THREE.PointLight(0xFFFFFF, 0.8);
+    pointLight.position.set(0, 20, 0);
+    scene.add(pointLight);
+
+    // ============ GROUND ============
     
-    // Simple circular ground with texture
     const groundRadius = 500;
-    const groundSegments = 32; // Reduced segments for performance
+    const groundSegments = 32;
     
-    // Create a simple ground texture procedurally (no external images)
+    // Ground texture
     const groundCanvas = document.createElement('canvas');
     groundCanvas.width = 512;
     groundCanvas.height = 512;
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Base earth color
-      groundCtx.fillStyle = '#5C4E3D';
+      // Base color (mas maliwanag na earth tone)
+      groundCtx.fillStyle = '#8A7A65';
       groundCtx.fillRect(0, 0, 512, 512);
       
-      // Add simple noise for texture (fast)
+      // Add texture
       const imageData = groundCtx.getImageData(0, 0, 512, 512);
       const data = imageData.data;
       
-      for (let i = 0; i < data.length; i += 8) { // Skip every other pixel for speed
-        const noise = (Math.random() - 0.5) * 40;
-        data[i] = Math.min(255, Math.max(0, data[i] + noise));
-        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise * 0.8));
-        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise * 0.6));
+      for (let i = 0; i < data.length; i += 4) {
+        // Magdagdag ng variation para hindi flat
+        const variation = (Math.random() - 0.5) * 30;
+        data[i] = Math.min(255, Math.max(160, data[i] + variation));
+        data[i+1] = Math.min(255, Math.max(140, data[i+1] + variation * 0.8));
+        data[i+2] = Math.min(255, Math.max(120, data[i+2] + variation * 0.6));
       }
       
       groundCtx.putImageData(imageData, 0, 0);
       
-      // Add simple grid pattern
-      groundCtx.strokeStyle = '#7A6A55';
+      // Magaan na grid lines
+      groundCtx.strokeStyle = '#AFA08B';
       groundCtx.lineWidth = 1;
       
-      // Fewer lines for performance
       for (let i = 0; i < 512; i += 64) {
         groundCtx.beginPath();
         groundCtx.moveTo(i, 0);
         groundCtx.lineTo(i, 512);
-        groundCtx.strokeStyle = 'rgba(122, 106, 85, 0.2)';
+        groundCtx.strokeStyle = 'rgba(175, 160, 139, 0.15)';
         groundCtx.stroke();
         
         groundCtx.beginPath();
@@ -147,13 +165,12 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundTexture = new THREE.CanvasTexture(groundCanvas);
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(4, 4);
+    groundTexture.repeat.set(6, 6);
     
-    // Ground material
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      color: 0x8A7A65,
-      roughness: 0.8,
+      color: 0xA0907A,
+      roughness: 0.7,
       metalness: 0.1,
       emissive: new THREE.Color(0x000000)
     });
@@ -167,38 +184,22 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Simple edge ring (lightweight)
+    // Edge ring
     const edgeRing = new THREE.Mesh(
-      new THREE.TorusGeometry(groundRadius, 1, 8, 48), // Lower segment count
+      new THREE.TorusGeometry(groundRadius, 1.5, 8, 48),
       new THREE.MeshStandardMaterial({
-        color: 0x6B5A44,
-        emissive: new THREE.Color(0x1A1510),
+        color: 0x7A6A55,
+        emissive: new THREE.Color(0x2A251F),
         transparent: true,
-        opacity: 0.3
+        opacity: 0.4
       })
     );
     edgeRing.rotation.x = Math.PI / 2;
     edgeRing.position.y = 0.05;
     scene.add(edgeRing);
 
-    // Add a few simple markers (instead of many lines)
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2;
-      const markerGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 6);
-      const markerMaterial = new THREE.MeshStandardMaterial({ color: 0x9A8A75 });
-      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
-      marker.position.set(
-        Math.sin(angle) * 200,
-        0.05,
-        Math.cos(angle) * 200
-      );
-      marker.rotation.x = 0;
-      marker.receiveShadow = true;
-      scene.add(marker);
-    }
-
-    // Add subtle fog for depth
-    scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
+    // Fog
+    scene.fog = new THREE.FogExp2(0x87CEEB, 0.0015);
 
     setDebug('Loading FBX model...');
 
@@ -227,23 +228,62 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Simplify materials for performance
+        // ============ MAGKAKAIBA-IBANG KULAY NG BUILDINGS ============
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+            
+            // Random na pumili ng building color mula sa common building palette
+            const buildingColors = [
+              0xE8E8E8, // Light gray / puti
+              0xD4D4D4, // Silver gray
+              0xC0C0C0, // Gray
+              0xCD853F, // Bronze / tansy
+              0x8B7355, // Brown / kayumanggi
+              0x9A7D5A, // Light brown
+              0x7A6A55, // Dark beige
+              0x5A4A3A, // Dark brown
+              0x4A6A8A, // Blue-gray
+              0x6A8A9A, // Gray-blue
+              0x8A9AA0, // Blue-gray light
+              0x9CB0B0, // Green-gray
+              0xA09A80, // Tan
+              0xB0A090, // Beige
+              0xC0B0A0, // Light beige
+              0x708090, // Slate gray
+              0x606060, // Dark gray
+              0x505050, // Charcoal
+              0x804020, // Dark brown (wood)
+              0xA06040, // Rustic brown
+            ];
+            
+            // Random na pumili ng kulay
+            const randomColor = buildingColors[Math.floor(Math.random() * buildingColors.length)];
+            
+            // Random roughness at metalness para hindi pare-pareho ang itsura
+            const roughness = 0.3 + Math.random() * 0.4;
+            const metalness = Math.random() * 0.3;
+            
             child.material = new THREE.MeshStandardMaterial({
-              color: 0xCCCCCC,
-              roughness: 0.4,
-              metalness: 0.1
+              color: randomColor,
+              roughness: roughness,
+              metalness: metalness,
+              emissive: new THREE.Color(0x000000),
+              emissiveIntensity: 0
             });
           }
         });
 
         scene.add(object);
         
-        const newCenter = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
-        camera.lookAt(newCenter);
+        // Adjust camera target sa taas ng buildings
+        const newBox = new THREE.Box3().setFromObject(object);
+        const newCenter = newBox.getCenter(new THREE.Vector3());
+        const newSize = newBox.getSize(new THREE.Vector3());
+        
+        // Itaas ng konti ang target para kita ang buildings
+        controls.target.set(newCenter.x, newSize.y * 0.4, newCenter.z);
         controls.update();
         
         setDebug('Ready');
@@ -262,7 +302,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       }
     );
 
-    // Simple animation loop
+    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -295,14 +335,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     };
   }, [modelPath]);
 
-  // Simple styles
+  // Styles
   const containerStyle: React.CSSProperties = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
     aspectRatio: '4/1',
-    backgroundColor: '#1E3B5C',
+    backgroundColor: '#0B3B5C',
     overflow: 'hidden'
   };
 
@@ -329,4 +369,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-}
+      }
