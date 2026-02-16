@@ -23,36 +23,12 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with dark evening sky gradient
+    // Scene setup with dark evening sky
     const scene = new THREE.Scene();
     
-    // Create a gradient texture for the evening sky
-    const canvas = document.createElement('canvas');
-    canvas.width = 1;
-    canvas.height = 2;
-    const context = canvas.getContext('2d');
-
-    if (context) {
-      // Evening gradient: dark blue/purple at top to orange/purple horizon
-      const gradient = context.createLinearGradient(0, 0, 0, 2);
-      gradient.addColorStop(0, '#0a0a2a'); // Deep night blue at top
-      gradient.addColorStop(0.5, '#2a1b3d'); // Dark purple in middle
-      gradient.addColorStop(1, '#4a2b4d'); // Warm purple/orange at horizon
-
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, 1, 2);
-
-      const gradientTexture = new THREE.CanvasTexture(canvas);
-      gradientTexture.wrapS = THREE.RepeatWrapping;
-      gradientTexture.wrapT = THREE.RepeatWrapping;
-      gradientTexture.repeat.set(1, 1);
-
-      scene.background = gradientTexture;
-      scene.fog = new THREE.Fog(0x4a2b4d, 50, 300); // Warm fog at horizon
-    } else {
-      scene.background = new THREE.Color(0x1a1a2e); // Dark blue fallback
-      scene.fog = new THREE.Fog(0x1a1a2e, 50, 300);
-    }
+    // Simple solid color background (much lighter than gradient)
+    scene.background = new THREE.Color(0x1a1a2e); // Dark blue
+    scene.fog = new THREE.Fog(0x1a1a2e, 80, 250); // Increased fog start for better performance
 
     // Camera setup
     const container = containerRef.current;
@@ -69,11 +45,11 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       powerPreference: "high-performance"
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit pixel ratio for performance
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2; // Slightly lower exposure for evening
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -87,190 +63,135 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.autoRotateSpeed = 2.0;
     controls.target.set(0, 5, 0);
 
-    // ============ EVENING LIGHTING SETUP ============
+    // ============ OPTIMIZED EVENING LIGHTING ============
     
-    // 1. Dim hemisphere light for evening ambiance
+    // Single hemisphere light
     const hemiLight = new THREE.HemisphereLight(0x1a2b4a, 0x4a2a1a, 0.8);
     scene.add(hemiLight);
 
-    // 2. Main directional light (low sun - orange/red tint)
+    // Main directional light (low sun)
     const dirLight = new THREE.DirectionalLight(0xffaa66, 0.8);
-    dirLight.position.set(-30, 20, 40); // Low in the sky
+    dirLight.position.set(-30, 20, 40);
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 4096;
-    dirLight.shadow.mapSize.height = 4096;
+    dirLight.shadow.mapSize.width = 2048; // Reduced shadow map size
+    dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.camera.near = 0.5;
     dirLight.shadow.camera.far = 200;
     dirLight.shadow.camera.left = -80;
     dirLight.shadow.camera.right = 80;
     dirLight.shadow.camera.top = 80;
     dirLight.shadow.camera.bottom = -80;
-    dirLight.shadow.bias = -0.0005;
     scene.add(dirLight);
 
-    // 3. Fill light with cool evening color
-    const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+    // Single fill light (instead of multiple)
+    const fillLight = new THREE.DirectionalLight(0x88aaff, 0.3);
     fillLight.position.set(20, 10, -30);
     scene.add(fillLight);
 
-    // 4. Ambient light with evening color
-    const ambientLight = new THREE.AmbientLight(0x2a2a4a, 1.2);
+    // Ambient light
+    const ambientLight = new THREE.AmbientLight(0x2a2a4a, 1.0);
     scene.add(ambientLight);
 
-    // 5. Create a container for ground lights
-    const groundLights = new THREE.Group();
-
-    // ============ TINY GROUND LIGHTS ============
-    // Function to create a tiny glowing light
-    const createTinyLight = (x: number, z: number, color: number, intensity: number = 0.8) => {
-      // Tiny sphere for the light source
-      const geometry = new THREE.SphereGeometry(0.15, 8, 8);
-      const material = new THREE.MeshStandardMaterial({
-        color: color,
-        emissive: color,
-        emissiveIntensity: intensity * 1.5
-      });
-      const lightSphere = new THREE.Mesh(geometry, material);
-      lightSphere.position.set(x, 0.15, z);
-      
-      // Add a point light for illumination
-      const pointLight = new THREE.PointLight(color, intensity, 15);
-      pointLight.position.set(x, 1, z);
-      
-      groundLights.add(lightSphere);
-      groundLights.add(pointLight);
-    };
-
-    // Create a grid of lights
-    const gridSize = 60;
-    const spacing = 4;
+    // ============ OPTIMIZED TINY GROUND LIGHTS ============
+    // Use instanced mesh for better performance
     
-    // Warm white lights for main streets
-    for (let x = -gridSize; x <= gridSize; x += spacing) {
-      for (let z = -gridSize; z <= gridSize; z += spacing) {
-        // Add some randomness to placement
-        if (Math.random() > 0.7) continue; // Skip some positions for natural look
+    const groundLights = new THREE.Group();
+    
+    // Create a single geometry and material for all light spheres
+    const lightGeometry = new THREE.SphereGeometry(0.15, 4, 4); // Lower poly sphere
+    const lightMaterial = new THREE.MeshStandardMaterial({
+      emissive: new THREE.Color(0xffaa66),
+      emissiveIntensity: 1.5
+    });
+
+    // Reduce number of lights significantly
+    const lightPositions = [];
+    
+    // Add lights in a sparse grid pattern
+    for (let x = -40; x <= 40; x += 8) { // Increased spacing
+      for (let z = -40; z <= 40; z += 8) {
+        // Add only 30% of possible positions
+        if (Math.random() > 0.3) continue;
         
-        // Different colors for variety
-        if (Math.random() > 0.8) {
-          createTinyLight(x, z, 0xffaa66, 0.6); // Warm orange
-        } else if (Math.random() > 0.6) {
-          createTinyLight(x, z, 0x88aaff, 0.5); // Cool blue
-        } else {
-          createTinyLight(x, z, 0xffdd88, 0.7); // Warm white
-        }
+        lightPositions.push({ x, z, color: 0xffaa66 });
       }
     }
-
-    // Add some random lights in patterns
-    for (let i = 0; i < 200; i++) {
+    
+    // Add some random lights
+    for (let i = 0; i < 30; i++) { // Reduced from 200 to 30
       const angle = Math.random() * Math.PI * 2;
       const radius = 20 + Math.random() * 30;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      
-      const colorChoice = Math.random();
-      if (colorChoice > 0.6) {
-        createTinyLight(x, z, 0xff6666, 0.5); // Reddish
-      } else if (colorChoice > 0.3) {
-        createTinyLight(x, z, 0x66ff66, 0.4); // Greenish
-      } else {
-        createTinyLight(x, z, 0x6666ff, 0.6); // Blue
-      }
+      lightPositions.push({ x, z, color: 0x88aaff });
     }
+
+    // Create lights from positions
+    lightPositions.forEach(pos => {
+      // Light sphere
+      const material = lightMaterial.clone();
+      material.color.setHex(pos.color);
+      material.emissive.setHex(pos.color);
+      
+      const lightSphere = new THREE.Mesh(lightGeometry, material);
+      lightSphere.position.set(pos.x, 0.15, pos.z);
+      groundLights.add(lightSphere);
+      
+      // Point light (reduced intensity and range)
+      const pointLight = new THREE.PointLight(pos.color, 0.4, 8); // Reduced range
+      pointLight.position.set(pos.x, 1, pos.z);
+      groundLights.add(pointLight);
+    });
 
     scene.add(groundLights);
 
-    // ============ EVENING ATMOSPHERE ============
+    // ============ SIMPLIFIED EVENING ATMOSPHERE ============
     
-    // Add a moon sphere
-    const moonGeometry = new THREE.SphereGeometry(4, 32, 32);
+    // Simple moon (just a sphere, no glow)
+    const moonGeometry = new THREE.SphereGeometry(3, 16, 16); // Lower poly
     const moonMaterial = new THREE.MeshStandardMaterial({
       color: 0xeeeeee,
       emissive: 0x444466,
-      emissiveIntensity: 0.3
+      emissiveIntensity: 0.2
     });
     const moonSphere = new THREE.Mesh(moonGeometry, moonMaterial);
-    moonSphere.position.set(-80, 60, -80);
+    moonSphere.position.set(-60, 40, -60);
     scene.add(moonSphere);
 
-    // Add evening stars
-    const starCount = 800;
+    // Reduced number of stars
+    const starCount = 200; // Reduced from 800
     const starGeometry = new THREE.BufferGeometry();
     const starPositions = new Float32Array(starCount * 3);
-    const starColors = new Float32Array(starCount * 3);
     
     for (let i = 0; i < starCount; i++) {
-      // Position stars in a dome above
-      const radius = 150;
+      const radius = 120;
       const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI * 0.4; // Keep stars in upper hemisphere
+      const phi = Math.random() * Math.PI * 0.4;
       
       starPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * radius;
       starPositions[i * 3 + 1] = Math.cos(phi) * radius + 20;
       starPositions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * radius;
-      
-      // Random star colors (mostly white, some blue/red)
-      const colorRand = Math.random();
-      if (colorRand > 0.95) {
-        starColors[i * 3] = 1.0; // Red
-        starColors[i * 3 + 1] = 0.6;
-        starColors[i * 3 + 2] = 0.6;
-      } else if (colorRand > 0.85) {
-        starColors[i * 3] = 0.6; // Blue
-        starColors[i * 3 + 1] = 0.6;
-        starColors[i * 3 + 2] = 1.0;
-      } else {
-        starColors[i * 3] = 1.0; // White
-        starColors[i * 3 + 1] = 1.0;
-        starColors[i * 3 + 2] = 1.0;
-      }
     }
     
     starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
     
     const starMaterial = new THREE.PointsMaterial({
-      size: 0.5,
-      vertexColors: true,
+      color: 0xffffff,
+      size: 0.3,
       transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending
+      opacity: 0.6
     });
     
     const stars = new THREE.Points(starGeometry, starMaterial);
     scene.add(stars);
 
-    // Add some floating particles for evening mist
-    const mistCount = 300;
-    const mistGeometry = new THREE.BufferGeometry();
-    const mistPositions = new Float32Array(mistCount * 3);
-    
-    for (let i = 0; i < mistCount; i++) {
-      mistPositions[i * 3] = (Math.random() - 0.5) * 200;
-      mistPositions[i * 3 + 1] = Math.random() * 30;
-      mistPositions[i * 3 + 2] = (Math.random() - 0.5) * 200;
-    }
-    
-    mistGeometry.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3));
-    
-    const mistMaterial = new THREE.PointsMaterial({
-      color: 0x88aaff,
-      size: 0.3,
-      transparent: true,
-      opacity: 0.15,
-      blending: THREE.AdditiveBlending
-    });
-    
-    const mist = new THREE.Points(mistGeometry, mistMaterial);
-    scene.add(mist);
+    // Remove mist particles entirely for performance
 
     // ============ GROUND PLANE ============
     const planeGeometry = new THREE.PlaneGeometry(500, 500);
     const planeMaterial = new THREE.MeshStandardMaterial({ 
       color: 0x1a1a2a,
       roughness: 0.7,
-      metalness: 0.1,
       emissive: new THREE.Color(0x0a0a1a),
       emissiveIntensity: 0.1
     });
@@ -291,20 +212,13 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         setDebug('FBX model loaded successfully');
         setLoading(false);
         
-        console.log('FBX Model loaded:', object);
-        
         const box = new THREE.Box3().setFromObject(object);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         
-        console.log('Original model size:', size);
-        
-        // Scale the model
         const targetSize = 30;
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = targetSize / maxDim;
-        
-        console.log(`Applying scale factor: ${scale}`);
         
         object.scale.set(scale * 20, scale * 20, scale * 20);
         object.rotation.x = -(90 * Math.PI / 180);
@@ -315,22 +229,18 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Apply materials to buildings
+        // Simplified materials
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Darker materials for evening
-            const material = new THREE.MeshStandardMaterial({
+            // Simple material without emissive for better performance
+            child.material = new THREE.MeshStandardMaterial({
               color: 0x3a3a4a,
               roughness: 0.6,
-              metalness: 0.2,
-              emissive: new THREE.Color(0x111122),
-              emissiveIntensity: 0.1
+              metalness: 0.1
             });
-            
-            child.material = material;
           }
         });
 
@@ -363,20 +273,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       
       controls.update();
       
-      // Animate stars (subtle twinkling)
+      // Simple star rotation (no mist or light pulsing for performance)
       stars.rotation.y += 0.0002;
-      
-      // Animate mist
-      mist.rotation.y += 0.0003;
-      
-      // Animate ground lights (subtle pulsing)
-      groundLights.children.forEach((child, index) => {
-        if (child instanceof THREE.Mesh && child.material.emissive) {
-          const time = Date.now() * 0.002 + index;
-          const pulse = 0.8 + Math.sin(time) * 0.2;
-          child.material.emissiveIntensity = pulse * 1.5;
-        }
-      });
       
       renderer.render(scene, camera);
     };
@@ -406,6 +304,16 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
+      
+      // Dispose geometries and materials
+      planeGeometry.dispose();
+      planeMaterial.dispose();
+      moonGeometry.dispose();
+      moonMaterial.dispose();
+      starGeometry.dispose();
+      starMaterial.dispose();
+      lightGeometry.dispose();
+      
       renderer.dispose();
     };
   }, [modelPath]);
@@ -417,7 +325,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     left: 0,
     width: '100%',
     aspectRatio: 4/1,
-    backgroundColor: '#1a1a2e', // Dark blue background
+    backgroundColor: '#1a1a2e',
     borderRadius: '0px',
     overflow: 'hidden',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
@@ -446,19 +354,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     pointerEvents: 'none',
   };
 
-  const debugStyle: React.CSSProperties = {
-    position: 'absolute',
-    bottom: '10px',
-    left: '10px',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    color: '#0f0',
-    padding: '4px 8px',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontFamily: 'monospace',
-    zIndex: 20,
-  };
-
   return (
     <div style={containerStyle}>
       <div style={canvasWrapperStyle} ref={containerRef} />
@@ -472,4 +367,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-            }
+}
