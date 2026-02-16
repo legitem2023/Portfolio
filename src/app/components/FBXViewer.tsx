@@ -332,7 +332,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         // ===== SIGURADUHING LAHAT NG MESH AY MAPALITAN =====
         let meshCount = 0;
         
-        object.traverse((child) => {
+        object.traverse((child:any) => {
           if (child.isMesh) {
             meshCount++;
             
