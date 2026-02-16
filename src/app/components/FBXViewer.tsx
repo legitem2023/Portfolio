@@ -23,25 +23,24 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with bright daytime sky
+    // Scene setup with realistic sky
     const scene = new THREE.Scene();
     
-    // Create a gradient texture for the sky (daytime colors)
+    // Simple gradient sky (lightweight)
     const canvas = document.createElement('canvas');
-    canvas.width = 1;
+    canvas.width = 2;
     canvas.height = 2;
     const context = canvas.getContext('2d');
 
     if (context) {
       const gradient = context.createLinearGradient(0, 0, 0, 2);
-      gradient.addColorStop(0, '#87CEEB'); // Sky blue at top
-      gradient.addColorStop(1, '#E0F6FF'); // Lighter blue at horizon
+      gradient.addColorStop(0, '#1E3B5C'); // Deep blue at top
+      gradient.addColorStop(0.6, '#7BA9C9'); // Mid blue
+      gradient.addColorStop(1, '#F5E6D3'); // Warm horizon
       context.fillStyle = gradient;
-      context.fillRect(0, 0, 1, 2);
+      context.fillRect(0, 0, 2, 2);
       const gradientTexture = new THREE.CanvasTexture(canvas);
       scene.background = gradientTexture;
-    } else {
-      scene.background = new THREE.Color(0x87CEEB);
     }
 
     // Camera setup
@@ -51,106 +50,96 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
     camera.position.set(7, 21, 37);
-    camera.lookAt(0, 0, 0);
 
-    // Renderer
+    // Renderer with optimized settings
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
-      powerPreference: "high-performance"
+      powerPreference: "default" // Less aggressive power usage
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5)); // Lower pixel ratio for performance
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 2.0; // Brighter exposure for daytime
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+    renderer.toneMapping = THREE.ReinhardToneMapping;
+    renderer.toneMappingExposure = 1.2;
     container.appendChild(renderer.domElement);
 
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = true;
     controls.maxPolarAngle = Math.PI / 2;
     controls.enableZoom = false;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 2.0;
+    controls.autoRotateSpeed = 1.5;
     controls.target.set(0, 5, 0);
 
-    // ============ DAYTIME LIGHTING ============
+    // ============ OPTIMIZED REALISTIC LIGHTING ============
     
-    // Main sun light (directional)
-    const sunLight = new THREE.DirectionalLight(0xFFF5E6, 2.5);
-    sunLight.position.set(50, 100, 50);
+    // Single sun light (main source)
+    const sunLight = new THREE.DirectionalLight(0xFFF5E6, 1.8);
+    sunLight.position.set(30, 50, 30);
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 4096;
-    sunLight.shadow.mapSize.height = 4096;
-    sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 200;
-    sunLight.shadow.camera.left = -50;
-    sunLight.shadow.camera.right = 50;
-    sunLight.shadow.camera.top = 50;
-    sunLight.shadow.camera.bottom = -50;
+    sunLight.shadow.mapSize.width = 1024; // Reduced for performance
+    sunLight.shadow.mapSize.height = 1024;
+    sunLight.shadow.bias = -0.0005;
+    sunLight.shadow.normalBias = 0.02;
     scene.add(sunLight);
 
-    // Fill light from opposite side
-    const fillLight = new THREE.DirectionalLight(0xE6F0FF, 1.2);
-    fillLight.position.set(-40, 60, -30);
-    scene.add(fillLight);
-
-    // Hemisphere light for ambient sky/ground bounce
-    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x8B7355, 1.2);
-    scene.add(hemiLight);
-
-    // Soft ambient light
-    const ambientLight = new THREE.AmbientLight(0x404060, 1.0);
+    // Simple ambient + hemisphere combined
+    const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
     scene.add(ambientLight);
 
-    // Add a subtle point light near the scene to brighten shadows
-    const pointLight = new THREE.PointLight(0xFFFFFF, 0.5);
-    pointLight.position.set(0, 20, 20);
-    scene.add(pointLight);
+    // One fill light
+    const fillLight = new THREE.DirectionalLight(0xC0D0E0, 0.5);
+    fillLight.position.set(-20, 20, -20);
+    scene.add(fillLight);
 
-    // ============ CIRCULAR GROUND ============
+    // ============ REALISTIC GROUND (LIGHTWEIGHT) ============
     
-    // Create a circular ground using CircleGeometry
+    // Simple circular ground with texture
     const groundRadius = 500;
-    const groundSegments = 64;
+    const groundSegments = 32; // Reduced segments for performance
     
-    // Create a canvas for the ground texture (more natural ground colors)
+    // Create a simple ground texture procedurally (no external images)
     const groundCanvas = document.createElement('canvas');
-    groundCanvas.width = 1024;
-    groundCanvas.height = 1024;
+    groundCanvas.width = 512;
+    groundCanvas.height = 512;
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Base ground color (warm earth tones)
-      groundCtx.fillStyle = '#8B7355';
-      groundCtx.fillRect(0, 0, 1024, 1024);
+      // Base earth color
+      groundCtx.fillStyle = '#5C4E3D';
+      groundCtx.fillRect(0, 0, 512, 512);
       
-      // Add variation with noise
-      const imageData = groundCtx.getImageData(0, 0, 1024, 1024);
+      // Add simple noise for texture (fast)
+      const imageData = groundCtx.getImageData(0, 0, 512, 512);
       const data = imageData.data;
       
-      for (let i = 0; i < data.length; i += 4) {
-        // Add random variation for texture
-        data[i] += Math.random() * 30;     // R
-        data[i+1] += Math.random() * 20;   // G
-        data[i+2] += Math.random() * 15;   // B
+      for (let i = 0; i < data.length; i += 8) { // Skip every other pixel for speed
+        const noise = (Math.random() - 0.5) * 40;
+        data[i] = Math.min(255, Math.max(0, data[i] + noise));
+        data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise * 0.8));
+        data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise * 0.6));
       }
       
       groundCtx.putImageData(imageData, 0, 0);
       
-      // Draw some subtle lines for texture
-      groundCtx.strokeStyle = '#A58B6F';
-      groundCtx.lineWidth = 2;
+      // Add simple grid pattern
+      groundCtx.strokeStyle = '#7A6A55';
+      groundCtx.lineWidth = 1;
       
-      // Random lines pattern
-      for (let i = 0; i < 50; i++) {
+      // Fewer lines for performance
+      for (let i = 0; i < 512; i += 64) {
         groundCtx.beginPath();
-        groundCtx.moveTo(Math.random() * 1024, Math.random() * 1024);
-        groundCtx.lineTo(Math.random() * 1024, Math.random() * 1024);
-        groundCtx.strokeStyle = `rgba(165, 139, 111, ${Math.random() * 0.3})`;
+        groundCtx.moveTo(i, 0);
+        groundCtx.lineTo(i, 512);
+        groundCtx.strokeStyle = 'rgba(122, 106, 85, 0.2)';
+        groundCtx.stroke();
+        
+        groundCtx.beginPath();
+        groundCtx.moveTo(0, i);
+        groundCtx.lineTo(512, i);
         groundCtx.stroke();
       }
     }
@@ -158,77 +147,58 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const groundTexture = new THREE.CanvasTexture(groundCanvas);
     groundTexture.wrapS = THREE.RepeatWrapping;
     groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(8, 8);
+    groundTexture.repeat.set(4, 4);
     
-    // Create the circular ground
-    const groundGeometry = new THREE.CircleGeometry(groundRadius, groundSegments);
+    // Ground material
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      color: 0x8B7355,
-      roughness: 0.9,
-      metalness: 0.05,
+      color: 0x8A7A65,
+      roughness: 0.8,
+      metalness: 0.1,
       emissive: new THREE.Color(0x000000)
     });
     
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(groundRadius, groundSegments),
+      groundMaterial
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.y = 0;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Add a subtle edge ring for the ground
-    const edgeGeometry = new THREE.TorusGeometry(groundRadius, 1.5, 16, 100);
-    const edgeMaterial = new THREE.MeshStandardMaterial({
-      color: 0x6B5A44,
-      emissive: new THREE.Color(0x2A231C),
-      transparent: true,
-      opacity: 0.5
-    });
-    const edgeRing = new THREE.Mesh(edgeGeometry, edgeMaterial);
+    // Simple edge ring (lightweight)
+    const edgeRing = new THREE.Mesh(
+      new THREE.TorusGeometry(groundRadius, 1, 8, 48), // Lower segment count
+      new THREE.MeshStandardMaterial({
+        color: 0x6B5A44,
+        emissive: new THREE.Color(0x1A1510),
+        transparent: true,
+        opacity: 0.3
+      })
+    );
     edgeRing.rotation.x = Math.PI / 2;
-    edgeRing.position.y = 0.1;
+    edgeRing.position.y = 0.05;
     scene.add(edgeRing);
 
-    // Add some subtle decorative elements on the ground (like paths or markings)
-    const pathGeometry = new THREE.TorusGeometry(200, 2, 16, 100);
-    const pathMaterial = new THREE.MeshStandardMaterial({
-      color: 0x6B5A44,
-      roughness: 0.8,
-      emissive: new THREE.Color(0x000000)
-    });
-    const pathRing = new THREE.Mesh(pathGeometry, pathMaterial);
-    pathRing.rotation.x = Math.PI / 2;
-    pathRing.position.y = 0.05;
-    scene.add(pathRing);
-
-    // Add a second smaller ring
-    const innerPathGeometry = new THREE.TorusGeometry(100, 1.5, 16, 100);
-    const innerPathMaterial = new THREE.MeshStandardMaterial({
-      color: 0x5A4A3A,
-      roughness: 0.8
-    });
-    const innerPathRing = new THREE.Mesh(innerPathGeometry, innerPathMaterial);
-    innerPathRing.rotation.x = Math.PI / 2;
-    innerPathRing.position.y = 0.05;
-    scene.add(innerPathRing);
-
-    // Add radial lines from center
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const lineLength = groundRadius - 20;
-      const points = [];
-      points.push(new THREE.Vector3(0, 0.05, 0));
-      points.push(new THREE.Vector3(
-        Math.sin(angle) * lineLength,
+    // Add a few simple markers (instead of many lines)
+    for (let i = 0; i < 4; i++) {
+      const angle = (i / 4) * Math.PI * 2;
+      const markerGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 6);
+      const markerMaterial = new THREE.MeshStandardMaterial({ color: 0x9A8A75 });
+      const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+      marker.position.set(
+        Math.sin(angle) * 200,
         0.05,
-        Math.cos(angle) * lineLength
-      ));
-      
-      const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-      const lineMaterial = new THREE.LineBasicMaterial({ color: 0x5A4A3A, opacity: 0.3, transparent: true });
-      const line = new THREE.Line(lineGeometry, lineMaterial);
-      scene.add(line);
+        Math.cos(angle) * 200
+      );
+      marker.rotation.x = 0;
+      marker.receiveShadow = true;
+      scene.add(marker);
     }
+
+    // Add subtle fog for depth
+    scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
 
     setDebug('Loading FBX model...');
 
@@ -241,87 +211,67 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         setDebug('FBX model loaded successfully');
         setLoading(false);
         
-        // Calculate bounding box for proper scaling
+        // Scale and position
         const box = new THREE.Box3().setFromObject(object);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         
-        // Scale the model appropriately
-        const targetSize = 30;
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = targetSize / maxDim;
+        const scale = 600 / Math.max(size.x, size.y, size.z);
         
-        object.scale.set(scale * 20, scale * 20, scale * 20);
+        object.scale.set(scale, scale, scale);
         object.rotation.x = -(90 * Math.PI / 180);
         
-        // Position the model on the ground
         object.position.set(
           -center.x * scale,
           0,
           -center.z * scale
         );
         
-        // Enhance building materials for daytime
+        // Simplify materials for performance
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
-            
-            // Brighter, more vibrant materials for daytime
             child.material = new THREE.MeshStandardMaterial({
               color: 0xCCCCCC,
-              roughness: 0.3,
-              metalness: 0.1,
-              emissive: new THREE.Color(0x000000)
+              roughness: 0.4,
+              metalness: 0.1
             });
           }
         });
 
         scene.add(object);
         
-        const newBox = new THREE.Box3().setFromObject(object);
-        const newCenter = newBox.getCenter(new THREE.Vector3());
-        
+        const newCenter = new THREE.Box3().setFromObject(object).getCenter(new THREE.Vector3());
         camera.lookAt(newCenter);
         controls.update();
         
-        setDebug('Model positioned and ready');
+        setDebug('Ready');
       },
       (progress) => {
-        const percent = (progress.loaded / progress.total) * 100;
-        setDebug(`Loading: ${Math.round(percent)}%`);
+        if (progress.total) {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          setDebug(`Loading: ${percent}%`);
+        }
       },
       (error: any) => {
         setLoading(false);
-        const errorMsg = error?.message || 'Unknown error';
-        setError(`Failed to load model: ${errorMsg}`);
-        setDebug(`Error: ${errorMsg}`);
-        console.error('FBX loading error details:', error);
+        setError('Failed to load model');
+        setDebug('Error loading model');
+        console.error('FBX loading error:', error);
       }
     );
 
-    // Animation loop
-    const clock = new THREE.Clock();
-    
+    // Simple animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      
-      const delta = clock.getDelta();
-      const elapsedTime = performance.now() / 1000;
-      
-      // Subtle ground texture animation (very slow)
-      if (groundTexture) {
-        groundTexture.offset.x += 0.0001;
-        groundTexture.offset.y += 0.00005;
-      }
-      
       controls.update();
       renderer.render(scene, camera);
     };
     
     animate();
 
-    // Handle window resize
+    // Handle resize
     const handleResize = () => {
       if (!containerRef.current) return;
       
@@ -334,7 +284,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     };
 
     window.addEventListener('resize', handleResize);
-    setDebug('Ready');
 
     // Cleanup
     return () => {
@@ -346,14 +295,14 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     };
   }, [modelPath]);
 
-  // Styles
+  // Simple styles
   const containerStyle: React.CSSProperties = {
     position: 'absolute',
     top: 0,
     left: 0,
     width: '100%',
-    aspectRatio: 4/1,
-    backgroundColor: '#87CEEB',
+    aspectRatio: '4/1',
+    backgroundColor: '#1E3B5C',
     overflow: 'hidden'
   };
 
@@ -363,34 +312,21 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     position: 'relative',
   };
 
-  const overlayStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(135, 206, 235, 0.3)',
-    color: 'black',
-    fontSize: '1.2rem',
-    zIndex: 10,
-    pointerEvents: 'none',
-  };
-
   return (
     <div style={containerStyle}>
       <div style={canvasWrapperStyle} ref={containerRef} />
       {error && (
-        <div style={{ ...overlayStyle, backgroundColor: 'rgba(255, 0, 0, 0.2)' }}>
-          <div style={{ color: '#8B0000', textAlign: 'center' }}>
-            <div>⚠️ Error loading model</div>
-            <div style={{ fontSize: '0.9rem', marginTop: '8px' }}>{error}</div>
-          </div>
+        <div style={{
+          position: 'absolute',
+          bottom: 10,
+          left: 10,
+          color: '#FF6B6B',
+          fontSize: '0.9rem',
+          zIndex: 10
+        }}>
+          ⚠️ {error}
         </div>
       )}
     </div>
   );
-            }
+}
