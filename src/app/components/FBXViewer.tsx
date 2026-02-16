@@ -43,10 +43,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
       const gradientTexture = new THREE.CanvasTexture(canvas);
       scene.background = gradientTexture;
-      scene.fog = new THREE.Fog(0x4a4a8a, 50, 300);
+      //scene.fog = new THREE.Fog(0x4a4a8a, 50, 300);
     } else {
       scene.background = new THREE.Color(0x2a2a6a);
-      scene.fog = new THREE.Fog(0x2a2a6a, 50, 300);
+      //scene.fog = new THREE.Fog(0x2a2a6a, 50, 300);
     }
 
     // Camera setup
