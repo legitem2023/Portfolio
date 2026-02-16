@@ -23,47 +23,44 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with sky blue background
+    // Scene setup with dark evening sky gradient
     const scene = new THREE.Scene();
-// Create a gradient texture for the background
-const canvas = document.createElement('canvas');
-canvas.width = 1;
-canvas.height = 2;
-const context = canvas.getContext('2d');
+    
+    // Create a gradient texture for the evening sky
+    const canvas = document.createElement('canvas');
+    canvas.width = 1;
+    canvas.height = 2;
+    const context = canvas.getContext('2d');
 
-// Check if context exists before using it
-if (context) {
-    // Create gradient from purple (top) to light purple (bottom)
-    const gradient = context.createLinearGradient(0, 0, 0, 2);
-    gradient.addColorStop(0, '#800080'); // Purple at top
-    gradient.addColorStop(1, '#D8BFD8'); // Light purple at bottom
+    if (context) {
+      // Evening gradient: dark blue/purple at top to orange/purple horizon
+      const gradient = context.createLinearGradient(0, 0, 0, 2);
+      gradient.addColorStop(0, '#0a0a2a'); // Deep night blue at top
+      gradient.addColorStop(0.5, '#2a1b3d'); // Dark purple in middle
+      gradient.addColorStop(1, '#4a2b4d'); // Warm purple/orange at horizon
 
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 1, 2);
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 1, 2);
 
-    // Create texture from canvas
-    const gradientTexture = new THREE.CanvasTexture(canvas);
-    gradientTexture.wrapS = THREE.RepeatWrapping;
-    gradientTexture.wrapT = THREE.RepeatWrapping;
-    gradientTexture.repeat.set(1, 1);
+      const gradientTexture = new THREE.CanvasTexture(canvas);
+      gradientTexture.wrapS = THREE.RepeatWrapping;
+      gradientTexture.wrapT = THREE.RepeatWrapping;
+      gradientTexture.repeat.set(1, 1);
 
-    // Set as scene background
-    scene.background = gradientTexture;
+      scene.background = gradientTexture;
+      scene.fog = new THREE.Fog(0x4a2b4d, 50, 300); // Warm fog at horizon
+    } else {
+      scene.background = new THREE.Color(0x1a1a2e); // Dark blue fallback
+      scene.fog = new THREE.Fog(0x1a1a2e, 50, 300);
+    }
 
-    // Optional: Update fog to match the bottom color for better depth
-    scene.fog = new THREE.Fog(0xD8BFD8, 50, 300); // Light purple fog
-} else {
-    // Fallback if canvas context is not available
-    scene.background = new THREE.Color(0x620f99); // Purple fallback
-    scene.fog = new THREE.Fog(0x620f99 , 50, 300);
-}
-    // Camera setup with proper aspect ratio
+    // Camera setup
     const container = containerRef.current;
     const width = container.clientWidth;
-    const height = 400; // Fixed height for better visibility
+    const height = 400;
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(7, 21, 37); // Better initial position
+    camera.position.set(7, 21, 37);
     camera.lookAt(0, 0, 0);
 
     // Renderer
@@ -74,9 +71,9 @@ if (context) {
     renderer.setSize(width, height);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.5; // Increase exposure for brighter scene
+    renderer.toneMappingExposure = 1.2; // Slightly lower exposure for evening
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -90,15 +87,15 @@ if (context) {
     controls.autoRotateSpeed = 2.0;
     controls.target.set(0, 5, 0);
 
-    // ============ ENHANCED BRIGHT LIGHTING FOR SKY EFFECT ============
+    // ============ EVENING LIGHTING SETUP ============
     
-    // 1. Hemisphere light for sky/ground bounce (very bright)
-    const hemiLight = new THREE.HemisphereLight(0x87CEEB, 0x44AA88, 3.0);
+    // 1. Dim hemisphere light for evening ambiance
+    const hemiLight = new THREE.HemisphereLight(0x1a2b4a, 0x4a2a1a, 0.8);
     scene.add(hemiLight);
 
-    // 2. Main directional light (simulating bright sun)
-    const dirLight = new THREE.DirectionalLight(0xFFEECC, 2.5);
-    dirLight.position.set(50, 100, 50);
+    // 2. Main directional light (low sun - orange/red tint)
+    const dirLight = new THREE.DirectionalLight(0xffaa66, 0.8);
+    dirLight.position.set(-30, 20, 40); // Low in the sky
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 4096;
     dirLight.shadow.mapSize.height = 4096;
@@ -109,118 +106,179 @@ if (context) {
     dirLight.shadow.camera.top = 80;
     dirLight.shadow.camera.bottom = -80;
     dirLight.shadow.bias = -0.0005;
-    
-    // Add a second directional light from opposite side for fill
-    const dirLight2 = new THREE.DirectionalLight(0xCCDDFF, 1.5);
-    dirLight2.position.set(-30, 40, -30);
-    scene.add(dirLight2);
-    
     scene.add(dirLight);
 
-    // 3. Multiple point lights for ambient brightness
-    const pointLight1 = new THREE.PointLight(0x88AAFF, 1.5, 100);
-    pointLight1.position.set(20, 30, 20);
-    scene.add(pointLight1);
+    // 3. Fill light with cool evening color
+    const fillLight = new THREE.DirectionalLight(0x88aaff, 0.4);
+    fillLight.position.set(20, 10, -30);
+    scene.add(fillLight);
 
-    const pointLight2 = new THREE.PointLight(0xFFAA88, 1.2, 100);
-    pointLight2.position.set(-20, 20, -20);
-    scene.add(pointLight2);
-
-    const pointLight3 = new THREE.PointLight(0x88FFAA, 1.0, 100);
-    pointLight3.position.set(30, 15, -30);
-    scene.add(pointLight3);
-
-    // 4. Ambient light with sky color
-    const ambientLight = new THREE.AmbientLight(0x404060, 2.5);
+    // 4. Ambient light with evening color
+    const ambientLight = new THREE.AmbientLight(0x2a2a4a, 1.2);
     scene.add(ambientLight);
 
-    // 5. Add some colored lights for visual interest
-    const colorLight1 = new THREE.PointLight(0xFF8855, 1.2);
-    colorLight1.position.set(40, 20, 40);
-    scene.add(colorLight1);
+    // 5. Create a container for ground lights
+    const groundLights = new THREE.Group();
 
-    const colorLight2 = new THREE.PointLight(0x55AAFF, 1.2);
-    colorLight2.position.set(-40, 15, 30);
-    scene.add(colorLight2);
-
-    // 6. Add a subtle blue tint light from above
-    const topLight = new THREE.PointLight(0xAACCFF, 1.8);
-    topLight.position.set(0, 60, 0);
-    scene.add(topLight);
-
-    // 7. Add a ring of lights around the scene for even illumination
-    const ringRadius = 80;
-    const ringHeight = 30;
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const x = Math.cos(angle) * ringRadius;
-      const z = Math.sin(angle) * ringRadius;
+    // ============ TINY GROUND LIGHTS ============
+    // Function to create a tiny glowing light
+    const createTinyLight = (x: number, z: number, color: number, intensity: number = 0.8) => {
+      // Tiny sphere for the light source
+      const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+      const material = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: intensity * 1.5
+      });
+      const lightSphere = new THREE.Mesh(geometry, material);
+      lightSphere.position.set(x, 0.15, z);
       
-      const ringLight = new THREE.PointLight(0xCCDDFF, 0.8);
-      ringLight.position.set(x, ringHeight, z);
-      scene.add(ringLight);
+      // Add a point light for illumination
+      const pointLight = new THREE.PointLight(color, intensity, 15);
+      pointLight.position.set(x, 1, z);
+      
+      groundLights.add(lightSphere);
+      groundLights.add(pointLight);
+    };
+
+    // Create a grid of lights
+    const gridSize = 60;
+    const spacing = 4;
+    
+    // Warm white lights for main streets
+    for (let x = -gridSize; x <= gridSize; x += spacing) {
+      for (let z = -gridSize; z <= gridSize; z += spacing) {
+        // Add some randomness to placement
+        if (Math.random() > 0.7) continue; // Skip some positions for natural look
+        
+        // Different colors for variety
+        if (Math.random() > 0.8) {
+          createTinyLight(x, z, 0xffaa66, 0.6); // Warm orange
+        } else if (Math.random() > 0.6) {
+          createTinyLight(x, z, 0x88aaff, 0.5); // Cool blue
+        } else {
+          createTinyLight(x, z, 0xffdd88, 0.7); // Warm white
+        }
+      }
     }
 
-    // ============ VISUAL ENHANCEMENTS ============
-    
-    // Add a sun sphere for visual effect
-    const sunGeometry = new THREE.SphereGeometry(5, 32, 32);
-    const sunMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFFAA55,
+    // Add some random lights in patterns
+    for (let i = 0; i < 200; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 20 + Math.random() * 30;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
       
-      transparent: true,
-      opacity: 0.3
+      const colorChoice = Math.random();
+      if (colorChoice > 0.6) {
+        createTinyLight(x, z, 0xff6666, 0.5); // Reddish
+      } else if (colorChoice > 0.3) {
+        createTinyLight(x, z, 0x66ff66, 0.4); // Greenish
+      } else {
+        createTinyLight(x, z, 0x6666ff, 0.6); // Blue
+      }
+    }
+
+    scene.add(groundLights);
+
+    // ============ EVENING ATMOSPHERE ============
+    
+    // Add a moon sphere
+    const moonGeometry = new THREE.SphereGeometry(4, 32, 32);
+    const moonMaterial = new THREE.MeshStandardMaterial({
+      color: 0xeeeeee,
+      emissive: 0x444466,
+      emissiveIntensity: 0.3
     });
-    const sunSphere = new THREE.Mesh(sunGeometry, sunMaterial);
-    sunSphere.position.set(100, 80, 100);
-    scene.add(sunSphere);
+    const moonSphere = new THREE.Mesh(moonGeometry, moonMaterial);
+    moonSphere.position.set(-80, 60, -80);
+    scene.add(moonSphere);
 
-    // Add some floating particles to simulate atmosphere
-    const particleCount = 500;
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePositions = new Float32Array(particleCount * 3);
+    // Add evening stars
+    const starCount = 800;
+    const starGeometry = new THREE.BufferGeometry();
+    const starPositions = new Float32Array(starCount * 3);
+    const starColors = new Float32Array(starCount * 3);
     
-    for (let i = 0; i < particleCount; i++) {
-      particlePositions[i * 3] = (Math.random() - 0.5) * 200;
-      particlePositions[i * 3 + 1] = Math.random() * 80;
-      particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 200;
+    for (let i = 0; i < starCount; i++) {
+      // Position stars in a dome above
+      const radius = 150;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI * 0.4; // Keep stars in upper hemisphere
+      
+      starPositions[i * 3] = Math.sin(phi) * Math.cos(theta) * radius;
+      starPositions[i * 3 + 1] = Math.cos(phi) * radius + 20;
+      starPositions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * radius;
+      
+      // Random star colors (mostly white, some blue/red)
+      const colorRand = Math.random();
+      if (colorRand > 0.95) {
+        starColors[i * 3] = 1.0; // Red
+        starColors[i * 3 + 1] = 0.6;
+        starColors[i * 3 + 2] = 0.6;
+      } else if (colorRand > 0.85) {
+        starColors[i * 3] = 0.6; // Blue
+        starColors[i * 3 + 1] = 0.6;
+        starColors[i * 3 + 2] = 1.0;
+      } else {
+        starColors[i * 3] = 1.0; // White
+        starColors[i * 3 + 1] = 1.0;
+        starColors[i * 3 + 2] = 1.0;
+      }
     }
     
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+    starGeometry.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
     
-    const particleMaterial = new THREE.PointsMaterial({
-      color: 0x88AAFF,
-      size: 0.2,
+    const starMaterial = new THREE.PointsMaterial({
+      size: 0.5,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.8,
       blending: THREE.AdditiveBlending
     });
     
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    scene.add(particles);
+    const stars = new THREE.Points(starGeometry, starMaterial);
+    scene.add(stars);
 
-    // ============ DEBUG AIDS ============
-    // Add test objects to verify rendering works
-    const addTestObjects = () => {
+    // Add some floating particles for evening mist
+    const mistCount = 300;
+    const mistGeometry = new THREE.BufferGeometry();
+    const mistPositions = new Float32Array(mistCount * 3);
+    
+    for (let i = 0; i < mistCount; i++) {
+      mistPositions[i * 3] = (Math.random() - 0.5) * 200;
+      mistPositions[i * 3 + 1] = Math.random() * 30;
+      mistPositions[i * 3 + 2] = (Math.random() - 0.5) * 200;
+    }
+    
+    mistGeometry.setAttribute('position', new THREE.BufferAttribute(mistPositions, 3));
+    
+    const mistMaterial = new THREE.PointsMaterial({
+      color: 0x88aaff,
+      size: 0.3,
+      transparent: true,
+      opacity: 0.15,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const mist = new THREE.Points(mistGeometry, mistMaterial);
+    scene.add(mist);
 
-      // Ground plane (semi-transparent for debugging)
-      const planeGeometry = new THREE.PlaneGeometry(500, 500);
-      const planeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x707070, // Medium gray
-      roughness: 0.4,
+    // ============ GROUND PLANE ============
+    const planeGeometry = new THREE.PlaneGeometry(500, 500);
+    const planeMaterial = new THREE.MeshStandardMaterial({ 
+      color: 0x1a1a2a,
+      roughness: 0.7,
       metalness: 0.1,
-      emissive: new THREE.Color(0x112233),
-      emissiveIntensity: 0.2
-      });
-      const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-      plane.rotation.x = Math.PI / 2;
-      plane.position.y = 0;
-      plane.receiveShadow = true;
-      scene.add(plane);
-    };
-
-    addTestObjects();
-
+      emissive: new THREE.Color(0x0a0a1a),
+      emissiveIntensity: 0.1
+    });
+    const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.rotation.x = Math.PI / 2;
+    plane.position.y = 0;
+    plane.receiveShadow = true;
+    scene.add(plane);
 
     setDebug('Loading FBX model...');
 
@@ -234,75 +292,54 @@ if (context) {
         setLoading(false);
         
         console.log('FBX Model loaded:', object);
-        console.log('Model children:', object.children);
         
-        // Calculate bounding box for scaling
         const box = new THREE.Box3().setFromObject(object);
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
         
         console.log('Original model size:', size);
-        console.log('Original model center:', center);
         
-        // Smart scaling - target a reasonable size
-        const targetSize = 30; // We want the model to fit within 30 units
+        // Scale the model
+        const targetSize = 30;
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = targetSize / maxDim;
         
-        console.log(`Applying scale factor: ${scale} (from ${maxDim} to ${targetSize})`);
+        console.log(`Applying scale factor: ${scale}`);
         
-        // Apply scale
         object.scale.set(scale * 20, scale * 20, scale * 20);
+        object.rotation.x = -(90 * Math.PI / 180);
         
-        object.rotation.x = -(90 * Math.PI / 180);  // Formula: degrees * PI/180
-        
-        // Center the model
         object.position.set(
           -center.x * scale,
           0,
           -center.z * scale
         );
         
-        // Enable shadows and enhance materials for better light response
-        // Enable shadows and apply gray material
-object.traverse((child) => {
-  if (child instanceof THREE.Mesh) {
-    child.castShadow = true;
-    child.receiveShadow = true;
-    
-    // Create and apply a gray material
-    const grayMaterial = new THREE.MeshStandardMaterial({
-      color: 0x707070, // Medium gray
-      roughness: 0.4,
-      metalness: 0.1,
-      emissive: new THREE.Color(0x112233),
-      emissiveIntensity: 0.2
-    });
-    
-    child.material = grayMaterial;
-  }
-});
+        // Apply materials to buildings
+        object.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Darker materials for evening
+            const material = new THREE.MeshStandardMaterial({
+              color: 0x3a3a4a,
+              roughness: 0.6,
+              metalness: 0.2,
+              emissive: new THREE.Color(0x111122),
+              emissiveIntensity: 0.1
+            });
+            
+            child.material = material;
+          }
+        });
 
-scene.add(object);
+        scene.add(object);
         
-        // Adjust camera to frame the model
         const newBox = new THREE.Box3().setFromObject(object);
         const newCenter = newBox.getCenter(new THREE.Vector3());
-        const newSize = newBox.getSize(new THREE.Vector3());
         
-        const maxDim2 = Math.max(newSize.x, newSize.y, newSize.z);
-        const fov = camera.fov * (Math.PI / 180);
-        let cameraDistance = maxDim2 / (2 * Math.tan(fov / 2));
-        cameraDistance *= 1.5; // Add padding
-        
-        /*camera.position.set(
-          newCenter.x + cameraDistance,
-          newCenter.y + cameraDistance * 0.6,
-          newCenter.z + cameraDistance
-        );*/
         camera.lookAt(newCenter);
-        
-        //controls.target.copy(newCenter);
         controls.update();
         
         setDebug('Model positioned and ready');
@@ -310,7 +347,6 @@ scene.add(object);
       (progress) => {
         const percent = (progress.loaded / progress.total) * 100;
         setDebug(`Loading: ${Math.round(percent)}%`);
-        console.log(`FBX loading: ${Math.round(percent)}%`);
       },
       (error: any) => {
         setLoading(false);
@@ -318,9 +354,6 @@ scene.add(object);
         setError(`Failed to load model: ${errorMsg}`);
         setDebug(`Error: ${errorMsg}`);
         console.error('FBX loading error details:', error);
-        
-        // Keep test objects so user can see something
-        console.log('Keeping test objects for debugging');
       }
     );
 
@@ -328,18 +361,23 @@ scene.add(object);
     const animate = () => {
       requestAnimationFrame(animate);
       
-      // Update controls
       controls.update();
       
-      // Animate particles (subtle movement)
-      particles.rotation.y += 0.0005;
+      // Animate stars (subtle twinkling)
+      stars.rotation.y += 0.0002;
       
-      // Animate sun sphere (subtle pulsing)
-      const time = Date.now() * 0.001;
-      sunSphere.scale.setScalar(1 + Math.sin(time) * 0.1);
-     console.log(camera.position);
-     console.log(controls);
-      // Render scene
+      // Animate mist
+      mist.rotation.y += 0.0003;
+      
+      // Animate ground lights (subtle pulsing)
+      groundLights.children.forEach((child, index) => {
+        if (child instanceof THREE.Mesh && child.material.emissive) {
+          const time = Date.now() * 0.002 + index;
+          const pulse = 0.8 + Math.sin(time) * 0.2;
+          child.material.emissiveIntensity = pulse * 1.5;
+        }
+      });
+      
       renderer.render(scene, camera);
     };
     
@@ -350,7 +388,7 @@ scene.add(object);
       if (!containerRef.current) return;
       
       const newWidth = containerRef.current.clientWidth;
-      const newHeight = 400; // Keep fixed height
+      const newHeight = 400;
       
       camera.aspect = newWidth / newHeight;
       camera.updateProjectionMatrix();
@@ -360,8 +398,6 @@ scene.add(object);
 
     window.addEventListener('resize', handleResize);
 
-    // Log renderer info
-    console.log('Renderer:', renderer.info);
     setDebug('Ready');
 
     // Cleanup
@@ -381,10 +417,10 @@ scene.add(object);
     left: 0,
     width: '100%',
     aspectRatio: 4/1,
-    backgroundColor: '#87CEEB', // Sky blue background
+    backgroundColor: '#1a1a2e', // Dark blue background
     borderRadius: '0px',
     overflow: 'hidden',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
   };
 
   const canvasWrapperStyle: React.CSSProperties = {
@@ -403,7 +439,7 @@ scene.add(object);
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(135, 206, 235, 0.7)', // Semi-transparent sky blue
+    backgroundColor: 'rgba(26, 26, 46, 0.7)',
     color: 'white',
     fontSize: '1.2rem',
     zIndex: 10,
@@ -431,9 +467,6 @@ scene.add(object);
           <div style={{ color: '#ff6b6b', textAlign: 'center' }}>
             <div>⚠️ Error loading model</div>
             <div style={{ fontSize: '0.9rem', marginTop: '8px' }}>{error}</div>
-            <div style={{ fontSize: '0.8rem', marginTop: '16px', color: '#ffaaaa' }}>
-              Showing test objects instead
-            </div>
           </div>
         </div>
       )}
