@@ -84,7 +84,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     // ============ LIGHTING ============
     
-    const hemiLight = new THREE.HemisphereLight(0x4a4a8a, 0x8a4a4a, 1.0);
+    const hemiLight = new THREE.HemisphereLight(0x4a4a8a, 0x8a8a8a, 1.0);
     scene.add(hemiLight);
 
     const dirLight = new THREE.DirectionalLight(0xffcc88, 1.5);
@@ -101,83 +101,21 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     const ambientLight = new THREE.AmbientLight(0x6a6a9a, 1.0);
     scene.add(ambientLight);
 
-    // ============ NEON CRIMSON GLOWING GROUND ============
+    // ============ DARK GRAY GROUND (5x SCALE) ============
     
-    // Create a glowing grid pattern for the ground
-    const gridSize = 60;
-    const divisions = 40;
-    const step = gridSize / divisions;
-    
-    // Main ground plane with crimson neon glow
+    // Main ground plane with dark gray color - scaled 5x
     const planeGeometry = new THREE.PlaneGeometry(500, 500);
     const planeMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x8a1a1a, // Dark crimson
-      emissive: 0x8a1a1a, // Same color for glow
-      emissiveIntensity: 1.2, // Strong glow
-      roughness: 0.3,
-      metalness: 0.2
+      color: 0x333333, // Dark gray
+      roughness: 0.7,
+      metalness: 0.1
     });
     const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane.scale.set(5, 5, 5); // Scale 5x
     plane.rotation.x = Math.PI / 2;
     plane.position.y = 0;
     plane.receiveShadow = true;
     scene.add(plane);
-    
-    // Add a secondary transparent glowing layer for depth
-    const glowPlaneGeometry = new THREE.PlaneGeometry(500, 500);
-    const glowPlaneMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xaa2222,
-      emissive: 0xaa2222,
-      emissiveIntensity: 0.8,
-      transparent: true,
-      opacity: 0.3
-    });
-    const glowPlane = new THREE.Mesh(glowPlaneGeometry, glowPlaneMaterial);
-    glowPlane.rotation.x = Math.PI / 2;
-    glowPlane.position.y = 0.1; // Slightly above ground
-    scene.add(glowPlane);
-    
-    // Add glowing grid lines
-    const gridGroup = new THREE.Group();
-    const lineMaterial = new THREE.LineBasicMaterial({ color: 0xff3333 });
-    
-    for (let i = -gridSize/2; i <= gridSize/2; i += step) {
-      // Vertical lines
-      const points1 = [];
-      points1.push(new THREE.Vector3(i, 0.2, -gridSize/2));
-      points1.push(new THREE.Vector3(i, 0.2, gridSize/2));
-      
-      const geometry1 = new THREE.BufferGeometry().setFromPoints(points1);
-      const line1 = new THREE.Line(geometry1, lineMaterial);
-      gridGroup.add(line1);
-      
-      // Horizontal lines
-      const points2 = [];
-      points2.push(new THREE.Vector3(-gridSize/2, 0.2, i));
-      points2.push(new THREE.Vector3(gridSize/2, 0.2, i));
-      
-      const geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
-      const line2 = new THREE.Line(geometry2, lineMaterial);
-      gridGroup.add(line2);
-    }
-    
-    scene.add(gridGroup);
-    
-    // Add glowing dots at intersections
-    const dotGeometry = new THREE.SphereGeometry(0.3, 6, 6);
-    const dotMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff4444,
-      emissive: 0xff0000,
-      emissiveIntensity: 2.0
-    });
-    
-    for (let x = -gridSize/2; x <= gridSize/2; x += step * 2) {
-      for (let z = -gridSize/2; z <= gridSize/2; z += step * 2) {
-        const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-        dot.position.set(x, 0.4, z);
-        scene.add(dot);
-      }
-    }
 
     setDebug('Loading FBX model...');
 
@@ -207,7 +145,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // Building materials with slight crimson reflection
+        // Building materials
         object.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
@@ -216,9 +154,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
             child.material = new THREE.MeshStandardMaterial({
               color: 0x9a9ab0,
               roughness: 0.4,
-              metalness: 0.2,
-              emissive: new THREE.Color(0x331111), // Slight crimson glow from ground reflection
-              emissiveIntensity: 0.2
+              metalness: 0.2
             });
           }
         });
@@ -249,28 +185,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      
       controls.update();
-      
-      // Pulse the glow intensity
-      const time = Date.now() * 0.002;
-      const pulse = 1.2 + Math.sin(time) * 0.3;
-      
-      // Update ground glow
-      if (planeMaterial.emissiveIntensity) {
-        planeMaterial.emissiveIntensity = pulse;
-      }
-      
-      // Pulse grid dots
-      scene.children.forEach(child => {
-        if (child instanceof THREE.Mesh && 
-            child.material instanceof THREE.MeshStandardMaterial &&
-            child.material.emissive &&
-            child.geometry instanceof THREE.SphereGeometry) {
-          child.material.emissiveIntensity = 1.5 + Math.sin(time + child.position.x) * 0.5;
-        }
-      });
-      
       renderer.render(scene, camera);
     };
     
@@ -348,4 +263,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-}
+      }
