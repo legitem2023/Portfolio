@@ -277,7 +277,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
         
         let meshCount = 0;
         
-        object.traverse((child) => {
+        object.traverse((child:any) => {
           if (child.isMesh) {
             meshCount++;
             
