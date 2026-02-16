@@ -54,8 +54,8 @@ if (context) {
     scene.fog = new THREE.Fog(0xD8BFD8, 50, 300); // Light purple fog
 } else {
     // Fallback if canvas context is not available
-    scene.background = new THREE.Color(0x800080); // Purple fallback
-    scene.fog = new THREE.Fog(0x800080, 50, 300);
+    scene.background = new THREE.Color(0x620f99); // Purple fallback
+    scene.fog = new THREE.Fog(0x620f99 , 50, 300);
 }
     // Camera setup with proper aspect ratio
     const container = containerRef.current;
@@ -63,7 +63,7 @@ if (context) {
     const height = 400; // Fixed height for better visibility
     
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(7, 29, 37); // Better initial position
+    camera.position.set(7, 21, 37); // Better initial position
     camera.lookAt(0, 0, 0);
 
     // Renderer
