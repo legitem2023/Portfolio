@@ -43,6 +43,7 @@ enum OrderStatus {
 
 export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus = 'PROCESSING', onReset }: ActiveDeliveryCardProps) {
   const { user } = useAuth();
+  console.log(delivery);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [showFailedReason, setShowFailedReason] = useState(false);
