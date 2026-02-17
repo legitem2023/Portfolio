@@ -362,7 +362,7 @@ model OrderItem {
   rejectedBy String[] @default([])
   supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product? @relation(fields: [productId], references: [id])
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   riderId     String?
   recipientName        String?
   recipientPhone       String?
