@@ -302,7 +302,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   <div key={item.id} className="flex justify-between text-xs lg:text-sm">
                     <div className="flex-1">
                       <span className="font-medium">{item.product.sku}</span>
-                      {item.product.description && (
+                      {item.product.name && (
                         <p className="text-gray-500 text-xs mt-0.5">{item.product.name}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
