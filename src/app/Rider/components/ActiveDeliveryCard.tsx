@@ -301,14 +301,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 {delivery.supplierItems?.map((item) => (
                   <div key={item.id} className="flex justify-between text-xs lg:text-sm">
                     <div className="flex-1">
-                      <span className="font-medium">{item.product.name}</span>
+                      <span className="font-medium">{item.product.sku}</span>
                       {item.product.description && (
-                        <p className="text-gray-500 text-xs mt-0.5">{item.product.description}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{item.product.name}</p>
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-gray-600 text-xs">Qty: {item.quantity}</span>
                         {item.product.weight && (
-                          <span className="text-gray-400 text-xs">• {item.product.weight}</span>
+                          <span className="text-gray-400 text-xs">• {item.product.name}</span>
                         )}
                       </div>
                     </div>
