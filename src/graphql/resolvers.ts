@@ -787,7 +787,8 @@ const orders = await prisma.order.findMany({
             }
           }
         }
-      }
+      },
+      orderId:true
     },
     user: {
       select: {
