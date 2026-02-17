@@ -541,7 +541,7 @@ const Header: React.FC = () => {
     <div>
       <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
         {/*<AnimatedCrowd/>*/}
-        <FBXViewer modelPath="/City/City.FBX" />
+        {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
           <div className="z-20 h-[100%] flex items-center">
