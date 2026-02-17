@@ -89,6 +89,7 @@ export const ACTIVE_ORDER_LIST = gql`
           product {
             name
             sku
+            images
           }
           supplier {
             id
@@ -158,6 +159,7 @@ export const ORDER_LIST_QUERY = gql`
           product {
             name
             sku
+            images
           }
           supplier {
             id
@@ -217,6 +219,7 @@ export interface OrderItem {
   product: {
     name: string;
     sku: string;
+    images: string[]
   };
   supplier?: Supplier[];
 }
