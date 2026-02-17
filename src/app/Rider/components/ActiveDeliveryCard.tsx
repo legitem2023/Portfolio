@@ -13,7 +13,9 @@ import {
   Truck,
   Home,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -48,6 +50,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [failedReason, setFailedReason] = useState('');
   const [actionType, setActionType] = useState<'pickup' | 'delivered' | 'cancel' | 'failed' | null>(null);
   const [showMap, setShowMap] = useState(false); // State for map modal
+  const [showItems, setShowItems] = useState(true); // State for items collapsible section
 
   // Set up the mutation
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
@@ -203,6 +206,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   };
 
+  const toggleItems = () => {
+    setShowItems(!showItems);
+  };
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-lg border border-indigo-200 overflow-hidden">
@@ -265,23 +272,62 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
           </div>
 
-          {/* Item details */}
-          <div className="mb-3 lg:mb-4 bg-gray-50 p-2 lg:p-3 rounded-lg">
-            <h4 className="font-semibold text-sm lg:text-base mb-1 lg:mb-2 flex items-center gap-1 lg:gap-2">
-              <Package size={isMobile ? 14 : 16} />
-              Items from this supplier ({delivery.items} item{delivery.items !== 1 ? "s" : ""})
-            </h4>
-            <div className="space-y-1 lg:space-y-2">
-              {delivery.supplierItems?.map((item) => (
-                <div key={item.id} className="flex justify-between text-xs lg:text-sm">
-                  <div>
-                    <span className="font-medium">{item.product.name}</span>
-                    <span className="text-gray-600 ml-1">(Qty: {item.quantity})</span>
+          {/* Collapsible Item details */}
+          <div className="mb-3 lg:mb-4 bg-gray-50 rounded-lg overflow-hidden">
+            {/* Header - always visible */}
+            <button
+              onClick={toggleItems}
+              className="w-full px-3 lg:px-4 py-2 lg:py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+            >
+              <h4 className="font-semibold text-sm lg:text-base flex items-center gap-1 lg:gap-2">
+                <Package size={isMobile ? 14 : 16} />
+                Items from this supplier ({delivery.items} item{delivery.items !== 1 ? "s" : ""})
+              </h4>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
+                  Total: {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
+                </span>
+                {showItems ? (
+                  <ChevronUp size={isMobile ? 16 : 20} className="text-gray-500" />
+                ) : (
+                  <ChevronDown size={isMobile ? 16 : 20} className="text-gray-500" />
+                )}
+              </div>
+            </button>
+
+            {/* Collapsible content */}
+            {showItems && (
+              <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-2 border-t border-gray-200 pt-3">
+                {delivery.supplierItems?.map((item) => (
+                  <div key={item.id} className="flex justify-between text-xs lg:text-sm">
+                    <div className="flex-1">
+                      <span className="font-medium">{item.product.name}</span>
+                      {item.product.description && (
+                        <p className="text-gray-500 text-xs mt-0.5">{item.product.description}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray-600 text-xs">Qty: {item.quantity}</span>
+                        {item.product.weight && (
+                          <span className="text-gray-400 text-xs">• {item.product.weight}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right ml-4">
+                      <div className="text-gray-700 font-medium">{formatPeso(item.price * item.quantity)}</div>
+                      <div className="text-gray-400 text-xs">{formatPeso(item.price)} each</div>
+                    </div>
                   </div>
-                  <div className="text-gray-700">{formatPeso(item.price * item.quantity)}</div>
+                ))}
+                
+                {/* Subtotal for items */}
+                <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between text-sm font-semibold">
+                  <span>Subtotal</span>
+                  <span className="text-green-600">
+                    {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
+                  </span>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Route info with Map button */}
@@ -526,4 +572,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-}
+            }
