@@ -307,7 +307,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                       )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-gray-600 text-xs">Qty: {item.quantity}</span>
-                        {item.product.weight && (
+                        {item.product.name && (
                           <span className="text-gray-400 text-xs">• {item.product.name}</span>
                         )}
                       </div>
