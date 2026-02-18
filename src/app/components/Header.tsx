@@ -879,7 +879,7 @@ const Header: React.FC = () => {
             {/* Header with close button */}
             <div 
               style={{
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,190,255,0.5) 100%)',
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(200,180,255,0.5) 100%)',
                  backdropFilter: 'blur(2px)',
                  WebkitBackdropFilter: 'blur(2px)'
               }}
@@ -891,7 +891,7 @@ const Header: React.FC = () => {
                   height={80} 
                   width={80} 
                   className="h-[100%] w-[auto] rounded"
-                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
+                  //style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
                 />
               </div>
               
