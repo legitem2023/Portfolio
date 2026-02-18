@@ -547,7 +547,7 @@ const Header: React.FC = () => {
               }}
         >
         {/*<AnimatedCrowd/>*/}
-        {/*<FBXViewer modelPath="/City/City.FBX" />*/}
+        <FBXViewer modelPath="/City/City.FBX" />
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
           <div className="z-20 h-[100%] flex items-center">
