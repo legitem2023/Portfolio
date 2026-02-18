@@ -877,7 +877,13 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+            <div 
+              style={{
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,190,255,0.5) 100%)',
+                 backdropFilter: 'blur(2px)',
+                 WebkitBackdropFilter: 'blur(2px)'
+              }}
+              className="flex items-center justify-between p-4 border-b p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity.svg" 
