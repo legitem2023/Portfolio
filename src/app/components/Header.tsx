@@ -557,7 +557,7 @@ const Header: React.FC = () => {
               height={80} 
               width={80} 
               className="h-[100%] w-[auto] rounded"
-              style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
+              //style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
             />
           </div>
              
