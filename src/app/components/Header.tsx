@@ -539,7 +539,13 @@ const Header: React.FC = () => {
 
   return (
     <div>
-      <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
+      <div className="relative p-2 aspect-[4/1] sm:aspect-[9/1]"
+           style={{
+                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
+                 backdropFilter: 'blur(2px)',
+                 WebkitBackdropFilter: 'blur(2px)'
+              }}
+        >
         {/*<AnimatedCrowd/>*/}
         {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
