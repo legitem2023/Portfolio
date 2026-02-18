@@ -23,22 +23,22 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
 
     setDebug('Setting up scene...');
 
-    // Scene setup with photorealistic sky
+    // Scene setup with bright daylight sky
     const scene = new THREE.Scene();
     
-    // Realistic sky gradient (parang totoong sunset/sunrise)
+    // Bright daylight sky gradient
     const canvas = document.createElement('canvas');
     canvas.width = 2;
-    canvas.height = 512; // Mas mataas para sa mas smooth na gradient
+    canvas.height = 512;
     const context = canvas.getContext('2d');
 
     if (context) {
       const gradient = context.createLinearGradient(0, 0, 0, 512);
-      gradient.addColorStop(0, '#0A1A2A'); // Deep night blue sa itaas
-      gradient.addColorStop(0.3, '#2A4A6A'); // Medium blue
-      gradient.addColorStop(0.6, '#6A8A9A'); // Gray-blue sa gitna
-      gradient.addColorStop(0.8, '#B0A090'); // Warm horizon
-      gradient.addColorStop(1, '#C0B0A0'); // Light horizon
+      gradient.addColorStop(0, '#4A90E2'); // Deep sky blue sa itaas
+      gradient.addColorStop(0.3, '#6BA5E8'); // Medium blue
+      gradient.addColorStop(0.6, '#87C1FF'); // Light blue
+      gradient.addColorStop(0.8, '#E0F0FF'); // Very light near horizon
+      gradient.addColorStop(1, '#FFFFFF'); // White at horizon
       context.fillStyle = gradient;
       context.fillRect(0, 0, 2, 512);
       const gradientTexture = new THREE.CanvasTexture(canvas);
@@ -54,7 +54,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     camera.position.set(7, 24, 37);
     camera.lookAt(0, 0, 0);
 
-    // Renderer with realistic settings
+    // Renderer with daylight settings
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
       powerPreference: "high-performance",
@@ -63,11 +63,10 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Soft shadows
-    //renderer.shadowMap.bias = 0.0001;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; // Film-like tone mapping
-    renderer.toneMappingExposure = 1.5; // Balanced exposure
-    renderer.outputEncoding = THREE.sRGBEncoding; // Correct color space
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 2.0; // Increased for brighter scene
+    renderer.outputEncoding = THREE.sRGBEncoding;
     container.appendChild(renderer.domElement);
 
     // Controls
@@ -75,19 +74,18 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = true;
-   // controls.maxPolarAngle = Math.PI / 2.5; // Limit angle para realistic
     controls.minDistance = 20;
     controls.maxDistance = 60;
     controls.enableZoom = true;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.8; // Mas mabagal, parang totoo
+    controls.autoRotateSpeed = 0.8;
     controls.target.set(0, 8, 0);
 
-    // ============ REALISTIC LIGHTING ============
+    // ============ BRIGHT DAYLIGHT LIGHTING ============
     
-    // Main sunlight (warm, parang araw sa hapon)
-    const sunLight = new THREE.DirectionalLight(0xFFE6CC, 1.5);
-    sunLight.position.set(30, 40, 30);
+    // Main sunlight (bright white/yellow for midday)
+    const sunLight = new THREE.DirectionalLight(0xFFF5E6, 2.5); // Brighter, slightly warm
+    sunLight.position.set(30, 50, 20); // Higher sun for less shadows
     sunLight.castShadow = true;
     sunLight.shadow.mapSize.width = 2048;
     sunLight.shadow.mapSize.height = 2048;
@@ -101,89 +99,83 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     sunLight.shadow.camera.bottom = -40;
     scene.add(sunLight);
 
-    // ============ SUN HELPER (mas realistic) ============
-    const sunGlowGeometry = new THREE.SphereGeometry(1.5, 16, 16);
+    // Sun representation (lighter for daylight)
+    const sunGlowGeometry = new THREE.SphereGeometry(1.8, 16, 16);
     const sunGlowMaterial = new THREE.MeshBasicMaterial({
-      color: 0xFFAA66,
+      color: 0xFFEECC,
       transparent: true,
-      opacity: 0.3
+      opacity: 0.2 // More subtle
     });
     const sunGlow = new THREE.Mesh(sunGlowGeometry, sunGlowMaterial);
     sunGlow.position.copy(sunLight.position);
     scene.add(sunGlow);
 
-    // Environment light (sky light)
-    const hemiLight = new THREE.HemisphereLight(0x88AACC, 0x332211, 0.8);
+    // Bright sky light
+    const hemiLight = new THREE.HemisphereLight(0xFFFFFF, 0xE0F0FF, 1.2); // Brighter
     scene.add(hemiLight);
 
-    // Fill light (reflected light from surroundings)
-    const fillLight = new THREE.DirectionalLight(0xAACCFF, 0.4);
-    fillLight.position.set(-20, 20, 30);
+    // Fill light (brighter for daylight)
+    const fillLight = new THREE.DirectionalLight(0xFFFFFF, 0.8);
+    fillLight.position.set(-20, 30, 30);
     scene.add(fillLight);
 
-    // Back light (rim lighting)
-    const backLight = new THREE.DirectionalLight(0xCCDDFF, 0.3);
-    backLight.position.set(-20, 30, -40);
+    // Back light (brighter rim lighting)
+    const backLight = new THREE.DirectionalLight(0xFFFFFF, 0.6);
+    backLight.position.set(20, 30, -40);
     scene.add(backLight);
 
-    // Ambient light (base illumination)
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.5);
+    // Ambient light (brighter for daylight)
+    const ambientLight = new THREE.AmbientLight(0xFFFFFF, 0.8);
     scene.add(ambientLight);
 
-    // ============ REALISTIC GROUND ============
+    // Additional fill from below (bounced light)
+    const bounceLight = new THREE.DirectionalLight(0xE0F0FF, 0.4);
+    bounceLight.position.set(0, -10, 0);
+    scene.add(bounceLight);
+
+    // ============ BRIGHTER GROUND ============
     
-    const groundRadius = 400; // Mas malaki para hindi kita ang edge
+    const groundRadius = 400;
     const groundSegments = 64;
     
-    // Create realistic ground texture (asphalt/concrete with wear)
+    // Create brighter ground texture
     const groundCanvas = document.createElement('canvas');
     groundCanvas.width = 1024;
     groundCanvas.height = 1024;
     const groundCtx = groundCanvas.getContext('2d');
     
     if (groundCtx) {
-      // Base color - weathered asphalt
-      groundCtx.fillStyle = '#3A4035';
+      // Lighter base color - light concrete/asphalt
+      groundCtx.fillStyle = '#8A8F85';
       groundCtx.fillRect(0, 0, 1024, 1024);
       
-      // Add realistic texture (asphalt grain)
+      // Add subtle texture
       const imageData = groundCtx.getImageData(0, 0, 1024, 1024);
       const data = imageData.data;
       
       for (let i = 0; i < data.length; i += 4) {
-        // Asphalt texture - irregular grain
-        const noise = (Math.random() - 0.5) * 30;
-        const wear = Math.random() > 0.99 ? 40 : 0; // Random light spots (wear)
+        const noise = (Math.random() - 0.5) * 15; // Less contrast for brighter look
         
-        data[i] = Math.min(140, Math.max(40, data[i] + noise + wear));
-        data[i+1] = Math.min(130, Math.max(35, data[i+1] + noise * 0.9 + wear * 0.8));
-        data[i+2] = Math.min(120, Math.max(30, data[i+2] + noise * 0.8 + wear * 0.6));
+        data[i] = Math.min(180, Math.max(120, data[i] + noise));
+        data[i+1] = Math.min(175, Math.max(115, data[i+1] + noise));
+        data[i+2] = Math.min(170, Math.max(110, data[i+2] + noise));
       }
       
       groundCtx.putImageData(imageData, 0, 0);
       
-      // Add subtle road lines/markings (weathered)
-      groundCtx.strokeStyle = '#6A6050';
-      groundCtx.lineWidth = 4;
+      // Very subtle road markings
+      groundCtx.strokeStyle = '#B0B0A0';
+      groundCtx.lineWidth = 2;
       
-      // Random cracks and wear lines
-      for (let i = 0; i < 50; i++) {
-        groundCtx.beginPath();
-        groundCtx.moveTo(Math.random() * 1024, Math.random() * 1024);
-        groundCtx.lineTo(Math.random() * 1024, Math.random() * 1024);
-        groundCtx.strokeStyle = `rgba(80, 70, 60, ${Math.random() * 0.3})`;
-        groundCtx.stroke();
-      }
-      
-      // Faint grid (urban planning)
-      groundCtx.strokeStyle = '#5A5A50';
+      // Faint grid lines
+      groundCtx.strokeStyle = '#A0A090';
       groundCtx.lineWidth = 1;
       
       for (let i = 0; i < 1024; i += 128) {
         groundCtx.beginPath();
         groundCtx.moveTo(i, 0);
         groundCtx.lineTo(i, 1024);
-        groundCtx.strokeStyle = 'rgba(90, 90, 80, 0.1)';
+        groundCtx.strokeStyle = 'rgba(160, 160, 140, 0.05)';
         groundCtx.stroke();
         
         groundCtx.beginPath();
@@ -200,12 +192,12 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     
     const groundMaterial = new THREE.MeshStandardMaterial({ 
       map: groundTexture,
-      color: 0x5A6050,
-      roughness: 0.9, // Napaka-rough (asphalt)
-      metalness: 0.5,
+      color: 0xB0B5A5, // Lighter color
+      roughness: 0.8,
+      metalness: 0.2,
       emissive: new THREE.Color(0x000000),
-      bumpMap: groundTexture, // Same texture as bump for depth
-      bumpScale: 0.5
+      bumpMap: groundTexture,
+      bumpScale: 0.3
     });
     
     const ground = new THREE.Mesh(
@@ -217,8 +209,8 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Atmospheric fog (realistic depth)
-    scene.fog = new THREE.FogExp2(0xA0B0B5, 0.0005);
+    // Lighter atmospheric fog
+    scene.fog = new THREE.FogExp2(0xE0F0FF, 0.0003);
 
     setDebug('Loading FBX model...');
 
@@ -247,39 +239,60 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
           -center.z * scale
         );
         
-        // ============ REALISTIC BUILDING MATERIALS ============
+        // ============ BRIGHTER BUILDING MATERIALS ============
         
-        // Realistic color palette based on real building materials
-        const realisticColors = [
-          // Concrete variations
-          0x7A7A70, 0x003333,0x001a1a,0x002233
+        // Brighter, more varied color palette for daylight
+        const daylightColors = [
+          // Light concrete and building materials
+          0xE8E8E0, // Off-white
+          0xD8D8D0, // Light gray
+          0xC8C8C0, // Medium light gray
+          0xF0F0E8, // Almost white
+          0xE0E0D8, // Warm light gray
+          0xD0D8D0, // Slight green tint
+          0xD8D0C8, // Warm beige
+          0xE8E0D8, // Light sandstone
+          0xF5F5F0, // Very light
+          0xE0D8D0, // Light taupe
         ];
         
-        console.log(`Using ${realisticColors.length} realistic building colors`);
+        // Brighter accent colors for variety
+        const accentColors = [
+          0xC0C8D0, // Light blue-gray
+          0xD0C8C0, // Light warm gray
+          0xC8D0C0, // Light sage
+          0xD0C8D0, // Light lavender-gray
+        ];
+        
+        console.log(`Using ${daylightColors.length} daylight colors`);
         
         let meshCount = 0;
         
-        object.traverse((child:any) => {
+        object.traverse((child: any) => {
           if (child.isMesh) {
             meshCount++;
             
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Pumili ng realistic na kulay
-            const baseColor = realisticColors[Math.floor(Math.random() * realisticColors.length)];
+            // Choose base color (mostly light, sometimes accent)
+            let baseColor;
+            if (Math.random() > 0.8) { // 20% chance for accent
+              baseColor = accentColors[Math.floor(Math.random() * accentColors.length)];
+            } else {
+              baseColor = daylightColors[Math.floor(Math.random() * daylightColors.length)];
+            }
             
-            // Add subtle variation (±5% sa brightness)
+            // Small variation
             const color = new THREE.Color(baseColor);
-            const variation = 0.9 + Math.random() * 0.2; // 0.9 to 1.1
+            const variation = 0.95 + Math.random() * 0.1; // 0.95 to 1.05
             color.multiplyScalar(variation);
             
-            // Realistic material properties
-            const roughness = 0.6 + Math.random() * 0.3; // Mostly rough
-            const metalness = Math.random() * 0.2; // Konting metalness lang
-            const bumpScale = 0.1 + Math.random() * 0.3; // Texture depth
+            // Material properties for daylight (less rough, slightly reflective)
+            const roughness = 0.4 + Math.random() * 0.3; // Less rough for brighter appearance
+            const metalness = 0.1 + Math.random() * 0.2; // Slight metalness for some shine
             
-            // Create realistic material
+            // Create material
             const material = new THREE.MeshStandardMaterial({
               color: color,
               roughness: roughness,
@@ -289,32 +302,17 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
               flatShading: false
             });
             
-            // Add subtle emissive for windows (random)
-            if (Math.random() > 0.7) {
-              material.emissive = new THREE.Color(0x332211);
-              material.emissiveIntensity = 0.05;
+            // Add subtle window reflections (more common in daylight)
+            if (Math.random() > 0.6) {
+              material.emissive = new THREE.Color(0x112233);
+              material.emissiveIntensity = 0.03; // Very subtle
             }
             
             child.material = material;
-            
-            // Optional: Add subtle color variation sa mga building na maraming parts
-            if (child.children && child.children.length > 0) {
-              child.children.forEach((part: any) => {
-                if (part.isMesh) {
-                  const partColor = new THREE.Color(baseColor);
-                  partColor.multiplyScalar(0.9 + Math.random() * 0.2);
-                  part.material = new THREE.MeshStandardMaterial({
-                    color: partColor,
-                    roughness: roughness,
-                    metalness: metalness
-                  });
-                }
-              });
-            }
           }
         });
         
-        console.log(`Applied realistic materials to ${meshCount} meshes`);
+        console.log(`Applied daylight materials to ${meshCount} meshes`);
         setDebug(`Loaded ${meshCount} building elements`);
 
         scene.add(object);
@@ -338,12 +336,6 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      
-      // Very subtle sun movement (optional)
-      if (sunLight) {
-        // Hindi na natin ginagalaw para consistent ang shadows
-      }
-      
       controls.update();
       renderer.render(scene, camera);
     };
@@ -381,7 +373,7 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
     left: 0,
     width: '100%',
     aspectRatio: '4/1',
-    backgroundColor: '#0A1A2A',
+    backgroundColor: '#4A90E2',
     overflow: 'hidden'
   };
 
@@ -408,4 +400,4 @@ export default function FBXViewer({ modelPath = '/City/City.FBX' }: FBXViewerPro
       )}
     </div>
   );
-          }
+}
