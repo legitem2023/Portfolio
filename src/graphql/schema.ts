@@ -280,7 +280,7 @@ export const typeDefs = gql`
     status: OrderStatus
     orderId: String
     order: Order
-    product: [Product]
+    product: [ProductVariant]
     supplier: [User]
     isDefault: Boolean
     rejectedBy: [String]
