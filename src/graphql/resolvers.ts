@@ -2618,13 +2618,7 @@ salesList: async (
             address: true,
             items: {
               include: {
-                product: {
-                  include: {
-                    variants: true,
-                    category: true
-                  }
-                }
-              }
+                product:true
             },
             payments: {
               orderBy: {
