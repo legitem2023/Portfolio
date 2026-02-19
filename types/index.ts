@@ -110,7 +110,7 @@ export interface WishlistItem {
 }
 
 export interface CartItem {
-  id: number;
+  id: string;
   userId: string;
   supplierId: string;
   sku: string;
