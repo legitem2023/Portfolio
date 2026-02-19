@@ -28,7 +28,7 @@ export const formatPeso = (amount: number): string => {
 export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierName: string; supplier?: Supplier } => {
   if (item.supplier && Array.isArray(item.supplier) && item.supplier.length > 0) {
     const supplier = item.supplier[0];
-    const supplierName = supplier.firstName || item.product.name || "Supplier";
+    const supplierName = supplier.firstName || item.product[0]?.name || "Supplier";
     
     if (supplier.addresses && supplier.addresses.length > 0) {
       const address = supplier.addresses[0];
