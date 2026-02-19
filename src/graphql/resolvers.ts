@@ -757,16 +757,7 @@ const orders = await prisma.order.findMany({
         riderId: true,
         recipientName: true,
         rejectedBy: true,
-        product: {
-          select: {
-            id: true,
-            name: true,
-            sku: true,
-            price: true,
-            salePrice: true,
-            images: true
-          }
-        },
+        product: true,
         supplier: {
           select: {
             id: true,
@@ -924,7 +915,7 @@ const orders = await prisma.order.findMany({
         riderId: true,
         recipientName: true,
         rejectedBy: true,
-            product: {
+            product:true, /*{
               select: {
                 id: true,
                 name: true,
@@ -933,7 +924,7 @@ const orders = await prisma.order.findMany({
                 salePrice: true,
                 images: true
               }
-            },
+            }*/
             supplier: {
               select: {
                 id: true,
@@ -1093,7 +1084,7 @@ const orders = await prisma.order.findMany({
         riderId: true,
         recipientName: true,
         rejectedBy: true,
-            product: {
+            product:true, /*{
               select: {
                 id: true,
                 name: true,
@@ -1102,7 +1093,7 @@ const orders = await prisma.order.findMany({
                 salePrice: true,
                 images: true
               }
-            },
+            },*/
             supplier: {
               select: {
                 id: true,
