@@ -301,18 +301,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-2 border-t border-gray-200 pt-3">
                 {delivery.supplierItems?.map((item) => (
                   <div key={item.id} className="flex justify-between text-xs lg:text-sm">
-                    <div className="flex-1">
-                      
-                      
-                      <div key={idx} className="flex items-center gap-2 mt-1">
-                        <span className="text-gray-400 text-xs">SKU {item.product[0].sku}</span>
+                    <div className="flex-1"> 
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray-400 text-xs">SKU: {item.product[0].sku}</span>
                         <span className="text-gray-400 text-xs">• {item.product[0].name}</span>
-                        <span className="text-gray-600 text-xs">Qty: {item.quantity}</span>
-                      
-                      </div>
-                      
-                      
-                      
+                        <span className="text-gray-600 text-xs">Qty: {item.quantity}</span> 
+                      </div>        
                     </div>
                     <div className="text-right ml-4">
                       <div className="text-gray-700 font-medium">{formatPeso(item.price * item.quantity)}</div>
