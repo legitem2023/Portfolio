@@ -70,7 +70,7 @@ const ConfirmationStage = ({
   const handlePlaceOrder = async () => {
     try {
       const orderItems = cartItems.map(item => ({
-        productId: item.id,
+        productId: item.productId,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price
