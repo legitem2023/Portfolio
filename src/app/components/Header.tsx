@@ -546,7 +546,7 @@ const Header: React.FC = () => {
                  WebkitBackdropFilter: 'blur(2px)'
               }}
         >
-        {/*<AnimatedCrowd/>*/}
+        <AnimatedCrowd/>
         {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
