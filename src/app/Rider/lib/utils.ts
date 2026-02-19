@@ -36,7 +36,7 @@ export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierN
     }
   }
   
-  return { address: undefined, supplierName: item.product.name || "Supplier", supplier: undefined };
+  return { address: undefined, supplierName: item.product[0]?.name || "Supplier", supplier: undefined };
 };
 
 // Group order items by supplier and map to delivery format
@@ -101,7 +101,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   Object.values(itemsBySupplier).forEach((supplierGroup) => {
     const { supplierInfo, items } = supplierGroup;
     const pickupAddress = supplierInfo?.address;
-    const supplierName = supplierInfo?.supplierName || "Restaurant";
+    const supplierName = supplierInfo?.supplierName || "Vendor City";
     const supplier = supplierInfo?.supplier;
     const supplierId = supplierGroup.supplierId;
     
