@@ -210,17 +210,18 @@ export interface Supplier {
   addresses: Address[];
 }
 
+
 export interface OrderItem {
   id: string;
   supplierId: string;
   quantity: number;
   price: number;
   status: string;
-  product: {
+  product: Array<{  // Change this to an array
     name: string;
     sku: string;
     images: string[]
-  };
+  }>;
   supplier?: Supplier[];
 }
 
