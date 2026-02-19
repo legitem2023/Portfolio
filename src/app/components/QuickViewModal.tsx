@@ -288,7 +288,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
     try {
       // Create cart item with variant-specific data and proper error handling
       const cartItem = {
-        id: Number(selectedVariant.id) || Date.now(),
+        id: selectedVariant.id?.toString(),
         productId: selectedVariant.id?.toString(), //product.id?.toString() || 'unknown',
         userId: 'current-user-id',
         supplierId:product.supplierId,
