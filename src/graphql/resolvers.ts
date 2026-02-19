@@ -2626,6 +2626,7 @@ salesList: async (
               }
             }
           }
+          }
         });
         
         if (!order) {
