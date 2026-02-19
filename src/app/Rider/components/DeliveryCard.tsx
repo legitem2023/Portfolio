@@ -193,7 +193,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
             {delivery.supplierItems?.map((item) => (
               <div key={item.id} className="flex justify-between text-xs lg:text-sm">
                 <div>
-                  <span className="font-medium">{item.product.name}</span>
+                  <span className="font-medium">{item.product[0].name}</span>
                   <span className="text-gray-600 ml-1">(Qty: {item.quantity})</span>
                 </div>
                 <div className="text-gray-700">{formatPeso(item.price * item.quantity)}</div>
