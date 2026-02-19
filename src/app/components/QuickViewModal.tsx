@@ -284,7 +284,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
 
   const handleAddToCartClick = () => {
     if (!product || !selectedVariant) return;
-    console.log(product);
+    console.log(selectedVariant);
     try {
       // Create cart item with variant-specific data and proper error handling
       const cartItem = {
