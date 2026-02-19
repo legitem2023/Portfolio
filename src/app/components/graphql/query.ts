@@ -589,6 +589,7 @@ export const GETPRODUCTS = gql`
           id
         }
         variants {
+          id
           name
           createdAt
           sku
@@ -632,6 +633,7 @@ export const GETPRODUCT = gql`
           id
         }
         variants {
+          id
           name
           createdAt
           sku
