@@ -2619,11 +2619,6 @@ salesList: async (
             items: {
               include: {
                 product:true
-            },
-            payments: {
-              orderBy: {
-                createdAt: 'desc'
-              }
             }
           }
           }
