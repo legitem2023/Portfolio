@@ -65,14 +65,14 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           </h2>
         </div>
         
-        {/* Tab Buttons Skeleton */}
+        
         <div className="flex gap-2 mb-4 lg:mb-6">
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
         </div>
 
-        {/* Skeleton Cards */}
+        
         <div className="space-y-3 lg:space-y-6">
           {[1, 2, 3].map((i) => (
             <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
@@ -105,14 +105,14 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           </h2>
         </div>
         
-        {/* Tab Buttons Skeleton */}
+        
         <div className="flex gap-2 mb-4 lg:mb-6">
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
           <div className="flex-1 lg:flex-none px-4 py-2 bg-gray-200 rounded-lg shimmer h-10"></div>
         </div>
 
-        {/* Skeleton Cards */}
+        
         <div className="space-y-3 lg:space-y-6">
           {[1, 2, 3].map((i) => (
             <ActiveDeliveryCardSkelitonError key={i} isMobile={isMobile} />
@@ -239,18 +239,6 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
             <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
           ))}
         </div>
-
-        <style jsx>{`
-          @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-          }
-          .shimmer {
-            animation: shimmer 2s infinite linear;
-            background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
-            background-size: 1000px 100%;
-          }
-        `}</style>
       </div>
     ) :deliveries.map((delivery) => (
             <ActiveDeliveryCard
