@@ -703,25 +703,16 @@ const orders = await prisma.order.findMany({
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
           select: {
             id: true,
-        orderId: true,
-        supplierId: true,
-        quantity: true,
-        price: true,
-        variantInfo: true,
-        status: true, // STATUS IS HERE
-        riderId: true,
-        recipientName: true,
-        rejectedBy: true,
-            product:true, /*{
-              select: {
-                id: true,
-                name: true,
-                sku: true,          // Added for frontend query
-                price: true,
-                salePrice: true,
-                images: true
-              }
-            }*/
+            orderId: true,
+            supplierId: true,
+            quantity: true,
+            price: true,
+            variantInfo: true,
+            status: true, // STATUS IS HERE
+            riderId: true,
+            recipientName: true,
+            rejectedBy: true,
+            product:true,
             supplier: {
               select: {
                 id: true,
@@ -842,15 +833,16 @@ const orders = await prisma.order.findMany({
   const where: any = {};
    const itemWhere: any =  {};
   // Add status filter if provided
-  if (filter) {
-    if (filter.status) {
-      itemWhere.status = filter.status;
-    }
-  
-    if (filter.supplierId) {
-      itemWhere.supplierId = filter.supplierId;
-    }
+  if(filter && filter.status) {
+      itemWhere.status = filter.status 
   }
+
+    
+  // Add supplierId filter through OrderItem relation
+  if (filter && filter.supplierId) {
+    itemWhere.supplierId = filter.supplierId  
+  }
+
 
   try {
     // Get orders count
@@ -866,18 +858,18 @@ const orders = await prisma.order.findMany({
       },
       include: {
         items: {
-          where:  itemWhere,
+          where: Object.keys(itemWhere).length > 0 ? itemWhere : {},
           select: {
             id: true,
-        orderId: true,
-        supplierId: true,
-        quantity: true,
-        price: true,
-        variantInfo: true,
-        status: true, // STATUS IS HERE
-        riderId: true,
-        recipientName: true,
-        rejectedBy: true,
+            orderId: true,
+            supplierId: true,
+            quantity: true,
+            price: true,
+            variantInfo: true,
+            status: true, // STATUS IS HERE
+            riderId: true,
+            recipientName: true,
+            rejectedBy: true,
             product:true,
             supplier: {
               select: {
