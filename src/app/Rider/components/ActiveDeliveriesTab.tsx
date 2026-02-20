@@ -214,7 +214,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         </button>
       </div>
       { loading?(
-      <div className="p-2 lg:p-6">
+      <div className="space-y-3 lg:space-y-6">
         {/* Skeleton Cards */}
         <div className="space-y-3 lg:space-y-6">
           {[1, 2, 3].map((i) => (
