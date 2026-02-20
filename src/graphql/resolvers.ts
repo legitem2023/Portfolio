@@ -1045,17 +1045,14 @@ const orders = await prisma.order.findMany({
   const where: any = {};
    const itemWhere: any =  {};
   // Add status filter if provided
-  if (filter && filter.status) {
-    itemWhere.status = filter.status;
-  }
-
-  // Add supplierId filter through OrderItem relation
-  if (filter && filter.supplierId) {
-    where.items = {
-      some: {
-        supplierId: filter.supplierId
-      }
-    };
+  if (filter) {
+    if (filter.status) {
+      itemWhere.status = filter.status;
+    }
+  
+    if (filter.supplierId) {
+      itemWhere.supplierId = filter.supplierId;
+    }
   }
 
   try {
