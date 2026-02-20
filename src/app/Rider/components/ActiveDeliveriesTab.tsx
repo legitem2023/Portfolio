@@ -55,7 +55,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
   };
 
   // Loading state with skeletons
-  if (loading) {
+ /* if (loading) {
     return (
       <div className="p-2 lg:p-6">
         <div className="flex justify-between items-center mb-3 lg:mb-6">
@@ -92,10 +92,10 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         `}</style>
       </div>
     );
-  }
+  }*/
 
   // Error state
-  if (error) {
+ /* if (error) {
         return (
       <div className="p-2 lg:p-6">
         <div className="flex justify-between items-center mb-3 lg:mb-6">
@@ -132,7 +132,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         `}</style>
       </div>
     );
-  }
+  }*/
 
   return (
     <div className="p-2 lg:p-6">
@@ -230,14 +230,35 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
-          {deliveries.map((delivery) => (
+          {
+            loading?(
+      <div className="p-2 lg:p-6">
+        {/* Skeleton Cards */}
+        <div className="space-y-3 lg:space-y-6">
+          {[1, 2, 3].map((i) => (
+            <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
+          ))}
+        </div>
+
+        <style jsx>{`
+          @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+          }
+          .shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
+            background-size: 1000px 100%;
+          }
+        `}</style>
+      </div>
+    ) :deliveries.map((delivery) => (
             <ActiveDeliveryCard
-      key={delivery.id}
-  delivery={delivery}
-  isMobile={isMobile}
-  currentStatus={activeTab} // Pass the current tab status
-  onReset={refetch}
-/>
+              key={delivery.id}
+              delivery={delivery}
+              isMobile={isMobile}
+              currentStatus={activeTab} // Pass the current tab status
+              onReset={refetch}/>
           ))}
         </div>
       )}
