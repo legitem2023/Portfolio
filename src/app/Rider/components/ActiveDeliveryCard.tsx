@@ -296,34 +296,63 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
             </button>
 
-            {/* Collapsible content */}
-            {showItems && (
-              <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-2 border-t border-gray-200 pt-3">
-                {delivery.supplierItems?.map((item) => (
-                  <div key={item.id} className="flex justify-between text-xs lg:text-sm">
-                    <div className="flex-1"> 
-                      <div className="flex flex-col gap-2 mt-1">
-                        <span className="text-gray-400 text-xs truncate w-full">SKU  : {item.product[0]?.sku}</span>
-                        <span className="text-gray-400 text-xs truncate w-full">Name : {item.product[0]?.name}</span>
-                        <span className="text-gray-600 text-xs">Qty  : {item.quantity}</span> 
-                      </div>        
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="text-gray-700 font-medium">{formatPeso(item.price * item.quantity)}</div>
-                      <div className="text-gray-400 text-xs">{formatPeso(item.price)} each</div>
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Subtotal for items */}
-                <div className="border-t border-gray-200 mt-2 pt-2 flex justify-between text-sm font-semibold">
-                  <span>Subtotal</span>
-                  <span className="text-green-600">
-                    {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
-                  </span>
-                </div>
-              </div>
+{/* Collapsible content */}
+{showItems && (
+  <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-3 border-t border-gray-200 pt-3">
+    {delivery.supplierItems?.map((item) => (
+      <div key={item.id} className="flex gap-3 bg-gray-50 rounded-lg p-2">
+        {/* Image section */}
+        {item.product[0]?.images && item.product[0].images.length > 0 && (
+          <div className="relative w-12 h-12 flex-shrink-0">
+            <img 
+              src={item.product[0].images[0]} 
+              alt={item.product[0].name}
+              className="w-full h-full object-cover rounded-lg border border-gray-200"
+            />
+            {item.product[0].images.length > 1 && (
+              <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                {item.product[0].images.length}
+              </span>
             )}
+          </div>
+        )}
+        
+        {/* Product details - left side */}
+        <div className="flex-1 min-w-0">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono bg-gray-200 px-1.5 py-0.5 rounded text-gray-700">
+                {item.product[0]?.sku}
+              </span>
+              <span className="text-xs text-gray-500">x{item.quantity}</span>
+            </div>
+            <h4 className="text-sm font-medium text-gray-900 truncate">
+              {item.product[0]?.name}
+            </h4>
+          </div>
+        </div>
+        
+        {/* Price section - right side */}
+        <div className="text-right flex-shrink-0">
+          <div className="text-sm font-bold text-gray-900">
+            {formatPeso(item.price * item.quantity)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {formatPeso(item.price)} each
+          </div>
+        </div>
+      </div>
+    ))}
+    
+    {/* Subtotal */}
+    <div className="flex justify-between items-center bg-gray-100 rounded-lg p-3 mt-2">
+      <span className="text-sm font-medium text-gray-600">Subtotal</span>
+      <span className="text-lg font-bold text-green-600">
+        {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
+      </span>
+    </div>
+  </div>
+)}
           </div>
 
           {/* Route info with Map button */}
