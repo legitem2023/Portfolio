@@ -298,58 +298,106 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
 {/* Collapsible content */}
 {showItems && (
-  <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-3 border-t border-gray-200 pt-3">
+  <div className="px-2 sm:px-3 lg:px-4 pb-2 sm:pb-3 lg:pb-4 space-y-2 sm:space-y-3 border-t border-gray-200 pt-2 sm:pt-3">
     {delivery.supplierItems?.map((item) => (
-      <div key={item.id} className="flex gap-3 bg-gray-50 rounded-lg p-2">
-        {/* Image section */}
-        {item.product[0]?.images && item.product[0].images.length > 0 && (
-          <div className="relative w-12 h-12 flex-shrink-0">
-            <img 
-              src={item.product[0].images[0]} 
-              alt={item.product[0].name}
-              className="w-full h-full object-cover rounded-lg border border-gray-200"
-            />
-            {item.product[0].images.length > 1 && (
-              <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                {item.product[0].images.length}
-              </span>
-            )}
-          </div>
-        )}
-        
-        {/* Product details - left side */}
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-col gap-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono bg-gray-200 px-1.5 py-0.5 rounded text-gray-700">
-                {item.product[0]?.sku}
-              </span>
-              <span className="text-xs text-gray-500">x{item.quantity}</span>
+      <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+        {/* Top row for mobile: Image and price side by side */}
+        <div className="flex xs:hidden items-center gap-2">
+          {/* Image section */}
+          {item.product[0]?.images && item.product[0].images.length > 0 && (
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <img 
+                src={item.product[0].images[0]} 
+                alt={item.product[0].name}
+                className="w-full h-full object-cover rounded-lg border border-gray-200"
+              />
+              {item.product[0].images.length > 1 && (
+                <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full">
+                  {item.product[0].images.length}
+                </span>
+              )}
             </div>
-            <h4 className="text-sm font-medium text-gray-900 truncate">
-              {item.product[0]?.name}
-            </h4>
+          )}
+          
+          {/* Mobile price */}
+          <div className="flex-1 text-right">
+            <div className="text-sm font-bold text-gray-900">
+              {formatPeso(item.price * item.quantity)}
+            </div>
+            <div className="text-xs text-gray-500">
+              {formatPeso(item.price)} each
+            </div>
           </div>
         </div>
-        
-        {/* Price section - right side */}
-        <div className="text-right flex-shrink-0">
-          <div className="text-sm font-bold text-gray-900">
-            {formatPeso(item.price * item.quantity)}
+
+        {/* Main content - responsive layout */}
+        <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+          {/* Image - hidden on mobile (shown in top row), visible on xs and up */}
+          {item.product[0]?.images && item.product[0].images.length > 0 && (
+            <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+              <img 
+                src={item.product[0].images[0]} 
+                alt={item.product[0].name}
+                className="w-full h-full object-cover rounded-lg border border-gray-200"
+              />
+              {item.product[0].images.length > 1 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white text-[10px] sm:text-xs w-4 sm:w-5 h-4 sm:h-5 flex items-center justify-center rounded-full">
+                  {item.product[0].images.length}
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Product details */}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              {/* SKU and quantity */}
+              <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                  {item.product[0]?.sku}
+                </span>
+                <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                  Qty: {item.quantity}
+                </span>
+              </div>
+              
+              {/* Product name */}
+              <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                {item.product[0]?.name}
+              </h4>
+              
+              {/* Price for tablet/desktop (hidden on mobile) */}
+              <div className="hidden sm:flex items-center gap-2 mt-0.5">
+                <span className="text-xs text-gray-500">Unit price:</span>
+                <span className="text-xs font-semibold text-gray-700">{formatPeso(item.price)}</span>
+              </div>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            {formatPeso(item.price)} each
+          
+          {/* Price - visible on tablet/desktop (hidden on mobile) */}
+          <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+            <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+              {formatPeso(item.price * item.quantity)}
+            </div>
+            <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+              @ {formatPeso(item.price)}
+            </div>
           </div>
         </div>
       </div>
     ))}
     
-    {/* Subtotal */}
-    <div className="flex justify-between items-center bg-gray-100 rounded-lg p-3 mt-2">
-      <span className="text-sm font-medium text-gray-600">Subtotal</span>
-      <span className="text-lg font-bold text-green-600">
-        {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
-      </span>
+    {/* Subtotal - responsive */}
+    <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 bg-gray-100 rounded-lg p-3 sm:p-4 mt-2 sm:mt-3">
+      <span className="text-sm sm:text-base font-medium text-gray-600">Subtotal</span>
+      <div className="flex flex-col xs:items-end w-full xs:w-auto">
+        <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+          {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
+        </span>
+        <span className="text-xs sm:text-sm text-gray-500">
+          ({delivery.supplierItems?.length} {delivery.supplierItems?.length === 1 ? 'item' : 'items'})
+        </span>
+      </div>
     </div>
   </div>
 )}
