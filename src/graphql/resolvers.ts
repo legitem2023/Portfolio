@@ -1069,8 +1069,8 @@ const orders = await prisma.order.findMany({
       },
       include: {
         items: {
-          where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
-          //where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
+         // where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
+          where: filter && filter.supplierId ? itemWhere : {},
           select: {
             id: true,
         orderId: true,
