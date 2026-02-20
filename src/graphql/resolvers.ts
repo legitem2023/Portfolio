@@ -268,57 +268,7 @@ async function getOrderStatusBreakdown(whereClause: any) {
     percentage: total > 0 ? (item._count.id / total) * 100 : 0
   }));
 }
-/*
-async function getCustomerMetrics(
-  currentWhere: any, 
-  previousWhere: any
-) {
-  const [currentCustomers, previousCustomers, repeatCustomers] = await Promise.all([
-    prisma.order.groupBy({
-      by: ['userId'],
-      where: currentWhere,
-      _count: {
-        id: true
-      }
-    }),
-    prisma.order.groupBy({
-      by: ['userId'],
-      where: previousWhere,
-      _count: {
-        id: true
-      }
-    }),
-    prisma.order.groupBy({
-      by: ['userId'],
-      where: currentWhere,
-      having: {
-        userId: {
-          _count: {
-            id: {
-              gt: 1
-            }
-          }
-        }
-      }
-    })
-  ]);
 
-  const totalRevenueResult = await prisma.order.aggregate({
-    where: currentWhere,
-    _sum: {
-      total: true
-    }
-  });
-
-  return {
-    total: currentCustomers.length,
-    repeatCustomers: repeatCustomers.length,
-    newCustomers: currentCustomers.length - repeatCustomers.length,
-    averageSpend: currentCustomers.length > 0 ? 
-      (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
-  };
-}
-*/
 async function getCustomerMetrics(
   currentWhere: any, 
   previousWhere: any
@@ -541,160 +491,7 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
-// Find the orderlist resolver function (around line 550-560)
-/*neworder: async(parent: any, args: any) => {
-  // Set default values
-  const filter = args.filter || {};
-  const pagination = args.pagination || {};
-  
-  const page = pagination.page || 1;
-  const pageSize = pagination.pageSize || 10;
-  const skip = (page - 1) * pageSize;
 
-  // Build where clause for ORDERS (NO filtering here)
-  const where: any = {};
-
-  try {
-    // Get ALL orders count (no filtering)
-    const totalCount = await prisma.order.count({ where });
-
-      // Add supplierId filter through OrderItem relation
-  if (filter && filter.status) {
-    where.status = filter.status
-  }
-    
-      // Add supplierId filter through OrderItem relation
-  if (filter && filter.supplierId) {
-    where.items = {
-      some: {
-        supplierId: filter.supplierId
-      }
-    };
-  }
-
-    // Get orders with pagination
-    const orders = await prisma.order.findMany({
-      where, // No filtering at order level
-      skip,
-      take: pageSize,
-      orderBy: {
-        createdAt: 'desc'
-      },
-      include: {
-        items: {
-          where: filter && filter.supplierId ? { supplierId: filter.supplierId } : {},
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-                price: true,
-                salePrice: true,
-                images: true
-              }
-            },
-            supplier: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                addresses: {
-                  select: {
-                    street: true,
-                    city: true,
-                    state: true,
-                    zipCode: true,
-                    country: true,
-                    isDefault: true
-                  }
-                }
-              }
-            }
-          }
-        },
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true
-          }
-        },
-        address: {
-          select: {
-            id: true,
-            street: true,
-            city: true,
-            state: true,
-            zipCode: true,
-            country: true
-          }
-        },
-        payments: {
-          select: {
-            id: true,
-            amount: true,
-            method: true,
-            status: true,
-            transactionId: true,
-            createdAt: true
-          }
-        }
-      }
-    });
-
-    // Format the response
-    const formattedOrders = orders.map(order => ({
-      id: order.id,
-      orderNumber: order.orderNumber,
-      userId: order.userId,
-      status: order.status,
-      total: order.total,
-      subtotal: order.subtotal || 0,
-      tax: order.tax || 0,
-      shipping: order.shipping || 0,
-      discount: order.discount || 0,
-      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
-      updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
-      user: order.user,
-      address: order.address,
-      payments: order.payments,
-      items: order.items.map(item => ({
-        id: item.id,
-        supplierId: item.supplierId,
-        quantity: item.quantity,
-        price: item.price,
-        variantInfo: item.variantInfo,
-        product: [item.product],
-        supplier: item.supplier ? [item.supplier] : []
-      }))
-    }));
-
-    // Calculate pagination info
-    const totalPages = Math.ceil(totalCount / pageSize);
-
-    const paginationInfo = {
-      total: totalCount,
-      page,
-      pageSize,
-      totalPages,
-      hasNextPage: page < totalPages,
-      hasPreviousPage: page > 1
-    };
-
-    return {
-      orders: formattedOrders,
-      pagination: paginationInfo
-    };
-
-  } catch (error) {
-    console.error('Error fetching orders:', error);
-    throw new Error('Failed to fetch orders');
-  }
-},*/
     // Find the orderlist resolver function (around line 550-560)
 neworder: async(parent: any, args: any) => {
   // Set default values
@@ -1069,8 +866,7 @@ const orders = await prisma.order.findMany({
       },
       include: {
         items: {
-         // where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
-          where: filter && filter.supplierId ? itemWhere : {},
+          where:  itemWhere,
           select: {
             id: true,
         orderId: true,
@@ -1082,16 +878,7 @@ const orders = await prisma.order.findMany({
         riderId: true,
         recipientName: true,
         rejectedBy: true,
-            product:true, /*{
-              select: {
-                id: true,
-                name: true,
-                sku: true,          // Added for frontend query
-                price: true,
-                salePrice: true,
-                images: true
-              }
-            },*/
+            product:true,
             supplier: {
               select: {
                 id: true,
