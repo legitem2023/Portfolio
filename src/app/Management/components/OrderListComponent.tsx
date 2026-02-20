@@ -148,7 +148,7 @@ export default function OrderListComponent({
       },
       pagination
     },
-    fetchPolicy: 'cache-and-network'
+    fetchPolicy: 'network-only'
   });
 
   // Status options
