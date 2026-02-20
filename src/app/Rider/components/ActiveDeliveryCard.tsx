@@ -43,7 +43,6 @@ enum OrderStatus {
 
 export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus = 'PROCESSING', onReset }: ActiveDeliveryCardProps) {
   const { user } = useAuth();
-  console.log(delivery);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [showFailedReason, setShowFailedReason] = useState(false);
@@ -51,7 +50,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [failedReason, setFailedReason] = useState('');
   const [actionType, setActionType] = useState<'pickup' | 'delivered' | 'cancel' | 'failed' | null>(null);
   const [showMap, setShowMap] = useState(false); // State for map modal
-  const [showItems, setShowItems] = useState(true); // State for items collapsible section
+  const [showItems, setShowItems] = useState(false); // State for items collapsible section
 
   // Set up the mutation
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
