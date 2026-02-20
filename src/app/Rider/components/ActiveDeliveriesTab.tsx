@@ -213,8 +213,16 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           )}
         </button>
       </div>
-
-      {deliveries.length === 0 ? (
+      { loading?(
+      <div className="p-2 lg:p-6">
+        {/* Skeleton Cards */}
+        <div className="space-y-3 lg:space-y-6">
+          {[1, 2, 3].map((i) => (
+            <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
+          ))}
+        </div>
+      </div>
+    ):deliveries.length === 0 ? (
         <div className="bg-gray-50 rounded-lg p-4 lg:p-8 text-center">
           <Bell size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-3 lg:mb-4" />
           <h3 className="text-base lg:text-lg font-semibold text-gray-600">
@@ -230,17 +238,8 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         </div>
       ) : (
         <div className="space-y-3 lg:space-y-6">
-          {
-            loading?(
-      <div className="p-2 lg:p-6">
-        {/* Skeleton Cards */}
-        <div className="space-y-3 lg:space-y-6">
-          {[1, 2, 3].map((i) => (
-            <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
-          ))}
-        </div>
-      </div>
-    ) :deliveries.map((delivery) => (
+        {
+          deliveries.map((delivery) => (
             <ActiveDeliveryCard
               key={delivery.id}
               delivery={delivery}
