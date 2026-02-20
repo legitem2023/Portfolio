@@ -129,7 +129,7 @@ export default function OrderListComponent({
     supplierId: initialSupplierId,
     status: initialStatus
   });
-  
+  console.log(filters);
   // State for pagination
   const [pagination, setPagination] = useState({
     page: 1,
