@@ -927,7 +927,7 @@ const orders = await prisma.order.findMany({
         }
       }
     });
-
+    throw new Error(orders);
     // Format the response to match GraphQL schema
     const formattedOrders = orders.map(order => ({
       id: order.id,
