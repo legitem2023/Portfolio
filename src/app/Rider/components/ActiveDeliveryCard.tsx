@@ -282,7 +282,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             >
               <h4 className="font-semibold text-sm lg:text-base flex items-center gap-1 lg:gap-2">
                 <Package size={isMobile ? 14 : 16} />
-                Items from this supplier ({delivery.items} item{delivery.items !== 1 ? "s" : ""})
+                {delivery.items} item{delivery.items !== 1 ? "s" : ""}
               </h4>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-500">
