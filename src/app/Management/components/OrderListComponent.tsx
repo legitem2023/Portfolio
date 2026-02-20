@@ -56,10 +56,11 @@ interface OrderItem {
   supplierId?: string;
   quantity: number;
   price: number;
-  product: {
+  product: Array<{  // Change this to an array
     name: string;
     sku: string;
-  };
+    images: string[]
+  }>;
 }
 
 interface Order {
@@ -419,9 +420,9 @@ export default function OrderListComponent({
                       {order.items.map((item) => (
                         <div key={item.id} className="flex flex-col justify-between gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.product.name}</p>
+                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.product[0].name}</p>
                             <div className="flex flex-col flex-wrap  gap-2 mt-1 text-xs sm:text-sm text-gray-600">
-                              <span className="truncate">SKU: {item.product.sku}</span>
+                              <span className="truncate">SKU: {item.product[0].sku}</span>
                               <span className="hidden sm:inline">•</span>
                               <span>Qty: {item.quantity}</span>
                               {item.supplierId && (
