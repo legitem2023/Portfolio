@@ -142,7 +142,10 @@ export default function OrderListComponent({
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
-      filter: filters.supplierId || filters.status ? filters : undefined,
+      filter: {
+        status: filters.status,
+        supplierId: filters.supplierId
+      },
       pagination
     },
     fetchPolicy: 'cache-and-network'
