@@ -190,7 +190,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
             <div className="flex items-center gap-2">
               <Package size={isMobile ? 16 : 18} className="text-gray-600" />
               <span className="font-semibold text-sm lg:text-base">
-                Items from this supplier ({delivery.items} item{delivery.items !== 1 ? "s" : ""})
+                {delivery.items} item{delivery.items !== 1 ? "s" : ""}
               </span>
             </div>
             <div className="flex items-center gap-2">
