@@ -511,7 +511,7 @@ export default function OrderListComponent({
                       </span>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
-                      {order.items.status}
+                      {order.items[0].status}
                     </span>
                   </div>
                 </div>
