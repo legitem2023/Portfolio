@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { 
   Package, 
+  MapPin, 
+  Building, 
   User, 
   Clock, 
   AlertCircle,
   Bell,
-  Shield
+  Shield,
+  Truck,
+  Home
 } from "lucide-react";
 
 // GraphQL Query
@@ -28,6 +32,8 @@ const ORDER_LIST_QUERY = gql`
           id
           firstName
           email
+          address
+          phone
         }
         items {
           id
@@ -45,6 +51,14 @@ const ORDER_LIST_QUERY = gql`
           amount
           method
           status
+        }
+        shipping {
+          address
+          city
+          province
+          zipCode
+          phone
+          instructions
         }
       }
       pagination {
@@ -82,6 +96,8 @@ interface Order {
     id: string;
     firstName: string;
     email: string;
+    address?: string;
+    phone?: string;
   };
   items: OrderItem[];
   payments: Array<{
@@ -90,6 +106,14 @@ interface Order {
     method: string;
     status: string;
   }>;
+  shipping?: {
+    address: string;
+    city: string;
+    province: string;
+    zipCode: string;
+    phone?: string;
+    instructions?: string;
+  };
 }
 
 interface PaginationInfo {
@@ -269,7 +293,7 @@ export default function OrderListComponent({
   const orderData = data?.orderlist as OrderListResponse;
   const allOrders = orderData?.orders || [];
   
-  // FILTER OUT ORDERS WITH 0 ITEMS - THIS IS THE KEY FIX
+  // FILTER OUT ORDERS WITH 0 ITEMS
   const ordersWithItems = allOrders.filter(order => order.items.length > 0);
   
   const paginationInfo = orderData?.pagination;
@@ -485,7 +509,63 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* Items Section - Only shown if items exist (which they do because we filtered) */}
+                  {/* DESTINATION / DELIVERY DETAILS - ADDED BACK */}
+                  <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Truck size={isMobile ? 16 : 18} className="text-green-600" />
+                      <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Details</h4>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Customer Information */}
+                      <div className="flex items-start gap-2">
+                        <User size={isMobile ? 14 : 16} className="text-green-500 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500">Customer</p>
+                          <p className="text-sm font-medium">{order.user.firstName}</p>
+                          {order.user.email && (
+                            <p className="text-xs text-gray-600">{order.user.email}</p>
+                          )}
+                          {order.user.phone && (
+                            <p className="text-xs text-gray-600">{order.user.phone}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Shipping Address */}
+                      <div className="flex items-start gap-2">
+                        <MapPin size={isMobile ? 14 : 16} className="text-green-500 mt-0.5" />
+                        <div>
+                          <p className="text-xs text-gray-500">Delivery Address</p>
+                          {order.shipping ? (
+                            <>
+                              <p className="text-sm">{order.shipping.address}</p>
+                              <p className="text-xs text-gray-600">
+                                {order.shipping.city}, {order.shipping.province} {order.shipping.zipCode}
+                              </p>
+                              {order.shipping.phone && (
+                                <p className="text-xs text-gray-600">Phone: {order.shipping.phone}</p>
+                              )}
+                              {order.shipping.instructions && (
+                                <p className="text-xs text-gray-500 italic mt-1">
+                                  Note: {order.shipping.instructions}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-sm">{order.user.address || 'No address provided'}</p>
+                              {order.user.phone && (
+                                <p className="text-xs text-gray-600">Phone: {order.user.phone}</p>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items Section */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4">
                     <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                       <Package size={isMobile ? 16 : 18} className="text-blue-500" />
