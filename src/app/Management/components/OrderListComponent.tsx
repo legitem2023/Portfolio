@@ -21,7 +21,7 @@ import {
   DollarSign
 } from "lucide-react";
 
-// GraphQL Query
+// GraphQL Query - EXISTING ONLY
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -37,16 +37,7 @@ const ORDER_LIST_QUERY = gql`
         user {
           id
           firstName
-          lastName
           email
-          address
-          phone
-        }
-        supplier {
-          id
-          name
-          address
-          phone
         }
         items {
           id
@@ -57,7 +48,6 @@ const ORDER_LIST_QUERY = gql`
             name
             sku
             images
-            description
           }
         }
         payments {
@@ -65,21 +55,6 @@ const ORDER_LIST_QUERY = gql`
           amount
           method
           status
-          transactionId
-          paidAt
-        }
-        shipping {
-          address
-          city
-          province
-          zipCode
-          phone
-          instructions
-        }
-        timeline {
-          status
-          timestamp
-          note
         }
       }
       pagination {
@@ -92,7 +67,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types
+// Types - EXISTING ONLY
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface OrderItem {
@@ -104,7 +79,6 @@ interface OrderItem {
     name: string;
     sku: string;
     images: string[];
-    description?: string;
   }>;
 }
 
@@ -117,16 +91,7 @@ interface Order {
   user: {
     id: string;
     firstName: string;
-    lastName?: string;
     email: string;
-    address?: string;
-    phone?: string;
-  };
-  supplier?: {
-    id: string;
-    name: string;
-    address?: string;
-    phone?: string;
   };
   items: OrderItem[];
   payments: Array<{
@@ -134,21 +99,6 @@ interface Order {
     amount: number;
     method: string;
     status: string;
-    transactionId?: string;
-    paidAt?: string;
-  }>;
-  shipping?: {
-    address: string;
-    city: string;
-    province: string;
-    zipCode: string;
-    phone?: string;
-    instructions?: string;
-  };
-  timeline?: Array<{
-    status: string;
-    timestamp: string;
-    note?: string;
   }>;
 }
 
@@ -546,20 +496,12 @@ export default function OrderListComponent({
                       </div>
                       <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
                         <User size={isMobile ? 14 : 16} />
-                        <span className="text-sm lg:text-base">
-                          {order.user.firstName} {order.user.lastName || ''}
-                        </span>
+                        <span className="text-sm lg:text-base">{order.user.firstName}</span>
                       </div>
                       <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
                         <Clock size={isMobile ? 14 : 16} />
                         <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
                       </div>
-                      {order.user.phone && (
-                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mt-0.5">
-                          <span className="text-xs">📞</span>
-                          <span className="text-xs lg:text-sm">{order.user.phone}</span>
-                        </div>
-                      )}
                     </div>
                     <div className="text-right">
                       <div className="text-xl lg:text-3xl font-bold text-green-600">
@@ -569,9 +511,9 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* Pickup and Dropoff Section - Same as ActiveDeliveryCard */}
+                  {/* Pickup and Dropoff Section - Using existing data */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-6">
-                    {/* Pickup From - Supplier */}
+                    {/* Pickup From - Using supplierId from first item */}
                     <div className="bg-blue-50 p-2 lg:p-3 rounded-lg">
                       <div className="flex items-center justify-between mb-1 lg:mb-2">
                         <div className="flex items-center gap-1 lg:gap-2">
@@ -580,16 +522,13 @@ export default function OrderListComponent({
                         </div>
                       </div>
                       <p className="text-gray-700 text-xs lg:text-sm font-medium">
-                        {order.supplier?.name || 'Supplier'}
+                        {order.items[0]?.supplierId ? `Supplier ${order.items[0].supplierId.substring(0, 8)}...` : 'Supplier'}
                       </p>
-                      {order.supplier?.address && (
-                        <p className="text-gray-600 text-xs mt-1">{order.supplier.address}</p>
-                      )}
-                      {order.supplier?.phone && (
+                      {order.items.some(item => item.supplierId) && (
                         <div className="mt-1 lg:mt-2 text-xs text-gray-500">
                           <div className="flex items-center gap-0.5 lg:gap-1">
                             <Building size={isMobile ? 8 : 10} />
-                            <span className="text-xs">{order.supplier.phone}</span>
+                            <span className="text-xs">ID: {order.items[0]?.supplierId}</span>
                           </div>
                         </div>
                       )}
@@ -614,35 +553,14 @@ export default function OrderListComponent({
                         <span className="font-semibold text-xs lg:text-sm">Deliver To</span>
                       </div>
                       <p className="text-gray-700 text-xs lg:text-sm font-medium">
-                        {order.user.firstName} {order.user.lastName || ''}
+                        {order.user.firstName}
                       </p>
-                      {order.shipping ? (
-                        <>
-                          <p className="text-gray-600 text-xs mt-1">
-                            {order.shipping.address}, {order.shipping.city}
-                          </p>
-                          <p className="text-gray-600 text-xs">
-                            {order.shipping.province} {order.shipping.zipCode}
-                          </p>
-                          {order.shipping.instructions && (
-                            <p className="text-gray-500 text-xs italic mt-1">
-                              Note: {order.shipping.instructions}
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        order.user.address && (
-                          <p className="text-gray-600 text-xs mt-1">{order.user.address}</p>
-                        )
-                      )}
-                      {order.user.phone && (
-                        <div className="mt-1 lg:mt-2 text-xs text-gray-500">
-                          <div className="flex items-center gap-0.5 lg:gap-1">
-                            <User size={isMobile ? 8 : 10} />
-                            <span className="text-xs">{order.user.phone}</span>
-                          </div>
+                      <div className="mt-1 lg:mt-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-0.5 lg:gap-1">
+                          <User size={isMobile ? 8 : 10} />
+                          <span className="text-xs">{order.user.email}</span>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </div>
 
@@ -744,13 +662,6 @@ export default function OrderListComponent({
                                     {item.product[0]?.name || 'Unknown Product'}
                                   </h4>
                                   
-                                  {/* Product description if available */}
-                                  {item.product[0]?.description && (
-                                    <p className="text-xs text-gray-500 line-clamp-2">
-                                      {item.product[0].description}
-                                    </p>
-                                  )}
-                                  
                                   {/* Price for tablet/desktop (hidden on mobile) */}
                                   <div className="hidden sm:flex items-center gap-2 mt-0.5">
                                     <span className="text-xs text-gray-500">Unit price:</span>
@@ -788,7 +699,7 @@ export default function OrderListComponent({
                     )}
                   </div>
 
-                  {/* Payments Section */}
+                  {/* Payments Section - EXISTING ONLY */}
                   {order.payments && order.payments.length > 0 && (
                     <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                       <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
@@ -819,16 +730,6 @@ export default function OrderListComponent({
                               <div className="text-sm font-bold text-gray-900">
                                 {formatCurrency(payment.amount)}
                               </div>
-                              {payment.transactionId && (
-                                <p className="text-xs text-gray-500">
-                                  TXN: {payment.transactionId}
-                                </p>
-                              )}
-                              {payment.paidAt && (
-                                <p className="text-xs text-gray-500">
-                                  {new Date(payment.paidAt).toLocaleString()}
-                                </p>
-                              )}
                             </div>
                           </div>
                         ))}
@@ -851,11 +752,6 @@ export default function OrderListComponent({
                         <p className="truncate">
                           <span className="font-medium">Customer:</span> {order.user.email}
                         </p>
-                        {order.user.phone && (
-                          <p className="truncate mt-1">
-                            <span className="font-medium">Phone:</span> {order.user.phone}
-                          </p>
-                        )}
                       </div>
                       <div className="flex sm:block justify-between sm:text-right">
                         <p><span className="font-medium">Items:</span> {order.items.length}</p>
@@ -863,27 +759,6 @@ export default function OrderListComponent({
                       </div>
                     </div>
                   </div>
-
-                  {/* Timeline if available */}
-                  {order.timeline && order.timeline.length > 0 && (
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                      <details className="text-xs sm:text-sm">
-                        <summary className="cursor-pointer text-gray-600 hover:text-gray-900 font-medium">
-                          View Order Timeline
-                        </summary>
-                        <div className="mt-2 space-y-1">
-                          {order.timeline.map((event, index) => (
-                            <div key={index} className="flex justify-between text-gray-600">
-                              <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[event.status as OrderStatus] || 'bg-gray-100'}`}>
-                                {event.status}
-                              </span>
-                              <span>{new Date(event.timestamp).toLocaleString()}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </details>
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
@@ -946,4 +821,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+                          }
