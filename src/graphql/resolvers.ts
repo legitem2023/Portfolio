@@ -931,7 +931,7 @@ const orders = await prisma.order.findMany({
       const emailResult = await emailMutations.sendNotificationEmail({
               recipientEmail: 'legitem2023@gmail.com',
               title: "Order Created Successfully",
-              message: `Your order has been created and is being processed. ${orders}`,
+              message: `Your order has been created and is being processed. ${itemWhere}`,
               actionUrl: `/orders`,
               userName: 'Customer',
               subject: `Order Confirmation: `
