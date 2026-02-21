@@ -7,21 +7,21 @@ import {
   MapPin, 
   Building, 
   User, 
+  Shield, 
   Clock, 
+  Navigation,
   CheckCircle,
   AlertCircle,
   Truck,
   Home,
   XCircle,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
-  Bell,
-  Shield,
-  CreditCard,
-  DollarSign
+  Bell
 } from "lucide-react";
 
-// GraphQL Query - EXISTING ONLY
+// GraphQL Query
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -67,7 +67,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types - EXISTING ONLY
+// Types
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface OrderItem {
@@ -140,6 +140,15 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+const formatPeso = (amount: number): string => {
+  return new Intl.NumberFormat('en-PH', {
+    style: 'currency',
+    currency: 'PHP',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
+
 // Status color mapping
 const statusColors = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -147,20 +156,6 @@ const statusColors = {
   SHIPPED: 'bg-blue-100 text-blue-700',
   DELIVERED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-800'
-};
-
-// Payment method icons
-const getPaymentIcon = (method: string) => {
-  switch(method?.toLowerCase()) {
-    case 'cash':
-      return <DollarSign size={16} className="text-green-600" />;
-    case 'card':
-    case 'credit card':
-    case 'debit card':
-      return <CreditCard size={16} className="text-blue-600" />;
-    default:
-      return <CreditCard size={16} className="text-gray-600" />;
-  }
 };
 
 export default function OrderListComponent({ 
@@ -479,10 +474,6 @@ export default function OrderListComponent({
                         Order #{order.orderNumber}
                       </span>
                     </div>
-                    {/* Status Badge */}
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
-                      {order.status}
-                    </span>
                   </div>
                 </div>
 
@@ -511,253 +502,94 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* Pickup and Dropoff Section - Using existing data */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-6">
-                    {/* Pickup From - Using supplierId from first item */}
-                    <div className="bg-blue-50 p-2 lg:p-3 rounded-lg">
-                      <div className="flex items-center justify-between mb-1 lg:mb-2">
-                        <div className="flex items-center gap-1 lg:gap-2">
-                          <MapPin size={isMobile ? 14 : 16} className="text-blue-500" />
-                          <span className="font-semibold text-xs lg:text-sm">Pickup From</span>
-                        </div>
-                      </div>
-                      <p className="text-gray-700 text-xs lg:text-sm font-medium">
-                        {order.items[0]?.supplierId ? `Supplier ${order.items[0].supplierId.substring(0, 8)}...` : 'Supplier'}
-                      </p>
-                      {order.items.some(item => item.supplierId) && (
-                        <div className="mt-1 lg:mt-2 text-xs text-gray-500">
-                          <div className="flex items-center gap-0.5 lg:gap-1">
-                            <Building size={isMobile ? 8 : 10} />
-                            <span className="text-xs">ID: {order.items[0]?.supplierId}</span>
+                  {/* Items Section - Each item has its own status like in the reference */}
+                  <div className="space-y-3 lg:space-y-4">
+                    {order.items.map((item, index) => (
+                      <div key={item.id} className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
+                        {/* Item Header - with status and item number */}
+                        <div className="bg-gray-100 px-3 lg:px-4 py-2 flex justify-between items-center">
+                          <div className="flex items-center gap-2">
+                            <Package size={isMobile ? 14 : 16} className="text-gray-600" />
+                            <span className="font-medium text-sm">Item {index + 1}</span>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Distance Indicator */}
-                    <div className="flex items-center justify-center">
-                      <div className="w-full border-t-2 border-dashed border-gray-300 relative">
-                        <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-1 lg:px-2">
-                          <div className="flex items-center gap-0.5 lg:gap-1 text-gray-500">
-                            <Truck size={isMobile ? 12 : 14} />
-                            <span className="text-xs lg:text-sm font-medium">→</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Deliver To - Customer */}
-                    <div className="bg-green-50 p-2 lg:p-3 rounded-lg">
-                      <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
-                        <MapPin size={isMobile ? 14 : 16} className="text-green-500" />
-                        <span className="font-semibold text-xs lg:text-sm">Deliver To</span>
-                      </div>
-                      <p className="text-gray-700 text-xs lg:text-sm font-medium">
-                        {order.user.firstName}
-                      </p>
-                      <div className="mt-1 lg:mt-2 text-xs text-gray-500">
-                        <div className="flex items-center gap-0.5 lg:gap-1">
-                          <User size={isMobile ? 8 : 10} />
-                          <span className="text-xs">{order.user.email}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Collapsible Item details */}
-                  <div className="mb-3 lg:mb-4 bg-gray-50 rounded-lg overflow-hidden">
-                    {/* Header - always visible */}
-                    <button
-                      onClick={() => toggleOrderItems(order.id)}
-                      className="w-full px-3 lg:px-4 py-2 lg:py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
-                    >
-                      <h4 className="font-semibold text-sm lg:text-base flex items-center gap-1 lg:gap-2">
-                        <Package size={isMobile ? 14 : 16} />
-                        {order.items.length} item{order.items.length !== 1 ? "s" : ""}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
-                          Total: {formatCurrency(order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0))}
-                        </span>
-                        {expandedOrders.has(order.id) ? (
-                          <ChevronUp size={isMobile ? 16 : 20} className="text-gray-500" />
-                        ) : (
-                          <ChevronDown size={isMobile ? 16 : 20} className="text-gray-500" />
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Collapsible content */}
-                    {expandedOrders.has(order.id) && (
-                      <div className="px-2 sm:px-3 lg:px-4 pb-2 sm:pb-3 lg:pb-4 space-y-2 sm:space-y-3 border-t border-gray-200 pt-2 sm:pt-3">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-white rounded-lg p-2 sm:p-3">
-                            {/* Top row for mobile: Image and price side by side */}
-                            <div className="flex xs:hidden items-center gap-2">
-                              {/* Image section */}
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="relative w-10 h-10 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                  {item.product[0].images.length > 1 && (
-                                    <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full">
-                                      {item.product[0].images.length}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {/* Mobile price */}
-                              <div className="flex-1 text-right">
-                                <div className="text-sm font-bold text-gray-900">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {formatCurrency(item.price)} each
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Main content - responsive layout */}
-                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                              {/* Image - hidden on mobile (shown in top row), visible on xs and up */}
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                  {item.product[0].images.length > 1 && (
-                                    <span className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white text-[10px] sm:text-xs w-4 sm:w-5 h-4 sm:h-5 flex items-center justify-center rounded-full">
-                                      {item.product[0].images.length}
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              
-                              {/* Product details */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col gap-0.5 sm:gap-1">
-                                  {/* SKU and quantity */}
-                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
-                                      {item.product[0]?.sku || 'N/A'}
-                                    </span>
-                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                      Qty: {item.quantity}
-                                    </span>
-                                    {item.supplierId && (
-                                      <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded truncate max-w-[100px]">
-                                        ID: {item.supplierId.substring(0, 8)}...
-                                      </span>
-                                    )}
-                                  </div>
-                                  
-                                  {/* Product name */}
-                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
-                                    {item.product[0]?.name || 'Unknown Product'}
-                                  </h4>
-                                  
-                                  {/* Price for tablet/desktop (hidden on mobile) */}
-                                  <div className="hidden sm:flex items-center gap-2 mt-0.5">
-                                    <span className="text-xs text-gray-500">Unit price:</span>
-                                    <span className="text-xs font-semibold text-gray-700">{formatCurrency(item.price)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Price - visible on tablet/desktop (hidden on mobile) */}
-                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
-                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
-                                  @ {formatCurrency(item.price)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {/* Subtotal - responsive */}
-                        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 bg-gray-100 rounded-lg p-3 sm:p-4 mt-2 sm:mt-3">
-                          <span className="text-sm sm:text-base font-medium text-gray-600">Subtotal</span>
-                          <div className="flex flex-col xs:items-end w-full xs:w-auto">
-                            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
-                              {formatCurrency(order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0))}
-                            </span>
-                            <span className="text-xs sm:text-sm text-gray-500">
-                              ({order.items.length} {order.items.length === 1 ? 'item' : 'items'})
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Payments Section - EXISTING ONLY */}
-                  {order.payments && order.payments.length > 0 && (
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                      <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
-                        <CreditCard size={isMobile ? 16 : 18} className="text-blue-500" />
-                        Payment Information
-                      </h4>
-                      <div className="space-y-2">
-                        {order.payments.map((payment) => (
-                          <div key={payment.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              {getPaymentIcon(payment.method)}
-                              <div>
-                                <span className="text-sm font-medium text-gray-900">
-                                  {payment.method}
-                                </span>
-                                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                                  payment.status === 'COMPLETED' || payment.status === 'PAID' 
-                                    ? 'bg-green-100 text-green-700' 
-                                    : payment.status === 'PENDING'
-                                    ? 'bg-yellow-100 text-yellow-700'
-                                    : 'bg-red-100 text-red-700'
-                                }`}>
-                                  {payment.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right w-full sm:w-auto">
-                              <div className="text-sm font-bold text-gray-900">
-                                {formatCurrency(payment.amount)}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        
-                        {/* Total */}
-                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg mt-2">
-                          <span className="font-semibold text-gray-700">Total Paid</span>
-                          <span className="text-lg font-bold text-blue-600">
-                            {formatCurrency(order.payments.reduce((sum, p) => sum + p.amount, 0))}
+                          {/* Status Badge - Using order status for each item like in reference */}
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
+                            {order.status}
                           </span>
                         </div>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Customer info footer */}
+                        {/* Item Details */}
+                        <div className="p-3 lg:p-4">
+                          <div className="flex flex-col xs:flex-row gap-3 sm:gap-4">
+                            {/* Image */}
+                            {item.product[0]?.images && item.product[0].images.length > 0 && (
+                              <div className="relative w-16 sm:w-20 lg:w-24 h-16 sm:h-20 lg:h-24 flex-shrink-0 mx-auto xs:mx-0">
+                                <img 
+                                  src={item.product[0].images[0]} 
+                                  alt={item.product[0].name}
+                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                />
+                                {item.product[0].images.length > 1 && (
+                                  <span className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white text-[10px] sm:text-xs w-4 sm:w-5 h-4 sm:h-5 flex items-center justify-center rounded-full">
+                                    {item.product[0].images.length}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Product details */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col gap-1 sm:gap-2">
+                                {/* SKU and supplier ID */}
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded text-gray-700">
+                                    SKU: {item.product[0]?.sku || 'N/A'}
+                                  </span>
+                                  {item.supplierId && (
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                      Supplier: {item.supplierId.substring(0, 8)}...
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {/* Product name */}
+                                <h4 className="text-sm sm:text-base font-medium text-gray-900">
+                                  {item.product[0]?.name || 'Unknown Product'}
+                                </h4>
+                                
+                                {/* Quantity and price */}
+                                <div className="flex flex-wrap items-center gap-3 mt-1">
+                                  <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
+                                  <span className="text-sm text-gray-600">×</span>
+                                  <span className="text-sm font-semibold text-gray-700">{formatCurrency(item.price)}</span>
+                                </div>
+                                
+                                {/* Subtotal */}
+                                <div className="mt-2 pt-2 border-t border-gray-200">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-gray-600">Subtotal</span>
+                                    <span className="text-base font-bold text-green-600">
+                                      {formatCurrency(item.price * item.quantity)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Order Total Footer */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                    <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate">
-                          <span className="font-medium">Customer:</span> {order.user.email}
-                        </p>
-                      </div>
-                      <div className="flex sm:block justify-between sm:text-right">
-                        <p><span className="font-medium">Items:</span> {order.items.length}</p>
-                        <p><span className="font-medium">Payments:</span> {order.payments.length}</p>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium text-gray-700">Order Total</span>
+                      <span className="text-xl font-bold text-green-600">{formatCurrency(order.total)}</span>
                     </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {order.items.length} item{order.items.length !== 1 ? 's' : ''} • {order.payments.length} payment{order.payments.length !== 1 ? 's' : ''}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -821,4 +653,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-                          }
+                            }
