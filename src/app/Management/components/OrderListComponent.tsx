@@ -4,21 +4,11 @@ import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { 
   Package, 
-  MapPin, 
-  Building, 
   User, 
-  Shield, 
   Clock, 
-  Navigation,
-  CheckCircle,
   AlertCircle,
-  Truck,
-  Home,
-  XCircle,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  Bell
+  Bell,
+  Shield
 } from "lucide-react";
 
 // GraphQL Query
@@ -168,9 +158,6 @@ export default function OrderListComponent({
 
   // State for supplier input
   const [supplierIdInput, setSupplierIdInput] = useState(initialSupplierId || '');
-  
-  // State for expanded items
-  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
@@ -233,19 +220,6 @@ export default function OrderListComponent({
     setPagination(prev => ({ ...prev, pageSize, page: 1 }));
   };
 
-  // Toggle order items expansion
-  const toggleOrderItems = (orderId: string) => {
-    setExpandedOrders(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(orderId)) {
-        newSet.delete(orderId);
-      } else {
-        newSet.add(orderId);
-      }
-      return newSet;
-    });
-  };
-
   // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -293,11 +267,15 @@ export default function OrderListComponent({
   }
 
   const orderData = data?.orderlist as OrderListResponse;
-  const orders = orderData?.orders || [];
+  const allOrders = orderData?.orders || [];
+  
+  // FILTER OUT ORDERS WITH 0 ITEMS - THIS IS THE KEY FIX
+  const ordersWithItems = allOrders.filter(order => order.items.length > 0);
+  
   const paginationInfo = orderData?.pagination;
 
-  // Check if there's no data
-  const hasNoData = orders.length === 0;
+  // Check if there's no data (no orders or all orders have 0 items)
+  const hasNoData = ordersWithItems.length === 0;
 
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -316,7 +294,7 @@ export default function OrderListComponent({
           <div className="hidden md:flex gap-2 text-sm">
             <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full flex items-center gap-1">
               <Package size={14} />
-              {orders.length}
+              {ordersWithItems.length}
             </span>
           </div>
           <button 
@@ -432,7 +410,7 @@ export default function OrderListComponent({
       {/* Results Count - Only show if there's data */}
       {paginationInfo && !hasNoData && (
         <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
-          Showing {orders.length} of {paginationInfo.total} orders
+          Showing {ordersWithItems.length} of {paginationInfo.total} orders with items
           {filters.supplierId && (
             <span> for supplier: <strong>{filters.supplierId}</strong></span>
           )}
@@ -442,15 +420,15 @@ export default function OrderListComponent({
         </div>
       )}
 
-      {/* No Data State - Show when orders array is empty */}
+      {/* No Data State - Show when no orders with items */}
       {hasNoData ? (
         <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
           <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Data Available</h3>
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Orders with Items</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
             {filters.supplierId || filters.status 
-              ? 'No orders match your current filters. Try adjusting your search criteria.'
-              : 'There are no orders to display at this moment.'}
+              ? 'No orders with items match your current filters. Try adjusting your search criteria.'
+              : 'There are no orders with items to display at this moment.'}
           </p>
           {(filters.supplierId || filters.status) && (
             <button
@@ -463,9 +441,9 @@ export default function OrderListComponent({
         </div>
       ) : (
         <>
-          {/* Orders Grid - Only render when there's data */}
+          {/* Orders Grid - Only render orders that have items */}
           <div className="space-y-3 sm:space-y-4">
-            {orders.map((order) => (
+            {ordersWithItems.map((order) => (
               <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
                 {/* Header */}
                 <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
@@ -507,81 +485,80 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* Items Section */}
+                  {/* Items Section - Only shown if items exist (which they do because we filtered) */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4">
                     <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                       <Package size={isMobile ? 16 : 18} className="text-blue-500" />
                       Items ({order.items.length})
                     </h4>
                     
-                    {/* Show message if order has no items */}
-                    {order.items.length === 0 ? (
-                      <div className="bg-gray-50 rounded-lg p-4 text-center">
-                        <p className="text-sm text-gray-500">No items in this order</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 sm:space-y-3">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
-                            {/* Item content - same as before */}
-                            <div className="flex xs:hidden items-center gap-2">
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="relative w-10 h-10 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                </div>
-                              )}
-                              <div className="flex-1 text-right">
-                                <div className="text-sm font-bold text-gray-900">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
+                    <div className="space-y-2 sm:space-y-3">
+                      {order.items.map((item, index) => (
+                        <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                          {/* Mobile view */}
+                          <div className="flex xs:hidden items-center gap-2">
+                            {item.product[0]?.images && item.product[0].images.length > 0 && (
+                              <div className="relative w-10 h-10 flex-shrink-0">
+                                <img 
+                                  src={item.product[0].images[0]} 
+                                  alt={item.product[0].name}
+                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                />
                               </div>
-                            </div>
-
-                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col gap-0.5 sm:gap-1">
-                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
-                                      {item.product[0]?.sku || 'N/A'}
-                                    </span>
-                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                      Qty: {item.quantity}
-                                    </span>
-                                  </div>
-                                  
-                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
-                                    {item.product[0]?.name || 'Unknown Product'}
-                                  </h4>
-                                </div>
-                              </div>
-                              
-                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
-                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
-                                  @ {formatCurrency(item.price)}
-                                </div>
+                            )}
+                            <div className="flex-1 text-right">
+                              <div className="text-sm font-bold text-gray-900">
+                                {formatCurrency(item.price * item.quantity)}
                               </div>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    )}
+
+                          {/* Desktop/tablet view */}
+                          <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                            {item.product[0]?.images && item.product[0].images.length > 0 && (
+                              <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                <img 
+                                  src={item.product[0].images[0]} 
+                                  alt={item.product[0].name}
+                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                />
+                              </div>
+                            )}
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col gap-0.5 sm:gap-1">
+                                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                  <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                    {item.product[0]?.sku || 'N/A'}
+                                  </span>
+                                  <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                    Qty: {item.quantity}
+                                  </span>
+                                  {item.supplierId && (
+                                    <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded truncate max-w-[100px]">
+                                      ID: {item.supplierId.substring(0, 8)}...
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                  {item.product[0]?.name || 'Unknown Product'}
+                                </h4>
+                              </div>
+                            </div>
+                            
+                            <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                              <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                {formatCurrency(item.price * item.quantity)}
+                              </div>
+                              <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                @ {formatCurrency(item.price)}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Order Footer */}
@@ -650,4 +627,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+                                }
