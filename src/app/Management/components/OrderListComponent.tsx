@@ -367,7 +367,7 @@ export default function OrderListComponent({
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow border border-gray-200 mb-4 sm:mb-6">
         <div className="flex flex-col gap-4">
           {/* Supplier ID Filter */}
-          <div>
+          <div className="hidden">
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Filter by Supplier ID
             </label>
