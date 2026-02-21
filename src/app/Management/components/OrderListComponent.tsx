@@ -2,6 +2,24 @@
 
 import { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import { 
+  Package, 
+  MapPin, 
+  Building, 
+  User, 
+  Clock, 
+  CheckCircle,
+  AlertCircle,
+  Truck,
+  Home,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
+  Bell,
+  Shield,
+  CreditCard,
+  DollarSign
+} from "lucide-react";
 
 // GraphQL Query
 const ORDER_LIST_QUERY = gql`
@@ -19,7 +37,16 @@ const ORDER_LIST_QUERY = gql`
         user {
           id
           firstName
+          lastName
           email
+          address
+          phone
+        }
+        supplier {
+          id
+          name
+          address
+          phone
         }
         items {
           id
@@ -29,6 +56,8 @@ const ORDER_LIST_QUERY = gql`
           product {
             name
             sku
+            images
+            description
           }
         }
         payments {
@@ -36,6 +65,21 @@ const ORDER_LIST_QUERY = gql`
           amount
           method
           status
+          transactionId
+          paidAt
+        }
+        shipping {
+          address
+          city
+          province
+          zipCode
+          phone
+          instructions
+        }
+        timeline {
+          status
+          timestamp
+          note
         }
       }
       pagination {
@@ -59,6 +103,8 @@ interface OrderItem {
   product: Array<{
     name: string;
     sku: string;
+    images: string[];
+    description?: string;
   }>;
 }
 
@@ -71,7 +117,16 @@ interface Order {
   user: {
     id: string;
     firstName: string;
+    lastName?: string;
     email: string;
+    address?: string;
+    phone?: string;
+  };
+  supplier?: {
+    id: string;
+    name: string;
+    address?: string;
+    phone?: string;
   };
   items: OrderItem[];
   payments: Array<{
@@ -79,6 +134,21 @@ interface Order {
     amount: number;
     method: string;
     status: string;
+    transactionId?: string;
+    paidAt?: string;
+  }>;
+  shipping?: {
+    address: string;
+    city: string;
+    province: string;
+    zipCode: string;
+    phone?: string;
+    instructions?: string;
+  };
+  timeline?: Array<{
+    status: string;
+    timestamp: string;
+    note?: string;
   }>;
 }
 
@@ -107,6 +177,7 @@ interface OrderPaginationInput {
 interface OrderListComponentProps {
   initialSupplierId?: string;
   initialStatus?: OrderStatus;
+  isMobile?: boolean;
 }
 
 // Format currency function for Philippine Peso
@@ -119,16 +190,40 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
+// Status color mapping
+const statusColors = {
+  PENDING: 'bg-yellow-100 text-yellow-800',
+  PROCESSING: 'bg-orange-100 text-orange-700',
+  SHIPPED: 'bg-blue-100 text-blue-700',
+  DELIVERED: 'bg-green-100 text-green-700',
+  CANCELLED: 'bg-red-100 text-red-800'
+};
+
+// Payment method icons
+const getPaymentIcon = (method: string) => {
+  switch(method?.toLowerCase()) {
+    case 'cash':
+      return <DollarSign size={16} className="text-green-600" />;
+    case 'card':
+    case 'credit card':
+    case 'debit card':
+      return <CreditCard size={16} className="text-blue-600" />;
+    default:
+      return <CreditCard size={16} className="text-gray-600" />;
+  }
+};
+
 export default function OrderListComponent({ 
   initialSupplierId, 
-  initialStatus 
+  initialStatus,
+  isMobile = false
 }: OrderListComponentProps) {
   // State for filters
   const [filters, setFilters] = useState<OrderFilterInput>({
     supplierId: initialSupplierId,
     status: initialStatus
   });
-  console.log(filters);
+  
   // State for pagination
   const [pagination, setPagination] = useState({
     page: 1,
@@ -137,6 +232,9 @@ export default function OrderListComponent({
 
   // State for supplier input
   const [supplierIdInput, setSupplierIdInput] = useState(initialSupplierId || '');
+  
+  // State for expanded items
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
 
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
@@ -159,15 +257,6 @@ export default function OrderListComponent({
     'CANCELLED'
   ];
 
-  // Status color mapping
-  const statusColors = {
-    PENDING: 'bg-yellow-100 text-yellow-800',
-    PROCESSING: 'bg-blue-100 text-blue-800',
-    SHIPPED: 'bg-indigo-100 text-indigo-800',
-    DELIVERED: 'bg-green-100 text-green-800',
-    CANCELLED: 'bg-red-100 text-red-800'
-  };
-
   // Handle filter changes
   const handleStatusChange = (status: OrderStatus | '') => {
     const newFilters = {
@@ -175,7 +264,7 @@ export default function OrderListComponent({
       status: status || undefined
     };
     setFilters(newFilters);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const handleSupplierIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,14 +277,14 @@ export default function OrderListComponent({
       supplierId: supplierIdInput.trim() || undefined
     };
     setFilters(newFilters);
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const clearFilters = () => {
     const newFilters = {};
     setFilters(newFilters);
     setSupplierIdInput('');
-    setPagination(prev => ({ ...prev, page: 1 })); // Reset to first page
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   // Handle page change
@@ -208,13 +297,32 @@ export default function OrderListComponent({
     setPagination(prev => ({ ...prev, pageSize, page: 1 }));
   };
 
+  // Toggle order items expansion
+  const toggleOrderItems = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
   // Format date
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   // Loading state
@@ -222,7 +330,7 @@ export default function OrderListComponent({
     return (
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <div className="flex flex-col sm:flex-row justify-center items-center h-48 sm:h-64">
-          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-orange-500"></div>
           <span className="ml-3 sm:ml-4 text-sm sm:text-base text-gray-600 mt-3 sm:mt-0">Loading orders...</span>
         </div>
       </div>
@@ -236,9 +344,7 @@ export default function OrderListComponent({
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center">
             <div className="text-red-500 mr-0 sm:mr-3 mb-2 sm:mb-0">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
               <h3 className="text-base sm:text-lg font-medium text-red-800">Failed to load orders</h3>
@@ -257,9 +363,31 @@ export default function OrderListComponent({
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="mb-4 sm:mb-6 lg:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Orders</h1>
-        <p className="text-sm sm:text-base text-gray-600">Manage and track all orders</p>
+      <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
+        <div>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2">
+            <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
+            <span>Orders</span>
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage and track all orders</p>
+        </div>
+        
+        {/* Quick stats */}
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex gap-2 text-sm">
+            <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full flex items-center gap-1">
+              <Package size={14} />
+              {orders.length}
+            </span>
+          </div>
+          <button 
+            onClick={handleRefresh}
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
+            title="Refresh"
+          >
+            <Package size={18} />
+          </button>
+        </div>
       </div>
 
       {/* Filters Section */}
@@ -276,11 +404,11 @@ export default function OrderListComponent({
                 value={supplierIdInput}
                 onChange={handleSupplierIdChange}
                 placeholder="Enter supplier ID..."
-                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
               <button
                 onClick={applySupplierFilter}
-                className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 text-sm sm:text-base bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors whitespace-nowrap"
               >
                 Apply
               </button>
@@ -296,7 +424,7 @@ export default function OrderListComponent({
               <select
                 value={filters.status || ''}
                 onChange={(e) => handleStatusChange(e.target.value as OrderStatus | '')}
-                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               >
                 <option value="">All Status</option>
                 {statusOptions.map((status) => (
@@ -326,7 +454,7 @@ export default function OrderListComponent({
               <span className="text-gray-600 whitespace-nowrap">Active filters:</span>
               <div className="flex flex-wrap gap-2">
                 {filters.supplierId && (
-                  <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm">
+                  <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs sm:text-sm">
                     Supplier: {filters.supplierId}
                     <button
                       onClick={() => {
@@ -335,7 +463,7 @@ export default function OrderListComponent({
                         setSupplierIdInput('');
                         setPagination(prev => ({ ...prev, page: 1 }));
                       }}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      className="text-orange-600 hover:text-orange-800 text-sm"
                     >
                       ×
                     </button>
@@ -377,14 +505,10 @@ export default function OrderListComponent({
 
       {/* Orders List */}
       {orders.length === 0 ? (
-        <div className="text-center py-8 sm:py-12">
-          <div className="text-gray-400 mb-3 sm:mb-4">
-            <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-          </div>
-          <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">No orders found</h3>
-          <p className="text-sm text-gray-500 px-4">
+        <div className="bg-gray-50 rounded-lg p-4 lg:p-8 text-center">
+          <Bell size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-3 lg:mb-4" />
+          <h3 className="text-base lg:text-lg font-semibold text-gray-600">No orders found</h3>
+          <p className="text-gray-500 text-sm lg:text-base mt-1 lg:mt-2">
             {filters.supplierId || filters.status 
               ? 'Try changing your filters' 
               : 'Orders will appear here once created'}
@@ -395,86 +519,371 @@ export default function OrderListComponent({
           {/* Orders Grid */}
           <div className="space-y-3 sm:space-y-4">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition-shadow overflow-hidden">
-                <div className="p-4 sm:p-6">
-                  {/* Order Header */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
-                          Order #{order.orderNumber}
-                        </h3>
-                        <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${statusColors[order.status]} self-start sm:self-auto`}>
-                          {order.status}
+              <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
+                {/* Header */}
+                <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-1 lg:gap-2">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                      <span className="font-bold text-indigo-700 text-xs lg:text-sm">
+                        Order #{order.orderNumber}
+                      </span>
+                    </div>
+                    {/* Status Badge */}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2 lg:p-6">
+                  {/* Order info */}
+                  <div className="flex justify-between items-start mb-3 lg:mb-4">
+                    <div>
+                      <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+                        <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
+                        <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
+                      </div>
+                      <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
+                        <User size={isMobile ? 14 : 16} />
+                        <span className="text-sm lg:text-base">
+                          {order.user.firstName} {order.user.lastName || ''}
                         </span>
                       </div>
-                      <p className="text-xs sm:text-sm text-gray-500 truncate">
-                        Placed on {formatDate(order.createdAt)} by {order.user.firstName}
-                      </p>
+                      <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
+                        <Clock size={isMobile ? 14 : 16} />
+                        <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
+                      </div>
+                      {order.user.phone && (
+                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mt-0.5">
+                          <span className="text-xs">📞</span>
+                          <span className="text-xs lg:text-sm">{order.user.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xl lg:text-3xl font-bold text-green-600">
+                        {formatCurrency(order.total)}
+                      </div>
+                      <p className="text-gray-500 text-xs lg:text-sm">Total amount</p>
                     </div>
                   </div>
 
-                  {/* Order Items - FIXED SECTION */}
-                  <div className="border-t border-gray-200 pt-3 sm:pt-4">
-                    <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3">Items</h4>
-                    <div className="space-y-2 sm:space-y-3">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                              {item.product[0]?.name || 'N/A'}
+                  {/* Pickup and Dropoff Section - Same as ActiveDeliveryCard */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 lg:gap-4 mb-4 lg:mb-6">
+                    {/* Pickup From - Supplier */}
+                    <div className="bg-blue-50 p-2 lg:p-3 rounded-lg">
+                      <div className="flex items-center justify-between mb-1 lg:mb-2">
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <MapPin size={isMobile ? 14 : 16} className="text-blue-500" />
+                          <span className="font-semibold text-xs lg:text-sm">Pickup From</span>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 text-xs lg:text-sm font-medium">
+                        {order.supplier?.name || 'Supplier'}
+                      </p>
+                      {order.supplier?.address && (
+                        <p className="text-gray-600 text-xs mt-1">{order.supplier.address}</p>
+                      )}
+                      {order.supplier?.phone && (
+                        <div className="mt-1 lg:mt-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-0.5 lg:gap-1">
+                            <Building size={isMobile ? 8 : 10} />
+                            <span className="text-xs">{order.supplier.phone}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Distance Indicator */}
+                    <div className="flex items-center justify-center">
+                      <div className="w-full border-t-2 border-dashed border-gray-300 relative">
+                        <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-1 lg:px-2">
+                          <div className="flex items-center gap-0.5 lg:gap-1 text-gray-500">
+                            <Truck size={isMobile ? 12 : 14} />
+                            <span className="text-xs lg:text-sm font-medium">→</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Deliver To - Customer */}
+                    <div className="bg-green-50 p-2 lg:p-3 rounded-lg">
+                      <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+                        <MapPin size={isMobile ? 14 : 16} className="text-green-500" />
+                        <span className="font-semibold text-xs lg:text-sm">Deliver To</span>
+                      </div>
+                      <p className="text-gray-700 text-xs lg:text-sm font-medium">
+                        {order.user.firstName} {order.user.lastName || ''}
+                      </p>
+                      {order.shipping ? (
+                        <>
+                          <p className="text-gray-600 text-xs mt-1">
+                            {order.shipping.address}, {order.shipping.city}
+                          </p>
+                          <p className="text-gray-600 text-xs">
+                            {order.shipping.province} {order.shipping.zipCode}
+                          </p>
+                          {order.shipping.instructions && (
+                            <p className="text-gray-500 text-xs italic mt-1">
+                              Note: {order.shipping.instructions}
                             </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm text-gray-600">
-                              <span className="truncate">SKU: {item.product[0]?.sku || 'N/A'}</span>
-                              <span className="hidden sm:inline">•</span>
-                              <span>Qty: {item.quantity}</span>
-                              {item.supplierId && (
-                                <>
-                                  <span className="hidden sm:inline">•</span>
-                                  <span className="bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded truncate max-w-[150px]">
-                                    Supplier: {item.supplierId}
-                                  </span>
-                                </>
+                          )}
+                        </>
+                      ) : (
+                        order.user.address && (
+                          <p className="text-gray-600 text-xs mt-1">{order.user.address}</p>
+                        )
+                      )}
+                      {order.user.phone && (
+                        <div className="mt-1 lg:mt-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-0.5 lg:gap-1">
+                            <User size={isMobile ? 8 : 10} />
+                            <span className="text-xs">{order.user.phone}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Collapsible Item details */}
+                  <div className="mb-3 lg:mb-4 bg-gray-50 rounded-lg overflow-hidden">
+                    {/* Header - always visible */}
+                    <button
+                      onClick={() => toggleOrderItems(order.id)}
+                      className="w-full px-3 lg:px-4 py-2 lg:py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                    >
+                      <h4 className="font-semibold text-sm lg:text-base flex items-center gap-1 lg:gap-2">
+                        <Package size={isMobile ? 14 : 16} />
+                        {order.items.length} item{order.items.length !== 1 ? "s" : ""}
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">
+                          Total: {formatCurrency(order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0))}
+                        </span>
+                        {expandedOrders.has(order.id) ? (
+                          <ChevronUp size={isMobile ? 16 : 20} className="text-gray-500" />
+                        ) : (
+                          <ChevronDown size={isMobile ? 16 : 20} className="text-gray-500" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Collapsible content */}
+                    {expandedOrders.has(order.id) && (
+                      <div className="px-2 sm:px-3 lg:px-4 pb-2 sm:pb-3 lg:pb-4 space-y-2 sm:space-y-3 border-t border-gray-200 pt-2 sm:pt-3">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-white rounded-lg p-2 sm:p-3">
+                            {/* Top row for mobile: Image and price side by side */}
+                            <div className="flex xs:hidden items-center gap-2">
+                              {/* Image section */}
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                  {item.product[0].images.length > 1 && (
+                                    <span className="absolute -top-1 -right-1 bg-gray-800 text-white text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full">
+                                      {item.product[0].images.length}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Mobile price */}
+                              <div className="flex-1 text-right">
+                                <div className="text-sm font-bold text-gray-900">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {formatCurrency(item.price)} each
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Main content - responsive layout */}
+                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                              {/* Image - hidden on mobile (shown in top row), visible on xs and up */}
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                  {item.product[0].images.length > 1 && (
+                                    <span className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white text-[10px] sm:text-xs w-4 sm:w-5 h-4 sm:h-5 flex items-center justify-center rounded-full">
+                                      {item.product[0].images.length}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              
+                              {/* Product details */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col gap-0.5 sm:gap-1">
+                                  {/* SKU and quantity */}
+                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                      {item.product[0]?.sku || 'N/A'}
+                                    </span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      Qty: {item.quantity}
+                                    </span>
+                                    {item.supplierId && (
+                                      <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded truncate max-w-[100px]">
+                                        ID: {item.supplierId.substring(0, 8)}...
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {/* Product name */}
+                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                    {item.product[0]?.name || 'Unknown Product'}
+                                  </h4>
+                                  
+                                  {/* Product description if available */}
+                                  {item.product[0]?.description && (
+                                    <p className="text-xs text-gray-500 line-clamp-2">
+                                      {item.product[0].description}
+                                    </p>
+                                  )}
+                                  
+                                  {/* Price for tablet/desktop (hidden on mobile) */}
+                                  <div className="hidden sm:flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-gray-500">Unit price:</span>
+                                    <span className="text-xs font-semibold text-gray-700">{formatCurrency(item.price)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Price - visible on tablet/desktop (hidden on mobile) */}
+                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                  @ {formatCurrency(item.price)}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        {/* Subtotal - responsive */}
+                        <div className="flex flex-col xs:flex-row justify-between items-start xs:items-center gap-2 bg-gray-100 rounded-lg p-3 sm:p-4 mt-2 sm:mt-3">
+                          <span className="text-sm sm:text-base font-medium text-gray-600">Subtotal</span>
+                          <div className="flex flex-col xs:items-end w-full xs:w-auto">
+                            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+                              {formatCurrency(order.items.reduce((sum, item) => sum + (item.price * item.quantity), 0))}
+                            </span>
+                            <span className="text-xs sm:text-sm text-gray-500">
+                              ({order.items.length} {order.items.length === 1 ? 'item' : 'items'})
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Payments Section */}
+                  {order.payments && order.payments.length > 0 && (
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                      <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
+                        <CreditCard size={isMobile ? 16 : 18} className="text-blue-500" />
+                        Payment Information
+                      </h4>
+                      <div className="space-y-2">
+                        {order.payments.map((payment) => (
+                          <div key={payment.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 p-2 sm:p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-2">
+                              {getPaymentIcon(payment.method)}
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {payment.method}
+                                </span>
+                                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                                  payment.status === 'COMPLETED' || payment.status === 'PAID' 
+                                    ? 'bg-green-100 text-green-700' 
+                                    : payment.status === 'PENDING'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-red-100 text-red-700'
+                                }`}>
+                                  {payment.status}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right w-full sm:w-auto">
+                              <div className="text-sm font-bold text-gray-900">
+                                {formatCurrency(payment.amount)}
+                              </div>
+                              {payment.transactionId && (
+                                <p className="text-xs text-gray-500">
+                                  TXN: {payment.transactionId}
+                                </p>
+                              )}
+                              {payment.paidAt && (
+                                <p className="text-xs text-gray-500">
+                                  {new Date(payment.paidAt).toLocaleString()}
+                                </p>
                               )}
                             </div>
                           </div>
-                          <div className="text-right sm:text-left">
-                            <p className="font-medium text-gray-900 text-sm sm:text-base">
-                              {formatCurrency(item.price)} × {item.quantity}
-                            </p>
-                            <p className="text-xs sm:text-sm text-gray-500">
-                              Subtotal: {formatCurrency(item.price * item.quantity)}
-                            </p>
-                          </div>
+                        ))}
+                        
+                        {/* Total */}
+                        <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg mt-2">
+                          <span className="font-semibold text-gray-700">Total Paid</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {formatCurrency(order.payments.reduce((sum, p) => sum + p.amount, 0))}
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Order Footer */}
-                  <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                    <div className="flex flex-col sm:flex-col justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
-                      <div className="text-right w-full sm:w-auto">
-                        <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                          {formatCurrency(order.total)}
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-500">Total amount</p>
                       </div>
-                      
-                      <div className="border-t border-gray-200 pt-3 flex-1 min-w-0">
-                        <p className="truncate">Customer: {order.user.email}</p>
-                        {order.payments.length > 0 && (
-                          <p className="mt-1 truncate">
-                            Payment: {order.payments[0].status} via {order.payments[0].method}
+                    </div>
+                  )}
+
+                  {/* Customer info footer */}
+                  <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                    <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate">
+                          <span className="font-medium">Customer:</span> {order.user.email}
+                        </p>
+                        {order.user.phone && (
+                          <p className="truncate mt-1">
+                            <span className="font-medium">Phone:</span> {order.user.phone}
                           </p>
                         )}
                       </div>
                       <div className="flex sm:block justify-between sm:text-right">
-                        <p>Items: {order.items.length}</p>
-                        <p>Payments: {order.payments.length}</p>
+                        <p><span className="font-medium">Items:</span> {order.items.length}</p>
+                        <p><span className="font-medium">Payments:</span> {order.payments.length}</p>
                       </div>
                     </div>
                   </div>
+
+                  {/* Timeline if available */}
+                  {order.timeline && order.timeline.length > 0 && (
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                      <details className="text-xs sm:text-sm">
+                        <summary className="cursor-pointer text-gray-600 hover:text-gray-900 font-medium">
+                          View Order Timeline
+                        </summary>
+                        <div className="mt-2 space-y-1">
+                          {order.timeline.map((event, index) => (
+                            <div key={index} className="flex justify-between text-gray-600">
+                              <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[event.status as OrderStatus] || 'bg-gray-100'}`}>
+                                {event.status}
+                              </span>
+                              <span>{new Date(event.timestamp).toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -490,7 +899,7 @@ export default function OrderListComponent({
                   <select
                     value={pagination.pageSize}
                     onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                    className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded"
+                    className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="5">5 per page</option>
                     <option value="10">10 per page</option>
