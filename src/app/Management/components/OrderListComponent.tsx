@@ -56,10 +56,9 @@ interface OrderItem {
   supplierId?: string;
   quantity: number;
   price: number;
-  product: Array<{  // Change this to an array
+  product: Array<{
     name: string;
     sku: string;
-    images: string[]
   }>;
 }
 
@@ -413,19 +412,20 @@ export default function OrderListComponent({
                         Placed on {formatDate(order.createdAt)} by {order.user.firstName}
                       </p>
                     </div>
-                    
                   </div>
 
-                  {/* Order Items */}
+                  {/* Order Items - FIXED SECTION */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4">
                     <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3">Items</h4>
                     <div className="space-y-2 sm:space-y-3">
                       {order.items.map((item) => (
-                        <div key={item.id} className="flex flex-col justify-between gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded">
+                        <div key={item.id} className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-50 rounded">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.product[0].name}</p>
-                            <div className="flex flex-col flex-wrap  gap-2 mt-1 text-xs sm:text-sm text-gray-600">
-                              <span className="truncate">SKU: {item.product[0].sku}</span>
+                            <p className="font-medium text-gray-900 text-sm sm:text-base truncate">
+                              {item.product[0]?.name || 'N/A'}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1 text-xs sm:text-sm text-gray-600">
+                              <span className="truncate">SKU: {item.product[0]?.sku || 'N/A'}</span>
                               <span className="hidden sm:inline">•</span>
                               <span>Qty: {item.quantity}</span>
                               {item.supplierId && (
@@ -443,7 +443,7 @@ export default function OrderListComponent({
                               {formatCurrency(item.price)} × {item.quantity}
                             </p>
                             <p className="text-xs sm:text-sm text-gray-500">
-                              {formatCurrency(item.price * item.quantity)}
+                              Subtotal: {formatCurrency(item.price * item.quantity)}
                             </p>
                           </div>
                         </div>
@@ -455,9 +455,9 @@ export default function OrderListComponent({
                   <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                     <div className="flex flex-col sm:flex-col justify-between gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
                       <div className="text-right w-full sm:w-auto">
-                      <div className="text-xl sm:text-2xl font-bold text-gray-900">
-                        {formatCurrency(order.total)}
-                      </div>
+                        <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                          {formatCurrency(order.total)}
+                        </div>
                         <p className="text-xs sm:text-sm text-gray-500">Total amount</p>
                       </div>
                       
