@@ -15,7 +15,7 @@ import {
   Home
 } from "lucide-react";
 
-// GraphQL Query
+// GraphQL Query - UPDATED with correct fields from ACTIVE_ORDER_LIST
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -32,18 +32,41 @@ const ORDER_LIST_QUERY = gql`
           id
           firstName
           email
-          address
-          phone
+        }
+        address {
+          id
+          street
+          city
+          state
+          zipCode
+          country
+          lat
+          lng
         }
         items {
           id
+          orderId
           supplierId
           quantity
           price
+          status
           product {
             name
             sku
             images
+          }
+          supplier {
+            id
+            firstName
+            addresses {
+              street
+              city
+              state
+              zipCode
+              country
+              lat
+              lng
+            }
           }
         }
         payments {
@@ -51,14 +74,6 @@ const ORDER_LIST_QUERY = gql`
           amount
           method
           status
-        }
-        shipping {
-          address
-          city
-          province
-          zipCode
-          phone
-          instructions
         }
       }
       pagination {
@@ -71,19 +86,39 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types
+// Types - UPDATED to match the query
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+
+interface Address {
+  id: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  lat?: number;
+  lng?: number;
+}
+
+interface Supplier {
+  id: string;
+  firstName: string;
+  addresses?: Address[];
+}
 
 interface OrderItem {
   id: string;
+  orderId?: string;
   supplierId?: string;
   quantity: number;
   price: number;
+  status?: OrderStatus;
   product: Array<{
     name: string;
     sku: string;
     images: string[];
   }>;
+  supplier?: Supplier;
 }
 
 interface Order {
@@ -96,9 +131,8 @@ interface Order {
     id: string;
     firstName: string;
     email: string;
-    address?: string;
-    phone?: string;
   };
+  address?: Address;
   items: OrderItem[];
   payments: Array<{
     id: string;
@@ -106,14 +140,6 @@ interface Order {
     method: string;
     status: string;
   }>;
-  shipping?: {
-    address: string;
-    city: string;
-    province: string;
-    zipCode: string;
-    phone?: string;
-    instructions?: string;
-  };
 }
 
 interface PaginationInfo {
@@ -161,6 +187,12 @@ const statusColors = {
   SHIPPED: 'bg-blue-100 text-blue-700',
   DELIVERED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-800'
+};
+
+// Format address function
+const formatAddress = (address?: Address): string => {
+  if (!address) return 'No address provided';
+  return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
 };
 
 export default function OrderListComponent({ 
@@ -509,61 +541,21 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* DESTINATION / DELIVERY DETAILS - ADDED BACK */}
-                  <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Truck size={isMobile ? 16 : 18} className="text-green-600" />
-                      <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Details</h4>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* Customer Information */}
-                      <div className="flex items-start gap-2">
-                        <User size={isMobile ? 14 : 16} className="text-green-500 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500">Customer</p>
-                          <p className="text-sm font-medium">{order.user.firstName}</p>
-                          {order.user.email && (
-                            <p className="text-xs text-gray-600">{order.user.email}</p>
-                          )}
-                          {order.user.phone && (
-                            <p className="text-xs text-gray-600">{order.user.phone}</p>
-                          )}
-                        </div>
+                  {/* DELIVERY ADDRESS SECTION - Using address from order */}
+                  {order.address && (
+                    <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin size={isMobile ? 16 : 18} className="text-green-600" />
+                        <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Address</h4>
                       </div>
-
-                      {/* Shipping Address */}
-                      <div className="flex items-start gap-2">
-                        <MapPin size={isMobile ? 14 : 16} className="text-green-500 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-gray-500">Delivery Address</p>
-                          {order.shipping ? (
-                            <>
-                              <p className="text-sm">{order.shipping.address}</p>
-                              <p className="text-xs text-gray-600">
-                                {order.shipping.city}, {order.shipping.province} {order.shipping.zipCode}
-                              </p>
-                              {order.shipping.phone && (
-                                <p className="text-xs text-gray-600">Phone: {order.shipping.phone}</p>
-                              )}
-                              {order.shipping.instructions && (
-                                <p className="text-xs text-gray-500 italic mt-1">
-                                  Note: {order.shipping.instructions}
-                                </p>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-sm">{order.user.address || 'No address provided'}</p>
-                              {order.user.phone && (
-                                <p className="text-xs text-gray-600">Phone: {order.user.phone}</p>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </div>
+                      <p className="text-sm text-gray-700">{formatAddress(order.address)}</p>
+                      {order.address.lat && order.address.lng && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          Coordinates: {order.address.lat}, {order.address.lng}
+                        </p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* Items Section */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4">
@@ -573,7 +565,7 @@ export default function OrderListComponent({
                     </h4>
                     
                     <div className="space-y-2 sm:space-y-3">
-                      {order.items.map((item, index) => (
+                      {order.items.map((item) => (
                         <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
                           {/* Mobile view */}
                           <div className="flex xs:hidden items-center gap-2">
@@ -590,6 +582,11 @@ export default function OrderListComponent({
                               <div className="text-sm font-bold text-gray-900">
                                 {formatCurrency(item.price * item.quantity)}
                               </div>
+                              {item.status && (
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                  {item.status}
+                                </span>
+                              )}
                             </div>
                           </div>
 
@@ -614,9 +611,9 @@ export default function OrderListComponent({
                                   <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
                                     Qty: {item.quantity}
                                   </span>
-                                  {item.supplierId && (
-                                    <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded truncate max-w-[100px]">
-                                      ID: {item.supplierId.substring(0, 8)}...
+                                  {item.status && (
+                                    <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                      {item.status}
                                     </span>
                                   )}
                                 </div>
@@ -624,6 +621,26 @@ export default function OrderListComponent({
                                 <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
                                   {item.product[0]?.name || 'Unknown Product'}
                                 </h4>
+
+                                {/* Supplier info if available */}
+                                {item.supplier && (
+                                  <div className="flex items-center gap-1 mt-1">
+                                    <Building size={10} className="text-gray-400" />
+                                    <span className="text-xs text-gray-500">
+                                      {item.supplier.firstName}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Supplier address if available */}
+                                {item.supplier?.addresses && item.supplier.addresses.length > 0 && (
+                                  <div className="flex items-start gap-1 mt-1">
+                                    <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                    <span className="text-xs text-gray-400 truncate">
+                                      {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             
@@ -707,4 +724,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+              }
