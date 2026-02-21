@@ -140,15 +140,6 @@ const formatCurrency = (amount: number): string => {
   }).format(amount);
 };
 
-const formatPeso = (amount: number): string => {
-  return new Intl.NumberFormat('en-PH', {
-    style: 'currency',
-    currency: 'PHP',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-};
-
 // Status color mapping
 const statusColors = {
   PENDING: 'bg-yellow-100 text-yellow-800',
@@ -305,6 +296,9 @@ export default function OrderListComponent({
   const orders = orderData?.orders || [];
   const paginationInfo = orderData?.pagination;
 
+  // Check if there's no data
+  const hasNoData = orders.length === 0;
+
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
       {/* Header */}
@@ -435,8 +429,8 @@ export default function OrderListComponent({
         )}
       </div>
 
-      {/* Results Count */}
-      {paginationInfo && (
+      {/* Results Count - Only show if there's data */}
+      {paginationInfo && !hasNoData && (
         <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
           Showing {orders.length} of {paginationInfo.total} orders
           {filters.supplierId && (
@@ -448,20 +442,28 @@ export default function OrderListComponent({
         </div>
       )}
 
-      {/* Orders List */}
-      {orders.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-4 lg:p-8 text-center">
-          <Bell size={isMobile ? 32 : 48} className="mx-auto text-gray-400 mb-3 lg:mb-4" />
-          <h3 className="text-base lg:text-lg font-semibold text-gray-600">No orders found</h3>
-          <p className="text-gray-500 text-sm lg:text-base mt-1 lg:mt-2">
+      {/* No Data State - Show when orders array is empty */}
+      {hasNoData ? (
+        <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
+          <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Data Available</h3>
+          <p className="text-sm text-gray-400 max-w-md mx-auto">
             {filters.supplierId || filters.status 
-              ? 'Try changing your filters' 
-              : 'Orders will appear here once created'}
+              ? 'No orders match your current filters. Try adjusting your search criteria.'
+              : 'There are no orders to display at this moment.'}
           </p>
+          {(filters.supplierId || filters.status) && (
+            <button
+              onClick={clearFilters}
+              className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       ) : (
         <>
-          {/* Orders Grid */}
+          {/* Orders Grid - Only render when there's data */}
           <div className="space-y-3 sm:space-y-4">
             {orders.map((order) => (
               <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
@@ -474,6 +476,9 @@ export default function OrderListComponent({
                         Order #{order.orderNumber}
                       </span>
                     </div>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
+                      {order.status}
+                    </span>
                   </div>
                 </div>
 
@@ -502,94 +507,89 @@ export default function OrderListComponent({
                     </div>
                   </div>
 
-                  {/* Items Section - Each item has its own status like in the reference */}
-                  <div className="space-y-3 lg:space-y-4">
-                    {order.items.map((item, index) => (
-                      <div key={item.id} className="bg-gray-50 rounded-lg overflow-hidden border border-gray-200">
-                        {/* Item Header - with status and item number */}
-                        <div className="bg-gray-100 px-3 lg:px-4 py-2 flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <Package size={isMobile ? 14 : 16} className="text-gray-600" />
-                            <span className="font-medium text-sm">Item {index + 1}</span>
-                          </div>
-                          {/* Status Badge - Using order status for each item like in reference */}
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
-                            {order.status}
-                          </span>
-                        </div>
-
-                        {/* Item Details */}
-                        <div className="p-3 lg:p-4">
-                          <div className="flex flex-col xs:flex-row gap-3 sm:gap-4">
-                            {/* Image */}
-                            {item.product[0]?.images && item.product[0].images.length > 0 && (
-                              <div className="relative w-16 sm:w-20 lg:w-24 h-16 sm:h-20 lg:h-24 flex-shrink-0 mx-auto xs:mx-0">
-                                <img 
-                                  src={item.product[0].images[0]} 
-                                  alt={item.product[0].name}
-                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                />
-                                {item.product[0].images.length > 1 && (
-                                  <span className="absolute -top-1.5 -right-1.5 bg-gray-800 text-white text-[10px] sm:text-xs w-4 sm:w-5 h-4 sm:h-5 flex items-center justify-center rounded-full">
-                                    {item.product[0].images.length}
-                                  </span>
-                                )}
+                  {/* Items Section */}
+                  <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                    <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
+                      <Package size={isMobile ? 16 : 18} className="text-blue-500" />
+                      Items ({order.items.length})
+                    </h4>
+                    
+                    {/* Show message if order has no items */}
+                    {order.items.length === 0 ? (
+                      <div className="bg-gray-50 rounded-lg p-4 text-center">
+                        <p className="text-sm text-gray-500">No items in this order</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 sm:space-y-3">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                            {/* Item content - same as before */}
+                            <div className="flex xs:hidden items-center gap-2">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 text-right">
+                                <div className="text-sm font-bold text-gray-900">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
                               </div>
-                            )}
-                            
-                            {/* Product details */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col gap-1 sm:gap-2">
-                                {/* SKU and supplier ID */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded text-gray-700">
-                                    SKU: {item.product[0]?.sku || 'N/A'}
-                                  </span>
-                                  {item.supplierId && (
-                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                                      Supplier: {item.supplierId.substring(0, 8)}...
+                            </div>
+
+                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col gap-0.5 sm:gap-1">
+                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                      {item.product[0]?.sku || 'N/A'}
                                     </span>
-                                  )}
-                                </div>
-                                
-                                {/* Product name */}
-                                <h4 className="text-sm sm:text-base font-medium text-gray-900">
-                                  {item.product[0]?.name || 'Unknown Product'}
-                                </h4>
-                                
-                                {/* Quantity and price */}
-                                <div className="flex flex-wrap items-center gap-3 mt-1">
-                                  <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
-                                  <span className="text-sm text-gray-600">×</span>
-                                  <span className="text-sm font-semibold text-gray-700">{formatCurrency(item.price)}</span>
-                                </div>
-                                
-                                {/* Subtotal */}
-                                <div className="mt-2 pt-2 border-t border-gray-200">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-600">Subtotal</span>
-                                    <span className="text-base font-bold text-green-600">
-                                      {formatCurrency(item.price * item.quantity)}
+                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      Qty: {item.quantity}
                                     </span>
                                   </div>
+                                  
+                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                    {item.product[0]?.name || 'Unknown Product'}
+                                  </h4>
+                                </div>
+                              </div>
+                              
+                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                  @ {formatCurrency(item.price)}
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
+                    )}
                   </div>
 
-                  {/* Order Total Footer */}
+                  {/* Order Footer */}
                   <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">Order Total</span>
-                      <span className="text-xl font-bold text-green-600">{formatCurrency(order.total)}</span>
+                    <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
+                      <p>Items: {order.items.length}</p>
+                      <p>Payments: {order.payments.length}</p>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {order.items.length} item{order.items.length !== 1 ? 's' : ''} • {order.payments.length} payment{order.payments.length !== 1 ? 's' : ''}
-                    </p>
                   </div>
                 </div>
               </div>
@@ -600,7 +600,6 @@ export default function OrderListComponent({
           {paginationInfo && paginationInfo.totalPages > 1 && (
             <div className="mt-6 sm:mt-8">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                {/* Page Size Selector */}
                 <div className="flex items-center gap-2 order-2 sm:order-1">
                   <span className="text-xs sm:text-sm text-gray-600">Show:</span>
                   <select
@@ -615,12 +614,10 @@ export default function OrderListComponent({
                   </select>
                 </div>
 
-                {/* Page Info */}
                 <div className="text-xs sm:text-sm text-gray-600 order-1 sm:order-2">
                   Page {paginationInfo.page} of {paginationInfo.totalPages}
                 </div>
 
-                {/* Page Navigation */}
                 <div className="flex gap-2 order-3">
                   <button
                     onClick={() => handlePageChange(paginationInfo.page - 1)}         
@@ -653,4 +650,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-                            }
+}
