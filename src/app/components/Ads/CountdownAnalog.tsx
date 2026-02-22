@@ -218,7 +218,7 @@ const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, 
             rgba(255,255,255,0.1) 80%,
             rgba(0,0,0,0.4) 100%
           );
-          border-radius: 50% / 30%;
+          
           box-shadow: 
             inset 0 -5px 10px rgba(0,0,0,0.5),
             inset 0 5px 10px rgba(255,255,255,0.1),
