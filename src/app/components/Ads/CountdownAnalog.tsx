@@ -25,7 +25,8 @@ const CountdownAnalog: React.FC = () => {
   });
 
   useEffect(() => {
-    const targetDate = new Date('2026-07-27T00:00:00');
+    // Fix: Create target date using UTC or specify explicitly
+    const targetDate = new Date(2026, 6, 27, 0, 0, 0); // Month is 0-indexed: 6 = July
 
     const updateCountdown = () => {
       const now = new Date();
