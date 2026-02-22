@@ -195,6 +195,95 @@ const formatAddress = (address?: Address): string => {
   return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
 };
 
+// Shimmer loading component
+const OrderCardShimmer = () => {
+  return (
+    <div className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden animate-pulse">
+      {/* Header shimmer */}
+      <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-indigo-300 rounded-full"></div>
+            <div className="h-4 w-24 bg-indigo-200 rounded"></div>
+          </div>
+          <div className="h-5 w-16 bg-orange-200 rounded-full"></div>
+        </div>
+      </div>
+
+      <div className="p-2 lg:p-6">
+        {/* Order info shimmer */}
+        <div className="flex justify-between items-start mb-3 lg:mb-4">
+          <div className="space-y-2">
+            <div className="h-6 w-32 bg-gray-200 rounded"></div>
+            <div className="h-4 w-28 bg-gray-200 rounded"></div>
+            <div className="h-4 w-36 bg-gray-200 rounded"></div>
+          </div>
+          <div className="text-right space-y-2">
+            <div className="h-8 w-24 bg-gray-200 rounded"></div>
+            <div className="h-3 w-16 bg-gray-200 rounded ml-auto"></div>
+          </div>
+        </div>
+
+        {/* Address shimmer */}
+        <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-4 h-4 bg-green-200 rounded"></div>
+            <div className="h-4 w-28 bg-green-200 rounded"></div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-full bg-green-200 rounded"></div>
+            <div className="h-3 w-3/4 bg-green-200 rounded"></div>
+          </div>
+        </div>
+
+        {/* Items section shimmer */}
+        <div className="border-t border-gray-200 pt-3 sm:pt-4">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <div className="w-4 h-4 bg-blue-200 rounded"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded"></div>
+          </div>
+          
+          <div className="space-y-2 sm:space-y-3">
+            {[1, 2].map((i) => (
+              <div key={i} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                <div className="flex xs:hidden items-center gap-2 w-full">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                  <div className="flex-1">
+                    <div className="h-4 w-20 bg-gray-200 rounded ml-auto"></div>
+                  </div>
+                </div>
+                <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                  <div className="hidden xs:block w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 bg-gray-200 rounded-lg"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex gap-2">
+                      <div className="h-4 w-16 bg-gray-200 rounded"></div>
+                      <div className="h-4 w-12 bg-gray-200 rounded"></div>
+                    </div>
+                    <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-1/2 bg-gray-200 rounded"></div>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-end justify-center space-y-1">
+                    <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                    <div className="h-3 w-16 bg-gray-200 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer shimmer */}
+        <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+          <div className="flex justify-between">
+            <div className="h-3 w-16 bg-gray-200 rounded"></div>
+            <div className="h-3 w-20 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function OrderListComponent({ 
   initialSupplierId, 
   initialStatus,
@@ -215,6 +304,9 @@ export default function OrderListComponent({
   // State for supplier input
   const [supplierIdInput, setSupplierIdInput] = useState(initialSupplierId || '');
 
+  // State for active tab
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(initialStatus || 'ALL');
+
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
@@ -227,8 +319,9 @@ export default function OrderListComponent({
     fetchPolicy: 'network-only'
   });
 
-  // Status options
-  const statusOptions: OrderStatus[] = [
+  // Status options for tabs
+  const statusOptions: (OrderStatus | 'ALL')[] = [
+    'ALL',
     'PENDING',
     'PROCESSING',
     'SHIPPED',
@@ -236,11 +329,12 @@ export default function OrderListComponent({
     'CANCELLED'
   ];
 
-  // Handle filter changes
-  const handleStatusChange = (status: OrderStatus | '') => {
+  // Handle tab change
+  const handleTabChange = (tab: OrderStatus | 'ALL') => {
+    setActiveTab(tab);
     const newFilters = {
       ...filters,
-      status: status || undefined
+      status: tab === 'ALL' ? undefined : tab as OrderStatus
     };
     setFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -263,6 +357,7 @@ export default function OrderListComponent({
     const newFilters = {};
     setFilters(newFilters);
     setSupplierIdInput('');
+    setActiveTab('ALL');
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -290,18 +385,6 @@ export default function OrderListComponent({
   const handleRefresh = () => {
     refetch();
   };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        <div className="flex flex-col sm:flex-row justify-center items-center h-48 sm:h-64">
-          <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-orange-500"></div>
-          <span className="ml-3 sm:ml-4 text-sm sm:text-base text-gray-600 mt-3 sm:mt-0">Loading orders...</span>
-        </div>
-      </div>
-    );
-  }
 
   // Error state
   if (error) {
@@ -331,7 +414,7 @@ export default function OrderListComponent({
   const paginationInfo = orderData?.pagination;
 
   // Check if there's no data (no orders or all orders have 0 items)
-  const hasNoData = ordersWithItems.length === 0;
+  const hasNoData = !loading && ordersWithItems.length === 0;
 
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -350,7 +433,7 @@ export default function OrderListComponent({
           <div className="hidden md:flex gap-2 text-sm">
             <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full flex items-center gap-1">
               <Package size={14} />
-              {ordersWithItems.length}
+              {!loading ? ordersWithItems.length : '...'}
             </span>
           </div>
           <button 
@@ -365,6 +448,29 @@ export default function OrderListComponent({
 
       {/* Filters Section */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow border border-gray-200 mb-4 sm:mb-6">
+        {/* Status Tabs */}
+        <div className="mb-4">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+              {statusOptions.map((status) => (
+                <button
+                  key={status}
+                  onClick={() => handleTabChange(status)}
+                  className={`
+                    whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm
+                    ${activeTab === status
+                      ? 'border-orange-500 text-orange-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }
+                  `}
+                >
+                  {status === 'ALL' ? 'All Orders' : status.charAt(0) + status.slice(1).toLowerCase()}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-4">
           {/* Supplier ID Filter */}
           <div className="hidden">
@@ -388,35 +494,14 @@ export default function OrderListComponent({
             </div>
           </div>
 
-          {/* Status Filter and Clear Filters */}
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                Filter by Status
-              </label>
-              <select
-                value={filters.status || ''}
-                onChange={(e) => handleStatusChange(e.target.value as OrderStatus | '')}
-                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              >
-                <option value="">All Status</option>
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status.charAt(0) + status.slice(1).toLowerCase()}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Clear Filters Button */}
-            <div className="self-end sm:self-auto">
-              <button
-                onClick={clearFilters}
-                className="w-full sm:w-auto px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
+          {/* Clear Filters Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={clearFilters}
+              className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Clear Filters
+            </button>
           </div>
         </div>
 
@@ -449,6 +534,7 @@ export default function OrderListComponent({
                       onClick={() => {
                         const newFilters = { ...filters, status: undefined };
                         setFilters(newFilters);
+                        setActiveTab('ALL');
                         setPagination(prev => ({ ...prev, page: 1 }));
                       }}
                       className="text-green-600 hover:text-green-800 text-sm"
@@ -463,8 +549,8 @@ export default function OrderListComponent({
         )}
       </div>
 
-      {/* Results Count - Only show if there's data */}
-      {paginationInfo && !hasNoData && (
+      {/* Results Count - Only show if there's data and not loading */}
+      {!loading && paginationInfo && !hasNoData && (
         <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
           Showing {ordersWithItems.length} of {paginationInfo.total} orders with items
           {filters.supplierId && (
@@ -476,8 +562,17 @@ export default function OrderListComponent({
         </div>
       )}
 
+      {/* Loading State - Shimmer Effect */}
+      {loading && (
+        <div className="space-y-3 sm:space-y-4">
+          {[1, 2, 3].map((i) => (
+            <OrderCardShimmer key={i} />
+          ))}
+        </div>
+      )}
+
       {/* No Data State - Show when no orders with items */}
-      {hasNoData ? (
+      {!loading && hasNoData ? (
         <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
           <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
           <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Orders with Items</h3>
@@ -496,232 +591,233 @@ export default function OrderListComponent({
           )}
         </div>
       ) : (
-        <>
-          {/* Orders Grid - Only render orders that have items */}
-          <div className="space-y-3 sm:space-y-4">
-            {ordersWithItems.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
-                {/* Header */}
-                <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1 lg:gap-2">
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-                      <span className="font-bold text-indigo-700 text-xs lg:text-sm">
-                        Order #{order.orderNumber}
+        !loading && (
+          <>
+            {/* Orders Grid - Only render orders that have items */}
+            <div className="space-y-3 sm:space-y-4">
+              {ordersWithItems.map((order) => (
+                <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-1 lg:gap-2">
+                        <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
+                        <span className="font-bold text-indigo-700 text-xs lg:text-sm">
+                          Order #{order.orderNumber}
+                        </span>
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
+                        {order.items[0].status}
                       </span>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
-                      {order.items[0].status}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-2 lg:p-6">
-                  {/* Order info */}
-                  <div className="flex justify-between items-start mb-3 lg:mb-4">
-                    <div>
-                      <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
-                        <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
-                        <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
-                      </div>
-                      <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
-                        <User size={isMobile ? 14 : 16} />
-                        <span className="text-sm lg:text-base">{order.user.firstName}</span>
-                      </div>
-                      <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
-                        <Clock size={isMobile ? 14 : 16} />
-                        <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl lg:text-3xl font-bold text-green-600">
-                        {formatCurrency(order.total)}
-                      </div>
-                      <p className="text-gray-500 text-xs lg:text-sm">Total amount</p>
-                    </div>
                   </div>
 
-                  {/* DELIVERY ADDRESS SECTION - Using address from order */}
-                  {order.address && (
-                    <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <MapPin size={isMobile ? 16 : 18} className="text-green-600" />
-                        <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Address</h4>
+                  <div className="p-2 lg:p-6">
+                    {/* Order info */}
+                    <div className="flex justify-between items-start mb-3 lg:mb-4">
+                      <div>
+                        <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+                          <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
+                          <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
+                        </div>
+                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
+                          <User size={isMobile ? 14 : 16} />
+                          <span className="text-sm lg:text-base">{order.user.firstName}</span>
+                        </div>
+                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
+                          <Clock size={isMobile ? 14 : 16} />
+                          <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-700">{formatAddress(order.address)}</p>
-                      {order.address.lat && order.address.lng && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          Coordinates: {order.address.lat}, {order.address.lng}
-                        </p>
-                      )}
+                      <div className="text-right">
+                        <div className="text-xl lg:text-3xl font-bold text-green-600">
+                          {formatCurrency(order.total)}
+                        </div>
+                        <p className="text-gray-500 text-xs lg:text-sm">Total amount</p>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Items Section */}
-                  <div className="border-t border-gray-200 pt-3 sm:pt-4">
-                    <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
-                      <Package size={isMobile ? 16 : 18} className="text-blue-500" />
-                      Items ({order.items.length})
-                    </h4>
-                    
-                    <div className="space-y-2 sm:space-y-3">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
-                          {/* Mobile view */}
-                          <div className="flex xs:hidden items-center gap-2">
-                            {item.product[0]?.images && item.product[0].images.length > 0 && (
-                              <div className="relative w-10 h-10 flex-shrink-0">
-                                <img 
-                                  src={item.product[0].images[0]} 
-                                  alt={item.product[0].name}
-                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                />
-                              </div>
-                            )}
-                            <div className="flex-1 text-right">
-                              <div className="text-sm font-bold text-gray-900">
-                                {formatCurrency(item.price * item.quantity)}
-                              </div>
-                              {item.status && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                  {item.status}
-                                </span>
+                    {/* DELIVERY ADDRESS SECTION - Using address from order */}
+                    {order.address && (
+                      <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <MapPin size={isMobile ? 16 : 18} className="text-green-600" />
+                          <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Address</h4>
+                        </div>
+                        <p className="text-sm text-gray-700">{formatAddress(order.address)}</p>
+                        {order.address.lat && order.address.lng && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Coordinates: {order.address.lat}, {order.address.lng}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Items Section */}
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                      <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
+                        <Package size={isMobile ? 16 : 18} className="text-blue-500" />
+                        Items ({order.items.length})
+                      </h4>
+                      
+                      <div className="space-y-2 sm:space-y-3">
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                            {/* Mobile view */}
+                            <div className="flex xs:hidden items-center gap-2">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
                               )}
-                            </div>
-                          </div>
-
-                          {/* Desktop/tablet view */}
-                          <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                            {item.product[0]?.images && item.product[0].images.length > 0 && (
-                              <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
-                                <img 
-                                  src={item.product[0].images[0]} 
-                                  alt={item.product[0].name}
-                                  className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                />
+                              <div className="flex-1 text-right">
+                                <div className="text-sm font-bold text-gray-900">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                {item.status && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                    {item.status}
+                                  </span>
+                                )}
                               </div>
-                            )}
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col gap-0.5 sm:gap-1">
-                                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                                  <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
-                                    {item.product[0]?.sku || 'N/A'}
-                                  </span>
-                                  <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                    Qty: {item.quantity}
-                                  </span>
-                                  {item.status && (
-                                    <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                      {item.status}
+                            </div>
+
+                            {/* Desktop/tablet view */}
+                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col gap-0.5 sm:gap-1">
+                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                      {item.product[0]?.sku || 'N/A'}
                                     </span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      Qty: {item.quantity}
+                                    </span>
+                                    {item.status && (
+                                      <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                        {item.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                    {item.product[0]?.name || 'Unknown Product'}
+                                  </h4>
+
+                                  {/* Supplier info if available */}
+                                  {item.supplier && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Building size={10} className="text-gray-400" />
+                                      <span className="text-xs text-gray-500">
+                                        {item.supplier.firstName}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {/* Supplier address if available */}
+                                  {item.supplier?.addresses && item.supplier.addresses.length > 0 && (
+                                    <div className="flex items-start gap-1 mt-1">
+                                      <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                      <span className="text-xs text-gray-400 truncate">
+                                        {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
-                                
-                                <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
-                                  {item.product[0]?.name || 'Unknown Product'}
-                                </h4>
-
-                                {/* Supplier info if available */}
-                                {item.supplier && (
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Building size={10} className="text-gray-400" />
-                                    <span className="text-xs text-gray-500">
-                                      {item.supplier.firstName}
-                                    </span>
-                                  </div>
-                                )}
-
-                                {/* Supplier address if available */}
-                                {item.supplier?.addresses && item.supplier.addresses.length > 0 && (
-                                  <div className="flex items-start gap-1 mt-1">
-                                    <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                    <span className="text-xs text-gray-400 truncate">
-                                      {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
-                                    </span>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                            
-                            <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
-                              <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
-                                {formatCurrency(item.price * item.quantity)}
-                              </div>
-                              <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
-                                @ {formatCurrency(item.price)}
+                              
+                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                  @ {formatCurrency(item.price)}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Order Footer */}
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                      <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
+                        <p>Items: {order.items.length}</p>
+                        <p>Payments: {order.payments.length}</p>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Order Footer */}
-                  <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                    <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
-                      <p>Items: {order.items.length}</p>
-                      <p>Payments: {order.payments.length}</p>
-                    </div>
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Pagination */}
-          {paginationInfo && paginationInfo.totalPages > 1 && (
-            <div className="mt-6 sm:mt-8">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2 order-2 sm:order-1">
-                  <span className="text-xs sm:text-sm text-gray-600">Show:</span>
-                  <select
-                    value={pagination.pageSize}
-                    onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                    className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
-                  >
-                    <option value="5">5 per page</option>
-                    <option value="10">10 per page</option>
-                    <option value="20">20 per page</option>
-                    <option value="50">50 per page</option>
-                  </select>
-                </div>
-
-                <div className="text-xs sm:text-sm text-gray-600 order-1 sm:order-2">
-                  Page {paginationInfo.page} of {paginationInfo.totalPages}
-                </div>
-
-                <div className="flex gap-2 order-3">
-                  <button
-                    onClick={() => handlePageChange(paginationInfo.page - 1)}         
-                    disabled={paginationInfo.page === 1}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                      paginationInfo.page === 1 
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    Previous
-                  </button>
-                  
-                  <button
-                    onClick={() => handlePageChange(paginationInfo.page + 1)}
-                    disabled={paginationInfo.page === paginationInfo.totalPages}
-                    className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                      paginationInfo.page === paginationInfo.totalPages 
-                        ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-          )}
-        </>
+
+            {/* Pagination */}
+              <div className="mt-6 sm:mt-8">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                  <div className="flex items-center gap-2 order-2 sm:order-1">
+                    <span className="text-xs sm:text-sm text-gray-600">Show:</span>
+                    <select
+                      value={pagination.pageSize}
+                      onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                      className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="5">5 per page</option>
+                      <option value="10">10 per page</option>
+                      <option value="20">20 per page</option>
+                      <option value="50">50 per page</option>
+                    </select>
+                  </div>
+
+                  <div className="text-xs sm:text-sm text-gray-600 order-1 sm:order-2">
+                    Page {paginationInfo.page} of {paginationInfo.totalPages}
+                  </div>
+
+                  <div className="flex gap-2 order-3">
+                    <button
+                      onClick={() => handlePageChange(paginationInfo.page - 1)}         
+                      disabled={paginationInfo.page === 1}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
+                        paginationInfo.page === 1 
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <button
+                      onClick={() => handlePageChange(paginationInfo.page + 1)}
+                      disabled={paginationInfo.page === paginationInfo.totalPages}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
+                        paginationInfo.page === paginationInfo.totalPages 
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            
+          </>
+        )
       )}
     </div>
   );
-              }
+      }
