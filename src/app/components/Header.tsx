@@ -590,10 +590,10 @@ const Header: React.FC = () => {
 
                 {/* Slide-up Bell Popup with enhanced animation */}
                 {isBellPopupOpen && userId && (
-                  <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
+                  <div className="fixed inset-0 z-50 transition-opacity duration-300 ease md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
                     {/* Backdrop for mobile with fade-in animation */}
                     <div 
-                      className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
+                      className="fixed inset-0 bg-black  md:hidden"
                       style={{
                         opacity: isBellPopupOpen ? 0.5 : 0,
                         backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
