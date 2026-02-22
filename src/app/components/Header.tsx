@@ -594,7 +594,7 @@ const Header: React.FC = () => {
                   )}
                 </button>
 
-                {/* Slide-up Bell Popup with enhanced animation */}
+                {/* Slide-up Bell Popup with enhanced animation - FIXED POSITION */}
                 {isBellPopupOpen && userId && (
                   <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
                     {/* Backdrop for mobile with fade-in animation */}
@@ -607,10 +607,10 @@ const Header: React.FC = () => {
                       onClick={() => setIsBellPopupOpen(false)}
                     />
                     
-                    {/* Popup Container with enhanced slide-up animation */}
+                    {/* Popup Container with enhanced slide-up animation - FIXED POSITIONING */}
                     <div className={`
                       fixed bottom-0 left-0 right-0 
-                      md:absolute md:bottom-auto md:top-full 
+                      md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full 
                       bg-white rounded-t-2xl md:rounded-2xl 
                       shadow-2xl border border-gray-200 
                       transform transition-all duration-300 ease-out
