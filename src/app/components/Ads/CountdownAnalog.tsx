@@ -25,8 +25,7 @@ const CountdownAnalog: React.FC = () => {
   });
 
   useEffect(() => {
-    // Fix: Create target date using UTC or specify explicitly
-    const targetDate = new Date(2026, 6, 27, 0, 0, 0); // Month is 0-indexed: 6 = July
+    const targetDate = new Date(2026, 6, 27, 0, 0, 0);
 
     const updateCountdown = () => {
       const now = new Date();
@@ -49,224 +48,222 @@ const CountdownAnalog: React.FC = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Update ref after render
   useEffect(() => {
     prevTimeRef.current = timeLeft;
   }, [timeLeft]);
 
-  // Format numbers with leading zero - FIXED for 3-digit days
   const formatDays = (num: number): string => num.toString().padStart(3, '0');
   const formatTime = (num: number): string => num.toString().padStart(2, '0');
 
   return (
-    <div className="relative w-full bg-transparent font-mono" style={{ aspectRatio: '5 / 1' }}>
+    <div className="relative w-full bg-transparent font-serif" style={{ aspectRatio: '5 / 1' }}>
       <div className="absolute inset-0 flex items-center justify-between px-2 md:px-4 gap-1 md:gap-2">
-        {/* Days - NOW WITH 3 DIGITS */}
-        <div className="flex-1 h-5/6 bg-cyan-950/30 backdrop-blur-sm border border-cyan-500/50 rounded-xl shadow-[0_0_15px_rgba(0,255,255,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
-          <span className="text-xs md:text-sm text-cyan-300 absolute top-1 left-2 z-20">D</span>
-          <div className="flex gap-1">
-            <DigitCylinder 
-              currentDigit={formatDays(timeLeft.days)[0]} 
-              prevDigit={formatDays(prevTimeRef.current.days)[0]} 
-              isAnimating={formatDays(timeLeft.days)[0] !== formatDays(prevTimeRef.current.days)[0]}
-              color="text-cyan-100"
-            />
-            <DigitCylinder 
-              currentDigit={formatDays(timeLeft.days)[1]} 
-              prevDigit={formatDays(prevTimeRef.current.days)[1]} 
-              isAnimating={formatDays(timeLeft.days)[1] !== formatDays(prevTimeRef.current.days)[1]}
-              color="text-cyan-100"
-            />
-            <DigitCylinder 
-              currentDigit={formatDays(timeLeft.days)[2]} 
-              prevDigit={formatDays(prevTimeRef.current.days)[2]} 
-              isAnimating={formatDays(timeLeft.days)[2] !== formatDays(prevTimeRef.current.days)[2]}
-              color="text-cyan-100"
-            />
+        {/* Days */}
+        <div className="flex-1 h-5/6 bg-amber-50/10 backdrop-blur-sm border border-amber-700/30 rounded-lg shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #8b7a5a 0%, #c9b587 50%, #8b7a5a 100%)' }}>
+          <span className="text-xs md:text-sm text-amber-200 absolute top-1 left-2 z-20 font-bold tracking-wider">DAYS</span>
+          <div className="flex gap-1 md:gap-2">
+            <BookFlipDigit digit={formatDays(timeLeft.days)[0]} prevDigit={formatDays(prevTimeRef.current.days)[0]} color="amber" />
+            <BookFlipDigit digit={formatDays(timeLeft.days)[1]} prevDigit={formatDays(prevTimeRef.current.days)[1]} color="amber" />
+            <BookFlipDigit digit={formatDays(timeLeft.days)[2]} prevDigit={formatDays(prevTimeRef.current.days)[2]} color="amber" />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-cyan-600 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-900"></div>
         </div>
 
         {/* Hours */}
-        <div className="flex-1 h-5/6 bg-orange-950/30 backdrop-blur-sm border border-orange-500/50 rounded-xl shadow-[0_0_15px_rgba(255,165,0,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
-          <span className="text-xs md:text-sm text-orange-300 absolute top-1 left-2 z-20">H</span>
-          <div className="flex gap-1">
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.hours)[0]} 
-              prevDigit={formatTime(prevTimeRef.current.hours)[0]} 
-              isAnimating={formatTime(timeLeft.hours)[0] !== formatTime(prevTimeRef.current.hours)[0]}
-              color="text-orange-100"
-            />
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.hours)[1]} 
-              prevDigit={formatTime(prevTimeRef.current.hours)[1]} 
-              isAnimating={formatTime(timeLeft.hours)[1] !== formatTime(prevTimeRef.current.hours)[1]}
-              color="text-orange-100"
-            />
+        <div className="flex-1 h-5/6 bg-amber-50/10 backdrop-blur-sm border border-amber-700/30 rounded-lg shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #8b7a5a 0%, #c9b587 50%, #8b7a5a 100%)' }}>
+          <span className="text-xs md:text-sm text-amber-200 absolute top-1 left-2 z-20 font-bold tracking-wider">HOURS</span>
+          <div className="flex gap-1 md:gap-2">
+            <BookFlipDigit digit={formatTime(timeLeft.hours)[0]} prevDigit={formatTime(prevTimeRef.current.hours)[0]} color="amber" />
+            <BookFlipDigit digit={formatTime(timeLeft.hours)[1]} prevDigit={formatTime(prevTimeRef.current.hours)[1]} color="amber" />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-900"></div>
         </div>
 
         {/* Minutes */}
-        <div className="flex-1 h-5/6 bg-yellow-950/30 backdrop-blur-sm border border-yellow-500/50 rounded-xl shadow-[0_0_15px_rgba(255,255,0,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
-          <span className="text-xs md:text-sm text-yellow-300 absolute top-1 left-2 z-20">M</span>
-          <div className="flex gap-1">
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.minutes)[0]} 
-              prevDigit={formatTime(prevTimeRef.current.minutes)[0]} 
-              isAnimating={formatTime(timeLeft.minutes)[0] !== formatTime(prevTimeRef.current.minutes)[0]}
-              color="text-yellow-100"
-            />
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.minutes)[1]} 
-              prevDigit={formatTime(prevTimeRef.current.minutes)[1]} 
-              isAnimating={formatTime(timeLeft.minutes)[1] !== formatTime(prevTimeRef.current.minutes)[1]}
-              color="text-yellow-100"
-            />
+        <div className="flex-1 h-5/6 bg-amber-50/10 backdrop-blur-sm border border-amber-700/30 rounded-lg shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #8b7a5a 0%, #c9b587 50%, #8b7a5a 100%)' }}>
+          <span className="text-xs md:text-sm text-amber-200 absolute top-1 left-2 z-20 font-bold tracking-wider">MINS</span>
+          <div className="flex gap-1 md:gap-2">
+            <BookFlipDigit digit={formatTime(timeLeft.minutes)[0]} prevDigit={formatTime(prevTimeRef.current.minutes)[0]} color="amber" />
+            <BookFlipDigit digit={formatTime(timeLeft.minutes)[1]} prevDigit={formatTime(prevTimeRef.current.minutes)[1]} color="amber" />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-900"></div>
         </div>
 
         {/* Seconds */}
-        <div className="flex-1 h-5/6 bg-pink-950/30 backdrop-blur-sm border border-pink-500/50 rounded-xl shadow-[0_0_15px_rgba(255,0,255,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
-          <span className="text-xs md:text-sm text-pink-300 absolute top-1 left-2 z-20">S</span>
-          <div className="flex gap-1">
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.seconds)[0]} 
-              prevDigit={formatTime(prevTimeRef.current.seconds)[0]} 
-              isAnimating={formatTime(timeLeft.seconds)[0] !== formatTime(prevTimeRef.current.seconds)[0]}
-              color="text-pink-100"
-            />
-            <DigitCylinder 
-              currentDigit={formatTime(timeLeft.seconds)[1]} 
-              prevDigit={formatTime(prevTimeRef.current.seconds)[1]} 
-              isAnimating={formatTime(timeLeft.seconds)[1] !== formatTime(prevTimeRef.current.seconds)[1]}
-              color="text-pink-100"
-            />
+        <div className="flex-1 h-5/6 bg-amber-50/10 backdrop-blur-sm border border-amber-700/30 rounded-lg shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #8b7a5a 0%, #c9b587 50%, #8b7a5a 100%)' }}>
+          <span className="text-xs md:text-sm text-amber-200 absolute top-1 left-2 z-20 font-bold tracking-wider">SECS</span>
+          <div className="flex gap-1 md:gap-2">
+            <BookFlipDigit digit={formatTime(timeLeft.seconds)[0]} prevDigit={formatTime(prevTimeRef.current.seconds)[0]} color="amber" />
+            <BookFlipDigit digit={formatTime(timeLeft.seconds)[1]} prevDigit={formatTime(prevTimeRef.current.seconds)[1]} color="amber" />
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-400 to-pink-600 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-900"></div>
         </div>
       </div>
+
+      {/* Book binding effect - vertical lines between units */}
+      <div className="absolute top-2 bottom-2 left-[25%] w-[2px] bg-gradient-to-b from-amber-800/50 via-amber-600/30 to-amber-800/50"></div>
+      <div className="absolute top-2 bottom-2 left-[50%] w-[2px] bg-gradient-to-b from-amber-800/50 via-amber-600/30 to-amber-800/50"></div>
+      <div className="absolute top-2 bottom-2 left-[75%] w-[2px] bg-gradient-to-b from-amber-800/50 via-amber-600/30 to-amber-800/50"></div>
     </div>
   );
 };
 
-interface DigitCylinderProps {
-  currentDigit: string;
+interface BookFlipDigitProps {
+  digit: string;
   prevDigit: string;
-  isAnimating: boolean;
   color: string;
 }
 
-const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, isAnimating, color }) => {
+const BookFlipDigit: React.FC<BookFlipDigitProps> = ({ digit, prevDigit, color }) => {
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [showTop, setShowTop] = useState(true);
+  
+  useEffect(() => {
+    if (digit !== prevDigit) {
+      setIsFlipping(true);
+      
+      // First half of flip - top page turns
+      setTimeout(() => {
+        setShowTop(false);
+      }, 150);
+      
+      // Reset after flip completes
+      setTimeout(() => {
+        setIsFlipping(false);
+        setShowTop(true);
+      }, 300);
+    }
+  }, [digit, prevDigit]);
+
   return (
-    <div className="relative w-6 md:w-10 h-14 md:h-18 overflow-visible perspective-cylinder">
+    <div className="relative w-8 md:w-12 h-16 md:h-20 book-page perspective">
       <style jsx>{`
-        @keyframes rotateVerticalDown {
+        @keyframes flipPageTop {
           0% {
             transform: rotateX(0deg);
+            transform-origin: top;
             opacity: 1;
           }
-          50% {
-            transform: rotateX(90deg);
-            opacity: 0.3;
-          }
           100% {
-            transform: rotateX(180deg);
+            transform: rotateX(-180deg);
+            transform-origin: top;
             opacity: 0;
           }
         }
         
-        @keyframes rotateVerticalUp {
+        @keyframes flipPageBottom {
           0% {
-            transform: rotateX(-180deg);
+            transform: rotateX(180deg);
+            transform-origin: bottom;
             opacity: 0;
-          }
-          50% {
-            transform: rotateX(-90deg);
-            opacity: 0.3;
           }
           100% {
             transform: rotateX(0deg);
+            transform-origin: bottom;
             opacity: 1;
           }
         }
 
-        .old-digit {
-          animation: rotateVerticalDown 0.4s ease-in forwards;
-          transform-origin: center;
+        .flip-top {
+          animation: flipPageTop 0.3s ease-in forwards;
           backface-visibility: hidden;
+          transform-style: preserve-3d;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .new-digit {
-          animation: rotateVerticalUp 0.4s ease-out forwards;
-          transform-origin: center;
+        .flip-bottom {
+          animation: flipPageBottom 0.3s ease-out forwards;
           backface-visibility: hidden;
+          transform-style: preserve-3d;
+          box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
         }
 
-        .perspective-cylinder {
-          perspective: 1000px;
-          perspective-origin: 50% 50%;
+        .perspective {
+          perspective: 800px;
         }
 
-        .horizontal-cylinder {
-          background: linear-gradient(
-            180deg,
-            rgba(0,0,0,0.4) 0%,
-            rgba(255,255,255,0.1) 20%,
-            rgba(255,255,255,0.2) 50%,
-            rgba(255,255,255,0.1) 80%,
-            rgba(0,0,0,0.4) 100%
-          );
-          
+        .book-page {
+          background: linear-gradient(145deg, #f5e6d3 0%, #fff4e6 50%, #f5e6d3 100%);
+          border-radius: 2px;
           box-shadow: 
-            inset 0 -5px 10px rgba(0,0,0,0.5),
-            inset 0 5px 10px rgba(255,255,255,0.1),
-            0 0 20px rgba(0,0,0,0.3);
+            inset 0 0 0 1px rgba(255,255,255,0.5),
+            inset 2px 0 5px rgba(0,0,0,0.1),
+            inset -2px 0 5px rgba(0,0,0,0.1),
+            0 2px 5px rgba(0,0,0,0.2);
         }
 
-        .cylinder-end {
-          background: radial-gradient(ellipse at center, rgba(255,255,255,0.2) 0%, transparent 70%);
+        .page-curl {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 10px;
+          height: 10px;
+          background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%);
+          pointer-events: none;
+        }
+
+        .binding-shadow {
+          position: absolute;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
         }
       `}</style>
 
-      {/* Horizontal cylinder background */}
-      <div className="absolute inset-0 horizontal-cylinder rounded-full"></div>
-      
-      {/* Cylinder ends (left and right caps) */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 cylinder-end"></div>
-      <div className="absolute right-0 top-0 bottom-0 w-1 cylinder-end"></div>
+      {/* Book page base */}
+      <div className="absolute inset-0 book-page">
+        {/* Page texture */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 2px, transparent 2px, transparent 8px)'
+        }}></div>
+        
+        {/* Binding shadow */}
+        <div className="binding-shadow"></div>
+        
+        {/* Page curl */}
+        <div className="page-curl"></div>
+      </div>
 
-      {/* Center reflective line */}
-      <div className="absolute left-1/2 top-0 bottom-0 w-[2px] bg-white/10 transform -translate-x-1/2"></div>
-
-      {/* Current digit (visible when not animating) */}
-      {!isAnimating && (
-        <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} z-10`}>
-          {currentDigit}
+      {/* Current digit (shows when not flipping or after flip completes) */}
+      {(!isFlipping || !showTop) && (
+        <div className="absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold text-amber-900 z-10" style={{ textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+          {digit}
         </div>
       )}
 
-      {/* Animation when digit changes */}
-      {isAnimating && (
+      {/* Flipping animation */}
+      {isFlipping && (
         <>
-          {/* Old digit rotating down and out */}
-          <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} old-digit z-20`}>
-            {prevDigit}
-          </div>
+          {/* Top page flipping (shows old number) */}
+          {showTop && (
+            <div className="absolute inset-0 flex items-start justify-center pt-4 flip-top z-20">
+              <div className="book-page absolute inset-0">
+                <div className="binding-shadow"></div>
+              </div>
+              <span className="text-2xl md:text-4xl font-bold text-amber-900 relative z-10" style={{ textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+                {prevDigit}
+              </span>
+            </div>
+          )}
           
-          {/* New digit rotating up and in */}
-          <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} new-digit z-10`}>
-            {currentDigit}
-          </div>
+          {/* Bottom page flipping (shows new number) */}
+          {!showTop && (
+            <div className="absolute inset-0 flex items-end justify-center pb-4 flip-bottom z-20">
+              <div className="book-page absolute inset-0">
+                <div className="binding-shadow"></div>
+              </div>
+              <span className="text-2xl md:text-4xl font-bold text-amber-900 relative z-10" style={{ textShadow: '1px 1px 0 rgba(255,255,255,0.5)' }}>
+                {digit}
+              </span>
+            </div>
+          )}
         </>
       )}
 
-      {/* Highlight overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, transparent 70%)',
-        mixBlendMode: 'overlay'
-      }}></div>
+      {/* Page edge effect */}
+      <div className="absolute right-0 top-1 bottom-1 w-[2px] bg-gradient-to-b from-amber-300 via-amber-500 to-amber-300 opacity-50"></div>
     </div>
   );
 };
