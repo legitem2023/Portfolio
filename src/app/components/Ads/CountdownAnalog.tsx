@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface TimeLeft {
   days: number;
@@ -9,137 +9,6 @@ interface TimeLeft {
   seconds: number;
 }
 
-interface FlipUnitProps {
-  value: number;
-  unit: string;
-  color: 'cyan' | 'orange' | 'yellow' | 'pink';
-}
-
-const FlipUnit: React.FC<FlipUnitProps> = ({ value, unit, color }) => {
-  const [displayValue, setDisplayValue] = useState(value);
-  const [isFlipping, setIsFlipping] = useState(false);
-  const prevValueRef = useRef(value);
-  
-  // Color configurations
-  const colorConfig = {
-    cyan: {
-      text: 'text-cyan-100',
-      label: 'text-cyan-300/80',
-      glow: 'drop-shadow-[0_0_8px_cyan]',
-      shadow: 'shadow-[inset_0_0_10px_rgba(0,255,255,0.3),0_0_15px_rgba(0,255,255,0.2)]',
-      gradient: 'via-cyan-400',
-      border: 'border-cyan-500/30'
-    },
-    orange: {
-      text: 'text-orange-100',
-      label: 'text-orange-300/80',
-      glow: 'drop-shadow-[0_0_8px_orange]',
-      shadow: 'shadow-[inset_0_0_10px_rgba(255,165,0,0.3),0_0_15px_rgba(255,165,0,0.2)]',
-      gradient: 'via-orange-400',
-      border: 'border-orange-500/30'
-    },
-    yellow: {
-      text: 'text-yellow-100',
-      label: 'text-yellow-300/80',
-      glow: 'drop-shadow-[0_0_8px_yellow]',
-      shadow: 'shadow-[inset_0_0_10px_rgba(255,255,0,0.3),0_0_15px_rgba(255,255,0,0.2)]',
-      gradient: 'via-yellow-400',
-      border: 'border-yellow-500/30'
-    },
-    pink: {
-      text: 'text-pink-100',
-      label: 'text-pink-300/80',
-      glow: 'drop-shadow-[0_0_8px_fuchsia]',
-      shadow: 'shadow-[inset_0_0_10px_rgba(255,0,255,0.3),0_0_15px_rgba(255,0,255,0.2)]',
-      gradient: 'via-pink-400',
-      border: 'border-pink-500/30'
-    }
-  };
-
-  const colors = colorConfig[color];
-
-  // Format number with leading zero
-  const format = (num: number): string => num.toString().padStart(2, '0');
-  const formattedValue = format(value);
-  const formattedDisplayValue = format(displayValue);
-
-  // Handle flip animation when value changes
-  useEffect(() => {
-    if (prevValueRef.current !== value) {
-      setIsFlipping(true);
-      
-      // Update display value after flip starts
-      const timeout1 = setTimeout(() => {
-        setDisplayValue(value);
-      }, 150);
-      
-      // End flip animation
-      const timeout2 = setTimeout(() => {
-        setIsFlipping(false);
-      }, 300);
-      
-      prevValueRef.current = value;
-      
-      return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-      };
-    }
-  }, [value]);
-
-  return (
-    <div className={`flex-1 h-5/6 bg-black/30 backdrop-blur-sm border ${colors.border} rounded-lg ${colors.shadow} flex flex-col items-center justify-center relative overflow-hidden`}>
-      <span className={`text-xs md:text-sm ${colors.label} absolute top-0.5 left-1 z-10`}>{unit}</span>
-      
-      {/* Flip container */}
-      <div className="relative w-full h-full flex items-center justify-center perspective">
-        {/* Top half - current value */}
-        <div className="absolute inset-0 flex items-start justify-center pt-3 overflow-hidden">
-          <div className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colors.text} ${colors.glow}`}>
-            {formattedDisplayValue}
-          </div>
-        </div>
-        
-        {/* Bottom half - current value */}
-        <div className="absolute inset-0 flex items-end justify-center pb-3 overflow-hidden">
-          <div className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colors.text} ${colors.glow}`}>
-            {formattedDisplayValue}
-          </div>
-        </div>
-        
-        {/* Flipping overlay */}
-        {isFlipping && (
-          <>
-            {/* Top half flipping down */}
-            <div className="absolute inset-0 origin-bottom animate-flip-down z-20">
-              <div className="h-1/2 bg-black/90 backdrop-blur-sm rounded-t-lg overflow-hidden border-b-2 border-white/20">
-                <div className="flex items-start justify-center pt-3 h-full">
-                  <div className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colors.text} ${colors.glow}`}>
-                    {format(prevValueRef.current)}
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bottom half flipping up */}
-            <div className="absolute inset-0 origin-top animate-flip-up z-20">
-              <div className="h-1/2 mt-auto bg-black/90 backdrop-blur-sm rounded-b-lg overflow-hidden border-t-2 border-white/20">
-                <div className="flex items-end justify-center pb-3 h-full">
-                  <div className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colors.text} ${colors.glow}`}>
-                    {formattedValue}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-      
-      <div className={`absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent ${colors.gradient} to-transparent`}></div>
-    </div>
-  );
-};
-
 const CountdownAnalog: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
@@ -147,6 +16,9 @@ const CountdownAnalog: React.FC = () => {
     minutes: 0,
     seconds: 0,
   });
+
+  const [prevSeconds, setPrevSeconds] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
 
   useEffect(() => {
     const targetDate = new Date('2026-07-27T00:00:00');
@@ -161,7 +33,14 @@ const CountdownAnalog: React.FC = () => {
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
+        // Trigger flip animation when seconds change
+        if (seconds !== prevSeconds) {
+          setIsFlipping(true);
+          setTimeout(() => setIsFlipping(false), 200);
+        }
+
         setTimeLeft({ days, hours, minutes, seconds });
+        setPrevSeconds(seconds);
       } else {
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
@@ -170,43 +49,85 @@ const CountdownAnalog: React.FC = () => {
     updateCountdown();
     const intervalId = setInterval(updateCountdown, 1000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [prevSeconds]);
+
+  // Format numbers with leading zero
+  const format = (num: number): string => num.toString().padStart(2, '0');
 
   return (
     <div className="relative w-full bg-transparent font-mono" style={{ aspectRatio: '5 / 1' }}>
-      {/* Add animation keyframes to global styles or component */}
       <style jsx>{`
-        @keyframes flipDown {
-          0% { transform: rotateX(0deg); }
-          100% { transform: rotateX(-90deg); }
+        @keyframes flip {
+          0% {
+            transform: rotateX(0deg);
+            opacity: 1;
+          }
+          50% {
+            transform: rotateX(90deg);
+            opacity: 0.5;
+            background: rgba(0, 255, 255, 0.1);
+          }
+          100% {
+            transform: rotateX(0deg);
+            opacity: 1;
+          }
         }
-        @keyframes flipUp {
-          0% { transform: rotateX(90deg); }
-          100% { transform: rotateX(0deg); }
-        }
-        .animate-flip-down {
-          animation: flipDown 0.3s ease-in forwards;
-          transform-origin: bottom;
-          backface-visibility: hidden;
-        }
-        .animate-flip-up {
-          animation: flipUp 0.3s ease-out forwards;
-          transform-origin: top;
-          backface-visibility: hidden;
-        }
-        .perspective {
-          perspective: 400px;
+        .flip-animation {
+          animation: flip 0.2s ease-in-out;
+          transform-style: preserve-3d;
         }
       `}</style>
 
       <div className="absolute inset-0 flex items-center justify-between px-2 md:px-4 gap-1 md:gap-2">
-        <FlipUnit value={timeLeft.days} unit="D" color="cyan" />
-        <FlipUnit value={timeLeft.hours} unit="H" color="orange" />
-        <FlipUnit value={timeLeft.minutes} unit="M" color="yellow" />
-        <FlipUnit value={timeLeft.seconds} unit="S" color="pink" />
+        {/* Days */}
+        <div className="flex-1 h-5/6 bg-black/40 backdrop-blur-sm border border-cyan-500/30 rounded-lg shadow-[inset_0_0_10px_rgba(0,255,255,0.3),0_0_15px_rgba(0,255,255,0.2)] flex flex-col items-center justify-center relative overflow-hidden group">
+          <span className="text-xs md:text-sm text-cyan-300/80 absolute top-0.5 left-1 z-10">D</span>
+          <span className={`text-2xl md:text-4xl lg:text-5xl font-bold text-cyan-100 drop-shadow-[0_0_8px_cyan] ${isFlipping ? 'flip-animation' : ''}`}>
+            {format(timeLeft.days)}
+          </span>
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+
+        {/* Hours */}
+        <div className="flex-1 h-5/6 bg-black/40 backdrop-blur-sm border border-orange-500/30 rounded-lg shadow-[inset_0_0_10px_rgba(255,165,0,0.3),0_0_15px_rgba(255,165,0,0.2)] flex flex-col items-center justify-center relative overflow-hidden group">
+          <span className="text-xs md:text-sm text-orange-300/80 absolute top-0.5 left-1 z-10">H</span>
+          <span className={`text-2xl md:text-4xl lg:text-5xl font-bold text-orange-100 drop-shadow-[0_0_8px_orange] ${isFlipping ? 'flip-animation' : ''}`}>
+            {format(timeLeft.hours)}
+          </span>
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-orange-400 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+
+        {/* Minutes */}
+        <div className="flex-1 h-5/6 bg-black/40 backdrop-blur-sm border border-yellow-500/30 rounded-lg shadow-[inset_0_0_10px_rgba(255,255,0,0.3),0_0_15px_rgba(255,255,0,0.2)] flex flex-col items-center justify-center relative overflow-hidden group">
+          <span className="text-xs md:text-sm text-yellow-300/80 absolute top-0.5 left-1 z-10">M</span>
+          <span className={`text-2xl md:text-4xl lg:text-5xl font-bold text-yellow-100 drop-shadow-[0_0_8px_yellow] ${isFlipping ? 'flip-animation' : ''}`}>
+            {format(timeLeft.minutes)}
+          </span>
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-yellow-400 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
+
+        {/* Seconds */}
+        <div className="flex-1 h-5/6 bg-black/40 backdrop-blur-sm border border-pink-500/30 rounded-lg shadow-[inset_0_0_10px_rgba(255,0,255,0.3),0_0_15px_rgba(255,0,255,0.2)] flex flex-col items-center justify-center relative overflow-hidden group">
+          <span className="text-xs md:text-sm text-pink-300/80 absolute top-0.5 left-1 z-10">S</span>
+          <span className={`text-2xl md:text-4xl lg:text-5xl font-bold text-pink-100 drop-shadow-[0_0_8px_fuchsia] ${isFlipping ? 'flip-animation' : ''}`}>
+            {format(timeLeft.seconds)}
+          </span>
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-pink-400 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
       </div>
 
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.02) 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
+      {/* Grid overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ 
+        backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', 
+        backgroundSize: '20px 20px' 
+      }}></div>
+      
+      {/* Center glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-cyan-500/5 rounded-full blur-xl pointer-events-none"></div>
     </div>
   );
 };
