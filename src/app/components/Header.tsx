@@ -546,7 +546,7 @@ const Header: React.FC = () => {
         
           <div className="z-20 h-[100%] flex items-center">
             <Image 
-              src="/VendorCity.svg" 
+              src="/VendorCity_2.webp" 
               alt="Logo" 
               height={80} 
               width={80} 
@@ -874,7 +874,7 @@ const Header: React.FC = () => {
             <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
-                  src="/VendorCity.svg" 
+                  src="/VendorCity_2.webp" 
                   alt="Logo" 
                   height={80} 
                   width={80} 
