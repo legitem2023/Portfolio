@@ -9,123 +9,6 @@ interface TimeLeft {
   seconds: number;
 }
 
-interface CylinderDigitProps {
-  value: number;
-  prevValue: number;
-  position: 'tens' | 'ones';
-  color: string;
-}
-
-const CylinderDigit: React.FC<CylinderDigitProps> = ({ value, prevValue, position, color }) => {
-  const [isRotating, setIsRotating] = useState(false);
-  const [rotationDirection, setRotationDirection] = useState<'up' | 'down'>('down');
-  
-  // Get the specific digit based on position
-  const currentDigit = position === 'tens' ? Math.floor(value / 10) : value % 10;
-  const prevDigit = position === 'tens' ? Math.floor(prevValue / 10) : prevValue % 10;
-  
-  useEffect(() => {
-    if (prevDigit !== currentDigit) {
-      // Determine rotation direction (like a mechanical cylinder)
-      if (currentDigit > prevDigit || (prevDigit === 9 && currentDigit === 0)) {
-        setRotationDirection('down'); // Rotates down
-      } else {
-        setRotationDirection('up'); // Rotates up
-      }
-      
-      setIsRotating(true);
-      const timer = setTimeout(() => {
-        setIsRotating(false);
-      }, 400);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [currentDigit, prevDigit]);
-
-  // Color classes mapping with metallic effects
-  const colorClasses = {
-    cyan: 'text-cyan-100 drop-shadow-[0_0_8px_cyan]',
-    orange: 'text-orange-100 drop-shadow-[0_0_8px_orange]',
-    yellow: 'text-yellow-100 drop-shadow-[0_0_8px_yellow]',
-    pink: 'text-pink-100 drop-shadow-[0_0_8px_fuchsia]'
-  };
-
-  // Metallic gradient overlays for each color
-  const metalGradients = {
-    cyan: 'from-cyan-500/20 via-cyan-300/10 to-cyan-500/20',
-    orange: 'from-orange-500/20 via-orange-300/10 to-orange-500/20',
-    yellow: 'from-yellow-500/20 via-yellow-300/10 to-yellow-500/20',
-    pink: 'from-pink-500/20 via-pink-300/10 to-pink-500/20'
-  };
-
-  return (
-    <div className="relative w-8 md:w-12 lg:w-16 h-16 md:h-20 lg:h-24 perspective-cylinder">
-      {/* Cylinder container */}
-      <div 
-        className="relative w-full h-full rounded-full overflow-hidden"
-        style={{
-          background: `linear-gradient(180deg, 
-            rgba(0,0,0,0.8) 0%, 
-            rgba(40,40,40,0.9) 20%, 
-            rgba(20,20,20,0.9) 50%, 
-            rgba(40,40,40,0.9) 80%, 
-            rgba(0,0,0,0.8) 100%)`,
-          boxShadow: 'inset 0 0 20px rgba(0,0,0,0.8), 0 5px 15px rgba(0,0,0,0.5)',
-          borderLeft: '2px solid rgba(255,255,255,0.1)',
-          borderRight: '2px solid rgba(0,0,0,0.5)'
-        }}
-      >
-        {/* Reflective surface */}
-        <div className="absolute inset-0" style={{
-          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 80%, transparent 100%)'
-        }}></div>
-        
-        {/* Digit container with 3D rotation */}
-        <div 
-          className={`absolute inset-0 flex items-center justify-center digit-cylinder ${isRotating ? `rotate-${rotationDirection}` : ''}`}
-          style={{
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden'
-          }}
-        >
-          {/* Current digit face */}
-          <div className="absolute inset-0 flex items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
-            <span className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colorClasses[color as keyof typeof colorClasses]}`}>
-              {currentDigit}
-            </span>
-          </div>
-          
-          {/* Previous digit face (for rotation) */}
-          {isRotating && (
-            <div 
-              className="absolute inset-0 flex items-center justify-center rotating-face"
-              style={{ 
-                backfaceVisibility: 'hidden',
-                transform: rotationDirection === 'down' ? 'rotateX(-90deg)' : 'rotateX(90deg)'
-              }}
-            >
-              <span className={`text-2xl md:text-4xl lg:text-5xl font-bold ${colorClasses[color as keyof typeof colorClasses]}`}>
-                {prevDigit}
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Cylinder end caps (top and bottom shadows) */}
-        <div className="absolute top-0 left-0 right-0 h-3 bg-gradient-to-b from-black/60 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-3 bg-gradient-to-t from-black/60 to-transparent"></div>
-        
-        {/* Reflective highlights */}
-        <div className={`absolute inset-0 bg-gradient-to-b ${metalGradients[color as keyof typeof metalGradients]} opacity-30`}></div>
-        
-        {/* Edge lighting */}
-        <div className="absolute left-0 top-0 bottom-0 w-[1px] bg-white/20"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-[1px] bg-black/40"></div>
-      </div>
-    </div>
-  );
-};
-
 const CountdownAnalog: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
     days: 0,
@@ -170,144 +53,197 @@ const CountdownAnalog: React.FC = () => {
     prevTimeRef.current = timeLeft;
   }, [timeLeft]);
 
+  // Format numbers with leading zero
+  const format = (num: number): string => num.toString().padStart(2, '0');
+
   return (
-    <div className="relative w-full bg-transparent font-mono p-4" style={{ aspectRatio: '5 / 1' }}>
+    <div className="relative w-full bg-transparent font-mono" style={{ aspectRatio: '5 / 1' }}>
+      <div className="absolute inset-0 flex items-center justify-between px-2 md:px-4 gap-1 md:gap-2">
+        {/* Days */}
+        <DigitBlock 
+          value={format(timeLeft.days)} 
+          prevValue={format(prevTimeRef.current.days)}
+          label="D" 
+          color="cyan" 
+        />
+
+        {/* Hours */}
+        <DigitBlock 
+          value={format(timeLeft.hours)} 
+          prevValue={format(prevTimeRef.current.hours)}
+          label="H" 
+          color="orange" 
+        />
+
+        {/* Minutes */}
+        <DigitBlock 
+          value={format(timeLeft.minutes)} 
+          prevValue={format(prevTimeRef.current.minutes)}
+          label="M" 
+          color="yellow" 
+        />
+
+        {/* Seconds */}
+        <DigitBlock 
+          value={format(timeLeft.seconds)} 
+          prevValue={format(prevTimeRef.current.seconds)}
+          label="S" 
+          color="pink" 
+        />
+      </div>
+    </div>
+  );
+};
+
+interface DigitBlockProps {
+  value: string;
+  prevValue: string;
+  label: string;
+  color: 'cyan' | 'orange' | 'yellow' | 'pink';
+}
+
+const DigitBlock: React.FC<DigitBlockProps> = ({ value, prevValue, label, color }) => {
+  const [animatingDigits, setAnimatingDigits] = useState<{tens: boolean, ones: boolean}>({tens: false, ones: false});
+  
+  // Color configurations
+  const colors = {
+    cyan: {
+      bg: 'bg-cyan-950/30',
+      border: 'border-cyan-500/50',
+      text: 'text-cyan-100',
+      label: 'text-cyan-300',
+      shadow: 'shadow-[0_0_15px_rgba(0,255,255,0.3)]',
+      gradient: 'from-cyan-400 to-cyan-600'
+    },
+    orange: {
+      bg: 'bg-orange-950/30',
+      border: 'border-orange-500/50',
+      text: 'text-orange-100',
+      label: 'text-orange-300',
+      shadow: 'shadow-[0_0_15px_rgba(255,165,0,0.3)]',
+      gradient: 'from-orange-400 to-orange-600'
+    },
+    yellow: {
+      bg: 'bg-yellow-950/30',
+      border: 'border-yellow-500/50',
+      text: 'text-yellow-100',
+      label: 'text-yellow-300',
+      shadow: 'shadow-[0_0_15px_rgba(255,255,0,0.3)]',
+      gradient: 'from-yellow-400 to-yellow-600'
+    },
+    pink: {
+      bg: 'bg-pink-950/30',
+      border: 'border-pink-500/50',
+      text: 'text-pink-100',
+      label: 'text-pink-300',
+      shadow: 'shadow-[0_0_15px_rgba(255,0,255,0.3)]',
+      gradient: 'from-pink-400 to-pink-600'
+    }
+  };
+
+  const c = colors[color];
+
+  // Check if digits changed and trigger animation
+  useEffect(() => {
+    if (value[0] !== prevValue[0]) {
+      setAnimatingDigits(prev => ({...prev, tens: true}));
+      setTimeout(() => setAnimatingDigits(prev => ({...prev, tens: false})), 400);
+    }
+    if (value[1] !== prevValue[1]) {
+      setAnimatingDigits(prev => ({...prev, ones: true}));
+      setTimeout(() => setAnimatingDigits(prev => ({...prev, ones: false})), 400);
+    }
+  }, [value, prevValue]);
+
+  return (
+    <div className={`flex-1 h-5/6 ${c.bg} backdrop-blur-sm border ${c.border} rounded-xl ${c.shadow} flex flex-col items-center justify-center relative overflow-hidden`}>
+      <span className={`text-xs md:text-sm ${c.label} absolute top-1 left-2 z-20`}>{label}</span>
+      
+      <div className="flex gap-1">
+        {/* Tens digit with carousel */}
+        <DigitCarousel 
+          currentDigit={value[0]} 
+          prevDigit={prevValue[0]} 
+          isAnimating={animatingDigits.tens}
+          color={c.text}
+        />
+
+        {/* Ones digit with carousel */}
+        <DigitCarousel 
+          currentDigit={value[1]} 
+          prevDigit={prevValue[1]} 
+          isAnimating={animatingDigits.ones}
+          color={c.text}
+        />
+      </div>
+
+      {/* Simple bottom glow */}
+      <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${c.gradient} opacity-50`}></div>
+    </div>
+  );
+};
+
+interface DigitCarouselProps {
+  currentDigit: string;
+  prevDigit: string;
+  isAnimating: boolean;
+  color: string;
+}
+
+const DigitCarousel: React.FC<DigitCarouselProps> = ({ currentDigit, prevDigit, isAnimating, color }) => {
+  return (
+    <div className="relative w-8 md:w-12 h-16 md:h-20 overflow-hidden">
       <style jsx>{`
-        @keyframes rotateDown {
+        @keyframes slideUpOld {
           0% {
-            transform: rotateX(0deg);
+            transform: translateY(0);
+            opacity: 1;
           }
           100% {
-            transform: rotateX(90deg);
+            transform: translateY(-100%);
+            opacity: 0;
           }
         }
         
-        @keyframes rotateUp {
+        @keyframes slideUpNew {
           0% {
-            transform: rotateX(0deg);
+            transform: translateY(100%);
+            opacity: 0;
           }
           100% {
-            transform: rotateX(-90deg);
+            transform: translateY(0);
+            opacity: 1;
           }
         }
-        
-        .digit-cylinder {
-          transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-          transform-style: preserve-3d;
+
+        .animate-old-up {
+          animation: slideUpOld 0.3s ease-in forwards;
         }
-        
-        .digit-cylinder.rotate-down {
-          animation: rotateDown 0.4s ease-in-out forwards;
-        }
-        
-        .digit-cylinder.rotate-up {
-          animation: rotateUp 0.4s ease-in-out forwards;
-        }
-        
-        .rotating-face {
-          transform-origin: center;
-          transition: transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
-        }
-        
-        .perspective-cylinder {
-          perspective: 800px;
-          perspective-origin: 50% 50%;
-        }
-        
-        /* Cylinder curvature effect */
-        .cylinder-curvature {
-          background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.3) 100%);
+
+        .animate-new-up {
+          animation: slideUpNew 0.3s ease-out forwards;
         }
       `}</style>
 
-      <div className="absolute inset-0 flex items-center justify-center px-2 md:px-4 gap-2 md:gap-4">
-        {/* Days */}
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-xs md:text-sm text-cyan-300/80 mb-1">DAYS</span>
-          <div className="flex gap-1 justify-center">
-            <CylinderDigit 
-              value={timeLeft.days} 
-              prevValue={prevTimeRef.current.days} 
-              position="tens" 
-              color="cyan" 
-            />
-            <CylinderDigit 
-              value={timeLeft.days} 
-              prevValue={prevTimeRef.current.days} 
-              position="ones" 
-              color="cyan" 
-            />
-          </div>
-        </div>
-
-        {/* Hours */}
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-xs md:text-sm text-orange-300/80 mb-1">HOURS</span>
-          <div className="flex gap-1 justify-center">
-            <CylinderDigit 
-              value={timeLeft.hours} 
-              prevValue={prevTimeRef.current.hours} 
-              position="tens" 
-              color="orange" 
-            />
-            <CylinderDigit 
-              value={timeLeft.hours} 
-              prevValue={prevTimeRef.current.hours} 
-              position="ones" 
-              color="orange" 
-            />
-          </div>
-        </div>
-
-        {/* Minutes */}
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-xs md:text-sm text-yellow-300/80 mb-1">MINS</span>
-          <div className="flex gap-1 justify-center">
-            <CylinderDigit 
-              value={timeLeft.minutes} 
-              prevValue={prevTimeRef.current.minutes} 
-              position="tens" 
-              color="yellow" 
-            />
-            <CylinderDigit 
-              value={timeLeft.minutes} 
-              prevValue={prevTimeRef.current.minutes} 
-              position="ones" 
-              color="yellow" 
-            />
-          </div>
-        </div>
-
-        {/* Seconds */}
-        <div className="flex-1 flex flex-col items-center">
-          <span className="text-xs md:text-sm text-pink-300/80 mb-1">SECS</span>
-          <div className="flex gap-1 justify-center">
-            <CylinderDigit 
-              value={timeLeft.seconds} 
-              prevValue={prevTimeRef.current.seconds} 
-              position="tens" 
-              color="pink" 
-            />
-            <CylinderDigit 
-              value={timeLeft.seconds} 
-              prevValue={prevTimeRef.current.seconds} 
-              position="ones" 
-              color="pink" 
-            />
-          </div>
-        </div>
+      {/* Current digit (stays in place) */}
+      <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color}`}>
+        {currentDigit}
       </div>
 
-      {/* Background lighting effect */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 70%)'
-      }}></div>
-      
-      {/* Reflective floor effect */}
-      <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none" style={{
-        background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.3) 100%)',
-        filter: 'blur(4px)'
-      }}></div>
+      {/* Animations when digit changes */}
+      {isAnimating && (
+        <>
+          {/* Old digit sliding up and out */}
+          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} animate-old-up`}>
+            {prevDigit}
+          </div>
+          
+          {/* New digit sliding up from bottom */}
+          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} animate-new-up`}>
+            {currentDigit}
+          </div>
+        </>
+      )}
     </div>
   );
 };
