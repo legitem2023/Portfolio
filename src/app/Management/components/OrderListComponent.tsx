@@ -211,7 +211,7 @@ const formatAddress = (address?: Address): string => {
   return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
 };
 
-// Shimmer loading component with CSS animation
+// Shimmer loading component with proper animation
 const OrderCardShimmer = () => {
   return (
     <div className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
@@ -219,10 +219,10 @@ const OrderCardShimmer = () => {
       <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-indigo-300 rounded-full shimmer"></div>
-            <div className="h-4 w-24 bg-indigo-200 rounded shimmer"></div>
+            <div className="w-2 h-2 bg-indigo-300 rounded-full shimmer-animation"></div>
+            <div className="h-4 w-24 bg-indigo-200 rounded shimmer-animation"></div>
           </div>
-          <div className="h-5 w-16 bg-orange-200 rounded-full shimmer"></div>
+          <div className="h-5 w-16 bg-orange-200 rounded-full shimmer-animation"></div>
         </div>
       </div>
 
@@ -230,57 +230,57 @@ const OrderCardShimmer = () => {
         {/* Order info shimmer */}
         <div className="flex justify-between items-start mb-3 lg:mb-4">
           <div className="space-y-2">
-            <div className="h-6 w-32 bg-gray-200 rounded shimmer"></div>
-            <div className="h-4 w-28 bg-gray-200 rounded shimmer"></div>
-            <div className="h-4 w-36 bg-gray-200 rounded shimmer"></div>
+            <div className="h-6 w-32 bg-gray-200 rounded shimmer-animation"></div>
+            <div className="h-4 w-28 bg-gray-200 rounded shimmer-animation"></div>
+            <div className="h-4 w-36 bg-gray-200 rounded shimmer-animation"></div>
           </div>
           <div className="text-right space-y-2">
-            <div className="h-8 w-24 bg-gray-200 rounded shimmer"></div>
-            <div className="h-3 w-16 bg-gray-200 rounded ml-auto shimmer"></div>
+            <div className="h-8 w-24 bg-gray-200 rounded shimmer-animation"></div>
+            <div className="h-3 w-16 bg-gray-200 rounded ml-auto shimmer-animation"></div>
           </div>
         </div>
 
         {/* Address shimmer */}
         <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-4 h-4 bg-green-200 rounded shimmer"></div>
-            <div className="h-4 w-28 bg-green-200 rounded shimmer"></div>
+            <div className="w-4 h-4 bg-green-200 rounded shimmer-animation"></div>
+            <div className="h-4 w-28 bg-green-200 rounded shimmer-animation"></div>
           </div>
           <div className="space-y-2">
-            <div className="h-3 w-full bg-green-200 rounded shimmer"></div>
-            <div className="h-3 w-3/4 bg-green-200 rounded shimmer"></div>
+            <div className="h-3 w-full bg-green-200 rounded shimmer-animation"></div>
+            <div className="h-3 w-3/4 bg-green-200 rounded shimmer-animation"></div>
           </div>
         </div>
 
         {/* Items section shimmer */}
         <div className="border-t border-gray-200 pt-3 sm:pt-4">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <div className="w-4 h-4 bg-blue-200 rounded shimmer"></div>
-            <div className="h-4 w-16 bg-gray-200 rounded shimmer"></div>
+            <div className="w-4 h-4 bg-blue-200 rounded shimmer-animation"></div>
+            <div className="h-4 w-16 bg-gray-200 rounded shimmer-animation"></div>
           </div>
           
           <div className="space-y-2 sm:space-y-3">
             {[1, 2].map((i) => (
               <div key={i} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
                 <div className="flex xs:hidden items-center gap-2 w-full">
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg shimmer"></div>
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg shimmer-animation"></div>
                   <div className="flex-1">
-                    <div className="h-4 w-20 bg-gray-200 rounded ml-auto shimmer"></div>
+                    <div className="h-4 w-20 bg-gray-200 rounded ml-auto shimmer-animation"></div>
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                  <div className="hidden xs:block w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 bg-gray-200 rounded-lg shimmer"></div>
+                  <div className="hidden xs:block w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 bg-gray-200 rounded-lg shimmer-animation"></div>
                   <div className="flex-1 space-y-2">
                     <div className="flex gap-2">
-                      <div className="h-4 w-16 bg-gray-200 rounded shimmer"></div>
-                      <div className="h-4 w-12 bg-gray-200 rounded shimmer"></div>
+                      <div className="h-4 w-16 bg-gray-200 rounded shimmer-animation"></div>
+                      <div className="h-4 w-12 bg-gray-200 rounded shimmer-animation"></div>
                     </div>
-                    <div className="h-4 w-3/4 bg-gray-200 rounded shimmer"></div>
-                    <div className="h-3 w-1/2 bg-gray-200 rounded shimmer"></div>
+                    <div className="h-4 w-3/4 bg-gray-200 rounded shimmer-animation"></div>
+                    <div className="h-3 w-1/2 bg-gray-200 rounded shimmer-animation"></div>
                   </div>
                   <div className="hidden sm:flex flex-col items-end justify-center space-y-1">
-                    <div className="h-4 w-20 bg-gray-200 rounded shimmer"></div>
-                    <div className="h-3 w-16 bg-gray-200 rounded shimmer"></div>
+                    <div className="h-4 w-20 bg-gray-200 rounded shimmer-animation"></div>
+                    <div className="h-3 w-16 bg-gray-200 rounded shimmer-animation"></div>
                   </div>
                 </div>
               </div>
@@ -291,8 +291,8 @@ const OrderCardShimmer = () => {
         {/* Footer shimmer */}
         <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
           <div className="flex justify-between">
-            <div className="h-3 w-16 bg-gray-200 rounded shimmer"></div>
-            <div className="h-3 w-20 bg-gray-200 rounded shimmer"></div>
+            <div className="h-3 w-16 bg-gray-200 rounded shimmer-animation"></div>
+            <div className="h-3 w-20 bg-gray-200 rounded shimmer-animation"></div>
           </div>
         </div>
       </div>
@@ -434,26 +434,37 @@ export default function OrderListComponent({
 
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-      {/* Add shimmer animation styles */}
-      <style jsx>{`
+      {/* Add global styles for shimmer animation */}
+      <style jsx global>{`
         @keyframes shimmer {
           0% {
-            background-position: -1000px 0;
+            transform: translateX(-100%);
           }
           100% {
-            background-position: 1000px 0;
+            transform: translateX(100%);
           }
         }
-        .shimmer {
-          animation: shimmer 2s infinite linear;
+        
+        .shimmer-animation {
+          position: relative;
+          overflow: hidden;
+          background: #f0f0f0 !important;
+        }
+        
+        .shimmer-animation::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
           background: linear-gradient(
-            to right,
-            #f6f7f8 0%,
-            #edeef1 20%,
-            #f6f7f8 40%,
-            #f6f7f8 100%
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.6),
+            transparent
           );
-          background-size: 1000px 100%;
+          animation: shimmer 1.8s infinite;
         }
       `}</style>
 
@@ -498,7 +509,7 @@ export default function OrderListComponent({
                     key={status}
                     onClick={() => handleTabChange(status)}
                     className={`
-                      group inline-flex items-center gap-2 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm
+                      group inline-flex items-center gap-2 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200
                       ${activeTab === status
                         ? 'border-orange-500 text-orange-600'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -508,6 +519,7 @@ export default function OrderListComponent({
                     <Icon 
                       size={16} 
                       className={`
+                        transition-colors duration-200
                         ${activeTab === status 
                           ? 'text-orange-500' 
                           : 'text-gray-400 group-hover:text-gray-500'
@@ -818,7 +830,7 @@ export default function OrderListComponent({
             </div>
 
             {/* Pagination */}
-            {paginationInfo && paginationInfo.totalPages > 1 && (
+            
               <div className="mt-6 sm:mt-8">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-2 order-2 sm:order-1">
@@ -866,10 +878,10 @@ export default function OrderListComponent({
                   </div>
                 </div>
               </div>
-            )}
+            
           </>
         )
       )}
     </div>
   );
-        }
+                            }
