@@ -594,28 +594,25 @@ const Header: React.FC = () => {
                   )}
                 </button>
 
-                {/* Slide-up Bell Popup with enhanced animation - FIXED POSITION */}
+                {/* Slide-up Bell Popup with fixed positioning */}
                 {isBellPopupOpen && userId && (
-                  <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
-                    {/* Backdrop for mobile with fade-in animation */}
+                  <>
+                    {/* Backdrop for mobile */}
                     <div 
-                      className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
-                      style={{
-                        opacity: isBellPopupOpen ? 0.5 : 0,
-                        backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
-                      }}
+                      className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
                       onClick={() => setIsBellPopupOpen(false)}
                     />
                     
-                    {/* Popup Container with enhanced slide-up animation - FIXED POSITIONING */}
+                    {/* Popup Container - Fixed positioning for mobile, absolute for desktop */}
                     <div className={`
                       fixed bottom-0 left-0 right-0 
-                      md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full 
-                      bg-white rounded-t-2xl md:rounded-2xl 
-                      shadow-2xl border border-gray-200 
-                      transform transition-all duration-300 ease-out
-                      ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
+                      md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full md:mt-2
+                      bg-white rounded-t-2xl md:rounded-2xl shadow-2xl border border-gray-200 z-50
+                      transform transition-transform duration-300 ease-out
+                      ${isBellPopupOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0 md:scale-95 md:opacity-0'}
+                      md:transform md:transition-all md:duration-300
                       max-h-[80vh] md:max-h-[70vh] flex flex-col
+                      md:w-96
                     `}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
@@ -678,12 +675,7 @@ const Header: React.FC = () => {
                                 className={`
                                   p-4 hover:bg-gray-50 transition-all duration-200 ease-out cursor-pointer
                                   ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
-                                  transform transition-transform duration-300 ease-out
-                                  ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
                                 `}
-                                style={{
-                                  transitionDelay: `${index * 50}ms`
-                                }}
                                 onClick={() => handleNotificationClick(notification)}
                               >
                                 <div className="flex items-start space-x-3">
@@ -763,7 +755,7 @@ const Header: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
+                          <div className="flex flex-col items-center justify-center p-8 text-center">
                             <Bell className="w-12 h-12 text-gray-300 mb-4" />
                             <p className="text-gray-500 font-medium">No notifications</p>
                             <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
@@ -784,7 +776,7 @@ const Header: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             )}
