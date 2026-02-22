@@ -160,90 +160,169 @@ const DigitBlock: React.FC<DigitBlockProps> = ({ value, prevValue, label, color 
       <span className={`text-xs md:text-sm ${c.label} absolute top-1 left-2 z-20`}>{label}</span>
       
       <div className="flex gap-1">
-        {/* Tens digit with carousel */}
-        <DigitCarousel 
+        {/* Tens digit with horizontal cylindrical animation */}
+        <DigitCylinder 
           currentDigit={value[0]} 
           prevDigit={prevValue[0]} 
           isAnimating={animatingDigits.tens}
           color={c.text}
+          position="left"
         />
 
-        {/* Ones digit with carousel */}
-        <DigitCarousel 
+        {/* Ones digit with horizontal cylindrical animation */}
+        <DigitCylinder 
           currentDigit={value[1]} 
           prevDigit={prevValue[1]} 
           isAnimating={animatingDigits.ones}
           color={c.text}
+          position="right"
         />
       </div>
 
-      {/* Simple bottom glow */}
+      {/* Bottom glow */}
       <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${c.gradient} opacity-50`}></div>
     </div>
   );
 };
 
-interface DigitCarouselProps {
+interface DigitCylinderProps {
   currentDigit: string;
   prevDigit: string;
   isAnimating: boolean;
   color: string;
+  position: 'left' | 'right';
 }
 
-const DigitCarousel: React.FC<DigitCarouselProps> = ({ currentDigit, prevDigit, isAnimating, color }) => {
+const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, isAnimating, color, position }) => {
   return (
-    <div className="relative w-8 md:w-12 h-16 md:h-20 overflow-hidden">
+    <div className="relative w-8 md:w-12 h-16 md:h-20 overflow-hidden perspective-cylinder">
       <style jsx>{`
-        @keyframes slideUpOld {
+        @keyframes rotateFromLeft {
           0% {
-            transform: translateY(0);
+            transform: rotateY(0deg);
             opacity: 1;
+            left: 0;
+          }
+          50% {
+            transform: rotateY(90deg);
+            opacity: 0.5;
+            left: -50%;
           }
           100% {
-            transform: translateY(-100%);
-            opacity: 0;
+            transform: rotateY(0deg);
+            opacity: 1;
+            left: 0;
           }
         }
         
-        @keyframes slideUpNew {
+        @keyframes rotateFromRight {
           0% {
-            transform: translateY(100%);
-            opacity: 0;
+            transform: rotateY(0deg);
+            opacity: 1;
+            right: 0;
+          }
+          50% {
+            transform: rotateY(-90deg);
+            opacity: 0.5;
+            right: -50%;
           }
           100% {
-            transform: translateY(0);
+            transform: rotateY(0deg);
             opacity: 1;
+            right: 0;
           }
         }
 
-        .animate-old-up {
-          animation: slideUpOld 0.3s ease-in forwards;
+        @keyframes slideFromLeft {
+          0% {
+            transform: translateX(-100%) rotateY(30deg);
+            opacity: 0;
+            filter: blur(2px);
+          }
+          100% {
+            transform: translateX(0) rotateY(0deg);
+            opacity: 1;
+            filter: blur(0);
+          }
         }
 
-        .animate-new-up {
-          animation: slideUpNew 0.3s ease-out forwards;
+        @keyframes slideFromRight {
+          0% {
+            transform: translateX(100%) rotateY(-30deg);
+            opacity: 0;
+            filter: blur(2px);
+          }
+          100% {
+            transform: translateX(0) rotateY(0deg);
+            opacity: 1;
+            filter: blur(0);
+          }
+        }
+
+        .cylinder-left {
+          animation: rotateFromLeft 0.4s ease-in-out forwards;
+          transform-style: preserve-3d;
+        }
+
+        .cylinder-right {
+          animation: rotateFromRight 0.4s ease-in-out forwards;
+          transform-style: preserve-3d;
+        }
+
+        .new-digit-left {
+          animation: slideFromLeft 0.3s ease-out forwards;
+        }
+
+        .new-digit-right {
+          animation: slideFromRight 0.3s ease-out forwards;
+        }
+
+        .perspective-cylinder {
+          perspective: 800px;
+          perspective-origin: 50% 50%;
+        }
+
+        .cylinder-shape {
+          background: linear-gradient(
+            90deg,
+            rgba(0,0,0,0.3) 0%,
+            rgba(255,255,255,0.1) 30%,
+            rgba(255,255,255,0.2) 50%,
+            rgba(255,255,255,0.1) 70%,
+            rgba(0,0,0,0.3) 100%
+          );
+          border-radius: 30% / 50%;
         }
       `}</style>
 
-      {/* Current digit (stays in place) */}
+      {/* Cylinder background effect */}
+      <div className="absolute inset-0 cylinder-shape pointer-events-none"></div>
+
+      {/* Current digit (base layer) */}
       <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color}`}>
         {currentDigit}
       </div>
 
-      {/* Animations when digit changes */}
+      {/* Animation when digit changes */}
       {isAnimating && (
         <>
-          {/* Old digit sliding up and out */}
-          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} animate-old-up`}>
+          {/* Old digit rotating out */}
+          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} ${position === 'left' ? 'cylinder-left' : 'cylinder-right'}`}>
             {prevDigit}
           </div>
           
-          {/* New digit sliding up from bottom */}
-          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} animate-new-up`}>
+          {/* New digit sliding in from side */}
+          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} ${position === 'left' ? 'new-digit-left' : 'new-digit-right'}`}>
             {currentDigit}
           </div>
         </>
       )}
+
+      {/* Reflective overlay for cylinder effect */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(circle at 30% 50%, rgba(255,255,255,0.2) 0%, transparent 70%)',
+        mixBlendMode: 'overlay'
+      }}></div>
     </div>
   );
 };
