@@ -539,7 +539,7 @@ const Header: React.FC = () => {
 
   return (
     <div>
-      <div className="relative p-2 aspect-[4/1] sm:aspect-[9/1]"
+      <div className="p-2 aspect-[4/1] sm:aspect-[9/1]"
            style={{
                  background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
                  backdropFilter: 'blur(2px)',
