@@ -54,132 +54,99 @@ const CountdownAnalog: React.FC = () => {
     prevTimeRef.current = timeLeft;
   }, [timeLeft]);
 
-  // Format numbers with leading zero
-  const format = (num: number): string => num.toString().padStart(2, '0');
+  // Format numbers with leading zero - FIXED for 3-digit days
+  const formatDays = (num: number): string => num.toString().padStart(3, '0');
+  const formatTime = (num: number): string => num.toString().padStart(2, '0');
 
   return (
     <div className="relative w-full bg-transparent font-mono" style={{ aspectRatio: '5 / 1' }}>
       <div className="absolute inset-0 flex items-center justify-between px-2 md:px-4 gap-1 md:gap-2">
-        {/* Days */}
-        <DigitBlock 
-          value={format(timeLeft.days)} 
-          prevValue={format(prevTimeRef.current.days)}
-          label="D" 
-          color="cyan" 
-        />
+        {/* Days - NOW WITH 3 DIGITS */}
+        <div className="flex-1 h-5/6 bg-cyan-950/30 backdrop-blur-sm border border-cyan-500/50 rounded-xl shadow-[0_0_15px_rgba(0,255,255,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
+          <span className="text-xs md:text-sm text-cyan-300 absolute top-1 left-2 z-20">D</span>
+          <div className="flex gap-1">
+            <DigitCylinder 
+              currentDigit={formatDays(timeLeft.days)[0]} 
+              prevDigit={formatDays(prevTimeRef.current.days)[0]} 
+              isAnimating={formatDays(timeLeft.days)[0] !== formatDays(prevTimeRef.current.days)[0]}
+              color="text-cyan-100"
+            />
+            <DigitCylinder 
+              currentDigit={formatDays(timeLeft.days)[1]} 
+              prevDigit={formatDays(prevTimeRef.current.days)[1]} 
+              isAnimating={formatDays(timeLeft.days)[1] !== formatDays(prevTimeRef.current.days)[1]}
+              color="text-cyan-100"
+            />
+            <DigitCylinder 
+              currentDigit={formatDays(timeLeft.days)[2]} 
+              prevDigit={formatDays(prevTimeRef.current.days)[2]} 
+              isAnimating={formatDays(timeLeft.days)[2] !== formatDays(prevTimeRef.current.days)[2]}
+              color="text-cyan-100"
+            />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-400 to-cyan-600 opacity-50"></div>
+        </div>
 
         {/* Hours */}
-        <DigitBlock 
-          value={format(timeLeft.hours)} 
-          prevValue={format(prevTimeRef.current.hours)}
-          label="H" 
-          color="orange" 
-        />
+        <div className="flex-1 h-5/6 bg-orange-950/30 backdrop-blur-sm border border-orange-500/50 rounded-xl shadow-[0_0_15px_rgba(255,165,0,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
+          <span className="text-xs md:text-sm text-orange-300 absolute top-1 left-2 z-20">H</span>
+          <div className="flex gap-1">
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.hours)[0]} 
+              prevDigit={formatTime(prevTimeRef.current.hours)[0]} 
+              isAnimating={formatTime(timeLeft.hours)[0] !== formatTime(prevTimeRef.current.hours)[0]}
+              color="text-orange-100"
+            />
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.hours)[1]} 
+              prevDigit={formatTime(prevTimeRef.current.hours)[1]} 
+              isAnimating={formatTime(timeLeft.hours)[1] !== formatTime(prevTimeRef.current.hours)[1]}
+              color="text-orange-100"
+            />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-orange-600 opacity-50"></div>
+        </div>
 
         {/* Minutes */}
-        <DigitBlock 
-          value={format(timeLeft.minutes)} 
-          prevValue={format(prevTimeRef.current.minutes)}
-          label="M" 
-          color="yellow" 
-        />
+        <div className="flex-1 h-5/6 bg-yellow-950/30 backdrop-blur-sm border border-yellow-500/50 rounded-xl shadow-[0_0_15px_rgba(255,255,0,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
+          <span className="text-xs md:text-sm text-yellow-300 absolute top-1 left-2 z-20">M</span>
+          <div className="flex gap-1">
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.minutes)[0]} 
+              prevDigit={formatTime(prevTimeRef.current.minutes)[0]} 
+              isAnimating={formatTime(timeLeft.minutes)[0] !== formatTime(prevTimeRef.current.minutes)[0]}
+              color="text-yellow-100"
+            />
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.minutes)[1]} 
+              prevDigit={formatTime(prevTimeRef.current.minutes)[1]} 
+              isAnimating={formatTime(timeLeft.minutes)[1] !== formatTime(prevTimeRef.current.minutes)[1]}
+              color="text-yellow-100"
+            />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-400 to-yellow-600 opacity-50"></div>
+        </div>
 
         {/* Seconds */}
-        <DigitBlock 
-          value={format(timeLeft.seconds)} 
-          prevValue={format(prevTimeRef.current.seconds)}
-          label="S" 
-          color="pink" 
-        />
+        <div className="flex-1 h-5/6 bg-pink-950/30 backdrop-blur-sm border border-pink-500/50 rounded-xl shadow-[0_0_15px_rgba(255,0,255,0.3)] flex flex-col items-center justify-center relative overflow-hidden">
+          <span className="text-xs md:text-sm text-pink-300 absolute top-1 left-2 z-20">S</span>
+          <div className="flex gap-1">
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.seconds)[0]} 
+              prevDigit={formatTime(prevTimeRef.current.seconds)[0]} 
+              isAnimating={formatTime(timeLeft.seconds)[0] !== formatTime(prevTimeRef.current.seconds)[0]}
+              color="text-pink-100"
+            />
+            <DigitCylinder 
+              currentDigit={formatTime(timeLeft.seconds)[1]} 
+              prevDigit={formatTime(prevTimeRef.current.seconds)[1]} 
+              isAnimating={formatTime(timeLeft.seconds)[1] !== formatTime(prevTimeRef.current.seconds)[1]}
+              color="text-pink-100"
+            />
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-400 to-pink-600 opacity-50"></div>
+        </div>
       </div>
-    </div>
-  );
-};
-
-interface DigitBlockProps {
-  value: string;
-  prevValue: string;
-  label: string;
-  color: 'cyan' | 'orange' | 'yellow' | 'pink';
-}
-
-const DigitBlock: React.FC<DigitBlockProps> = ({ value, prevValue, label, color }) => {
-  const [animatingDigits, setAnimatingDigits] = useState<{tens: boolean, ones: boolean}>({tens: false, ones: false});
-  
-  // Color configurations
-  const colors = {
-    cyan: {
-      bg: 'bg-cyan-950/30',
-      border: 'border-cyan-500/50',
-      text: 'text-cyan-100',
-      label: 'text-cyan-300',
-      shadow: 'shadow-[0_0_15px_rgba(0,255,255,0.3)]',
-      gradient: 'from-cyan-400 to-cyan-600'
-    },
-    orange: {
-      bg: 'bg-orange-950/30',
-      border: 'border-orange-500/50',
-      text: 'text-orange-100',
-      label: 'text-orange-300',
-      shadow: 'shadow-[0_0_15px_rgba(255,165,0,0.3)]',
-      gradient: 'from-orange-400 to-orange-600'
-    },
-    yellow: {
-      bg: 'bg-yellow-950/30',
-      border: 'border-yellow-500/50',
-      text: 'text-yellow-100',
-      label: 'text-yellow-300',
-      shadow: 'shadow-[0_0_15px_rgba(255,255,0,0.3)]',
-      gradient: 'from-yellow-400 to-yellow-600'
-    },
-    pink: {
-      bg: 'bg-pink-950/30',
-      border: 'border-pink-500/50',
-      text: 'text-pink-100',
-      label: 'text-pink-300',
-      shadow: 'shadow-[0_0_15px_rgba(255,0,255,0.3)]',
-      gradient: 'from-pink-400 to-pink-600'
-    }
-  };
-
-  const c = colors[color];
-
-  // Check if digits changed and trigger animation
-  useEffect(() => {
-    if (value[0] !== prevValue[0]) {
-      setAnimatingDigits(prev => ({...prev, tens: true}));
-      setTimeout(() => setAnimatingDigits(prev => ({...prev, tens: false})), 400);
-    }
-    if (value[1] !== prevValue[1]) {
-      setAnimatingDigits(prev => ({...prev, ones: true}));
-      setTimeout(() => setAnimatingDigits(prev => ({...prev, ones: false})), 400);
-    }
-  }, [value, prevValue]);
-
-  return (
-    <div className={`flex-1 h-5/6 ${c.bg} backdrop-blur-sm border ${c.border} rounded-xl ${c.shadow} flex flex-col items-center justify-center relative overflow-hidden`}>
-      <span className={`text-xs md:text-sm ${c.label} absolute top-1 left-2 z-20`}>{label}</span>
-      
-      <div className="flex gap-1">
-        {/* Tens digit */}
-        <DigitCylinder 
-          currentDigit={value[0]} 
-          prevDigit={prevValue[0]} 
-          isAnimating={animatingDigits.tens}
-          color={c.text}
-        />
-
-        {/* Ones digit */}
-        <DigitCylinder 
-          currentDigit={value[1]} 
-          prevDigit={prevValue[1]} 
-          isAnimating={animatingDigits.ones}
-          color={c.text}
-        />
-      </div>
-
-      {/* Bottom glow */}
-      <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${c.gradient} opacity-50`}></div>
     </div>
   );
 };
@@ -193,7 +160,7 @@ interface DigitCylinderProps {
 
 const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, isAnimating, color }) => {
   return (
-    <div className="relative w-8 md:w-12 h-16 md:h-20 overflow-visible perspective-cylinder">
+    <div className="relative w-6 md:w-10 h-14 md:h-18 overflow-visible perspective-cylinder">
       <style jsx>{`
         @keyframes rotateVerticalDown {
           0% {
@@ -275,7 +242,7 @@ const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, 
 
       {/* Current digit (visible when not animating) */}
       {!isAnimating && (
-        <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} z-10`}>
+        <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} z-10`}>
           {currentDigit}
         </div>
       )}
@@ -284,12 +251,12 @@ const DigitCylinder: React.FC<DigitCylinderProps> = ({ currentDigit, prevDigit, 
       {isAnimating && (
         <>
           {/* Old digit rotating down and out */}
-          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} old-digit z-20`}>
+          <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} old-digit z-20`}>
             {prevDigit}
           </div>
           
           {/* New digit rotating up and in */}
-          <div className={`absolute inset-0 flex items-center justify-center text-2xl md:text-4xl font-bold ${color} new-digit z-10`}>
+          <div className={`absolute inset-0 flex items-center justify-center text-xl md:text-3xl font-bold ${color} new-digit z-10`}>
             {currentDigit}
           </div>
         </>
