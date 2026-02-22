@@ -26,6 +26,7 @@ enum OrderStatus {
 export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("PROCESSING");
+  const [currentPage, setCurrentPage] = useState(1);
   
   const { data, loading, error, refetch } = useQuery<ActiveOrderListResponse>(ACTIVE_ORDER_LIST, {
     variables: {
@@ -34,7 +35,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         riderId: user?.userId
       },
       pagination: {
-        page: 1,
+        page: currentPage,
         pageSize: 10
       }
     },
@@ -47,10 +48,16 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when changing tabs
     refetch();
   };
 
   const handleRefresh = () => {
+    refetch();
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
     refetch();
   };
 
@@ -249,6 +256,36 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           ))}
         </div>
       )}
+      {/* Pagination Controls */}
+      {!loading && deliveries.length > 0 && (
+        <div className="flex justify-center items-center gap-4 mt-6 lg:mt-8">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+              currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+          >
+            Previous
+          </button>
+          <span className="text-gray-700 font-medium">
+            Page {currentPage}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={deliveries.length < 10}
+            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
+              deliveries.length < 10
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-orange-500 text-white hover:bg-orange-600'
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
-}
+          }
