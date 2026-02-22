@@ -539,14 +539,8 @@ const Header: React.FC = () => {
 
   return (
     <div>
-      <div className="p-2 aspect-[4/1] sm:aspect-[9/1]"
-           style={{
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
-                 backdropFilter: 'blur(2px)',
-                 WebkitBackdropFilter: 'blur(2px)'
-              }}
-        >
-        <AnimatedCrowd/>
+      <div className="relative bg-gradient-to-r from-violet-100 to-indigo-100 bg-opacity-90 p-2 aspect-[4/1] sm:aspect-[9/1]">
+        {/*<AnimatedCrowd/>*/}
         {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
@@ -557,7 +551,7 @@ const Header: React.FC = () => {
               height={80} 
               width={80} 
               className="h-[100%] w-[auto] rounded"
-              //style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
+              style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
             />
           </div>
              
@@ -594,25 +588,28 @@ const Header: React.FC = () => {
                   )}
                 </button>
 
-                {/* Slide-up Bell Popup with fixed positioning */}
+                {/* Slide-up Bell Popup with enhanced animation */}
                 {isBellPopupOpen && userId && (
-                  <>
-                    {/* Backdrop for mobile */}
+                  <div className="fixed inset-0 z-50 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
+                    {/* Backdrop for mobile with fade-in animation */}
                     <div 
-                      className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+                      className="fixed inset-0 bg-black transition-opacity duration-300 ease-out md:hidden"
+                      style={{
+                        opacity: isBellPopupOpen ? 0.5 : 0,
+                        backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
+                      }}
                       onClick={() => setIsBellPopupOpen(false)}
                     />
                     
-                    {/* Popup Container - Fixed positioning for mobile, absolute for desktop */}
+                    {/* Popup Container with enhanced slide-up animation */}
                     <div className={`
                       fixed bottom-0 left-0 right-0 
-                      md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full md:mt-2
-                      bg-white rounded-t-2xl md:rounded-2xl shadow-2xl border border-gray-200 z-50
-                      transform transition-transform duration-300 ease-out
-                      ${isBellPopupOpen ? 'translate-y-0' : 'translate-y-full md:translate-y-0 md:scale-95 md:opacity-0'}
-                      md:transform md:transition-all md:duration-300
+                      md:absolute md:bottom-auto md:top-full 
+                      bg-white rounded-t-2xl md:rounded-2xl 
+                      shadow-2xl border border-gray-200 
+                      transform transition-all duration-300 ease-out
+                      ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
                       max-h-[80vh] md:max-h-[70vh] flex flex-col
-                      md:w-96
                     `}>
                       {/* Header */}
                       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
@@ -675,7 +672,12 @@ const Header: React.FC = () => {
                                 className={`
                                   p-4 hover:bg-gray-50 transition-all duration-200 ease-out cursor-pointer
                                   ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                                  transform transition-transform duration-300 ease-out
+                                  ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
                                 `}
+                                style={{
+                                  transitionDelay: `${index * 50}ms`
+                                }}
                                 onClick={() => handleNotificationClick(notification)}
                               >
                                 <div className="flex items-start space-x-3">
@@ -755,7 +757,7 @@ const Header: React.FC = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="flex flex-col items-center justify-center p-8 text-center">
+                          <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
                             <Bell className="w-12 h-12 text-gray-300 mb-4" />
                             <p className="text-gray-500 font-medium">No notifications</p>
                             <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
@@ -776,7 +778,7 @@ const Header: React.FC = () => {
                         </button>
                       </div>
                     </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -869,13 +871,7 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div 
-              style={{
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
-                 backdropFilter: 'blur(2px)',
-                 WebkitBackdropFilter: 'blur(2px)'
-              }}
-              className="flex items-center justify-between p-4 border-b p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity.svg" 
@@ -883,7 +879,7 @@ const Header: React.FC = () => {
                   height={80} 
                   width={80} 
                   className="h-[100%] w-[auto] rounded"
-                  //style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
+                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
                 />
               </div>
               
