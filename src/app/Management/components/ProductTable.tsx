@@ -177,7 +177,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
 
   return (
     <>
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6">
         <SearchSortBar
           searchPlaceholder="Search products by name, SKU, or description..."
           sortOptions={sortOptions}
@@ -185,34 +185,35 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
           onSortChange={setSortOption}
         />
         
-        <div className="mt-2 text-sm text-gray-500">
+        <div className="mt-2 text-xs sm:text-sm text-gray-500 px-1">
           Showing {filteredAndSortedProducts.length} of {products.length} products
           {searchQuery && (
-            <span> for <span className="font-medium">{searchQuery}</span></span>
+            <span className="block sm:inline mt-1 sm:mt-0"> for <span className="font-medium">"{searchQuery}"</span></span>
           )}
         </div>
       </div>
 
-      <div className="hidden md:block bg-white shadow-md rounded-lg overflow-hidden">
+      {/* Desktop Table View - Hidden on mobile */}
+      <div className="hidden md:block bg-white shadow-md rounded-lg overflow-hidden overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Product
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Price
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Stock
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Variants
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Status
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
+              <th scope="col" className="px-4 lg:px-6 py-3 text-left text-xs font-medium bg-gray-800 text-gray-300 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -232,7 +233,8 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
         </table>
       </div>
 
-      <div className="md:hidden space-y-4">
+      {/* Mobile Card View - Visible only on mobile */}
+      <div className="md:hidden space-y-3 px-1">
         {filteredAndSortedProducts.map((product) => (
           <MobileProductCard 
             key={product.id} 
@@ -260,6 +262,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
     </>
   );
 }
+
 // Helper function
 const convertToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
