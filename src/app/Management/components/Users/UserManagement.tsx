@@ -81,8 +81,8 @@ const USERS = gql`
 `;
 
 const UPDATE_ROLE = gql`
-  mutation UpdateRole($userId: ID!, $level: Role!) {
-    updateRole(userId: $userId, level: $level) {
+  mutation UpdateRole($userId: ID!, $Level: Role!) {
+    updateRole(userId: $userId, Level: $Level) {
       statusText
     }
   }
@@ -91,6 +91,7 @@ const UPDATE_ROLE = gql`
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const { loading, error, data } = useQuery<UsersData>(USERS);
   const [updateRole] = useMutation<UpdateRoleResponse, UpdateRoleVariables>(UPDATE_ROLE, {
     refetchQueries: [{ query: USERS }]
@@ -125,7 +126,7 @@ const UserManagement = () => {
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
       await updateRole({
-        variables: { userId, level: newRole }
+        variables: { userId, Level: newRole }
       });
     } catch (err) {
       console.error('Error updating role:', err);
@@ -140,6 +141,14 @@ const UserManagement = () => {
   const getRoleCount = (role: TabType): number => {
     if (role === 'ALL') return users.length;
     return users.filter((u) => u.role === role).length;
+  };
+
+  const toggleAddresses = (userId: string) => {
+    setExpandedUserId(expandedUserId === userId ? null : userId);
+  };
+
+  const formatAddress = (address: Address) => {
+    return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
   };
 
   return (
@@ -312,6 +321,58 @@ const UserManagement = () => {
                     </select>
                   </div>
 
+                  {/* Addresses Section */}
+                  <div className="mt-2 sm:mt-3 md:mt-4">
+                    <button
+                      onClick={() => toggleAddresses(user.id)}
+                      className="w-full flex items-center justify-between text-left"
+                    >
+                      <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Addresses ({user.addresses?.length || 0})
+                      </label>
+                      <svg
+                        className={`w-4 h-4 text-gray-500 transition-transform ${
+                          expandedUserId === user.id ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {expandedUserId === user.id && (
+                      <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                        {user.addresses && user.addresses.length > 0 ? (
+                          user.addresses.map((address, index) => (
+                            <div
+                              key={index}
+                              className={`text-xs p-2 rounded border ${
+                                address.isDefault
+                                  ? 'border-blue-200 bg-blue-50'
+                                  : 'border-gray-200 bg-gray-50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-gray-700">
+                                  {address.type || 'Address'} {address.isDefault && '(Default)'}
+                                </span>
+                                <span className="text-gray-400 text-xs">
+                                  {new Date(address.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-gray-600">{formatAddress(address)}</p>
+                              <p className="text-gray-500 mt-1">Receiver: {address.receiver}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-gray-500 italic p-2">No addresses found</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Additional Info */}
                   <div className="mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-gray-100">
                     <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs">
@@ -322,12 +383,6 @@ const UserManagement = () => {
                         </span>
                       </div>
                       <div className="col-span-2 sm:col-span-1">
-                        <span className="text-gray-500">Addresses:</span>
-                        <span className="ml-1 font-medium text-gray-700">
-                          {user.addresses?.length || 0}
-                        </span>
-                      </div>
-                      <div className="col-span-2">
                         <span className="text-gray-500">Joined:</span>
                         <span className="ml-1 font-medium text-gray-700">
                           {new Date(user.createdAt).toLocaleDateString('en-US', {
