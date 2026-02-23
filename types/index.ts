@@ -129,6 +129,7 @@ export interface Product {
   id: string;
   sku: string;
   supplierId: string;
+  supplier:User;
   name: string;
   description: string;
   price: number;
