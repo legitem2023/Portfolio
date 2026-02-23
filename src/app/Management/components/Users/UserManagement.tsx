@@ -75,7 +75,7 @@ const UserManagement = () => {
     ? users 
     : users.filter((user:any) => user.role === activeTab);
 
-  const handleRoleChange = async (userId, newRole) => {
+  const handleRoleChange = async (userId:any, newRole:any) => {
     try {
       await updateRole({
         variables: { userId, level: newRole }
@@ -86,7 +86,7 @@ const UserManagement = () => {
     }
   };
 
-  const getRoleCount = (role) => {
+  const getRoleCount = (role:any) => {
     if (role === 'ALL') return users.length;
     return users.filter(u => u.role === role).length;
   };
