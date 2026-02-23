@@ -9,6 +9,7 @@ export const typeDefs = gql`
   enum Role {
     ADMIN
     MANAGER
+    RIDER
     USER
   }
 
