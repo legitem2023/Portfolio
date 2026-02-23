@@ -563,7 +563,7 @@ model TrackingCounter {
 
 // Enums remain the same
 enum Role {
-  ADMIN
+  ADMINISTRATOR
   MANAGER
   RIDER
   USER
