@@ -88,7 +88,7 @@ const UserManagement = () => {
 
   const getRoleCount = (role:any) => {
     if (role === 'ALL') return users.length;
-    return users.filter(u => u.role === role).length;
+    return users.filter((u:any) => u.role === role).length;
   };
 
   return (
