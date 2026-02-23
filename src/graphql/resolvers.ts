@@ -1679,7 +1679,15 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
             supplierId: true,
             supplier: {
               select: {
-                addresses:true
+                addresses: {
+                  where:{
+                    isDefault:true
+                  },
+                  select: {
+                    lat:true,
+                    lng:true
+                  }
+                }
               }
             },
             category: {
