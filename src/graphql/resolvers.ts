@@ -2441,7 +2441,7 @@ salesList: async (
     }
 
     return {
-      statusText: `User role successfully updated to ${level}`
+      statusText: `User role successfully updated to ${Level}`
     };
 
   } catch (error) {
