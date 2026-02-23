@@ -188,7 +188,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
         <div className="mt-2 text-xs sm:text-sm text-gray-500 px-1">
           Showing {filteredAndSortedProducts.length} of {products.length} products
           {searchQuery && (
-            <span className="block sm:inline mt-1 sm:mt-0"> for <span className="font-medium">"{searchQuery}"</span></span>
+            <span className="block sm:inline mt-1 sm:mt-0"> for <span className="font-medium">&quot;{searchQuery}&quot;</span></span>
           )}
         </div>
       </div>
