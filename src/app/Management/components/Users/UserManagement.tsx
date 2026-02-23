@@ -136,7 +136,7 @@ const UserManagement = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user) => (
+            {filteredUsers.map((user:any) => (
               <div
                 key={user.id}
                 className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
@@ -260,7 +260,7 @@ const UserManagement = () => {
               <span className="font-medium">Total Users: {users.length}</span>
               <span>•</span>
               <div className="flex space-x-3">
-                {tabs.slice(1).map(role => (
+                {tabs.slice(1).map((role:any) => (
                   <div key={role} className="flex items-center">
                     <span className={`w-2 h-2 rounded-full mr-1 ${
                       role === 'ADMINISTRATOR' ? 'bg-purple-500' :
