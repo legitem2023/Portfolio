@@ -47,7 +47,7 @@ interface UpdateRoleResponse {
 
 interface UpdateRoleVariables {
   userId: string;
-  level: UserRole;
+  Level: UserRole;
 }
 
 // Queries and Mutations
