@@ -2405,6 +2405,59 @@ salesList: async (
   },
 
   Mutation: {
+  updateRole: async (_, { userId, level }) => {
+  try {
+    if (!userId) {
+      return {
+        statusText: 'User ID is required'
+      };
+    }
+
+    if (!level) {
+      return {
+        statusText: 'Role level is required'
+      };
+    }
+
+    const validRoles = ['ADMINISTRATOR', 'MANAGER', 'RIDER', 'USER'];
+    if (!validRoles.includes(level)) {
+      return {
+        statusText: `Invalid role. Must be one of: ${validRoles.join(', ')}`
+      };
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        role: level,
+        updatedAt: new Date()
+      }
+    });
+
+    if (!updatedUser) {
+      return {
+        statusText: 'User not found'
+      };
+    }
+
+    return {
+      statusText: `User role successfully updated to ${level}`
+    };
+
+  } catch (error) {
+    console.error('Error updating user role:', error);
+    
+    if (error.code === 'P2025') {
+      return {
+        statusText: 'User not found'
+      };
+    }
+    
+    return {
+      statusText: error.message || 'An error occurred while updating user role'
+    };
+  }
+},
     updateOrderStatus: async (_: any, { itemId,riderId,supplierId,userId,status,title,message }: any) => {
       try {
     // Validate inputs
