@@ -300,8 +300,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
         color: selectedColor || 'Unknown',
         size: selectedSize || 'Unknown',
         variant: selectedVariant,
-        lat:product.supplier.addresses.lat,
-        lng:product.supplier.addresses.lng,
+        lat:product.supplier.addresses[0].lat,
+        lng:product.supplier.addresses[0].lng,
       };
 
       // Validate required fields before dispatching
