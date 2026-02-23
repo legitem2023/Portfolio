@@ -2405,7 +2405,7 @@ salesList: async (
   },
 
   Mutation: {
-  updateRole: async (_, { userId, level }) => {
+  updateRole: async (_:any, { userId, Level }:any) => {
   try {
     if (!userId) {
       return {
@@ -2413,14 +2413,14 @@ salesList: async (
       };
     }
 
-    if (!level) {
+    if (!Level) {
       return {
         statusText: 'Role level is required'
       };
     }
 
     const validRoles = ['ADMINISTRATOR', 'MANAGER', 'RIDER', 'USER'];
-    if (!validRoles.includes(level)) {
+    if (!validRoles.includes(Level)) {
       return {
         statusText: `Invalid role. Must be one of: ${validRoles.join(', ')}`
       };
@@ -2429,7 +2429,7 @@ salesList: async (
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { 
-        role: level,
+        role: Level,
         updatedAt: new Date()
       }
     });
