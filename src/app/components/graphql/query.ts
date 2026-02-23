@@ -581,6 +581,12 @@ export const GETPRODUCTS = gql`
         price
         salePrice
         supplierId
+        supplier {
+          addresses {
+            lat
+            lng
+          }
+        }
         sku
         stock
         images
