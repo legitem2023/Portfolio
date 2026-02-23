@@ -1677,9 +1677,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
             tags: true,
             sku: true,
             supplierId: true,
-            supplier: {
-              addresses:true
-            },
+            supplier: true,
             category: {
               select: {
                 id: true,
