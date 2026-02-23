@@ -4,6 +4,52 @@ import { gql, useQuery, useMutation } from '@apollo/client';
 import { useState } from 'react';
 import Image from 'next/image';
 
+// Types
+type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
+type TabType = UserRole | 'ALL';
+
+interface Address {
+  type: string;
+  receiver: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+interface User {
+  id: string;
+  email: string;
+  password: string;
+  firstName: string | null;
+  lastName: string | null;
+  addresses: Address[];
+  avatar: string | null;
+  phone: string | null;
+  emailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  role: UserRole;
+}
+
+interface UsersData {
+  users: User[];
+}
+
+interface UpdateRoleResponse {
+  updateRole: {
+    statusText: string;
+  };
+}
+
+interface UpdateRoleVariables {
+  userId: string;
+  level: UserRole;
+}
+
 // Queries and Mutations
 const USERS = gql`
   query GetUsers {
@@ -43,9 +89,9 @@ const UPDATE_ROLE = gql`
 `;
 
 const UserManagement = () => {
-  const [activeTab, setActiveTab] = useState('ALL');
-  const { loading, error, data } = useQuery(USERS);
-  const [updateRole] = useMutation(UPDATE_ROLE, {
+  const [activeTab, setActiveTab] = useState<TabType>('ALL');
+  const { loading, error, data } = useQuery<UsersData>(USERS);
+  const [updateRole] = useMutation<UpdateRoleResponse, UpdateRoleVariables>(UPDATE_ROLE, {
     refetchQueries: [{ query: USERS }]
   });
 
@@ -61,10 +107,10 @@ const UserManagement = () => {
     </div>
   );
 
-  const users:any = data?.users || [];
-  const tabs = ['ALL', 'ADMINISTRATOR', 'MANAGER', 'RIDER', 'USER'];
+  const users: User[] = data?.users || [];
+  const tabs: TabType[] = ['ALL', 'ADMINISTRATOR', 'MANAGER', 'RIDER', 'USER'];
   
-  const roleColors = {
+  const roleColors: Record<UserRole, string> = {
     ADMINISTRATOR: 'bg-purple-100 text-purple-800 border-purple-200',
     MANAGER: 'bg-blue-100 text-blue-800 border-blue-200',
     RIDER: 'bg-green-100 text-green-800 border-green-200',
@@ -73,22 +119,26 @@ const UserManagement = () => {
 
   const filteredUsers = activeTab === 'ALL' 
     ? users 
-    : users.filter((user:any) => user.role === activeTab);
+    : users.filter((user) => user.role === activeTab);
 
-  const handleRoleChange = async (userId:any, newRole:any) => {
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
       await updateRole({
         variables: { userId, level: newRole }
       });
-    } catch (err:any) {
+    } catch (err) {
       console.error('Error updating role:', err);
-      alert(err.message);
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert('An unknown error occurred');
+      }
     }
   };
 
-  const getRoleCount = (role:any) => {
+  const getRoleCount = (role: TabType): number => {
     if (role === 'ALL') return users.length;
-    return users.filter((u:any) => u.role === role).length;
+    return users.filter((u) => u.role === role).length;
   };
 
   return (
@@ -136,7 +186,7 @@ const UserManagement = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredUsers.map((user:any) => (
+            {filteredUsers.map((user) => (
               <div
                 key={user.id}
                 className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
@@ -200,7 +250,7 @@ const UserManagement = () => {
                     </label>
                     <select
                       value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                      onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
                       className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
                     >
                       <option value="ADMINISTRATOR">Administrator</option>
@@ -260,7 +310,7 @@ const UserManagement = () => {
               <span className="font-medium">Total Users: {users.length}</span>
               <span>•</span>
               <div className="flex space-x-3">
-                {tabs.slice(1).map((role:any) => (
+                {tabs.slice(1).map((role) => (
                   <div key={role} className="flex items-center">
                     <span className={`w-2 h-2 rounded-full mr-1 ${
                       role === 'ADMINISTRATOR' ? 'bg-purple-500' :
