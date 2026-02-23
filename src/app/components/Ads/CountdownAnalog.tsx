@@ -9,44 +9,125 @@ interface TimeLeft {
   seconds: number;
 }
 
-// Reusable FlipCard component for each digit
-const FlipCard: React.FC<{ value: string; label: string; color: string }> = ({ value, label, color }) => {
-  // Determine gradient colors based on the passed color
-  const gradientFrom = `from-${color}-400/30`;
-  const gradientVia = `via-${color}-400/80`;
-  const gradientTo = `to-${color}-400/30`;
-  const borderGlow = `border-${color}-400/50`;
-  const textGlow = `text-${color}-200`;
-  const shadowColor = color === 'cyan' ? 'rgba(34,211,238,0.5)' :
-                      color === 'orange' ? 'rgba(251,146,60,0.5)' :
-                      color === 'yellow' ? 'rgba(250,204,21,0.5)' :
-                      'rgba(232,121,249,0.5)'; // fuchsia/pink
+interface DigitProps {
+  value: number;
+  prevValue: number;
+  label: string;
+  color: 'cyan' | 'amber' | 'lime' | 'rose';
+}
+
+const DigitTile: React.FC<DigitProps> = ({ value, prevValue, label, color }) => {
+  const [flipping, setFlipping] = useState(false);
+  const [displayValue, setDisplayValue] = useState(value);
+  const [prevDisplayValue, setPrevDisplayValue] = useState(prevValue);
+
+  // Color mappings
+  const colorClasses = {
+    cyan: {
+      bg: 'bg-cyan-950/40',
+      border: 'border-cyan-500/40',
+      text: 'text-cyan-200',
+      glow: '0, 255, 255',
+      shadow: 'cyan-500',
+      from: 'from-cyan-400/20',
+      via: 'via-cyan-400/60',
+      to: 'to-cyan-400/20',
+    },
+    amber: {
+      bg: 'bg-amber-950/40',
+      border: 'border-amber-500/40',
+      text: 'text-amber-200',
+      glow: '255, 193, 7',
+      shadow: 'amber-500',
+      from: 'from-amber-400/20',
+      via: 'via-amber-400/60',
+      to: 'to-amber-400/20',
+    },
+    lime: {
+      bg: 'bg-lime-950/40',
+      border: 'border-lime-500/40',
+      text: 'text-lime-200',
+      glow: '132, 255, 99',
+      shadow: 'lime-500',
+      from: 'from-lime-400/20',
+      via: 'via-lime-400/60',
+      to: 'to-lime-400/20',
+    },
+    rose: {
+      bg: 'bg-rose-950/40',
+      border: 'border-rose-500/40',
+      text: 'text-rose-200',
+      glow: '255, 107, 107',
+      shadow: 'rose-500',
+      from: 'from-rose-400/20',
+      via: 'via-rose-400/60',
+      to: 'to-rose-400/20',
+    },
+  };
+
+  const c = colorClasses[color];
+
+  // Trigger flip animation when value changes
+  useEffect(() => {
+    if (value !== displayValue) {
+      setPrevDisplayValue(displayValue);
+      setFlipping(true);
+      
+      const timer = setTimeout(() => {
+        setDisplayValue(value);
+        setFlipping(false);
+      }, 300); // Half of animation duration
+      
+      return () => clearTimeout(timer);
+    }
+  }, [value, displayValue]);
 
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center">
-      {/* Label at top */}
-      <span className={`absolute -top-5 left-1/2 transform -translate-x-1/2 text-xs font-mono text-${color}-300/70 tracking-widest`}>
+    <div className="relative w-full h-full flex flex-col items-center">
+      {/* Label above digit */}
+      <span className={`absolute -top-6 text-xs font-mono tracking-widest text-${color}-300/70`}>
         {label}
       </span>
 
-      {/* Flip card container with mechanical look */}
-      <div className={`relative w-full h-full bg-black/40 backdrop-blur-sm rounded-lg border ${borderGlow} shadow-[inset_0_0_15px_${shadowColor},0_0_20px_${shadowColor}] overflow-hidden`}>
-        {/* Top half (static) - shows the top part of the digit */}
-        <div className="absolute top-0 left-0 w-full h-1/2 bg-gradient-to-b from-white/5 to-transparent border-b border-white/10 flex items-end justify-center pb-1">
-          <span className={`text-3xl md:text-5xl font-bold ${textGlow} drop-shadow-[0_0_8px_${color}]`}>
-            {value}
+      {/* Main tile with mechanical look */}
+      <div className={`relative w-full h-full ${c.bg} backdrop-blur-md rounded-lg border ${c.border} shadow-[inset_0_0_20px_rgba(${c.glow},0.3),0_0_30px_rgba(${c.glow},0.2)] overflow-hidden`}>
+        
+        {/* Current value (top half) */}
+        <div className={`absolute top-0 left-0 w-full h-1/2 flex items-end justify-center pb-1 border-b border-white/10 bg-gradient-to-b ${c.from} via-transparent to-transparent transition-all duration-700 ${flipping ? 'opacity-0 -translate-y-full' : 'opacity-100 translate-y-0'}`}>
+          <span className={`text-3xl md:text-5xl font-bold ${c.text} drop-shadow-[0_0_8px_${c.shadow}]`}>
+            {displayValue}
           </span>
         </div>
 
-        {/* Bottom half (static) - shows the bottom part of the digit, slightly dimmed to simulate flip */}
-        <div className="absolute bottom-0 left-0 w-full h-1/2 bg-gradient-to-t from-black/60 to-transparent flex items-start justify-center pt-1">
-          <span className={`text-3xl md:text-5xl font-bold ${textGlow} drop-shadow-[0_0_8px_${color}] opacity-70`}>
-            {value}
+        {/* Current value (bottom half) */}
+        <div className={`absolute bottom-0 left-0 w-full h-1/2 flex items-start justify-center pt-1 bg-gradient-to-t ${c.from} via-transparent to-transparent transition-all duration-700 ${flipping ? 'opacity-0 translate-y-full' : 'opacity-100 translate-y-0'}`}>
+          <span className={`text-3xl md:text-5xl font-bold ${c.text} drop-shadow-[0_0_8px_${c.shadow}] opacity-70`}>
+            {displayValue}
           </span>
         </div>
 
-        {/* The "flipping" line in the middle - mechanical detail */}
-        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/80 to-transparent transform -translate-y-1/2 z-10"></div>
+        {/* Previous value (top half - flipping down) */}
+        <div className={`absolute top-0 left-0 w-full h-1/2 flex items-end justify-center pb-1 border-b border-white/10 bg-gradient-to-b ${c.from} via-transparent to-transparent transition-all duration-700 ${flipping ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full'}`}>
+          <span className={`text-3xl md:text-5xl font-bold ${c.text} drop-shadow-[0_0_8px_${c.shadow}]`}>
+            {prevDisplayValue}
+          </span>
+        </div>
+
+        {/* Previous value (bottom half - flipping down) */}
+        <div className={`absolute bottom-0 left-0 w-full h-1/2 flex items-start justify-center pt-1 bg-gradient-to-t ${c.from} via-transparent to-transparent transition-all duration-700 ${flipping ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-full'}`}>
+          <span className={`text-3xl md:text-5xl font-bold ${c.text} drop-shadow-[0_0_8px_${c.shadow}] opacity-70`}>
+            {prevDisplayValue}
+          </span>
+        </div>
+
+        {/* Horizontal split line (mechanical detail) */}
+        <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/60 to-transparent transform -translate-y-1/2 z-10"></div>
+        
+        {/* Vertical rivets/bolts (mechanical details) */}
+        <div className="absolute top-1 left-1 w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_5px_white]"></div>
+        <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_5px_white]"></div>
+        <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_5px_white]"></div>
+        <div className="absolute bottom-1 right-1 w-1.5 h-1.5 rounded-full bg-white/30 shadow-[0_0_5px_white]"></div>
       </div>
     </div>
   );
@@ -54,6 +135,13 @@ const FlipCard: React.FC<{ value: string; label: string; color: string }> = ({ v
 
 const CountdownAnalog: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  });
+
+  const [prevTimeLeft, setPrevTimeLeft] = useState<TimeLeft>({
     days: 0,
     hours: 0,
     minutes: 0,
@@ -73,8 +161,10 @@ const CountdownAnalog: React.FC = () => {
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
+        setPrevTimeLeft(timeLeft);
         setTimeLeft({ days, hours, minutes, seconds });
       } else {
+        setPrevTimeLeft(timeLeft);
         setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
@@ -82,48 +172,126 @@ const CountdownAnalog: React.FC = () => {
     updateCountdown();
     const intervalId = setInterval(updateCountdown, 1000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [timeLeft]);
 
-  // Helper to format numbers with leading zero (as two-digit strings)
-  const format = (num: number): string => num.toString().padStart(2, '0');
+  // Split each time unit into two digits
+  const daysDigits = {
+    tens: Math.floor(timeLeft.days / 10),
+    ones: timeLeft.days % 10,
+  };
+  const hoursDigits = {
+    tens: Math.floor(timeLeft.hours / 10),
+    ones: timeLeft.hours % 10,
+  };
+  const minutesDigits = {
+    tens: Math.floor(timeLeft.minutes / 10),
+    ones: timeLeft.minutes % 10,
+  };
+  const secondsDigits = {
+    tens: Math.floor(timeLeft.seconds / 10),
+    ones: timeLeft.seconds % 10,
+  };
 
-  // Split each time unit into two separate digits for the flip book
-  const daysStr = format(timeLeft.days);
-  const hoursStr = format(timeLeft.hours);
-  const minutesStr = format(timeLeft.minutes);
-  const secondsStr = format(timeLeft.seconds);
+  const prevDaysDigits = {
+    tens: Math.floor(prevTimeLeft.days / 10),
+    ones: prevTimeLeft.days % 10,
+  };
+  const prevHoursDigits = {
+    tens: Math.floor(prevTimeLeft.hours / 10),
+    ones: prevTimeLeft.hours % 10,
+  };
+  const prevMinutesDigits = {
+    tens: Math.floor(prevTimeLeft.minutes / 10),
+    ones: prevTimeLeft.minutes % 10,
+  };
+  const prevSecondsDigits = {
+    tens: Math.floor(prevTimeLeft.seconds / 10),
+    ones: prevTimeLeft.seconds % 10,
+  };
 
   return (
     <div className="relative w-full bg-transparent font-mono" style={{ aspectRatio: '5 / 1' }}>
-      {/* Main container: horizontal split for each digit */}
-      <div className="absolute inset-0 flex items-center justify-between px-2 gap-2 md:gap-4">
-        {/* Days section - two flip cards */}
+      {/* Main container */}
+      <div className="absolute inset-0 flex items-center justify-between px-1 gap-1 md:gap-2">
+        {/* Days */}
         <div className="flex-1 h-4/5 flex gap-1">
-          <FlipCard value={daysStr[0]} label="D" color="cyan" />
-          <FlipCard value={daysStr[1]} label=" " color="cyan" />
+          <DigitTile 
+            value={daysDigits.tens} 
+            prevValue={prevDaysDigits.tens} 
+            label="D" 
+            color="cyan" 
+          />
+          <DigitTile 
+            value={daysDigits.ones} 
+            prevValue={prevDaysDigits.ones} 
+            label="" 
+            color="cyan" 
+          />
         </div>
 
-        {/* Hours section - two flip cards */}
+        {/* Hours */}
         <div className="flex-1 h-4/5 flex gap-1">
-          <FlipCard value={hoursStr[0]} label="H" color="orange" />
-          <FlipCard value={hoursStr[1]} label=" " color="orange" />
+          <DigitTile 
+            value={hoursDigits.tens} 
+            prevValue={prevHoursDigits.tens} 
+            label="H" 
+            color="amber" 
+          />
+          <DigitTile 
+            value={hoursDigits.ones} 
+            prevValue={prevHoursDigits.ones} 
+            label="" 
+            color="amber" 
+          />
         </div>
 
-        {/* Minutes section - two flip cards */}
+        {/* Minutes */}
         <div className="flex-1 h-4/5 flex gap-1">
-          <FlipCard value={minutesStr[0]} label="M" color="yellow" />
-          <FlipCard value={minutesStr[1]} label=" " color="yellow" />
+          <DigitTile 
+            value={minutesDigits.tens} 
+            prevValue={prevMinutesDigits.tens} 
+            label="M" 
+            color="lime" 
+          />
+          <DigitTile 
+            value={minutesDigits.ones} 
+            prevValue={prevMinutesDigits.ones} 
+            label="" 
+            color="lime" 
+          />
         </div>
 
-        {/* Seconds section - two flip cards */}
+        {/* Seconds */}
         <div className="flex-1 h-4/5 flex gap-1">
-          <FlipCard value={secondsStr[0]} label="S" color="fuchsia" />
-          <FlipCard value={secondsStr[1]} label=" " color="fuchsia" />
+          <DigitTile 
+            value={secondsDigits.tens} 
+            prevValue={prevSecondsDigits.tens} 
+            label="S" 
+            color="rose" 
+          />
+          <DigitTile 
+            value={secondsDigits.ones} 
+            prevValue={prevSecondsDigits.ones} 
+            label="" 
+            color="rose" 
+          />
         </div>
       </div>
 
-      {/* Mechanical grid overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
+      {/* Mechanical details overlay */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* Fine grid lines */}
+        <div className="w-full h-full" style={{ 
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
+          backgroundSize: '20px 20px'
+        }}></div>
+        
+        {/* Corner accents */}
+        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-white/10"></div>
+        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-white/10"></div>
+        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-white/10"></div>
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-white/10"></div>
+      </div>
     </div>
   );
 };
