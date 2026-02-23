@@ -73,7 +73,7 @@ const UserManagement = () => {
 
   const filteredUsers = activeTab === 'ALL' 
     ? users 
-    : users.filter((user:any => user.role === activeTab));
+    : users.filter((user:any) => user.role === activeTab);
 
   const handleRoleChange = async (userId, newRole) => {
     try {
