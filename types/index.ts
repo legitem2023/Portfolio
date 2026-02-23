@@ -56,6 +56,8 @@ export interface Address {
   createdAt: string;
   user: User;
   orders: Order[];
+  lat:number;
+  lng:number;
 }
 
 // Add this enum after the Address interface:
