@@ -61,7 +61,7 @@ const UserManagement = () => {
     </div>
   );
 
-  const users = data?.users || [];
+  const users:any = data?.users || [];
   const tabs = ['ALL', 'ADMINISTRATOR', 'MANAGER', 'RIDER', 'USER'];
   
   const roleColors = {
@@ -73,7 +73,7 @@ const UserManagement = () => {
 
   const filteredUsers = activeTab === 'ALL' 
     ? users 
-    : users.filter(user => user.role === activeTab);
+    : users.filter((user:any => user.role === activeTab));
 
   const handleRoleChange = async (userId, newRole) => {
     try {
