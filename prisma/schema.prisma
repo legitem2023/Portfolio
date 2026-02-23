@@ -565,6 +565,7 @@ model TrackingCounter {
 enum Role {
   ADMIN
   MANAGER
+  RIDER
   USER
 }
 
