@@ -80,7 +80,7 @@ const UserManagement = () => {
       await updateRole({
         variables: { userId, level: newRole }
       });
-    } catch (err) {
+    } catch (err:any) {
       console.error('Error updating role:', err);
       alert(err.message);
     }
