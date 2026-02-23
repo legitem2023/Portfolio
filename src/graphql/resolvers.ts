@@ -2444,7 +2444,7 @@ salesList: async (
       statusText: `User role successfully updated to ${Level}`
     };
 
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error updating user role:', error);
     
     if (error.code === 'P2025') {
