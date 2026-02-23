@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@apollo/client';
 import { USERS } from '../../components/graphql/query';
-import UserList from './Users/UserList';
+import UserManagement from './Users/UserManagement';
 
 const UsersTab: React.FC = () => {
   const { data, loading, error } = useQuery(USERS);
@@ -22,10 +22,7 @@ const UsersTab: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Users</h2>
       </div>
-      <UserList 
-          users={data?.users || []} 
-          loading={loading}
-        />
+      <UserManagement/>
       </div>
   );
 };
