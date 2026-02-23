@@ -121,6 +121,8 @@ export interface CartItem {
   price?: number;
   images?: string[];
   product?: Product;
+  lat?:number;
+  lng?:number;
 }
 
 export interface Product {
