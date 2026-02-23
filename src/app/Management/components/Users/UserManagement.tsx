@@ -90,20 +90,21 @@ const UPDATE_ROLE = gql`
 
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { loading, error, data } = useQuery<UsersData>(USERS);
   const [updateRole] = useMutation<UpdateRoleResponse, UpdateRoleVariables>(UPDATE_ROLE, {
     refetchQueries: [{ query: USERS }]
   });
 
   if (loading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="text-gray-500">Loading users...</div>
+    <div className="flex justify-center items-center min-h-[50vh] sm:min-h-[70vh]">
+      <div className="text-gray-500 text-sm sm:text-base">Loading users...</div>
     </div>
   );
   
   if (error) return (
-    <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-      <p className="text-red-600">Error: {error.message}</p>
+    <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-md m-3 sm:m-6">
+      <p className="text-red-600 text-sm sm:text-base">Error: {error.message}</p>
     </div>
   );
 
@@ -142,33 +143,84 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-3 sm:px-4 md:px-6 py-4 sm:py-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-2">Manage user roles and permissions</p>
+        <div className="mb-4 sm:mb-6 md:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+            User Management
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
+            Manage user roles and permissions
+          </p>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="flex -mb-px px-6">
+        {/* Mobile Tabs Dropdown */}
+        <div className="block sm:hidden mb-4">
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="w-full bg-white rounded-lg shadow px-4 py-3 flex items-center justify-between"
+          >
+            <span className="font-medium text-gray-700">
+              {activeTab === 'ALL' ? 'All Users' : activeTab}
+            </span>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${isMobileMenuOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          
+          {isMobileMenuOpen && (
+            <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200">
+              {tabs.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full px-4 py-3 text-left flex items-center justify-between
+                    ${activeTab === tab ? 'bg-blue-50 text-blue-600' : 'text-gray-700'}
+                    ${tab !== tabs[tabs.length - 1] ? 'border-b border-gray-100' : ''}
+                  `}
+                >
+                  <span className="font-medium">
+                    {tab === 'ALL' ? 'All Users' : tab}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium
+                    ${activeTab === tab ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}
+                  `}>
+                    {getRoleCount(tab)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop Tabs */}
+        <div className="hidden sm:block bg-white rounded-lg shadow mb-4 sm:mb-6 overflow-x-auto">
+          <div className="border-b border-gray-200 min-w-max">
+            <nav className="flex px-4 sm:px-6">
               {tabs.map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`
-                    py-4 px-6 font-medium text-sm border-b-2 transition-colors
+                    py-3 sm:py-4 px-3 sm:px-4 md:px-6 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap
                     ${activeTab === tab
                       ? 'border-blue-500 text-blue-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }
                   `}
                 >
-                  {tab === 'ALL' ? 'All Users' : tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  {tab === 'ALL' ? 'All Users' : tab}
                   <span className={`
-                    ml-2 py-0.5 px-2 rounded-full text-xs
+                    ml-1 sm:ml-2 py-0.5 px-1.5 sm:px-2 rounded-full text-xs
                     ${activeTab === tab ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}
                   `}>
                     {getRoleCount(tab)}
@@ -181,36 +233,36 @@ const UserManagement = () => {
 
         {/* Users Grid */}
         {filteredUsers.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-gray-500">No users found in this category</p>
+          <div className="bg-white rounded-lg shadow p-6 sm:p-8 md:p-12 text-center">
+            <p className="text-sm sm:text-base text-gray-500">No users found in this category</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {filteredUsers.map((user) => (
               <div
                 key={user.id}
                 className="bg-white rounded-lg shadow overflow-hidden hover:shadow-lg transition-shadow"
               >
                 {/* Card Header with Role Color */}
-                <div className={`h-2 ${roleColors[user.role].split(' ')[0]}`} />
+                <div className={`h-1.5 sm:h-2 ${roleColors[user.role].split(' ')[0]}`} />
 
                 {/* Card Content */}
-                <div className="p-6">
+                <div className="p-3 sm:p-4 md:p-6">
                   {/* User Header */}
-                  <div className="flex items-start space-x-4">
+                  <div className="flex items-start space-x-2 sm:space-x-3 md:space-x-4">
                     {/* Avatar */}
                     <div className="flex-shrink-0">
                       {user.avatar ? (
                         <Image
                           src={user.avatar}
                           alt={`${user.firstName || ''} ${user.lastName || ''}`}
-                          width={56}
-                          height={56}
-                          className="rounded-full border-2 border-gray-200"
+                          width={48}
+                          height={48}
+                          className="rounded-full border-2 border-gray-200 w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14"
                         />
                       ) : (
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-2 border-gray-300">
-                          <span className="text-gray-600 text-xl font-semibold">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center border-2 border-gray-300">
+                          <span className="text-gray-600 text-base sm:text-lg md:text-xl font-semibold">
                             {user.firstName?.[0] || user.lastName?.[0] || user.email[0].toUpperCase()}
                           </span>
                         </div>
@@ -219,39 +271,39 @@ const UserManagement = () => {
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate">
+                      <h3 className="font-semibold text-sm sm:text-base text-gray-900 truncate">
                         {user.firstName || user.lastName ? (
                           `${user.firstName || ''} ${user.lastName || ''}`
                         ) : (
                           'No name provided'
                         )}
                       </h3>
-                      <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
                       {user.phone && (
-                        <p className="text-sm text-gray-400 mt-1">{user.phone}</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-0.5 sm:mt-1 truncate">{user.phone}</p>
                       )}
                     </div>
                   </div>
 
                   {/* Current Role Badge */}
-                  <div className="mt-4">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  <div className="mt-2 sm:mt-3 md:mt-4">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
                       Current Role
                     </label>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${roleColors[user.role]}`}>
+                    <span className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium border ${roleColors[user.role]}`}>
                       {user.role}
                     </span>
                   </div>
 
                   {/* Role Selector */}
-                  <div className="mt-4">
-                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                  <div className="mt-2 sm:mt-3 md:mt-4">
+                    <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
                       Change Role
                     </label>
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value as UserRole)}
-                      className="block w-full text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      className="block w-full text-xs sm:text-sm border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-white py-1.5 sm:py-2"
                     >
                       <option value="ADMINISTRATOR">Administrator</option>
                       <option value="MANAGER">Manager</option>
@@ -261,15 +313,15 @@ const UserManagement = () => {
                   </div>
 
                   {/* Additional Info */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div>
+                  <div className="mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-gray-100">
+                    <div className="grid grid-cols-2 gap-1 sm:gap-2 text-xs">
+                      <div className="col-span-2 sm:col-span-1">
                         <span className="text-gray-500">Email verified:</span>
                         <span className={`ml-1 font-medium ${user.emailVerified ? 'text-green-600' : 'text-red-600'}`}>
                           {user.emailVerified ? '✓' : '✗'}
                         </span>
                       </div>
-                      <div>
+                      <div className="col-span-2 sm:col-span-1">
                         <span className="text-gray-500">Addresses:</span>
                         <span className="ml-1 font-medium text-gray-700">
                           {user.addresses?.length || 0}
@@ -289,9 +341,9 @@ const UserManagement = () => {
                   </div>
 
                   {/* Email Verification Status Bar */}
-                  <div className="mt-4 -mx-6 -mb-6 px-6 py-3 bg-gray-50">
+                  <div className="mt-2 sm:mt-3 md:mt-4 -mx-3 sm:-mx-4 md:-mx-6 -mb-3 sm:-mb-4 md:-mb-6 px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-50">
                     <div className="flex items-center">
-                      <div className={`w-2 h-2 rounded-full mr-2 ${user.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                      <div className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full mr-1.5 sm:mr-2 ${user.emailVerified ? 'bg-green-500' : 'bg-yellow-500'}`} />
                       <span className="text-xs text-gray-600">
                         {user.emailVerified ? 'Verified user' : 'Pending verification'}
                       </span>
@@ -304,26 +356,26 @@ const UserManagement = () => {
         )}
 
         {/* Summary Footer */}
-        <div className="mt-8 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center space-x-4">
-              <span className="font-medium">Total Users: {users.length}</span>
-              <span>•</span>
-              <div className="flex space-x-3">
+        <div className="mt-4 sm:mt-6 md:mt-8 bg-white rounded-lg shadow p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs sm:text-sm text-gray-600 gap-2 sm:gap-0">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <span className="font-medium">Total: {users.length}</span>
+              <span className="hidden sm:inline">•</span>
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {tabs.slice(1).map((role) => (
                   <div key={role} className="flex items-center">
-                    <span className={`w-2 h-2 rounded-full mr-1 ${
+                    <span className={`w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full mr-1 ${
                       role === 'ADMINISTRATOR' ? 'bg-purple-500' :
                       role === 'MANAGER' ? 'bg-blue-500' :
                       role === 'RIDER' ? 'bg-green-500' : 'bg-gray-500'
                     }`} />
-                    <span>{role}: {getRoleCount(role)}</span>
+                    <span className="text-xs">{role}: {getRoleCount(role)}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <span className="text-gray-400">
-              Last updated: {new Date().toLocaleTimeString()}
+            <span className="text-xs text-gray-400 sm:text-right w-full sm:w-auto">
+              Updated: {new Date().toLocaleTimeString()}
             </span>
           </div>
         </div>
