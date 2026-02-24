@@ -26,6 +26,9 @@ const CountdownAnalog = ({ targetDate }: any) => {
           overflow: hidden;
           padding: 0;
           margin: 0;
+          position: relative;
+          left: 0;
+          right: 0;
         }
 
         .countdown-container {
@@ -37,45 +40,58 @@ const CountdownAnalog = ({ targetDate }: any) => {
           display: flex;
           justify-content: center;
           align-items: center;
+          left: 0;
+          right: 0;
         }
         
-        /* Scale the entire countdown based on container width */
+        /* Remove all default spacing */
         .countdown-container :global(.flip-clock-countdown) {
           transform: scale(1);
           transform-origin: center;
-          margin: 0 auto !important;
+          margin: 0 !important;
           padding: 0 !important;
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
           width: auto !important;
           height: auto !important;
           max-width: 100%;
+          position: relative;
+          left: 0 !important;
+          right: 0 !important;
         }
         
-        /* Let the library handle the internal sizing, we just scale the container */
+        /* Reset flip-clock container */
         .countdown-container :global(.flip-clock) {
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          gap: clamp(2px, 0.5vw, 5px) !important;
+          gap: 2px !important;
           flex-wrap: nowrap !important;
-          width: auto !important;
-          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          position: relative !important;
+          left: 0 !important;
+          right: 0 !important;
         }
         
-        /* Allow natural sizing */
+        /* Remove any default margins/padding from pieces */
         .countdown-container :global(.flip-clock__piece) {
           margin: 0 !important;
-          padding: 0 1px !important;
+          padding: 0 !important;
+          position: relative !important;
         }
         
-        /* Flip card styling with lavender gradient - keep original proportions */
+        /* Reset card positioning */
         .countdown-container :global(.flip-clock__card) {
           background: transparent !important;
           border: none !important;
           box-shadow: none !important;
-          font-size: inherit !important;
+          margin: 0 !important;
+          padding: 0 !important;
         }
         
-        /* Front and back of flip cards */
+        /* Flip card styling with lavender gradient */
         .countdown-container :global(.flip-clock__card__top),
         .countdown-container :global(.flip-clock__card__bottom),
         .countdown-container :global(.flip-clock__card__back) {
@@ -116,7 +132,8 @@ const CountdownAnalog = ({ targetDate }: any) => {
           color: #9b7e9b !important;
           font-size: 1.5em !important;
           font-weight: bold !important;
-          margin: 0 2px !important;
+          margin: 0 !important;
+          padding: 0 !important;
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
         
@@ -157,10 +174,6 @@ const CountdownAnalog = ({ targetDate }: any) => {
         @media (max-width: 480px) {
           .countdown-container :global(.flip-clock-countdown) {
             transform: scale(0.7);
-          }
-          
-          .countdown-container :global(.flip-clock__colon) {
-            margin: 0 1px !important;
           }
         }
 
