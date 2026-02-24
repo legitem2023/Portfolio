@@ -24,14 +24,14 @@ export default function Header({
   if (isMobile) {
     return (
       <header className="bg-white shadow-lg">
-        <div className="px-4 py-3">
+        <div className="p-2">
           <div className="flex justify-between items-center">
             <div>
               <Image 
               src="/VendorCity_Rider.webp" 
               alt="Logo" 
-              height={100} 
-              width={100} 
+              height={80} 
+              width={80} 
               className="h-[100%] w-[auto] rounded"
             />
               {/*<h1 className="text-lg font-bold text-gray-900">
@@ -48,7 +48,7 @@ export default function Header({
                 <p className="font-semibold text-xs">{user?.name}</p>
                 <p className="text-gray-500 text-xs">{user?.userId}</p>
               </div>
-              <div className="relative">
+              <div className="relative p-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
                   MR
                 </div>
