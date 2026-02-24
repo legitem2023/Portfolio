@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Bell, Package } from "lucide-react";
 import { useAuth } from '../hooks/useAuth';
-
+import Image from 'next/image';
 interface HeaderProps {
   isMobile: boolean;
   isOnline: boolean;
