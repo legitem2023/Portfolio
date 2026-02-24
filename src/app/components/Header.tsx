@@ -539,7 +539,7 @@ const Header: React.FC = () => {
 
   return (
     <div>
-      <div className="relative p-2 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+      <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
         {/*<AnimatedCrowd/>*/}
         {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
@@ -548,8 +548,8 @@ const Header: React.FC = () => {
             <Image 
               src="/VendorCity.webp" 
               alt="Logo" 
-              height={80} 
-              width={80} 
+              height={100} 
+              width={100} 
               className="h-[100%] w-[auto] rounded bg-red-500"
             />
           </div>
@@ -870,13 +870,13 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-0 border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity.webp" 
                   alt="Logo" 
-                  height={80} 
-                  width={80} 
+                  height={100} 
+                  width={100} 
                   className="h-[100%] w-[auto] rounded"
                 />
               </div>
