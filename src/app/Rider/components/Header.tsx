@@ -27,13 +27,20 @@ export default function Header({
         <div className="px-4 py-3">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-lg font-bold text-gray-900">
+              <Image 
+              src="/VendorCity_Rider.webp" 
+              alt="Logo" 
+              height={100} 
+              width={100} 
+              className="h-[100%] w-[auto] rounded"
+            />
+              {/*<h1 className="text-lg font-bold text-gray-900">
                 <span className="text-blue-600">VC</span> Rider
               </h1>
               <div className="flex items-center mt-0.5">
                 <div className={`w-2 h-2 rounded-full mr-1.5 ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
                 <p className="text-xs text-gray-500">{isOnline ? "Online" : "Offline"}</p>
-              </div>
+              </div>*/}
             </div>
             
             <div className="flex items-center gap-2">
