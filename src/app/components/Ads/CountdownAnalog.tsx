@@ -23,66 +23,56 @@ const CountdownAnalog = ({ targetDate }: any) => {
           display: flex;
           justify-content: center;
           align-items: center;
-          overflow: hidden; /* Prevents overflow */
+          overflow: hidden;
+          padding: 0;
+          margin: 0;
         }
 
         .countdown-container {
           width: 100%;
-          aspect-ratio: 5/1;
           max-width: 100%;
-          margin: 0 auto;
+          margin: 0;
+          padding: 0;
           position: relative;
-          overflow: visible; /* Allow internal elements to be visible */
-        }
-        
-        .countdown-container :global(.flip-clock-countdown) {
-          width: 100%;
-          height: 100%;
           display: flex;
-          align-items: center;
           justify-content: center;
-          transform: scale(1); /* Ensure no scaling issues */
+          align-items: center;
+        }
+        
+        /* Scale the entire countdown based on container width */
+        .countdown-container :global(.flip-clock-countdown) {
+          transform: scale(1);
           transform-origin: center;
-        }
-        
-        .countdown-container :global(.flip-clock) {
-          width: 100% !important;
-          height: 100% !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          gap: 2px !important;
+          margin: 0 auto !important;
           padding: 0 !important;
-          margin: 0 !important;
-          flex-wrap: nowrap !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100%;
         }
         
-        .countdown-container :global(.flip-clock__piece) {
-          flex: 1 1 0px !important;
-          min-width: 0 !important;
-          max-width: 25% !important; /* Max 25% for 4 pieces */
-          height: 100% !important;
+        /* Let the library handle the internal sizing, we just scale the container */
+        .countdown-container :global(.flip-clock) {
           display: flex !important;
-          flex-direction: column !important;
           align-items: center !important;
           justify-content: center !important;
+          gap: clamp(2px, 0.5vw, 5px) !important;
+          flex-wrap: nowrap !important;
+          width: auto !important;
+          height: auto !important;
+        }
+        
+        /* Allow natural sizing */
+        .countdown-container :global(.flip-clock__piece) {
           margin: 0 !important;
           padding: 0 1px !important;
-          box-sizing: border-box !important;
         }
         
-        /* Flip card styling */
+        /* Flip card styling with lavender gradient - keep original proportions */
         .countdown-container :global(.flip-clock__card) {
-          width: 100% !important;
-          height: 70% !important;
-          min-height: 0 !important;
-          font-size: clamp(12px, 4vw, 32px) !important;
           background: transparent !important;
           border: none !important;
           box-shadow: none !important;
-          position: relative !important;
-          margin: 0 !important;
-          padding: 0 !important;
+          font-size: inherit !important;
         }
         
         /* Front and back of flip cards */
@@ -94,67 +84,47 @@ const CountdownAnalog = ({ targetDate }: any) => {
           border: 1px solid rgba(255, 255, 255, 0.3) !important;
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
           text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5) !important;
-          overflow: hidden !important;
         }
         
         .countdown-container :global(.flip-clock__card__top) {
           background: linear-gradient(145deg, rgba(240, 240, 255, 0.98), rgba(226, 201, 226, 0.98)) !important;
           border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
-          line-height: 1 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
         }
         
         .countdown-container :global(.flip-clock__card__bottom) {
           background: linear-gradient(125deg, rgba(220, 220, 245, 0.95), rgba(206, 181, 206, 0.95)) !important;
-          line-height: 1 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
         }
         
         /* Labels */
         .countdown-container :global(.flip-clock__slot) {
-          font-size: clamp(6px, 1.2vw, 12px) !important;
-          margin-top: 2px !important;
+          font-size: 0.7em !important;
+          margin-top: 5px !important;
           text-align: center !important;
           color: #5b3e5b !important;
           font-weight: 600 !important;
-          letter-spacing: 0.3px !important;
+          letter-spacing: 0.5px !important;
           text-transform: uppercase !important;
           background: linear-gradient(135deg, rgba(230, 230, 250, 0.8), rgba(216, 191, 216, 0.8));
-          padding: 2px 4px !important;
-          border-radius: 8px !important;
+          padding: 2px 8px !important;
+          border-radius: 12px !important;
           backdrop-filter: blur(2px);
           white-space: nowrap !important;
-          width: fit-content !important;
-          max-width: 90% !important;
-          margin-left: auto !important;
-          margin-right: auto !important;
-          line-height: 1 !important;
         }
         
         /* Colon */
         .countdown-container :global(.flip-clock__colon) {
           color: #9b7e9b !important;
-          font-size: clamp(10px, 3vw, 24px) !important;
+          font-size: 1.5em !important;
           font-weight: bold !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          line-height: 1 !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          width: auto !important;
-          min-width: 2px !important;
+          margin: 0 2px !important;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
         
         /* Completed message */
         .completed-message {
           display: block;
           text-align: center;
-          font-size: clamp(12px, 3vw, 20px);
+          font-size: 16px;
           color: #5b3e5b;
           background: linear-gradient(135deg, rgba(230, 230, 250, 0.95), rgba(216, 191, 216, 0.95));
           padding: 8px 16px;
@@ -166,60 +136,53 @@ const CountdownAnalog = ({ targetDate }: any) => {
           width: fit-content;
         }
         
-        /* Mobile optimization */
+        /* Mobile: scale down the entire countdown */
         @media (max-width: 768px) {
-          .countdown-container {
-            aspect-ratio: 5/1;
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.9);
           }
-          
-          .countdown-container :global(.flip-clock__card) {
-            height: 65%;
-            font-size: clamp(10px, 3.5vw, 24px) !important;
+        }
+
+        @media (max-width: 600px) {
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.8);
           }
           
           .countdown-container :global(.flip-clock__slot) {
-            font-size: clamp(5px, 1vw, 10px) !important;
-            padding: 1px 2px !important;
-            margin-top: 1px !important;
-            letter-spacing: 0.2px !important;
+            font-size: 0.6em !important;
+            padding: 2px 4px !important;
           }
-          
-          .countdown-container :global(.flip-clock) {
-            gap: 1px !important;
+        }
+
+        @media (max-width: 480px) {
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.7);
           }
           
           .countdown-container :global(.flip-clock__colon) {
-            font-size: clamp(8px, 2.5vw, 18px) !important;
-          }
-          
-          .countdown-container :global(.flip-clock__piece) {
-            max-width: 25% !important;
-            padding: 0 !important;
+            margin: 0 1px !important;
           }
         }
 
-        /* Small mobile optimization */
-        @media (max-width: 480px) {
-          .countdown-container :global(.flip-clock__card) {
-            height: 60%;
-            font-size: clamp(8px, 3vw, 18px) !important;
-          }
-          
-          .countdown-container :global(.flip-clock__slot) {
-            font-size: clamp(4px, 0.8vw, 8px) !important;
-            padding: 1px !important;
-            border-radius: 4px !important;
+        @media (max-width: 375px) {
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.6);
           }
         }
 
-        /* Hide labels on very small screens if needed */
-        @media (max-width: 360px) {
-          .countdown-container :global(.flip-clock__slot) {
-            display: none;
+        @media (max-width: 320px) {
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.55);
           }
           
-          .countdown-container :global(.flip-clock__card) {
-            height: 80%;
+          .countdown-container :global(.flip-clock__slot) {
+            font-size: 0.5em !important;
+          }
+        }
+
+        @media (max-width: 280px) {
+          .countdown-container :global(.flip-clock-countdown) {
+            transform: scale(0.5);
           }
         }
       `}</style>
