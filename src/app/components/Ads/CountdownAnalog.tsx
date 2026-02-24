@@ -11,7 +11,7 @@ const CountdownAnalog = ({ targetDate }: any) => {
         <FlipClockCountdown
           to={targetDate}
           className="flip-clock-countdown"
-          labels={['DAYS', 'HOURS', 'MIN', 'SEC']}
+          labels={['DD', 'HH', 'MM', 'SS']}
         >
           <span className="completed-message">The countdown is complete!</span>
         </FlipClockCountdown>
