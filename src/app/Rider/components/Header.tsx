@@ -23,15 +23,15 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className="bg-white shadow-lg">
-        <div className="p-2">
+      <header className="bg-white shadow-lg p-0 aspect-[4/1] sm:aspect-[9/1]">
+        <div className="p-0">
           <div className="flex justify-between items-center">
             <div>
               <Image 
               src="/VendorCity_Rider.webp" 
               alt="Logo" 
-              height={60} 
-              width={60} 
+              height={80} 
+              width={80} 
               className="h-[70%] w-[auto] rounded"
             />
               {/*<h1 className="text-lg font-bold text-gray-900">
