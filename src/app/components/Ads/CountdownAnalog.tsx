@@ -41,7 +41,7 @@ const CountdownAnalog = ({ targetDate }: any) => {
         
         /* Remove all default spacing */
         .countdown-container :global(.flip-clock-countdown) {
-          transform: scale(1);
+          transform: scale(0.9);
           transform-origin: center;
           margin: 0 !important;
           padding: 0 !important;
