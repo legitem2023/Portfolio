@@ -43,7 +43,7 @@ export default function AdDropdown({ content }: AdDropdownProps) {
     overflowWrap: 'break-word',
     wordBreak: 'break-word',
     zIndex:'0',
-    boxShadow:'0.5px 0.5px 3px #000000'
+    //boxShadow:'0.5px 0.5px 3px #000000'
   };
 
   return (
