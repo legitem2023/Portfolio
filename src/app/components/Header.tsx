@@ -551,7 +551,6 @@ const Header: React.FC = () => {
               height={80} 
               width={80} 
               className="h-[100%] w-[auto] rounded"
-              style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
             />
           </div>
              
@@ -871,7 +870,7 @@ const Header: React.FC = () => {
             }}
           >
             {/* Header with close button */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-purple-400 bg-opacity-40 backdrop-blur-md p-2 aspect-[3/1]">
+            <div className="flex items-center justify-between p-4 border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity.webp" 
@@ -879,7 +878,6 @@ const Header: React.FC = () => {
                   height={80} 
                   width={80} 
                   className="h-[100%] w-[auto] rounded"
-                  style={{ filter: 'drop-shadow(0.5px 0.5px 3px black)' }}
                 />
               </div>
               
