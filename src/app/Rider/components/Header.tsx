@@ -30,8 +30,8 @@ export default function Header({
               <Image 
               src="/VendorCity_Rider.webp" 
               alt="Logo" 
-              height={80} 
-              width={80} 
+              height={60} 
+              width={60} 
               className="h-[70%] w-[auto] rounded"
             />
               {/*<h1 className="text-lg font-bold text-gray-900">
