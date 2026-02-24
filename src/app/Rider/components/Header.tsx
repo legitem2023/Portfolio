@@ -32,17 +32,10 @@ export default function Header({
               <Image 
                 src="/VendorCity_Rider.webp" 
                 alt="VendorCity Rider" 
-                height={48} 
-                width={48} 
-                className="h-12 w-auto rounded-lg"
-                priority
+                height={58} 
+                width={58} 
+                className="h-16 w-auto rounded-lg"
               />
-              <div className="flex items-center gap-1.5">
-                <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
-                <span className="text-xs font-medium text-gray-600">
-                  {isOnline ? "Online" : "Offline"}
-                </span>
-              </div>
             </div>
 
             {/* User Section */}
