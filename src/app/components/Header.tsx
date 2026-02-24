@@ -550,7 +550,7 @@ const Header: React.FC = () => {
               alt="Logo" 
               height={100} 
               width={100} 
-              className="h-[100%] w-[auto] rounded bg-red-500"
+              className="h-[100%] w-[auto] rounded"
             />
           </div>
              
