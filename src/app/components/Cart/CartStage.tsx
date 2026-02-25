@@ -126,31 +126,16 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
                   <p className="text-indigo-700">{formatPesoPrice(subtotal)}</p>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <p>Shipping</p>
-                  <p>{formatPesoPrice(shippingCost)}</p>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
                   <p>Tax</p>
                   <p>{formatPesoPrice(tax)}</p>
                 </div>
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between text-base md:text-lg font-semibold">
-                    <p className="text-indigo-900">Total</p>
-                    <p className="text-indigo-700">{formatPesoPrice(total)}</p>
-                  </div>
-                </div>
               </div>
-
-              <p className="mt-4 text-xs md:text-sm text-gray-500">
-                Shipping and taxes calculated at checkout.
-              </p>
-              
               <div className="mt-6">
                 <button
                   onClick={onCheckout}
                   className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-sm md:text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                 >
-                  Checkout
+                  Next
                 </button>
               </div>
               
