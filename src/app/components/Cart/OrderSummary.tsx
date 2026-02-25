@@ -33,7 +33,7 @@ const OrderSummary = ({ cartItems, subtotal, shippingCost, tax, total, onQuantit
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white rounded mt-5">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-6 md:mb-8">Order Summary</h2>
         
@@ -42,7 +42,7 @@ const OrderSummary = ({ cartItems, subtotal, shippingCost, tax, total, onQuantit
           <div className="flex-1">
             <div className="flow-root">
               <ul role="list" className="-my-6 divide-y divide-gray-200">
-
+                 <li>SubTotal :{subtotal}</li>
               </ul>
             </div>
           </div>
