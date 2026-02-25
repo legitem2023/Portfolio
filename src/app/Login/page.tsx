@@ -51,7 +51,7 @@ export default function LuxuryLogin() {
         redirect: false, // Don't redirect automatically
       });
      
-     // console.log(result);
+      console.log(result);
       
       if (result?.error) {
         // showToast('Login failed: ' + result.error, 'error')
