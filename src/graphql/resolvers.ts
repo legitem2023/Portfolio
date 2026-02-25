@@ -3411,7 +3411,8 @@ deleteProduct: async (_: any, { id }: any) => {
 
         return {
           statusText: "success",
-          token
+          token,
+          role:user?.role
         };
 
       } catch (err) {
