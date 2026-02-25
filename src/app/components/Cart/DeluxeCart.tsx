@@ -218,7 +218,7 @@ const DeluxeCart = () => {
           )}
           
         </div>
-        <div className="bg-white rounded-xl p-6 md:p-8">
+        <div className="bg-white rounded-xl p-6 md:p-8 mt-5">
          <OrderSummary
               cartItems={cartItems}
               subtotal={subtotal}
