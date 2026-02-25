@@ -68,7 +68,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
-          console.log("Login response:", data);
+          console.log("Login response:", data?.login);
 
           if (data?.login?.token) {
             // Return the user object with the token from your backend
