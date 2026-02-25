@@ -60,8 +60,8 @@ interface Notification {
 }
 
 const Header: React.FC = () => {
-  const { user } = useAuth();
-  console.log(user);
+  const { user:ActiveDetails } = useAuth();
+  console.log(ActiveDetails);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
