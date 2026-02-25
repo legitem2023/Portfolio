@@ -218,7 +218,8 @@ const DeluxeCart = () => {
           )}
           
         </div>
-        <OrderSummary
+        <div className="bg-white rounded-xl p-6 md:p-8">
+         <OrderSummary
               cartItems={cartItems}
               subtotal={subtotal}
               shippingCost={shippingCost}
@@ -227,6 +228,7 @@ const DeluxeCart = () => {
               onQuantityChange={handleQuantityChange}
               onCheckout={handleCheckout}
             />
+        </div>
       </div>
     </div>
   );
