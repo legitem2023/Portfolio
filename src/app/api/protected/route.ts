@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
   // The httpOnly cookie is automatically included in the request
   // You can access user data from the session
+  console.log(session.serverToken,"<<<");
   return Response.json({
     message: "Protected data",
     user: session.serverToken,
