@@ -114,45 +114,6 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
               </ul>
             </div>
           </div>
-
-          {/* Order Summary Section */}
-          <div className="lg:w-96">
-            <div className="bg-gray-50 rounded-lg p-4 md:p-6 sticky top-4">
-              <h3 className="text-lg font-serif font-semibold text-indigo-900 mb-4">Order Summary</h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between text-sm md:text-base">
-                  <p className="text-indigo-900">Subtotal</p>
-                  <p className="text-indigo-700">{formatPesoPrice(subtotal)}</p>
-                </div>
-                <div className="flex justify-between text-sm text-gray-600">
-                  <p>Tax</p>
-                  <p>{formatPesoPrice(tax)}</p>
-                </div>
-              </div>
-              <div className="mt-6">
-                <button
-                  onClick={onCheckout}
-                  className="w-full bg-indigo-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-sm md:text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
-                >
-                  Next
-                </button>
-              </div>
-              
-              <div className="mt-4 flex justify-center text-center">
-                <p className="text-xs md:text-sm text-gray-500">
-                  or{' '}
-                  <button
-                    type="button"
-                    className="text-indigo-600 font-medium hover:text-indigo-500"
-                  >
-                    Continue Shopping
-                    <span aria-hidden="true"> &rarr;</span>
-                  </button>
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
