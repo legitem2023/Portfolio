@@ -789,6 +789,7 @@ export const typeDefs = gql`
   type Result {
     token: String
     statusText: String
+    role: String
   }
   
   input PaginationInput {
