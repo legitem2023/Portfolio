@@ -16,6 +16,7 @@ interface FormData {
 }
 
 export default function LuxuryLogin() {
+  const { user } = useAuth();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -34,7 +35,7 @@ export default function LuxuryLogin() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault(); // Prevent default form submission
-    const { user } = useAuth();
+    
     if (!formData.email || !formData.password) {
       // showToast('Please enter email and password.', 'error')
       return;
