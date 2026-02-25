@@ -45,12 +45,7 @@ const OrderSummary = ({
         <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-6 md:mb-8">Order Summary</h2>
         
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Cart Items Count */}
-          <div className="flex-1">
-            <p className="text-indigo-700">
-              {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
-            </p>
-          </div>
+ 
 
           {/* Order Summary Section */}
           <div className="lg:w-96">
