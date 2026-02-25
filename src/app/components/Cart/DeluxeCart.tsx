@@ -13,6 +13,7 @@ import ShippingStage from './ShippingStage';
 import PaymentStage from './PaymentStage';
 import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
+import OrderSummary from './OrderSummary';
 import { decryptToken } from '../../../../utils/decryptToken';
 
 import { CartItem } from '../../../../types';
@@ -215,7 +216,17 @@ const DeluxeCart = () => {
           {currentStage === 'completed' && (
             <CompletedStage onContinueShopping={handleContinueShopping} />
           )}
+          
         </div>
+        <OrderSummary
+              cartItems={cartItems}
+              subtotal={subtotal}
+              shippingCost={shippingCost}
+              tax={tax}
+              total={total}
+              onQuantityChange={handleQuantityChange}
+              onCheckout={handleCheckout}
+            />
       </div>
     </div>
   );
