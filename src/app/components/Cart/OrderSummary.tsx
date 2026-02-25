@@ -1,4 +1,4 @@
-import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { CartItem } from '../../../../types';
 
 interface CartStageProps {
@@ -19,7 +19,14 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
-const OrderSummary = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
+const OrderSummary = ({ 
+  cartItems, 
+  subtotal, 
+  shippingCost, 
+  tax, 
+  total, 
+  onCheckout 
+}: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-8 md:py-12 px-4">
@@ -38,12 +45,51 @@ const OrderSummary = ({ cartItems, subtotal, shippingCost, tax, total, onQuantit
         <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-6 md:mb-8">Order Summary</h2>
         
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Cart Items Section */}
+          {/* Cart Items Count */}
           <div className="flex-1">
-            <div className="flow-root">
-              <ul role="list" className="-my-6 divide-y divide-gray-200">
-                 <li>SubTotal :{subtotal}</li>
-              </ul>
+            <p className="text-indigo-700">
+              {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'} in your cart
+            </p>
+          </div>
+
+          {/* Order Summary Section */}
+          <div className="lg:w-96">
+            <div className="bg-indigo-50 rounded-lg p-6">
+              <h3 className="text-lg font-serif font-bold text-indigo-900 mb-4">Order Total</h3>
+              
+              <div className="flow-root">
+                <dl className="-my-4 text-sm divide-y divide-indigo-200">
+                  <div className="py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700">Subtotal</dt>
+                    <dd className="font-medium text-indigo-900">{formatPesoPrice(subtotal)}</dd>
+                  </div>
+                  
+                  <div className="py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700">Shipping</dt>
+                    <dd className="font-medium text-indigo-900">
+                      {shippingCost === 0 ? 'Free' : formatPesoPrice(shippingCost)}
+                    </dd>
+                  </div>
+                  
+                  <div className="py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700">Tax</dt>
+                    <dd className="font-medium text-indigo-900">{formatPesoPrice(tax)}</dd>
+                  </div>
+                  
+                  <div className="py-4 flex items-center justify-between">
+                    <dt className="text-base font-bold text-indigo-900">Total</dt>
+                    <dd className="text-base font-bold text-indigo-900">{formatPesoPrice(total)}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={onCheckout}
+                className="mt-6 w-full bg-indigo-600 border border-transparent rounded-md py-3 px-4 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+              >
+                Proceed to Checkout
+              </button>
             </div>
           </div>
         </div>
