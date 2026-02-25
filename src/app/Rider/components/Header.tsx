@@ -24,7 +24,7 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className="bg-white shadow-md sticky top-0 z-50">
+      <header className="bg-gray-900 shadow-md sticky top-0 z-50">
         <div className="px-4 py-2">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
