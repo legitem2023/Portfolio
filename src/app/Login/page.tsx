@@ -51,7 +51,7 @@ export default function LuxuryLogin() {
         redirect: false, // Don't redirect automatically
       });
      
-      console.log(result);
+      //console.log(result);
       
       if (result?.error) {
         // showToast('Login failed: ' + result.error, 'error')
@@ -59,8 +59,8 @@ export default function LuxuryLogin() {
       } else {
         // showToast('Login successful', 'success')
         // Use router.push instead of window.location.reload for SPA navigation
-        console.log(user);
-        //router.push('/'); // Redirect to home page or dashboard
+        //console.log(user);
+          router.push('/'); // Redirect to home page or dashboard
        
         // Alternatively, you can refresh the session without full page reload
         // router.refresh();
@@ -76,8 +76,8 @@ export default function LuxuryLogin() {
   return (
     <>
       <Head>
-        <title>Login | ELEGANCE</title>
-        <meta name="description" content="Login to your ELEGANCE account" />
+        <title>Login | VendorCity</title>
+        <meta name="description" content="Login to VendorCity Account" />
       </Head>
       
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
