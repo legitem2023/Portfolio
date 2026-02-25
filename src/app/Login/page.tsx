@@ -8,7 +8,7 @@ import Image from 'next/image';
 import Footer from '../components/Footer';
 import { signIn } from 'next-auth/react'; 
 import Header from '../components/Header';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '../components/hooks/useAuth';
 interface FormData {
   email: string;
   password: string;
