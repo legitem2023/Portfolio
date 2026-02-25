@@ -60,7 +60,7 @@ export default function LuxuryLogin() {
         // Use router.push instead of window.location.reload for SPA navigation
         console.log(user);
         //router.push('/'); // Redirect to home page or dashboard
-        )
+       
         // Alternatively, you can refresh the session without full page reload
         // router.refresh();
       }
