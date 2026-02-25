@@ -41,7 +41,7 @@ import LogoutButton from './LogoutButton';
 import Ads from './Ads/Ads';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
-
+import { useAuth } from './hooks/useAuth';
 interface Notification {
   id: string;
   type: NotificationType;
@@ -60,6 +60,8 @@ interface Notification {
 }
 
 const Header: React.FC = () => {
+  const { user } = useAuth();
+  console.log(user);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
