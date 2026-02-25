@@ -8,6 +8,7 @@ interface User {
   email?: string;
   phone: string; 
   image?: string;
+  addresses: string[];
 }
 
 export const useAuth = () => {
