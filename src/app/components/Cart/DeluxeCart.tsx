@@ -74,7 +74,8 @@ const DeluxeCart = () => {
     variables: { id: user?.userId },
   });
   
-  if(loading && profileDataLoading) return <CartStageShimmer/>
+  if(loading) return <CartStageShimmer/>
+  if(profileDataLoading) return <CartStageShimmer/>
   
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
