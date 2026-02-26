@@ -28,9 +28,10 @@ interface ShippingStageProps {
   onSubmit: (e: FormEvent) => void;
   onBack: () => void;
   userId: string;
+  refresh:any;
 }
 
-const ShippingStage = ({ shippingInfo, addresses, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
+const ShippingStage = ({ shippingInfo, addresses, setShippingInfo, onSubmit, onBack, userId, refresh }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   
   // GraphQL query to fetch user addresses
@@ -68,6 +69,7 @@ const ShippingStage = ({ shippingInfo, addresses, setShippingInfo, onSubmit, onB
   };
 
   const handleAddressSelect = (address: Address) => {
+    refresh();
     setSelectedAddressId(address.id);
     setShippingInfo({
       addressId: address.id,
