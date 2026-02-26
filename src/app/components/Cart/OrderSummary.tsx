@@ -5,7 +5,7 @@ interface CartStageProps {
   cartItems: CartItem[];
   addresses:Address[];
   subtotal: number;
-  shippingCost: number;
+  
   tax: number;
   total: number;
   onQuantityChange: (id: string | number, quantity: number) => void;
@@ -24,7 +24,7 @@ const OrderSummary = ({
   cartItems, 
   addresses,
   subtotal, 
-  shippingCost, 
+  
   tax, 
   total, 
   onCheckout 
@@ -64,7 +64,7 @@ const OrderSummary = ({
                   <div className="py-4 flex items-center justify-between">
                     <dt className="text-indigo-700">Shipping</dt>
                     <dd className="font-medium text-indigo-900">
-                      {shippingCost === 0 ? 'Free' : formatPesoPrice(shippingCost)}
+                      
                     </dd>
                   </div>
                   
