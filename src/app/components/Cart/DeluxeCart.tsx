@@ -74,9 +74,6 @@ const DeluxeCart = () => {
     variables: { id: user?.userId },
   });
   
-  if(loading) return <CartStageShimmer/>
-  if(profileDataLoading) return <CartStageShimmer/>
-  
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
@@ -114,6 +111,17 @@ const DeluxeCart = () => {
   const handleContinueShopping = () => {
     setCurrentStage('cart');
   };
+  
+  // Show shimmer while loading
+  if (loading || profileDataLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          <CartStageShimmer />
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
