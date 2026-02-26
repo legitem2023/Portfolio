@@ -15,7 +15,7 @@ import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 import OrderSummary from './OrderSummary';
 import { decryptToken } from '../../../../utils/decryptToken';
-import { useAuth } from '../hooks';
+import { useAuth } from '../hooks/useAuth';
 import { CartItem } from '../../../../types';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
