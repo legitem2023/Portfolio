@@ -76,7 +76,7 @@ const DeluxeCart = () => {
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
-  const [userId, setUserId] = useState(user?.userId);
+  const [userId, setUserId]:any = useState(user?.userId);
   
   const { data:profileData, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
