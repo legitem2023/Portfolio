@@ -76,7 +76,7 @@ const DeluxeCart = () => {
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
-  //const [userId, setUserId] = useState(user.userId);
+  const [userId, setUserId] = useState(user.userId);
   
   const { data:profileData, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
@@ -192,7 +192,7 @@ const DeluxeCart = () => {
               setShippingInfo={setShippingInfo}
               onSubmit={handleShippingSubmit}
               onBack={() => setCurrentStage('cart')}
-              userId={user?.userId}
+              userId={userId}
             />
           )}
           
@@ -207,7 +207,7 @@ const DeluxeCart = () => {
           
           {currentStage === 'confirmation' && (
             <ConfirmationStage 
-              userId={user?.userId}
+              userId={userId}
               cartItems={cartItems}
               shippingInfo={shippingInfo}
               paymentInfo={paymentInfo}
