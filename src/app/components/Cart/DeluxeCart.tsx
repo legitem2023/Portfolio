@@ -69,7 +69,7 @@ const DeluxeCart = () => {
   const dispatch = useDispatch();
   const userId = user?.userId;
   
-  const { data: profileData } = useQuery(GET_USER_PROFILE, {
+  const { data: profileData,loading } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
   
