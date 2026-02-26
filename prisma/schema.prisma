@@ -283,19 +283,14 @@ model Product {
 model Heart {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   variantId       String?         @db.ObjectId
-  
   userId          String?         @db.ObjectId
   createdAt       DateTime?       @default(now())
-
   // Relationships
   user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
   variants        ProductVariant?  @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  // Ensure a like is for either a post or comment, not both
-  @@unique([userId, postId, commentId])
+  @@unique([userId, variantId])
   @@index([userId])
-  @@index([postId])
-  @@index([commentId])
-  @@map("likes")
+  @@index([variantId])
 }
 
 model ProductVariant {
