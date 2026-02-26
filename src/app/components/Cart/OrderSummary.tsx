@@ -134,14 +134,10 @@ const OrderSummary = ({
           setIndividualDistances(distances);
           setTotalDistance(accumulatedDistance);
           
-          // CORRECTED CALCULATION:
-          // 1. First, calculate rate per item based on its distance
-          // 2. Sum up all item shipping costs
-          // 3. Add base rate
-          
+          // Calculate shipping for each item individually
           let totalShippingCost = 0;
           
-          // Calculate shipping for each item individually
+          // Calculate shipping for each item based on its distance
           distances.forEach((distance) => {
             // Only charge for items with valid distance
             if (distance > 0) {
@@ -249,6 +245,10 @@ const OrderSummary = ({
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
                       {totalDistance > 0 && individualDistances.length > 0 && (
                         <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
+                          {/* Delivery breakdown explanation */}
+                          <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
+                            Delivery from multiple locations:
+                          </div>
                           <div className="whitespace-nowrap">Base rate: ₱{BASE_RATE}</div>
                           {individualDistances.map((dist, index) => (
                             dist > 0 && (
@@ -259,6 +259,9 @@ const OrderSummary = ({
                           ))}
                           <div className="whitespace-nowrap font-medium border-t border-indigo-200 pt-0.5 mt-0.5">
                             Total: ₱{BASE_RATE} + ₱{individualDistances.reduce((sum, d) => sum + (d * RATE_PER_KM), 0).toFixed(2)} = ₱{shippingCost.toFixed(2)}
+                          </div>
+                          <div className="whitespace-nowrap text-indigo-600 mt-1 italic">
+                            Each item ships from its own location
                           </div>
                         </div>
                       )}
@@ -287,7 +290,7 @@ const OrderSummary = ({
                     : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
                 }`}
               >
-                {isCalculatingShipping ? 'Calculating...' : 'Proceed to Checkout'}
+                {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
               </button>
             </div>
           </div>
