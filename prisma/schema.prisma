@@ -85,7 +85,6 @@ model User {
   addresses       Address[]
   products        Product[]
   orders          Order[]
-  heart           Heart[]
   reviews         Review[]
   wishlist        WishlistItem[]
   cart            CartItem[]
