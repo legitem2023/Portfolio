@@ -94,7 +94,6 @@ const OrderSummary = ({
           const pickupLng = item.lng;
           
           // Get dropoff location from default address
-          // Assuming your Address type has lat and lng properties
           const dropoffLat = defaultAddress.lat;
           const dropoffLng = defaultAddress.lng;
           
@@ -174,12 +173,12 @@ const OrderSummary = ({
 
   if (cartItems.length === 0) {
     return (
-      <div className="text-center py-8 md:py-12 px-4">
-        <div className="text-indigo-500 mb-4 flex justify-center">
-          <ShoppingCart size={48} className="w-8 h-8 md:w-12 md:h-12" />
+      <div className="text-center py-6 md:py-8 px-3 md:px-4">
+        <div className="text-indigo-500 mb-3 md:mb-4 flex justify-center">
+          <ShoppingCart size={32} className="w-6 h-6 md:w-8 md:h-8 lg:w-12 lg:h-12" />
         </div>
-        <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-2">Your cart is empty</h2>
-        <p className="text-indigo-700 text-sm md:text-base">Add some items to your cart to continue shopping</p>
+        <h2 className="text-lg md:text-xl lg:text-2xl font-serif font-bold text-indigo-900 mb-1 md:mb-2">Your cart is empty</h2>
+        <p className="text-indigo-700 text-xs md:text-sm lg:text-base">Add some items to your cart to continue shopping</p>
       </div>
     );
   }
@@ -188,58 +187,62 @@ const OrderSummary = ({
   const totalWithShipping = total + shippingCost;
 
   return (
-    <div className="bg-white rounded">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
-        <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-6 md:mb-8">Order Summary</h2>
+    <div className="bg-white rounded-lg md:rounded-xl w-full">
+      <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
+          Order Summary
+        </h2>
         
-        <div className="flex flex-col items-end">
-          {/* Order Summary Section - Only this is displayed */}
-          <div className="lg:w-96 w-full">
-            <div className="bg-indigo-50 rounded-lg p-6">
-              <h3 className="text-lg font-serif font-bold text-indigo-900 mb-4">Order Total</h3>
+        <div className="flex flex-col w-full">
+          {/* Order Summary Section */}
+          <div className="w-full">
+            <div className="bg-indigo-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 lg:p-6">
+              <h3 className="text-base sm:text-lg font-serif font-bold text-indigo-900 mb-2 sm:mb-3 md:mb-4">
+                Order Total
+              </h3>
               
               {isCalculatingShipping && (
-                <div className="mb-4 text-sm text-indigo-600 flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600"></div>
-                  Calculating shipping...
+                <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-indigo-600 flex items-center gap-1 sm:gap-2">
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-indigo-600"></div>
+                  <span className="text-xs sm:text-sm">Calculating shipping...</span>
                 </div>
               )}
               
               {shippingError && (
-                <div className="mb-4 text-sm text-red-600 bg-red-50 p-2 rounded">
+                <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-red-600 bg-red-50 p-2 sm:p-3 rounded">
                   ⚠ {shippingError}
                 </div>
               )}
               
               <div className="flow-root">
-                <dl className="-my-4 text-sm divide-y divide-indigo-200">
-                  <div className="py-4 flex items-center justify-between">
-                    <dt className="text-indigo-700">Subtotal</dt>
-                    <dd className="font-medium text-indigo-900">{formatPesoPrice(subtotal)}</dd>
+                <dl className="-my-2 sm:-my-3 md:-my-4 text-xs sm:text-sm divide-y divide-indigo-200">
+                  <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700 text-xs sm:text-sm">Subtotal</dt>
+                    <dd className="font-medium text-indigo-900 text-xs sm:text-sm">{formatPesoPrice(subtotal)}</dd>
                   </div>
                   
-                  <div className="py-4 flex items-center justify-between">
-                    <dt className="text-indigo-700">Shipping</dt>
+                  <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
-                      <div>{formatPesoPrice(shippingCost)}</div>
+                      <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
                       {totalDistance > 0 && (
-                        <div className="text-xs text-indigo-500 mt-1">
-                          <div>Total road distance: {totalDistance.toFixed(2)} km</div>
-                          <div>₱{BASE_RATE} base + ₱{RATE_PER_KM}/km</div>
-                          <div>÷ {cartItems.length} item{cartItems.length > 1 ? 's' : ''}</div>
+                        <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5">
+                          <div className="whitespace-nowrap">Distance: {totalDistance.toFixed(2)} km</div>
+                          <div className="whitespace-nowrap">₱{BASE_RATE} + ₱{RATE_PER_KM}/km</div>
+                          <div className="whitespace-nowrap">÷ {cartItems.length} item{cartItems.length > 1 ? 's' : ''}</div>
                         </div>
                       )}
                     </dd>
                   </div>
                   
-                  <div className="py-4 flex items-center justify-between">
-                    <dt className="text-indigo-700">Tax</dt>
-                    <dd className="font-medium text-indigo-900">{formatPesoPrice(tax)}</dd>
+                  <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
+                    <dt className="text-indigo-700 text-xs sm:text-sm">Tax</dt>
+                    <dd className="font-medium text-indigo-900 text-xs sm:text-sm">{formatPesoPrice(tax)}</dd>
                   </div>
                   
-                  <div className="py-4 flex items-center justify-between">
-                    <dt className="text-base font-bold text-indigo-900">Total</dt>
-                    <dd className="text-base font-bold text-indigo-900">{formatPesoPrice(totalWithShipping)}</dd>
+                  <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
+                    <dt className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">Total</dt>
+                    <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(totalWithShipping)}</dd>
                   </div>
                 </dl>
               </div>
@@ -248,13 +251,13 @@ const OrderSummary = ({
               <button
                 onClick={onCheckout}
                 disabled={isCalculatingShipping || !!shippingError}
-                className={`mt-6 w-full border border-transparent rounded-md py-3 px-4 text-base font-medium text-white transition-colors ${
+                className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
                   isCalculatingShipping || shippingError
-                    ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'
+                    ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                    : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
                 }`}
               >
-                {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
+                {isCalculatingShipping ? 'Calculating...' : 'Proceed to Checkout'}
               </button>
             </div>
           </div>
