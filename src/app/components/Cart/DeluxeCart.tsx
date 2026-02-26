@@ -42,7 +42,8 @@ export interface PaymentInfo {
 }
 
 const DeluxeCart = () => {
-  const { user } = useAuth();
+  const { user,loading } = useAuth();
+  if(loading) return <ShippingStageShimmer/>
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId: '',
@@ -69,7 +70,7 @@ const DeluxeCart = () => {
   const dispatch = useDispatch();
   const userId = user?.userId;
   
-  const { data: profileData,loading } = useQuery(GET_USER_PROFILE, {
+  const { data: profileData } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
   
@@ -110,7 +111,7 @@ const DeluxeCart = () => {
   const handleContinueShopping = () => {
     setCurrentStage('cart');
   };
-  if(loading) return <ShippingStageShimmer/>
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
