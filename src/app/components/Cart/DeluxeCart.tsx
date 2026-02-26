@@ -70,7 +70,7 @@ const DeluxeCart = () => {
   const dispatch = useDispatch();
   const userId = user?.userId;
   
-  const { data: profileData,loading:profileDataLoading } = useQuery(GET_USER_PROFILE, {
+  const { data: profileData,loading:profileDataLoading,refresh } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
   
@@ -170,6 +170,7 @@ const DeluxeCart = () => {
               onSubmit={handleShippingSubmit}
               onBack={() => setCurrentStage('cart')}
               userId={userId}
+              refresh={refresh}
             />
           )}
           
