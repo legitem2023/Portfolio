@@ -192,45 +192,9 @@ const OrderSummary = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <h2 className="text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-6 md:mb-8">Order Summary</h2>
         
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Cart Items List */}
-          <div className="flex-1">
-            <h3 className="text-lg font-serif font-bold text-indigo-900 mb-4">Items ({cartItems.length})</h3>
-            <div className="space-y-4">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex items-start gap-4 p-4 bg-indigo-50 rounded-lg">
-                  {item.images && item.images[0] && (
-                    <img 
-                      src={item.images[0]} 
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h4 className="font-medium text-indigo-900">{item.name}</h4>
-                    <p className="text-sm text-indigo-700">SKU: {item.sku}</p>
-                    {item.color && <p className="text-sm text-indigo-600">Color: {item.color}</p>}
-                    {item.size && <p className="text-sm text-indigo-600">Size: {item.size}</p>}
-                    <p className="text-sm font-medium text-indigo-900 mt-1">
-                      {formatPesoPrice(item.price || 0)} x {item.quantity || 1}
-                    </p>
-                    {item.lat && item.lng ? (
-                      <p className="text-xs text-green-600 mt-1">
-                        ✓ Pickup location available
-                      </p>
-                    ) : (
-                      <p className="text-xs text-red-500 mt-1">
-                        ⚠ No pickup location set
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Order Summary Section */}
-          <div className="lg:w-96">
+        <div className="flex flex-col items-end">
+          {/* Order Summary Section - Only this is displayed */}
+          <div className="lg:w-96 w-full">
             <div className="bg-indigo-50 rounded-lg p-6">
               <h3 className="text-lg font-serif font-bold text-indigo-900 mb-4">Order Total</h3>
               
