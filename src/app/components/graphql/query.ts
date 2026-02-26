@@ -477,6 +477,8 @@ query GetUser($id: ID) {
         state
         zipCode
         country
+        lat
+        lng
         isDefault
         createdAt
       }
