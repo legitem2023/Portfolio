@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useState, FormEvent } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  addToCart, 
   removeFromCart, 
   clearCart, 
   changeQuantity 
@@ -14,15 +13,13 @@ import PaymentStage from './PaymentStage';
 import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 import OrderSummary from './OrderSummary';
-import { decryptToken } from '../../../../utils/decryptToken';
 import { useAuth } from '../hooks/useAuth';
 import { CartItem } from '../../../../types';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
 
-// Update your ShippingInfo interface to include addressId
 export interface ShippingInfo {
-  addressId: string; // Add this field
+  addressId: string;
   receiver: string;
   address: string;
   city: string;
@@ -31,19 +28,12 @@ export interface ShippingInfo {
   country: string;
 }
 
-
-
-
-
 export interface PaymentInfo {
   method?: string;
-  // For GCash
   gcashNumber?: string;
-  // For Bank Transfer
   bankName?: string;
   accountNumber?: string;
   accountName?: string;
-  // For Credit Card (optional, if you want to keep it)
   cardNumber?: string;
   cardHolder?: string;
   expiryDate?: string;
@@ -54,20 +44,20 @@ const DeluxeCart = () => {
   const { user } = useAuth();
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
-    addressId:'',
+    addressId: '',
     receiver: '',
     address: '',
     city: '',
     zipCode: '',
     country: '',
-    state:''
+    state: ''
   });
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
-    method:'',
-    gcashNumber:'',
-    bankName:'',
-    accountNumber:'',
-    accountName:'',
+    method: '',
+    gcashNumber: '',
+    bankName: '',
+    accountNumber: '',
+    accountName: '',
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
@@ -76,37 +66,12 @@ const DeluxeCart = () => {
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
-  const [userId, setUserId]:any = useState(user?.userId);
+  const userId = user?.userId;
   
-  const { data:profileData, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
+  const { data: profileData } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
   
- /* useEffect(() => {
-    const getRole = async () => {
-      try {
-        const response = await fetch('/api/protected', {
-          credentials: 'include' // Important: includes cookies
-        });
-        
-        if (response.status === 401) {
-          // Handle unauthorized access
-          throw new Error('Unauthorized');
-        }
-        
-        const data = await response.json();
-        const token = data?.user;
-        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
-        const payload = await decryptToken(token, secret.toString());
-        setUserId(payload.userId);
-        console.log(payload);
-      } catch (err) {
-        console.error('Error getting role:', err);
-      }
-    };
-    getRole();
-  }, []);*/
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
@@ -137,7 +102,6 @@ const DeluxeCart = () => {
   };
   
   const handlePlaceOrder = () => {
-    // In a real app, you would send the order to your backend here
     dispatch(clearCart());
     setCurrentStage('completed');
   };
@@ -146,31 +110,38 @@ const DeluxeCart = () => {
     setCurrentStage('cart');
   };
   
-  // Render different stages based on currentStage
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-         {/* Progress Bar */}
-<div className="flex justify-between relative mb-12">
-  <div className="absolute top-5 left-5 right-5 h-0.5 bg-indigo-200 z-0"></div>
-  
-  {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
-    const stageIndex = ['cart', 'shipping', 'payment', 'confirmation'].indexOf(currentStage);
-    const isCompleted = index < stageIndex;
-    const isActive = index === stageIndex;
-    
-    return (
-      <div key={stage} className="flex flex-col items-center relative z-10">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${isActive ? 'bg-indigo-500 border-indigo-500 text-white' : isCompleted ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-white border-indigo-300 text-indigo-300'}`}>
-          {index + 1}
+        {/* Progress Bar */}
+        <div className="flex justify-between relative mb-12">
+          <div className="absolute top-5 left-5 right-5 h-0.5 bg-indigo-200 z-0"></div>
+          
+          {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
+            const stageIndex = ['cart', 'shipping', 'payment', 'confirmation'].indexOf(currentStage);
+            const isCompleted = index < stageIndex;
+            const isActive = index === stageIndex;
+            
+            return (
+              <div key={stage} className="flex flex-col items-center relative z-10">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                  isActive 
+                    ? 'bg-indigo-500 border-indigo-500 text-white' 
+                    : isCompleted 
+                      ? 'bg-indigo-500 border-indigo-500 text-white' 
+                      : 'bg-white border-indigo-300 text-indigo-300'
+                }`}>
+                  {index + 1}
+                </div>
+                <span className={`mt-2 text-sm font-medium ${
+                  isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'
+                }`}>
+                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
+                </span>
+              </div>
+            );
+          })}
         </div>
-        <span className={`mt-2 text-sm font-medium ${isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'}`}>
-          {stage.charAt(0).toUpperCase() + stage.slice(1)}
-        </span>
-      </div>
-    );
-  })}
-</div>
         
         {/* Content */}
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
@@ -223,18 +194,18 @@ const DeluxeCart = () => {
           {currentStage === 'completed' && (
             <CompletedStage onContinueShopping={handleContinueShopping} />
           )}
-          
         </div>
+        
         <div className="bg-white rounded-xl p-6 md:p-8 mt-5">
-         <OrderSummary
-              cartItems={cartItems}
-              subtotal={subtotal}
-              shippingCost={shippingCost}
-              tax={tax}
-              total={total}
-              onQuantityChange={handleQuantityChange}
-              onCheckout={handleCheckout}
-            />
+          <OrderSummary
+            cartItems={cartItems}
+            subtotal={subtotal}
+            shippingCost={shippingCost}
+            tax={tax}
+            total={total}
+            onQuantityChange={handleQuantityChange}
+            onCheckout={handleCheckout}
+          />
         </div>
       </div>
     </div>
