@@ -24,6 +24,9 @@ interface Address {
   userId: string;
   zipCode: string;
   receiver: string; // Added missing receiver property
+  lat:number;
+  lng:number;
+  
 }
 
 const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
@@ -92,7 +95,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
   if (loading) {
     return <ShippingStageShimmer/>;
   }
-
+console.log(savedAddresses);
   if (error) {
     return (
       <div className="flex justify-center items-center py-8">
