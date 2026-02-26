@@ -15,7 +15,7 @@ import ConfirmationStage from './ConfirmationStage';
 import CompletedStage from './CompletedStage';
 import OrderSummary from './OrderSummary';
 import { decryptToken } from '../../../../utils/decryptToken';
-
+import { useAuth } from '../hooks';
 import { CartItem } from '../../../../types';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
@@ -51,6 +51,7 @@ export interface PaymentInfo {
 }
 
 const DeluxeCart = () => {
+  const { user } = useAuth();
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId:'',
@@ -75,9 +76,13 @@ const DeluxeCart = () => {
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
-    const [userId, setUserId] = useState("");
-
-  useEffect(() => {
+  //const [userId, setUserId] = useState(user.userId);
+  
+  const { data:profileData, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
+    variables: { id: user.userId },
+  });
+  
+ /* useEffect(() => {
     const getRole = async () => {
       try {
         const response = await fetch('/api/protected', {
@@ -101,7 +106,7 @@ const DeluxeCart = () => {
       }
     };
     getRole();
-  }, []);
+  }, []);*/
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
@@ -187,7 +192,7 @@ const DeluxeCart = () => {
               setShippingInfo={setShippingInfo}
               onSubmit={handleShippingSubmit}
               onBack={() => setCurrentStage('cart')}
-              userId={userId}
+              userId={user.userId}
             />
           )}
           
@@ -202,7 +207,7 @@ const DeluxeCart = () => {
           
           {currentStage === 'confirmation' && (
             <ConfirmationStage 
-              userId={userId}
+              userId={user.userId}
               cartItems={cartItems}
               shippingInfo={shippingInfo}
               paymentInfo={paymentInfo}
