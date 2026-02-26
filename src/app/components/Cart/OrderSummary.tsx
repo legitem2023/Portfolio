@@ -53,6 +53,7 @@ const OrderSummary = ({
 }: CartStageProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [totalDistance, setTotalDistance] = useState<number>(0);
+  const [individualDistances, setIndividualDistances] = useState<number[]>([]);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   
@@ -65,6 +66,7 @@ const OrderSummary = ({
       if (cartItems.length === 0 || addresses.length === 0) {
         setShippingCost(0);
         setTotalDistance(0);
+        setIndividualDistances([]);
         return;
       }
 
@@ -76,6 +78,7 @@ const OrderSummary = ({
         setShippingError("No default delivery address found");
         setShippingCost(0);
         setTotalDistance(0);
+        setIndividualDistances([]);
         return;
       }
 
@@ -83,7 +86,8 @@ const OrderSummary = ({
       setShippingError(null);
 
       try {
-        // Calculate shipping cost
+        // Calculate distances for each item individually
+        const distances: number[] = [];
         let accumulatedDistance = 0;
         let itemsWithLocation = 0;
 
@@ -103,6 +107,7 @@ const OrderSummary = ({
                 { lat: pickupLat, lng: pickupLng },
                 { lat: dropoffLat, lng: dropoffLng }
               );
+              distances.push(distance);
               accumulatedDistance += distance;
               itemsWithLocation++;
               
@@ -114,34 +119,53 @@ const OrderSummary = ({
                 pickupLat, pickupLng,
                 dropoffLat, dropoffLng
               );
+              distances.push(fallbackDistance);
               accumulatedDistance += fallbackDistance;
               itemsWithLocation++;
               console.log(`Item ${item.name}: Using fallback distance = ${fallbackDistance.toFixed(2)} km`);
             }
           } else {
             console.log(`Item ${item.name} missing location data:`, { pickupLat, pickupLng, dropoffLat, dropoffLng });
+            distances.push(0);
           }
         }
 
         if (itemsWithLocation > 0) {
+          setIndividualDistances(distances);
           setTotalDistance(accumulatedDistance);
           
-          // Calculate total shipping cost: Base rate + (total distance * rate per km)
-          const totalShippingCost = BASE_RATE + (accumulatedDistance * RATE_PER_KM);
+          // CORRECTED CALCULATION:
+          // 1. First, calculate rate per item based on its distance
+          // 2. Sum up all item shipping costs
+          // 3. Add base rate
           
-          // Divide shipping cost by number of cart items
-          const shippingPerItem = totalShippingCost / cartItems.length;
-          setShippingCost(shippingPerItem);
+          let totalShippingCost = 0;
+          
+          // Calculate shipping for each item individually
+          distances.forEach((distance) => {
+            // Only charge for items with valid distance
+            if (distance > 0) {
+              const itemShippingCost = distance * RATE_PER_KM;
+              totalShippingCost += itemShippingCost;
+            }
+          });
+          
+          // Add base rate to total
+          totalShippingCost += BASE_RATE;
+          
+          setShippingCost(totalShippingCost);
           
           console.log("Shipping Calculation Summary:");
+          console.log("Individual distances:", distances.map(d => d.toFixed(2)).join(', '), "km");
           console.log("Total distance:", accumulatedDistance.toFixed(2), "km");
           console.log("Base rate:", BASE_RATE);
           console.log("Rate per km:", RATE_PER_KM);
+          console.log("Item shipping costs:", distances.map(d => (d * RATE_PER_KM).toFixed(2)).join(', '));
           console.log("Total shipping cost:", totalShippingCost.toFixed(2));
-          console.log("Shipping cost per item:", shippingPerItem.toFixed(2));
         } else {
           setShippingCost(0);
           setTotalDistance(0);
+          setIndividualDistances([]);
           setShippingError("No items with valid location data found");
           console.log("No items with valid location data found");
         }
@@ -150,6 +174,7 @@ const OrderSummary = ({
         setShippingError("Error calculating shipping cost");
         setShippingCost(0);
         setTotalDistance(0);
+        setIndividualDistances([]);
       } finally {
         setIsCalculatingShipping(false);
       }
@@ -182,9 +207,6 @@ const OrderSummary = ({
       </div>
     );
   }
-
-  // Calculate new total including shipping
-  const totalWithShipping = total + shippingCost;
 
   return (
     <div className="bg-white rounded-lg md:rounded-xl w-full">
@@ -225,11 +247,19 @@ const OrderSummary = ({
                     <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
-                      {totalDistance > 0 && (
-                        <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5">
-                          <div className="whitespace-nowrap">Distance: {totalDistance.toFixed(2)} km</div>
-                          <div className="whitespace-nowrap">₱{BASE_RATE} + ₱{RATE_PER_KM}/km</div>
-                          <div className="whitespace-nowrap">÷ {cartItems.length} item{cartItems.length > 1 ? 's' : ''}</div>
+                      {totalDistance > 0 && individualDistances.length > 0 && (
+                        <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
+                          <div className="whitespace-nowrap">Base rate: ₱{BASE_RATE}</div>
+                          {individualDistances.map((dist, index) => (
+                            dist > 0 && (
+                              <div key={index} className="whitespace-nowrap">
+                                Item {index + 1}: {dist.toFixed(2)}km × ₱{RATE_PER_KM} = ₱{(dist * RATE_PER_KM).toFixed(2)}
+                              </div>
+                            )
+                          ))}
+                          <div className="whitespace-nowrap font-medium border-t border-indigo-200 pt-0.5 mt-0.5">
+                            Total: ₱{BASE_RATE} + ₱{individualDistances.reduce((sum, d) => sum + (d * RATE_PER_KM), 0).toFixed(2)} = ₱{shippingCost.toFixed(2)}
+                          </div>
                         </div>
                       )}
                     </dd>
@@ -242,7 +272,7 @@ const OrderSummary = ({
                   
                   <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
                     <dt className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">Total</dt>
-                    <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(totalWithShipping)}</dd>
+                    <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(total + shippingCost)}</dd>
                   </div>
                 </dl>
               </div>
