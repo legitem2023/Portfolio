@@ -1,8 +1,9 @@
 import { ShoppingCart } from 'lucide-react';
-import { CartItem } from '../../../../types';
+import { CartItem, Address } from '../../../../types';
 
 interface CartStageProps {
   cartItems: CartItem[];
+  addresses:Address[];
   subtotal: number;
   shippingCost: number;
   tax: number;
@@ -21,6 +22,7 @@ const formatPesoPrice = (price: number): string => {
 
 const OrderSummary = ({ 
   cartItems, 
+  addresses,
   subtotal, 
   shippingCost, 
   tax, 
