@@ -17,6 +17,7 @@ import { useAuth } from '../hooks/useAuth';
 import { CartItem } from '../../../../types';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
+import ShippingStageShimmer from './ShippingStageShimmer';
 
 export interface ShippingInfo {
   addressId: string;
@@ -109,7 +110,7 @@ const DeluxeCart = () => {
   const handleContinueShopping = () => {
     setCurrentStage('cart');
   };
-  
+  if(loading) return <ShippingStageShimmer/>
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
