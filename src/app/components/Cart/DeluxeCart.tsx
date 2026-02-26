@@ -17,7 +17,7 @@ import { useAuth } from '../hooks/useAuth';
 import { CartItem } from '../../../../types';
 import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
-import ShippingStageShimmer from './ShippingStageShimmer';
+import CartStageShimmer from './CartStageShimmer';
 
 export interface ShippingInfo {
   addressId: string;
@@ -70,11 +70,11 @@ const DeluxeCart = () => {
   const dispatch = useDispatch();
   const userId = user?.userId;
   
-  const { data: profileData } = useQuery(GET_USER_PROFILE, {
+  const { data: profileData,loading:profileDataLoading } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
   
-  if(loading) return <ShippingStageShimmer/>
+  if(loading && profileDataLoading) return <CartStageShimmer/>
   
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
