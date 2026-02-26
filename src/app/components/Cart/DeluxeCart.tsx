@@ -160,6 +160,7 @@ const DeluxeCart = () => {
           {currentStage === 'shipping' && userId && (
             <ShippingStage 
               shippingInfo={shippingInfo}
+              addresses= {profileData?.user.addresses}
               setShippingInfo={setShippingInfo}
               onSubmit={handleShippingSubmit}
               onBack={() => setCurrentStage('cart')}
