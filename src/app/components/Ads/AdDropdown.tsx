@@ -49,7 +49,7 @@ export default function AdDropdown({ content }: AdDropdownProps) {
   return (
     <div style={containerStyle}>
       <button style={buttonStyle} onClick={() => setIsOpen(!isOpen)}>
-        Advertisement
+        Ads
         <span style={iconStyle}>▼</span>
       </button>
       {isOpen && <div style={contentStyle}>{content}</div>}
