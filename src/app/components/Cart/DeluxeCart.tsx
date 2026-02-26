@@ -17,6 +17,8 @@ import OrderSummary from './OrderSummary';
 import { decryptToken } from '../../../../utils/decryptToken';
 
 import { CartItem } from '../../../../types';
+import { useQuery } from '@apollo/client';
+import { GET_USER_PROFILE } from '../graphql/query';
 
 // Update your ShippingInfo interface to include addressId
 export interface ShippingInfo {
