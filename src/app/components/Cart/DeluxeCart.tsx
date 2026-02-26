@@ -43,7 +43,7 @@ export interface PaymentInfo {
 
 const DeluxeCart = () => {
   const { user,loading } = useAuth();
-  if(loading) return <ShippingStageShimmer/>
+  
   const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId: '',
@@ -73,6 +73,8 @@ const DeluxeCart = () => {
   const { data: profileData } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
   });
+  
+  if(loading) return <ShippingStageShimmer/>
   
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
