@@ -4,13 +4,6 @@ import { useQuery } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
 import ShippingStageShimmer from './ShippingStageShimmer';
 
-interface ShippingStageProps {
-  shippingInfo: ShippingInfo;
-  setShippingInfo: (info: ShippingInfo) => void;
-  onSubmit: (e: FormEvent) => void;
-  onBack: () => void;
-  userId: string;
-}
 
 interface Address {
   id: string;
@@ -25,11 +18,19 @@ interface Address {
   zipCode: string;
   receiver: string; // Added missing receiver property
   lat:number;
-  lng:number;
-  
+  lng:number; 
 }
 
-const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
+interface ShippingStageProps {
+  shippingInfo: ShippingInfo;
+  addresses:Address[];
+  setShippingInfo: (info: ShippingInfo) => void;
+  onSubmit: (e: FormEvent) => void;
+  onBack: () => void;
+  userId: string;
+}
+
+const ShippingStage = ({ shippingInfo, addresses, setShippingInfo, onSubmit, onBack, userId }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   
   // GraphQL query to fetch user addresses
@@ -38,7 +39,7 @@ const ShippingStage = ({ shippingInfo, setShippingInfo, onSubmit, onBack, userId
   });
   
   // Extract addresses from GraphQL response
-  const savedAddresses: Address[] = data?.user.addresses || data?.user?.addresses || [];
+  const savedAddresses: Address[] = addresses; //data?.user.addresses || data?.user?.addresses || [];
 
   // Set default address when data loads
   useEffect(() => {
