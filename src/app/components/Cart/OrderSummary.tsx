@@ -41,7 +41,7 @@ const OrderSummary = ({
     );
   }
  console.log("Pickup",cartItems);
- console.log("DropOff",addresses);
+ console.log("DropOff",addresses.filter((item:any) => item.isDefault===true));
   return (
     <div className="bg-white rounded">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
