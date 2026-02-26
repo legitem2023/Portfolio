@@ -214,10 +214,7 @@ const OrderSummary = ({
         <div className="flex flex-col w-full">
           {/* Order Summary Section */}
           <div className="w-full">
-            <div className="bg-indigo-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 lg:p-6">
-              <h3 className="text-base sm:text-lg font-serif font-bold text-indigo-900 mb-2 sm:mb-3 md:mb-4">
-                Order Total
-              </h3>
+            <div className="bg-indigo-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 lg:p-6">              
               
               {isCalculatingShipping && (
                 <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-indigo-600 flex items-center gap-1 sm:gap-2">
