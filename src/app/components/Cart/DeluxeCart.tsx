@@ -208,7 +208,7 @@ const CartStage = ({ cartItems, onQuantityChange, onCheckout, subtotal, shipping
           <ShoppingCart size={48} className="text-indigo-400" />
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h2>
-        <p className="text-gray-600 mb-8">Looks like you haven't added anything to your cart yet</p>
+        <p className="text-gray-600 mb-8">Looks like you havent added anything to your cart yet</p>
         <button
           onClick={() => window.location.href = '/products'}
           className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
@@ -1301,19 +1301,19 @@ const CompletedStage = ({ onContinueShopping }: CompletedStageProps) => {
       </div>
       <h2 className="text-3xl font-bold text-gray-900 mb-3">Order Placed Successfully!</h2>
       <p className="text-gray-600 mb-8 max-w-md mx-auto">
-        Thank you for your purchase. We've sent a confirmation email with your order details.
+        Thank you for your purchase. Weve sent a confirmation email with your order details.
       </p>
       
       <div className="bg-indigo-50 rounded-lg p-6 max-w-md mx-auto mb-8">
-        <h3 className="font-semibold text-indigo-900 mb-3">What's Next?</h3>
+        <h3 className="font-semibold text-indigo-900 mb-3">Whats Next?</h3>
         <ul className="text-sm text-indigo-700 space-y-2 text-left">
           <li className="flex items-start space-x-2">
             <Check size={16} className="mt-0.5 flex-shrink-0" />
-            <span>You'll receive an order confirmation via email</span>
+            <span>Youll receive an order confirmation via email</span>
           </li>
           <li className="flex items-start space-x-2">
             <Check size={16} className="mt-0.5 flex-shrink-0" />
-            <span>We'll notify you once your order is shipped</span>
+            <span>Well notify you once your order is shipped</span>
           </li>
           <li className="flex items-start space-x-2">
             <Check size={16} className="mt-0.5 flex-shrink-0" />
