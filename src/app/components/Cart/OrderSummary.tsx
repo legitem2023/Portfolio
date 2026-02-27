@@ -292,7 +292,7 @@ const OrderSummary = ({
                 </div>
               )}
               
-              <div className="flow-root">
+              <div className="flow-root mb-5">
                 <dl className="-my-2 sm:-my-3 md:-my-4 text-xs sm:text-sm divide-y divide-indigo-200">
                   <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
                     <dt className="text-indigo-700 text-xs sm:text-sm">Subtotal</dt>
