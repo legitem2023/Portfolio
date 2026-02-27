@@ -36,21 +36,7 @@ export interface PaymentInfo {
   cvv?: string;
 }
 
-interface Address {
-  id: string;
-  city: string;
-  country: string;
-  createdAt: string;
-  isDefault: boolean;
-  state: string;
-  street: string;
-  type: string;
-  userId: string;
-  zipCode: string;
-  receiver: string;
-  lat: number;
-  lng: number;
-}
+
 
 type Coordinate = {
   lat: number;
