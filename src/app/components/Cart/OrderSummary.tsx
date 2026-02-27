@@ -65,11 +65,6 @@ const OrderSummary = ({
   const BASE_RATE = 50; // Base rate in pesos (one-time fee)
   const RATE_PER_KM = 15; // Rate per kilometer in pesos
 
-  // Function to navigate to different stages
-  const handleNavigateToStage = (stage: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed') => {
-    setCurrentStage(stage);
-  };
-
   // Fallback Haversine formula in case OSRM API fails
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Earth's radius in kilometers
@@ -218,58 +213,66 @@ const OrderSummary = ({
   const averageDistance = totalDistance / cartItems.length;
   const distanceCharge = averageDistance * RATE_PER_KM;
 
+  // Function to render the appropriate button based on current stage
+  const renderStageButton = () => {
+    // Don't show any button on cart stage (already has checkout button)
+    if (currentStage === 'cart') return null;
+
+    switch (currentStage) {
+      case 'shipping':
+        return (
+          <button
+            onClick={() => setCurrentStage('payment')}
+            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
+          >
+            Proceed to Payment
+          </button>
+        );
+      
+      case 'payment':
+        return (
+          <button
+            onClick={() => setCurrentStage('confirmation')}
+            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
+          >
+            Review Order
+          </button>
+        );
+      
+      case 'confirmation':
+        return (
+          <button
+            onClick={() => {
+              // This would trigger the place order action
+              setCurrentStage('completed');
+            }}
+            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-green-600 hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform active:scale-[0.98] transition-all duration-200"
+          >
+            Place Order
+          </button>
+        );
+      
+      case 'completed':
+        return (
+          <button
+            onClick={() => setCurrentStage('cart')}
+            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
+          >
+            Continue Shopping
+          </button>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg md:rounded-xl w-full">
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
         <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           Order Summary
         </h2>
-        
-        {/* Stage Navigation Buttons */}
-        {currentStage && (
-          <div className="mb-4 flex flex-wrap gap-2 text-xs sm:text-sm">
-            <button 
-              onClick={() => handleNavigateToStage('cart')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                currentStage === 'cart' 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-              }`}
-            >
-              Cart
-            </button>
-            <button 
-              onClick={() => handleNavigateToStage('shipping')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                currentStage === 'shipping' 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-              }`}
-            >
-              Shipping
-            </button>
-            <button 
-              onClick={() => handleNavigateToStage('payment')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                currentStage === 'payment' 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-              }`}
-            >
-              Payment
-            </button>
-            <button 
-              onClick={() => handleNavigateToStage('confirmation')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                currentStage === 'confirmation' 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-              }`}
-            >
-              Confirmation
-            </button>
-          </div>
-        )}
         
         <div className="flex flex-col w-full">
           {/* Order Summary Section */}
@@ -300,7 +303,7 @@ const OrderSummary = ({
                     <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
-                      {totalDistance > 0 && individualDistances.length > 0 && (
+                      {/*totalDistance > 0 && individualDistances.length > 0 && (
                         <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
                           <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
                             Shipping calculation:
@@ -321,7 +324,7 @@ const OrderSummary = ({
                             Total: ₱{BASE_RATE} + ₱{distanceCharge.toFixed(2)} = ₱{shippingCost.toFixed(2)}
                           </div>
                         </div>
-                      )}
+                      )*/}
                     </dd>
                   </div>
                   
@@ -337,48 +340,41 @@ const OrderSummary = ({
                 </dl>
               </div>
 
-              {/* Checkout Button */}
-              <button
-                onClick={() => {
-                  onCheckout();
-                  // Directly set to shipping stage when checkout is clicked
-                  setCurrentStage('shipping');
-                }}
-                disabled={isCalculatingShipping || !!shippingError}
-                className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
-                  isCalculatingShipping || shippingError
-                    ? 'bg-gray-400 cursor-not-allowed opacity-50'
-                    : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
-                }`}
-              >
-                {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
-              </button>
+              {/* Dynamic Button - Changes based on current stage */}
+              {currentStage === 'cart' ? (
+                <button
+                  onClick={() => {
+                    onCheckout();
+                    setCurrentStage('shipping');
+                  }}
+                  disabled={isCalculatingShipping || !!shippingError}
+                  className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
+                    isCalculatingShipping || shippingError
+                      ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                      : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
+                  }`}
+                >
+                  {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
+                </button>
+              ) : (
+                renderStageButton()
+              )}
 
-              {/* Quick Navigation Buttons for other stages */}
-              {currentStage && currentStage !== 'cart' && (
+              {/* Back Navigation Links - Only show when not on cart or completed stage */}
+              {currentStage && currentStage !== 'cart' && currentStage !== 'completed' && (
                 <div className="mt-3 flex gap-2 justify-center">
                   <button
-                    onClick={() => handleNavigateToStage('cart')}
+                    onClick={() => {
+                      if (currentStage === 'shipping') setCurrentStage('cart');
+                      if (currentStage === 'payment') setCurrentStage('shipping');
+                      if (currentStage === 'confirmation') setCurrentStage('payment');
+                    }}
                     className="text-xs text-indigo-600 hover:text-indigo-800 underline"
                   >
-                    Return to Cart
+                    ← Back to {currentStage === 'shipping' ? 'Cart' : 
+                               currentStage === 'payment' ? 'Shipping' : 
+                               currentStage === 'confirmation' ? 'Payment' : ''}
                   </button>
-                  {currentStage === 'payment' && (
-                    <button
-                      onClick={() => handleNavigateToStage('shipping')}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 underline"
-                    >
-                      Back to Shipping
-                    </button>
-                  )}
-                  {currentStage === 'confirmation' && (
-                    <button
-                      onClick={() => handleNavigateToStage('payment')}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 underline"
-                    >
-                      Back to Payment
-                    </button>
-                  )}
                 </div>
               )}
             </div>
