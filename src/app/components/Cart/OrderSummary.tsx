@@ -86,7 +86,7 @@ const OrderSummary = ({
       setShippingError(null);
 
       try {
-        // Calculate distances for each item individually
+        // Step 1: Get distance for each item individually
         const distances: number[] = [];
         let accumulatedDistance = 0;
         let itemsWithLocation = 0;
@@ -134,31 +134,31 @@ const OrderSummary = ({
           setIndividualDistances(distances);
           setTotalDistance(accumulatedDistance);
           
-          // CORRECTED CALCULATION:
-          // 1. Sum all distances to get accumulatedDistance
-          // 2. Divide accumulatedDistance by cartItems.length to get average distance per item
-          // 3. Calculate shipping per item based on average distance
-          // 4. Sum up all items' shipping costs
+          // CORRECTED FORMULA:
+          // Step 1: Get individual distances ✓ (done above)
+          // Step 2: Sum all distances ✓ (accumulatedDistance)
+          // Step 3: Divide by cart length to get average distance
+          // Step 4: Multiply by rate per km
+          // Step 5: Add base rate
           
-          const averageDistancePerItem = accumulatedDistance / cartItems.length;
-          
-          // Calculate shipping per item (each item pays equal share of total distance)
-          const shippingPerItem = (averageDistancePerItem * RATE_PER_KM);
-          
-          // Total shipping cost = Base rate (one-time) + (shipping per item × number of items)
-          const totalShippingCost = BASE_RATE + (shippingPerItem * cartItems.length);
+          const averageDistance = accumulatedDistance / cartItems.length;
+          const distanceCharge = averageDistance * RATE_PER_KM;
+          const totalShippingCost = BASE_RATE + distanceCharge;
           
           setShippingCost(totalShippingCost);
           
-          console.log("Shipping Calculation Summary:");
-          console.log("Individual distances:", distances.map(d => d.toFixed(2)).join(', '), "km");
-          console.log("Total accumulated distance:", accumulatedDistance.toFixed(2), "km");
-          console.log("Number of items:", cartItems.length);
-          console.log("Average distance per item:", averageDistancePerItem.toFixed(2), "km");
-          console.log("Shipping per item (based on avg distance):", shippingPerItem.toFixed(2));
-          console.log("Base rate (one-time):", BASE_RATE);
-          console.log("Total shipping cost:", totalShippingCost.toFixed(2));
-          console.log("Breakdown: ₱", BASE_RATE, " + (₱", shippingPerItem.toFixed(2), " × ", cartItems.length, " items) = ₱", totalShippingCost.toFixed(2));
+          console.log("=================================");
+          console.log("SHIPPING CALCULATION (CORRECTED)");
+          console.log("=================================");
+          console.log("Step 1 - Individual distances:");
+          distances.forEach((dist, index) => {
+            console.log(`  Item ${index + 1}: ${dist.toFixed(2)} km`);
+          });
+          console.log("Step 2 - Sum all distances: ", accumulatedDistance.toFixed(2), "km");
+          console.log("Step 3 - Divide by cart length:", accumulatedDistance.toFixed(2), "km ÷", cartItems.length, "= ", averageDistance.toFixed(2), "km (average)");
+          console.log("Step 4 - Multiply by rate per km:", averageDistance.toFixed(2), "km × ₱", RATE_PER_KM, "= ₱", distanceCharge.toFixed(2));
+          console.log("Step 5 - Add base rate: ₱", BASE_RATE, "+ ₱", distanceCharge.toFixed(2), "= ₱", totalShippingCost.toFixed(2));
+          console.log("=================================");
         } else {
           setShippingCost(0);
           setTotalDistance(0);
@@ -206,8 +206,8 @@ const OrderSummary = ({
   }
 
   // Calculate values for display
-  const averageDistancePerItem = totalDistance / cartItems.length;
-  const shippingPerItem = averageDistancePerItem * RATE_PER_KM;
+  const averageDistance = totalDistance / cartItems.length;
+  const distanceCharge = averageDistance * RATE_PER_KM;
 
   return (
     <div className="bg-white rounded-lg md:rounded-xl w-full">
@@ -252,17 +252,22 @@ const OrderSummary = ({
                         <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
                           {/* Delivery breakdown explanation */}
                           <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
-                            Equal share calculation:
+                            Shipping calculation:
                           </div>
+                          <div className="whitespace-nowrap">Individual distances:</div>
+                          {individualDistances.map((dist, index) => (
+                            dist > 0 && (
+                              <div key={index} className="whitespace-nowrap pl-2">
+                                Item {index + 1}: {dist.toFixed(2)} km
+                              </div>
+                            )
+                          ))}
                           <div className="whitespace-nowrap">Total distance: {totalDistance.toFixed(2)} km</div>
-                          <div className="whitespace-nowrap">÷ {cartItems.length} items = {averageDistancePerItem.toFixed(2)} km/item avg</div>
-                          <div className="whitespace-nowrap">Shipping per item: {averageDistancePerItem.toFixed(2)}km × ₱{RATE_PER_KM} = ₱{shippingPerItem.toFixed(2)}</div>
-                          <div className="whitespace-nowrap">Base rate (one-time): ₱{BASE_RATE}</div>
+                          <div className="whitespace-nowrap">÷ {cartItems.length} items = {averageDistance.toFixed(2)} km (avg)</div>
+                          <div className="whitespace-nowrap">× ₱{RATE_PER_KM} = ₱{distanceCharge.toFixed(2)}</div>
+                          <div className="whitespace-nowrap">+ Base rate: ₱{BASE_RATE}</div>
                           <div className="whitespace-nowrap font-medium border-t border-indigo-200 pt-0.5 mt-0.5">
-                            Total: ₱{BASE_RATE} + (₱{shippingPerItem.toFixed(2)} × {cartItems.length}) = ₱{shippingCost.toFixed(2)}
-                          </div>
-                          <div className="whitespace-nowrap text-indigo-600 mt-1 italic">
-                            Each item pays equal share of total distance
+                            Total: ₱{BASE_RATE} + ₱{distanceCharge.toFixed(2)} = ₱{shippingCost.toFixed(2)}
                           </div>
                         </div>
                       )}
