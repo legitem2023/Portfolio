@@ -248,9 +248,9 @@ const OrderSummary = ({
                     <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
-                      {totalDistance > 0 && individualDistances.length > 0 && (
+                      {/*totalDistance > 0 && individualDistances.length > 0 && (
                         <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
-                          {/* Delivery breakdown explanation */}
+                          
                           <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
                             Shipping calculation:
                           </div>
@@ -270,7 +270,7 @@ const OrderSummary = ({
                             Total: ₱{BASE_RATE} + ₱{distanceCharge.toFixed(2)} = ₱{shippingCost.toFixed(2)}
                           </div>
                         </div>
-                      )}
+                      )*/}
                     </dd>
                   </div>
                   
