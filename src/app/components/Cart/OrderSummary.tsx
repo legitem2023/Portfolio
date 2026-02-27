@@ -10,6 +10,8 @@ interface CartStageProps {
   total: number;
   onQuantityChange: (id: string | number, quantity: number) => void;
   onCheckout: () => void;
+  setCurrentStage: (stage: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed') => void;
+  currentStage?: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed';
 }
 
 type Coordinate = {
@@ -49,7 +51,9 @@ const OrderSummary = ({
   subtotal, 
   tax, 
   total, 
-  onCheckout 
+  onCheckout,
+  setCurrentStage,
+  currentStage
 }: CartStageProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -60,6 +64,24 @@ const OrderSummary = ({
   // Static rates (you can modify these values)
   const BASE_RATE = 50; // Base rate in pesos (one-time fee)
   const RATE_PER_KM = 15; // Rate per kilometer in pesos
+
+  // Function to navigate to different stages
+  const handleNavigateToStage = (stage: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed') => {
+    setCurrentStage(stage);
+  };
+
+  // Fallback Haversine formula in case OSRM API fails
+  const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return Math.round((R * c) * 100) / 100; // Round to 2 decimal places
+  };
 
   useEffect(() => {
     const calculateShipping = async () => {
@@ -180,19 +202,6 @@ const OrderSummary = ({
     calculateShipping();
   }, [cartItems, addresses]);
 
-  // Fallback Haversine formula in case OSRM API fails
-  const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return Math.round((R * c) * 100) / 100; // Round to 2 decimal places
-  };
-
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-6 md:py-8 px-3 md:px-4">
@@ -215,6 +224,52 @@ const OrderSummary = ({
         <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-3 sm:mb-4 md:mb-6 lg:mb-8">
           Order Summary
         </h2>
+        
+        {/* Stage Navigation Buttons */}
+        {currentStage && (
+          <div className="mb-4 flex flex-wrap gap-2 text-xs sm:text-sm">
+            <button 
+              onClick={() => handleNavigateToStage('cart')}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                currentStage === 'cart' 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              }`}
+            >
+              Cart
+            </button>
+            <button 
+              onClick={() => handleNavigateToStage('shipping')}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                currentStage === 'shipping' 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              }`}
+            >
+              Shipping
+            </button>
+            <button 
+              onClick={() => handleNavigateToStage('payment')}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                currentStage === 'payment' 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              }`}
+            >
+              Payment
+            </button>
+            <button 
+              onClick={() => handleNavigateToStage('confirmation')}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                currentStage === 'confirmation' 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+              }`}
+            >
+              Confirmation
+            </button>
+          </div>
+        )}
         
         <div className="flex flex-col w-full">
           {/* Order Summary Section */}
@@ -245,9 +300,8 @@ const OrderSummary = ({
                     <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
-                      {/*totalDistance > 0 && individualDistances.length > 0 && (
+                      {totalDistance > 0 && individualDistances.length > 0 && (
                         <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
-                          
                           <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
                             Shipping calculation:
                           </div>
@@ -267,7 +321,7 @@ const OrderSummary = ({
                             Total: ₱{BASE_RATE} + ₱{distanceCharge.toFixed(2)} = ₱{shippingCost.toFixed(2)}
                           </div>
                         </div>
-                      )*/}
+                      )}
                     </dd>
                   </div>
                   
@@ -285,7 +339,11 @@ const OrderSummary = ({
 
               {/* Checkout Button */}
               <button
-                onClick={onCheckout}
+                onClick={() => {
+                  onCheckout();
+                  // Directly set to shipping stage when checkout is clicked
+                  setCurrentStage('shipping');
+                }}
                 disabled={isCalculatingShipping || !!shippingError}
                 className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
                   isCalculatingShipping || shippingError
@@ -295,6 +353,34 @@ const OrderSummary = ({
               >
                 {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
               </button>
+
+              {/* Quick Navigation Buttons for other stages */}
+              {currentStage && currentStage !== 'cart' && (
+                <div className="mt-3 flex gap-2 justify-center">
+                  <button
+                    onClick={() => handleNavigateToStage('cart')}
+                    className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                  >
+                    Return to Cart
+                  </button>
+                  {currentStage === 'payment' && (
+                    <button
+                      onClick={() => handleNavigateToStage('shipping')}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                    >
+                      Back to Shipping
+                    </button>
+                  )}
+                  {currentStage === 'confirmation' && (
+                    <button
+                      onClick={() => handleNavigateToStage('payment')}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                    >
+                      Back to Payment
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
