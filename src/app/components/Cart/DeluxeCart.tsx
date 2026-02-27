@@ -242,16 +242,18 @@ const DeluxeCart = () => {
         </div>
         
         <div className="bg-white rounded-xl p-6 md:p-8 mt-5">
-          <OrderSummary
-            cartItems={cartItems}
-            addresses={profileData?.user.addresses}
-            subtotal={subtotal}
-            tax={tax}
-            total={total}
-            onQuantityChange={handleQuantityChange}
-            onCheckout={handleCheckout}
-          />
-        </div>
+  <OrderSummary
+    cartItems={cartItems}
+    addresses={profileData?.user.addresses}
+    subtotal={subtotal}
+    tax={tax}
+    total={total}
+    onQuantityChange={handleQuantityChange}
+    onCheckout={handleCheckout}
+    setCurrentStage={setCurrentStage}
+    currentStage={currentStage}
+  />
+</div>
       </div>
     </div>
   );
