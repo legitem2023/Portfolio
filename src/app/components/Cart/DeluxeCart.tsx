@@ -193,13 +193,11 @@ const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityCh
   );
 };
 
-// Shipping Stage Component
+// Shipping Stage Component - Without buttons
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
   addresses: Address[];
   setShippingInfo: (info: ShippingInfo) => void;
-  onSubmit: (e: FormEvent) => void;
-  onBack: () => void;
   userId: string;
   refresh: any;
 }
@@ -208,8 +206,6 @@ const ShippingStage = ({
   shippingInfo, 
   addresses, 
   setShippingInfo, 
-  onSubmit, 
-  onBack, 
   userId, 
   refresh 
 }: ShippingStageProps) => {
@@ -328,7 +324,7 @@ const ShippingStage = ({
         </div>
       )}
 
-      <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
+      <div className="space-y-4 sm:space-y-5">
         <div>
           <label className="block text-indigo-800 font-medium mb-1.5 sm:mb-2 text-sm sm:text-base">
             Receiver Name
@@ -427,36 +423,18 @@ const ShippingStage = ({
             <option value="Philippines">Philippines</option>
           </select>
         </div>
-        
-        <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 sm:gap-4">
-          <button 
-            type="button" 
-            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 border border-indigo-300 text-indigo-700 rounded-lg font-medium text-sm sm:text-base hover:bg-indigo-50 transition-colors active:bg-indigo-100"
-            onClick={onBack}
-          >
-            Back
-          </button>
-          <button 
-            type="submit" 
-            className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium text-sm sm:text-base hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md active:scale-[0.98]"
-          >
-            Continue to Payment
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };
 
-// Payment Stage Component
+// Payment Stage Component - Without buttons
 interface PaymentStageProps {
   paymentInfo: PaymentInfo;
   setPaymentInfo: (info: PaymentInfo) => void;
-  onSubmit: (e: FormEvent) => void;
-  onBack: () => void;
 }
 
-const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: PaymentStageProps) => {
+const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('cod');
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -469,6 +447,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
   const handleMethodChange = (method: PaymentMethod) => {
     setSelectedMethod(method);
     setPaymentInfo({
+      ...paymentInfo,
       method: method,
       cardNumber: '',
       cardHolder: '',
@@ -479,15 +458,6 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
       accountNumber: '',
       accountName: ''
     });
-  };
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setPaymentInfo({
-      ...paymentInfo,
-      method: selectedMethod
-    });
-    onSubmit(e);
   };
   
   return (
@@ -574,7 +544,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <div>
         {selectedMethod === 'gcash' && (
           <div className="space-y-5">
             <div className="bg-indigo-50 border-l-4 border-indigo-400 p-4 mb-4">
@@ -692,28 +662,12 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
             </label>
           </div>
         </div>
-        
-        <div className="flex justify-between">
-          <button 
-            type="button" 
-            className="px-6 py-3 border border-indigo-300 text-indigo-700 rounded-lg font-medium hover:bg-indigo-50 transition-colors"
-            onClick={onBack}
-          >
-            Back to Shipping
-          </button>
-          <button 
-            type="submit" 
-            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md"
-          >
-            {selectedMethod === 'cod' ? 'Review Order' : 'Continue to Review'}
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 };
 
-// Confirmation Stage Component
+// Confirmation Stage Component - Without buttons
 interface ConfirmationStageProps {
   cartItems: CartItem[];
   shippingInfo: ShippingInfo;
@@ -722,9 +676,6 @@ interface ConfirmationStageProps {
   shippingCost: number;
   tax: number;
   total: number;
-  onPlaceOrder: () => Promise<void>;
-  onBack: () => void;
-  isPlacingOrder: boolean;
 }
 
 const ConfirmationStage = ({ 
@@ -734,10 +685,7 @@ const ConfirmationStage = ({
   subtotal, 
   shippingCost, 
   tax, 
-  total, 
-  onPlaceOrder, 
-  onBack,
-  isPlacingOrder
+  total 
 }: ConfirmationStageProps) => {
   const getPaymentMethodDisplay = () => {
     switch (paymentInfo.method) {
@@ -920,44 +868,6 @@ const ConfirmationStage = ({
             </div>
           </section>
         </div>
-
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 mt-8 py-4 sm:py-6 lg:relative lg:bg-transparent lg:border-t-0 lg:mt-8 lg:pt-8">
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4">
-            <button
-              type="button"
-              onClick={onBack}
-              disabled={isPlacingOrder}
-              className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              <span className="mr-2">←</span>
-              Back to Payment
-            </button>
-            
-            <div className="text-center sm:text-right">
-              <div className="flex items-center justify-center sm:justify-end space-x-2 mb-3">
-                <span className="text-sm text-gray-600">Total:</span>
-                <span className="text-lg font-bold text-gray-900">{formatPesoPrice(total)}</span>
-              </div>
-              <button
-                onClick={onPlaceOrder}
-                disabled={isPlacingOrder}
-                className="w-full sm:w-auto bg-indigo-600 border border-transparent rounded-md shadow-sm px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-              >
-                {isPlacingOrder ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Placing Order...
-                  </span>
-                ) : (
-                  'Place Order'
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -976,24 +886,31 @@ const CompletedStage = ({ onContinueShopping }: CompletedStageProps) => {
       </div>
       <h2 className="text-2xl font-serif font-bold text-amber-900 mb-3">Order Placed Successfully!</h2>
       <p className="text-amber-700 mb-6 max-w-md mx-auto">Thank you for your purchase. Your order has been placed and will be processed shortly.</p>
-      <button 
-        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-lg font-medium hover:from-amber-600 hover:to-amber-700 transition-all shadow-md"
-        onClick={onContinueShopping}
-      >
-        Continue Shopping
-      </button>
     </div>
   );
 };
 
-// Order Summary Component
+// Order Summary Component - With all navigation buttons
 interface OrderSummaryProps {
   cartItems: CartItem[];
   addresses: Address[];
   subtotal: number;
   tax: number;
   total: number;
-  currentStage?: CartStage;
+  currentStage: CartStage;
+  onProceedToShipping: () => void;
+  onProceedToPayment: () => void;
+  onProceedToConfirmation: () => void;
+  onPlaceOrder: () => Promise<void>;
+  onBackToCart: () => void;
+  onBackToShipping: () => void;
+  onBackToPayment: () => void;
+  onContinueShopping: () => void;
+  isPlacingOrder: boolean;
+  canProceedToShipping: boolean;
+  canProceedToPayment: boolean;
+  canProceedToConfirmation: boolean;
+  canPlaceOrder: boolean;
 }
 
 const OrderSummary = ({ 
@@ -1002,7 +919,20 @@ const OrderSummary = ({
   subtotal, 
   tax, 
   total, 
-  currentStage
+  currentStage,
+  onProceedToShipping,
+  onProceedToPayment,
+  onProceedToConfirmation,
+  onPlaceOrder,
+  onBackToCart,
+  onBackToShipping,
+  onBackToPayment,
+  onContinueShopping,
+  isPlacingOrder,
+  canProceedToShipping,
+  canProceedToPayment,
+  canProceedToConfirmation,
+  canPlaceOrder
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -1125,6 +1055,118 @@ const OrderSummary = ({
 
   const totalWithShipping = total + shippingCost;
 
+  // Render different buttons based on current stage
+  const renderNavigationButtons = () => {
+    switch (currentStage) {
+      case 'cart':
+        return (
+          <button
+            onClick={onProceedToShipping}
+            disabled={!canProceedToShipping || isCalculatingShipping}
+            className={`w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
+              !canProceedToShipping || isCalculatingShipping
+                ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
+            }`}
+          >
+            {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Shipping'}
+          </button>
+        );
+
+      case 'shipping':
+        return (
+          <div className="space-y-3">
+            <button
+              onClick={onProceedToPayment}
+              disabled={!canProceedToPayment}
+              className={`w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
+                !canProceedToPayment
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
+              }`}
+            >
+              Proceed to Payment
+            </button>
+            <button
+              onClick={onBackToCart}
+              className="w-full text-xs text-indigo-600 hover:text-indigo-800 underline py-1"
+            >
+              ← Back to Cart
+            </button>
+          </div>
+        );
+
+      case 'payment':
+        return (
+          <div className="space-y-3">
+            <button
+              onClick={onProceedToConfirmation}
+              disabled={!canProceedToConfirmation}
+              className={`w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
+                !canProceedToConfirmation
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
+              }`}
+            >
+              Review Order
+            </button>
+            <button
+              onClick={onBackToShipping}
+              className="w-full text-xs text-indigo-600 hover:text-indigo-800 underline py-1"
+            >
+              ← Back to Shipping
+            </button>
+          </div>
+        );
+
+      case 'confirmation':
+        return (
+          <div className="space-y-3">
+            <button
+              onClick={onPlaceOrder}
+              disabled={!canPlaceOrder || isPlacingOrder}
+              className={`w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
+                !canPlaceOrder || isPlacingOrder
+                  ? 'bg-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-green-600 hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform active:scale-[0.98]'
+              }`}
+            >
+              {isPlacingOrder ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Placing Order...
+                </span>
+              ) : (
+                'Place Order'
+              )}
+            </button>
+            <button
+              onClick={onBackToPayment}
+              className="w-full text-xs text-indigo-600 hover:text-indigo-800 underline py-1"
+            >
+              ← Back to Payment
+            </button>
+          </div>
+        );
+
+      case 'completed':
+        return (
+          <button
+            onClick={onContinueShopping}
+            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
+          >
+            Continue Shopping
+          </button>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg md:rounded-xl w-full">
       <div className="px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
@@ -1172,6 +1214,10 @@ const OrderSummary = ({
                     <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(totalWithShipping)}</dd>
                   </div>
                 </dl>
+              </div>
+
+              <div className="mt-3 sm:mt-4 md:mt-5 lg:mt-6">
+                {renderNavigationButtons()}
               </div>
             </div>
           </div>
@@ -1234,20 +1280,6 @@ const DeluxeCart = () => {
       dispatch(changeQuantity({ id, quantity }));
     }
   };
-  
-  const handleShippingSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (validateStageTransition('shipping', 'payment')) {
-      setCurrentStage('payment');
-    }
-  };
-  
-  const handlePaymentSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (validateStageTransition('payment', 'confirmation')) {
-      setCurrentStage('confirmation');
-    }
-  };
 
   // Centralized place order function with GraphQL
   const handlePlaceOrder = async (): Promise<void> => {
@@ -1292,24 +1324,12 @@ const DeluxeCart = () => {
       setIsPlacingOrder(false);
     }
   };
-  
-  const handleContinueShopping = () => {
-    setCurrentStage('cart');
-  };
-
-  const handleBackNavigation = (targetStage: CartStage) => {
-    if (validateStageTransition(currentStage, targetStage)) {
-      setCurrentStage(targetStage);
-    }
-  };
 
   // Centralized stage validation function
   const validateStageTransition = (fromStage: CartStage, toStage: CartStage): boolean => {
     setStageError(null);
 
-    // Define validation rules for each stage transition
     const validationRules: Record<string, () => boolean> = {
-      // Cart to Shipping validation
       'cart->shipping': () => {
         if (cartItems.length === 0) {
           setStageError('Your cart is empty. Please add items before proceeding.');
@@ -1322,14 +1342,12 @@ const DeluxeCart = () => {
         return true;
       },
 
-      // Shipping to Payment validation
       'shipping->payment': () => {
         if (!userId) {
           setStageError('User authentication required.');
           return false;
         }
         
-        // Validate shipping info is complete
         const requiredShippingFields: (keyof ShippingInfo)[] = [
           'receiver', 'address', 'city', 'zipCode', 'country', 'state'
         ];
@@ -1346,7 +1364,6 @@ const DeluxeCart = () => {
         return true;
       },
 
-      // Payment to Confirmation validation
       'payment->confirmation': () => {
         if (!userId) {
           setStageError('User authentication required.');
@@ -1358,7 +1375,6 @@ const DeluxeCart = () => {
           return false;
         }
 
-        // Validate specific payment method requirements
         if (paymentInfo.method === 'gcash' && !paymentInfo.gcashNumber) {
           setStageError('Please enter your GCash mobile number.');
           return false;
@@ -1374,7 +1390,6 @@ const DeluxeCart = () => {
         return true;
       },
 
-      // Confirmation to Completed validation (for order placement)
       'confirmation->completed': () => {
         if (cartItems.length === 0) {
           setStageError('Cannot place order: Cart is empty.');
@@ -1399,7 +1414,6 @@ const DeluxeCart = () => {
         return true;
       },
 
-      // Back navigation validation (always allowed)
       'shipping->cart': () => true,
       'payment->shipping': () => true,
       'confirmation->payment': () => true,
@@ -1422,12 +1436,56 @@ const DeluxeCart = () => {
     return isValid;
   };
 
-  // Wrapper for setCurrentStage that includes validation
-  const handleStageChange = (newStage: CartStage) => {
-    if (validateStageTransition(currentStage, newStage)) {
-      setCurrentStage(newStage);
+  // Navigation handlers
+  const handleProceedToShipping = () => {
+    if (validateStageTransition('cart', 'shipping')) {
+      setCurrentStage('shipping');
     }
   };
+
+  const handleProceedToPayment = () => {
+    if (validateStageTransition('shipping', 'payment')) {
+      setCurrentStage('payment');
+    }
+  };
+
+  const handleProceedToConfirmation = () => {
+    if (validateStageTransition('payment', 'confirmation')) {
+      setCurrentStage('confirmation');
+    }
+  };
+
+  const handleBackToCart = () => {
+    if (validateStageTransition('shipping', 'cart')) {
+      setCurrentStage('cart');
+    }
+  };
+
+  const handleBackToShipping = () => {
+    if (validateStageTransition('payment', 'shipping')) {
+      setCurrentStage('shipping');
+    }
+  };
+
+  const handleBackToPayment = () => {
+    if (validateStageTransition('confirmation', 'payment')) {
+      setCurrentStage('payment');
+    }
+  };
+
+  const handleContinueShopping = () => {
+    setCurrentStage('cart');
+  };
+
+  // Determine if buttons should be enabled
+  const canProceedToShipping = cartItems.length > 0 && !!userId;
+  const canProceedToPayment = !!userId && 
+    shippingInfo.receiver && shippingInfo.address && shippingInfo.city && 
+    shippingInfo.zipCode && shippingInfo.country && shippingInfo.state;
+  const canProceedToConfirmation = !!userId && !!paymentInfo.method && 
+    (paymentInfo.method !== 'gcash' || paymentInfo.gcashNumber) &&
+    (paymentInfo.method !== 'bank' || (paymentInfo.bankName && paymentInfo.accountNumber && paymentInfo.accountName));
+  const canPlaceOrder = !!userId && !!shippingInfo.addressId && !!paymentInfo.method && cartItems.length > 0;
   
   if (loading || profileDataLoading) {
     return (
@@ -1498,10 +1556,8 @@ const DeluxeCart = () => {
           {currentStage === 'shipping' && userId && (
             <ShippingStage 
               shippingInfo={shippingInfo}
-              addresses={profileData?.user.addresses}
+              addresses={profileData?.user.addresses || []}
               setShippingInfo={setShippingInfo}
-              onSubmit={handleShippingSubmit}
-              onBack={() => handleStageChange('cart')}
               userId={userId}
               refresh={refresh}
             />
@@ -1516,12 +1572,6 @@ const DeluxeCart = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Authentication Required</h3>
               <p className="text-gray-600 mb-6">Please log in to continue with shipping</p>
-              <button
-                onClick={() => handleStageChange('cart')}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Return to Cart
-              </button>
             </div>
           )}
           
@@ -1529,8 +1579,6 @@ const DeluxeCart = () => {
             <PaymentStage 
               paymentInfo={paymentInfo}
               setPaymentInfo={setPaymentInfo}
-              onSubmit={handlePaymentSubmit}
-              onBack={() => handleStageChange('shipping')}
             />
           )}
           
@@ -1543,21 +1591,12 @@ const DeluxeCart = () => {
               shippingCost={shippingCost}
               tax={tax}
               total={total}
-              onPlaceOrder={handlePlaceOrder}
-              onBack={() => handleStageChange('payment')}
-              isPlacingOrder={isPlacingOrder}
             />
           )}
           
           {currentStage === 'confirmation' && !userId && (
             <div className="text-center py-12">
               <p className="text-red-500">User information not available</p>
-              <button
-                onClick={() => handleStageChange('cart')}
-                className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Return to Cart
-              </button>
             </div>
           )}
           
@@ -1569,11 +1608,24 @@ const DeluxeCart = () => {
         <div className="bg-white rounded-xl p-6 md:p-8 mt-5">
           <OrderSummary
             cartItems={cartItems}
-            addresses={profileData?.user.addresses}
+            addresses={profileData?.user.addresses || []}
             subtotal={subtotal}
             tax={tax}
             total={total}
             currentStage={currentStage}
+            onProceedToShipping={handleProceedToShipping}
+            onProceedToPayment={handleProceedToPayment}
+            onProceedToConfirmation={handleProceedToConfirmation}
+            onPlaceOrder={handlePlaceOrder}
+            onBackToCart={handleBackToCart}
+            onBackToShipping={handleBackToShipping}
+            onBackToPayment={handleBackToPayment}
+            onContinueShopping={handleContinueShopping}
+            isPlacingOrder={isPlacingOrder}
+            canProceedToShipping={canProceedToShipping}
+            canProceedToPayment={canProceedToPayment}
+            canProceedToConfirmation={canProceedToConfirmation}
+            canPlaceOrder={canPlaceOrder}
           />
         </div>
       </div>
