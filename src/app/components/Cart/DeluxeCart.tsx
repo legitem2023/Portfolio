@@ -35,29 +35,14 @@ export interface PaymentInfo {
   expiryDate?: string;
   cvv?: string;
 }
-/*
-interface Address {
-  id: string;
-  city: string;
-  country: string;
-  createdAt: string;
-  isDefault: boolean;
-  state: string;
-  street: string;
-  type: string;
-  userId: string;
-  zipCode: string;
-  receiver: string;
-  lat: number;
-  lng: number;
-}
-*/
+
 type Coordinate = {
   lat: number;
   lng: number;
 };
 
 type PaymentMethod = 'gcash' | 'bank' | 'cod';
+type CartStage = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed';
 
 // Helper function to format price as peso
 const formatPesoPrice = (price: number): string => {
@@ -82,7 +67,7 @@ async function getDistanceInKm(
   }
 
   const route = data.routes[0];
-  return route.distance / 1000; // distance in kilometers
+  return route.distance / 1000;
 }
 
 // Shimmer Component
@@ -99,22 +84,6 @@ const CartStageShimmer = () => (
           </div>
         </div>
       ))}
-    </div>
-  </div>
-);
-
-const ShippingStageShimmer = () => (
-  <div className="animate-pulse space-y-6">
-    <div className="h-8 bg-indigo-200 rounded w-64 mb-6"></div>
-    <div className="space-y-4">
-      <div className="h-12 bg-indigo-100 rounded"></div>
-      <div className="h-12 bg-indigo-100 rounded"></div>
-      <div className="grid grid-cols-2 gap-4">
-        <div className="h-12 bg-indigo-100 rounded"></div>
-        <div className="h-12 bg-indigo-100 rounded"></div>
-      </div>
-      <div className="h-12 bg-indigo-100 rounded"></div>
-      <div className="h-12 bg-indigo-100 rounded"></div>
     </div>
   </div>
 );
@@ -1075,8 +1044,9 @@ interface OrderSummaryProps {
   total: number;
   onQuantityChange: (id: string | number, quantity: number) => void;
   onCheckout: () => void;
-  setCurrentStage: (stage: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed') => void;
-  currentStage?: 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed';
+  setCurrentStage: (stage: CartStage) => void;
+  currentStage?: CartStage;
+  validateStageTransition: (fromStage: CartStage, toStage: CartStage) => boolean;
 }
 
 const OrderSummary = ({ 
@@ -1087,7 +1057,8 @@ const OrderSummary = ({
   total, 
   onCheckout,
   setCurrentStage,
-  currentStage
+  currentStage,
+  validateStageTransition
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -1215,7 +1186,11 @@ const OrderSummary = ({
       case 'shipping':
         return (
           <button
-            onClick={() => setCurrentStage('payment')}
+            onClick={() => {
+              if (validateStageTransition('shipping', 'payment')) {
+                setCurrentStage('payment');
+              }
+            }}
             className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
           >
             Proceed to Payment
@@ -1225,7 +1200,11 @@ const OrderSummary = ({
       case 'payment':
         return (
           <button
-            onClick={() => setCurrentStage('confirmation')}
+            onClick={() => {
+              if (validateStageTransition('payment', 'confirmation')) {
+                setCurrentStage('confirmation');
+              }
+            }}
             className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
           >
             Review Order
@@ -1235,7 +1214,11 @@ const OrderSummary = ({
       case 'confirmation':
         return (
           <button
-            onClick={() => setCurrentStage('completed')}
+            onClick={() => {
+              if (validateStageTransition('confirmation', 'completed')) {
+                setCurrentStage('completed');
+              }
+            }}
             className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-green-600 hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform active:scale-[0.98] transition-all duration-200"
           >
             Place Order
@@ -1256,6 +1239,8 @@ const OrderSummary = ({
         return null;
     }
   };
+
+  const totalWithShipping = total + shippingCost;
 
   return (
     <div className="bg-white rounded-lg md:rounded-xl w-full">
@@ -1301,7 +1286,7 @@ const OrderSummary = ({
                   
                   <div className="py-2 sm:py-3 md:py-4 flex items-center justify-between">
                     <dt className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">Total</dt>
-                    <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(total + shippingCost)}</dd>
+                    <dd className="text-xs sm:text-sm md:text-base font-bold text-indigo-900">{formatPesoPrice(totalWithShipping)}</dd>
                   </div>
                 </dl>
               </div>
@@ -1309,8 +1294,10 @@ const OrderSummary = ({
               {currentStage === 'cart' ? (
                 <button
                   onClick={() => {
-                    onCheckout();
-                    setCurrentStage('shipping');
+                    if (validateStageTransition('cart', 'shipping')) {
+                      onCheckout();
+                      setCurrentStage('shipping');
+                    }
                   }}
                   disabled={isCalculatingShipping || !!shippingError}
                   className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
@@ -1329,9 +1316,12 @@ const OrderSummary = ({
                 <div className="mt-3 flex gap-2 justify-center">
                   <button
                     onClick={() => {
-                      if (currentStage === 'shipping') setCurrentStage('cart');
-                      if (currentStage === 'payment') setCurrentStage('shipping');
-                      if (currentStage === 'confirmation') setCurrentStage('payment');
+                      const backStage = currentStage === 'shipping' ? 'cart' : 
+                                       currentStage === 'payment' ? 'shipping' : 
+                                       currentStage === 'confirmation' ? 'payment' : 'cart';
+                      if (validateStageTransition(currentStage, backStage)) {
+                        setCurrentStage(backStage);
+                      }
                     }}
                     className="text-xs text-indigo-600 hover:text-indigo-800 underline"
                   >
@@ -1353,7 +1343,8 @@ const OrderSummary = ({
 const DeluxeCart = () => {
   const { user, loading } = useAuth();
   
-  const [currentStage, setCurrentStage] = useState<'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed'>('cart');
+  const [currentStage, setCurrentStage] = useState<CartStage>('cart');
+  const [stageError, setStageError] = useState<string | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId: '',
     receiver: '',
@@ -1404,21 +1395,153 @@ const DeluxeCart = () => {
   
   const handleShippingSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setCurrentStage('payment');
+    if (validateStageTransition('shipping', 'payment')) {
+      setCurrentStage('payment');
+    }
   };
   
   const handlePaymentSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setCurrentStage('confirmation');
+    if (validateStageTransition('payment', 'confirmation')) {
+      setCurrentStage('confirmation');
+    }
   };
   
   const handlePlaceOrder = () => {
-    dispatch(clearCart());
-    setCurrentStage('completed');
+    if (validateStageTransition('confirmation', 'completed')) {
+      dispatch(clearCart());
+      setCurrentStage('completed');
+    }
   };
   
   const handleContinueShopping = () => {
     setCurrentStage('cart');
+  };
+
+  // Centralized stage validation function
+  const validateStageTransition = (fromStage: CartStage, toStage: CartStage): boolean => {
+    setStageError(null);
+
+    // Define validation rules for each stage transition
+    const validationRules: Record<string, () => boolean> = {
+      // Cart to Shipping validation
+      'cart->shipping': () => {
+        if (cartItems.length === 0) {
+          setStageError('Your cart is empty. Please add items before proceeding.');
+          return false;
+        }
+        if (!userId) {
+          setStageError('Please log in to continue with checkout.');
+          return false;
+        }
+        return true;
+      },
+
+      // Shipping to Payment validation
+      'shipping->payment': () => {
+        if (!userId) {
+          setStageError('User authentication required.');
+          return false;
+        }
+        
+        // Validate shipping info is complete
+        const requiredShippingFields: (keyof ShippingInfo)[] = [
+          'receiver', 'address', 'city', 'zipCode', 'country', 'state'
+        ];
+        
+        const missingFields = requiredShippingFields.filter(
+          field => !shippingInfo[field] || shippingInfo[field].trim() === ''
+        );
+        
+        if (missingFields.length > 0) {
+          setStageError(`Please complete all shipping information fields: ${missingFields.join(', ')}`);
+          return false;
+        }
+        
+        return true;
+      },
+
+      // Payment to Confirmation validation
+      'payment->confirmation': () => {
+        if (!userId) {
+          setStageError('User authentication required.');
+          return false;
+        }
+        
+        if (!paymentInfo.method) {
+          setStageError('Please select a payment method.');
+          return false;
+        }
+
+        // Validate specific payment method requirements
+        if (paymentInfo.method === 'gcash' && !paymentInfo.gcashNumber) {
+          setStageError('Please enter your GCash mobile number.');
+          return false;
+        }
+
+        if (paymentInfo.method === 'bank') {
+          if (!paymentInfo.bankName || !paymentInfo.accountNumber || !paymentInfo.accountName) {
+            setStageError('Please complete all bank transfer details.');
+            return false;
+          }
+        }
+
+        return true;
+      },
+
+      // Confirmation to Completed validation
+      'confirmation->completed': () => {
+        if (cartItems.length === 0) {
+          setStageError('Cannot place order: Cart is empty.');
+          return false;
+        }
+        
+        if (!userId) {
+          setStageError('User authentication required to place order.');
+          return false;
+        }
+        
+        if (!shippingInfo.addressId) {
+          setStageError('Shipping address is required.');
+          return false;
+        }
+        
+        if (!paymentInfo.method) {
+          setStageError('Payment method is required.');
+          return false;
+        }
+
+        return true;
+      },
+
+      // Back navigation validation (always allowed)
+      'shipping->cart': () => true,
+      'payment->shipping': () => true,
+      'confirmation->payment': () => true,
+    };
+
+    const transitionKey = `${fromStage}->${toStage}`;
+    const validator = validationRules[transitionKey];
+
+    if (!validator) {
+      console.warn(`No validation rule defined for transition: ${transitionKey}`);
+      return true; // Allow transition if no specific rule defined
+    }
+
+    const isValid = validator();
+    
+    if (!isValid) {
+      console.log(`Stage transition validation failed: ${transitionKey}`, stageError);
+    }
+
+    return isValid;
+  };
+
+  // Wrapper for setCurrentStage that includes validation
+  const handleStageChange = (newStage: CartStage) => {
+    if (validateStageTransition(currentStage, newStage)) {
+      setCurrentStage(newStage);
+    }
   };
   
   if (loading || profileDataLoading) {
@@ -1464,6 +1587,16 @@ const DeluxeCart = () => {
           })}
         </div>
         
+        {/* Error Display */}
+        {stageError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm flex items-center">
+              <span className="mr-2">⚠</span>
+              {stageError}
+            </p>
+          </div>
+        )}
+        
         {/* Content */}
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
           {currentStage === 'cart' && (
@@ -1484,7 +1617,7 @@ const DeluxeCart = () => {
               addresses={profileData?.user.addresses}
               setShippingInfo={setShippingInfo}
               onSubmit={handleShippingSubmit}
-              onBack={() => setCurrentStage('cart')}
+              onBack={() => handleStageChange('cart')}
               userId={userId}
               refresh={refresh}
             />
@@ -1500,7 +1633,7 @@ const DeluxeCart = () => {
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Authentication Required</h3>
               <p className="text-gray-600 mb-6">Please log in to continue with shipping</p>
               <button
-                onClick={() => setCurrentStage('cart')}
+                onClick={() => handleStageChange('cart')}
                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Return to Cart
@@ -1513,7 +1646,7 @@ const DeluxeCart = () => {
               paymentInfo={paymentInfo}
               setPaymentInfo={setPaymentInfo}
               onSubmit={handlePaymentSubmit}
-              onBack={() => setCurrentStage('shipping')}
+              onBack={() => handleStageChange('shipping')}
             />
           )}
           
@@ -1528,7 +1661,7 @@ const DeluxeCart = () => {
               tax={tax}
               total={total}
               onPlaceOrder={handlePlaceOrder}
-              onBack={() => setCurrentStage('payment')}
+              onBack={() => handleStageChange('payment')}
             />
           )}
           
@@ -1536,7 +1669,7 @@ const DeluxeCart = () => {
             <div className="text-center py-12">
               <p className="text-red-500">User information not available</p>
               <button
-                onClick={() => setCurrentStage('cart')}
+                onClick={() => handleStageChange('cart')}
                 className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Return to Cart
@@ -1558,8 +1691,9 @@ const DeluxeCart = () => {
             total={total}
             onQuantityChange={handleQuantityChange}
             onCheckout={handleCheckout}
-            setCurrentStage={setCurrentStage}
+            setCurrentStage={handleStageChange}
             currentStage={currentStage}
+            validateStageTransition={validateStageTransition}
           />
         </div>
       </div>
