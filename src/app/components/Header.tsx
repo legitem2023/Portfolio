@@ -837,6 +837,17 @@ const Header: React.FC = () => {
                       <span className="transition-all duration-200">Orders</span>
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleTabClick(10);
+                      }}
+                    >
+                      <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
+                      <span className="transition-all duration-200">Wishlist</span>
+                      <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
                     <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
                     <div className="transform transition-all duration-300 hover:scale-[1.02]">
                       <LogoutButton/>
@@ -945,7 +956,23 @@ const Header: React.FC = () => {
                     <span className="flex-1 transition-all duration-300">Orders</span>
                     <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
-
+                  <button
+                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.2s'
+                    }}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      handleTabClick(10);
+                    }}
+                  >
+                    <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
+                    <span className="flex-1 transition-all duration-300">Wishlist</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+                  
                   <div 
                     className="border-t border-gray-200 my-3 transition-all duration-300"
                     style={{
