@@ -202,3 +202,12 @@ body.search-overlay-open {
 .order-column::-webkit-scrollbar-thumb:hover {
   background: #a78bfa;
 }
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
