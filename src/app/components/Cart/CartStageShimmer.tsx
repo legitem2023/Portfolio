@@ -6,7 +6,7 @@ const CartStageShimmer = () => {
   return (
     <div>
       {/* Checkout Steps with Shimmer */}
-      <div className="relative overflow-hidden rounded-lg mb-6">
+      <div className="relative overflow-hidden rounded-lg">
         <div className="flex justify-between relative mb-6 sm:mb-8 md:mb-10">
           <div className="absolute top-3 left-0 right-0 h-0.5 bg-indigo-200 z-0"></div>
           
@@ -38,7 +38,7 @@ const CartStageShimmer = () => {
       </div>
 
       {/* Cart Items Shimmer */}
-      <div className="bg-white min-h-screen">
+      <div className="bg-white rounded-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
           {/* Title shimmer - using background with animation overlay */}
           <div className="relative overflow-hidden h-8 md:h-10 w-48 bg-gray-200 rounded-lg mb-6 md:mb-8">
