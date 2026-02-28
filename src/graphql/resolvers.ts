@@ -2418,6 +2418,39 @@ salesList: async (
   },
 
   Mutation: {
+    addToWishList: async (_, { userId, productId }) => {
+  try {
+    // Check if item already exists
+    const existingItem = await prisma.wishlistItem.findFirst({
+      where: {
+        userId: userId,
+        productId: productId
+      }
+    });
+
+    if (existingItem) {
+      return {
+        statusText: 'Item already in wishlist'
+      };
+    }
+
+    // Create new wishlist item
+    await prisma.wishlistItem.create({
+      data: {
+        userId: userId,
+        productId: productId
+      }
+    });
+
+    return {
+      statusText: 'Added to wishlist successfully'
+    };
+  } catch (error) {
+    return {
+      statusText: error.message || 'Failed to add to wishlist'
+    };
+  }
+},
   updateRole: async (_:any, { userId, Level }:any) => {
   try {
     if (!userId) {
