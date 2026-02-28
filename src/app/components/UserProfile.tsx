@@ -75,7 +75,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
           tabsConfig={[
             { id: 'posts', label: 'Posts', icon: 'user' },
             { id: 'address', label: 'Addresses', icon: 'location' },
-            { id: 'wishlist', label: 'Wishlist', icon: 'location' }
+            { id: 'wishlist', label: 'Wishlist', icon: 'wishlist' }
           ]}
         />
       </div>
