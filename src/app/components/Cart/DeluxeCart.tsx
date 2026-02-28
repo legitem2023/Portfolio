@@ -1232,6 +1232,19 @@ const DeluxeCart = () => {
   const shippingCost = subtotal > 0 ? 5.99 : 0;
   const tax = subtotal * 0.08;
   const total = subtotal + shippingCost + tax;
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
+  // Scroll to top whenever stage changes
+  useEffect(() => {
+    scrollToTop();
+  }, [currentStage]);
   
   const handleQuantityChange = (id: string | number, quantity: number) => {
     if (quantity === 0) {
