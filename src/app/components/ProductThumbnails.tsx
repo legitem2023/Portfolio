@@ -8,7 +8,7 @@ import { showToast } from '../../../utils/toastify';
 import { Product } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from './hooks/useAuth';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
