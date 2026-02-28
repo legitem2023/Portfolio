@@ -2418,7 +2418,7 @@ salesList: async (
   },
 
   Mutation: {
-    addToWishList: async (_, { userId, productId }) => {
+    addToWishList: async (_:any, { userId, productId }:any) => {
   try {
     // Check if item already exists
     const existingItem = await prisma.wishlistItem.findFirst({
