@@ -13,6 +13,7 @@ import { useQuery, useMutation } from '@apollo/client';
 import { GET_USER_PROFILE } from '../graphql/query';
 import { CREATE_ORDER } from '../graphql/mutation';
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import CartStageShimmer from './CartStageShimmer';
 
 export interface ShippingInfo {
   addressId: string;
@@ -70,7 +71,7 @@ async function getDistanceInKm(
 }
 
 // Shimmer Component - Optimized for mobile
-const CartStageShimmer = () => (
+/*const CartStageShimmer = () => (
   <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 lg:p-8 animate-pulse">
     <div className="h-6 sm:h-7 md:h-8 bg-indigo-200 rounded w-32 sm:w-40 md:w-48 mb-4 sm:mb-6"></div>
     <div className="space-y-3 sm:space-y-4">
@@ -85,7 +86,7 @@ const CartStageShimmer = () => (
       ))}
     </div>
   </div>
-);
+);*/
 
 // Cart Stage Component - Mobile optimized
 interface CartStageProps {
