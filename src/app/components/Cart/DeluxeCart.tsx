@@ -34,6 +34,7 @@ export interface PaymentInfo {
   cardHolder?: string;
   expiryDate?: string;
   cvv?: string;
+  termsAccepted?: boolean; // Add terms to payment info
 }
 
 type Coordinate = {
@@ -443,6 +444,13 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
     });
   };
 
+  const handleTermsChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPaymentInfo({
+      ...paymentInfo,
+      termsAccepted: e.target.checked
+    });
+  };
+
   const handleMethodChange = (method: PaymentMethod) => {
     setSelectedMethod(method);
     setPaymentInfo({
@@ -653,6 +661,8 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
             <input
               type="checkbox"
               id="terms"
+              checked={paymentInfo.termsAccepted || false}
+              onChange={handleTermsChange}
               required
               className="mt-1 w-4 h-4 text-indigo-600 border-indigo-300 rounded focus:ring-indigo-500"
             />
@@ -1231,7 +1241,8 @@ const DeluxeCart = () => {
     cardNumber: '',
     cardHolder: '',
     expiryDate: '',
-    cvv: ''
+    cvv: '',
+    termsAccepted: false
   });
   
   const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
@@ -1361,6 +1372,12 @@ const DeluxeCart = () => {
           }
         }
 
+        // Add terms acceptance validation
+        if (!paymentInfo.termsAccepted) {
+          setStageError('You must accept the terms and conditions to proceed.');
+          return false;
+        }
+
         return true;
       },
 
@@ -1382,6 +1399,12 @@ const DeluxeCart = () => {
         
         if (!paymentInfo.method) {
           setStageError('Payment method is required.');
+          return false;
+        }
+
+        // Double-check terms acceptance before placing order
+        if (!paymentInfo.termsAccepted) {
+          setStageError('You must accept the terms and conditions to place order.');
           return false;
         }
 
@@ -1457,9 +1480,16 @@ const DeluxeCart = () => {
     userId && 
     paymentInfo.method && 
     (paymentInfo.method !== 'gcash' || paymentInfo.gcashNumber) &&
-    (paymentInfo.method !== 'bank' || (paymentInfo.bankName && paymentInfo.accountNumber && paymentInfo.accountName))
+    (paymentInfo.method !== 'bank' || (paymentInfo.bankName && paymentInfo.accountNumber && paymentInfo.accountName)) &&
+    paymentInfo.termsAccepted // Add terms to the condition
   );
-  const canPlaceOrder = Boolean(userId && shippingInfo.addressId && paymentInfo.method && cartItems.length > 0);
+  const canPlaceOrder = Boolean(
+    userId && 
+    shippingInfo.addressId && 
+    paymentInfo.method && 
+    cartItems.length > 0 &&
+    paymentInfo.termsAccepted // Double-check terms before order placement
+  );
   
   if (loading || profileDataLoading) {
     return (
