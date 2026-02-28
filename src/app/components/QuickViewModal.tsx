@@ -1,6 +1,7 @@
 // components/QuickViewModal.tsx
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
+import { ADD_TO_WISHLIST } from './graphql/mutation';
 import Image from 'next/image';
 import { 
   X, 
