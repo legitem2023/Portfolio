@@ -1,6 +1,13 @@
 import { gql } from "@apollo/client";
 
 // Create notification mutation
+export const ADD_TO_WISHLIST = gql`
+  mutation AddToWishList($userId: ID!, $productId: ID!) {
+    addToWishList(userId: $userId, productId: $productId) {
+      statusText
+    }
+  }
+`;
 
 export const CREATE_API_BILL_MUTATION = gql`
   mutation CreateApiBill($input: ApiBillInput!) {
