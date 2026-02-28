@@ -19,7 +19,8 @@ import {
   CheckCircle,
   Info,
   Clock,
-  Menu
+  Menu,
+  Heart
 } from 'lucide-react';
 import FBXViewer from './FBXViewer';
 // Import queries and mutations
@@ -844,7 +845,7 @@ const Header: React.FC = () => {
                         handleTabClick(10);
                       }}
                     >
-                      <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
+                      <Heart  className="mr-2 text-gray-400 w-4 h-4" />
                       <span className="transition-all duration-200">Wishlist</span>
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
@@ -968,7 +969,7 @@ const Header: React.FC = () => {
                       handleTabClick(10);
                     }}
                   >
-                    <ShoppingBag className="mr-3 text-gray-400 w-5 h-5" />
+                    <Heart className="mr-3 text-gray-400 w-5 h-5" />
                     <span className="flex-1 transition-all duration-300">Wishlist</span>
                     <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
