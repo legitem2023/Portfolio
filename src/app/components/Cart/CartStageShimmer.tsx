@@ -7,7 +7,9 @@ const CartStageShimmer = () => {
     <div>
       {/* Checkout Steps with Shimmer */}
       <div className="relative overflow-hidden rounded-lg mb-6">
-        <div className="flex justify-between items-center max-w-2xl mx-auto py-4 px-6">
+        <div className="flex justify-between relative mb-6 sm:mb-8 md:mb-10">
+          <div className="absolute top-3 left-0 right-0 h-0.5 bg-indigo-200 z-0"></div>
+          
           {['cart', 'shipping', 'payment', 'confirmation'].map((stage, index) => {
             const stageIndex = ['cart', 'shipping', 'payment', 'confirmation'].indexOf(currentStage);
             const isCompleted = index < stageIndex;
@@ -25,6 +27,7 @@ const CartStageShimmer = () => {
                 <span className={`mt-1 text-xs sm:text-sm font-medium ${
                   isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'
                 }`}>
+                  {stage.charAt(0).toUpperCase() + stage.slice(1)}
                 </span>
               </div>
             );
