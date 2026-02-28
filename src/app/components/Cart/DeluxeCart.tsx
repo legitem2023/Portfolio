@@ -807,7 +807,7 @@ const ConfirmationStage = ({
 
           <section className="lg:col-span-5 xl:col-span-4">
             <div className="space-y-4 sm:space-y-6">
-              <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+              {/* <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h3>
                 
                 <div className="space-y-3">
@@ -828,7 +828,7 @@ const ConfirmationStage = ({
                     <span className="text-base font-semibold text-gray-900">{formatPesoPrice(total)}</span>
                   </div>
                 </div>
-              </div>
+              </div>*/}
 
               <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-3">Shipping Address</h3>
