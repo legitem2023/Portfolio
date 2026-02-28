@@ -42,27 +42,30 @@ const ProfileTabs = ({ activeTab, onTabChange, tabsConfig }: ProfileTabsProps) =
   };
 
   return (
-    <div className="mt-6 border-t border-gray-200">
-      <div className="flex overflow-x-auto scrollbar-hide">
-        <div className="flex space-x-2 min-w-max">
+    <div className="w-full mt-6">
+      <div className="relative right-0">
+        <ul className="relative flex flex-wrap px-1.5 py-1.5 list-none rounded-md bg-slate-100" role="list">
           {tabsConfig
             .slice()
-            .sort((a:any, b:any) => b.id - a.id)
+            .sort((a: any, b: any) => b.id - a.id)
             .map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => onTabChange(tab.id)}
-                className={`px-4 py-3 font-medium flex items-center text-sm border-b-2 ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                {getTabIcon(tab.icon)}
-                {tab.label}
-              </button>
+              <li key={tab.id} className="z-30 flex-auto text-center">
+                <button
+                  onClick={() => onTabChange(tab.id)}
+                  className={`z-30 flex items-center justify-center w-full px-0 py-2 text-sm mb-0 transition-all ease-in-out border-0 rounded-md cursor-pointer ${
+                    activeTab === tab.id
+                      ? 'bg-white text-slate-700 shadow-sm'
+                      : 'text-slate-600 bg-inherit hover:text-slate-900'
+                  }`}
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                >
+                  {getTabIcon(tab.icon)}
+                  {tab.label}
+                </button>
+              </li>
             ))}
-        </div>
+        </ul>
       </div>
     </div>
   );
