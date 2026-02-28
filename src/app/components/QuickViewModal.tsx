@@ -1,6 +1,7 @@
 // components/QuickViewModal.tsx
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
+import { useMutation } from '@apollo/client';
 import { ADD_TO_WISHLIST } from './graphql/mutation';
 import Image from 'next/image';
 import { 
@@ -25,6 +26,7 @@ interface QuickViewModalProps {
   product: Product | null;
   isOpen: boolean;
   onClose: () => void;
+  userId?: string; // Add userId prop
   onAddToCart?: (product: Product, options: { color: string; size: string; quantity: number }) => void;
 }
 
@@ -36,7 +38,13 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
-const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClose, onAddToCart }) => {
+const QuickViewModal: React.FC<QuickViewModalProps> = ({ 
+  product, 
+  isOpen, 
+  onClose, 
+  userId, // Add userId
+  onAddToCart 
+}) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState('');
@@ -44,7 +52,20 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const [isMobile, setIsMobile] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [wishlistMessage, setWishlistMessage] = useState('');
   const dispatch = useDispatch();
+
+  // Add to wishlist mutation
+  const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
+    onCompleted: (data) => {
+      setWishlistMessage(data.addToWishList.statusText);
+      setTimeout(() => setWishlistMessage(''), 3000); // Clear message after 3 seconds
+    },
+    onError: (error) => {
+      setWishlistMessage(error.message);
+      setTimeout(() => setWishlistMessage(''), 3000);
+    }
+  });
 
   // Memoize variants to prevent unnecessary recalculations
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
@@ -78,6 +99,31 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
   const getImageSrc = (index: number) => {
     const image = additionalImages[index];
     return image || '/NoImage.webp';
+  };
+
+  // Handle add to wishlist
+  const handleAddToWishlist = async () => {
+    if (!userId) {
+      setWishlistMessage('Please log in to add items to wishlist');
+      setTimeout(() => setWishlistMessage(''), 3000);
+      return;
+    }
+
+    if (!product?.id) {
+      setWishlistMessage('Product not available');
+      return;
+    }
+
+    try {
+      await addToWishlist({
+        variables: {
+          userId: userId,
+          productId: product.id
+        }
+      });
+    } catch (error) {
+      console.error('Error adding to wishlist:', error);
+    }
   };
 
   // 3D Model Component
@@ -380,6 +426,17 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
           <X className="h-6 w-6 text-gray-600" />
         </button>
 
+        {/* Wishlist notification */}
+        {wishlistMessage && (
+          <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-30 px-4 py-2 rounded-md text-sm ${
+            wishlistMessage.includes('success') || wishlistMessage.includes('Added') 
+              ? 'bg-green-100 text-green-800' 
+              : 'bg-red-100 text-red-800'
+          }`}>
+            {wishlistMessage}
+          </div>
+        )}
+
         <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} gap-4 md:gap-8 p-4 md:p-6`}>
           {/* Product Media Section with Tabs */}
           <div className="h-full">
@@ -529,10 +586,16 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, isOpen, onClos
                 {selectedVariant ? 'Add to Cart' : 'Select Options'}
               </button>
               <button 
-                className="p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                onClick={handleAddToWishlist}
+                disabled={wishlistLoading || !userId}
+                className={`p-2 md:p-3 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors relative ${
+                  wishlistLoading ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
                 aria-label="Add to wishlist"
               >
-                <Heart className="h-5 w-5 md:h-6 md:w-6 text-gray-600" />
+                <Heart className={`h-5 w-5 md:h-6 md:w-6 text-gray-600 ${
+                  wishlistLoading ? 'animate-pulse' : ''
+                }`} />
               </button>
             </div>
 
