@@ -1483,7 +1483,7 @@ const DeluxeCart = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-4 px-2 sm:py-6 sm:px-3 md:py-8 md:px-4">
+    <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 py-4 px-2 sm:py-6 sm:px-3 md:py-8 md:px-4">
       <div className="max-w-6xl mx-auto">
         {/* Progress Steps - Mobile Optimized */}
         <div className="flex justify-between relative mb-6 sm:mb-8 md:mb-10">
