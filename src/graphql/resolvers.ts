@@ -2445,7 +2445,7 @@ salesList: async (
     return {
       statusText: 'Added to wishlist successfully'
     };
-  } catch (error) {
+  } catch (error:any) {
     return {
       statusText: error.message || 'Failed to add to wishlist'
     };
