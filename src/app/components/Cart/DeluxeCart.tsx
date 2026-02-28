@@ -96,10 +96,9 @@ interface CartStageProps {
   tax: number;
   total: number;
   onQuantityChange: (id: string | number, quantity: number) => void;
-  onCheckout: () => void;
 }
 
-const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange, onCheckout }: CartStageProps) => {
+const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-8 md:py-12 px-4">
@@ -706,7 +705,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo, onSubmit, onBack }: Payment
             type="submit" 
             className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-medium hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-md"
           >
-            {selectedMethod === 'cod' ? 'Place Order' : 'Continue to Payment'}
+            {selectedMethod === 'cod' ? 'Review Order' : 'Continue to Review'}
           </button>
         </div>
       </form>
@@ -723,9 +722,9 @@ interface ConfirmationStageProps {
   shippingCost: number;
   tax: number;
   total: number;
-  onPlaceOrder: () => void;
+  onPlaceOrder: () => Promise<void>;
   onBack: () => void;
-  userId: string;
+  isPlacingOrder: boolean;
 }
 
 const ConfirmationStage = ({ 
@@ -738,10 +737,8 @@ const ConfirmationStage = ({
   total, 
   onPlaceOrder, 
   onBack,
-  userId
+  isPlacingOrder
 }: ConfirmationStageProps) => {
-  const [createOrder, { loading, error }] = useMutation(CREATE_ORDER);
-
   const getPaymentMethodDisplay = () => {
     switch (paymentInfo.method) {
       case 'gcash':
@@ -771,34 +768,6 @@ const ConfirmationStage = ({
     }
   };
 
-  const handlePlaceOrder = async () => {
-    try {
-      const orderItems = cartItems.map(item => ({
-        productId: item.id,
-        supplierId: item.supplierId,
-        quantity: item.quantity,
-        price: item.price
-      }));
-      const OrderParams = {
-        userId: userId,
-        addressId: shippingInfo.addressId,
-        items: orderItems
-      }
-      
-      console.table(OrderParams);
-      const result = await createOrder({
-        variables: OrderParams
-      });
-
-      if (result.data?.createOrder) {
-        console.log('Order created successfully:', result.data.createOrder);
-        onPlaceOrder();
-      } 
-    } catch (err) {
-      console.error('Error creating order:', err);
-    }
-  };
-
   const paymentDisplay = getPaymentMethodDisplay();
 
   return (
@@ -810,24 +779,6 @@ const ConfirmationStage = ({
         </div>
         
         <div className="space-y-4 mb-6 sm:mb-8">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 pt-0.5">
-                  <div className="w-5 h-5 sm:w-6 sm:h-6 bg-red-100 rounded-full flex items-center justify-center">
-                    <span className="text-red-600 font-bold text-xs sm:text-sm">!</span>
-                  </div>
-                </div>
-                <div className="ml-3 flex-1">
-                  <h3 className="text-red-800 font-semibold text-sm">Order Error</h3>
-                  <p className="text-red-700 text-xs sm:text-sm mt-1">
-                    There was a problem placing your order. Please try again.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
           <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
             <div className="flex items-start">
               <div className="flex-shrink-0 pt-0.5">
@@ -975,7 +926,7 @@ const ConfirmationStage = ({
             <button
               type="button"
               onClick={onBack}
-              disabled={loading}
+              disabled={isPlacingOrder}
               className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               <span className="mr-2">←</span>
@@ -988,11 +939,11 @@ const ConfirmationStage = ({
                 <span className="text-lg font-bold text-gray-900">{formatPesoPrice(total)}</span>
               </div>
               <button
-                onClick={handlePlaceOrder}
-                disabled={loading}
+                onClick={onPlaceOrder}
+                disabled={isPlacingOrder}
                 className="w-full sm:w-auto bg-indigo-600 border border-transparent rounded-md shadow-sm px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
               >
-                {loading ? (
+                {isPlacingOrder ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -1042,11 +993,7 @@ interface OrderSummaryProps {
   subtotal: number;
   tax: number;
   total: number;
-  onQuantityChange: (id: string | number, quantity: number) => void;
-  onCheckout: () => void;
-  setCurrentStage: (stage: CartStage) => void;
   currentStage?: CartStage;
-  validateStageTransition: (fromStage: CartStage, toStage: CartStage) => boolean;
 }
 
 const OrderSummary = ({ 
@@ -1055,10 +1002,7 @@ const OrderSummary = ({
   subtotal, 
   tax, 
   total, 
-  onCheckout,
-  setCurrentStage,
-  currentStage,
-  validateStageTransition
+  currentStage
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [totalDistance, setTotalDistance] = useState<number>(0);
@@ -1179,67 +1123,6 @@ const OrderSummary = ({
     );
   }
 
-  const renderStageButton = () => {
-    if (currentStage === 'cart') return null;
-
-    switch (currentStage) {
-      case 'shipping':
-        return (
-          <button
-            onClick={() => {
-              if (validateStageTransition('shipping', 'payment')) {
-                setCurrentStage('payment');
-              }
-            }}
-            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
-          >
-            Proceed to Payment
-          </button>
-        );
-      
-      case 'payment':
-        return (
-          <button
-            onClick={() => {
-              if (validateStageTransition('payment', 'confirmation')) {
-                setCurrentStage('confirmation');
-              }
-            }}
-            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
-          >
-            Review Order
-          </button>
-        );
-      
-      case 'confirmation':
-        return (
-          <button
-            onClick={() => {
-              if (validateStageTransition('confirmation', 'completed')) {
-                setCurrentStage('completed');
-              }
-            }}
-            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-green-600 hover:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform active:scale-[0.98] transition-all duration-200"
-          >
-            Place Order
-          </button>
-        );
-      
-      case 'completed':
-        return (
-          <button
-            onClick={() => setCurrentStage('cart')}
-            className="w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98] transition-all duration-200"
-          >
-            Continue Shopping
-          </button>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
   const totalWithShipping = total + shippingCost;
 
   return (
@@ -1290,47 +1173,6 @@ const OrderSummary = ({
                   </div>
                 </dl>
               </div>
-
-              {currentStage === 'cart' ? (
-                <button
-                  onClick={() => {
-                    if (validateStageTransition('cart', 'shipping')) {
-                      onCheckout();
-                      setCurrentStage('shipping');
-                    }
-                  }}
-                  disabled={isCalculatingShipping || !!shippingError}
-                  className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
-                    isCalculatingShipping || shippingError
-                      ? 'bg-gray-400 cursor-not-allowed opacity-50'
-                      : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
-                  }`}
-                >
-                  {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
-                </button>
-              ) : (
-                renderStageButton()
-              )}
-
-              {currentStage && currentStage !== 'cart' && currentStage !== 'completed' && (
-                <div className="mt-3 flex gap-2 justify-center">
-                  <button
-                    onClick={() => {
-                      const backStage = currentStage === 'shipping' ? 'cart' : 
-                                       currentStage === 'payment' ? 'shipping' : 
-                                       currentStage === 'confirmation' ? 'payment' : 'cart';
-                      if (validateStageTransition(currentStage, backStage)) {
-                        setCurrentStage(backStage);
-                      }
-                    }}
-                    className="text-xs text-indigo-600 hover:text-indigo-800 underline"
-                  >
-                    ← Back to {currentStage === 'shipping' ? 'Cart' : 
-                               currentStage === 'payment' ? 'Shipping' : 
-                               currentStage === 'confirmation' ? 'Payment' : ''}
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -1345,6 +1187,8 @@ const DeluxeCart = () => {
   
   const [currentStage, setCurrentStage] = useState<CartStage>('cart');
   const [stageError, setStageError] = useState<string | null>(null);
+  const [isPlacingOrder, setIsPlacingOrder] = useState<boolean>(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId: '',
     receiver: '',
@@ -1374,6 +1218,8 @@ const DeluxeCart = () => {
     variables: { id: user?.userId },
   });
   
+  const [createOrder] = useMutation(CREATE_ORDER);
+  
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
@@ -1389,10 +1235,6 @@ const DeluxeCart = () => {
     }
   };
   
-  const handleCheckout = () => {
-    setCurrentStage('shipping');
-  };
-  
   const handleShippingSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (validateStageTransition('shipping', 'payment')) {
@@ -1406,16 +1248,59 @@ const DeluxeCart = () => {
       setCurrentStage('confirmation');
     }
   };
-  
-  const handlePlaceOrder = () => {
-    if (validateStageTransition('confirmation', 'completed')) {
-      dispatch(clearCart());
-      setCurrentStage('completed');
+
+  // Centralized place order function with GraphQL
+  const handlePlaceOrder = async (): Promise<void> => {
+    if (!validateStageTransition('confirmation', 'completed')) {
+      return;
+    }
+
+    setIsPlacingOrder(true);
+    setOrderError(null);
+
+    try {
+      const orderItems = cartItems.map(item => ({
+        productId: item.id,
+        supplierId: item.supplierId,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const orderParams = {
+        userId: userId,
+        addressId: shippingInfo.addressId,
+        items: orderItems
+      };
+
+      console.log('Placing order with params:', orderParams);
+
+      const result = await createOrder({
+        variables: orderParams
+      });
+
+      if (result.data?.createOrder) {
+        console.log('Order created successfully:', result.data.createOrder);
+        dispatch(clearCart());
+        setCurrentStage('completed');
+      } else {
+        throw new Error('Failed to create order');
+      }
+    } catch (err) {
+      console.error('Error creating order:', err);
+      setOrderError(err instanceof Error ? err.message : 'Failed to place order. Please try again.');
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
   
   const handleContinueShopping = () => {
     setCurrentStage('cart');
+  };
+
+  const handleBackNavigation = (targetStage: CartStage) => {
+    if (validateStageTransition(currentStage, targetStage)) {
+      setCurrentStage(targetStage);
+    }
   };
 
   // Centralized stage validation function
@@ -1489,7 +1374,7 @@ const DeluxeCart = () => {
         return true;
       },
 
-      // Confirmation to Completed validation
+      // Confirmation to Completed validation (for order placement)
       'confirmation->completed': () => {
         if (cartItems.length === 0) {
           setStageError('Cannot place order: Cart is empty.');
@@ -1525,7 +1410,7 @@ const DeluxeCart = () => {
 
     if (!validator) {
       console.warn(`No validation rule defined for transition: ${transitionKey}`);
-      return true; // Allow transition if no specific rule defined
+      return true;
     }
 
     const isValid = validator();
@@ -1588,11 +1473,11 @@ const DeluxeCart = () => {
         </div>
         
         {/* Error Display */}
-        {stageError && (
+        {(stageError || orderError) && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm flex items-center">
               <span className="mr-2">⚠</span>
-              {stageError}
+              {stageError || orderError}
             </p>
           </div>
         )}
@@ -1607,7 +1492,6 @@ const DeluxeCart = () => {
               tax={tax}
               total={total}
               onQuantityChange={handleQuantityChange}
-              onCheckout={handleCheckout}
             />
           )}
           
@@ -1652,7 +1536,6 @@ const DeluxeCart = () => {
           
           {currentStage === 'confirmation' && userId && (
             <ConfirmationStage 
-              userId={userId}
               cartItems={cartItems}
               shippingInfo={shippingInfo}
               paymentInfo={paymentInfo}
@@ -1662,6 +1545,7 @@ const DeluxeCart = () => {
               total={total}
               onPlaceOrder={handlePlaceOrder}
               onBack={() => handleStageChange('payment')}
+              isPlacingOrder={isPlacingOrder}
             />
           )}
           
@@ -1689,11 +1573,7 @@ const DeluxeCart = () => {
             subtotal={subtotal}
             tax={tax}
             total={total}
-            onQuantityChange={handleQuantityChange}
-            onCheckout={handleCheckout}
-            setCurrentStage={handleStageChange}
             currentStage={currentStage}
-            validateStageTransition={validateStageTransition}
           />
         </div>
       </div>
