@@ -1590,7 +1590,8 @@ const DeluxeCart = () => {
         </div>
         
         {/* Order Summary - Separate Card */}
-        <div className="bg-white rounded-lg shadow-sm">
+        {cartItems.length > 0?
+          <div className="bg-white rounded-lg shadow-sm">
           <OrderSummary
             cartItems={cartItems}
             addresses={profileData?.user?.addresses || []}
@@ -1613,6 +1614,7 @@ const DeluxeCart = () => {
             canPlaceOrder={canPlaceOrder}
           />
         </div>
+        :(<></>)}
       </div>
     </div>
   );
