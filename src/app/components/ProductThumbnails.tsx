@@ -8,6 +8,7 @@ import { showToast } from '../../../utils/toastify';
 import { Product } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
+import { useAuth } from '../hooks/useAuth';
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -25,6 +26,8 @@ const formatPesoPrice = (price: number): string => {
 };
 
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
+  const { user,loading:userloading } = useAuth();
+  
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
@@ -72,7 +75,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
   };
-
+  if(userloading) return;
+  const userId = user?.userId;
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
@@ -262,6 +266,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={handleAddToCart}
+        userId={userId}
       />
     </>
   );
