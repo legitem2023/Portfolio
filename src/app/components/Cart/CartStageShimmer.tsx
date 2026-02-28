@@ -22,7 +22,7 @@ const CartStageShimmer = () => {
                     ? 'bg-indigo-500 border-indigo-500 text-white' 
                     : 'bg-white border-indigo-300 text-indigo-300'
                 }`}>
-                  {index + 1}
+                  
                 </div>
                 <span className={`mt-1 text-xs sm:text-sm font-medium ${
                   isActive || isCompleted ? 'text-indigo-800' : 'text-indigo-400'
