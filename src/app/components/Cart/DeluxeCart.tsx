@@ -98,7 +98,7 @@ interface CartStageProps {
   onQuantityChange: (id: string | number, quantity: number) => void;
 }
 
-const CartStage = ({ cartItems, subtotal, shippingCost, tax, total, onQuantityChange }: CartStageProps) => {
+const CartStage = ({ cartItems, onQuantityChange }: CartStageProps) => {
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-8 md:py-12 px-4">
@@ -206,7 +206,6 @@ const ShippingStage = ({
   shippingInfo, 
   addresses, 
   setShippingInfo, 
-  userId, 
   refresh 
 }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -935,8 +934,6 @@ const OrderSummary = ({
   canPlaceOrder
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
-  const [totalDistance, setTotalDistance] = useState<number>(0);
-  const [individualDistances, setIndividualDistances] = useState<number[]>([]);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   
@@ -959,19 +956,14 @@ const OrderSummary = ({
     const calculateShipping = async () => {
       if (cartItems.length === 0 || addresses.length === 0) {
         setShippingCost(0);
-        setTotalDistance(0);
-        setIndividualDistances([]);
         return;
       }
 
       const defaultAddress = addresses.find((item: Address) => item.isDefault === true);
       
       if (!defaultAddress) {
-        console.log("No default address found");
         setShippingError("No default delivery address found");
         setShippingCost(0);
-        setTotalDistance(0);
-        setIndividualDistances([]);
         return;
       }
 
@@ -979,7 +971,6 @@ const OrderSummary = ({
       setShippingError(null);
 
       try {
-        const distances: number[] = [];
         let accumulatedDistance = 0;
         let itemsWithLocation = 0;
 
@@ -995,7 +986,6 @@ const OrderSummary = ({
                 { lat: pickupLat, lng: pickupLng },
                 { lat: dropoffLat, lng: dropoffLng }
               );
-              distances.push(distance);
               accumulatedDistance += distance;
               itemsWithLocation++;
             } catch (error) {
@@ -1003,36 +993,25 @@ const OrderSummary = ({
                 pickupLat, pickupLng,
                 dropoffLat, dropoffLng
               );
-              distances.push(fallbackDistance);
               accumulatedDistance += fallbackDistance;
               itemsWithLocation++;
             }
-          } else {
-            distances.push(0);
           }
         }
 
         if (itemsWithLocation > 0) {
-          setIndividualDistances(distances);
-          setTotalDistance(accumulatedDistance);
-          
           const averageDistance = accumulatedDistance / cartItems.length;
           const distanceCharge = averageDistance * RATE_PER_KM;
           const totalShippingCost = BASE_RATE + distanceCharge;
-          
           setShippingCost(totalShippingCost);
         } else {
           setShippingCost(0);
-          setTotalDistance(0);
-          setIndividualDistances([]);
           setShippingError("No items with valid location data found");
         }
       } catch (error) {
         console.error("Error calculating shipping:", error);
         setShippingError("Error calculating shipping cost");
         setShippingCost(0);
-        setTotalDistance(0);
-        setIndividualDistances([]);
       } finally {
         setIsCalculatingShipping(false);
       }
@@ -1055,7 +1034,6 @@ const OrderSummary = ({
 
   const totalWithShipping = total + shippingCost;
 
-  // Render different buttons based on current stage
   const renderNavigationButtons = () => {
     switch (currentStage) {
       case 'cart':
@@ -1262,6 +1240,7 @@ const DeluxeCart = () => {
   
   const { data: profileData, loading: profileDataLoading, refetch: refresh } = useQuery(GET_USER_PROFILE, {
     variables: { id: user?.userId },
+    skip: !user?.userId,
   });
   
   const [createOrder] = useMutation(CREATE_ORDER);
@@ -1281,7 +1260,6 @@ const DeluxeCart = () => {
     }
   };
 
-  // Centralized place order function with GraphQL
   const handlePlaceOrder = async (): Promise<void> => {
     if (!validateStageTransition('confirmation', 'completed')) {
       return;
@@ -1304,14 +1282,11 @@ const DeluxeCart = () => {
         items: orderItems
       };
 
-      console.log('Placing order with params:', orderParams);
-
       const result = await createOrder({
         variables: orderParams
       });
 
       if (result.data?.createOrder) {
-        console.log('Order created successfully:', result.data.createOrder);
         dispatch(clearCart());
         setCurrentStage('completed');
       } else {
@@ -1325,7 +1300,6 @@ const DeluxeCart = () => {
     }
   };
 
-  // Centralized stage validation function
   const validateStageTransition = (fromStage: CartStage, toStage: CartStage): boolean => {
     setStageError(null);
 
@@ -1353,7 +1327,7 @@ const DeluxeCart = () => {
         ];
         
         const missingFields = requiredShippingFields.filter(
-          field => !shippingInfo[field] || shippingInfo[field].trim() === ''
+          field => !shippingInfo[field] || shippingInfo[field]?.trim() === ''
         );
         
         if (missingFields.length > 0) {
@@ -1423,20 +1397,12 @@ const DeluxeCart = () => {
     const validator = validationRules[transitionKey];
 
     if (!validator) {
-      console.warn(`No validation rule defined for transition: ${transitionKey}`);
       return true;
     }
 
-    const isValid = validator();
-    
-    if (!isValid) {
-      console.log(`Stage transition validation failed: ${transitionKey}`, stageError);
-    }
-
-    return isValid;
+    return validator();
   };
 
-  // Navigation handlers
   const handleProceedToShipping = () => {
     if (validateStageTransition('cart', 'shipping')) {
       setCurrentStage('shipping');
@@ -1477,15 +1443,23 @@ const DeluxeCart = () => {
     setCurrentStage('cart');
   };
 
-  // Determine if buttons should be enabled
-  const canProceedToShipping = cartItems.length > 0 && !!userId;
-  const canProceedToPayment = !!userId && 
-    shippingInfo.receiver && shippingInfo.address && shippingInfo.city && 
-    shippingInfo.zipCode && shippingInfo.country && shippingInfo.state;
-  const canProceedToConfirmation = !!userId && !!paymentInfo.method && 
+  const canProceedToShipping = Boolean(cartItems.length > 0 && userId);
+  const canProceedToPayment = Boolean(
+    userId && 
+    shippingInfo.receiver && 
+    shippingInfo.address && 
+    shippingInfo.city && 
+    shippingInfo.zipCode && 
+    shippingInfo.country && 
+    shippingInfo.state
+  );
+  const canProceedToConfirmation = Boolean(
+    userId && 
+    paymentInfo.method && 
     (paymentInfo.method !== 'gcash' || paymentInfo.gcashNumber) &&
-    (paymentInfo.method !== 'bank' || (paymentInfo.bankName && paymentInfo.accountNumber && paymentInfo.accountName));
-  const canPlaceOrder = !!userId && !!shippingInfo.addressId && !!paymentInfo.method && cartItems.length > 0;
+    (paymentInfo.method !== 'bank' || (paymentInfo.bankName && paymentInfo.accountNumber && paymentInfo.accountName))
+  );
+  const canPlaceOrder = Boolean(userId && shippingInfo.addressId && paymentInfo.method && cartItems.length > 0);
   
   if (loading || profileDataLoading) {
     return (
@@ -1500,7 +1474,6 @@ const DeluxeCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Progress Bar */}
         <div className="flex justify-between relative mb-12">
           <div className="absolute top-5 left-5 right-5 h-0.5 bg-indigo-200 z-0"></div>
           
@@ -1530,7 +1503,6 @@ const DeluxeCart = () => {
           })}
         </div>
         
-        {/* Error Display */}
         {(stageError || orderError) && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm flex items-center">
@@ -1540,7 +1512,6 @@ const DeluxeCart = () => {
           </div>
         )}
         
-        {/* Content */}
         <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
           {currentStage === 'cart' && (
             <CartStage 
@@ -1556,7 +1527,7 @@ const DeluxeCart = () => {
           {currentStage === 'shipping' && userId && (
             <ShippingStage 
               shippingInfo={shippingInfo}
-              addresses={profileData?.user.addresses || []}
+              addresses={profileData?.user?.addresses || []}
               setShippingInfo={setShippingInfo}
               userId={userId}
               refresh={refresh}
@@ -1608,7 +1579,7 @@ const DeluxeCart = () => {
         <div className="bg-white rounded-xl p-6 md:p-8 mt-5">
           <OrderSummary
             cartItems={cartItems}
-            addresses={profileData?.user.addresses || []}
+            addresses={profileData?.user?.addresses || []}
             subtotal={subtotal}
             tax={tax}
             total={total}
