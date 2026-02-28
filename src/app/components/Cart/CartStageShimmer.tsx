@@ -17,11 +17,7 @@ const CartStageShimmer = () => {
             
             return (
               <div key={stage} className="flex flex-col items-center relative z-10">
-                <div className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 text-xs sm:text-sm ${
-                  isActive || isCompleted
-                    ? 'bg-indigo-500 border-indigo-500 text-white' 
-                    : 'bg-white border-indigo-300 text-indigo-300'
-                }`}>
+                <div className={`w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border-2 text-xs sm:text-sm animate-shimmer bg-gradient-to-r from-transparent via-white/30 to-transparent`}>
                   {index + 1}
                 </div>
                 <span className={`mt-1 text-xs sm:text-sm font-medium ${
