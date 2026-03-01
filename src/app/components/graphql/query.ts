@@ -433,6 +433,14 @@ query GetUser($id: ID) {
       followerCount
       followingCount
       isFollowing
+      wishlist{
+         product {
+           id
+           name
+           price
+           images
+         }
+      }
       products {
         id
         name
