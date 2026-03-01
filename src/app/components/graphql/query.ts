@@ -435,10 +435,18 @@ query GetUser($id: ID) {
       isFollowing
       wishlist{
          product {
-           id
-           name
-           price
-           images
+           variants {
+             name
+             createdAt
+             sku
+             color
+             size
+             price
+             salePrice
+             stock
+             images
+             model
+        }
          }
       }
       products {
