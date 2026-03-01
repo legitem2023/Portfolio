@@ -2,7 +2,9 @@
 import { User, Post } from '../../../types';
 import AddressesTab from './AddressesTab';
 import DeluxeMessageCard from '../components/Posting/DeluxeMessageCard';
+import WishlistDisplay from './WishlistDisplay';
 import { ApolloQueryResult, OperationVariables } from "@apollo/client";
+
 interface TabContentProps {
   activeTab: string;
   user: User;
@@ -86,13 +88,19 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
       />
     );
   };
-
+ const renderWishlistTab = () => {
+   return (
+     <WishlistDisplay wishlistItems={user?.wishlist} />
+   )
+ }
   // Add default case for unknown tabs
   switch (activeTab) {
     case 'posts':
       return renderPostsTab();
     case 'address':
       return renderAddressTab();
+    case 'wishlist':
+      return renderWishlistTab();
     default:
       return (
         <div className="text-center py-8">
