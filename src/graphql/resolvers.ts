@@ -1551,7 +1551,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
                  include: {
                    variants:{
                      include: {
-                       id: true,
+                       
                        name: true,
                        createdAt: true,
                        sku: true,
