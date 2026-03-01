@@ -100,7 +100,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
     case 'address':
       return renderAddressTab();
     case 'wishlist':
-      return renderWishlistTab();
+      return (<></>);//renderWishlistTab();
     default:
       return (
         <div className="text-center py-8">
