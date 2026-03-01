@@ -13,7 +13,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     );
   }
 
-  console.log('Wishlist Items:', wishlistItems); // Debug log
+  console.log('Wishlist Data:', wishlistItems);
 
   const handleVariantSelect = (productId: string, variant: any) => {
     setSelectedVariants(prev => ({
@@ -26,85 +26,37 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     return selectedVariants[productId];
   };
 
-  const getCurrentPrice = (product: any, productId: string) => {
-    const selectedVariant = getSelectedVariant(productId);
-    if (selectedVariant) {
-      return {
-        price: selectedVariant.price,
-        salePrice: selectedVariant.salePrice,
-        hasSale: selectedVariant.salePrice && selectedVariant.salePrice < selectedVariant.price
-      };
-    }
-    // If no variant selected and product has variants, show first variant price
-    if (product.variants && product.variants.length > 0) {
-      const firstVariant = product.variants[0];
-      return {
-        price: firstVariant.price,
-        salePrice: firstVariant.salePrice,
-        hasSale: firstVariant.salePrice && firstVariant.salePrice < firstVariant.price
-      };
-    }
-    return {
-      price: product.price,
-      salePrice: product.salePrice,
-      hasSale: product.salePrice && product.salePrice < product.price
-    };
-  };
-
-  const handleAddToCart = (product: any, productId: string) => {
-    const selectedVariant = getSelectedVariant(productId);
-    if (!selectedVariant && product.variants?.length > 0) {
-      alert('Please select a variant first');
-      return;
-    }
-    console.log('Add to cart:', { 
-      product, 
-      variant: selectedVariant || null 
-    });
-  };
-
-  const handleRemoveFromWishlist = (productId: string) => {
-    console.log('Remove from wishlist:', productId);
-  };
-
-  const handleView3DModel = (modelUrl: string) => {
-    if (modelUrl) {
-      window.open(modelUrl, '_blank');
-    }
-  };
-
   return (
     <div className="wishlist-container">
       <h2 className="wishlist-title">My Wishlist ({wishlistItems.length} items)</h2>
       
       <div className="wishlist-grid">
         {wishlistItems.map((item: any, index: number) => {
-          // Extract product from wishlist item
           const product = item.product;
           if (!product) return null;
           
           const selectedVariant = getSelectedVariant(product.id);
-          const currentPrice = getCurrentPrice(product, product.id);
+          const variants = product.variants || [];
           
           return (
             <div key={product.id || index} className="wishlist-card">
-              {/* Product Image */}
-              <div className="product-image-wrapper">
-                {(selectedVariant?.images && selectedVariant.images.length > 0) ? (
+              {/* Variant Images */}
+              <div className="variant-image-wrapper">
+                {selectedVariant?.images && selectedVariant.images.length > 0 ? (
                   <Image
                     src={selectedVariant.images[0]}
                     alt={selectedVariant.name || product.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="product-image"
+                    className="variant-image"
                   />
-                ) : (product.images && product.images.length > 0) ? (
+                ) : variants[0]?.images && variants[0].images.length > 0 ? (
                   <Image
-                    src={product.images[0]}
+                    src={variants[0].images[0]}
                     alt={product.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="product-image"
+                    className="variant-image"
                   />
                 ) : (
                   <div className="image-placeholder">
@@ -113,98 +65,132 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 )}
               </div>
 
-              {/* Product Details */}
-              <div className="product-details">
-                <h3 className="product-name">
-                  {selectedVariant?.name || product.name}
-                </h3>
+              {/* Product Info */}
+              <div className="product-info">
+                <h3 className="product-name">{product.name}</h3>
                 
-                {/* Price Display */}
-                <div className="price-container">
-                  {currentPrice.hasSale ? (
-                    <>
-                      <span className="sale-price">
-                        ${currentPrice.salePrice?.toLocaleString()}
-                      </span>
-                      <span className="original-price">
-                        ${currentPrice.price?.toLocaleString()}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="regular-price">
-                      ${currentPrice.price?.toLocaleString()}
-                    </span>
-                  )}
+                {/* Variants Display */}
+                <div className="variants-container">
+                  <h4 className="variants-title">Available Variants:</h4>
+                  
+                  {variants.map((variant: any, vIndex: number) => {
+                    const isSelected = selectedVariant?.sku === variant.sku;
+                    const hasSale = variant.salePrice && variant.salePrice < variant.price;
+                    
+                    return (
+                      <div 
+                        key={variant.sku || vIndex} 
+                        className={`variant-card ${isSelected ? 'selected' : ''}`}
+                        onClick={() => handleVariantSelect(product.id, variant)}
+                      >
+                        {/* Variant Header */}
+                        <div className="variant-header">
+                          <span className="variant-name">{variant.name || product.name}</span>
+                          {variant.stock > 0 ? (
+                            <span className="stock-badge in-stock">In Stock ({variant.stock})</span>
+                          ) : (
+                            <span className="stock-badge out-of-stock">Out of Stock</span>
+                          )}
+                        </div>
+
+                        {/* Variant Details Grid */}
+                        <div className="variant-details-grid">
+                          {/* Color */}
+                          {variant.color && (
+                            <div className="variant-detail">
+                              <span className="detail-label">Color:</span>
+                              <div className="color-display">
+                                <span 
+                                  className="color-swatch" 
+                                  style={{ backgroundColor: variant.color }}
+                                />
+                                <span className="color-value">{variant.color}</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Size */}
+                          {variant.size && (
+                            <div className="variant-detail">
+                              <span className="detail-label">Size:</span>
+                              <span className="detail-value">{variant.size}</span>
+                            </div>
+                          )}
+
+                          {/* SKU */}
+                          {variant.sku && (
+                            <div className="variant-detail">
+                              <span className="detail-label">SKU:</span>
+                              <span className="detail-value sku-value">{variant.sku}</span>
+                            </div>
+                          )}
+
+                          {/* Price */}
+                          <div className="variant-detail">
+                            <span className="detail-label">Price:</span>
+                            <div className="price-display">
+                              {hasSale ? (
+                                <>
+                                  <span className="sale-price">
+                                    ${variant.salePrice?.toLocaleString()}
+                                  </span>
+                                  <span className="original-price">
+                                    ${variant.price?.toLocaleString()}
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="regular-price">
+                                  ${variant.price?.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Created At */}
+                          {variant.createdAt && (
+                            <div className="variant-detail">
+                              <span className="detail-label">Added:</span>
+                              <span className="detail-value">
+                                {new Date(variant.createdAt).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 3D Model Link */}
+                        {variant.model && (
+                          <a 
+                            href={variant.model} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="model-link"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View 3D Model
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* Variants Section */}
-                {product.variants && product.variants.length > 0 && (
-                  <div className="variant-section">
-                    <div className="variant-label">Select Variant:</div>
-                    <div className="variant-options">
-                      {product.variants.map((variant: any, vIndex: number) => (
-                        <button
-                          key={variant.sku || vIndex}
-                          className={`variant-chip ${selectedVariant?.sku === variant.sku ? 'selected' : ''}`}
-                          onClick={() => handleVariantSelect(product.id, variant)}
-                          disabled={variant.stock <= 0}
-                        >
-                          {variant.color && (
-                            <span 
-                              className="color-dot" 
-                              style={{ backgroundColor: variant.color }}
-                            />
-                          )}
-                          {variant.size && <span>{variant.size}</span>}
-                          {variant.stock <= 0 && (
-                            <span className="stock-badge">Out of Stock</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Selected Variant Info */}
+                {/* Selected Variant Actions */}
                 {selectedVariant && (
-                  <div className="variant-info">
-                    {selectedVariant.sku && (
-                      <p className="sku">SKU: {selectedVariant.sku}</p>
-                    )}
-                    {selectedVariant.stock > 0 ? (
-                      <p className="in-stock">In Stock ({selectedVariant.stock})</p>
-                    ) : (
-                      <p className="out-of-stock">Out of Stock</p>
-                    )}
+                  <div className="selected-variant-actions">
+                    <button 
+                      className="add-to-cart-btn"
+                      disabled={selectedVariant.stock <= 0}
+                    >
+                      Add Selected Variant to Cart
+                    </button>
                   </div>
-                )}
-
-                {/* 3D Model Button */}
-                {(selectedVariant?.model || product.model) && (
-                  <button
-                    className="model-button"
-                    onClick={() => handleView3DModel(selectedVariant?.model || product.model)}
-                  >
-                    View 3D Model
-                  </button>
                 )}
               </div>
 
-              {/* Action Buttons */}
-              <div className="product-actions">
-                <button 
-                  className="add-to-cart-btn"
-                  onClick={() => handleAddToCart(product, product.id)}
-                  disabled={product.variants?.length > 0 && !selectedVariant}
-                >
-                  Add to Cart
-                </button>
-                
-                <button 
-                  className="remove-btn"
-                  onClick={() => handleRemoveFromWishlist(product.id)}
-                >
-                  Remove
+              {/* Wishlist Actions */}
+              <div className="wishlist-actions">
+                <button className="remove-btn">
+                  Remove from Wishlist
                 </button>
               </div>
             </div>
@@ -228,9 +214,9 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         }
 
         .wishlist-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-          gap: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
           width: 100%;
         }
 
@@ -239,10 +225,9 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           flex-direction: column;
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 0.75rem;
+          border-radius: 1rem;
           overflow: hidden;
           transition: box-shadow 0.2s ease;
-          height: 100%;
           width: 100%;
         }
 
@@ -250,14 +235,15 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
-        .product-image-wrapper {
+        .variant-image-wrapper {
           position: relative;
           width: 100%;
-          aspect-ratio: 4/3;
+          height: 300px;
           background-color: #f9fafb;
+          border-bottom: 1px solid #e5e7eb;
         }
 
-        .product-image {
+        .variant-image {
           object-fit: cover;
         }
 
@@ -275,179 +261,184 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           font-size: 0.875rem;
         }
 
-        .product-details {
-          padding: 1rem;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
+        .product-info {
+          padding: 1.5rem;
         }
 
         .product-name {
-          font-size: 1.125rem;
-          font-weight: 600;
+          font-size: 1.5rem;
+          font-weight: 700;
           color: #111827;
-          margin: 0 0 0.5rem 0;
-          line-height: 1.4;
-          word-break: break-word;
+          margin: 0 0 1.5rem 0;
         }
 
-        .price-container {
+        .variants-container {
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .variants-title {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: #374151;
+          margin: 0 0 0.5rem 0;
+        }
+
+        .variant-card {
+          border: 2px solid #e5e7eb;
+          border-radius: 0.75rem;
+          padding: 1.25rem;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          background: white;
+        }
+
+        .variant-card:hover {
+          border-color: #3b82f6;
+          background: #fafafa;
+        }
+
+        .variant-card.selected {
+          border-color: #3b82f6;
+          background: #eff6ff;
+          box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+        }
+
+        .variant-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
+          padding-bottom: 0.75rem;
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .variant-name {
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .stock-badge {
+          font-size: 0.875rem;
+          font-weight: 500;
+          padding: 0.25rem 0.75rem;
+          border-radius: 9999px;
+        }
+
+        .in-stock {
+          background: #d1fae5;
+          color: #065f46;
+        }
+
+        .out-of-stock {
+          background: #fee2e2;
+          color: #991b1b;
+        }
+
+        .variant-details-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1rem;
+          margin-bottom: 1rem;
+        }
+
+        .variant-detail {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+
+        .detail-label {
+          font-size: 0.875rem;
+          color: #6b7280;
+        }
+
+        .detail-value {
+          font-weight: 500;
+          color: #111827;
+        }
+
+        .color-display {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .color-swatch {
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: 50%;
+          border: 2px solid white;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .color-value {
+          text-transform: capitalize;
+        }
+
+        .sku-value {
+          font-family: monospace;
+          font-size: 0.875rem;
+        }
+
+        .price-display {
           display: flex;
           align-items: center;
           gap: 0.5rem;
           flex-wrap: wrap;
-          margin-bottom: 1rem;
-        }
-
-        .regular-price, .sale-price {
-          font-size: 1.25rem;
-          font-weight: 700;
-          color: #111827;
         }
 
         .sale-price {
+          font-weight: 700;
           color: #dc2626;
         }
 
         .original-price {
-          font-size: 1rem;
+          font-size: 0.875rem;
           color: #6b7280;
           text-decoration: line-through;
         }
 
-        .variant-section {
-          margin-bottom: 1rem;
+        .regular-price {
+          font-weight: 700;
+          color: #111827;
         }
 
-        .variant-label {
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: #4b5563;
-          margin-bottom: 0.5rem;
-        }
-
-        .variant-options {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 0.5rem;
-        }
-
-        .variant-chip {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.25rem;
-          padding: 0.375rem 0.75rem;
-          background: white;
-          border: 1px solid #e5e7eb;
-          border-radius: 9999px;
-          font-size: 0.875rem;
-          color: #374151;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .variant-chip:hover:not(:disabled) {
-          border-color: #3b82f6;
-          background: #eff6ff;
-        }
-
-        .variant-chip.selected {
-          background: #3b82f6;
-          border-color: #3b82f6;
-          color: white;
-        }
-
-        .variant-chip:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .color-dot {
-          width: 1rem;
-          height: 1rem;
-          border-radius: 50%;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          flex-shrink: 0;
-        }
-
-        .stock-badge {
-          font-size: 0.75rem;
-          color: #ef4444;
-          margin-left: 0.25rem;
-        }
-
-        .variant-chip.selected .stock-badge {
-          color: white;
-        }
-
-        .variant-info {
-          margin-bottom: 1rem;
-          padding: 0.5rem;
-          background: #f9fafb;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-        }
-
-        .sku {
-          color: #6b7280;
-          margin: 0 0 0.25rem 0;
-          word-break: break-word;
-        }
-
-        .in-stock {
-          color: #10b981;
-          font-weight: 500;
-          margin: 0;
-        }
-
-        .out-of-stock {
-          color: #ef4444;
-          font-weight: 500;
-          margin: 0;
-        }
-
-        .model-button {
-          width: 100%;
-          padding: 0.5rem;
+        .model-link {
+          display: inline-block;
+          margin-top: 0.75rem;
+          padding: 0.5rem 1rem;
           background: #8b5cf6;
           color: white;
-          border: none;
+          text-decoration: none;
           border-radius: 0.5rem;
           font-size: 0.875rem;
           font-weight: 500;
-          cursor: pointer;
           transition: background 0.2s ease;
-          margin-top: auto;
-          margin-bottom: 0.5rem;
         }
 
-        .model-button:hover {
+        .model-link:hover {
           background: #7c3aed;
         }
 
-        .product-actions {
-          display: flex;
-          gap: 0.5rem;
-          padding: 1rem;
-          border-top: 1px solid #e5e7eb;
-          margin-top: auto;
-        }
-
-        .add-to-cart-btn, .remove-btn {
-          flex: 1;
-          padding: 0.625rem;
-          border: none;
-          border-radius: 0.5rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          min-width: 0; /* Prevents flex items from overflowing */
+        .selected-variant-actions {
+          margin-top: 1.5rem;
+          padding-top: 1.5rem;
+          border-top: 2px solid #e5e7eb;
         }
 
         .add-to-cart-btn {
+          width: 100%;
+          padding: 1rem;
           background: #3b82f6;
           color: white;
+          border: none;
+          border-radius: 0.75rem;
+          font-size: 1rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.2s ease;
         }
 
         .add-to-cart-btn:hover:not(:disabled) {
@@ -459,10 +450,21 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           cursor: not-allowed;
         }
 
+        .wishlist-actions {
+          padding: 1rem 1.5rem 1.5rem;
+        }
+
         .remove-btn {
+          width: 100%;
+          padding: 0.75rem;
           background: white;
           color: #ef4444;
-          border: 1px solid #ef4444;
+          border: 2px solid #ef4444;
+          border-radius: 0.75rem;
+          font-size: 0.875rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
         .remove-btn:hover {
@@ -474,7 +476,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           text-align: center;
           padding: 3rem;
           background: white;
-          border-radius: 0.75rem;
+          border-radius: 1rem;
           border: 1px solid #e5e7eb;
         }
 
@@ -484,18 +486,15 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           margin: 0;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-          .wishlist-grid {
+        @media (max-width: 768px) {
+          .variant-details-grid {
             grid-template-columns: 1fr;
           }
           
-          .wishlist-container {
-            padding: 1rem;
-          }
-          
-          .product-actions {
+          .variant-header {
             flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
           }
         }
       `}</style>
