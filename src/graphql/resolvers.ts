@@ -1547,7 +1547,24 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           addresses: true,
           wishlist:{
             include: {
-              product:true
+              product {
+                 include: {
+                   variants:{
+                     include: {
+                       id: true,
+                       name: true,
+                       createdAt: true,
+                       sku: true,
+                       color: true,
+                       size: true,
+                       price: true,
+                       salePrice: true,
+                       stock: true,
+                       images: true
+                     }
+                   }
+                 }
+              }
             }
           },
           products: {
