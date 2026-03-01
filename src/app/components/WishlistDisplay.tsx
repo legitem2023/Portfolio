@@ -204,12 +204,12 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
 };
 
 // Handler functions (you can implement these based on your needs)
-const handleAddToCart = (product) => {
+const handleAddToCart = (product:any) => {
   console.log('Add to cart:', product);
   // Implement your add to cart logic here
 };
 
-const handleRemoveFromWishlist = (productId) => {
+const handleRemoveFromWishlist = (productId:any) => {
   console.log('Remove from wishlist:', productId);
   // Implement your remove from wishlist logic here
 };
