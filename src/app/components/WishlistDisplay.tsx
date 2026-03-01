@@ -13,6 +13,8 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     );
   }
 
+  console.log('Wishlist Items:', wishlistItems); // Debug log
+
   const handleVariantSelect = (productId: string, variant: any) => {
     setSelectedVariants(prev => ({
       ...prev,
@@ -31,6 +33,15 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         price: selectedVariant.price,
         salePrice: selectedVariant.salePrice,
         hasSale: selectedVariant.salePrice && selectedVariant.salePrice < selectedVariant.price
+      };
+    }
+    // If no variant selected and product has variants, show first variant price
+    if (product.variants && product.variants.length > 0) {
+      const firstVariant = product.variants[0];
+      return {
+        price: firstVariant.price,
+        salePrice: firstVariant.salePrice,
+        hasSale: firstVariant.salePrice && firstVariant.salePrice < firstVariant.price
       };
     }
     return {
@@ -68,25 +79,29 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
       
       <div className="wishlist-grid">
         {wishlistItems.map((item: any, index: number) => {
-          const selectedVariant = getSelectedVariant(item.product.id);
-          const currentPrice = getCurrentPrice(item.product, item.product.id);
+          // Extract product from wishlist item
+          const product = item.product;
+          if (!product) return null;
+          
+          const selectedVariant = getSelectedVariant(product.id);
+          const currentPrice = getCurrentPrice(product, product.id);
           
           return (
-            <div key={item.product?.id || index} className="wishlist-card">
+            <div key={product.id || index} className="wishlist-card">
               {/* Product Image */}
               <div className="product-image-wrapper">
                 {(selectedVariant?.images && selectedVariant.images.length > 0) ? (
                   <Image
                     src={selectedVariant.images[0]}
-                    alt={selectedVariant.name || item.product.name}
+                    alt={selectedVariant.name || product.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="product-image"
                   />
-                ) : (item.product.images && item.product.images.length > 0) ? (
+                ) : (product.images && product.images.length > 0) ? (
                   <Image
-                    src={item.product.images[0]}
-                    alt={item.product.name}
+                    src={product.images[0]}
+                    alt={product.name}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="product-image"
@@ -101,7 +116,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
               {/* Product Details */}
               <div className="product-details">
                 <h3 className="product-name">
-                  {selectedVariant?.name || item.product.name}
+                  {selectedVariant?.name || product.name}
                 </h3>
                 
                 {/* Price Display */}
@@ -109,29 +124,30 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                   {currentPrice.hasSale ? (
                     <>
                       <span className="sale-price">
-                        ${currentPrice.salePrice.toLocaleString()}
+                        ${currentPrice.salePrice?.toLocaleString()}
                       </span>
                       <span className="original-price">
-                        ${currentPrice.price.toLocaleString()}
+                        ${currentPrice.price?.toLocaleString()}
                       </span>
                     </>
                   ) : (
                     <span className="regular-price">
-                      ${currentPrice.price.toLocaleString()}
+                      ${currentPrice.price?.toLocaleString()}
                     </span>
                   )}
                 </div>
 
                 {/* Variants Section */}
-                {item.product.variants && item.product.variants.length > 0 && (
+                {product.variants && product.variants.length > 0 && (
                   <div className="variant-section">
                     <div className="variant-label">Select Variant:</div>
                     <div className="variant-options">
-                      {item.product.variants.map((variant: any, vIndex: number) => (
+                      {product.variants.map((variant: any, vIndex: number) => (
                         <button
                           key={variant.sku || vIndex}
                           className={`variant-chip ${selectedVariant?.sku === variant.sku ? 'selected' : ''}`}
-                          onClick={() => handleVariantSelect(item.product.id, variant)}
+                          onClick={() => handleVariantSelect(product.id, variant)}
+                          disabled={variant.stock <= 0}
                         >
                           {variant.color && (
                             <span 
@@ -140,7 +156,9 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                             />
                           )}
                           {variant.size && <span>{variant.size}</span>}
-                          {variant.stock <= 0 && <span className="stock-badge">Out of Stock</span>}
+                          {variant.stock <= 0 && (
+                            <span className="stock-badge">Out of Stock</span>
+                          )}
                         </button>
                       ))}
                     </div>
@@ -162,10 +180,10 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 )}
 
                 {/* 3D Model Button */}
-                {selectedVariant?.model && (
+                {(selectedVariant?.model || product.model) && (
                   <button
                     className="model-button"
-                    onClick={() => handleView3DModel(selectedVariant.model)}
+                    onClick={() => handleView3DModel(selectedVariant?.model || product.model)}
                   >
                     View 3D Model
                   </button>
@@ -176,15 +194,15 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
               <div className="product-actions">
                 <button 
                   className="add-to-cart-btn"
-                  onClick={() => handleAddToCart(item.product, item.product.id)}
-                  disabled={item.product.variants?.length > 0 && !selectedVariant}
+                  onClick={() => handleAddToCart(product, product.id)}
+                  disabled={product.variants?.length > 0 && !selectedVariant}
                 >
                   Add to Cart
                 </button>
                 
                 <button 
                   className="remove-btn"
-                  onClick={() => handleRemoveFromWishlist(item.product?.id)}
+                  onClick={() => handleRemoveFromWishlist(product.id)}
                 >
                   Remove
                 </button>
@@ -225,6 +243,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           overflow: hidden;
           transition: box-shadow 0.2s ease;
           height: 100%;
+          width: 100%;
         }
 
         .wishlist-card:hover {
@@ -234,7 +253,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         .product-image-wrapper {
           position: relative;
           width: 100%;
-          padding-top: 75%; /* 4:3 Aspect Ratio */
+          aspect-ratio: 4/3;
           background-color: #f9fafb;
         }
 
@@ -259,6 +278,8 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         .product-details {
           padding: 1rem;
           flex: 1;
+          display: flex;
+          flex-direction: column;
         }
 
         .product-name {
@@ -267,6 +288,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           color: #111827;
           margin: 0 0 0.5rem 0;
           line-height: 1.4;
+          word-break: break-word;
         }
 
         .price-container {
@@ -324,7 +346,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           transition: all 0.2s ease;
         }
 
-        .variant-chip:hover {
+        .variant-chip:hover:not(:disabled) {
           border-color: #3b82f6;
           background: #eff6ff;
         }
@@ -335,11 +357,17 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           color: white;
         }
 
+        .variant-chip:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
         .color-dot {
           width: 1rem;
           height: 1rem;
           border-radius: 50%;
           border: 1px solid rgba(0, 0, 0, 0.1);
+          flex-shrink: 0;
         }
 
         .stock-badge {
@@ -363,6 +391,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         .sku {
           color: #6b7280;
           margin: 0 0 0.25rem 0;
+          word-break: break-word;
         }
 
         .in-stock {
@@ -388,7 +417,8 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           font-weight: 500;
           cursor: pointer;
           transition: background 0.2s ease;
-          margin-bottom: 1rem;
+          margin-top: auto;
+          margin-bottom: 0.5rem;
         }
 
         .model-button:hover {
@@ -400,6 +430,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           gap: 0.5rem;
           padding: 1rem;
           border-top: 1px solid #e5e7eb;
+          margin-top: auto;
         }
 
         .add-to-cart-btn, .remove-btn {
@@ -411,6 +442,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           font-weight: 500;
           cursor: pointer;
           transition: all 0.2s ease;
+          min-width: 0; /* Prevents flex items from overflowing */
         }
 
         .add-to-cart-btn {
@@ -460,6 +492,10 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           
           .wishlist-container {
             padding: 1rem;
+          }
+          
+          .product-actions {
+            flex-direction: column;
           }
         }
       `}</style>
