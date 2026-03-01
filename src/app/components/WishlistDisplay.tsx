@@ -15,7 +15,7 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
       <h2>My Wishlist ({wishlistItems.length} items)</h2>
       
       <div className="wishlist-grid">
-        {wishlistItems.map((item, index) => (
+        {wishlistItems.map((item:any, index:any) => (
           <div key={item.product?.id || index} className="wishlist-card">
             {/* Product Image Placeholder */}
             <div className="product-image">
