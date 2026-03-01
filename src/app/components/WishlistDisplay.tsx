@@ -1,7 +1,7 @@
 // components/WishlistDisplay.jsx
 import Image from 'next/image';
 
-const WishlistDisplay = ({ wishlistItems }) => {
+const WishlistDisplay = ({ wishlistItems }:any) => {
   if (!wishlistItems || wishlistItems.length === 0) {
     return (
       <div className="wishlist-empty">
