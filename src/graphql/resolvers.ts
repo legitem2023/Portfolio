@@ -1549,20 +1549,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
             include: {
               product: {
                  include: {
-                   variants:{
-                     include: {
-                       
-                       name: true,
-                       createdAt: true,
-                       sku: true,
-                       color: true,
-                       size: true,
-                       price: true,
-                       salePrice: true,
-                       stock: true,
-                       images: true
-                     }
-                   }
+                   variants: true
                  }
               }
             }
