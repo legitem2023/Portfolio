@@ -33,7 +33,6 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         hasSale: selectedVariant.salePrice && selectedVariant.salePrice < selectedVariant.price
       };
     }
-    // If no variant selected, show base product price (assuming product has price)
     return {
       price: product.price,
       salePrice: product.salePrice,
@@ -51,12 +50,10 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
       product, 
       variant: selectedVariant || null 
     });
-    // Implement your add to cart logic here
   };
 
   const handleRemoveFromWishlist = (productId: string) => {
     console.log('Remove from wishlist:', productId);
-    // Implement your remove from wishlist logic here
   };
 
   const handleView3DModel = (modelUrl: string) => {
@@ -65,85 +62,9 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     }
   };
 
-  // Render variant options
-  const renderVariants = (product: any, productId: string) => {
-    if (!product.variants || product.variants.length === 0) return null;
-
-    const selectedVariant = getSelectedVariant(productId);
-
-    return (
-      <div className="variant-section">
-        <h4 className="variant-title">Select Variant:</h4>
-        
-        <div className="variants-list">
-          {product.variants.map((variant: any, index: number) => (
-            <div
-              key={variant.sku || index}
-              className={`variant-card ${selectedVariant?.sku === variant.sku ? 'selected' : ''}`}
-              onClick={() => handleVariantSelect(productId, variant)}
-            >
-              {/* Color Display */}
-              {variant.color && (
-                <div className="variant-color">
-                  <span 
-                    className="color-swatch" 
-                    style={{ backgroundColor: variant.color }}
-                  />
-                  <span className="color-value">{variant.color}</span>
-                </div>
-              )}
-
-              {/* Size Display */}
-              {variant.size && (
-                <div className="variant-size">
-                  <span className="size-label">Size:</span>
-                  <span className="size-value">{variant.size}</span>
-                </div>
-              )}
-
-              {/* Price Display */}
-              <div className="variant-pricing">
-                {variant.salePrice && variant.salePrice < variant.price ? (
-                  <>
-                    <span className="sale-price">
-                      ${variant.salePrice.toLocaleString()}
-                    </span>
-                    <span className="original-price">
-                      ${variant.price.toLocaleString()}
-                    </span>
-                  </>
-                ) : (
-                  <span className="regular-price">
-                    ${variant.price.toLocaleString()}
-                  </span>
-                )}
-              </div>
-
-              {/* Stock Status */}
-              <div className="variant-stock">
-                {variant.stock > 0 ? (
-                  <span className="in-stock">In Stock ({variant.stock})</span>
-                ) : (
-                  <span className="out-of-stock">Out of Stock</span>
-                )}
-              </div>
-
-              {/* 3D Model Indicator */}
-              {variant.model && (
-                <div className="model-indicator">
-                  <span className="model-badge">3D Model Available</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="wishlist-container">
-      <h2>My Wishlist ({wishlistItems.length} items)</h2>
+      <h2 className="wishlist-title">My Wishlist ({wishlistItems.length} items)</h2>
       
       <div className="wishlist-grid">
         {wishlistItems.map((item: any, index: number) => {
@@ -153,22 +74,22 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
           return (
             <div key={item.product?.id || index} className="wishlist-card">
               {/* Product Image */}
-              <div className="product-image">
-                {selectedVariant?.images && selectedVariant.images.length > 0 ? (
+              <div className="product-image-wrapper">
+                {(selectedVariant?.images && selectedVariant.images.length > 0) ? (
                   <Image
                     src={selectedVariant.images[0]}
                     alt={selectedVariant.name || item.product.name}
-                    width={300}
-                    height={300}
-                    className="product-img"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="product-image"
                   />
-                ) : item.product.images && item.product.images.length > 0 ? (
+                ) : (item.product.images && item.product.images.length > 0) ? (
                   <Image
                     src={item.product.images[0]}
                     alt={item.product.name}
-                    width={300}
-                    height={300}
-                    className="product-img"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    className="product-image"
                   />
                 ) : (
                   <div className="image-placeholder">
@@ -187,43 +108,74 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 <div className="price-container">
                   {currentPrice.hasSale ? (
                     <>
-                      <p className="sale-price">
+                      <span className="sale-price">
                         ${currentPrice.salePrice.toLocaleString()}
-                      </p>
-                      <p className="original-price">
+                      </span>
+                      <span className="original-price">
                         ${currentPrice.price.toLocaleString()}
-                      </p>
+                      </span>
                     </>
                   ) : (
-                    <p className="product-price">
+                    <span className="regular-price">
                       ${currentPrice.price.toLocaleString()}
-                    </p>
+                    </span>
                   )}
                 </div>
 
                 {/* Variants Section */}
-                {renderVariants(item.product, item.product.id)}
+                {item.product.variants && item.product.variants.length > 0 && (
+                  <div className="variant-section">
+                    <div className="variant-label">Select Variant:</div>
+                    <div className="variant-options">
+                      {item.product.variants.map((variant: any, vIndex: number) => (
+                        <button
+                          key={variant.sku || vIndex}
+                          className={`variant-chip ${selectedVariant?.sku === variant.sku ? 'selected' : ''}`}
+                          onClick={() => handleVariantSelect(item.product.id, variant)}
+                        >
+                          {variant.color && (
+                            <span 
+                              className="color-dot" 
+                              style={{ backgroundColor: variant.color }}
+                            />
+                          )}
+                          {variant.size && <span>{variant.size}</span>}
+                          {variant.stock <= 0 && <span className="stock-badge">Out of Stock</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Selected Variant Info */}
                 {selectedVariant && (
-                  <div className="selected-variant-info">
-                    <p className="sku">SKU: {selectedVariant.sku}</p>
-                    {selectedVariant.model && (
-                      <button
-                        className="btn btn-model"
-                        onClick={() => handleView3DModel(selectedVariant.model)}
-                      >
-                        View 3D Model
-                      </button>
+                  <div className="variant-info">
+                    {selectedVariant.sku && (
+                      <p className="sku">SKU: {selectedVariant.sku}</p>
+                    )}
+                    {selectedVariant.stock > 0 ? (
+                      <p className="in-stock">In Stock ({selectedVariant.stock})</p>
+                    ) : (
+                      <p className="out-of-stock">Out of Stock</p>
                     )}
                   </div>
+                )}
+
+                {/* 3D Model Button */}
+                {selectedVariant?.model && (
+                  <button
+                    className="model-button"
+                    onClick={() => handleView3DModel(selectedVariant.model)}
+                  >
+                    View 3D Model
+                  </button>
                 )}
               </div>
 
               {/* Action Buttons */}
               <div className="product-actions">
                 <button 
-                  className="btn btn-primary"
+                  className="add-to-cart-btn"
                   onClick={() => handleAddToCart(item.product, item.product.id)}
                   disabled={item.product.variants?.length > 0 && !selectedVariant}
                 >
@@ -231,7 +183,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 </button>
                 
                 <button 
-                  className="btn btn-remove"
+                  className="remove-btn"
                   onClick={() => handleRemoveFromWishlist(item.product?.id)}
                 >
                   Remove
@@ -244,88 +196,91 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
 
       <style jsx>{`
         .wishlist-container {
-          max-width: 1200px;
+          width: 100%;
+          max-width: 1280px;
           margin: 0 auto;
-          padding: 20px;
+          padding: 2rem 1rem;
+        }
+
+        .wishlist-title {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #1a1a1a;
+          margin-bottom: 2rem;
         }
 
         .wishlist-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-          gap: 24px;
-          margin-top: 24px;
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+          gap: 1.5rem;
+          width: 100%;
         }
 
         .wishlist-card {
-          border: 1px solid #eaeaea;
-          border-radius: 12px;
-          overflow: hidden;
-          transition: transform 0.2s, box-shadow 0.2s;
-          background: white;
           display: flex;
           flex-direction: column;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.75rem;
+          overflow: hidden;
+          transition: box-shadow 0.2s ease;
+          height: 100%;
         }
 
         .wishlist-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-image-wrapper {
+          position: relative;
+          width: 100%;
+          padding-top: 75%; /* 4:3 Aspect Ratio */
+          background-color: #f9fafb;
         }
 
         .product-image {
-          width: 100%;
-          height: 240px;
-          background: #f5f5f5;
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-
-        .product-img {
           object-fit: cover;
-          width: 100%;
-          height: 100%;
-          transition: transform 0.3s;
-        }
-
-        .product-img:hover {
-          transform: scale(1.05);
         }
 
         .image-placeholder {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 100%;
-          height: 100%;
           background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
           color: white;
-          font-size: 14px;
+          font-size: 0.875rem;
         }
 
         .product-details {
-          padding: 20px;
+          padding: 1rem;
           flex: 1;
         }
 
         .product-name {
-          margin: 0 0 12px 0;
-          font-size: 18px;
+          font-size: 1.125rem;
           font-weight: 600;
-          color: #1a1a1a;
+          color: #111827;
+          margin: 0 0 0.5rem 0;
           line-height: 1.4;
         }
 
         .price-container {
-          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+          margin-bottom: 1rem;
         }
 
-        .product-price, .sale-price {
-          margin: 0;
-          font-size: 24px;
+        .regular-price, .sale-price {
+          font-size: 1.25rem;
           font-weight: 700;
-          color: #2c3e50;
+          color: #111827;
         }
 
         .sale-price {
@@ -333,199 +288,179 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         }
 
         .original-price {
-          margin: 4px 0 0;
-          font-size: 16px;
-          color: #999;
+          font-size: 1rem;
+          color: #6b7280;
           text-decoration: line-through;
         }
 
         .variant-section {
-          margin: 16px 0;
+          margin-bottom: 1rem;
         }
 
-        .variant-title {
-          font-size: 14px;
-          font-weight: 600;
-          color: #666;
-          margin-bottom: 12px;
+        .variant-label {
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: #4b5563;
+          margin-bottom: 0.5rem;
         }
 
-        .variants-list {
+        .variant-options {
           display: flex;
-          flex-direction: column;
-          gap: 12px;
+          flex-wrap: wrap;
+          gap: 0.5rem;
         }
 
-        .variant-card {
-          border: 1px solid #eaeaea;
-          border-radius: 8px;
-          padding: 12px;
-          cursor: pointer;
-          transition: all 0.2s;
-          background: #fafafa;
-        }
-
-        .variant-card:hover {
-          border-color: #0070f3;
-          background: #f0f7ff;
-        }
-
-        .variant-card.selected {
-          border-color: #0070f3;
-          background: #f0f7ff;
-          box-shadow: 0 2px 8px rgba(0, 112, 243, 0.1);
-        }
-
-        .variant-color {
-          display: flex;
+        .variant-chip {
+          display: inline-flex;
           align-items: center;
-          gap: 8px;
-          margin-bottom: 8px;
+          gap: 0.25rem;
+          padding: 0.375rem 0.75rem;
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 9999px;
+          font-size: 0.875rem;
+          color: #374151;
+          cursor: pointer;
+          transition: all 0.2s ease;
         }
 
-        .color-swatch {
-          width: 24px;
-          height: 24px;
+        .variant-chip:hover {
+          border-color: #3b82f6;
+          background: #eff6ff;
+        }
+
+        .variant-chip.selected {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          color: white;
+        }
+
+        .color-dot {
+          width: 1rem;
+          height: 1rem;
           border-radius: 50%;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          border: 1px solid rgba(0, 0, 0, 0.1);
         }
 
-        .color-value {
-          font-size: 14px;
-          color: #666;
-          text-transform: capitalize;
+        .stock-badge {
+          font-size: 0.75rem;
+          color: #ef4444;
+          margin-left: 0.25rem;
         }
 
-        .variant-size {
-          display: flex;
-          gap: 8px;
-          margin-bottom: 8px;
-          font-size: 14px;
+        .variant-chip.selected .stock-badge {
+          color: white;
         }
 
-        .size-label {
-          color: #999;
+        .variant-info {
+          margin-bottom: 1rem;
+          padding: 0.5rem;
+          background: #f9fafb;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
         }
 
-        .size-value {
-          font-weight: 600;
-          color: #333;
-        }
-
-        .variant-pricing {
-          margin-bottom: 8px;
-        }
-
-        .regular-price {
-          font-weight: 600;
-          color: #2c3e50;
-        }
-
-        .variant-stock {
-          font-size: 13px;
-          margin-bottom: 8px;
+        .sku {
+          color: #6b7280;
+          margin: 0 0 0.25rem 0;
         }
 
         .in-stock {
           color: #10b981;
+          font-weight: 500;
+          margin: 0;
         }
 
         .out-of-stock {
           color: #ef4444;
-        }
-
-        .model-indicator {
-          margin-top: 8px;
-        }
-
-        .model-badge {
-          display: inline-block;
-          padding: 4px 8px;
-          background: #e879f9;
-          color: white;
-          border-radius: 4px;
-          font-size: 11px;
           font-weight: 500;
+          margin: 0;
         }
 
-        .selected-variant-info {
-          margin-top: 12px;
-          padding-top: 12px;
-          border-top: 1px dashed #eaeaea;
-        }
-
-        .sku {
-          font-size: 12px;
-          color: #999;
-          margin-bottom: 8px;
-        }
-
-        .btn-model {
-          background-color: #8b5cf6;
-          color: white;
+        .model-button {
           width: 100%;
-          margin-top: 8px;
+          padding: 0.5rem;
+          background: #8b5cf6;
+          color: white;
+          border: none;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          cursor: pointer;
+          transition: background 0.2s ease;
+          margin-bottom: 1rem;
         }
 
-        .btn-model:hover {
-          background-color: #7c3aed;
+        .model-button:hover {
+          background: #7c3aed;
         }
 
         .product-actions {
-          padding: 20px;
-          border-top: 1px solid #eaeaea;
           display: flex;
-          gap: 12px;
+          gap: 0.5rem;
+          padding: 1rem;
+          border-top: 1px solid #e5e7eb;
         }
 
-        .btn {
+        .add-to-cart-btn, .remove-btn {
           flex: 1;
-          padding: 12px;
+          padding: 0.625rem;
           border: none;
-          border-radius: 6px;
-          font-size: 14px;
+          border-radius: 0.5rem;
+          font-size: 0.875rem;
           font-weight: 500;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: all 0.2s ease;
         }
 
-        .btn:disabled {
+        .add-to-cart-btn {
+          background: #3b82f6;
+          color: white;
+        }
+
+        .add-to-cart-btn:hover:not(:disabled) {
+          background: #2563eb;
+        }
+
+        .add-to-cart-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
         }
 
-        .btn-primary {
-          background-color: #0070f3;
-          color: white;
+        .remove-btn {
+          background: white;
+          color: #ef4444;
+          border: 1px solid #ef4444;
         }
 
-        .btn-primary:hover:not(:disabled) {
-          background-color: #0051b3;
-        }
-
-        .btn-remove {
-          background-color: #fff;
-          color: #dc2626;
-          border: 1px solid #dc2626;
-        }
-
-        .btn-remove:hover {
-          background-color: #dc2626;
+        .remove-btn:hover {
+          background: #ef4444;
           color: white;
         }
 
         .wishlist-empty {
           text-align: center;
-          padding: 48px;
+          padding: 3rem;
           background: white;
-          border-radius: 12px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          border-radius: 0.75rem;
+          border: 1px solid #e5e7eb;
         }
 
         .wishlist-empty p {
-          font-size: 18px;
-          color: #666;
+          font-size: 1.125rem;
+          color: #6b7280;
+          margin: 0;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+          .wishlist-grid {
+            grid-template-columns: 1fr;
+          }
+          
+          .wishlist-container {
+            padding: 1rem;
+          }
         }
       `}</style>
     </div>
