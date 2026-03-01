@@ -76,7 +76,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
       </div>
     );
   };
-
+  console.log("data=>",user?.wishlist);
   const renderAddressTab = () => {
     return (
       <AddressesTab
