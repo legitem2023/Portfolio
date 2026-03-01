@@ -28,6 +28,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   if(!data?.user) return <UserProfileShimmer />;
   
   const user: User = data?.user;
+  console.log(user);
   return (
     <div className="min-h-screen p-0">
       <div className="max-w-2xl mx-auto">      {/* Cover Photo */}
