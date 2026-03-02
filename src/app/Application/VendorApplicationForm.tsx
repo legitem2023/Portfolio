@@ -244,7 +244,8 @@ export default function VendorApplicationForm() {
             {submitStatus === 'success' && (
               <div className="bg-green-100 border border-green-300 text-green-700 px-4 py-3 rounded-xl flex items-center gap-2">
                 <i className="fas fa-check-circle text-green-600"></i>
-                <span>Application submitted successfully! We'll be in touch soon.</span>
+                
+               <span>Application submitted successfully! We&#39;ll be in touch soon.</span>
               </div>
             )}
             {submitStatus === 'error' && (
