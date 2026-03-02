@@ -27,7 +27,7 @@ interface DeliveryCardProps {
   refetch: any;
 }
 
-export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }: DeliveryCardProps) {
+export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, refetch }: DeliveryCardProps) {
   const { user } = useAuth();
   const [showItems, setShowItems] = useState(false);
   
