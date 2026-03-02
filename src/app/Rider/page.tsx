@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Head from "next/head";
 import { useQuery } from "@apollo/client";
+import { useRouter } from "next/navigation";
 import { ACCEPT_BY_RIDER, ORDER_LIST_QUERY, OrderListResponse } from './lib/types';
 import { mapOrdersToDeliveriesBySupplier } from './lib/utils';
 import { useWindowSize } from './hooks/useWindowSize';
@@ -14,6 +15,7 @@ import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { useAuth } from './hooks/useAuth';
+
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
   ssr: false,
@@ -30,13 +32,34 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
 });
 
 export default function RiderDashboard() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  
   // State to manage active tab
   const [activeTab, setActiveTab] = useState("newDeliveries");
   const [isOnline, setIsOnline] = useState(true);
-  const { user } = useAuth();
+  
   // Get window size
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
+
+  // Redirect to login if no user
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/Login');
+    }
+    if (user?.role==='USER') {
+      router.push('/');
+    }
+    if (user?.role==='MANAGEMENT') {
+      router.push('/Management');
+    }
+  }, [authLoading, user, router]);
+
+  // Show nothing while checking auth or if no user (will redirect)
+  if (authLoading || !user) {
+    return null;
+  }
 
   // GraphQL query for orders
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
@@ -56,6 +79,7 @@ export default function RiderDashboard() {
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.neworder?.orders.flatMap(mapOrdersToDeliveriesBySupplier) || [];
   const newDeliveriesCount = newDeliveries.length;
+
   // Handle accepting a delivery
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
