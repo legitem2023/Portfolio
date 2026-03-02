@@ -57,11 +57,11 @@ export default function Header({
                     {user?.name || 'Rider'}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {user?.userId || 'VC-001'}
+                    {'VC-001'}
                   </p>
                 </div>
                 <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                  <div className="w-10 h-10 bg-gradient-to-br from-lime-600 to-lime-700 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
                     {user?.name?.charAt(0) || 'R'}
                   </div>
                 </div>
