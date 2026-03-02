@@ -24,7 +24,7 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className="bg-gray-900 shadow-md sticky top-0 z-50">
+      <header className="bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(120,220,120,0.5)_100%)] shadow-md sticky top-0 z-50">
         <div className="px-4 py-2">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
