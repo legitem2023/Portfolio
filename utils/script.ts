@@ -92,8 +92,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   });
 
   // Ensure counter is always 6 digits (padded with leading zeros)
-  const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
-  
+  const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
   // Format: ORD-ZIPCODE-YYMMDD-000001
   return `ORD-${zipCode}-${dateStr}-${paddedCounter}`;
 }
