@@ -31,14 +31,25 @@ export async function comparePassword(plainPassword: string, hashedPassword: str
 const prisma = new PrismaClient()
 
 
-export async function generateTrackingNumber(): Promise<string> {
+export async function generateTrackingNumber(userId:string): Promise<string> {
   // Get today's date at 00:00:00
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   // Use this for the tracking number string only
-  const dateStr = format(today, 'yyyyMMdd');
-
+  const dateStr = format(today, 'yyMMdd');
+ // Get user's default address zipCode
+  const user = await prisma.address.findUnique({
+    where: { 
+      userId: userId,
+      isDefault: true
+    },
+    select: { zipCode: true }
+  });
+  
+  // Handle case where no default address exists
+  const zipCode = user?.zipCode || '00000';
+  
   // Use `today` (Date object) directly in the database
   const trackingCounter = await prisma.trackingCounter.upsert({
     where: { date: today },
@@ -48,8 +59,46 @@ export async function generateTrackingNumber(): Promise<string> {
 
  // const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
   const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
-  return `TRK-${dateStr}-${paddedCounter}`;
+  return `TRK-${zipCode}-${dateStr}-${paddedCounter}`;
 }
+
+
+export async function generateOrderNumber(userId: string): Promise<string> {
+  // Get today's date at midnight for consistent grouping
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  // Format date as YYMMDD (6 digits)
+  const dateStr = format(today, 'yyMMdd');
+  
+  // Get user's default address zipCode
+  const user = await prisma.address.findUnique({
+    where: { 
+      userId: userId,
+      isDefault: true
+    },
+    select: { zipCode: true }
+  });
+  
+  // Handle case where no default address exists
+  const zipCode = user?.zipCode || '00000';
+  
+  // Use date string for tracking instead of Date object
+  // This avoids timezone issues with MongoDB
+  const trackingCounter = await prisma.trackingCounter.upsert({
+    where: { date: dateStr }, // Use string date instead of Date object
+    update: { counter: { increment: 1 } },
+    create: { date: dateStr, counter: 1 }
+  });
+
+  // Ensure counter is always 6 digits (padded with leading zeros)
+  const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
+  
+  // Format: ORD-ZIPCODE-YYMMDD-000001
+  return `ORD-${zipCode}-${dateStr}-${paddedCounter}`;
+}
+
+
 
 // calculateDistanceInKm.ts
 
