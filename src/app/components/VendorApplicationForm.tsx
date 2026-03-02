@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import Header from './Header';
+import Head from 'next/head';
 interface FormData {
   businessName: string;
   contactName: string;
@@ -67,8 +68,13 @@ export default function VendorApplicationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e6d9f0] to-[#d4c0e8] flex flex-col items-center justify-center p-0">
-      <Header/>
+  <>
+      <Head>
+        <title>Application | VendorCity</title>
+        <meta name="description" content="Login to VendorCity Account" />
+      </Head>  
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+        <Header/>
       <div className="max-w-4xl w-full">
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl border border-white/40 overflow-hidden">
           {/* Header */}
@@ -283,5 +289,6 @@ export default function VendorApplicationForm() {
         </div>
       </div>
     </div>
+  </>
   );
 }
