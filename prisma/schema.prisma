@@ -358,6 +358,7 @@ model OrderItem {
   orderId     String?  @db.ObjectId
   productId   String?  @db.ObjectId
   supplierId  String?  @db.ObjectId
+  trackingNumber String?
   quantity    Int?
   price       Float?
   variantInfo String?
