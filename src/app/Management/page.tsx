@@ -26,8 +26,12 @@ export default function ManagementDashboard() {
     return(<LoadingShimmer/>) 
   }
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [userId, setUserId] = useState("");
-  const [userRole, setUserRole] = useState("");
+  
+  
+
+  const [userId, setUserId] = useState<string | undefined>('');
+  const [userRole, setUserRole] = useState<string | undefined>('');
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
