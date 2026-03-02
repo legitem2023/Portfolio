@@ -32,8 +32,8 @@ export default function Header({
               <Image 
                 src="/VendorCity_Rider.webp" 
                 alt="VendorCity Rider" 
-                height={40} 
-                width={40} 
+                height={60} 
+                width={60} 
                 className="h-[100%] w-auto rounded-lg"
               />
             </div>
