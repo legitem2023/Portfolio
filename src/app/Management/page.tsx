@@ -122,7 +122,7 @@ export default function ManagementDashboard() {
         return (
           <ProductsTab
             // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
-            supplierId={user.userId || ''}
+            supplierId={user?.userId || ''}
             products={products}
             refetch={refetch}
             categories={categories}
@@ -145,7 +145,7 @@ export default function ManagementDashboard() {
       case 'orders':
         return (
           <OrderListComponent
-            initialSupplierId={user.userId}
+            initialSupplierId={user?.userId}
             initialStatus="PENDING"
           />
         );
