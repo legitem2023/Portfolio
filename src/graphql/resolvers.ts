@@ -2600,7 +2600,7 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
       where: { id: riderId },
       select: { firstName: true, email:true }
     });
-
+    const trackingNumber = await generateTrackingNumber(supplierId);
     const updatedOrder = await prisma.orderItem.updateMany({
         where: { orderId:itemId,
                  supplierId:supplierId
@@ -2608,7 +2608,7 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
         data: {
           status: 'PROCESSING',
           riderId: riderId,
-          trackingNumber:generateTrackingNumber(supplierId)
+          trackingNumber:trackingNumber
         }});
 
      await prisma.notification.create({
@@ -3889,12 +3889,12 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         status: "PENDING",
       };
     });
-
+    const orderNumber = await generateOrderNumber(supplierId);
     const response = await prisma.order.create({
       data: {
         userId,
         addressId,
-        orderNumber: generateOrderNumber(supplierId),//`ORD-${Date.now()}`,
+        orderNumber: orderNumber,//`ORD-${Date.now()}`,
         status: "PENDING",
         total: items.reduce(
           (sum: number, item: any) => sum + item.price * item.quantity,
