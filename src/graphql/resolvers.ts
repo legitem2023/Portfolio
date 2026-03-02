@@ -1,6 +1,6 @@
 // resolvers.ts
 import { PrismaClient, PrivacySetting, OrderStatus } from "@prisma/client";
-import { comparePassword, encryptPassword } from '../../utils/script';
+import { comparePassword, encryptPassword, generateOrderNumber, generateTrackingNumber } from '../../utils/script';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
@@ -2608,6 +2608,7 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
         data: {
           status: 'PROCESSING',
           riderId: riderId,
+          trackingNumber:generateTrackingNumber(supplierId)
         }});
 
      await prisma.notification.create({
@@ -3893,7 +3894,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
       data: {
         userId,
         addressId,
-        orderNumber: `ORD-${Date.now()}`,
+        orderNumber: generateOrderNumber(supplierId),//`ORD-${Date.now()}`,
         status: "PENDING",
         total: items.reduce(
           (sum: number, item: any) => sum + item.price * item.quantity,
