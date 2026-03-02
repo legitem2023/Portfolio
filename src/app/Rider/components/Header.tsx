@@ -24,7 +24,7 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className="bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,240,100,0.5)_100%)]  shadow-md sticky top-0 z-50">
+      <header className="aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,240,100,0.5)_100%)]  shadow-md sticky top-0 z-50">
         <div className="px-4 py-2">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
@@ -32,9 +32,9 @@ export default function Header({
               <Image 
                 src="/VendorCity_Rider.webp" 
                 alt="VendorCity Rider" 
-                height={58} 
-                width={58} 
-                className="h-16 w-auto rounded-lg"
+                height={100} 
+                width={100} 
+                className="h- w-auto rounded-lg"
               />
             </div>
 
@@ -81,15 +81,14 @@ export default function Header({
           <div className="flex items-center gap-4">
             <Image 
               src="/VendorCity_Rider.webp" 
-              alt="VendorCity Rider" 
-              height={52} 
-              width={52} 
-              className="h-13 w-auto rounded-lg"
-              priority
+              alt="Logo" 
+              height={100} 
+              width={100} 
+              className="h-[100%] w-[auto] rounded"
             />
             <div>
               <h1 className="text-xl font-bold text-gray-900">
-                <span className="text-blue-600">VendorCity</span> Rider
+                <span className="text-lime-600">VendorCity</span> Rider
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="flex items-center gap-1">
