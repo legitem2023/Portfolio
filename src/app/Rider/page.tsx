@@ -43,24 +43,7 @@ export default function RiderDashboard() {
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
 
-  // Redirect to login if no user
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/Login');
-    }
-    if (user?.role==='USER') {
-      router.push('/');
-    }
-    if (user?.role==='MANAGEMENT') {
-      router.push('/Management');
-    }
-  }, [authLoading, user, router]);
-
-  // Show nothing while checking auth or if no user (will redirect)
-  if (authLoading || !user) {
-    return null;
-  }
-
+  
   // GraphQL query for orders
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
     variables: {
@@ -75,6 +58,24 @@ export default function RiderDashboard() {
     },
     pollInterval: 10000
   });
+  
+  // Redirect to login if no user
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/Login');
+    }
+    if (user?.role==='USER') {
+      router.push('/');
+    }
+    if (user?.role==='MANAGER') {
+      router.push('/Management');
+    }
+  }, [authLoading, user, router]);
+
+  // Show nothing while checking auth or if no user (will redirect)
+  if (authLoading || !user) {
+    return null;
+  }
 
   // Transform GraphQL data to delivery format
   const newDeliveries = data?.neworder?.orders.flatMap(mapOrdersToDeliveriesBySupplier) || [];
