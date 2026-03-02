@@ -280,6 +280,7 @@ export const typeDefs = gql`
     variantInfo: String
     status: OrderStatus
     orderId: String
+    trackingNumber: String
     order: Order
     product: [ProductVariant]
     supplier: [User]
