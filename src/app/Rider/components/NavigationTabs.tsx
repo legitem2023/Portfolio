@@ -102,8 +102,8 @@ export default function NavigationTabs({
                 className={`
                   flex-1 px-4 py-3 border-b-2 font-medium text-sm lg:text-base flex items-center justify-center gap-2 transition-all
                   ${activeTab === tab.id
-                    ? "border-blue-600 text-blue-600 bg-blue-50"
-                    : "border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    ? "border-lime-600 text-lime-600 bg-lime-50"
+                    : "border-transparent text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50"
                   }
                 `}
               >
