@@ -24,7 +24,7 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className="bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(120,220,120,0.5)_100%)] shadow-md sticky top-0 z-50">
+      <header className="bg-[linear-gradient(135deg,rgba(255,255,255,1)_0%,rgba(120,220,120,9)_100%)] shadow-md sticky top-0 z-50">
         <div className="px-4 py-2">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
@@ -124,7 +124,7 @@ export default function Header({
             <div className="flex items-center gap-3">
               <div className="text-right">
                 <p className="font-semibold text-gray-900">{user?.name || 'Rider Name'}</p>
-                <p className="text-sm text-gray-500">{user?.userId || 'VC-001'}</p>
+                <p className="text-sm text-gray-500">{'VC-001'}</p>
               </div>
               <div className="relative">
                 <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm">
