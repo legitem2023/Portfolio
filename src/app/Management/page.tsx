@@ -65,7 +65,7 @@ export default function ManagementDashboard() {
 
   // Handle authentication and authorization
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       router.push('/Login');
     } else if (user?.role === 'USER') {
       router.push('/');
