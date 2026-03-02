@@ -38,7 +38,9 @@ export async function generateTrackingNumber(userId:string): Promise<string> {
 
   // Use this for the tracking number string only
   const dateStr = format(today, 'yyMMdd');
- // Get user's default address zipCode
+ const dateStrB = format(today, 'yyyyMMdd');
+  
+  // Get user's default address zipCode
   const user = await prisma.address.findMany({
     where: { 
       userId: userId,
@@ -70,6 +72,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   
   // Format date as YYMMDD (6 digits)
   const dateStr = format(today, 'yyMMdd');
+  const dateStrB = format(today, 'yyyyMMdd');
   
   // Get user's default address zipCode
   const user = await prisma.address.findMany({
@@ -86,9 +89,9 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   // Use date string for tracking instead of Date object
   // This avoids timezone issues with MongoDB
   const trackingCounter = await prisma.trackingCounter.upsert({
-    where: { date: dateStr }, // Use string date instead of Date object
+    where: { date: today }, // Use string date instead of Date object
     update: { counter: { increment: 1 } },
-    create: { date: dateStr, counter: 1 }
+    create: { date: today, counter: 1 }
   });
 
   // Ensure counter is always 6 digits (padded with leading zeros)
