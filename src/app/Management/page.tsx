@@ -17,20 +17,25 @@ import SalesList from './components/SalesList';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import { decryptToken } from '../../../utils/decryptToken';
 import UsersTab from './components/UsersTab';
+import { useAuth } from './hooks/useAuth';
 
 export default function ManagementDashboard() {
+  const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
+  if(authLoading) { 
+    return(<LoadingShimmer/>) 
+  }
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [userId, setUserId] = useState("");
   const [userRole, setUserRole] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<category[]>([]);
 
-  useEffect(() => {
+ /* useEffect(() => {
     const getRole = async () => {
       try {
         setIsLoading(true);
@@ -78,14 +83,29 @@ export default function ManagementDashboard() {
       }
     };
     getRole();
-  }, [router]);
+  }, [router]);*/
 
   const { data: productData, loading: productLoading,refetch } = useQuery(MANAGEMENTPRODUCTS,{
     variables :{
-      userId:userId
+      userId:user?.userId
     },
-    skip: !userId // Skip query until userId is available
+    skip: !user?.userId // Skip query until userId is available
   });
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/Login');
+    }
+    if (user?.role==='USER') {
+      router.push('/');
+    }
+    if (user?.role==='RIDER') {
+      router.push('/Rider');
+    }
+      setUserId(user?.userId);
+      setUserRole(user?.role);
+  }, [authLoading, user, router]);
+
   
   useEffect(() => {
     if (categoryData?.categories) {
