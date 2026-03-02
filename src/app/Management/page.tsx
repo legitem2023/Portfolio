@@ -15,7 +15,6 @@ import LoadingShimmer from './components/LoadingShimmer';
 import SalesList from './components/SalesList';
 
 import { Product, category, NewProduct, NewCategory } from '../../../types';
-import { decryptToken } from '../../../utils/decryptToken';
 import UsersTab from './components/UsersTab';
 import { useAuth } from './hooks/useAuth';
 
@@ -25,8 +24,6 @@ export default function ManagementDashboard() {
   
   // Move all useState hooks to the top, before any conditional returns
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [userId, setUserId] = useState<string | undefined>('');
-  const [userRole, setUserRole] = useState<string | undefined>('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -77,10 +74,8 @@ export default function ManagementDashboard() {
       router.push('/');
     } else if (user?.role === 'RIDER') {
       router.push('/Rider');
-    } else {
-      setUserId(user?.userId);
-      setUserRole(user?.role);
     }
+    setIsLoading(false);
   }, [authLoading, user, router]);
 
   useEffect(() => {
@@ -122,13 +117,19 @@ export default function ManagementDashboard() {
   };
 
   const renderContent = () => {
+    // Check if user exists and has valid role before rendering protected content
+    if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
+      return null;
+    }
+
     switch (activeTab) {
       case 'dashboard':
         return <SalesDashboard />;
       case 'products':
         return (
           <ProductsTab
-            supplierId={userId}
+            // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
+            supplierId={user.userId || ''}
             products={products}
             refetch={refetch}
             categories={categories}
@@ -151,7 +152,7 @@ export default function ManagementDashboard() {
       case 'orders':
         return (
           <OrderListComponent
-            initialSupplierId={userId}
+            initialSupplierId={user.userId}
             initialStatus="PENDING"
           />
         );
@@ -170,7 +171,7 @@ export default function ManagementDashboard() {
   }
 
   // Don't render anything if redirecting or unauthorized
-  if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
+  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
     return null;
   }
 
@@ -198,4 +199,4 @@ export default function ManagementDashboard() {
       </div>
     </div>
   );
-        }
+            }
