@@ -114,11 +114,7 @@ export default function ManagementDashboard() {
   };
 
   const renderContent = () => {
-    // Check if user exists and has valid role before rendering protected content
-    if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-      return null;
-    }
-
+    
     switch (activeTab) {
       case 'dashboard':
         return <SalesDashboard />;
