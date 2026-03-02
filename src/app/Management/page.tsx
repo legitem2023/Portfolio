@@ -61,10 +61,7 @@ export default function ManagementDashboard() {
     isActive: true
   });
 
-  // Now we can have conditional returns after all hooks are called
-  if (authLoading) { 
-    return <LoadingShimmer />;
-  }
+
 
   // Handle authentication and authorization
   useEffect(() => {
@@ -164,16 +161,15 @@ export default function ManagementDashboard() {
         return <SalesDashboard />;
     }
   };
-
+  // Now we can have conditional returns after all hooks are called
+  if (authLoading) { 
+    return <LoadingShimmer />;
+  }
   // Show loading state while checking authentication
   if (isLoading || categoryLoading || productLoading) {
     return <LoadingShimmer />;
   }
 
-  // Don't render anything if redirecting or unauthorized
-  if (!user || (user.role !== 'admin' && user.role !== 'manager')) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-100">
