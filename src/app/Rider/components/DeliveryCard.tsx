@@ -24,6 +24,7 @@ interface DeliveryCardProps {
   isMobile: boolean;
   onAccept: (deliveryId: string) => void;
   onReject: (deliveryId: string) => void;
+  refetch: any;
 }
 
 export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }: DeliveryCardProps) {
@@ -61,6 +62,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
 
       if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
         onAccept(delivery.id);
+        refetch();
       }
     } catch (error) {
       console.error('Error accepting delivery:', error);
@@ -117,7 +119,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject }:
       
       onReject(delivery.id);
       alert('All items have been rejected successfully');
-      
+      refetch();
     } catch (error: any) {
       console.error('Error rejecting delivery:', error);
       alert(`Failed to reject delivery: ${error.message}`);
