@@ -58,7 +58,7 @@ if (error) {
           <span className="hidden sm:inline">Requests auto-expire in 2 minutes</span>
           <span className="sm:hidden">2 min expiry</span>
           <button
-            onClick={() => refetch()}
+            onClick={() => refresh()}
             className="ml-1 lg:ml-2 text-blue-600 hover:text-blue-800 text-xs lg:text-sm"
           >
             Refresh
