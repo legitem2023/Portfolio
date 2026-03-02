@@ -25,15 +25,15 @@ export default function Header({
   if (isMobile) {
     return (
       <header className="aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,240,100,0.5)_100%)]  shadow-md sticky top-0 z-50">
-        <div className="px-4 py-2">
+        <div className="p-2">
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center gap-2">
               <Image 
                 src="/VendorCity_Rider.webp" 
                 alt="VendorCity Rider" 
-                height={100} 
-                width={100} 
+                height={70} 
+                width={70} 
                 className="h-[100%] w-auto rounded-lg"
               />
             </div>
