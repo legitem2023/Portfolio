@@ -15,7 +15,7 @@ interface NewDeliveriesTabProps {
 export default function NewDeliveriesTab({ isMobile, onAcceptDelivery, onRejectDelivery }: NewDeliveriesTabProps) {
  const { user } = useAuth();
   
-  const { data, loading, error, refetch } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
+  const { data, loading, error, refetch:refresh } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
   variables: {
     filter: {
       status: "PENDING",
@@ -81,7 +81,8 @@ if (error) {
               isMobile={isMobile}
               onAccept={onAcceptDelivery}
               onReject={onRejectDelivery}
-            />
+              refetch={refresh}
+              />
           ))}
         </div>
       )}
