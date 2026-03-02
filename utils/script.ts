@@ -39,7 +39,7 @@ export async function generateTrackingNumber(userId:string): Promise<string> {
   // Use this for the tracking number string only
   const dateStr = format(today, 'yyMMdd');
  // Get user's default address zipCode
-  const user = await prisma.address.findUnique({
+  const user = await prisma.address.findMany({
     where: { 
       userId: userId,
       isDefault: true
@@ -72,7 +72,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   const dateStr = format(today, 'yyMMdd');
   
   // Get user's default address zipCode
-  const user = await prisma.address.findUnique({
+  const user = await prisma.address.findMany({
     where: { 
       userId: userId,
       isDefault: true
