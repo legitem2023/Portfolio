@@ -87,7 +87,7 @@ const Header: React.FC = () => {
   
   // Check if current route is auth page
   const isAuthPage = useMemo(() => {
-    return ['/Login', '/Signup', '/ForgotPassword'].includes(pathname);
+    return ['/Login', '/Signup', '/ForgotPassword', '/Application'].includes(pathname);
   }, [pathname]);
   
   // Check if user is logged in
