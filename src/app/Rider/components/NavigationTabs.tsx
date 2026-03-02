@@ -69,8 +69,8 @@ export default function NavigationTabs({
               className={`
                 flex flex-col items-center justify-center p-1 rounded-lg transition-all w-14
                 ${activeTab === tab.id
-                  ? "text-blue-600 bg-blue-50"
-                  : "text-gray-600"
+                  ? "text-lime-600 bg-lime-50"
+                  : "text-emerald-600"
                 }
               `}
             >
