@@ -67,7 +67,7 @@ export default function VendorApplicationForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#e6d9f0] to-[#d4c0e8] flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-[#e6d9f0] to-[#d4c0e8] flex flex-col items-center justify-center p-0">
       <Header/>
       <div className="max-w-4xl w-full">
         <div className="bg-white/80 backdrop-blur-sm shadow-2xl border border-white/40 overflow-hidden">
