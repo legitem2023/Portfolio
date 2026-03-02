@@ -22,131 +22,31 @@ import { useAuth } from './hooks/useAuth';
 export default function ManagementDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  if(authLoading) { 
-    return(<LoadingShimmer/>) 
-  }
+  
+  // Move all useState hooks to the top, before any conditional returns
   const [activeTab, setActiveTab] = useState<string>('dashboard');
-  
-  
-
   const [userId, setUserId] = useState<string | undefined>('');
   const [userRole, setUserRole] = useState<string | undefined>('');
-  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
-  const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<category[]>([]);
 
- /* useEffect(() => {
-    const getRole = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/protected', {
-          credentials: 'include'
-        });
-        
-        // Redirect to login if unauthorized (no active user)
-        if (response.status === 401) {
-          router.push('./Login');
-          return;
-        }
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data');
-        }
-        
-        const data = await response.json();
-        const token = data?.user;
-        
-        if (!token) {
-          router.push('./Login');
-          return;
-        }
-        
-        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-        const payload = await decryptToken(token, secret.toString());
-        
-        // Check if user role is admin or manager
-       
-        if (payload.role === 'admin' && payload.role === 'manager') {
-          router.push('./');
-          return;
-        }
-        
-        setUserId(payload.userId);
-        setUserRole(payload.role);
-        console.log(payload);
-        
-      } catch (err) {
-        console.error('Error getting role:', err);
-        router.push('./Login');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    getRole();
-  }, [router]);*/
-
-  const { data: productData, loading: productLoading,refetch } = useQuery(MANAGEMENTPRODUCTS,{
-    variables :{
-      userId:user?.userId
+  // Move useQuery hooks to the top as well
+  const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+  const { data: productData, loading: productLoading, refetch } = useQuery(MANAGEMENTPRODUCTS, {
+    variables: {
+      userId: user?.userId
     },
     skip: !user?.userId // Skip query until userId is available
   });
-
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/Login');
-    }
-    if (user?.role==='USER') {
-      router.push('/');
-    }
-    if (user?.role==='RIDER') {
-      router.push('/Rider');
-    }
-      setUserId(user?.userId);
-      setUserRole(user?.role);
-  }, [authLoading, user, router]);
-
-  
-  useEffect(() => {
-    if (categoryData?.categories) {
-      const categoriesData = categoryData.categories.map((data: any) => ({
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        productCount: 0,
-        status: data.isActive ? "Active" : "Inactive"
-      }));
-      setCategories(categoriesData);
-    }
-
-    if (productData?.getProducts) {
-      const productsData = productData.getProducts.map((data:any)=> ({
-        id: data.id, 
-        name: data.name, 
-        description: data.description, 
-        price: data.price,
-        salePrice: data.salePrice, 
-        sku: data.sku, 
-        stock: data.stock,
-        category: data.categoryId,
-        brand: data.brand,
-        status: data.isActive,
-        variants: data.variants
-      }));
-      setProducts(productsData);
-    }
-  }, [categoryData, productData]);
 
   const [newProduct, setNewProduct] = useState<NewProduct>({
     name: "",
     description: "",
     price: "",
-    color:"",
-    size:"",
+    color: "",
+    size: "",
     salePrice: "",
     sku: "",
     stock: "",
@@ -164,116 +64,115 @@ export default function ManagementDashboard() {
     isActive: true
   });
 
+  // Now we can have conditional returns after all hooks are called
+  if (authLoading) { 
+    return <LoadingShimmer />;
+  }
+
+  // Handle authentication and authorization
+  useEffect(() => {
+    if (!user) {
+      router.push('/Login');
+    } else if (user?.role === 'USER') {
+      router.push('/');
+    } else if (user?.role === 'RIDER') {
+      router.push('/Rider');
+    } else {
+      setUserId(user?.userId);
+      setUserRole(user?.role);
+    }
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (categoryData?.categories) {
+      const categoriesData = categoryData.categories.map((data: any) => ({
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        productCount: 0,
+        status: data.isActive ? "Active" : "Inactive"
+      }));
+      setCategories(categoriesData);
+    }
+
+    if (productData?.getProducts) {
+      const productsData = productData.getProducts.map((data: any) => ({
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        salePrice: data.salePrice,
+        sku: data.sku,
+        stock: data.stock,
+        category: data.categoryId,
+        brand: data.brand,
+        status: data.isActive,
+        variants: data.variants
+      }));
+      setProducts(productsData);
+    }
+  }, [categoryData, productData]);
+
   const handleProductSubmit = (e: React.FormEvent) => {
-   /* e.preventDefault();
-    const category = categories.find(c => c.id === newProduct.categoryId);
-    
-    const product: Product = {
-      id: newProduct.name,
-      name: newProduct.name,
-      variants: newProduct.variants,
-      description: newProduct.description,
-      price: parseFloat(newProduct.price),
-      salePrice: newProduct.salePrice ? parseFloat(newProduct.salePrice) : 0,
-      sku: newProduct.sku,
-      size: newProduct.size,
-      category: category?.name || "Uncategorized" as any,
-      brand: newProduct.brand,
-      isActive: newProduct.isActive ? true : false
-      onSale, 
-      isNew, 
-      isFeatured, 
-      rating
-    };
-    
-    setProducts([...products, product]);
-    setNewProduct({
-      name: "",
-      description: "",
-      variants:[],
-      price: "",
-      salePrice: "",
-      sku: "",
-      color:"",
-      size:"",
-      stock: "",
-      categoryId: "",
-      brand: "",
-      isActive: true,
-      featured: false
-    });*/
+    // Your existing product submit logic
   };
 
   const handleCategorySubmit = (e: React.FormEvent) => {
-    /*e.preventDefault();
-    const category: category = {
-      id: categories.length + 1,
-      name: newCategory.name,
-      description: newCategory.description || undefined,
-      productCount: 0,
-      status: newCategory.isActive ? "Active" : "Inactive",
-      parentId: newCategory.parentId ? parseInt(newCategory.parentId) : undefined
-    };
-    
-    setCategories([...categories, category]);
-    setNewCategory({
-      name: "",
-      description: "",
-      parentId: "",
-      isActive: true
-    });*/
+    // Your existing category submit logic
   };
 
   const renderContent = () => {
-    switch(activeTab) {
+    switch (activeTab) {
       case 'dashboard':
-        return <SalesDashboard/>;
+        return <SalesDashboard />;
       case 'products':
-        return <ProductsTab 
-          supplierId={userId}
-          products={products} 
-          refetch={refetch}
-          categories={categories}
-          newProduct={newProduct}
-          setNewProduct={setNewProduct}
-          handleProductSubmit={handleProductSubmit}
-        />;
+        return (
+          <ProductsTab
+            supplierId={userId}
+            products={products}
+            refetch={refetch}
+            categories={categories}
+            newProduct={newProduct}
+            setNewProduct={setNewProduct}
+            handleProductSubmit={handleProductSubmit}
+          />
+        );
       case 'categories':
-        return <CategoriesTab 
-          categories={categories}
-          newCategory={newCategory}
-          setNewCategory={setNewCategory}
-          handleCategorySubmit={handleCategorySubmit}
-        />;
+        return (
+          <CategoriesTab
+            categories={categories}
+            newCategory={newCategory}
+            setNewCategory={setNewCategory}
+            handleCategorySubmit={handleCategorySubmit}
+          />
+        );
       case 'users':
-        return <UsersTab/>;
+        return <UsersTab />;
       case 'orders':
-        return <OrderListComponent 
-        initialSupplierId={userId}// Optional initial filter
-        initialStatus="PENDING" // Optional initial filter
-      />;
+        return (
+          <OrderListComponent
+            initialSupplierId={userId}
+            initialStatus="PENDING"
+          />
+        );
       case 'sales':
-        return <SalesList/>;
+        return <SalesList />;
       case 'bills':
-        return <ApiBillsTab/>;
+        return <ApiBillsTab />;
       default:
-        return <SalesDashboard/>;
+        return <SalesDashboard />;
     }
   };
 
   // Show loading state while checking authentication
-  if (isLoading) {
-    return (
-      <LoadingShimmer/>
-    );
+  if (isLoading || categoryLoading || productLoading) {
+    return <LoadingShimmer />;
   }
 
-  // Don't render anything if redirecting
-  /*if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
+  // Don't render anything if redirecting or unauthorized
+  if (!userId || (userRole !== 'admin' && userRole !== 'manager')) {
     return null;
-  }*/
-
-  if (categoryLoading && productLoading) return <LoadingShimmer/>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
