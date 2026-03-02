@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-
+import Header from './Header';
 interface FormData {
   businessName: string;
   contactName: string;
@@ -68,8 +68,9 @@ export default function VendorApplicationForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#e6d9f0] to-[#d4c0e8] py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <Header/>
       <div className="max-w-4xl w-full">
-        <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/40 overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-sm shadow-2xl border border-white/40 overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-[#b79ad4] to-[#dac0f0] px-8 py-6">
             <div className="flex items-center gap-3">
