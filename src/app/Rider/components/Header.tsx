@@ -24,8 +24,8 @@ export default function Header({
   
   if (isMobile) {
     return (
-      <header className=" aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,240,100,0.5)_100%)]  shadow-md sticky top-0 z-50">
-        <div className="relative p-0">
+      <div>
+        <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,240,100,0.5)_100%)]  shadow-md sticky top-0 z-50">
           <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
           <div className="z-20 h-[100%] flex items-center">
@@ -69,7 +69,7 @@ export default function Header({
             </div>
           </div>
         </div>
-      </header>
+      </div>
     );
   }
 
