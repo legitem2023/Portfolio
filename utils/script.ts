@@ -48,7 +48,7 @@ export async function generateTrackingNumber(userId:string): Promise<string> {
   });
   
   // Handle case where no default address exists
-  const zipCode = user?.zipCode || '00000';
+  const zipCode = user[0].zipCode || '00000';
   
   // Use `today` (Date object) directly in the database
   const trackingCounter = await prisma.trackingCounter.upsert({
@@ -81,7 +81,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   });
   
   // Handle case where no default address exists
-  const zipCode = user?.zipCode || '00000';
+  const zipCode = user[0].zipCode || '00000';
   
   // Use date string for tracking instead of Date object
   // This avoids timezone issues with MongoDB
