@@ -3889,7 +3889,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
         status: "PENDING",
       };
     });
-    const orderNumber = await generateOrderNumber(supplierId);
+    const orderNumber = await generateOrderNumber(items[0].supplierId;);
     const response = await prisma.order.create({
       data: {
         userId,
