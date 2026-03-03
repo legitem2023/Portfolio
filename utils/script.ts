@@ -65,16 +65,16 @@ export async function generateOrderNumber(userId: string): Promise<string> {
     
   // Use date string for tracking instead of Date object
   // This avoids timezone issues with MongoDB
- /* const trackingCounter = await prisma.trackingCounter.upsert({
+  const orderCounter = await prisma.orderCounter.upsert({
     where: { date: today }, // Use string date instead of Date object
     update: { counter: { increment: 1 } },
     create: { date: today, counter: 1 }
-  });*/
+  });
 
   // Ensure counter is always 6 digits (padded with leading zeros)
- // const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
+  const paddedCounter = (orderCounter.counter || 0).toString().padStart(6, '0');
   // Format: ORD-ZIPCODE-YYMMDD-000001
-  return `ORD-${dateStr}-${dateStrB}`;
+  return `ORD-${dateStr}-${paddedCounter}`;
 }
 
 
