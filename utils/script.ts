@@ -38,20 +38,8 @@ export async function generateTrackingNumber(userId:string): Promise<string> {
 
   // Use this for the tracking number string only
   const dateStr = format(today, 'yyMMdd');
- const dateStrB = format(today, 'yyyyMMdd');
-  
-  // Get user's default address zipCode
-  const user = await prisma.address.findMany({
-    where: { 
-      userId: userId,
-      isDefault: true
-    },
-    select: { zipCode: true }
-  });
-  
-  // Handle case where no default address exists
-  const zipCode = user[0].zipCode || '00000';
-  
+  const dateStrB = format(today, 'yyyyMMdd');
+    
   // Use `today` (Date object) directly in the database
   const trackingCounter = await prisma.trackingCounter.upsert({
     where: { date: today },
@@ -61,7 +49,7 @@ export async function generateTrackingNumber(userId:string): Promise<string> {
 
  // const paddedCounter = trackingCounter.counter.toString().padStart(6, '0');
   const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
-  return `TRK-${zipCode}-${dateStr}-${paddedCounter}`;
+  return `TRK-${dateStr}-${paddedCounter}`;
 }
 
 
@@ -74,18 +62,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   const dateStr = format(today, 'yyMMdd');
   const dateStrB = format(today, 'yyyyMMdd');
   
-  // Get user's default address zipCode
-  const user = await prisma.address.findMany({
-    where: { 
-      userId: userId,
-      isDefault: true
-    },
-    select: { zipCode: true }
-  });
-  
-  // Handle case where no default address exists
-  const zipCode = user[0].zipCode || '00000';
-  
+    
   // Use date string for tracking instead of Date object
   // This avoids timezone issues with MongoDB
   const trackingCounter = await prisma.trackingCounter.upsert({
@@ -97,7 +74,7 @@ export async function generateOrderNumber(userId: string): Promise<string> {
   // Ensure counter is always 6 digits (padded with leading zeros)
   const paddedCounter = (trackingCounter.counter || 0).toString().padStart(6, '0');
   // Format: ORD-ZIPCODE-YYMMDD-000001
-  return `ORD-${zipCode}-${dateStr}-${paddedCounter}`;
+  return `ORD-${dateStr}-${paddedCounter}`;
 }
 
 
