@@ -1045,8 +1045,8 @@ export default function OrderListComponent({
               ))}
             </div>
 
-            {/* Pagination */}
-            {(
+            {/* Pagination - FIXED with proper null checks */}
+            {paginationInfo && paginationInfo.totalPages > 1 && (
               <div className="mt-6 sm:mt-8">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-2 order-2 sm:order-1">
@@ -1064,15 +1064,15 @@ export default function OrderListComponent({
                   </div>
 
                   <div className="text-xs sm:text-sm text-gray-600 order-1 sm:order-2">
-                    Page {paginationInfo?.page} of {paginationInfo?.totalPages}
+                    Page {paginationInfo.page} of {paginationInfo.totalPages}
                   </div>
 
                   <div className="flex gap-2 order-3">
                     <button
-                      onClick={() => handlePageChange(paginationInfo?.page - 1)}         
-                      disabled={paginationInfo?.page === 1}
+                      onClick={() => handlePageChange(paginationInfo.page - 1)}         
+                      disabled={paginationInfo.page === 1}
                       className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                        paginationInfo?.page === 1 
+                        paginationInfo.page === 1 
                           ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
                           : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
@@ -1081,10 +1081,10 @@ export default function OrderListComponent({
                     </button>
                     
                     <button
-                      onClick={() => handlePageChange(paginationInfo?.page + 1)}
-                      disabled={paginationInfo?.page === paginationInfo?.totalPages}
+                      onClick={() => handlePageChange(paginationInfo.page + 1)}
+                      disabled={paginationInfo.page === paginationInfo.totalPages}
                       className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                        paginationInfo?.page === paginationInfo?.totalPages 
+                        paginationInfo.page === paginationInfo.totalPages 
                           ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
                           : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
