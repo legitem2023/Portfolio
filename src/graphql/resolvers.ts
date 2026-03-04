@@ -863,6 +863,7 @@ const orders = await prisma.order.findMany({
             id: true,
             orderId: true,
             supplierId: true,
+            riderId: true,
             quantity: true,
             price: true,
             variantInfo: true,
