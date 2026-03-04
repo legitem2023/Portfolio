@@ -382,7 +382,7 @@ export default function OrderListComponent({
   // Get all orders from GraphQL with proper typing
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
-  
+  console.log(orderData,"<===");
   // APPLY CLIENT-SIDE FILTERING - filter the JSON results by date
   const filteredOrders = useMemo(() => {
     let filtered = allOrders;
