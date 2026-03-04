@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useDispatch } from "react-redux"
 import { setActiveIndex } from '../../../Redux/activeIndexSlice'
 import { persistor } from '../../../Redux/store' // Import the persistor
-
+import { ChevronRight, LogOut } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 
 export default function LogoutButton() {
@@ -28,15 +28,14 @@ export default function LogoutButton() {
    router.push('/Login');
   };
   
-  return (
-    <button 
-      className={`w-full text-black bg-transparent-600 hover:bg-red-700 py-2 px-4 transition-all duration-300 flex items-center justify-center ${
-        isLoggingOut ? 'opacity-70 cursor-not-allowed' : ''
-      }`}
-
-      disabled={isLoggingOut}
-      onClick={handleLogout}>
-      Logout
-    </button>
+  return (  
+   <button
+        className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+        disabled={isLoggingOut}
+        onClick={handleLogout}>
+                    <LogOut className="mr-3 text-gray-400 w-5 h-5" />
+                    <span className="flex-1 transition-all duration-300">Logout</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
+   </button>
   );
 }
