@@ -284,6 +284,7 @@ export const typeDefs = gql`
     order: Order
     product: [ProductVariant]
     supplier: [User]
+    rider: [User]
     isDefault: Boolean
     rejectedBy: [String]
   }
