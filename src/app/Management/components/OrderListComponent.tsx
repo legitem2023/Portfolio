@@ -54,6 +54,7 @@ const ORDER_LIST_QUERY = gql`
           id
           orderId
           supplierId
+          riderId
           quantity
           price
           status
@@ -61,6 +62,19 @@ const ORDER_LIST_QUERY = gql`
             name
             sku
             images
+          }
+          rider {
+            id
+            firstName
+            addresses {
+              street
+              city
+              state
+              zipCode
+              country
+              lat
+              lng
+            }
           }
           supplier {
             id
@@ -112,7 +126,11 @@ interface Supplier {
   firstName: string;
   addresses?: Address[];
 }
-
+interface Rider {
+  id: string;
+  firstName: string;
+  addresses?: Address[];
+}
 interface OrderItem {
   id: string;
   orderId?: string;
@@ -125,6 +143,7 @@ interface OrderItem {
     sku: string;
     images: string[];
   }>;
+  rider?: Rider;
   supplier?: Supplier;
 }
 
