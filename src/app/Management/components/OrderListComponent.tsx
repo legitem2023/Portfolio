@@ -360,8 +360,9 @@ export default function OrderListComponent({
     fetchPolicy: 'network-only'
   });
 
-  // Get all orders from GraphQL
-  const allOrders = data?.orderlist?.orders || [];
+  // Get all orders from GraphQL with proper typing
+  const orderData = data?.orderlist as OrderListResponse | undefined;
+  const allOrders: Order[] = orderData?.orders || [];
   
   // APPLY CLIENT-SIDE FILTERING - filter the JSON results by date
   const filteredOrders = useMemo(() => {
@@ -372,7 +373,7 @@ export default function OrderListComponent({
       const fromDate = new Date(dateFilter.from);
       const toDate = new Date(dateFilter.to);
       
-      filtered = filtered.filter(order => {
+      filtered = filtered.filter((order: Order) => {
         const orderDate = new Date(order.createdAt);
         return orderDate >= fromDate && orderDate <= toDate;
       });
@@ -382,9 +383,11 @@ export default function OrderListComponent({
   }, [allOrders, dateFilter]);
 
   // Further filter out orders with 0 items
-  const ordersWithItems = filteredOrders.filter(order => order.items.length > 0);
+  const ordersWithItems = useMemo(() => {
+    return filteredOrders.filter((order: Order) => order.items.length > 0);
+  }, [filteredOrders]);
   
-  const paginationInfo = data?.orderlist?.pagination;
+  const paginationInfo = orderData?.pagination;
 
   // Status options for tabs
   const statusOptions: (OrderStatus | 'ALL')[] = [
@@ -1097,4 +1100,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-            }
+}
