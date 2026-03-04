@@ -94,7 +94,8 @@ model User {
   supportTickets  SupportTicket[]
   notifications   Notification[]
   ticketResponses TicketResponse[]
-  supplier    OrderItem[]
+  supplier        OrderItem[]
+  rider           OrderItem[]
   // Social features (NEW) - Using explicit relations for MongoDB
   posts           Post[]
   comments        Comment[]
