@@ -368,7 +368,7 @@ model OrderItem {
   supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
   order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     ProductVariant? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rider       User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  rider       User?    @relation(fields: [riderId], references: [id], onDelete: Cascade)
   recipientName        String?
   recipientPhone       String?
   pickupAddress        String?
