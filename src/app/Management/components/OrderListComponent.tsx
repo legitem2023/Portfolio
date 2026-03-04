@@ -55,7 +55,6 @@ const ORDER_LIST_QUERY = gql`
           id
           orderId
           supplierId
-          riderId
           quantity
           price
           status
@@ -134,7 +133,6 @@ interface Rider {
 }
 interface OrderItem {
   id: string;
-  riderId?: string;
   orderId?: string;
   supplierId?: string;
   quantity: number;
