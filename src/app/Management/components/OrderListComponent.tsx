@@ -19,7 +19,8 @@ import {
   XCircle,
   RefreshCw,
   Loader2,
-  Calendar
+  Calendar,
+  Bike
 } from "lucide-react";
 
 // GraphQL Query - KEEP EXACTLY AS ORIGINAL
@@ -1021,18 +1022,40 @@ export default function OrderListComponent({
                                     <div className="flex items-center gap-1 mt-1">
                                       <Building size={10} className="text-gray-400" />
                                       <span className="text-xs text-gray-500">
-                                        {item.supplier.firstName}
+                                        Supplier: {item.supplier.firstName}
                                       </span>
                                     </div>
                                   )}
 
                                   {/* Supplier address if available */}
                                   {item.supplier?.addresses && item.supplier.addresses.length > 0 && (
-                                    <div className="flex items-start gap-1 mt-1">
+                                    <div className="flex items-start gap-1 mt-0.5">
                                       <MapPin size={10} className="text-gray-400 mt-0.5" />
                                       <span className="text-xs text-gray-400 truncate">
-                                        {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
+                                        From: {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
                                       </span>
+                                    </div>
+                                  )}
+
+                                  {/* Rider info if available */}
+                                  {item.rider && (
+                                    <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
+                                      <div className="flex items-center gap-1">
+                                        <Bike size={12} className="text-orange-500" />
+                                        <span className="text-xs font-medium text-orange-600">
+                                          Rider: {item.rider.firstName}
+                                        </span>
+                                      </div>
+                                      
+                                      {/* Rider Address */}
+                                      {item.rider.addresses && item.rider.addresses.length > 0 && (
+                                        <div className="flex items-start gap-1 mt-0.5 ml-4">
+                                          <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                          <span className="text-xs text-gray-400 truncate">
+                                            {item.rider.addresses[0].street}, {item.rider.addresses[0].city}
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>
@@ -1119,4 +1142,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+    }
