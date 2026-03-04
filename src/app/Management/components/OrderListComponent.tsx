@@ -18,10 +18,12 @@ import {
   CheckCircle,
   XCircle,
   RefreshCw,
-  Loader2
+  Loader2,
+  Calendar,
+  ChevronDown
 } from "lucide-react";
 
-// GraphQL Query - UPDATED with correct fields from ACTIVE_ORDER_LIST
+// GraphQL Query - UPDATED with createdAt filter
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -92,7 +94,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types - UPDATED to match the query
+// Types - UPDATED to include date filters
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface Address {
@@ -163,6 +165,10 @@ interface OrderListResponse {
 interface OrderFilterInput {
   supplierId?: string;
   status?: OrderStatus;
+  createdAt?: {
+    from?: string;
+    to?: string;
+  };
 }
 
 interface OrderPaginationInput {
@@ -204,6 +210,19 @@ const statusIcons = {
   DELIVERED: CheckCircle,
   CANCELLED: XCircle
 };
+
+// Date filter presets
+const DATE_PRESETS = {
+  TODAY: 'today',
+  YESTERDAY: 'yesterday',
+  LAST_7_DAYS: 'last7Days',
+  LAST_30_DAYS: 'last30Days',
+  THIS_MONTH: 'thisMonth',
+  LAST_MONTH: 'lastMonth',
+  CUSTOM: 'custom'
+} as const;
+
+type DatePreset = typeof DATE_PRESETS[keyof typeof DATE_PRESETS];
 
 // Format address function
 const formatAddress = (address?: Address): string => {
@@ -323,12 +342,19 @@ export default function OrderListComponent({
   // State for active tab
   const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(initialStatus || 'ALL');
 
+  // State for date filter
+  const [datePreset, setDatePreset] = useState<DatePreset | ''>('');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
         status: filters.status,
-        supplierId: filters.supplierId
+        supplierId: filters.supplierId,
+        createdAt: filters.createdAt
       },
       pagination
     },
@@ -369,11 +395,102 @@ export default function OrderListComponent({
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
+  // Date preset handlers
+  const handleDatePresetChange = (preset: DatePreset) => {
+    setDatePreset(preset);
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let from: Date | null = null;
+    let to: Date | null = new Date();
+    to.setHours(23, 59, 59, 999);
+
+    switch (preset) {
+      case DATE_PRESETS.TODAY:
+        from = new Date(today);
+        break;
+      case DATE_PRESETS.YESTERDAY:
+        from = new Date(today);
+        from.setDate(from.getDate() - 1);
+        to = new Date(today);
+        to.setDate(to.getDate() - 1);
+        to.setHours(23, 59, 59, 999);
+        break;
+      case DATE_PRESETS.LAST_7_DAYS:
+        from = new Date(today);
+        from.setDate(from.getDate() - 7);
+        break;
+      case DATE_PRESETS.LAST_30_DAYS:
+        from = new Date(today);
+        from.setDate(from.getDate() - 30);
+        break;
+      case DATE_PRESETS.THIS_MONTH:
+        from = new Date(today.getFullYear(), today.getMonth(), 1);
+        break;
+      case DATE_PRESETS.LAST_MONTH:
+        from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        to = new Date(today.getFullYear(), today.getMonth(), 0);
+        to.setHours(23, 59, 59, 999);
+        break;
+      case DATE_PRESETS.CUSTOM:
+        setShowDatePicker(true);
+        return;
+    }
+
+    if (preset !== DATE_PRESETS.CUSTOM) {
+      setShowDatePicker(false);
+      const newFilters = {
+        ...filters,
+        createdAt: from ? {
+          from: from.toISOString(),
+          to: to?.toISOString()
+        } : undefined
+      };
+      setFilters(newFilters);
+      setPagination(prev => ({ ...prev, page: 1 }));
+    }
+  };
+
+  const applyCustomDateFilter = () => {
+    if (customDateFrom && customDateTo) {
+      const from = new Date(customDateFrom);
+      from.setHours(0, 0, 0, 0);
+      
+      const to = new Date(customDateTo);
+      to.setHours(23, 59, 59, 999);
+
+      const newFilters = {
+        ...filters,
+        createdAt: {
+          from: from.toISOString(),
+          to: to.toISOString()
+        }
+      };
+      setFilters(newFilters);
+      setPagination(prev => ({ ...prev, page: 1 }));
+      setShowDatePicker(false);
+    }
+  };
+
+  const clearDateFilter = () => {
+    setDatePreset('');
+    setCustomDateFrom('');
+    setCustomDateTo('');
+    setShowDatePicker(false);
+    const { createdAt, ...restFilters } = filters;
+    setFilters(restFilters);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
   const clearFilters = () => {
-    const newFilters = {};
-    setFilters(newFilters);
+    setFilters({});
     setSupplierIdInput('');
     setActiveTab('ALL');
+    setDatePreset('');
+    setCustomDateFrom('');
+    setCustomDateTo('');
+    setShowDatePicker(false);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -535,6 +652,81 @@ export default function OrderListComponent({
         </div>
 
         <div className="flex flex-col gap-4">
+          {/* Date Filter */}
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+              Filter by Date
+            </label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1 relative">
+                <select
+                  value={datePreset}
+                  onChange={(e) => handleDatePresetChange(e.target.value as DatePreset)}
+                  className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 appearance-none bg-white"
+                >
+                  <option value="">Select date range</option>
+                  <option value={DATE_PRESETS.TODAY}>Today</option>
+                  <option value={DATE_PRESETS.YESTERDAY}>Yesterday</option>
+                  <option value={DATE_PRESETS.LAST_7_DAYS}>Last 7 days</option>
+                  <option value={DATE_PRESETS.LAST_30_DAYS}>Last 30 days</option>
+                  <option value={DATE_PRESETS.THIS_MONTH}>This month</option>
+                  <option value={DATE_PRESETS.LAST_MONTH}>Last month</option>
+                  <option value={DATE_PRESETS.CUSTOM}>Custom range</option>
+                </select>
+                <Calendar className="absolute right-3 top-2.5 text-gray-400" size={16} />
+              </div>
+              {datePreset && (
+                <button
+                  onClick={clearDateFilter}
+                  className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors whitespace-nowrap"
+                >
+                  Clear Date
+                </button>
+              )}
+            </div>
+
+            {/* Custom Date Picker */}
+            {showDatePicker && (
+              <div className="mt-3 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">From</label>
+                    <input
+                      type="date"
+                      value={customDateFrom}
+                      onChange={(e) => setCustomDateFrom(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">To</label>
+                    <input
+                      type="date"
+                      value={customDateTo}
+                      onChange={(e) => setCustomDateTo(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-3">
+                  <button
+                    onClick={() => setShowDatePicker(false)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 text-gray-700 rounded hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyCustomDateFilter}
+                    disabled={!customDateFrom || !customDateTo}
+                    className="px-3 py-1.5 text-sm bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Supplier ID Filter */}
           <div className="hidden">
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
@@ -563,13 +755,13 @@ export default function OrderListComponent({
               onClick={clearFilters}
               className="px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Clear Filters
+              Clear All Filters
             </button>
           </div>
         </div>
 
         {/* Active Filters Display */}
-        {(filters.supplierId || filters.status) && (
+        {(filters.supplierId || filters.status || filters.createdAt) && (
           <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm">
               <span className="text-gray-600 whitespace-nowrap">Active filters:</span>
@@ -606,6 +798,17 @@ export default function OrderListComponent({
                     </button>
                   </span>
                 )}
+                {filters.createdAt && (
+                  <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm">
+                    Date: {new Date(filters.createdAt.from || '').toLocaleDateString()} - {new Date(filters.createdAt.to || '').toLocaleDateString()}
+                    <button
+                      onClick={clearDateFilter}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -621,6 +824,9 @@ export default function OrderListComponent({
           )}
           {filters.status && (
             <span> with status: <strong>{filters.status}</strong></span>
+          )}
+          {filters.createdAt && (
+            <span> from: <strong>{new Date(filters.createdAt.from || '').toLocaleDateString()}</strong> to <strong>{new Date(filters.createdAt.to || '').toLocaleDateString()}</strong></span>
           )}
         </div>
       )}
@@ -640,11 +846,11 @@ export default function OrderListComponent({
           <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
           <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Orders with Items</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
-            {filters.supplierId || filters.status 
+            {filters.supplierId || filters.status || filters.createdAt
               ? 'No orders with items match your current filters. Try adjusting your search criteria.'
               : 'There are no orders with items to display at this moment.'}
           </p>
-          {(filters.supplierId || filters.status) && (
+          {(filters.supplierId || filters.status || filters.createdAt) && (
             <button
               onClick={clearFilters}
               className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
@@ -830,7 +1036,7 @@ export default function OrderListComponent({
             </div>
 
             {/* Pagination */}
-            
+            {paginationInfo && paginationInfo.totalPages > 1 && (
               <div className="mt-6 sm:mt-8">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                   <div className="flex items-center gap-2 order-2 sm:order-1">
@@ -878,10 +1084,10 @@ export default function OrderListComponent({
                   </div>
                 </div>
               </div>
-            
+            )}
           </>
         )
       )}
     </div>
   );
-                            }
+                    }
