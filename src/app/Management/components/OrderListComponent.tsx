@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, gql } from '@apollo/client';
 import { 
   Package, 
@@ -19,11 +19,10 @@ import {
   XCircle,
   RefreshCw,
   Loader2,
-  Calendar,
-  ChevronDown
+  Calendar
 } from "lucide-react";
 
-// GraphQL Query - UPDATED with createdAt filter
+// GraphQL Query - KEEP EXACTLY AS ORIGINAL
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -94,7 +93,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types - UPDATED to include date filters
+// Types
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface Address {
@@ -162,13 +161,10 @@ interface OrderListResponse {
   pagination: PaginationInfo;
 }
 
+// GraphQL filter input (keep as original)
 interface OrderFilterInput {
   supplierId?: string;
   status?: OrderStatus;
-  createdAt?: {
-    from?: string;
-    to?: string;
-  };
 }
 
 interface OrderPaginationInput {
@@ -180,6 +176,25 @@ interface OrderListComponentProps {
   initialSupplierId?: string;
   initialStatus?: OrderStatus;
   isMobile?: boolean;
+}
+
+// Date filter presets for client-side filtering
+const DATE_PRESETS = {
+  TODAY: 'today',
+  YESTERDAY: 'yesterday',
+  LAST_7_DAYS: 'last7Days',
+  LAST_30_DAYS: 'last30Days',
+  THIS_MONTH: 'thisMonth',
+  LAST_MONTH: 'lastMonth',
+  CUSTOM: 'custom'
+} as const;
+
+type DatePreset = typeof DATE_PRESETS[keyof typeof DATE_PRESETS];
+
+// Client-side date filter interface
+interface ClientDateFilter {
+  from?: string;
+  to?: string;
 }
 
 // Format currency function for Philippine Peso
@@ -211,30 +226,16 @@ const statusIcons = {
   CANCELLED: XCircle
 };
 
-// Date filter presets
-const DATE_PRESETS = {
-  TODAY: 'today',
-  YESTERDAY: 'yesterday',
-  LAST_7_DAYS: 'last7Days',
-  LAST_30_DAYS: 'last30Days',
-  THIS_MONTH: 'thisMonth',
-  LAST_MONTH: 'lastMonth',
-  CUSTOM: 'custom'
-} as const;
-
-type DatePreset = typeof DATE_PRESETS[keyof typeof DATE_PRESETS];
-
 // Format address function
 const formatAddress = (address?: Address): string => {
   if (!address) return 'No address provided';
   return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}, ${address.country}`;
 };
 
-// Shimmer loading component with proper animation
+// Shimmer loading component
 const OrderCardShimmer = () => {
   return (
     <div className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
-      {/* Header shimmer */}
       <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -246,7 +247,6 @@ const OrderCardShimmer = () => {
       </div>
 
       <div className="p-2 lg:p-6">
-        {/* Order info shimmer */}
         <div className="flex justify-between items-start mb-3 lg:mb-4">
           <div className="space-y-2">
             <div className="h-6 w-32 bg-gray-200 rounded shimmer-animation"></div>
@@ -259,7 +259,6 @@ const OrderCardShimmer = () => {
           </div>
         </div>
 
-        {/* Address shimmer */}
         <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-4 h-4 bg-green-200 rounded shimmer-animation"></div>
@@ -271,7 +270,6 @@ const OrderCardShimmer = () => {
           </div>
         </div>
 
-        {/* Items section shimmer */}
         <div className="border-t border-gray-200 pt-3 sm:pt-4">
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
             <div className="w-4 h-4 bg-blue-200 rounded shimmer-animation"></div>
@@ -307,7 +305,6 @@ const OrderCardShimmer = () => {
           </div>
         </div>
 
-        {/* Footer shimmer */}
         <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
           <div className="flex justify-between">
             <div className="h-3 w-16 bg-gray-200 rounded shimmer-animation"></div>
@@ -324,11 +321,14 @@ export default function OrderListComponent({
   initialStatus,
   isMobile = false
 }: OrderListComponentProps) {
-  // State for filters
-  const [filters, setFilters] = useState<OrderFilterInput>({
+  // State for GraphQL filters (sent to backend)
+  const [graphqlFilters, setGraphqlFilters] = useState<OrderFilterInput>({
     supplierId: initialSupplierId,
     status: initialStatus
   });
+  
+  // State for client-side date filter (NOT sent to GraphQL)
+  const [dateFilter, setDateFilter] = useState<ClientDateFilter>({});
   
   // State for pagination
   const [pagination, setPagination] = useState({
@@ -342,24 +342,49 @@ export default function OrderListComponent({
   // State for active tab
   const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(initialStatus || 'ALL');
 
-  // State for date filter
+  // State for date filter UI
   const [datePreset, setDatePreset] = useState<DatePreset | ''>('');
   const [customDateFrom, setCustomDateFrom] = useState('');
   const [customDateTo, setCustomDateTo] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch orders
+  // Fetch orders - ONLY use graphqlFilters here
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: filters.status,
-        supplierId: filters.supplierId,
-        createdAt: filters.createdAt
+        status: graphqlFilters.status,
+        supplierId: graphqlFilters.supplierId
       },
       pagination
     },
     fetchPolicy: 'network-only'
   });
+
+  // Get all orders from GraphQL
+  const allOrders = data?.orderlist?.orders || [];
+  
+  // APPLY CLIENT-SIDE FILTERING - filter the JSON results by date
+  const filteredOrders = useMemo(() => {
+    let filtered = allOrders;
+    
+    // Apply client-side date filtering if date filter is active
+    if (dateFilter.from && dateFilter.to) {
+      const fromDate = new Date(dateFilter.from);
+      const toDate = new Date(dateFilter.to);
+      
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= fromDate && orderDate <= toDate;
+      });
+    }
+    
+    return filtered;
+  }, [allOrders, dateFilter]);
+
+  // Further filter out orders with 0 items
+  const ordersWithItems = filteredOrders.filter(order => order.items.length > 0);
+  
+  const paginationInfo = data?.orderlist?.pagination;
 
   // Status options for tabs
   const statusOptions: (OrderStatus | 'ALL')[] = [
@@ -371,14 +396,14 @@ export default function OrderListComponent({
     'CANCELLED'
   ];
 
-  // Handle tab change
+  // Handle tab change - updates graphqlFilters (sent to backend)
   const handleTabChange = (tab: OrderStatus | 'ALL') => {
     setActiveTab(tab);
     const newFilters = {
-      ...filters,
+      ...graphqlFilters,
       status: tab === 'ALL' ? undefined : tab as OrderStatus
     };
-    setFilters(newFilters);
+    setGraphqlFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
@@ -388,14 +413,14 @@ export default function OrderListComponent({
 
   const applySupplierFilter = () => {
     const newFilters = {
-      ...filters,
+      ...graphqlFilters,
       supplierId: supplierIdInput.trim() || undefined
     };
-    setFilters(newFilters);
+    setGraphqlFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  // Date preset handlers
+  // Date preset handlers - updates client-side dateFilter only
   const handleDatePresetChange = (preset: DatePreset) => {
     setDatePreset(preset);
     
@@ -439,15 +464,12 @@ export default function OrderListComponent({
     }
 
     setShowDatePicker(false);
-    const newFilters = {
-      ...filters,
-      createdAt: from ? {
+    if (from) {
+      setDateFilter({
         from: from.toISOString(),
         to: to?.toISOString()
-      } : undefined
-    };
-    setFilters(newFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
+      });
+    }
   };
 
   const applyCustomDateFilter = () => {
@@ -458,15 +480,10 @@ export default function OrderListComponent({
       const to = new Date(customDateTo);
       to.setHours(23, 59, 59, 999);
 
-      const newFilters = {
-        ...filters,
-        createdAt: {
-          from: from.toISOString(),
-          to: to.toISOString()
-        }
-      };
-      setFilters(newFilters);
-      setPagination(prev => ({ ...prev, page: 1 }));
+      setDateFilter({
+        from: from.toISOString(),
+        to: to.toISOString()
+      });
       setShowDatePicker(false);
       setDatePreset(DATE_PRESETS.CUSTOM);
     }
@@ -477,13 +494,12 @@ export default function OrderListComponent({
     setCustomDateFrom('');
     setCustomDateTo('');
     setShowDatePicker(false);
-    const { createdAt, ...restFilters } = filters;
-    setFilters(restFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setDateFilter({});
   };
 
   const clearFilters = () => {
-    setFilters({});
+    setGraphqlFilters({});
+    setDateFilter({});
     setSupplierIdInput('');
     setActiveTab('ALL');
     setDatePreset('');
@@ -537,15 +553,7 @@ export default function OrderListComponent({
     );
   }
 
-  const orderData = data?.orderlist as OrderListResponse;
-  const allOrders = orderData?.orders || [];
-  
-  // FILTER OUT ORDERS WITH 0 ITEMS
-  const ordersWithItems = allOrders.filter(order => order.items.length > 0);
-  
-  const paginationInfo = orderData?.pagination;
-
-  // Check if there's no data (no orders or all orders have 0 items)
+  // Check if there's no data after all filtering
   const hasNoData = !loading && ordersWithItems.length === 0;
 
   return (
@@ -651,7 +659,7 @@ export default function OrderListComponent({
         </div>
 
         <div className="flex flex-col gap-4">
-          {/* Date Filter */}
+          {/* Date Filter - CLIENT SIDE ONLY */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Filter by Date
@@ -726,7 +734,7 @@ export default function OrderListComponent({
             )}
           </div>
 
-          {/* Supplier ID Filter */}
+          {/* Supplier ID Filter - Hidden as in original */}
           <div className="hidden">
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Filter by Supplier ID
@@ -760,18 +768,18 @@ export default function OrderListComponent({
         </div>
 
         {/* Active Filters Display */}
-        {(filters.supplierId || filters.status || filters.createdAt) && (
+        {(graphqlFilters.supplierId || graphqlFilters.status || dateFilter.from) && (
           <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-xs sm:text-sm">
               <span className="text-gray-600 whitespace-nowrap">Active filters:</span>
               <div className="flex flex-wrap gap-2">
-                {filters.supplierId && (
+                {graphqlFilters.supplierId && (
                   <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs sm:text-sm">
-                    Supplier: {filters.supplierId}
+                    Supplier: {graphqlFilters.supplierId}
                     <button
                       onClick={() => {
-                        const newFilters = { ...filters, supplierId: undefined };
-                        setFilters(newFilters);
+                        const newFilters = { ...graphqlFilters, supplierId: undefined };
+                        setGraphqlFilters(newFilters);
                         setSupplierIdInput('');
                         setPagination(prev => ({ ...prev, page: 1 }));
                       }}
@@ -781,13 +789,13 @@ export default function OrderListComponent({
                     </button>
                   </span>
                 )}
-                {filters.status && (
+                {graphqlFilters.status && (
                   <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm">
-                    Status: {filters.status}
+                    Status: {graphqlFilters.status}
                     <button
                       onClick={() => {
-                        const newFilters = { ...filters, status: undefined };
-                        setFilters(newFilters);
+                        const newFilters = { ...graphqlFilters, status: undefined };
+                        setGraphqlFilters(newFilters);
                         setActiveTab('ALL');
                         setPagination(prev => ({ ...prev, page: 1 }));
                       }}
@@ -797,9 +805,9 @@ export default function OrderListComponent({
                     </button>
                   </span>
                 )}
-                {filters.createdAt && (
+                {dateFilter.from && dateFilter.to && (
                   <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs sm:text-sm">
-                    Date: {new Date(filters.createdAt.from || '').toLocaleDateString()} - {new Date(filters.createdAt.to || '').toLocaleDateString()}
+                    Date: {new Date(dateFilter.from).toLocaleDateString()} - {new Date(dateFilter.to).toLocaleDateString()}
                     <button
                       onClick={clearDateFilter}
                       className="text-blue-600 hover:text-blue-800 text-sm"
@@ -814,23 +822,23 @@ export default function OrderListComponent({
         )}
       </div>
 
-      {/* Results Count - Only show if there's data and not loading */}
+      {/* Results Count */}
       {!loading && paginationInfo && !hasNoData && (
         <div className="mb-3 sm:mb-4 text-xs sm:text-sm text-gray-600">
           Showing {ordersWithItems.length} of {paginationInfo.total} orders with items
-          {filters.supplierId && (
-            <span> for supplier: <strong>{filters.supplierId}</strong></span>
+          {graphqlFilters.supplierId && (
+            <span> for supplier: <strong>{graphqlFilters.supplierId}</strong></span>
           )}
-          {filters.status && (
-            <span> with status: <strong>{filters.status}</strong></span>
+          {graphqlFilters.status && (
+            <span> with status: <strong>{graphqlFilters.status}</strong></span>
           )}
-          {filters.createdAt && (
-            <span> from: <strong>{new Date(filters.createdAt.from || '').toLocaleDateString()}</strong> to <strong>{new Date(filters.createdAt.to || '').toLocaleDateString()}</strong></span>
+          {dateFilter.from && dateFilter.to && (
+            <span> from: <strong>{new Date(dateFilter.from).toLocaleDateString()}</strong> to <strong>{new Date(dateFilter.to).toLocaleDateString()}</strong></span>
           )}
         </div>
       )}
 
-      {/* Loading State - Shimmer Effect */}
+      {/* Loading State */}
       {loading && (
         <div className="space-y-3 sm:space-y-4">
           {[1, 2, 3].map((i) => (
@@ -839,17 +847,17 @@ export default function OrderListComponent({
         </div>
       )}
 
-      {/* No Data State - Show when no orders with items */}
+      {/* No Data State */}
       {!loading && hasNoData ? (
         <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
           <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
           <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Orders with Items</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
-            {filters.supplierId || filters.status || filters.createdAt
+            {(graphqlFilters.supplierId || graphqlFilters.status || dateFilter.from)
               ? 'No orders with items match your current filters. Try adjusting your search criteria.'
               : 'There are no orders with items to display at this moment.'}
           </p>
-          {(filters.supplierId || filters.status || filters.createdAt) && (
+          {(graphqlFilters.supplierId || graphqlFilters.status || dateFilter.from) && (
             <button
               onClick={clearFilters}
               className="mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm"
@@ -861,7 +869,7 @@ export default function OrderListComponent({
       ) : (
         !loading && (
           <>
-            {/* Orders Grid - Only render orders that have items */}
+            {/* Orders Grid */}
             <div className="space-y-3 sm:space-y-4">
               {ordersWithItems.map((order) => (
                 <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
@@ -905,7 +913,7 @@ export default function OrderListComponent({
                       </div>
                     </div>
 
-                    {/* DELIVERY ADDRESS SECTION - Using address from order */}
+                    {/* Delivery Address */}
                     {order.address && (
                       <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
                         <div className="flex items-center gap-2 mb-2">
@@ -1089,4 +1097,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+            }
