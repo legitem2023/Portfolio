@@ -438,18 +438,16 @@ export default function OrderListComponent({
         return;
     }
 
-    if (preset !== DATE_PRESETS.CUSTOM) {
-      setShowDatePicker(false);
-      const newFilters = {
-        ...filters,
-        createdAt: from ? {
-          from: from.toISOString(),
-          to: to?.toISOString()
-        } : undefined
-      };
-      setFilters(newFilters);
-      setPagination(prev => ({ ...prev, page: 1 }));
-    }
+    setShowDatePicker(false);
+    const newFilters = {
+      ...filters,
+      createdAt: from ? {
+        from: from.toISOString(),
+        to: to?.toISOString()
+      } : undefined
+    };
+    setFilters(newFilters);
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const applyCustomDateFilter = () => {
@@ -470,6 +468,7 @@ export default function OrderListComponent({
       setFilters(newFilters);
       setPagination(prev => ({ ...prev, page: 1 }));
       setShowDatePicker(false);
+      setDatePreset(DATE_PRESETS.CUSTOM);
     }
   };
 
@@ -1090,4 +1089,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-                    }
+}
