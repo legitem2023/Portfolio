@@ -94,8 +94,8 @@ model User {
   supportTickets  SupportTicket[]
   notifications   Notification[]
   ticketResponses TicketResponse[]
-  supplier        OrderItem[]
-  rider           OrderItem[]
+  supplier        OrderItem[] @relation("SupplierOrderItems")  // matches supplier relation in OrderItem
+  rider           OrderItem[] @relation("RiderOrderItems")     // matches rider relation in OrderItem
   // Social features (NEW) - Using explicit relations for MongoDB
   posts           Post[]
   comments        Comment[]
