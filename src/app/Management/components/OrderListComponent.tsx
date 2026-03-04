@@ -134,7 +134,7 @@ interface Rider {
 }
 interface OrderItem {
   id: string;
-  riderId? string;
+  riderId?: string;
   orderId?: string;
   supplierId?: string;
   quantity: number;
