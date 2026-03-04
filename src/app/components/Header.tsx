@@ -850,8 +850,9 @@ const Header: React.FC = () => {
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                     <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
+                    <LogoutButton/>
                     <div className="transform transition-all duration-300 hover:scale-[1.02]">
-                      <LogoutButton/>
+                
                     </div>
                   </div>
                 )}
@@ -983,7 +984,7 @@ const Header: React.FC = () => {
                       transformOrigin: 'left'
                     }}
                   ></div>
-
+                 <LogoutButton/>
                   <div 
                     className="px-4 py-3 transform transition-all duration-300"
                     style={{
@@ -992,7 +993,7 @@ const Header: React.FC = () => {
                       transitionDelay: '0.3s'
                     }}
                   >
-                    <LogoutButton/>
+                    
                   </div>
                 </div>
               </div>
