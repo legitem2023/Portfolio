@@ -943,8 +943,12 @@ const orders = await prisma.order.findMany({
       createdAt: order.createdAt ? order.createdAt.toISOString() : null,
       updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
       user: order.user,
-      supplier: order.items.supplier ? [order.items.supplier] : [], // Wrap in array to match [User] type
-      rider: order.items.rider ? [order.items.rider]:[],
+      supplier: order.items.map(item => ({
+        supplier: item.supplier ? [item.supplier] : [], // Wrap in array to match [User] type
+      })),
+      rider: order.items.map(item => ({
+        rider: item.rider ? [item.rider] : [], // Wrap in array to match [User] type
+      })),
       address: order.address,
       payments: order.payments,
       items: order.items.map(item => ({
