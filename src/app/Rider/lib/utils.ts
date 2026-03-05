@@ -41,7 +41,7 @@ export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierN
 
 // Group order items by supplier and map to delivery format
 export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
-  const firstName = order.user?.firstName || "Customer";
+  const firstName = order.user?.firstName +" "+ order.user?.lastName || "Customer";
   const userId = order.user?.id;
   const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
   const orderParentId = order.id;
