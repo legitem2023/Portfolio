@@ -2436,7 +2436,7 @@ salesList: async (
   },
 
   Mutation: {
-    updateUserPhone: async (_:any, { id, phone }) => {
+    updateUserPhone: async (_:any, { id, phone }:any) => {
       try {
         // Validate phone number
         if (!phone || phone.trim() === '') {
