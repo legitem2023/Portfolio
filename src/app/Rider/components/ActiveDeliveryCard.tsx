@@ -259,12 +259,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <Building size={isMobile ? 14 : 16} className="text-blue-400" />
                 <span className="font-medium text-sm lg:text-base">{delivery.restaurant}</span>
               </div>
-              <div className="grid grid-cols-2 items-center  gap-1 lg:gap-2 text-gray-600">
-                <User size={isMobile ? 14 : 16} />
-                <span className="text-sm lg:text-base">{delivery.customer}</span>
-                <Phone size={isMobile ? 14 : 16} />
-                <span className="text-sm lg:text-base">{delivery.customerContact}</span>
-              </div>
+<div className="flex flex-col gap-0.5 lg:gap-1">
+  <div className="flex items-center gap-x-0.5 lg:gap-x-1">
+    <User size={isMobile ? 14 : 16} />
+    <span className="text-sm">{delivery.customer}</span>
+  </div>
+  <div className="flex items-center gap-x-0.5 lg:gap-x-1">
+    <Phone size={isMobile ? 14 : 16} />
+    <span className="text-sm">{delivery.customerContact}</span>
+  </div>
+</div>
             </div>
             <div className="text-right">
               <div className="text-xl lg:text-3xl font-bold text-green-600">{delivery.payout}</div>
