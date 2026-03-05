@@ -943,6 +943,7 @@ const orders = await prisma.order.findMany({
       createdAt: order.createdAt ? order.createdAt.toISOString() : null,
       updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
       user: order.user,
+      
       address: order.address,
       payments: order.payments,
       items: order.items.map(item => ({
@@ -953,7 +954,8 @@ const orders = await prisma.order.findMany({
         price: item.price,
         variantInfo: item.variantInfo,
         product: [item.product], // Wrap in array to match [Product] type
-        supplier: item.supplier ? [item.supplier] : [] // Wrap in array to match [User] type
+        supplier: item.supplier ? [item.supplier] : [], // Wrap in array to match [User] type
+        rider: item.rider ? [item.rider]:[]
       }))
     }));
 
