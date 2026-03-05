@@ -50,11 +50,11 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   console.log(order.user,'mapping stage');
   const customerContact = order.user?.phone;
   // Group items by supplier
-const itemsBySupplier: Record<string, {
-  supplierId: string;
-  items: OrderItem[];
-  supplierInfo?: { address?: Address; supplierName: string; supplier?: Supplier; supplierContact?: string };
-}> = {};
+  const itemsBySupplier: Record<string, {
+    supplierId: string;
+    items: OrderItem[];
+    supplierInfo?: { address?: Address; supplierName: string; supplier?: Supplier; supplierContact?: string };
+  }> = {};
   
   order.items.forEach(item => {
     const supplierId = item.supplierId || "unknown";
@@ -153,7 +153,7 @@ const itemsBySupplier: Record<string, {
       restaurant: supplierName,
       customer: firstName,
       customerId: userId,
-      customerContact:customerContact,
+      customerContact: customerContact || "",
       distance,
       pickup: pickupFormatted,
       dropoff: dropoffFormatted,
@@ -166,7 +166,7 @@ const itemsBySupplier: Record<string, {
       pickupAddress,
       supplierName,
       supplier,
-      supplierContact,
+      supplierContact: supplierContact || "",
       subtotal: formatPeso(subtotal),
       supplierItems: items,
       isPartialDelivery: Object.keys(itemsBySupplier).length > 1,
