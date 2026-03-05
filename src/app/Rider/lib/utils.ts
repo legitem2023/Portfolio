@@ -36,7 +36,7 @@ export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierN
     }
   }
   
-  return { address: undefined, supplierName: item.product[0]?.name || "Supplier", supplier: undefined };
+  return { address: undefined, supplierName: item.product[0]?.name || "Supplier", supplier: undefined, supplierContact:supplierContact};
 };
 
 // Group order items by supplier and map to delivery format
