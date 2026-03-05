@@ -223,6 +223,7 @@ model Address {
   userId      String?  @db.ObjectId
   type        AddressType?
   receiver    String?
+  phone       String?
   street      String?
   city        String?
   state       String?
