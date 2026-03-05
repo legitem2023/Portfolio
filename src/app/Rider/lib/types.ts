@@ -301,6 +301,7 @@ export interface Delivery {
   restaurant: string;
   customer: string;
   customerId: string;
+  customerContact: string;
   distance: string;
   pickup: string;
   dropoff: string;
