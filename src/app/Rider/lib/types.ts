@@ -69,6 +69,7 @@ export const ACTIVE_ORDER_LIST = gql`
           firstName
           lastName
           email
+          phone
         }
         address {
           id
@@ -93,9 +94,11 @@ export const ACTIVE_ORDER_LIST = gql`
             images
           }
           supplier {
-            id
-            firstName
-            lastName
+             id
+             firstName
+             lastName
+             email
+             phone
             addresses {
               street
               city
@@ -140,7 +143,9 @@ export const ORDER_LIST_QUERY = gql`
         user {
           id
           firstName
+          lastName
           email
+          phone
         }
         address {
           id
@@ -166,6 +171,8 @@ export const ORDER_LIST_QUERY = gql`
           supplier {
             id
             firstName
+            lastName
+            phone
             addresses {
               street
               city
