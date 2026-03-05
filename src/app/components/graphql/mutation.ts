@@ -1,5 +1,28 @@
 import { gql } from "@apollo/client";
 
+export const UPDATE_USER_PHONE = gql`
+  mutation UpdateUserPhone($id: ID!, $phone: String!) {
+    updateUserPhone(id: $id, phone: $phone) {
+      id
+      phone
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_AVATAR = gql`
+  mutation UpdateUserAvatar($id: ID!, $avatar: String!) {
+    updateUserAvatar(id: $id, avatar: $avatar) {
+      id
+      avatar
+      firstName
+      lastName
+      phone
+    }
+  }
+`;
 // Create notification mutation
 export const ADD_TO_WISHLIST = gql`
   mutation AddToWishList($userId: ID!, $productId: ID!) {
