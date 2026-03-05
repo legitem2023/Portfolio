@@ -68,6 +68,7 @@ const ORDER_LIST_QUERY = gql`
             id
             firstName
             lastName
+            phone
             addresses {
               street
               city
@@ -82,6 +83,7 @@ const ORDER_LIST_QUERY = gql`
             id
             firstName
             lastName
+            phone
             addresses {
               street
               city
@@ -129,6 +131,7 @@ interface User {
   firstName: string;
   lastName?: string;
   email?: string;
+  phone?: string;
   addresses?: Address[];
 }
 
@@ -1035,6 +1038,9 @@ export default function OrderListComponent({
                                 <p className="text-sm font-medium text-gray-800">
                                   {rider.firstName} {rider.lastName || ''}
                                 </p>
+                                <p className="text-sm font-medium text-gray-800">
+                                  {rider.phone}
+                                </p>
                                 {rider.addresses && rider.addresses.length > 0 && (
                                   <div className="flex items-start gap-1 mt-1">
                                     <MapPin size={10} className="text-gray-400 mt-0.5" />
@@ -1115,14 +1121,14 @@ export default function OrderListComponent({
                                     </h4>
 
                                     {/* Show supplierId and riderId references */}
-                                    {item.supplierId && (
+                                    {/*item.supplierId && (
                                       <div className="flex items-center gap-1 mt-1">
                                         <Building size={10} className="text-gray-400" />
                                         <span className="text-xs text-gray-500">
                                           Supplier ID: {item.supplierId}
                                         </span>
                                       </div>
-                                    )}
+                                    )*/}
 
                                     {item.riderId && (
                                       <div className="flex items-center gap-1 mt-1">
