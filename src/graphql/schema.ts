@@ -277,6 +277,7 @@ export const typeDefs = gql`
     quantity: Int
     price: Float
     supplierId: String
+    riderId: String
     variantInfo: String
     status: OrderStatus
     orderId: String
