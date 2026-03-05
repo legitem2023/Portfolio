@@ -18,6 +18,7 @@ interface FormData {
   country: string;
   isDefault: boolean;
   receiver: string;
+  phone: string;  // Added phone field
   lat: number | null;
   lng: number | null;
 }
@@ -45,6 +46,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     country: '',
     isDefault: false,
     receiver: '',
+    phone: '',  // Initialize phone field
     lat: null,
     lng: null
   });
@@ -442,7 +444,26 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter receiver name"
+            required
           />
+        </div>
+
+        {/* Phone Field - NEW */}
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="+63 912 345 6789"
+            required
+          />
+          <p className="mt-1 text-xs text-gray-500">Include country code for international numbers</p>
         </div>
 
         {/* Street Address */}
@@ -589,4 +610,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </form>
     </div>
   );
-}
+      }
