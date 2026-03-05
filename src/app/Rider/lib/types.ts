@@ -217,6 +217,8 @@ export interface Supplier {
   id: string;
   firstName: string;
   lastName: string;
+  phone: string;
+  email: string;
   addresses: Address[];
 }
 
