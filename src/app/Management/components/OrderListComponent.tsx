@@ -124,16 +124,13 @@ interface Address {
   lng?: number;
 }
 
-interface Supplier {
+interface User {
   id: string;
   firstName: string;
+  email?: string;
   addresses?: Address[];
 }
-interface Rider {
-  id: string;
-  firstName: string;
-  addresses?: Address[];
-}
+
 interface OrderItem {
   id: string;
   orderId?: string;
@@ -147,8 +144,8 @@ interface OrderItem {
     sku: string;
     images: string[];
   }>;
-  rider?: Rider;
-  supplier?: Supplier;
+  rider?: User | User[]; // Can be object or array
+  supplier?: User | User[]; // Can be object or array
 }
 
 interface Order {
@@ -162,8 +159,8 @@ interface Order {
     firstName: string;
     email: string;
   };
-  rider?: Rider;
-  supplier?: Supplier;
+  rider?: any;
+  supplier?: any;
   address?: Address;
   items: OrderItem[];
   payments: Array<{
@@ -249,6 +246,14 @@ const statusIcons = {
   SHIPPED: Truck,
   DELIVERED: CheckCircle,
   CANCELLED: XCircle
+};
+
+// Helper function to safely get user from possible array
+const getUserFromItem = (item: OrderItem, type: 'rider' | 'supplier'): User | undefined => {
+  const user = item[type];
+  if (!user) return undefined;
+  // If it's an array, get the first element
+  return Array.isArray(user) ? user[0] : user;
 };
 
 // Format address function
@@ -388,7 +393,7 @@ export default function OrderListComponent({
   // Get all orders from GraphQL with proper typing
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
-  console.log(orderData,"<===");
+  
   // APPLY CLIENT-SIDE FILTERING - filter the JSON results by date
   const filteredOrders = useMemo(() => {
     let filtered = allOrders;
@@ -655,7 +660,7 @@ export default function OrderListComponent({
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
               {statusOptions.map((status) => {
-                const Icon = statusIcons[status];
+                const Icon = statusIcons[status as keyof typeof statusIcons] || ShoppingBag;
                 return (
                   <button
                     key={status}
@@ -965,118 +970,124 @@ export default function OrderListComponent({
                       </h4>
                       
                       <div className="space-y-2 sm:space-y-3">
-                        {order.items.map((item) => (
-                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
-                            {/* Mobile view */}
-                            <div className="flex xs:hidden items-center gap-2">
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="relative w-10 h-10 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                </div>
-                              )}
-                              <div className="flex-1 text-right">
-                                <div className="text-sm font-bold text-gray-900">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                                {item.status && (
-                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                    {item.status}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Desktop/tablet view */}
-                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                              {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
-                                  <img 
-                                    src={item.product[0].images[0]} 
-                                    alt={item.product[0].name}
-                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                  />
-                                </div>
-                              )}
-                              
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-col gap-0.5 sm:gap-1">
-                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
-                                      {item.product[0]?.sku || 'N/A'}
-                                    </span>
-                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                      Qty: {item.quantity}
-                                    </span>
-                                    {item.status && (
-                                      <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                        {item.status}
-                                      </span>
-                                    )}
+                        {order.items.map((item) => {
+                          // Safely get rider and supplier from possible arrays
+                          const rider = getUserFromItem(item, 'rider');
+                          const supplier = getUserFromItem(item, 'supplier');
+                          
+                          return (
+                            <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                              {/* Mobile view */}
+                              <div className="flex xs:hidden items-center gap-2">
+                                {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                  <div className="relative w-10 h-10 flex-shrink-0">
+                                    <img 
+                                      src={item.product[0].images[0]} 
+                                      alt={item.product[0].name}
+                                      className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                    />
                                   </div>
-                                  
-                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
-                                    {item.product[0]?.name || 'Unknown Product'}
-                                  </h4>
-
-                                  {/* Supplier info if available */}
-                                  {item.supplier && (
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Building size={10} className="text-gray-400" />
-                                      <span className="text-xs text-gray-500">
-                                        Supplier: {item.supplier.firstName}
-                                      </span>
-                                    </div>
+                                )}
+                                <div className="flex-1 text-right">
+                                  <div className="text-sm font-bold text-gray-900">
+                                    {formatCurrency(item.price * item.quantity)}
+                                  </div>
+                                  {item.status && (
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                      {item.status}
+                                    </span>
                                   )}
+                                </div>
+                              </div>
 
-                                  {/* Supplier address if available */}
-                                  {item.supplier?.addresses && item.supplier.addresses.length > 0 && (
-                                    <div className="flex items-start gap-1 mt-0.5">
-                                      <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                      <span className="text-xs text-gray-400 truncate">
-                                        From: {item.supplier.addresses[0].street}, {item.supplier.addresses[0].city}
+                              {/* Desktop/tablet view */}
+                              <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                                {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                  <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                    <img 
+                                      src={item.product[0].images[0]} 
+                                      alt={item.product[0].name}
+                                      className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                    />
+                                  </div>
+                                )}
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col gap-0.5 sm:gap-1">
+                                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                      <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                        {item.product[0]?.sku || 'N/A'}
                                       </span>
-                                    </div>
-                                  )}
-
-                                  {/* Rider info if available */}
-                                  {item.rider && (
-                                    <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
-                                      <div className="flex items-center gap-1">
-                                        <Bike size={12} className="text-orange-500" />
-                                        <span className="text-xs font-medium text-orange-600">
-                                          Rider: {item.rider.firstName}
+                                      <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                        Qty: {item.quantity}
+                                      </span>
+                                      {item.status && (
+                                        <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                          {item.status}
                                         </span>
-                                      </div>
-                                      
-                                      {/* Rider Address */}
-                                      {item.rider.addresses && item.rider.addresses.length > 0 && (
-                                        <div className="flex items-start gap-1 mt-0.5 ml-4">
-                                          <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                          <span className="text-xs text-gray-400 truncate">
-                                            {item.rider.addresses[0].street}, {item.rider.addresses[0].city}
-                                          </span>
-                                        </div>
                                       )}
                                     </div>
-                                  )}
+                                    
+                                    <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                      {item.product[0]?.name || 'Unknown Product'}
+                                    </h4>
+
+                                    {/* Supplier info if available */}
+                                    {supplier && (
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <Building size={10} className="text-gray-400" />
+                                        <span className="text-xs text-gray-500">
+                                          Supplier: {supplier.firstName}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Supplier address if available */}
+                                    {supplier?.addresses && supplier.addresses.length > 0 && (
+                                      <div className="flex items-start gap-1 mt-0.5">
+                                        <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                        <span className="text-xs text-gray-400 truncate">
+                                          From: {supplier.addresses[0].street}, {supplier.addresses[0].city}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Rider info if available */}
+                                    {rider && (
+                                      <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
+                                        <div className="flex items-center gap-1">
+                                          <Bike size={12} className="text-orange-500" />
+                                          <span className="text-xs font-medium text-orange-600">
+                                            Rider: {rider.firstName}
+                                          </span>
+                                        </div>
+                                        
+                                        {/* Rider Address */}
+                                        {rider.addresses && rider.addresses.length > 0 && (
+                                          <div className="flex items-start gap-1 mt-0.5 ml-4">
+                                            <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                            <span className="text-xs text-gray-400 truncate">
+                                              {rider.addresses[0].street}, {rider.addresses[0].city}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                              
-                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
-                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
-                                  {formatCurrency(item.price * item.quantity)}
-                                </div>
-                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
-                                  @ {formatCurrency(item.price)}
+                                
+                                <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                                  <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                    {formatCurrency(item.price * item.quantity)}
+                                  </div>
+                                  <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                    @ {formatCurrency(item.price)}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -1147,4 +1158,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-    }
+            }
