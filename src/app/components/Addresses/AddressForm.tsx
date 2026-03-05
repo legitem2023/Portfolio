@@ -58,6 +58,13 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [isFetchingIp, setIsFetchingIp] = useState(false);
   const [locationStep, setLocationStep] = useState<'idle' | 'fetching-ip' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  // New state for note acknowledgment
+  const [hasReadNote, setHasReadNote] = useState(false);
+  const [showNotePrompt, setShowNotePrompt] = useState(false);
+  const [addressNeedsManualCompletion, setAddressNeedsManualCompletion] = useState(false);
+  const [autoFillAttempted, setAutoFillAttempted] = useState(false);
+  
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
   // ============ IP ADDRESS FETCHING ============
@@ -146,19 +153,29 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         const addressComponents = result.address_components;
         
         let street = '';
+        let streetNumber = '';
+        let route = '';
         let city = '';
         let state = '';
         let zipCode = '';
         let country = '';
+        let subpremise = ''; // For apartment/unit numbers
+        let premise = '';
 
         addressComponents.forEach((component: any) => {
           const types = component.types;
           
           if (types.includes('street_number')) {
-            street = component.long_name + ' ' + street;
+            streetNumber = component.long_name;
           }
           if (types.includes('route')) {
-            street += component.long_name;
+            route = component.long_name;
+          }
+          if (types.includes('subpremise')) {
+            subpremise = component.long_name; // Apartment/unit/suite number
+          }
+          if (types.includes('premise')) {
+            premise = component.long_name; // Building name
           }
           if (types.includes('locality')) {
             city = component.long_name;
@@ -174,7 +191,24 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           }
         });
 
-        street = street.trim();
+        // Construct street address with proper formatting
+        if (streetNumber && route) {
+          street = `${streetNumber} ${route}`;
+        } else if (route) {
+          street = route;
+        } else if (premise) {
+          street = premise;
+        }
+
+        // Check if address might be missing specific details
+        const hasDetailedAddress = streetNumber && route;
+        const hasBuildingInfo = subpremise || premise;
+        
+        // If we have a building but no street number/route, mark for manual completion
+        if (!hasDetailedAddress && hasBuildingInfo) {
+          setAddressNeedsManualCompletion(true);
+        }
+
         setActiveApi('google');
         
         return {
@@ -236,16 +270,27 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       if (data && data.address) {
         const address = data.address;
         
+        // Construct street address
         let street = '';
+        let hasHouseNumber = false;
+        
         if (address.road) {
           street = address.road;
           if (address.house_number) {
             street = `${address.house_number} ${street}`;
+            hasHouseNumber = true;
           }
         } else if (address.pedestrian) {
           street = address.pedestrian;
         } else if (address.footway) {
           street = address.footway;
+        } else if (address.building) {
+          street = address.building;
+        }
+
+        // Check if address might be missing specific details
+        if (!hasHouseNumber && (address.building || address.apartments)) {
+          setAddressNeedsManualCompletion(true);
         }
 
         setActiveApi('osm');
@@ -352,6 +397,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     setIsGeocoding(true);
     setLocationError(null);
     setLocationStep('getting-location');
+    setAddressNeedsManualCompletion(false);
     
     try {
       const location = await geocodeAddress(fullAddress);
@@ -369,8 +415,16 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   };
 
   const handleGetCurrentLocation = async () => {
+    // Check if user has read the note
+    if (!hasReadNote) {
+      setShowNotePrompt(true);
+      return;
+    }
+
+    setAutoFillAttempted(true);
     setIsGeocoding(true);
     setLocationError(null);
+    setAddressNeedsManualCompletion(false);
     
     try {
       // Step 1: Fetch IP address (required for location verification)
@@ -406,6 +460,15 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     } finally {
       setIsGeocoding(false);
     }
+  };
+
+  const handleAcknowledgeNote = () => {
+    setHasReadNote(true);
+    setShowNotePrompt(false);
+    // Automatically trigger location fetch after acknowledgment
+    setTimeout(() => {
+      handleGetCurrentLocation();
+    }, 100);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -488,7 +551,137 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* Location Status Indicator - Mobile Optimized */}
+      {/* Note Acknowledgement Modal/Prompt */}
+      {showNotePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+            <div className="mb-4">
+              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full">
+                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="mt-4 text-lg font-medium text-gray-900 text-center">
+                Important Information Required
+              </h3>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-blue-800 font-medium mb-2">📍 Before using Auto-fill:</p>
+                <ul className="text-sm text-blue-700 space-y-2">
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>IP address will be detected for location verification</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>GPS location will be used for precise coordinates</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span className="font-semibold">For buildings/units:</span> You may need to manually complete the street address
+                  </li>
+                  <li className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>Your IP is only used for verification and not stored</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ By proceeding, you acknowledge that auto-filled addresses may need manual completion for specific buildings, units, or apartments.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowNotePrompt(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAcknowledgeNote}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                >
+                  I Understand, Proceed
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Required Note Section - Always visible */}
+      <div className="mb-4 sm:mb-6 border-2 border-blue-300 rounded-lg overflow-hidden">
+        <div className="bg-blue-600 text-white px-4 py-2 flex items-center">
+          <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span className="font-semibold text-sm sm:text-base">REQUIRED: Please Read Before Using Auto-fill</span>
+        </div>
+        
+        <div className="p-4 bg-blue-50">
+          <div className="space-y-3 text-sm text-blue-800">
+            <p className="font-medium">📍 Auto-fill Location Process:</p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">1</span>
+                <div>
+                  <p className="font-semibold">IP Detection</p>
+                  <p className="text-xs text-blue-600">Verify your general region</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">2</span>
+                <div>
+                  <p className="font-semibold">GPS Location</p>
+                  <p className="text-xs text-blue-600">Get precise coordinates</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">3</span>
+                <div>
+                  <p className="font-semibold">Auto-fill</p>
+                  <p className="text-xs text-blue-600">Complete address fields</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-3 p-3 bg-yellow-100 rounded-lg border border-yellow-300">
+              <p className="text-xs sm:text-sm text-yellow-800">
+                <span className="font-bold">⚠️ IMPORTANT:</span> For addresses in buildings, apartments, or complexes, 
+                the auto-fill may not capture unit numbers, floor numbers, or specific building details. 
+                <span className="font-semibold block mt-1">You must manually review and complete the street address if needed.</span>
+              </p>
+            </div>
+
+            <div className="mt-2 flex items-center text-xs text-blue-600">
+              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <span>Your IP address is only used for verification and is not stored</span>
+            </div>
+
+            {/* Acknowledgment indicator */}
+            {hasReadNote && (
+              <div className="mt-2 p-2 bg-green-100 rounded-lg flex items-center">
+                <svg className="h-4 w-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs text-green-700">You have acknowledged the requirements</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Location Status Indicator */}
       {isGeocoding && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg animate-pulse">
           <div className="flex items-center">
@@ -501,109 +694,24 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* IP Address and Location Notice - Collapsible on Mobile */}
-      <div className="mb-4 sm:mb-6">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="w-full lg:hidden flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg"
-        >
-          <span className="text-sm font-semibold text-blue-800 flex items-center">
-            <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      {/* Manual Completion Warning */}
+      {addressNeedsManualCompletion && (
+        <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+          <div className="flex">
+            <svg className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
-            How location detection works
-          </span>
-          <svg className={`h-5 w-5 text-blue-600 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {/* Expanded content on mobile, always visible on desktop */}
-        <div className={`${isExpanded ? 'block' : 'hidden'} lg:block mt-2 lg:mt-0`}>
-          <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-            <div className="flex flex-col sm:flex-row sm:items-start">
-              <div className="hidden sm:block flex-shrink-0 sm:mr-3">
-                <svg className="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm sm:text-base font-semibold text-blue-800 mb-2 sm:mb-3">
-                  📍 How to use &quot;Auto-fill from Current Location&quot;
-                </h3>
-                
-                {/* Step indicators - Vertical on mobile, horizontal on desktop */}
-                <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:justify-between sm:gap-2 text-sm text-blue-700">
-                  <div className="flex items-start sm:flex-1">
-                    <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">1</span>
-                    <div>
-                      <p className="font-medium">IP Detection</p>
-                      <p className="text-xs text-blue-600 mt-0.5">Verify your region</p>
-                    </div>
-                  </div>
-                  
-                  <div className="hidden sm:block text-blue-300">→</div>
-                  <div className="sm:hidden border-l-2 border-blue-200 ml-2.5 h-2"></div>
-                  
-                  <div className="flex items-start sm:flex-1">
-                    <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">2</span>
-                    <div>
-                      <p className="font-medium">GPS Location</p>
-                      <p className="text-xs text-blue-600 mt-0.5">Get precise coordinates</p>
-                    </div>
-                  </div>
-                  
-                  <div className="hidden sm:block text-blue-300">→</div>
-                  <div className="sm:hidden border-l-2 border-blue-200 ml-2.5 h-2"></div>
-                  
-                  <div className="flex items-start sm:flex-1">
-                    <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">3</span>
-                    <div>
-                      <p className="font-medium">Auto-fill</p>
-                      <p className="text-xs text-blue-600 mt-0.5">Complete address</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* IP Address Display */}
-                {ipAddress && (
-                  <div className="mt-3 p-2 bg-green-100 rounded-md">
-                    <p className="text-xs text-green-800 flex items-center">
-                      <svg className="h-4 w-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span className="truncate">IP: <span className="font-mono">{ipAddress}</span></span>
-                    </p>
-                  </div>
-                )}
-
-                {/* Requirements - Mobile optimized */}
-                <div className="mt-3 p-2 bg-yellow-50 rounded-md border border-yellow-200">
-                  <p className="text-xs font-medium text-yellow-800 mb-1">⚠️ Requirements:</p>
-                  <ul className="text-xs text-yellow-700 list-disc list-inside">
-                    <li className="truncate">Internet connection</li>
-                    <li className="truncate">Location services enabled</li>
-                    <li className="truncate">Allow location access</li>
-                  </ul>
-                </div>
-
-                <p className="text-xs text-gray-500 mt-2">
-                  🔒 IP used only for verification, not stored
-                </p>
-              </div>
+            <div>
+              <p className="font-semibold text-sm">Address可能需要手动完成 / Address May Need Manual Completion</p>
+              <p className="text-xs mt-1">
+                The detected address might be missing building/unit details. Please review and complete the street address below.
+              </p>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Active API indicator */}
-      {formData.lat && formData.lng && activeApi && (
-        <div className="mb-4 p-2 bg-blue-50 border border-blue-200 text-blue-700 rounded text-xs">
-          🗺️ Location by: {activeApi === 'google' ? 'Google Maps' : 'OpenStreetMap'}
-        </div>
       )}
 
-      {/* Display coordinates - Mobile Optimized */}
+      {/* Display coordinates if available */}
       {formData.lat && formData.lng && (
         <div className="mb-4 p-2 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded flex items-center justify-between">
           <span className="text-xs sm:text-sm truncate mr-2">
@@ -676,10 +784,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <p className="mt-1 text-xs text-gray-500">Include country code</p>
         </div>
 
-        {/* Street Address */}
-        <div>
+        {/* Street Address - Highlighted when needs manual completion */}
+        <div className={addressNeedsManualCompletion ? 'p-2 border-2 border-yellow-400 rounded-lg bg-yellow-50' : ''}>
           <label htmlFor="street" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Street Address
+            Street Address {addressNeedsManualCompletion && <span className="text-yellow-600">(Please complete manually)</span>}
           </label>
           <input
             type="text"
@@ -687,13 +795,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             name="street"
             value={formData.street}
             onChange={handleChange}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="123 Main St"
+            className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressNeedsManualCompletion ? 'border-yellow-400 bg-white' : 'border-gray-300'
+            }`}
+            placeholder={addressNeedsManualCompletion ? "e.g., Unit 123, Building Name, Street..." : "123 Main St"}
             required
           />
+          {addressNeedsManualCompletion && (
+            <p className="mt-1 text-xs text-yellow-600">
+              ⚠️ Please add apartment/unit number, building name, or specific details
+            </p>
+          )}
         </div>
 
-        {/* City, State, Zip Code - Stack on mobile, grid on tablet/desktop */}
+        {/* City, State, Zip Code */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label htmlFor="city" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -761,7 +876,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           />
         </div>
 
-        {/* Location Buttons - Stack on mobile, side by side on tablet/desktop */}
+        {/* Location Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             type="button"
@@ -782,7 +897,11 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             type="button"
             onClick={handleGetCurrentLocation}
             disabled={isGeocoding || isFetchingIp}
-            className="w-full sm:flex-1 bg-purple-600 text-white py-3 sm:py-2 px-3 sm:px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
+            className={`w-full sm:flex-1 text-white py-3 sm:py-2 px-3 sm:px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base ${
+              !hasReadNote 
+                ? 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500 animate-pulse' 
+                : 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
+            }`}
           >
             {isGeocoding || isFetchingIp ? (
               <span className="flex items-center justify-center">
@@ -797,17 +916,23 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
                 <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <span className="truncate">Auto-fill Current Location</span>
+                <span className="truncate">
+                  {!hasReadNote ? '⚠️ Read Note First' : 'Auto-fill Current Location'}
+                </span>
               </span>
             )}
           </button>
         </div>
 
-        {/* Help Text - Mobile Optimized */}
+        {/* Help Text */}
         <div className="text-xs text-gray-500 text-center px-2">
-          <p className="truncate">
-            Click &quot;Auto-fill&quot; to detect IP & GPS location
-          </p>
+          {!hasReadNote ? (
+            <p className="text-orange-600 font-medium">
+              ⚠️ Please read the required note above before using Auto-fill
+            </p>
+          ) : (
+            <p>Click Auto-fill to detect location. {addressNeedsManualCompletion && 'Complete missing details if needed.'}</p>
+          )}
         </div>
 
         {/* Default Address Checkbox */}
@@ -825,7 +950,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </label>
         </div>
 
-        {/* Action Buttons - Stack on mobile, side by side on tablet/desktop */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-2 sm:pt-4">
           <button
             type="submit"
@@ -848,4 +973,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </form>
     </div>
   );
-      }
+}
