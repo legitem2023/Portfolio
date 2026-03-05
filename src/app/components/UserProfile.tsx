@@ -4,7 +4,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from './graphql/query';
-import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR } from './graphql/mutations';
+import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR } from './graphql/mutation';
 import { User } from '../../../types';
 import UserProfileShimmer from './UserProfileShimmer';
 import UserProfileShimmerRed from './UserProfileShimmerRed';
