@@ -989,7 +989,7 @@ export default function OrderListComponent({
                       )}
 
                       {/* Suppliers Section - at Order Level */}
-                      {orderSuppliers.length > 0 && (
+                      {/*orderSuppliers.length > 0 && (
                         <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
                           <div className="flex items-center gap-2 mb-3">
                             <Building size={isMobile ? 16 : 18} className="text-blue-600" />
@@ -1018,7 +1018,7 @@ export default function OrderListComponent({
                             ))}
                           </div>
                         </div>
-                      )}
+                      )*/}
 
                       {/* Riders Section - at Order Level */}
                       {orderRiders.length > 0 && (
@@ -1026,7 +1026,7 @@ export default function OrderListComponent({
                           <div className="flex items-center gap-2 mb-3">
                             <Bike size={isMobile ? 16 : 18} className="text-orange-600" />
                             <h4 className="font-semibold text-sm lg:text-base text-orange-700">
-                              Riders ({orderRiders.length})
+                              Rider
                             </h4>
                           </div>
                           <div className="space-y-3">
