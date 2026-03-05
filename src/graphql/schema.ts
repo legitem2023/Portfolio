@@ -950,6 +950,9 @@ input OrderPaginationInput {
 
   type Mutation {
     # Existing mutations
+    
+    updateUserPhone(id: ID, phone: String): User
+    updateUserAvatar(id: ID, avatar: String): User
     addToWishList(userId:ID,productId:ID):Result
     updateRole(userId:ID,Level:Role):Result
     updateOrderStatus(itemId:ID,riderId:ID,supplierId:ID,userId:ID,status:String,title:String,message:String): Result
