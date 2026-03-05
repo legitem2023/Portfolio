@@ -2454,7 +2454,7 @@ salesList: async (
         });
 
         return updatedUser;
-      } catch (error) {
+      } catch (error:any) {
         console.error('Error in updateUserPhone:', error);
         if (error.code === 'P2025') {
           throw new Error('User not found');
