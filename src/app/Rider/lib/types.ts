@@ -209,6 +209,7 @@ export interface Address {
 export interface Supplier {
   id: string;
   firstName: string;
+  lastName: string;
   addresses: Address[];
 }
 
@@ -237,7 +238,7 @@ export interface Payment {
 export interface OrderUser {
   id: string;
   firstName: string;
-  lastName
+  lastName: string;
   email: string;
   phone: string;
 }
