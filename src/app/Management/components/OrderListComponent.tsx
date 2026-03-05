@@ -51,12 +51,8 @@ const ORDER_LIST_QUERY = gql`
           lat
           lng
         }
-        rider {
-          rider
-        }
-        supplier {
-          supplier
-        }
+        rider
+        supplier
         items {
           id
           orderId
