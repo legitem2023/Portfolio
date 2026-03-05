@@ -871,27 +871,7 @@ const orders = await prisma.order.findMany({
             recipientName: true,
             rejectedBy: true,
             product:true,
-            rider: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
-                addresses: {
-                  // Removed isDefault filter to match frontend query
-                  select: {
-                    street: true,
-                    city: true,
-                    state: true,
-                    zipCode: true,
-                    country: true,
-                    isDefault: true,
-                    lat: true,
-                    lng: true
-                  }
-                }
-              }
-            },
+            rider: true,
             supplier: {
               select: {
                 id: true,
