@@ -452,12 +452,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               <p className="text-gray-700 text-xs lg:text-sm">{delivery.dropoff}</p>
               {delivery.dropoffAddress && (
                 <div className="mt-1 lg:mt-2 text-xs text-gray-500">
-                  <div className="grid grid-cols-2 items-center gap-0.5 lg:gap-1">
-                    <User size={isMobile ? 8 : 10} />
-                    <span className="text-xs">{delivery.customer}</span>
-                    <Phone size={isMobile ? 8: 10} />
-                    <span className="text-xs">{delivery.customerContact}</span>
-                  </div>
+<div className="flex flex-col gap-0.5 lg:gap-1">
+  <div className="flex items-center gap-x-0.5 lg:gap-x-1">
+    <User size={isMobile ? 8 : 10} />
+    <span className="text-xs">{delivery.customer}</span>
+  </div>
+  <div className="flex items-center gap-x-0.5 lg:gap-x-1">
+    <Phone size={isMobile ? 8 : 10} />
+    <span className="text-xs">{delivery.customerContact}</span>
+  </div>
+</div>
                 </div>
               )}
             </div>
