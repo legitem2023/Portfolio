@@ -66,32 +66,6 @@ const ORDER_LIST_QUERY = gql`
             sku
             images
           }
-          rider {
-            id
-            firstName
-            addresses {
-              street
-              city
-              state
-              zipCode
-              country
-              lat
-              lng
-            }
-          }
-          supplier {
-            id
-            firstName
-            addresses {
-              street
-              city
-              state
-              zipCode
-              country
-              lat
-              lng
-            }
-          }
         }
         payments {
           id
@@ -127,8 +101,8 @@ interface Address {
 interface User {
   id: string;
   firstName: string;
+  lastName?: string;
   email?: string;
-  addresses?: Address[];
 }
 
 interface OrderItem {
@@ -144,8 +118,7 @@ interface OrderItem {
     sku: string;
     images: string[];
   }>;
-  rider?: User | User[]; // Can be object or array
-  supplier?: User | User[]; // Can be object or array
+  // No rider or supplier at item level
 }
 
 interface Order {
@@ -159,8 +132,8 @@ interface Order {
     firstName: string;
     email: string;
   };
-  rider?: any;
-  supplier?: any;
+  rider?: User; // Rider at order level
+  supplier?: User; // Supplier at order level
   address?: Address;
   items: OrderItem[];
   payments: Array<{
@@ -183,7 +156,7 @@ interface OrderListResponse {
   pagination: PaginationInfo;
 }
 
-// GraphQL filter input (keep as original)
+// GraphQL filter input
 interface OrderFilterInput {
   supplierId?: string;
   status?: OrderStatus;
@@ -246,14 +219,6 @@ const statusIcons = {
   SHIPPED: Truck,
   DELIVERED: CheckCircle,
   CANCELLED: XCircle
-};
-
-// Helper function to safely get user from possible array
-const getUserFromItem = (item: OrderItem, type: 'rider' | 'supplier'): User | undefined => {
-  const user = item[type];
-  if (!user) return undefined;
-  // If it's an array, get the first element
-  return Array.isArray(user) ? user[0] : user;
 };
 
 // Format address function
@@ -378,7 +343,7 @@ export default function OrderListComponent({
   const [customDateTo, setCustomDateTo] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  // Fetch orders - ONLY use graphqlFilters here
+  // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
@@ -390,11 +355,11 @@ export default function OrderListComponent({
     fetchPolicy: 'network-only'
   });
 
-  // Get all orders from GraphQL with proper typing
+  // Get all orders from GraphQL
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
   
-  // APPLY CLIENT-SIDE FILTERING - filter the JSON results by date
+  // APPLY CLIENT-SIDE FILTERING - filter by date
   const filteredOrders = useMemo(() => {
     let filtered = allOrders;
     
@@ -402,6 +367,7 @@ export default function OrderListComponent({
     if (dateFilter.from && dateFilter.to) {
       const fromDate = new Date(dateFilter.from);
       const toDate = new Date(dateFilter.to);
+      toDate.setHours(23, 59, 59, 999);
       
       filtered = filtered.filter((order: Order) => {
         const orderDate = new Date(order.createdAt);
@@ -429,7 +395,7 @@ export default function OrderListComponent({
     'CANCELLED'
   ];
 
-  // Handle tab change - updates graphqlFilters (sent to backend)
+  // Handle tab change
   const handleTabChange = (tab: OrderStatus | 'ALL') => {
     setActiveTab(tab);
     const newFilters = {
@@ -453,7 +419,7 @@ export default function OrderListComponent({
     setPagination(prev => ({ ...prev, page: 1 }));
   };
 
-  // Date preset handlers - updates client-side dateFilter only
+  // Date preset handlers
   const handleDatePresetChange = (preset: DatePreset) => {
     setDatePreset(preset);
     
@@ -767,8 +733,8 @@ export default function OrderListComponent({
             )}
           </div>
 
-          {/* Supplier ID Filter - Hidden as in original */}
-          <div className="hidden">
+          {/* Supplier ID Filter */}
+          <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
               Filter by Supplier ID
             </label>
@@ -962,6 +928,35 @@ export default function OrderListComponent({
                       </div>
                     )}
 
+                    {/* Supplier Info - at Order Level */}
+                    {order.supplier && (
+                      <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Building size={isMobile ? 16 : 18} className="text-blue-600" />
+                          <h4 className="font-semibold text-sm lg:text-base text-blue-700">Supplier Information</h4>
+                        </div>
+                        <p className="text-sm text-gray-700">
+                          {order.supplier.firstName} {order.supplier.lastName || ''}
+                        </p>
+                        {order.supplier.email && (
+                          <p className="text-xs text-gray-500 mt-1">{order.supplier.email}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Rider Info - at Order Level */}
+                    {order.rider && (
+                      <div className="bg-orange-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Bike size={isMobile ? 16 : 18} className="text-orange-600" />
+                          <h4 className="font-semibold text-sm lg:text-base text-orange-700">Rider Information</h4>
+                        </div>
+                        <p className="text-sm text-gray-700">
+                          {order.rider.firstName} {order.rider.lastName || ''}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Items Section */}
                     <div className="border-t border-gray-200 pt-3 sm:pt-4">
                       <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
@@ -970,124 +965,95 @@ export default function OrderListComponent({
                       </h4>
                       
                       <div className="space-y-2 sm:space-y-3">
-                        {order.items.map((item) => {
-                          // Safely get rider and supplier from possible arrays
-                          const rider = getUserFromItem(item, 'rider');
-                          const supplier = getUserFromItem(item, 'supplier');
-                          
-                          return (
-                            <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
-                              {/* Mobile view */}
-                              <div className="flex xs:hidden items-center gap-2">
-                                {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                  <div className="relative w-10 h-10 flex-shrink-0">
-                                    <img 
-                                      src={item.product[0].images[0]} 
-                                      alt={item.product[0].name}
-                                      className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                    />
-                                  </div>
+                        {order.items.map((item) => (
+                          <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
+                            {/* Mobile view */}
+                            <div className="flex xs:hidden items-center gap-2">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="relative w-10 h-10 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                              <div className="flex-1 text-right">
+                                <div className="text-sm font-bold text-gray-900">
+                                  {formatCurrency(item.price * item.quantity)}
+                                </div>
+                                {item.status && (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                    {item.status}
+                                  </span>
                                 )}
-                                <div className="flex-1 text-right">
-                                  <div className="text-sm font-bold text-gray-900">
-                                    {formatCurrency(item.price * item.quantity)}
-                                  </div>
-                                  {item.status && (
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                      {item.status}
+                              </div>
+                            </div>
+
+                            {/* Desktop/tablet view */}
+                            <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
+                              {item.product[0]?.images && item.product[0].images.length > 0 && (
+                                <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
+                                  <img 
+                                    src={item.product[0].images[0]} 
+                                    alt={item.product[0].name}
+                                    className="w-full h-full object-cover rounded-lg border border-gray-200"
+                                  />
+                                </div>
+                              )}
+                              
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col gap-0.5 sm:gap-1">
+                                  <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                    <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
+                                      {item.product[0]?.sku || 'N/A'}
                                     </span>
+                                    <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                                      Qty: {item.quantity}
+                                    </span>
+                                    {item.status && (
+                                      <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
+                                        {item.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
+                                    {item.product[0]?.name || 'Unknown Product'}
+                                  </h4>
+
+                                  {/* Show supplierId and riderId if available */}
+                                  {item.supplierId && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Building size={10} className="text-gray-400" />
+                                      <span className="text-xs text-gray-500">
+                                        Supplier ID: {item.supplierId}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {item.riderId && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <Bike size={10} className="text-gray-400" />
+                                      <span className="text-xs text-gray-500">
+                                        Rider ID: {item.riderId}
+                                      </span>
+                                    </div>
                                   )}
                                 </div>
                               </div>
-
-                              {/* Desktop/tablet view */}
-                              <div className="flex flex-1 flex-col xs:flex-row gap-2 sm:gap-3">
-                                {item.product[0]?.images && item.product[0].images.length > 0 && (
-                                  <div className="hidden xs:block relative w-12 sm:w-14 lg:w-16 h-12 sm:h-14 lg:h-16 flex-shrink-0">
-                                    <img 
-                                      src={item.product[0].images[0]} 
-                                      alt={item.product[0].name}
-                                      className="w-full h-full object-cover rounded-lg border border-gray-200"
-                                    />
-                                  </div>
-                                )}
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col gap-0.5 sm:gap-1">
-                                    <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                                      <span className="text-[10px] sm:text-xs font-mono bg-gray-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-gray-700">
-                                        {item.product[0]?.sku || 'N/A'}
-                                      </span>
-                                      <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
-                                        Qty: {item.quantity}
-                                      </span>
-                                      {item.status && (
-                                        <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded-full ${statusColors[item.status]}`}>
-                                          {item.status}
-                                        </span>
-                                      )}
-                                    </div>
-                                    
-                                    <h4 className="text-xs sm:text-sm lg:text-base font-medium text-gray-900 truncate">
-                                      {item.product[0]?.name || 'Unknown Product'}
-                                    </h4>
-
-                                    {/* Supplier info if available */}
-                                    {supplier && (
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <Building size={10} className="text-gray-400" />
-                                        <span className="text-xs text-gray-500">
-                                          Supplier: {supplier.firstName}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {/* Supplier address if available */}
-                                    {supplier?.addresses && supplier.addresses.length > 0 && (
-                                      <div className="flex items-start gap-1 mt-0.5">
-                                        <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                        <span className="text-xs text-gray-400 truncate">
-                                          From: {supplier.addresses[0].street}, {supplier.addresses[0].city}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {/* Rider info if available */}
-                                    {rider && (
-                                      <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
-                                        <div className="flex items-center gap-1">
-                                          <Bike size={12} className="text-orange-500" />
-                                          <span className="text-xs font-medium text-orange-600">
-                                            Rider: {rider.firstName}
-                                          </span>
-                                        </div>
-                                        
-                                        {/* Rider Address */}
-                                        {rider.addresses && rider.addresses.length > 0 && (
-                                          <div className="flex items-start gap-1 mt-0.5 ml-4">
-                                            <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                            <span className="text-xs text-gray-400 truncate">
-                                              {rider.addresses[0].street}, {rider.addresses[0].city}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
+                              
+                              <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
+                                <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
+                                  {formatCurrency(item.price * item.quantity)}
                                 </div>
-                                
-                                <div className="hidden sm:flex flex-col items-end justify-center flex-shrink-0 min-w-[80px] lg:min-w-[100px]">
-                                  <div className="text-sm lg:text-base font-bold text-gray-900 whitespace-nowrap">
-                                    {formatCurrency(item.price * item.quantity)}
-                                  </div>
-                                  <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
-                                    @ {formatCurrency(item.price)}
-                                  </div>
+                                <div className="text-xs lg:text-sm text-gray-500 whitespace-nowrap">
+                                  @ {formatCurrency(item.price)}
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1103,7 +1069,7 @@ export default function OrderListComponent({
               ))}
             </div>
 
-            {/* Pagination - FIXED with proper null checks */}
+            {/* Pagination */}
             {paginationInfo && paginationInfo.totalPages > 1 && (
               <div className="mt-6 sm:mt-8">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -1158,4 +1124,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-            }
+  }
