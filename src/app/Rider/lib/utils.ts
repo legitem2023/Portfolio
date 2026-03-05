@@ -25,18 +25,19 @@ export const formatPeso = (amount: number): string => {
 };
 
 // Helper function to get supplier info from an item
-export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierName: string; supplier?: Supplier } => {
+export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierName: string; supplier?: Supplier; supplierContact?: string } => {
   if (item.supplier && Array.isArray(item.supplier) && item.supplier.length > 0) {
     const supplier = item.supplier[0];
     const supplierName = supplier.firstName || item.product[0]?.name || "Supplier";
     const supplierContact = supplier.phone;
     if (supplier.addresses && supplier.addresses.length > 0) {
       const address = supplier.addresses[0];
-      return { address, supplierName, supplier };
+      return { address, supplierName, supplier, supplierContact };
     }
+    return { address: undefined, supplierName, supplier, supplierContact };
   }
   
-  return { address: undefined, supplierName: item.product[0]?.name || "Supplier", supplier: undefined, supplierContact:supplierContact};
+  return { address: undefined, supplierName: item.product[0]?.name || "Supplier", supplier: undefined, supplierContact: undefined };
 };
 
 // Group order items by supplier and map to delivery format
