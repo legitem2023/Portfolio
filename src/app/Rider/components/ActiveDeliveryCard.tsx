@@ -209,7 +209,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const toggleItems = () => {
     setShowItems(!showItems);
   };
-console.log(delivery,"delivery");
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-lg border border-indigo-200 overflow-hidden">
