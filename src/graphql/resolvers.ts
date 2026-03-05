@@ -719,6 +719,7 @@ const orders = await prisma.order.findMany({
                 firstName: true,
                 lastName: true,
                 email: true,
+                phone:true,
                 addresses: {
                   // Removed isDefault filter to match frontend query
                   select: {
