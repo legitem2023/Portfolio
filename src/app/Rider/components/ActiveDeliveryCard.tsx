@@ -255,10 +255,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
+          <div className="flex flex-col gap-0.5 lg:gap-1">
+             <div className="flex items-center gap-x-0.5 lg:gap-x-1">
                 <Building size={isMobile ? 14 : 16} className="text-blue-400" />
                 <span className="font-medium text-sm lg:text-base">{delivery.restaurant}</span>
-              </div>
+             </div>
+             <div className="flex items-center gap-x-0.5 lg:gap-x-1">
+                <Phone size={isMobile ? 14 : 16} className="text-blue-400" />
+                <span className="font-medium text-sm lg:text-base">{delivery.supplierContact}</span>
+             </div>
+          </div>
 <div className="flex flex-col gap-0.5 lg:gap-1">
   <div className="flex items-center gap-x-0.5 lg:gap-x-1">
     <User size={isMobile ? 14 : 16} />
