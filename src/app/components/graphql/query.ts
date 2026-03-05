@@ -430,6 +430,7 @@ query GetUser($id: ID) {
       firstName
       lastName
       avatar
+      phone
       followerCount
       followingCount
       isFollowing
