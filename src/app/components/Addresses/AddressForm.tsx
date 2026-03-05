@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation';
 
@@ -56,20 +56,43 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [activeApi, setActiveApi] = useState<'google' | 'osm'>('google');
   const [ipAddress, setIpAddress] = useState<string | null>(null);
   const [isFetchingIp, setIsFetchingIp] = useState(false);
+  const [locationStep, setLocationStep] = useState<'idle' | 'fetching-ip' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
   // ============ IP ADDRESS FETCHING ============
   const fetchIpAddress = async (): Promise<string | null> => {
     setIsFetchingIp(true);
+    setLocationStep('fetching-ip');
     try {
-      // Using ipify.org to get public IP address
-      const response = await fetch('https://api.ipify.org?format=json');
-      const data = await response.json();
-      setIpAddress(data.ip);
-      return data.ip;
+      // Using multiple IP services for redundancy
+      const services = [
+        'https://api.ipify.org?format=json',
+        'https://api.myip.com',
+        'https://ipapi.co/json/'
+      ];
+      
+      for (const service of services) {
+        try {
+          const response = await fetch(service);
+          const data = await response.json();
+          
+          // Handle different response formats
+          if (data.ip) {
+            setIpAddress(data.ip);
+            return data.ip;
+          } else if (data.ip_address) {
+            setIpAddress(data.ip_address);
+            return data.ip_address;
+          }
+        } catch (e) {
+          console.log(`Failed to fetch from ${service}, trying next...`);
+        }
+      }
+      
+      throw new Error('Could not fetch IP address from any service');
     } catch (error) {
       console.error('Error fetching IP address:', error);
-      setLocationError('Could not fetch IP address. Please check your network connection.');
+      setLocationError('Could not fetch IP address. Please check your network connection or manually enter your address.');
       return null;
     } finally {
       setIsFetchingIp(false);
@@ -176,7 +199,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         {
           headers: {
             'Accept-Language': 'en',
-            'User-Agent': 'YourAppName/1.0'
+            'User-Agent': 'VendorCity/1.0'
           }
         }
       );
@@ -203,7 +226,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         {
           headers: {
             'Accept-Language': 'en',
-            'User-Agent': 'YourAppName/1.0'
+            'User-Agent': 'VendorCity/1.0'
           }
         }
       );
@@ -258,6 +281,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   };
 
   const reverseGeocode = async (lat: number, lng: number): Promise<{ address: ReverseGeocodeResult; api: string } | null> => {
+    setLocationStep('reverse-geocoding');
+    
     const googleResult = await reverseGeocodeWithGoogle(lat, lng);
     if (googleResult) {
       return { address: googleResult, api: 'google' };
@@ -274,6 +299,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   // Get current device location
   const getCurrentLocation = async (): Promise<{ lat: number; lng: number } | null> => {
+    setLocationStep('getting-location');
+    
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
         setLocationError('Geolocation is not supported by this browser');
@@ -290,7 +317,23 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         },
         (error) => {
           console.error('Error getting location:', error);
-          setLocationError('Could not get your current location. Please enable location services.');
+          let errorMessage = 'Could not get your current location. ';
+          
+          switch(error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Please enable location access in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Location request timed out. Please try again.';
+              break;
+            default:
+              errorMessage += 'Please enable location services.';
+          }
+          
+          setLocationError(errorMessage);
           resolve(null);
         },
         {
@@ -307,6 +350,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     
     setIsGeocoding(true);
     setLocationError(null);
+    setLocationStep('getting-location');
     
     try {
       const location = await geocodeAddress(fullAddress);
@@ -316,6 +360,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           lat: location.lat,
           lng: location.lng
         }));
+        setLocationStep('complete');
       }
     } finally {
       setIsGeocoding(false);
@@ -327,16 +372,15 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     setLocationError(null);
     
     try {
-      // First fetch IP address (required for location services)
+      // Step 1: Fetch IP address (required for location verification)
       const ip = await fetchIpAddress();
       
       if (!ip) {
-        setLocationError('Unable to verify IP address. Cannot proceed with location detection.');
-        setIsGeocoding(false);
-        return;
+        // If IP fetch fails, still try to get location but show warning
+        setLocationError('Warning: Could not verify IP address. Location accuracy may be affected.');
       }
 
-      // Then get current coordinates
+      // Step 2: Get current coordinates
       const location = await getCurrentLocation();
       if (location) {
         // Set coordinates immediately
@@ -346,7 +390,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           lng: location.lng
         }));
 
-        // Then get address from coordinates
+        // Step 3: Get address from coordinates
         const result = await reverseGeocode(location.lat, location.lng);
         if (result) {
           setFormData(prev => ({
@@ -355,6 +399,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             lat: location.lat,
             lng: location.lng
           }));
+          setLocationStep('complete');
         }
       }
     } finally {
@@ -395,6 +440,22 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   const isAddressComplete = formData.street && formData.city && formData.state && formData.zipCode && formData.country;
 
+  // Get step message based on current location step
+  const getLocationStepMessage = () => {
+    switch(locationStep) {
+      case 'fetching-ip':
+        return '🔍 Detecting your IP address...';
+      case 'getting-location':
+        return '📍 Getting your current location...';
+      case 'reverse-geocoding':
+        return '🏠 Converting location to address...';
+      case 'complete':
+        return '✅ Location detected successfully!';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Add New Address</h2>
@@ -411,29 +472,65 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* IP Address Requirement Notice */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      {/* Location Status Indicator */}
+      {isGeocoding && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg animate-pulse">
+          <div className="flex items-center">
+            <svg className="animate-spin h-5 w-5 text-blue-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-blue-700 font-medium">{getLocationStepMessage()}</span>
+          </div>
+        </div>
+      )}
+
+      {/* IP Address and Location Notice */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
         <div className="flex items-start">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            <svg className="h-6 w-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div className="ml-3 flex-1">
-            <h3 className="text-sm font-medium text-blue-800">IP Address Required</h3>
-            <div className="mt-2 text-sm text-blue-700">
-              <p className="mb-2">
-                ⚠️ <strong>Note:</strong> To use the &qout;Auto-fill from Current Location&qout; feature, we need to detect your IP address first. This helps us:
+            <h3 className="text-sm font-semibold text-blue-800 mb-2">
+              📍 How to use &quot;Auto-fill from Current Location&quot;
+            </h3>
+            <div className="space-y-3 text-sm text-blue-700">
+              <div className="flex items-start space-x-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">1</span>
+                <p><strong>IP Detection:</strong> We first detect your IP address to verify your general region and ensure accurate geolocation services.</p>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">2</span>
+                <p><strong>GPS Location:</strong> Your device&apos;s GPS is then used to get precise coordinates.</p>
+              </div>
+              <div className="flex items-start space-x-2">
+                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800">3</span>
+                <p><strong>Address Conversion:</strong> We convert your coordinates to a complete address automatically.</p>
+              </div>
+              
+              {ipAddress && (
+                <div className="mt-3 p-2 bg-green-100 rounded-md">
+                  <p className="text-xs text-green-800 flex items-center">
+                    <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    IP Address detected: <span className="font-mono ml-1">{ipAddress}</span>
+                  </p>
+                </div>
+              )}
+
+              <p className="text-xs bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
+                ⚠️ <strong>Note:</strong> For accurate location detection, please ensure:
+                <br />• You&apos;re connected to the internet
+                <br />• Location services are enabled in your browser
+                <br />• You&apos;ve allowed location access when prompted
               </p>
-              <ul className="list-disc list-inside space-y-1 mb-2">
-                <li>Verify your general location region</li>
-                <li>Ensure accurate geolocation services</li>
-                <li>Comply with regional data processing requirements</li>
-                <li>Enhance location accuracy</li>
-              </ul>
-              <p className="text-xs bg-blue-100 p-2 rounded">
+
+              <p className="text-xs text-gray-500 mt-2">
                 🔒 Your IP address is only used for location verification and is not stored permanently.
-                {ipAddress && <span className="block mt-1 font-mono">Detected IP: {ipAddress}</span>}
               </p>
             </div>
           </div>
@@ -450,13 +547,18 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       {/* Display coordinates if available */}
       {formData.lat && formData.lng && (
         <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded flex justify-between items-center">
-          <span>
+          <span className="flex items-center">
+            <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
             📍 Location set: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
           </span>
           <button
             type="button"
             onClick={() => setFormData(prev => ({ ...prev, lat: null, lng: null }))}
             className="text-green-700 hover:text-green-900 font-bold"
+            title="Clear location"
           >
             ✕
           </button>
@@ -487,7 +589,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         {/* Receiver Field */}
         <div>
           <label htmlFor="receiver" className="block text-sm font-medium text-gray-700 mb-1">
-            Receiver
+            Receiver Name
           </label>
           <input
             type="text"
@@ -556,7 +658,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
           <div>
             <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-1">
-              State
+              State/Province
             </label>
             <input
               type="text"
@@ -572,7 +674,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
           <div>
             <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-1">
-              ZIP Code
+              ZIP/Postal Code
             </label>
             <input
               type="text"
@@ -612,7 +714,13 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             disabled={isGeocoding || !isAddressComplete}
             className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isGeocoding ? 'Finding Location...' : '📍 Get Location from Address'}
+            <span className="flex items-center justify-center">
+              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {isGeocoding ? 'Finding Location...' : '📍 Get Location from Address'}
+            </span>
           </button>
           
           <button
@@ -623,16 +731,29 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           >
             {isGeocoding || isFetchingIp ? (
               <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 {isFetchingIp ? 'Detecting IP...' : 'Getting Location...'}
               </span>
             ) : (
-              '📱 Auto-fill from Current Location'
+              <span className="flex items-center justify-center">
+                <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                📱 Auto-fill from Current Location
+              </span>
             )}
           </button>
+        </div>
+
+        {/* Help Text for Location Button */}
+        <div className="text-xs text-gray-500 text-center">
+          <p>
+            Click &quot;Auto-fill from Current Location&quot; to automatically detect your IP and GPS location.
+            {!ipAddress && " You'll be prompted for location access."}
+          </p>
         </div>
 
         {/* Default Address Checkbox */}
@@ -673,4 +794,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </form>
     </div>
   );
-          }
+    }
