@@ -2436,6 +2436,32 @@ salesList: async (
   },
 
   Mutation: {
+    updateUserPhone: async (_:any, { id, phone }) => {
+      try {
+        // Validate phone number
+        if (!phone || phone.trim() === '') {
+          throw new Error('Phone number is required');
+        }
+
+        // Update user in database using Prisma
+        const updatedUser = await prisma.user.update({
+          where: { id },
+          data: { phone: phone.trim() },
+          include: {
+            posts: true,
+            addresses: true
+          }
+        });
+
+        return updatedUser;
+      } catch (error) {
+        console.error('Error in updateUserPhone:', error);
+        if (error.code === 'P2025') {
+          throw new Error('User not found');
+        }
+        throw new Error(`Failed to update phone number: ${error.message}`);
+      }
+    },
     addToWishList: async (_:any, { userId, productId }:any) => {
   try {
     // Check if item already exists
