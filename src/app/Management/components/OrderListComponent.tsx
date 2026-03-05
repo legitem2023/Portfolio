@@ -166,6 +166,8 @@ interface Order {
     firstName: string;
     email: string;
   };
+  rider?: Rider;
+  supplier?: Supplier;
   address?: Address;
   items: OrderItem[];
   payments: Array<{
