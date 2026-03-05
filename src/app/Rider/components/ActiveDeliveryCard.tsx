@@ -15,7 +15,8 @@ import {
   XCircle,
   AlertTriangle,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Phone
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -261,7 +262,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
                 <User size={isMobile ? 14 : 16} />
                 <span className="text-sm lg:text-base">{delivery.customer}</span>
-                <User size={isMobile ? 14 : 16} />
+                <Phone size={isMobile ? 14 : 16} />
                 <span className="text-sm lg:text-base">{delivery.customerContact}</span>
               
 
