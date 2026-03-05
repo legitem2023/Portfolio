@@ -29,7 +29,7 @@ export const getSupplierInfo = (item: OrderItem): { address?: Address; supplierN
   if (item.supplier && Array.isArray(item.supplier) && item.supplier.length > 0) {
     const supplier = item.supplier[0];
     const supplierName = supplier.firstName || item.product[0]?.name || "Supplier";
-    
+    const supplierContact = supplier.phone;
     if (supplier.addresses && supplier.addresses.length > 0) {
       const address = supplier.addresses[0];
       return { address, supplierName, supplier };
@@ -91,6 +91,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     dropoffAddress?: Address;
     pickupAddress?: Address;
     supplierName: string;
+    supplierContact: string;
     supplier?: Supplier;
     subtotal: string;
     supplierItems?: OrderItem[];
@@ -104,6 +105,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     const { supplierInfo, items } = supplierGroup;
     const pickupAddress = supplierInfo?.address;
     const supplierName = supplierInfo?.supplierName || "Vendor City";
+    const supplierContact = supplierInfo?.supplierContact;
     const supplier = supplierInfo?.supplier;
     const supplierId = supplierGroup.supplierId;
     
@@ -163,6 +165,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       pickupAddress,
       supplierName,
       supplier,
+      supplierContact,
       subtotal: formatPeso(subtotal),
       supplierItems: items,
       isPartialDelivery: Object.keys(itemsBySupplier).length > 1,
