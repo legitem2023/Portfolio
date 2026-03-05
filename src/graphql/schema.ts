@@ -183,6 +183,7 @@ export const typeDefs = gql`
     id: ID
     type: AddressType
     receiver: String
+    phone: String
     street: String
     city: String
     state: String
@@ -1101,6 +1102,7 @@ input OrderPaginationInput {
     userId: String
     type: String
     receiver: String
+    phone: String
     street: String
     city: String
     state: String
