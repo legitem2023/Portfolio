@@ -423,7 +423,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             <h3 className="text-sm font-medium text-blue-800">IP Address Required</h3>
             <div className="mt-2 text-sm text-blue-700">
               <p className="mb-2">
-                ⚠️ <strong>Note:</strong> To use the "Auto-fill from Current Location" feature, we need to detect your IP address first. This helps us:
+                ⚠️ <strong>Note:</strong> To use the &qout;Auto-fill from Current Location&qout; feature, we need to detect your IP address first. This helps us:
               </p>
               <ul className="list-disc list-inside space-y-1 mb-2">
                 <li>Verify your general location region</li>
