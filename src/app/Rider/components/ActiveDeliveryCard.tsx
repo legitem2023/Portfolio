@@ -261,6 +261,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
                 <User size={isMobile ? 14 : 16} />
                 <span className="text-sm lg:text-base">{delivery.customer}</span>
+                <User size={isMobile ? 14 : 16} />
+                <span className="text-sm lg:text-base">{delivery.customerContact}</span>
+              
+
               </div>
             </div>
             <div className="text-right">
