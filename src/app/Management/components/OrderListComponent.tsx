@@ -563,6 +563,29 @@ export default function OrderListComponent({
     refetch();
   };
 
+  // Aggregate unique suppliers and riders from items for each order
+  const getOrderSuppliers = (items: OrderItem[]): User[] => {
+    const suppliersMap = new Map<string, User>();
+    items.forEach(item => {
+      const supplier = getUserFromItem(item.supplier);
+      if (supplier && !suppliersMap.has(supplier.id)) {
+        suppliersMap.set(supplier.id, supplier);
+      }
+    });
+    return Array.from(suppliersMap.values());
+  };
+
+  const getOrderRiders = (items: OrderItem[]): User[] => {
+    const ridersMap = new Map<string, User>();
+    items.forEach(item => {
+      const rider = getUserFromItem(item.rider);
+      if (rider && !ridersMap.has(rider.id)) {
+        ridersMap.set(rider.id, rider);
+      }
+    });
+    return Array.from(ridersMap.values());
+  };
+
   // Error state
   if (error) {
     return (
@@ -900,78 +923,139 @@ export default function OrderListComponent({
           <>
             {/* Orders Grid */}
             <div className="space-y-3 sm:space-y-4">
-              {ordersWithItems.map((order) => (
-                <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
-                  {/* Header */}
-                  <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1 lg:gap-2">
-                        <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                        <span className="font-bold text-indigo-700 text-xs lg:text-sm">
-                          Order #{order.orderNumber}
+              {ordersWithItems.map((order) => {
+                // Get unique suppliers and riders for this order
+                const orderSuppliers = getOrderSuppliers(order.items);
+                const orderRiders = getOrderRiders(order.items);
+                
+                return (
+                  <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-indigo-50 px-3 lg:px-4 py-2 lg:py-3 border-b border-orange-100">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-1 lg:gap-2">
+                          <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                          <span className="font-bold text-indigo-700 text-xs lg:text-sm">
+                            Order #{order.orderNumber}
+                          </span>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
+                          {order.items[0]?.status || order.status}
                         </span>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
-                        {order.items[0]?.status || order.status}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="p-2 lg:p-6">
-                    {/* Order info */}
-                    <div className="flex justify-between items-start mb-3 lg:mb-4">
-                      <div>
-                        <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
-                          <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
-                          <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
-                        </div>
-                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
-                          <User size={isMobile ? 14 : 16} />
-                          <span className="text-sm lg:text-base">{order.user.firstName}</span>
-                        </div>
-                        <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
-                          <Clock size={isMobile ? 14 : 16} />
-                          <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xl lg:text-3xl font-bold text-green-600">
-                          {formatCurrency(order.total)}
-                        </div>
-                        <p className="text-gray-500 text-xs lg:text-sm">Total amount</p>
-                      </div>
                     </div>
 
-                    {/* Delivery Address */}
-                    {order.address && (
-                      <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          <MapPin size={isMobile ? 16 : 18} className="text-green-600" />
-                          <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Address</h4>
+                    <div className="p-2 lg:p-6">
+                      {/* Order info */}
+                      <div className="flex justify-between items-start mb-3 lg:mb-4">
+                        <div>
+                          <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
+                            <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
+                            <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
+                          </div>
+                          <div className="flex items-center gap-1 lg:gap-2 text-gray-600 mb-0.5 lg:mb-1">
+                            <User size={isMobile ? 14 : 16} />
+                            <span className="text-sm lg:text-base">{order.user.firstName}</span>
+                          </div>
+                          <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
+                            <Clock size={isMobile ? 14 : 16} />
+                            <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-700">{formatAddress(order.address)}</p>
-                        {order.address.lat && order.address.lng && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Coordinates: {order.address.lat}, {order.address.lng}
-                          </p>
-                        )}
+                        <div className="text-right">
+                          <div className="text-xl lg:text-3xl font-bold text-green-600">
+                            {formatCurrency(order.total)}
+                          </div>
+                          <p className="text-gray-500 text-xs lg:text-sm">Total amount</p>
+                        </div>
                       </div>
-                    )}
 
-                    {/* Items Section */}
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
-                      <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
-                        <Package size={isMobile ? 16 : 18} className="text-blue-500" />
-                        Items ({order.items.length})
-                      </h4>
-                      
-                      <div className="space-y-2 sm:space-y-3">
-                        {order.items.map((item) => {
-                          // Safely get supplier and rider (handles both object and array formats)
-                          const supplier = getUserFromItem(item.supplier);
-                          const rider = getUserFromItem(item.rider);
-                          
-                          return (
+                      {/* Delivery Address */}
+                      {order.address && (
+                        <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                          <div className="flex items-center gap-2 mb-2">
+                            <MapPin size={isMobile ? 16 : 18} className="text-green-600" />
+                            <h4 className="font-semibold text-sm lg:text-base text-green-700">Delivery Address</h4>
+                          </div>
+                          <p className="text-sm text-gray-700">{formatAddress(order.address)}</p>
+                          {order.address.lat && order.address.lng && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Coordinates: {order.address.lat}, {order.address.lng}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Suppliers Section - at Order Level */}
+                      {orderSuppliers.length > 0 && (
+                        <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Building size={isMobile ? 16 : 18} className="text-blue-600" />
+                            <h4 className="font-semibold text-sm lg:text-base text-blue-700">
+                              Suppliers ({orderSuppliers.length})
+                            </h4>
+                          </div>
+                          <div className="space-y-3">
+                            {orderSuppliers.map((supplier) => (
+                              <div key={supplier.id} className="border-l-2 border-blue-200 pl-3">
+                                <p className="text-sm font-medium text-gray-800">
+                                  {supplier.firstName} {supplier.lastName || ''}
+                                </p>
+                                {supplier.email && (
+                                  <p className="text-xs text-gray-500 mt-1">{supplier.email}</p>
+                                )}
+                                {supplier.addresses && supplier.addresses.length > 0 && (
+                                  <div className="flex items-start gap-1 mt-1">
+                                    <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                    <span className="text-xs text-gray-500">
+                                      {supplier.addresses[0].street}, {supplier.addresses[0].city}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Riders Section - at Order Level */}
+                      {orderRiders.length > 0 && (
+                        <div className="bg-orange-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Bike size={isMobile ? 16 : 18} className="text-orange-600" />
+                            <h4 className="font-semibold text-sm lg:text-base text-orange-700">
+                              Riders ({orderRiders.length})
+                            </h4>
+                          </div>
+                          <div className="space-y-3">
+                            {orderRiders.map((rider) => (
+                              <div key={rider.id} className="border-l-2 border-orange-200 pl-3">
+                                <p className="text-sm font-medium text-gray-800">
+                                  {rider.firstName} {rider.lastName || ''}
+                                </p>
+                                {rider.addresses && rider.addresses.length > 0 && (
+                                  <div className="flex items-start gap-1 mt-1">
+                                    <MapPin size={10} className="text-gray-400 mt-0.5" />
+                                    <span className="text-xs text-gray-500">
+                                      {rider.addresses[0].street}, {rider.addresses[0].city}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Items Section */}
+                      <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                        <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
+                          <Package size={isMobile ? 16 : 18} className="text-blue-500" />
+                          Items ({order.items.length})
+                        </h4>
+                        
+                        <div className="space-y-2 sm:space-y-3">
+                          {order.items.map((item) => (
                             <div key={item.id} className="flex flex-col xs:flex-row gap-2 sm:gap-3 bg-gray-50 rounded-lg p-2 sm:p-3">
                               {/* Mobile view */}
                               <div className="flex xs:hidden items-center gap-2">
@@ -1028,48 +1112,8 @@ export default function OrderListComponent({
                                       {item.product[0]?.name || 'Unknown Product'}
                                     </h4>
 
-                                    {/* Supplier info - at item level */}
-                                    {supplier && (
-                                      <div className="mt-1">
-                                        <div className="flex items-center gap-1">
-                                          <Building size={10} className="text-gray-400" />
-                                          <span className="text-xs text-gray-600">
-                                            Supplier: {supplier.firstName} {supplier.lastName || ''}
-                                          </span>
-                                        </div>
-                                        {supplier.addresses && supplier.addresses.length > 0 && (
-                                          <div className="flex items-start gap-1 ml-4 mt-0.5">
-                                            <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                            <span className="text-xs text-gray-400 truncate">
-                                              {supplier.addresses[0].street}, {supplier.addresses[0].city}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {/* Rider info - at item level */}
-                                    {rider && (
-                                      <div className="mt-2 pt-1 border-t border-dashed border-gray-200">
-                                        <div className="flex items-center gap-1">
-                                          <Bike size={12} className="text-orange-500" />
-                                          <span className="text-xs font-medium text-orange-600">
-                                            Rider: {rider.firstName} {rider.lastName || ''}
-                                          </span>
-                                        </div>
-                                        {rider.addresses && rider.addresses.length > 0 && (
-                                          <div className="flex items-start gap-1 mt-0.5 ml-4">
-                                            <MapPin size={10} className="text-gray-400 mt-0.5" />
-                                            <span className="text-xs text-gray-400 truncate">
-                                              {rider.addresses[0].street}, {rider.addresses[0].city}
-                                            </span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {/* Fallback to just showing IDs if no user objects */}
-                                    {!supplier && item.supplierId && (
+                                    {/* Show supplierId and riderId references */}
+                                    {item.supplierId && (
                                       <div className="flex items-center gap-1 mt-1">
                                         <Building size={10} className="text-gray-400" />
                                         <span className="text-xs text-gray-500">
@@ -1078,7 +1122,7 @@ export default function OrderListComponent({
                                       </div>
                                     )}
 
-                                    {!rider && item.riderId && (
+                                    {item.riderId && (
                                       <div className="flex items-center gap-1 mt-1">
                                         <Bike size={10} className="text-gray-400" />
                                         <span className="text-xs text-gray-500">
@@ -1099,21 +1143,21 @@ export default function OrderListComponent({
                                 </div>
                               </div>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Order Footer */}
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
-                      <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
-                        <p>Items: {order.items.length}</p>
-                        <p>Payments: {order.payments.length}</p>
+                      {/* Order Footer */}
+                      <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
+                        <div className="flex justify-between items-center text-xs sm:text-sm text-gray-600">
+                          <p>Items: {order.items.length}</p>
+                          <p>Payments: {order.payments.length}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pagination */}
@@ -1171,4 +1215,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-          }
+                    }
