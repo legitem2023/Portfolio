@@ -315,6 +315,7 @@ export interface Delivery {
   dropoffAddress?: Address;
   pickupAddress?: Address;
   supplierName: string;
+  supplierContact: string;
   supplier?: Supplier;
   subtotal: string;
   supplierItems?: OrderItem[];
