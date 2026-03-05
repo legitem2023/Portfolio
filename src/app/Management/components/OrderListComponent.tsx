@@ -67,6 +67,7 @@ const ORDER_LIST_QUERY = gql`
           rider {
             id
             firstName
+            lastName
             addresses {
               street
               city
@@ -80,6 +81,7 @@ const ORDER_LIST_QUERY = gql`
           supplier {
             id
             firstName
+            lastName
             addresses {
               street
               city
