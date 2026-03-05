@@ -237,7 +237,9 @@ export interface Payment {
 export interface OrderUser {
   id: string;
   firstName: string;
+  lastName
   email: string;
+  phone: string;
 }
 
 export interface Order {
