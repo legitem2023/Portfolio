@@ -259,13 +259,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <Building size={isMobile ? 14 : 16} className="text-blue-400" />
                 <span className="font-medium text-sm lg:text-base">{delivery.restaurant}</span>
               </div>
-              <div className="flex items-center gap-1 lg:gap-2 text-gray-600">
+              <div className="grid grid-cols-2 items-center  gap-1 lg:gap-2 text-gray-600">
                 <User size={isMobile ? 14 : 16} />
                 <span className="text-sm lg:text-base">{delivery.customer}</span>
                 <Phone size={isMobile ? 14 : 16} />
                 <span className="text-sm lg:text-base">{delivery.customerContact}</span>
-              
-
               </div>
             </div>
             <div className="text-right">
@@ -454,9 +452,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               <p className="text-gray-700 text-xs lg:text-sm">{delivery.dropoff}</p>
               {delivery.dropoffAddress && (
                 <div className="mt-1 lg:mt-2 text-xs text-gray-500">
-                  <div className="flex items-center gap-0.5 lg:gap-1">
+                  <div className="grid grid-cols-2 items-center gap-0.5 lg:gap-1">
                     <User size={isMobile ? 8 : 10} />
                     <span className="text-xs">{delivery.customer}</span>
+                    <Phone size={isMobile ? 8: 10} />
+                    <span className="text-xs">{delivery.customerContact}</span>
                   </div>
                 </div>
               )}
