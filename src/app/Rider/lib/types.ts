@@ -67,6 +67,7 @@ export const ACTIVE_ORDER_LIST = gql`
         user {
           id
           firstName
+          lastName
           email
         }
         address {
@@ -94,6 +95,7 @@ export const ACTIVE_ORDER_LIST = gql`
           supplier {
             id
             firstName
+            lastName
             addresses {
               street
               city
