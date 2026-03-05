@@ -18,7 +18,7 @@ interface FormData {
   country: string;
   isDefault: boolean;
   receiver: string;
-  phone: string;  // Added phone field
+  phone: string;
   lat: number | null;
   lng: number | null;
 }
@@ -46,7 +46,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     country: '',
     isDefault: false,
     receiver: '',
-    phone: '',  // Initialize phone field
+    phone: '',
     lat: null,
     lng: null
   });
@@ -54,7 +54,27 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [activeApi, setActiveApi] = useState<'google' | 'osm'>('google');
+  const [ipAddress, setIpAddress] = useState<string | null>(null);
+  const [isFetchingIp, setIsFetchingIp] = useState(false);
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
+
+  // ============ IP ADDRESS FETCHING ============
+  const fetchIpAddress = async (): Promise<string | null> => {
+    setIsFetchingIp(true);
+    try {
+      // Using ipify.org to get public IP address
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      setIpAddress(data.ip);
+      return data.ip;
+    } catch (error) {
+      console.error('Error fetching IP address:', error);
+      setLocationError('Could not fetch IP address. Please check your network connection.');
+      return null;
+    } finally {
+      setIsFetchingIp(false);
+    }
+  };
 
   // ============ GOOGLE MAPS API METHODS ============
   const geocodeWithGoogle = async (address: string): Promise<GeocodeResult | null> => {
@@ -156,7 +176,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         {
           headers: {
             'Accept-Language': 'en',
-            'User-Agent': 'YourAppName/1.0' // Replace with your app name
+            'User-Agent': 'YourAppName/1.0'
           }
         }
       );
@@ -183,7 +203,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         {
           headers: {
             'Accept-Language': 'en',
-            'User-Agent': 'YourAppName/1.0' // Replace with your app name
+            'User-Agent': 'YourAppName/1.0'
           }
         }
       );
@@ -192,7 +212,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       if (data && data.address) {
         const address = data.address;
         
-        // Construct street address
         let street = '';
         if (address.road) {
           street = address.road;
@@ -224,13 +243,11 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   // ============ WRAPPER METHODS WITH FALLBACK ============
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number; api: string } | null> => {
-    // Try Google first
     const googleResult = await geocodeWithGoogle(address);
     if (googleResult) {
       return { ...googleResult, api: 'google' };
     }
 
-    // Fallback to OpenStreetMap
     const osmResult = await geocodeWithOSM(address);
     if (osmResult) {
       return { ...osmResult, api: 'osm' };
@@ -241,13 +258,11 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   };
 
   const reverseGeocode = async (lat: number, lng: number): Promise<{ address: ReverseGeocodeResult; api: string } | null> => {
-    // Try Google first
     const googleResult = await reverseGeocodeWithGoogle(lat, lng);
     if (googleResult) {
       return { address: googleResult, api: 'google' };
     }
 
-    // Fallback to OpenStreetMap
     const osmResult = await reverseGeocodeWithOSM(lat, lng);
     if (osmResult) {
       return { address: osmResult, api: 'osm' };
@@ -312,7 +327,16 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     setLocationError(null);
     
     try {
-      // First get current coordinates
+      // First fetch IP address (required for location services)
+      const ip = await fetchIpAddress();
+      
+      if (!ip) {
+        setLocationError('Unable to verify IP address. Cannot proceed with location detection.');
+        setIsGeocoding(false);
+        return;
+      }
+
+      // Then get current coordinates
       const location = await getCurrentLocation();
       if (location) {
         // Set coordinates immediately
@@ -387,6 +411,35 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
+      {/* IP Address Requirement Notice */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3 flex-1">
+            <h3 className="text-sm font-medium text-blue-800">IP Address Required</h3>
+            <div className="mt-2 text-sm text-blue-700">
+              <p className="mb-2">
+                ⚠️ <strong>Note:</strong> To use the "Auto-fill from Current Location" feature, we need to detect your IP address first. This helps us:
+              </p>
+              <ul className="list-disc list-inside space-y-1 mb-2">
+                <li>Verify your general location region</li>
+                <li>Ensure accurate geolocation services</li>
+                <li>Comply with regional data processing requirements</li>
+                <li>Enhance location accuracy</li>
+              </ul>
+              <p className="text-xs bg-blue-100 p-2 rounded">
+                🔒 Your IP address is only used for location verification and is not stored permanently.
+                {ipAddress && <span className="block mt-1 font-mono">Detected IP: {ipAddress}</span>}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Active API indicator */}
       {formData.lat && formData.lng && activeApi && (
         <div className="mb-4 p-2 bg-blue-50 border border-blue-200 text-blue-700 rounded text-xs">
@@ -448,7 +501,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           />
         </div>
 
-        {/* Phone Field - NEW */}
+        {/* Phone Field */}
         <div>
           <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
             Phone Number
@@ -565,10 +618,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <button
             type="button"
             onClick={handleGetCurrentLocation}
-            disabled={isGeocoding}
-            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isGeocoding || isFetchingIp}
+            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors relative"
           >
-            {isGeocoding ? 'Getting Location...' : '📱 Auto-fill from Current Location'}
+            {isGeocoding || isFetchingIp ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {isFetchingIp ? 'Detecting IP...' : 'Getting Location...'}
+              </span>
+            ) : (
+              '📱 Auto-fill from Current Location'
+            )}
           </button>
         </div>
 
@@ -610,4 +673,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </form>
     </div>
   );
-      }
+          }
