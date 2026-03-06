@@ -250,7 +250,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     try {
       // First upload the proof of delivery
       const proofInput: ProofOfDeliveryInput = {
-        id: delivery.id,
+        id: delivery.originalOrderId,
         receivedBy: receivedByName,
         receivedAt: new Date().toISOString(),
         photoUrl: proofPhoto,
