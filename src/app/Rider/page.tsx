@@ -141,7 +141,7 @@ export default function RiderDashboard() {
         return <RiderPaymentHistory
           riderId={user?.userId}
           showSummary={true}
-          allowPayoutRequest={false} // Admin can process payouts manually
+           // Admin can process payouts manually
         />;
       default:
         return null;
