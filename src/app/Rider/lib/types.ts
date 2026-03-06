@@ -333,6 +333,7 @@ export interface Delivery {
   supplierName: string;
   supplierContact: string;
   supplier?: Supplier;
+  proofOfDelivery?:ProofOfDelivery[]
   subtotal: string;
   supplierItems?: OrderItem[];
   isPartialDelivery: boolean;
