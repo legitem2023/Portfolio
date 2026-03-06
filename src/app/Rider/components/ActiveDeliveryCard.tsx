@@ -668,10 +668,64 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
           )}
 
+          {/* Proof of Delivery Display */}
+          {delivery.proofOfDelivery && delivery.proofOfDelivery.length > 0 && (
+            <div className="border-t border-gray-200 pt-4 mt-2">
+              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
+                <Camera size={16} className="text-blue-500" />
+                Proof of Delivery
+              </h4>
+              <div className="space-y-4">
+                {delivery.proofOfDelivery.map((proof, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    {/* Photo */}
+                    {proof.photoUrl && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
+                        <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                          <img 
+                            src={proof.photoUrl} 
+                            alt="Delivery proof" 
+                            className="w-full h-48 object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Recipient Info */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-gray-500">Received By</p>
+                        <p className="text-sm font-medium">{proof.receivedBy}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500">Received At</p>
+                        <p className="text-sm font-medium">
+                          {new Date(proof.receivedAt).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Signature */}
+                    {proof.signatureData && (
+                      <div>
+                        <p className="text-xs text-gray-500 mb-2">Signature</p>
+                        <div className="bg-white rounded-lg border border-gray-200 p-2">
+                          <img 
+                            src={proof.signatureData} 
+                            alt="Signature" 
+                            className="max-h-16 w-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action buttons */}
-          { delivery.proofOfDelivery.length > 0?(
-          
-          ):(<></>) }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             
             {currentStatus === 'PROCESSING' && (
@@ -984,4 +1038,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-  }
+}
