@@ -25,7 +25,7 @@ import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import DeliveryMap from './DeliveryMap';
 import { gql } from '@apollo/client';
 
@@ -82,6 +82,40 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize canvas with high resolution
+  useEffect(() => {
+    if (showProofModal && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Set canvas size with higher resolution (2x for retina displays)
+        const container = canvas.parentElement;
+        if (container) {
+          const containerWidth = container.clientWidth;
+          
+          // Set canvas dimensions with higher resolution
+          canvas.width = Math.max(500, containerWidth * 2);
+          canvas.height = 200 * 2;
+          
+          // Style to maintain aspect ratio while showing high-res canvas
+          canvas.style.width = '100%';
+          canvas.style.height = '200px';
+          
+          // Configure context for better drawing
+          ctx.scale(2, 2); // Scale down to match display size
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          
+          // White background
+          ctx.fillStyle = '#fff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+    }
+  }, [showProofModal]);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -171,9 +205,38 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     e.target.value = '';
   };
 
+  // Helper function to get accurate coordinates considering canvas scaling
+  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate scale factors
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    let clientX, clientY;
+    
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Calculate canvas coordinates accounting for scaling
+    const x = (clientX - rect.left) * scaleX;
+    const y = (clientY - rect.top) * scaleY;
+    
+    return { x, y };
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     setIsDrawing(true);
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -182,21 +245,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     ctx.beginPath();
     
-    let clientX, clientY;
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    const rect = canvas.getBoundingClientRect();
-    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    const { x, y } = getCoordinates(e);
+    ctx.moveTo(x, y);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     if (!isDrawing) return;
     
     const canvas = canvasRef.current;
@@ -205,33 +259,23 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
-    
-    let clientX, clientY;
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-    
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    const { x, y } = getCoordinates(e);
+    ctx.lineTo(x, y);
     ctx.stroke();
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     setIsDrawing(false);
+    
     if (canvasRef.current) {
-      setSignature(canvasRef.current.toDataURL());
+      // Get the high-quality signature data
+      setSignature(canvasRef.current.toDataURL('image/png', 1.0));
     }
   };
 
   const clearSignature = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -239,6 +283,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     if (!ctx) return;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Fill with white background
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     setSignature(null);
   };
 
@@ -910,11 +957,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Recipient Signature *
                 </label>
-                <div className="border-2 border-gray-300 rounded-lg overflow-hidden">
+                <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
                   <canvas
                     ref={canvasRef}
-                    width={500}
-                    height={200}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={stopDrawing}
@@ -922,17 +967,38 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="w-full h-48 bg-white cursor-crosshair touch-none"
+                    className="w-full h-48 cursor-crosshair touch-none"
+                    style={{
+                      backgroundColor: '#fff',
+                      display: 'block'
+                    }}
                   />
                 </div>
-                <div className="flex justify-end mt-2">
+                
+                {/* Signature controls */}
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-xs text-gray-500">
+                    Sign in the box above
+                  </p>
                   <button
                     onClick={clearSignature}
-                    className="text-sm text-red-600 hover:text-red-800"
+                    className="text-sm text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
                   >
                     Clear Signature
                   </button>
                 </div>
+                
+                {/* Preview signature if exists */}
+                {signature && (
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-500 mb-2">Signature Preview:</p>
+                    <img 
+                      src={signature} 
+                      alt="Signature preview" 
+                      className="max-h-16 border border-gray-200 rounded bg-white"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -1038,4 +1104,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-}
+          }
