@@ -699,6 +699,15 @@ const orders = await prisma.order.findMany({
         createdAt: 'desc'
       },
       include: {
+        proofOfDelivery: {
+          select: {
+              id: true,
+              photoUrl:true,
+              signatureData:true,
+              receivedBy: true,
+              receivedAt: true
+          }
+        },
         items: {
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
           select: {
@@ -787,6 +796,7 @@ const orders = await prisma.order.findMany({
       user: order.user,
       address: order.address,
       payments: order.payments,
+      proofOfDelivery: order.proofOfDelivery,
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
