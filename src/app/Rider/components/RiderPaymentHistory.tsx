@@ -410,7 +410,8 @@ export default function RiderPaymentHistory({
       minute: '2-digit',
     });
   };
-
+  if(loading) return;
+console.log(data);
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
       {/* Header */}
