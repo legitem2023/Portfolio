@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
-// Use your existing query
+// Using your existing query
 export const ACTIVE_ORDER_LIST = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -79,49 +79,48 @@ export const ACTIVE_ORDER_LIST = gql`
   }
 `;
 
+// OrderStatus enum as provided - EXACTLY as given
+enum OrderStatus {
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED'
+}
+
+// Payment status enum (common payment statuses)
+enum PaymentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED'
+}
+
 // Types
-export type Payment = {
+type Payment = {
   id: string;
   amount: number;
   method: string;
-  status: string;
+  status: PaymentStatus;
   orderId: string;
   orderNumber: string;
-  orderStatus: string;
+  orderStatus: OrderStatus;
   createdAt: string;
-  deliveryAddress?: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
   customerName?: string;
-  items?: Array<{
-    id: string;
-    productName: string;
-    quantity: number;
-    price: number;
-  }>;
+  customerEmail?: string;
 };
 
-export type PaymentSummary = {
+type PaymentSummary = {
   totalEarnings: number;
   pendingPayments: number;
   completedPayments: number;
-  thisWeekEarnings: number;
-  thisMonthEarnings: number;
-};
-
-export type PaymentFilters = {
-  status?: string;
-  dateRange?: 'today' | 'week' | 'month' | 'custom';
-  startDate?: string;
-  endDate?: string;
+  deliveredOrders: number;
+  totalOrders: number;
 };
 
 interface RiderPaymentHistoryProps {
-  riderId?: string; // supplier/rider ID to filter orders
+  riderId?: string;
   showSummary?: boolean;
   className?: string;
 }
@@ -166,14 +165,16 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
       ),
     },
     {
-      title: 'This Month',
-      amount: summary.thisMonthEarnings,
+      title: 'Delivered Orders',
+      amount: summary.deliveredOrders,
       bgColor: 'bg-purple-50',
       textColor: 'text-purple-700',
       borderColor: 'border-purple-200',
+      isCount: true,
+      subtitle: `Total Orders: ${summary.totalOrders}`,
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
         </svg>
       ),
     },
@@ -190,8 +191,11 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
             <div>
               <p className="text-sm font-medium text-gray-600">{card.title}</p>
               <p className={`text-2xl font-bold ${card.textColor}`}>
-                ${card.amount.toFixed(2)}
+                {card.isCount ? card.amount : `$${card.amount.toFixed(2)}`}
               </p>
+              {card.subtitle && (
+                <p className="text-xs text-gray-500 mt-1">{card.subtitle}</p>
+              )}
             </div>
             <div className={card.textColor}>{card.icon}</div>
           </div>
@@ -212,10 +216,11 @@ export default function RiderPaymentHistory({
     totalEarnings: 0,
     pendingPayments: 0,
     completedPayments: 0,
-    thisWeekEarnings: 0,
-    thisMonthEarnings: 0,
+    deliveredOrders: 0,
+    totalOrders: 0,
   });
-  const [filters, setFilters] = useState<PaymentFilters>({});
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>('');
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -227,27 +232,20 @@ export default function RiderPaymentHistory({
   const buildOrderFilter = () => {
     const filter: any = {};
     
-    // If riderId is provided, filter by supplier
+    // If riderId is provided, filter by supplier/rider
     if (riderId) {
-      filter.riderId = riderId;
+      filter.supplierId = riderId;
     }
-/*
-    // Add date filters if needed
-    if (filters.startDate || filters.endDate) {
-      filter.createdAt = {};
-      if (filters.startDate) filter.createdAt.gte = filters.startDate;
-      if (filters.endDate) filter.createdAt.lte = filters.endDate;
-    }
-*/
-    // Add status filter if needed
-    if (filters.status) {
-      filter.status = filters.status;
+
+    // Add order status filter if selected
+    if (orderStatusFilter) {
+      filter.status = orderStatusFilter;
     }
 
     return filter;
   };
 
-  // Query orders
+  // Query orders using your existing query
   const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST, {
     variables: {
       filter: buildOrderFilter(),
@@ -269,68 +267,67 @@ export default function RiderPaymentHistory({
       let totalEarnings = 0;
       let pendingPayments = 0;
       let completedPayments = 0;
-      let thisWeekEarnings = 0;
-      let thisMonthEarnings = 0;
-
-      const now = new Date();
-      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      let deliveredOrders = 0;
+      
+      // Track unique orders for count
+      const uniqueOrders = new Set();
 
       orders.forEach((order: any) => {
+        uniqueOrders.add(order.id);
+        
+        // Count delivered orders
+        if (order.status === OrderStatus.DELIVERED) {
+          deliveredOrders++;
+        }
+
+        // Only process orders that have payments
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
-            const orderDate = new Date(order.createdAt);
             
+            // Apply payment status filter if set
+            if (paymentStatusFilter && payment.status !== paymentStatusFilter) {
+              return;
+            }
+
             // Create payment object
             extractedPayments.push({
               id: payment.id,
               amount: payment.amount,
               method: payment.method,
-              status: payment.status,
+              status: payment.status as PaymentStatus,
               orderId: order.id,
               orderNumber: order.orderNumber,
-              orderStatus: order.status,
+              orderStatus: order.status as OrderStatus,
               createdAt: order.createdAt,
-              deliveryAddress: order.address,
               customerName: order.user ? 
-                `${order.user.firstName} ${order.user.lastName}` : undefined,
-              items: order.items?.map((item: any) => ({
-                id: item.id,
-                productName: item.product?.name || 'Unknown',
-                quantity: item.quantity,
-                price: item.price,
-              })),
+                `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
+              customerEmail: order.user?.email,
             });
 
             // Calculate summaries
             totalEarnings += payment.amount;
             
-            if (payment.status === 'PENDING') {
+            if (payment.status === PaymentStatus.PENDING) {
               pendingPayments += payment.amount;
-            } else if (payment.status === 'COMPLETED') {
+            } else if (payment.status === PaymentStatus.COMPLETED) {
               completedPayments += payment.amount;
-            }
-
-            // Check if order is from this week
-            if (orderDate >= startOfWeek) {
-              thisWeekEarnings += payment.amount;
-            }
-
-            // Check if order is from this month
-            if (orderDate >= startOfMonth) {
-              thisMonthEarnings += payment.amount;
             }
           });
         }
       });
+
+      // Sort payments by date (newest first)
+      extractedPayments.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
       setPayments(extractedPayments);
       setSummary({
         totalEarnings,
         pendingPayments,
         completedPayments,
-        thisWeekEarnings,
-        thisMonthEarnings,
+        deliveredOrders,
+        totalOrders: uniqueOrders.size,
       });
 
       // Update pagination
@@ -343,57 +340,47 @@ export default function RiderPaymentHistory({
         });
       }
     }
-  }, [data]);
+  }, [data, paymentStatusFilter, orderStatusFilter]);
 
-  const handleFilterChange = (newFilters: Partial<PaymentFilters>) => {
-    setFilters({ ...filters, ...newFilters });
+  const handlePaymentStatusFilterChange = (status: string) => {
+    setPaymentStatusFilter(status);
     setPagination({ ...pagination, page: 1 });
-    // Refetch with new filters
+  };
+
+  const handleOrderStatusFilterChange = (status: string) => {
+    setOrderStatusFilter(status);
+    setPagination({ ...pagination, page: 1 });
+    // Refetch with new order status filter
     setTimeout(() => refetch(), 0);
   };
 
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
+    refetch();
   };
 
-  const handleDateRangeChange = (range: string) => {
-    const now = new Date();
-    let startDate = '';
-    let endDate = now.toISOString().split('T')[0];
-
-    switch (range) {
-      case 'today':
-        startDate = endDate;
-        break;
-      case 'week':
-        const weekAgo = new Date(now.setDate(now.getDate() - 7));
-        startDate = weekAgo.toISOString().split('T')[0];
-        break;
-      case 'month':
-        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-        startDate = monthAgo.toISOString().split('T')[0];
-        break;
-      default:
-        return;
-    }
-
-    handleFilterChange({ 
-      dateRange: range as any, 
-      startDate, 
-      endDate 
-    });
-  };
-
-  const getStatusBadge = (status: string) => {
-    const statusColors: Record<string, string> = {
-      PENDING: 'bg-yellow-100 text-yellow-800',
-      PROCESSING: 'bg-blue-100 text-blue-800',
-      COMPLETED: 'bg-green-100 text-green-800',
-      FAILED: 'bg-red-100 text-red-800',
-      REFUNDED: 'bg-gray-100 text-gray-800',
+  const getPaymentStatusBadge = (status: PaymentStatus) => {
+    const statusColors: Record<PaymentStatus, string> = {
+      [PaymentStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+      [PaymentStatus.COMPLETED]: 'bg-green-100 text-green-800',
+      [PaymentStatus.FAILED]: 'bg-red-100 text-red-800',
+      [PaymentStatus.REFUNDED]: 'bg-gray-100 text-gray-800',
     };
 
     return statusColors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getOrderStatusBadge = (status: OrderStatus) => {
+    const statusColors: Record<OrderStatus, string> = {
+      [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+      [OrderStatus.PROCESSING]: 'bg-blue-100 text-blue-800',
+      [OrderStatus.SHIPPED]: 'bg-purple-100 text-purple-800',
+      [OrderStatus.DELIVERED]: 'bg-green-100 text-green-800',
+      [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
+      [OrderStatus.REFUNDED]: 'bg-gray-100 text-gray-800',
+    };
+
+    return statusColors[status];
   };
 
   const getPaymentMethodIcon = (method: string) => {
@@ -429,56 +416,41 @@ export default function RiderPaymentHistory({
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h2 className="text-xl font-semibold text-gray-800">Payment History</h2>
+          <h2 className="text-xl font-semibold text-gray-800">Rider Payment History</h2>
           
           <div className="flex flex-wrap gap-2">
-            {/* Date Range Quick Filters */}
-            <button
-              onClick={() => handleDateRangeChange('today')}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${
-                filters.dateRange === 'today' 
-                  ? 'bg-blue-100 text-blue-700 border-blue-300' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Today
-            </button>
-            <button
-              onClick={() => handleDateRangeChange('week')}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${
-                filters.dateRange === 'week' 
-                  ? 'bg-blue-100 text-blue-700 border-blue-300' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              This Week
-            </button>
-            <button
-              onClick={() => handleDateRangeChange('month')}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${
-                filters.dateRange === 'month' 
-                  ? 'bg-blue-100 text-blue-700 border-blue-300' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              This Month
-            </button>
-
-            {/* Status Filter */}
+            {/* Payment Status Filter */}
             <select
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              onChange={(e) => handleFilterChange({ status: e.target.value || undefined })}
-              value={filters.status || ''}
+              onChange={(e) => handlePaymentStatusFilterChange(e.target.value)}
+              value={paymentStatusFilter}
             >
-              <option value="">All Status</option>
-              <option value="PENDING">Pending</option>
-              <option value="PROCESSING">PROCESSING</option>
-              <option value="SHIPPED">SHIPPED</option>
-              <option value="DELIVERED">DELIVERED</option>
-              <option value="REFUNDED">REFUNDED</option>
+              <option value="">All Payment Status</option>
+              {Object.values(PaymentStatus).map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+
+            {/* Order Status Filter - Using the EXACT enum you provided */}
+            <select
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              onChange={(e) => handleOrderStatusFilterChange(e.target.value)}
+              value={orderStatusFilter}
+            >
+              <option value="">All Order Status</option>
+              {Object.values(OrderStatus).map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
             </select>
           </div>
         </div>
+        {riderId && (
+          <p className="text-sm text-gray-500 mt-2">Rider ID: {riderId}</p>
+        )}
       </div>
 
       {/* Summary Cards */}
@@ -509,7 +481,7 @@ export default function RiderPaymentHistory({
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="mt-2 text-sm">No payment records found</p>
+            <p className="mt-2 text-sm">No payment records found for this rider</p>
           </div>
         ) : (
           <table className="min-w-full divide-y divide-gray-200">
@@ -531,7 +503,7 @@ export default function RiderPaymentHistory({
                   Method
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Payment Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order Status
@@ -549,6 +521,9 @@ export default function RiderPaymentHistory({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {payment.customerName || 'N/A'}
+                    {payment.customerEmail && (
+                      <div className="text-xs text-gray-400">{payment.customerEmail}</div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatCurrency(payment.amount)}
@@ -560,12 +535,12 @@ export default function RiderPaymentHistory({
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadge(payment.status)}`}>
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getPaymentStatusBadge(payment.status)}`}>
                       {payment.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getOrderStatusBadge(payment.orderStatus)}`}>
                       {payment.orderStatus}
                     </span>
                   </td>
@@ -609,4 +584,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-                                      }
+}
