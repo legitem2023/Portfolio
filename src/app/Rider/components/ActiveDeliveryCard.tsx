@@ -86,9 +86,28 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   // Initialize canvas with high resolution
   useEffect(() => {
     if (showProofModal && canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // Get the display size (CSS pixels)
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
+    // Set internal resolution 5x higher
+    const scale = 5;
+    canvas.width = displayWidth * scale;
+    canvas.height = displayHeight * scale;
+    
+    const context = canvas.getContext('2d');
+    
+    // Scale context to match CSS size
+    context.scale(scale, scale);
+    
+    // Set up canvas properties
+    context.lineJoin = 'round';
+    context.lineCap = 'round';
+    context.lineWidth = 3;
+      //const canvas = canvasRef.current;
+      //const ctx = canvas.getContext('2d');
+     /* if (ctx) {
         // Set canvas size with higher resolution (2x for retina displays)
         const container = canvas.parentElement;
         if (container) {
@@ -115,7 +134,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           ctx.fillStyle = '#fff';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
-      }
+      }*/
     }
   }, [showProofModal]);
 
