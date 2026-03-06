@@ -92,18 +92,20 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         // Set canvas size with higher resolution (2x for retina displays)
         const container = canvas.parentElement;
         if (container) {
-          const containerWidth = container.clientWidth;
           
-          // Set canvas dimensions with higher resolution
-          canvas.width = Math.max(500, containerWidth * 2);
-          canvas.height = 200 * 2;
-          
-          // Style to maintain aspect ratio while showing high-res canvas
-          canvas.style.width = '100%';
-          canvas.style.height = '200px';
-          
-          // Configure context for better drawing
-          ctx.scale(2, 2); // Scale down to match display size
+          // Get the display size (CSS pixels)
+          const displayWidth = canvas.clientWidth;
+          const displayHeight = canvas.clientHeight;
+    
+          // Set internal resolution 5x higher
+          const scale = 5;
+          canvas.width = displayWidth * scale;
+          canvas.height = displayHeight * scale;
+    
+          const context = canvas.getContext('2d');
+    
+          // Scale context to match CSS size
+          context.scale(scale, scale);       
           ctx.strokeStyle = '#000';
           ctx.lineWidth = 2;
           ctx.lineCap = 'round';
@@ -967,7 +969,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    className="w-full h-48 cursor-crosshair touch-none"
+                    
+                    className="w-full h-[150px] border border-gray-200 rounded-lg bg-gray-50 cursor-crosshair touch-none"
+                
                     style={{
                       backgroundColor: '#fff',
                       display: 'block'
