@@ -231,14 +231,14 @@ export default function RiderPaymentHistory({
     if (riderId) {
       filter.supplierId = riderId;
     }
-
+/*
     // Add date filters if needed
     if (filters.startDate || filters.endDate) {
       filter.createdAt = {};
       if (filters.startDate) filter.createdAt.gte = filters.startDate;
       if (filters.endDate) filter.createdAt.lte = filters.endDate;
     }
-
+*/
     // Add status filter if needed
     if (filters.status) {
       filter.status = filters.status;
