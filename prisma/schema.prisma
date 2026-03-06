@@ -348,7 +348,7 @@ model Order {
   address     Address? @relation(fields: [addressId], references: [id])
   items       OrderItem[]
   payments    Payment[]
-
+  proofOfDelivery   ProofOfDelivery[]
   @@index([userId])
   @@index([status])
   @@index([createdAt])
@@ -387,6 +387,17 @@ model OrderItem {
   @@index([productId])
   @@map("order_items")
 }
+
+model ProofOfDelivery {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId       String   @db.ObjectId
+  order         Order  @relation(fields: [orderId], references: [id])
+  photoUrl      String?
+  signatureData String?
+  receivedBy    String
+  receivedAt    DateTime @default(now())
+}
+
 
 // Cart
 model CartItem {
