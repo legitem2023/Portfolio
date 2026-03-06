@@ -84,70 +84,70 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   
-  // Initialize canvas context with high resolution
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    // Get the display size (CSS pixels)
+// Initialize canvas context with high resolution
+useEffect(() => {
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  
+  // Get the display size (CSS pixels)
+  const displayWidth = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
+  
+  // Set internal resolution (2x for better quality without breaking coordinates)
+  const scale = 2;
+  canvas.width = displayWidth * scale;
+  canvas.height = displayHeight * scale;
+  
+  const context = canvas.getContext('2d');
+  if (!context) return;
+  
+  // Scale context to match CSS size
+  context.scale(scale, scale);
+  
+  // Set up canvas properties
+  context.lineJoin = 'round';
+  context.lineCap = 'round';
+  context.lineWidth = 2;
+  context.strokeStyle = '#2e8b57';
+  
+  // Fill with white background
+  context.fillStyle = '#ffffff';
+  context.fillRect(0, 0, displayWidth, displayHeight);
+  
+  setCtx(context);
+  
+  // Handle window resize to maintain high resolution
+  const handleResize = () => {
     const displayWidth = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;
-    
-    // Set internal resolution (2x for better quality without breaking coordinates)
-    const scale = 2;
     canvas.width = displayWidth * scale;
     canvas.height = displayHeight * scale;
-    
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    
-    // Scale context to match CSS size
     context.scale(scale, scale);
-    
-    // Set up canvas properties
     context.lineJoin = 'round';
     context.lineCap = 'round';
     context.lineWidth = 2;
     context.strokeStyle = '#2e8b57';
     
-    // Fill with white background
+    // Restore white background after resize
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, displayWidth, displayHeight);
     
-    setCtx(context);
-    
-    // Handle window resize to maintain high resolution
-    const handleResize = () => {
-      const displayWidth = canvas.clientWidth;
-      const displayHeight = canvas.clientHeight;
-      canvas.width = displayWidth * scale;
-      canvas.height = displayHeight * scale;
-      context.scale(scale, scale);
-      context.lineJoin = 'round';
-      context.lineCap = 'round';
-      context.lineWidth = 2;
-      context.strokeStyle = '#2e8b57';
-      
-      // Restore white background after resize
-      context.fillStyle = '#ffffff';
-      context.fillRect(0, 0, displayWidth, displayHeight);
-      
-      // Alternative fix using Image constructor with proper parameters
-if (signature) {
-  const img = new Image(displayWidth, displayHeight);
-  img.onload = () => {
-    context.drawImage(img, 0, 0, displayWidth, displayHeight);
+    // Redraw existing signature if any
+    if (signature) {
+      const img = document.createElement('img');
+      img.onload = () => {
+        context.drawImage(img, 0, 0, displayWidth, displayHeight);
+      };
+      img.src = signature;
+    }
   };
-  img.src = signature;
-}
-    };
-    
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, [signature]);
+  
+  window.addEventListener('resize', handleResize);
+  
+  return () => {
+    window.removeEventListener('resize', handleResize);
+  };
+}, [signature]);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
