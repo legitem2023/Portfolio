@@ -182,6 +182,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     ctx.beginPath();
     
+    // Get coordinates
     let clientX, clientY;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
@@ -191,8 +192,22 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       clientY = e.clientY;
     }
     
+    // Get canvas position and dimensions
     const rect = canvas.getBoundingClientRect();
-    ctx.moveTo(clientX - rect.left, clientY - rect.top);
+    
+    // Calculate position relative to canvas (0-1 range)
+    const relativeX = (clientX - rect.left) / rect.width;
+    const relativeY = (clientY - rect.top) / rect.height;
+    
+    // Clamp values to prevent drawing outside canvas
+    const clampedX = Math.max(0, Math.min(1, relativeX));
+    const clampedY = Math.max(0, Math.min(1, relativeY));
+    
+    // Convert to canvas pixel coordinates
+    const canvasX = clampedX * canvas.width;
+    const canvasY = clampedY * canvas.height;
+    
+    ctx.moveTo(canvasX, canvasY);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -207,7 +222,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
+    ctx.lineCap = 'round'; // Make lines smoother
+    ctx.lineJoin = 'round'; // Make lines smoother
     
+    // Get coordinates
     let clientX, clientY;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
@@ -217,9 +235,29 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       clientY = e.clientY;
     }
     
+    // Get canvas position and dimensions
     const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(clientX - rect.left, clientY - rect.top);
+    
+    // Calculate position relative to canvas (0-1 range)
+    const relativeX = (clientX - rect.left) / rect.width;
+    const relativeY = (clientY - rect.top) / rect.height;
+    
+    // Clamp values to prevent drawing outside canvas
+    const clampedX = Math.max(0, Math.min(1, relativeX));
+    const clampedY = Math.max(0, Math.min(1, relativeY));
+    
+    // Convert to canvas pixel coordinates
+    const canvasX = clampedX * canvas.width;
+    const canvasY = clampedY * canvas.height;
+    
+    ctx.lineTo(canvasX, canvasY);
     ctx.stroke();
+  };
+
+  // Add this new function to handle touch events better
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent scrolling while drawing
+    draw(e);
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
@@ -911,27 +949,27 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   Recipient Signature *
                 </label>
                 <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
-                  <div className="relative w-full" style={{ paddingBottom: '40%' }}> {/* 5:2 aspect ratio (500:200) */}
-                    <canvas
-                      ref={canvasRef}
-                      width={500}
-                      height={200}
-                      onMouseDown={startDrawing}
-                      onMouseMove={draw}
-                      onMouseUp={stopDrawing}
-                      onMouseLeave={stopDrawing}
-                      onTouchStart={startDrawing}
-                      onTouchMove={draw}
-                      onTouchEnd={stopDrawing}
-                      className="absolute top-0 left-0 w-full h-full bg-white cursor-crosshair touch-none"
-                      style={{ 
-                        display: 'block',
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain'
-                      }}
-                    />
-                  </div>
+                  <canvas
+                    ref={canvasRef}
+                    width={500}
+                    height={200}
+                    onMouseDown={startDrawing}
+                    onMouseMove={draw}
+                    onMouseUp={stopDrawing}
+                    onMouseLeave={stopDrawing}
+                    onTouchStart={startDrawing}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={stopDrawing}
+                    onTouchCancel={stopDrawing}
+                    className="w-full h-auto bg-white cursor-crosshair touch-none"
+                    style={{ 
+                      display: 'block',
+                      width: '100%',
+                      height: 'auto',
+                      aspectRatio: '500/200',
+                      maxWidth: '100%'
+                    }}
+                  />
                 </div>
                 <div className="flex justify-end mt-2">
                   <button
@@ -1046,4 +1084,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-                        }
+                                          }
