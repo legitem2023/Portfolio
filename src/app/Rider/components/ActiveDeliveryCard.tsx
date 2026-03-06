@@ -132,14 +132,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       context.fillStyle = '#ffffff';
       context.fillRect(0, 0, displayWidth, displayHeight);
       
-      // Redraw existing signature if any
-      if (signature) {
-        const img = new Image();
-        img.onload = () => {
-          context.drawImage(img, 0, 0, displayWidth, displayHeight);
-        };
-        img.src = signature;
-      }
+      // Alternative fix using Image constructor with proper parameters
+if (signature) {
+  const img = new Image(displayWidth, displayHeight);
+  img.onload = () => {
+    context.drawImage(img, 0, 0, displayWidth, displayHeight);
+  };
+  img.src = signature;
+}
     };
     
     window.addEventListener('resize', handleResize);
