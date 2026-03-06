@@ -17,7 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   Phone,
-  Camera
+  Camera,
+  Image
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -78,7 +79,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [signature, setSignature] = useState<string | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -136,6 +138,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Prevent page refresh
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -144,9 +147,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       };
       reader.readAsDataURL(file);
     }
+    // Clear the input value so the same file can be selected again if needed
+    e.target.value = '';
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent page refresh on touch devices
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -170,6 +176,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent page refresh on touch devices
     if (!isDrawing) return;
     
     const canvas = canvasRef.current;
@@ -195,14 +202,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent page refresh on touch devices
     setIsDrawing(false);
     if (canvasRef.current) {
       setSignature(canvasRef.current.toDataURL());
     }
   };
 
-  const clearSignature = () => {
+  const clearSignature = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent page refresh
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -354,6 +363,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
   const toggleItems = () => {
     setShowItems(!showItems);
+  };
+
+  const openCamera = (e: React.MouseEvent) => {
+    e.preventDefault();
+    cameraInputRef.current?.click();
+  };
+
+  const openGallery = (e: React.MouseEvent) => {
+    e.preventDefault();
+    galleryInputRef.current?.click();
   };
 
   return (
@@ -705,26 +724,48 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                       className="w-full h-48 object-cover rounded-lg border-2 border-gray-300"
                     />
                     <button
-                      onClick={() => setProofPhoto(null)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setProofPhoto(null);
+                      }}
                       className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
                     >
                       <XCircle size={16} />
                     </button>
                   </div>
                 ) : (
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-green-500 transition-colors"
-                  >
-                    <Camera className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload delivery photo</p>
-                    <p className="text-xs text-gray-500">Take a photo of the delivered items</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={openCamera}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
+                    >
+                      <Camera className="h-8 w-8 text-gray-400" />
+                      <p className="text-sm text-gray-600">Take Photo</p>
+                      <p className="text-xs text-gray-500">Use camera</p>
+                    </button>
+                    <button
+                      onClick={openGallery}
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
+                    >
+                      <Image className="h-8 w-8 text-gray-400" />
+                      <p className="text-sm text-gray-600">Choose from Gallery</p>
+                      <p className="text-xs text-gray-500">Select existing photo</p>
+                    </button>
                     <input
-                      ref={fileInputRef}
+                      ref={cameraInputRef}
                       type="file"
                       accept="image/*"
                       capture="environment"
                       onChange={handlePhotoUpload}
+                      onClick={(e) => e.stopPropagation()}
+                      className="hidden"
+                    />
+                    <input
+                      ref={galleryInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      onClick={(e) => e.stopPropagation()}
                       className="hidden"
                     />
                   </div>
@@ -878,4 +919,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-                  }
+                }
