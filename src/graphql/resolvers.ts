@@ -2436,6 +2436,50 @@ salesList: async (
   },
 
   Mutation: {
+      uploadDeliveryProof: async (_parent: any, { file }: any) => {
+      const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
+      const photoUUID = uuidv4();
+      const signatureUUID = uuidv4();
+      // Save images
+      const photoFile = await saveBase64Image(photoUrl, `photo-${photoUUID}.jpg`);
+      const signatureFile = await saveBase64Image(signatureData, `signature-${signatureUUID}.png`);
+
+      // Save to DB
+      const record = await prisma.proofOfDelivery.create({
+        data: {
+          orderId:id,
+          receivedBy:receivedBy,
+          receivedAt: new Date(receivedAt),
+          photoUrl: photoFile.url,
+          signatureData: signatureFile.url,
+        },
+      });
+
+      /* const timeStarted = await prisma.deliveryStatusLog.findFirst({
+               where: {
+                   deliveryId: id,
+                   status: "TimeStart",
+               },
+               select:{
+                 timestamp:true
+               }
+             })*/
+     /* const nowUnix = Math.floor(Date.now() / 1000); 
+      const timeInterval = getMinuteDiff(timeStarted?.timestamp,nowUnix);
+      console.log("timestamp",timeInterval);
+     await prisma.delivery.update({
+          where: { id: id },
+          data: {
+            actualDeliveryTime: new Date(),
+            ata: timeInterval ? timeInterval.toString() : "",
+            updatedAt: new Date()
+           }
+         });*/
+      
+      return {
+        statusText:'Success'
+      };
+    },
     updateUserPhone: async (_:any, { id, phone }:any) => {
       try {
         // Validate phone number
