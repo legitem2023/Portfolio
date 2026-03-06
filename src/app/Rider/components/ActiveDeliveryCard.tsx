@@ -82,7 +82,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const [ctx, setCtx] = useState(null);
+  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   
   // Initialize canvas context with high resolution
   useEffect(() => {
@@ -98,7 +98,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     canvas.width = displayWidth * scale;
     canvas.height = displayHeight * scale;
     
-    const context:any = canvas.getContext('2d');
+    const context = canvas.getContext('2d');
+    if (!context) return;
     
     // Scale context to match CSS size
     context.scale(scale, scale);
@@ -219,68 +220,64 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     e.target.value = '';
   };
 
-// Replace the getCoordinates function (around line 245-267) with this:
+  // Get coordinates from both mouse and touch events
+  const getCoordinates = (e: any) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+    
+    const rect = canvas.getBoundingClientRect();
+    
+    // For touch events
+    if (e.touches && e.touches[0]) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    } 
+    // For mouse events
+    else {
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+  };
 
-const getCoordinates = (e: any) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return undefined;
+  // Handle signature drawing
+  const startDrawing = (e: any) => {
+    if (!ctx) return;
+    
+    // Prevent scrolling on mobile
+    if (e.touches) {
+      e.preventDefault();
+    }
+    
+    const coords = getCoordinates(e);
+    if (!coords) return;
+    
+    const { x, y } = coords;
+    
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
   
-  const rect = canvas.getBoundingClientRect();
-  
-  // For touch events
-  if (e.touches && e.touches[0]) {
-    return {
-      x: e.touches[0].clientX - rect.left,
-      y: e.touches[0].clientY - rect.top
-    };
-  } 
-  // For mouse events
-  else {
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-  }
-};
-
-// Then update the startDrawing function (around line 270-285):
-
-const startDrawing = (e: any) => {
-  if (!ctx) return;
-  
-  // Prevent scrolling on mobile
-  if (e.touches) {
-    e.preventDefault();
-  }
-  
-  const coords = getCoordinates(e);
-  if (!coords) return; // Add this check
-  
-  const { x, y } = coords;
-  
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  setIsDrawing(true);
-};
-
-// And update the draw function (around line 287-302):
-
-const draw = (e: any) => {
-  if (!isDrawing || !ctx) return;
-  
-  // Prevent scrolling on mobile
-  if (e.touches) {
-    e.preventDefault();
-  }
-  
-  const coords = getCoordinates(e);
-  if (!coords) return; // Add this check
-  
-  const { x, y } = coords;
-  
-  ctx.lineTo(x, y);
-  ctx.stroke();
-};
+  const draw = (e: any) => {
+    if (!isDrawing || !ctx) return;
+    
+    // Prevent scrolling on mobile
+    if (e.touches) {
+      e.preventDefault();
+    }
+    
+    const coords = getCoordinates(e);
+    if (!coords) return;
+    
+    const { x, y } = coords;
+    
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
   
   const stopDrawing = () => {
     if (!ctx) return;
@@ -514,24 +511,6 @@ const draw = (e: any) => {
                   )}
                 </div>
               </div>
-              {/* <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <Building size={14} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base break-words">{delivery.restaurant}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{delivery.supplierContact}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User size={14} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-sm sm:text-base break-words">{delivery.customer}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{delivery.customerContact}</span>
-                </div>
-              </div>*/}
             </div>
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 p-3 sm:p-4 rounded-xl sm:bg-transparent">
               <div className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{delivery.payout}</div>
@@ -1120,4 +1099,4 @@ const draw = (e: any) => {
       )}
     </>
   );
-          }
+    }
