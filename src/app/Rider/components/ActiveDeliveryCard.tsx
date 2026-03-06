@@ -25,7 +25,7 @@ import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import DeliveryMap from './DeliveryMap';
 import { gql } from '@apollo/client';
 
@@ -77,40 +77,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
   const [receivedByName, setReceivedByName] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
   const [hasProofUploaded, setHasProofUploaded] = useState(false);
-  
-  // Canvas refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawingRef = useRef(false);
-  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
-  
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  
-  // Initialize canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Set canvas size
-    canvas.width = 400;
-    canvas.height = 200;
-    
-    // Set up context
-    ctx.strokeStyle = '#2e8b57';
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    // Fill with white
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    ctxRef.current = ctx;
-  }, []);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -187,7 +158,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page refresh
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -196,78 +167,79 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       };
       reader.readAsDataURL(file);
     }
+    // Clear the input value so the same file can be selected again if needed
     e.target.value = '';
   };
 
-  // Drawing functions
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page refresh on touch devices
+    setIsDrawing(true);
     const canvas = canvasRef.current;
-    const ctx = ctxRef.current;
+    if (!canvas) return;
     
-    if (!canvas || !ctx) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    let x, y;
-    
-    if ('touches' in e) {
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
-    } else {
-      x = e.clientX - rect.left;
-      y = e.clientY - rect.top;
-    }
-    
-    // Scale coordinates to canvas size
-    x = (x / rect.width) * canvas.width;
-    y = (y / rect.height) * canvas.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     ctx.beginPath();
-    ctx.moveTo(x, y);
-    isDrawingRef.current = true;
+    
+    let clientX, clientY;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    const rect = canvas.getBoundingClientRect();
+    ctx.moveTo(clientX - rect.left, clientY - rect.top);
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!isDrawingRef.current || !ctxRef.current || !canvasRef.current) return;
+    e.preventDefault(); // Prevent page refresh on touch devices
+    if (!isDrawing) return;
     
     const canvas = canvasRef.current;
-    const ctx = ctxRef.current;
-    const rect = canvas.getBoundingClientRect();
-    let x, y;
+    if (!canvas) return;
     
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = 2;
+    
+    let clientX, clientY;
     if ('touches' in e) {
-      x = e.touches[0].clientX - rect.left;
-      y = e.touches[0].clientY - rect.top;
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
     } else {
-      x = e.clientX - rect.left;
-      y = e.clientY - rect.top;
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
     
-    // Scale coordinates to canvas size
-    x = (x / rect.width) * canvas.width;
-    y = (y / rect.height) * canvas.height;
-    
-    ctx.lineTo(x, y);
+    const rect = canvas.getBoundingClientRect();
+    ctx.lineTo(clientX - rect.left, clientY - rect.top);
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
-    if (!ctxRef.current) return;
-    ctxRef.current.closePath();
-    isDrawingRef.current = false;
+  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault(); // Prevent page refresh on touch devices
+    setIsDrawing(false);
+    if (canvasRef.current) {
+      setSignature(canvasRef.current.toDataURL());
+    }
   };
 
   const clearSignature = (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page refresh
     const canvas = canvasRef.current;
-    const ctx = ctxRef.current;
+    if (!canvas) return;
     
-    if (!canvas || !ctx) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    setSignature(null);
   };
 
   const handleUploadProofOnly = async () => {
@@ -276,6 +248,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       return;
     }
 
+    // Validate proof of delivery
     if (!proofPhoto) {
       setMessage({ type: 'error', text: 'Please take a photo of the delivered items' });
       return;
@@ -286,44 +259,21 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       return;
     }
 
-    const canvas = canvasRef.current;
-    if (!canvas) {
-      setMessage({ type: 'error', text: 'Signature pad not available' });
-      return;
-    }
-
-    // Check if signature is empty
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const pixels = imageData.data;
-    let hasDrawing = false;
-    
-    for (let i = 0; i < pixels.length; i += 4) {
-      if (pixels[i] < 250 || pixels[i+1] < 250 || pixels[i+2] < 250) {
-        hasDrawing = true;
-        break;
-      }
-    }
-    
-    if (!hasDrawing) {
+    if (!signature) {
       setMessage({ type: 'error', text: 'Please capture the recipient\'s signature' });
       return;
     }
 
-    const signatureData = canvas.toDataURL('image/png');
-    setSignature(signatureData);
-
     setActionType('delivered');
 
     try {
+      // Upload the proof of delivery only
       const proofInput: ProofOfDeliveryInput = {
         id: delivery.originalOrderId,
         receivedBy: receivedByName,
         receivedAt: new Date().toISOString(),
         photoUrl: proofPhoto,
-        signatureData: signatureData
+        signatureData: signature
       };
 
       await uploadProof({
@@ -353,6 +303,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setActionType('delivered');
 
     try {
+      // Update order status to DELIVERED
       const supplierItems = delivery.supplierItems || [];
       for (const item of supplierItems) {
         await updateOrderStatus({
@@ -502,6 +453,24 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   )}
                 </div>
               </div>
+              {/* <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <Building size={14} className="text-blue-400 flex-shrink-0" />
+                  <span className="text-sm sm:text-base break-words">{delivery.restaurant}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone size={14} className="text-blue-400 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">{delivery.supplierContact}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User size={14} className="text-gray-500 flex-shrink-0" />
+                  <span className="text-sm sm:text-base break-words">{delivery.customer}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone size={14} className="text-gray-500 flex-shrink-0" />
+                  <span className="text-sm sm:text-base">{delivery.customerContact}</span>
+                </div>
+              </div>*/}
             </div>
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 p-3 sm:p-4 rounded-xl sm:bg-transparent">
               <div className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{delivery.payout}</div>
@@ -853,6 +822,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <button
                   onClick={() => {
                     setShowProofModal(false);
+                    // Don't clear proof data when closing modal
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -935,40 +905,38 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 />
               </div>
 
-              {/* Signature Pad */}
+              {/* Signature Pad - FIXED VERSION */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Recipient Signature *
                 </label>
                 <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
-                  <canvas
-                    ref={canvasRef}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
-                    onTouchCancel={stopDrawing}
-                    className="w-full h-[200px] cursor-crosshair touch-none"
-                    style={{
-                      backgroundColor: '#ffffff',
-                      display: 'block',
-                      width: '100%',
-                      height: '200px'
-                    }}
-                  />
+                  <div className="relative w-full" style={{ paddingBottom: '40%' }}> {/* 5:2 aspect ratio (500:200) */}
+                    <canvas
+                      ref={canvasRef}
+                      width={500}
+                      height={200}
+                      onMouseDown={startDrawing}
+                      onMouseMove={draw}
+                      onMouseUp={stopDrawing}
+                      onMouseLeave={stopDrawing}
+                      onTouchStart={startDrawing}
+                      onTouchMove={draw}
+                      onTouchEnd={stopDrawing}
+                      className="absolute top-0 left-0 w-full h-full bg-white cursor-crosshair touch-none"
+                      style={{ 
+                        display: 'block',
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain'
+                      }}
+                    />
+                  </div>
                 </div>
-                
-                {/* Signature controls */}
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-xs text-gray-500">
-                    Sign in the box above
-                  </p>
+                <div className="flex justify-end mt-2">
                   <button
                     onClick={clearSignature}
-                    className="text-sm text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50 transition-colors"
+                    className="text-sm text-red-600 hover:text-red-800"
                   >
                     Clear Signature
                   </button>
@@ -1078,4 +1046,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-                      }
+                        }
