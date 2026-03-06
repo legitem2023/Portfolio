@@ -78,6 +78,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [receivedByName, setReceivedByName] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [hasProofUploaded, setHasProofUploaded] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
@@ -92,6 +93,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         setMessage(null);
         setActionType(null);
         setShowProofModal(false);
+        // Reset proof states after successful delivery
+        setProofPhoto(null);
+        setReceivedByName('');
+        setSignature(null);
+        setHasProofUploaded(false);
       }, 2000);
     },
     onError: (error) => {
@@ -104,7 +110,21 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   });
 
-  const [uploadProof, { loading: uploadLoading }] = useMutation(UPLOAD);
+  const [uploadProof, { loading: uploadLoading }] = useMutation(UPLOAD, {
+    onCompleted: () => {
+      setMessage({ type: 'success', text: 'Proof of delivery uploaded successfully!' });
+      setHasProofUploaded(true);
+      setTimeout(() => {
+        setMessage(null);
+      }, 3000);
+    },
+    onError: (error) => {
+      setMessage({ type: 'error', text: error.message || 'Failed to upload proof' });
+      setTimeout(() => {
+        setMessage(null);
+      }, 5000);
+    }
+  });
 
   const isLoading = mutationLoading || uploadLoading;
 
@@ -222,7 +242,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setSignature(null);
   };
 
-  const handleDelivered = async () => {
+  const handleUploadProofOnly = async () => {
     if (!user) {
       setMessage({ type: 'error', text: 'User not authenticated' });
       return;
@@ -245,10 +265,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
 
     setActionType('delivered');
-    setShowProofModal(false);
 
     try {
-      // First upload the proof of delivery
+      // Upload the proof of delivery only
       const proofInput: ProofOfDeliveryInput = {
         id: delivery.originalOrderId,
         receivedBy: receivedByName,
@@ -263,7 +282,28 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         }
       });
 
-      // Then update order status
+      setShowProofModal(false);
+    } catch (error) {
+      console.error('Error uploading proof:', error);
+      setActionType(null);
+    }
+  };
+
+  const handleCompleteDelivery = async () => {
+    if (!user) {
+      setMessage({ type: 'error', text: 'User not authenticated' });
+      return;
+    }
+
+    if (!hasProofUploaded) {
+      setMessage({ type: 'error', text: 'Please upload proof of delivery first' });
+      return;
+    }
+
+    setActionType('delivered');
+
+    try {
+      // Update order status to DELIVERED
       const supplierItems = delivery.supplierItems || [];
       for (const item of supplierItems) {
         await updateOrderStatus({
@@ -278,11 +318,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           }
         });
       }
-
-      // Reset proof states
-      setProofPhoto(null);
-      setReceivedByName('');
-      setSignature(null);
     } catch (error) {
       console.error('Error updating order status:', error);
       setActionType(null);
@@ -609,6 +644,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
           </div>
 
+          {/* Proof Upload Status Indicator */}
+          {hasProofUploaded && currentStatus === 'SHIPPED' && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
+              <CheckCircle size={18} className="text-green-600" />
+              <span className="text-sm text-green-700">Proof of delivery uploaded. Ready to complete delivery.</span>
+            </div>
+          )}
+
           {/* Status/Error Messages */}
           {message && (
             <div className={`p-3 sm:p-4 rounded-xl flex items-start gap-3 ${
@@ -660,19 +703,34 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
             {currentStatus === 'SHIPPED' && (
               <>
+                {/* Upload Proof Button */}
                 <button
                   onClick={() => setShowProofModal(true)}
                   disabled={isLoading || !!message}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 sm:py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50"
+                >
+                  <Camera size={18} />
+                  <span>Upload Proof of Delivery</span>
+                </button>
+                
+                {/* Complete Delivery Button - only enabled if proof exists */}
+                <button
+                  onClick={handleCompleteDelivery}
+                  disabled={isLoading || !!message || !hasProofUploaded}
                   className={`
                     w-full px-4 py-3 sm:py-4 rounded-xl font-semibold 
                     transition flex items-center justify-center gap-2 
                     text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed
-                    bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg
+                    ${hasProofUploaded 
+                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg' 
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }
                   `}
                 >
                   <Home size={18} />
                   <span>Complete Delivery</span>
                 </button>
+                
                 <button
                   onClick={() => setShowFailedReason(true)}
                   disabled={isLoading}
@@ -702,9 +760,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Proof of Delivery</h2>
+                <h2 className="text-2xl font-bold">Upload Proof of Delivery</h2>
                 <button
-                  onClick={() => setShowProofModal(false)}
+                  onClick={() => {
+                    setShowProofModal(false);
+                    // Don't clear proof data when closing modal
+                  }}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   ✕
@@ -819,11 +880,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               {/* Action Buttons */}
               <div className="flex gap-3">
                 <button
-                  onClick={handleDelivered}
+                  onClick={handleUploadProofOnly}
                   disabled={isLoading}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Processing...' : 'Confirm Delivery'}
+                  {isLoading ? 'Uploading...' : 'Upload Proof Only'}
                 </button>
                 <button
                   onClick={() => setShowProofModal(false)}
@@ -919,4 +980,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-                }
+  }
