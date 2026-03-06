@@ -541,7 +541,7 @@ const Header: React.FC = () => {
   };
 
   const handleLogoClick = () =>{
-    router.push('/Login');  
+    router.push('/');  
     dispatch(setActiveIndex(1));
   }
   return (
