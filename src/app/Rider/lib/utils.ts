@@ -1,4 +1,4 @@
-import { Address, OrderItem, Supplier, Order } from './types';
+import { Address, OrderItem, Supplier, Order, proofOfDelivery } from './types';
 
 // Helper function to calculate distance (simplified - in real app use coordinates)
 export const calculateDistance = (address1?: Address, address2?: Address): string => {
@@ -47,6 +47,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const orderId = order.orderNumber || `ORD-${order.id.slice(-6).toUpperCase()}`;
   const orderParentId = order.id;
   const dropoffAddress = order.address;
+  const proofOfDelivery = order.proofOfDelivery,
   console.log(order.user,'mapping stage');
   const customerContact = order.user?.phone;
   // Group items by supplier
@@ -94,6 +95,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     supplierName: string;
     supplierContact: string;
     supplier?: Supplier;
+    proofOfDelivery?:proofOfDelivery;
     subtotal: string;
     supplierItems?: OrderItem[];
     isPartialDelivery: boolean;
@@ -165,6 +167,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       dropoffAddress,
       pickupAddress,
       supplierName,
+      proofOfDelivery,
       supplier,
       supplierContact: supplierContact || "",
       subtotal: formatPeso(subtotal),
