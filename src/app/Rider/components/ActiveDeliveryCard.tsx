@@ -386,7 +386,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               {delivery.supplierName && (  
                 <div className="mt-2 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-1">
-                    <Builing size={10} />
+                    <Building size={10} />
                     <span className="truncate">{delivery.supplierName}</span>
                   </div>
                   <div className="flex items-center gap-1">
