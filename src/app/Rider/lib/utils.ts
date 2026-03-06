@@ -1,4 +1,4 @@
-import { Address, OrderItem, Supplier, Order, proofOfDelivery } from './types';
+import { Address, OrderItem, Supplier, Order, ProofOfDelivery } from './types';
 
 // Helper function to calculate distance (simplified - in real app use coordinates)
 export const calculateDistance = (address1?: Address, address2?: Address): string => {
@@ -95,7 +95,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     supplierName: string;
     supplierContact: string;
     supplier?: Supplier;
-    proofOfDelivery?:proofOfDelivery;
+    proofOfDelivery?:ProofOfDelivery;
     subtotal: string;
     supplierItems?: OrderItem[];
     isPartialDelivery: boolean;
