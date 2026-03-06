@@ -970,7 +970,7 @@ input ProofOfDeliveryInput {
 
   type Mutation {
     # Existing mutations
-    uploadDeliveryProof:(file:ProofOfDeliveryInput):Result
+    uploadDeliveryProof(file:ProofOfDeliveryInput): Result
     updateUserPhone(id: ID, phone: String): User
     updateUserAvatar(id: ID, avatar: String): User
     addToWishList(userId:ID,productId:ID):Result
