@@ -448,15 +448,29 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     galleryInputRef.current?.click();
   };
 
+  // Helper function to format date safely
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      return date.toLocaleString();
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
         {/* Header */}
-        <div className="bg-indigo-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-orange-100">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse"></div>
-              <span className="font-bold text-indigo-700 text-sm sm:text-base">Active Order</span>
+        <div className="bg-indigo-50 px-4 py-3 border-b border-orange-100">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 bg-indigo-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="font-bold text-indigo-700 text-sm">Active Order</span>
               {delivery.isPartialDelivery && (
                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap">
                   Piece {delivery.supplierIndex} of {delivery.totalSuppliersInOrder}
@@ -476,43 +490,24 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           </div>
         </div>
 
-        <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="p-4 space-y-4">
           {/* Order info */}
-          <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
-            <div className="w-full sm:w-auto">
-              <div className="flex items-start gap-2 mb-2">
-                <Shield size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-bold text-lg sm:text-xl break-all">{delivery.orderId}</h3>
-                  {delivery.isPartialDelivery && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Partial delivery - Items from {delivery.totalSuppliersInOrder} suppliers
-                    </p>
-                  )}
-                </div>
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start gap-2">
+              <Shield size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-base break-words">{delivery.orderId}</h3>
+                {delivery.isPartialDelivery && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Partial delivery - Items from {delivery.totalSuppliersInOrder} suppliers
+                  </p>
+                )}
               </div>
-              {/* <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <Building size={14} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base break-words">{delivery.restaurant}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-blue-400 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{delivery.supplierContact}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User size={14} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-sm sm:text-base break-words">{delivery.customer}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone size={14} className="text-gray-500 flex-shrink-0" />
-                  <span className="text-sm sm:text-base">{delivery.customerContact}</span>
-                </div>
-              </div>*/}
             </div>
-            <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 p-3 sm:p-4 rounded-xl sm:bg-transparent">
-              <div className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{delivery.payout}</div>
-              <p className="text-gray-500 text-xs sm:text-sm">Payout for this piece</p>
+            
+            <div className="bg-green-50 p-3 rounded-xl">
+              <div className="text-xl font-bold text-green-600 break-words">{delivery.payout}</div>
+              <p className="text-gray-500 text-xs">Payout for this piece</p>
               {delivery.subtotal && (
                 <p className="text-xs text-gray-400 mt-1">Subtotal: {delivery.subtotal}</p>
               )}
@@ -523,64 +518,66 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
             <button
               onClick={toggleItems}
-              className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
             >
-              <h4 className="font-semibold text-sm sm:text-base flex items-center gap-2">
+              <h4 className="font-semibold text-sm flex items-center gap-2">
                 <Package size={16} />
                 {delivery.items} item{delivery.items !== 1 ? "s" : ""}
               </h4>
-              <div className="flex items-center gap-3">
-                <span className="text-xs sm:text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">
                   Total: {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
                 </span>
                 {showItems ? (
-                  <ChevronUp size={18} className="text-gray-500" />
+                  <ChevronUp size={18} className="text-gray-500 flex-shrink-0" />
                 ) : (
-                  <ChevronDown size={18} className="text-gray-500" />
+                  <ChevronDown size={18} className="text-gray-500 flex-shrink-0" />
                 )}
               </div>
             </button>
 
             {showItems && (
-              <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 border-t border-gray-200 pt-3 sm:pt-4">
+              <div className="px-4 pb-4 space-y-3 border-t border-gray-200 pt-3">
                 {delivery.supplierItems?.map((item) => (
-                  <div key={item.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 bg-white rounded-xl p-3 sm:p-4 shadow-sm">
-                    {item.product[0]?.images && item.product[0].images.length > 0 && (
-                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 mx-auto sm:mx-0">
-                        <img 
-                          src={item.product[0].images[0]} 
-                          alt={item.product[0].name}
-                          className="w-full h-full object-cover rounded-lg border border-gray-200"
-                        />
-                        {item.product[0].images.length > 1 && (
-                          <span className="absolute -top-2 -right-2 bg-gray-800 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                            {item.product[0].images.length}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                        <div className="space-y-1.5">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded text-gray-700">
-                              {item.product[0]?.sku}
+                  <div key={item.id} className="flex flex-col gap-3 bg-white rounded-xl p-3 shadow-sm">
+                    <div className="flex gap-3">
+                      {item.product[0]?.images && item.product[0].images.length > 0 && (
+                        <div className="relative w-16 h-16 flex-shrink-0">
+                          <img 
+                            src={item.product[0].images[0]} 
+                            alt={item.product[0].name}
+                            className="w-full h-full object-cover rounded-lg border border-gray-200"
+                          />
+                          {item.product[0].images.length > 1 && (
+                            <span className="absolute -top-2 -right-2 bg-gray-800 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
+                              {item.product[0].images.length}
                             </span>
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                              Qty: {item.quantity}
-                            </span>
-                          </div>
-                          <h4 className="text-sm sm:text-base font-medium text-gray-900 break-words">
-                            {item.product[0]?.name}
-                          </h4>
+                          )}
                         </div>
-                        <div className="text-left sm:text-right">
-                          <div className="text-base sm:text-lg font-bold text-gray-900 whitespace-nowrap">
-                            {formatPeso(item.price * item.quantity)}
+                      )}
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-xs font-mono bg-gray-200 px-2 py-1 rounded text-gray-700">
+                                {item.product[0]?.sku}
+                              </span>
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                Qty: {item.quantity}
+                              </span>
+                            </div>
+                            <h4 className="text-sm font-medium text-gray-900 break-words">
+                              {item.product[0]?.name}
+                            </h4>
                           </div>
-                          <div className="text-xs sm:text-sm text-gray-500">
-                            @ {formatPeso(item.price)}
+                          <div className="text-left w-full sm:w-auto">
+                            <div className="text-base font-bold text-gray-900">
+                              {formatPeso(item.price * item.quantity)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              @ {formatPeso(item.price)}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -588,13 +585,13 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   </div>
                 ))}
                 
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-gray-100 rounded-xl p-4 sm:p-5 mt-3 sm:mt-4">
-                  <span className="text-sm sm:text-base font-medium text-gray-600">Subtotal</span>
-                  <div className="w-full sm:w-auto">
-                    <span className="text-xl sm:text-2xl font-bold text-green-600 break-words">
+                <div className="flex flex-col gap-2 bg-gray-100 rounded-xl p-4 mt-3">
+                  <span className="text-sm font-medium text-gray-600">Subtotal</span>
+                  <div>
+                    <span className="text-xl font-bold text-green-600 break-words">
                       {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.price * item.quantity), 0) || 0)}
                     </span>
-                    <span className="text-xs sm:text-sm text-gray-500 ml-2">
+                    <span className="text-xs text-gray-500 ml-2">
                       ({delivery.supplierItems?.length} {delivery.supplierItems?.length === 1 ? 'item' : 'items'})
                     </span>
                   </div>
@@ -604,12 +601,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           </div>
 
           {/* Route info */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-            <div className="bg-blue-50 p-3 sm:p-4 rounded-xl">
+          <div className="space-y-3">
+            <div className="bg-blue-50 p-3 rounded-xl">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <MapPin size={16} className="text-blue-500" />
-                  <span className="font-semibold text-xs sm:text-sm">Pickup From</span>
+                  <span className="font-semibold text-xs">Pickup From</span>
                 </div>
                 <button
                   onClick={() => setShowMap(true)}
@@ -619,7 +616,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   <span>Route</span>
                 </button>
               </div>
-              <p className="text-gray-700 text-xs sm:text-sm break-words">{delivery.pickup}</p>
+              <p className="text-gray-700 text-xs break-words">{delivery.pickup}</p>
               {delivery.supplierName && (  
                 <div className="mt-2 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-1">
@@ -634,7 +631,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               )}
             </div>
             
-            <div className="flex items-center justify-center py-2 sm:py-0">
+            <div className="flex items-center justify-center py-1">
               <div className="w-full border-t-2 border-dashed border-gray-300 relative">
                 <div className="absolute left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-2">
                   <div className="flex items-center gap-1 text-gray-500">
@@ -645,12 +642,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
             </div>
             
-            <div className="bg-green-50 p-3 sm:p-4 rounded-xl">
+            <div className="bg-green-50 p-3 rounded-xl">
               <div className="flex items-center gap-1.5 mb-2">
                 <MapPin size={16} className="text-green-500" />
-                <span className="font-semibold text-xs sm:text-sm">Deliver To</span>
+                <span className="font-semibold text-xs">Deliver To</span>
               </div>
-              <p className="text-gray-700 text-xs sm:text-sm break-words">{delivery.dropoff}</p>
+              <p className="text-gray-700 text-xs break-words">{delivery.dropoff}</p>
               {delivery.dropoffAddress && (
                 <div className="mt-2 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-1">
@@ -669,15 +666,15 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           {/* Additional info */}
           <div className="flex flex-wrap gap-2">
             <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-lg">
-              <Package size={14} className="text-gray-600" />
+              <Package size={14} className="text-gray-600 flex-shrink-0" />
               <span className="text-xs font-medium whitespace-nowrap">{delivery.items} item{delivery.items !== 1 ? "s" : ""}</span>
             </div>
             <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-lg">
-              <Navigation size={14} className="text-gray-600" />
+              <Navigation size={14} className="text-gray-600 flex-shrink-0" />
               <span className="text-xs font-medium whitespace-nowrap">{delivery.distance}</span>
             </div>
             <div className="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-lg">
-              <Clock size={14} className="text-gray-600" />
+              <Clock size={14} className="text-gray-600 flex-shrink-0" />
               <span className="text-xs font-medium whitespace-nowrap">~15-20 min</span>
             </div>
           </div>
@@ -685,14 +682,14 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           {/* Proof Upload Status Indicator */}
           {hasProofUploaded && currentStatus === 'SHIPPED' && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-              <CheckCircle size={18} className="text-green-600" />
+              <CheckCircle size={18} className="text-green-600 flex-shrink-0" />
               <span className="text-sm text-green-700">Proof of delivery uploaded. Ready to complete delivery.</span>
             </div>
           )}
 
           {/* Status/Error Messages */}
           {message && (
-            <div className={`p-3 sm:p-4 rounded-xl flex items-start gap-3 ${
+            <div className={`p-3 rounded-xl flex items-start gap-3 ${
               message.type === 'success' ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
             }`}>
               {message.type === 'success' ? (
@@ -700,7 +697,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               ) : (
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
               )}
-              <p className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'} break-words`}>
+              <p className={`text-sm ${message.type === 'success' ? 'text-green-700' : 'text-red-700'} break-words flex-1`}>
                 {message.text}
               </p>
             </div>
@@ -734,12 +731,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <p className="text-xs text-gray-500">Received By</p>
-                        <p className="text-sm font-medium">{proof.receivedBy}</p>
+                        <p className="text-sm font-medium break-words">{proof.receivedBy}</p>
                       </div>
                       <div>
                         <p className="text-xs text-gray-500">Received At</p>
-                        <p className="text-sm font-medium">
-                          {new Date(proof.receivedAt).toLocaleString()}
+                        <p className="text-sm font-medium break-words">
+                          {formatDate(proof.receivedAt)}
                         </p>
                       </div>
                     </div>
@@ -764,7 +761,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           )}
 
           {/* Action buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             
             {currentStatus === 'PROCESSING' && (
               <>
@@ -772,9 +769,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   onClick={handlePickup}
                   disabled={isLoading || !!message}
                   className={`
-                    w-full px-4 py-3 sm:py-4 rounded-xl font-semibold 
+                    w-full px-4 py-4 rounded-xl font-semibold 
                     transition flex items-center justify-center gap-2 
-                    text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed
+                    text-sm disabled:opacity-50 disabled:cursor-not-allowed
                     ${isLoading && actionType === 'pickup'
                       ? 'bg-yellow-500 text-white cursor-wait' 
                       : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
@@ -789,7 +786,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <button
                   onClick={() => setShowCancelReason(true)}
                   disabled={isLoading}
-                  className="w-full bg-white border border-red-300 text-red-600 px-4 py-3 sm:py-4 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50"
+                  className="w-full bg-white border border-red-300 text-red-600 px-4 py-4 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                 >
                   <XCircle size={18} />
                   <span>Cancel Order</span>
@@ -803,7 +800,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <button
                   onClick={() => setShowProofModal(true)}
                   disabled={isLoading || !!message}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 sm:py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                 >
                   <Camera size={18} />
                   <span>Upload Proof of Delivery</span>
@@ -814,9 +811,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   onClick={handleCompleteDelivery}
                   disabled={isLoading || !!message || !hasProofUploaded}
                   className={`
-                    w-full px-4 py-3 sm:py-4 rounded-xl font-semibold 
+                    w-full px-4 py-4 rounded-xl font-semibold 
                     transition flex items-center justify-center gap-2 
-                    text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed
+                    text-sm disabled:opacity-50 disabled:cursor-not-allowed
                     ${hasProofUploaded 
                       ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg' 
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -830,7 +827,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <button
                   onClick={() => setShowFailedReason(true)}
                   disabled={isLoading}
-                  className="w-full bg-white border border-red-300 text-red-600 px-4 py-3 sm:py-4 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50"
+                  className="w-full bg-white border border-red-300 text-red-600 px-4 py-4 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
                 >
                   <AlertTriangle size={18} />
                   <span>Delivery Failed</span>
@@ -839,7 +836,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             )}
 
             {currentStatus === 'DELIVERED' && (
-              <div className="col-span-1 sm:col-span-2 bg-green-50 border border-green-200 rounded-xl p-4 text-center">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
                 <div className="flex items-center justify-center gap-2 text-green-700">
                   <CheckCircle size={20} />
                   <span className="font-semibold">Order Delivered Successfully</span>
@@ -852,24 +849,23 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
       {/* Proof of Delivery Modal */}
       {showProofModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">Upload Proof of Delivery</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-white rounded-t-xl sm:rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-5 sm:p-6">
+              <div className="flex justify-between items-center mb-5">
+                <h2 className="text-xl font-bold">Upload Proof of Delivery</h2>
                 <button
                   onClick={() => {
                     setShowProofModal(false);
-                    // Don't clear proof data when closing modal
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 p-2"
                 >
                   ✕
                 </button>
               </div>
 
               {/* Photo Upload */}
-              <div className="mb-6">
+              <div className="mb-5">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Delivery Photo *
                 </label>
@@ -891,10 +887,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={openCamera}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
                     >
                       <Camera className="h-8 w-8 text-gray-400" />
                       <p className="text-sm text-gray-600">Take Photo</p>
@@ -902,7 +898,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     </button>
                     <button
                       onClick={openGallery}
-                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-green-500 transition-colors flex flex-col items-center gap-2"
                     >
                       <Image className="h-8 w-8 text-gray-400" />
                       <p className="text-sm text-gray-600">Choose from Gallery</p>
@@ -930,7 +926,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
 
               {/* Recipient Name */}
-              <div className="mb-6">
+              <div className="mb-5">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Recipient Name *
                 </label>
@@ -939,12 +935,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   value={receivedByName}
                   onChange={(e) => setReceivedByName(e.target.value)}
                   placeholder="Enter recipient's full name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                 />
               </div>
 
-              {/* Signature Pad - FIXED VERSION */}
-              <div className="mb-6">
+              {/* Signature Pad */}
+              <div className="mb-5">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Recipient Signature *
                 </label>
@@ -982,19 +978,19 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <button
+                  onClick={() => setShowProofModal(false)}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold text-sm"
+                >
+                  Cancel
+                </button>
                 <button
                   onClick={handleUploadProofOnly}
                   disabled={isLoading}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? 'Uploading...' : 'Upload Proof Only'}
-                </button>
-                <button
-                  onClick={() => setShowProofModal(false)}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold"
-                >
-                  Cancel
                 </button>
               </div>
             </div>
@@ -1004,33 +1000,35 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
       {/* Cancel Reason Modal */}
       {showCancelReason && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h4 className="font-semibold text-lg mb-4">Cancel Order</h4>
-            <textarea
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              placeholder="Please provide a reason for cancellation..."
-              className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[100px] mb-4"
-              rows={4}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={handleCancel}
-                disabled={isLoading || !cancelReason.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
-              >
-                {isLoading && actionType === 'cancel' ? 'Processing...' : 'Confirm Cancel'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowCancelReason(false);
-                  setCancelReason('');
-                }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold text-sm"
-              >
-                Back
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-white rounded-t-xl sm:rounded-xl max-w-md w-full">
+            <div className="p-5">
+              <h4 className="font-semibold text-lg mb-4">Cancel Order</h4>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Please provide a reason for cancellation..."
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[100px] mb-4"
+                rows={4}
+              />
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <button
+                  onClick={() => {
+                    setShowCancelReason(false);
+                    setCancelReason('');
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold text-sm"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={isLoading || !cancelReason.trim()}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
+                >
+                  {isLoading && actionType === 'cancel' ? 'Processing...' : 'Confirm Cancel'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1038,33 +1036,35 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
       {/* Failed Delivery Modal */}
       {showFailedReason && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h4 className="font-semibold text-lg mb-4">Report Failed Delivery</h4>
-            <textarea
-              value={failedReason}
-              onChange={(e) => setFailedReason(e.target.value)}
-              placeholder="Please provide a reason for failed delivery..."
-              className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[100px] mb-4"
-              rows={4}
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={handleFailedDelivery}
-                disabled={isLoading || !failedReason.trim()}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
-              >
-                {isLoading && actionType === 'failed' ? 'Processing...' : 'Confirm Failed Delivery'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowFailedReason(false);
-                  setFailedReason('');
-                }}
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold text-sm"
-              >
-                Back
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end sm:items-center justify-center">
+          <div className="bg-white rounded-t-xl sm:rounded-xl max-w-md w-full">
+            <div className="p-5">
+              <h4 className="font-semibold text-lg mb-4">Report Failed Delivery</h4>
+              <textarea
+                value={failedReason}
+                onChange={(e) => setFailedReason(e.target.value)}
+                placeholder="Please provide a reason for failed delivery..."
+                className="w-full p-3 border border-gray-300 rounded-lg text-sm min-h-[100px] mb-4"
+                rows={4}
+              />
+              <div className="flex flex-col-reverse sm:flex-row gap-2">
+                <button
+                  onClick={() => {
+                    setShowFailedReason(false);
+                    setFailedReason('');
+                  }}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-3 rounded-lg font-semibold text-sm"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleFailedDelivery}
+                  disabled={isLoading || !failedReason.trim()}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
+                >
+                  {isLoading && actionType === 'failed' ? 'Processing...' : 'Confirm Failed Delivery'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1084,4 +1084,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-                                          }
+          }
