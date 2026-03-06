@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
-// ONLY using your existing query - NO new types
+// Use your existing query
 export const ACTIVE_ORDER_LIST = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -79,8 +79,8 @@ export const ACTIVE_ORDER_LIST = gql`
   }
 `;
 
-// Types based on your existing data structure
-type Payment = {
+// Types
+export type Payment = {
   id: string;
   amount: number;
   method: string;
@@ -89,11 +89,23 @@ type Payment = {
   orderNumber: string;
   orderStatus: string;
   createdAt: string;
+  deliveryAddress?: {
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   customerName?: string;
-  customerEmail?: string;
+  items?: Array<{
+    id: string;
+    productName: string;
+    quantity: number;
+    price: number;
+  }>;
 };
 
-type PaymentSummary = {
+export type PaymentSummary = {
   totalEarnings: number;
   pendingPayments: number;
   completedPayments: number;
@@ -101,8 +113,15 @@ type PaymentSummary = {
   thisMonthEarnings: number;
 };
 
+export type PaymentFilters = {
+  status?: string;
+  dateRange?: 'today' | 'week' | 'month' | 'custom';
+  startDate?: string;
+  endDate?: string;
+};
+
 interface RiderPaymentHistoryProps {
-  supplierId?: string; // This filters by supplier (rider)
+  riderId?: string; // supplier/rider ID to filter orders
   showSummary?: boolean;
   className?: string;
 }
@@ -184,7 +203,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
 
 // Main Component
 export default function RiderPaymentHistory({
-  supplierId,
+  riderId,
   showSummary = true,
   className = '',
 }: RiderPaymentHistoryProps) {
@@ -196,8 +215,7 @@ export default function RiderPaymentHistory({
     thisWeekEarnings: 0,
     thisMonthEarnings: 0,
   });
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [filters, setFilters] = useState<PaymentFilters>({});
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10,
@@ -205,22 +223,31 @@ export default function RiderPaymentHistory({
     totalPages: 0,
   });
 
-  // Build filter for orders based on supplier
+  // Build filter for orders
   const buildOrderFilter = () => {
     const filter: any = {};
     
-    // If supplierId is provided, filter orders by supplier
-    // Note: This depends on how your OrderFilterInput works
-    // You might need to adjust this based on your actual filter structure
-    if (supplierId) {
-      // This is an assumption - adjust based on your actual schema
-      filter.supplierId = supplierId;
+    // If riderId is provided, filter by supplier
+    if (riderId) {
+      filter.supplierId = riderId;
+    }
+
+    // Add date filters if needed
+    if (filters.startDate || filters.endDate) {
+      filter.createdAt = {};
+      if (filters.startDate) filter.createdAt.gte = filters.startDate;
+      if (filters.endDate) filter.createdAt.lte = filters.endDate;
+    }
+
+    // Add status filter if needed
+    if (filters.status) {
+      filter.status = filters.status;
     }
 
     return filter;
   };
 
-  // Query orders using ONLY your existing query
+  // Query orders
   const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST, {
     variables: {
       filter: buildOrderFilter(),
@@ -246,39 +273,14 @@ export default function RiderPaymentHistory({
       let thisMonthEarnings = 0;
 
       const now = new Date();
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
-      startOfWeek.setHours(0, 0, 0, 0);
-      
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       orders.forEach((order: any) => {
-        // Only process orders that have payments
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
             const orderDate = new Date(order.createdAt);
             
-            // Apply status filter if set
-            if (statusFilter && payment.status !== statusFilter) {
-              return;
-            }
-
-            // Apply date filter if set
-            if (dateFilter !== 'all') {
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              
-              if (dateFilter === 'today' && orderDate < today) {
-                return;
-              }
-              if (dateFilter === 'week' && orderDate < startOfWeek) {
-                return;
-              }
-              if (dateFilter === 'month' && orderDate < startOfMonth) {
-                return;
-              }
-            }
-
             // Create payment object
             extractedPayments.push({
               id: payment.id,
@@ -289,9 +291,15 @@ export default function RiderPaymentHistory({
               orderNumber: order.orderNumber,
               orderStatus: order.status,
               createdAt: order.createdAt,
+              deliveryAddress: order.address,
               customerName: order.user ? 
-                `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
-              customerEmail: order.user?.email,
+                `${order.user.firstName} ${order.user.lastName}` : undefined,
+              items: order.items?.map((item: any) => ({
+                id: item.id,
+                productName: item.product?.name || 'Unknown',
+                quantity: item.quantity,
+                price: item.price,
+              })),
             });
 
             // Calculate summaries
@@ -316,11 +324,6 @@ export default function RiderPaymentHistory({
         }
       });
 
-      // Sort payments by date (newest first)
-      extractedPayments.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
       setPayments(extractedPayments);
       setSummary({
         totalEarnings,
@@ -340,21 +343,45 @@ export default function RiderPaymentHistory({
         });
       }
     }
-  }, [data, statusFilter, dateFilter]);
+  }, [data]);
 
-  const handleStatusFilterChange = (status: string) => {
-    setStatusFilter(status);
+  const handleFilterChange = (newFilters: Partial<PaymentFilters>) => {
+    setFilters({ ...filters, ...newFilters });
     setPagination({ ...pagination, page: 1 });
-  };
-
-  const handleDateFilterChange = (range: 'all' | 'today' | 'week' | 'month') => {
-    setDateFilter(range);
-    setPagination({ ...pagination, page: 1 });
+    // Refetch with new filters
+    setTimeout(() => refetch(), 0);
   };
 
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
-    refetch();
+  };
+
+  const handleDateRangeChange = (range: string) => {
+    const now = new Date();
+    let startDate = '';
+    let endDate = now.toISOString().split('T')[0];
+
+    switch (range) {
+      case 'today':
+        startDate = endDate;
+        break;
+      case 'week':
+        const weekAgo = new Date(now.setDate(now.getDate() - 7));
+        startDate = weekAgo.toISOString().split('T')[0];
+        break;
+      case 'month':
+        const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+        startDate = monthAgo.toISOString().split('T')[0];
+        break;
+      default:
+        return;
+    }
+
+    handleFilterChange({ 
+      dateRange: range as any, 
+      startDate, 
+      endDate 
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -407,19 +434,9 @@ export default function RiderPaymentHistory({
           <div className="flex flex-wrap gap-2">
             {/* Date Range Quick Filters */}
             <button
-              onClick={() => handleDateFilterChange('all')}
+              onClick={() => handleDateRangeChange('today')}
               className={`px-3 py-2 text-sm font-medium rounded-md ${
-                dateFilter === 'all' 
-                  ? 'bg-blue-100 text-blue-700 border-blue-300' 
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All Time
-            </button>
-            <button
-              onClick={() => handleDateFilterChange('today')}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${
-                dateFilter === 'today' 
+                filters.dateRange === 'today' 
                   ? 'bg-blue-100 text-blue-700 border-blue-300' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -427,9 +444,9 @@ export default function RiderPaymentHistory({
               Today
             </button>
             <button
-              onClick={() => handleDateFilterChange('week')}
+              onClick={() => handleDateRangeChange('week')}
               className={`px-3 py-2 text-sm font-medium rounded-md ${
-                dateFilter === 'week' 
+                filters.dateRange === 'week' 
                   ? 'bg-blue-100 text-blue-700 border-blue-300' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -437,9 +454,9 @@ export default function RiderPaymentHistory({
               This Week
             </button>
             <button
-              onClick={() => handleDateFilterChange('month')}
+              onClick={() => handleDateRangeChange('month')}
               className={`px-3 py-2 text-sm font-medium rounded-md ${
-                dateFilter === 'month' 
+                filters.dateRange === 'month' 
                   ? 'bg-blue-100 text-blue-700 border-blue-300' 
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -450,8 +467,8 @@ export default function RiderPaymentHistory({
             {/* Status Filter */}
             <select
               className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              onChange={(e) => handleStatusFilterChange(e.target.value)}
-              value={statusFilter}
+              onChange={(e) => handleFilterChange({ status: e.target.value || undefined })}
+              value={filters.status || ''}
             >
               <option value="">All Status</option>
               <option value="PENDING">Pending</option>
@@ -513,7 +530,7 @@ export default function RiderPaymentHistory({
                   Method
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Payment Status
+                  Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Order Status
@@ -531,9 +548,6 @@ export default function RiderPaymentHistory({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {payment.customerName || 'N/A'}
-                    {payment.customerEmail && (
-                      <div className="text-xs text-gray-400">{payment.customerEmail}</div>
-                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {formatCurrency(payment.amount)}
@@ -594,4 +608,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-          }
+                                      }
