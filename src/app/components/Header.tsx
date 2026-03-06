@@ -540,6 +540,10 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleLogoClick = () =>{
+    router.push('/Login');  
+    dispatch(setActiveIndex(1));
+  }
   return (
     <div>
       <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
@@ -553,6 +557,7 @@ const Header: React.FC = () => {
               alt="Logo" 
               height={100} 
               width={100} 
+              onClick={()=>handleLogoClick()}
               className="h-[100%] w-[auto] rounded"
             />
           </div>
