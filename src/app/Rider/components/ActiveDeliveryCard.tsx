@@ -105,7 +105,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           const context = canvas.getContext('2d');
     
           // Scale context to match CSS size
-          context.scale(scale, scale);       
+          ctx.scale(scale, scale);       
           ctx.strokeStyle = '#000';
           ctx.lineWidth = 2;
           ctx.lineCap = 'round';
