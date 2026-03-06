@@ -26,6 +26,15 @@ import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 import DeliveryMap from './DeliveryMap';
 
+export const UPLOAD = gql`
+mutation UploadDeliveryProof($file: ProofOfDeliveryInput) {
+  uploadDeliveryProof(file: $file) {
+    statusText
+  }
+}
+`
+
+
 interface ActiveDeliveryCardProps {
   delivery: Delivery;
   isMobile: boolean;
