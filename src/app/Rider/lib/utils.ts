@@ -167,7 +167,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       dropoffAddress,
       pickupAddress,
       supplierName,
-      proofOfDelivery,
+      proofOfDelivery:proofOfDelivery,
       supplier,
       supplierContact: supplierContact || "",
       subtotal: formatPeso(subtotal),
