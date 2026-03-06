@@ -95,7 +95,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     supplierName: string;
     supplierContact: string;
     supplier?: Supplier;
-    proofOfDelivery?:ProofOfDelivery;
+    proofOfDelivery?:ProofOfDelivery[];
     subtotal: string;
     supplierItems?: OrderItem[];
     isPartialDelivery: boolean;
