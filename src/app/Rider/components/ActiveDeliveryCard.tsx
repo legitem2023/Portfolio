@@ -222,7 +222,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   // Get coordinates from both mouse and touch events
   const getCoordinates = (e:any) => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
+   if (!canvas) return;
+   const rect = canvas.getBoundingClientRect();
     
     // For touch events
     if (e.touches && e.touches[0]) {
