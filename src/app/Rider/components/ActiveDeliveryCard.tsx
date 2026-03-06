@@ -98,7 +98,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     canvas.width = displayWidth * scale;
     canvas.height = displayHeight * scale;
     
-    const context = canvas.getContext('2d');
+    const context:any = canvas.getContext('2d');
     
     // Scale context to match CSS size
     context.scale(scale, scale);
