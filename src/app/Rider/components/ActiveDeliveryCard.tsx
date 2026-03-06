@@ -254,7 +254,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   )}
                 </div>
               </div>
-              <div className="space-y-1.5">
+              {/* <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
                   <Building size={14} className="text-blue-400 flex-shrink-0" />
                   <span className="text-sm sm:text-base break-words">{delivery.restaurant}</span>
@@ -271,7 +271,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                   <Phone size={14} className="text-gray-500 flex-shrink-0" />
                   <span className="text-sm sm:text-base">{delivery.customerContact}</span>
                 </div>
-              </div>
+              </div>*/}
             </div>
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 p-3 sm:p-4 rounded-xl sm:bg-transparent">
               <div className="text-2xl sm:text-3xl font-bold text-green-600 break-words">{delivery.payout}</div>
@@ -383,11 +383,15 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 </button>
               </div>
               <p className="text-gray-700 text-xs sm:text-sm break-words">{delivery.pickup}</p>
-              {delivery.supplierName && (
-                <div className="mt-2 text-xs text-gray-500">
+              {delivery.supplierName && (  
+                <div className="mt-2 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-1">
-                    <Building size={10} />
+                    <Builing size={10} />
                     <span className="truncate">{delivery.supplierName}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Phone size={10} />
+                    <span>{delivery.supplierContact}</span>
                   </div>
                 </div>
               )}
