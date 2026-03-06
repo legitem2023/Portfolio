@@ -220,7 +220,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   // Get coordinates from both mouse and touch events
-  const getCoordinates = (e) => {
+  const getCoordinates = (e:any) => {
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     
@@ -241,7 +241,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   // Handle signature drawing
-  const startDrawing = (e) => {
+  const startDrawing = (e:any) => {
     if (!ctx) return;
     
     // Prevent scrolling on mobile
@@ -256,7 +256,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setIsDrawing(true);
   };
   
-  const draw = (e) => {
+  const draw = (e:any) => {
     if (!isDrawing || !ctx) return;
     
     // Prevent scrolling on mobile
