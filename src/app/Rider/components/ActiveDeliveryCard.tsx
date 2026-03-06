@@ -219,57 +219,68 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     e.target.value = '';
   };
 
-  // Get coordinates from both mouse and touch events
-  const getCoordinates = (e:any) => {
-    const canvas = canvasRef.current;
-   if (!canvas) return;
-   const rect = canvas.getBoundingClientRect();
-    
-    // For touch events
-    if (e.touches && e.touches[0]) {
-      return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
-      };
-    } 
-    // For mouse events
-    else {
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-  };
+// Replace the getCoordinates function (around line 245-267) with this:
 
-  // Handle signature drawing
-  const startDrawing = (e:any) => {
-    if (!ctx) return;
-    
-    // Prevent scrolling on mobile
-    if (e.touches) {
-      e.preventDefault();
-    }
-    
-    const { x, y } = getCoordinates(e);
-    
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    setIsDrawing(true);
-  };
+const getCoordinates = (e: any) => {
+  const canvas = canvasRef.current;
+  if (!canvas) return undefined;
   
-  const draw = (e:any) => {
-    if (!isDrawing || !ctx) return;
-    
-    // Prevent scrolling on mobile
-    if (e.touches) {
-      e.preventDefault();
-    }
-    
-    const { x, y } = getCoordinates(e);
-    
-    ctx.lineTo(x, y);
-    ctx.stroke();
-  };
+  const rect = canvas.getBoundingClientRect();
+  
+  // For touch events
+  if (e.touches && e.touches[0]) {
+    return {
+      x: e.touches[0].clientX - rect.left,
+      y: e.touches[0].clientY - rect.top
+    };
+  } 
+  // For mouse events
+  else {
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+};
+
+// Then update the startDrawing function (around line 270-285):
+
+const startDrawing = (e: any) => {
+  if (!ctx) return;
+  
+  // Prevent scrolling on mobile
+  if (e.touches) {
+    e.preventDefault();
+  }
+  
+  const coords = getCoordinates(e);
+  if (!coords) return; // Add this check
+  
+  const { x, y } = coords;
+  
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  setIsDrawing(true);
+};
+
+// And update the draw function (around line 287-302):
+
+const draw = (e: any) => {
+  if (!isDrawing || !ctx) return;
+  
+  // Prevent scrolling on mobile
+  if (e.touches) {
+    e.preventDefault();
+  }
+  
+  const coords = getCoordinates(e);
+  if (!coords) return; // Add this check
+  
+  const { x, y } = coords;
+  
+  ctx.lineTo(x, y);
+  ctx.stroke();
+};
   
   const stopDrawing = () => {
     if (!ctx) return;
