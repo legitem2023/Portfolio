@@ -669,7 +669,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
           )}
 
           {/* Action buttons */}
+          { delivery.proofOfDelivery.length > 0?(
+          
+          ):(<></>) }
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            
             {currentStatus === 'PROCESSING' && (
               <>
                 <button
