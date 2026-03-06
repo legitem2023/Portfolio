@@ -229,7 +229,7 @@ export default function RiderPaymentHistory({
     
     // If riderId is provided, filter by supplier
     if (riderId) {
-      filter.supplierId = riderId;
+      filter.riderId = riderId;
     }
 /*
     // Add date filters if needed
