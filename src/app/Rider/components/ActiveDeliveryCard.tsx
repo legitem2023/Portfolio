@@ -93,8 +93,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     const displayWidth = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;
     
-    // Set internal resolution 5x higher
-    const scale = 5;
+    // Set internal resolution (2x for better quality without breaking coordinates)
+    const scale = 2;
     canvas.width = displayWidth * scale;
     canvas.height = displayHeight * scale;
     
@@ -107,8 +107,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     // Set up canvas properties
     context.lineJoin = 'round';
     context.lineCap = 'round';
-    context.lineWidth = 3;
+    context.lineWidth = 2;
     context.strokeStyle = '#2e8b57';
+    
+    // Fill with white background
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, displayWidth, displayHeight);
     
     setCtx(context);
     
@@ -121,8 +125,21 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       context.scale(scale, scale);
       context.lineJoin = 'round';
       context.lineCap = 'round';
-      context.lineWidth = 3;
+      context.lineWidth = 2;
       context.strokeStyle = '#2e8b57';
+      
+      // Restore white background after resize
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, displayWidth, displayHeight);
+      
+      // Redraw existing signature if any
+      if (signature) {
+        const img = new Image();
+        img.onload = () => {
+          context.drawImage(img, 0, 0, displayWidth, displayHeight);
+        };
+        img.src = signature;
+      }
     };
     
     window.addEventListener('resize', handleResize);
@@ -130,7 +147,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, []);
+  }, [signature]);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -228,10 +245,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     const rect = canvas.getBoundingClientRect();
     
     // For touch events
-    if (e.touches && e.touches[0]) {
+    if (e.touches) {
+      e.preventDefault();
+      const touch = e.touches[0];
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
       };
     } 
     // For mouse events
@@ -245,12 +264,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
   // Handle signature drawing
   const startDrawing = (e: any) => {
-    if (!ctx) return;
-    
-    // Prevent scrolling on mobile
-    if (e.touches) {
-      e.preventDefault();
-    }
+    e.preventDefault();
+    if (!ctx || !canvasRef.current) return;
     
     const coords = getCoordinates(e);
     if (!coords) return;
@@ -263,12 +278,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
   
   const draw = (e: any) => {
-    if (!isDrawing || !ctx) return;
-    
-    // Prevent scrolling on mobile
-    if (e.touches) {
-      e.preventDefault();
-    }
+    e.preventDefault();
+    if (!isDrawing || !ctx || !canvasRef.current) return;
     
     const coords = getCoordinates(e);
     if (!coords) return;
@@ -288,15 +299,15 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const clearSignature = (e: React.MouseEvent) => {
     e.preventDefault();
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !ctx) return;
     
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const displayWidth = canvas.clientWidth;
+    const displayHeight = canvas.clientHeight;
     
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, displayWidth, displayHeight);
     // Fill with white background
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, displayWidth, displayHeight);
     setSignature(null);
   };
 
@@ -317,10 +328,37 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       return;
     }
 
-    if (!signature) {
+    // Capture signature from canvas
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      setMessage({ type: 'error', text: 'Signature pad not available' });
+      return;
+    }
+
+    // Check if signature is empty (all white)
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    let hasDrawing = false;
+    
+    // Check if any non-white pixel exists (with some tolerance)
+    for (let i = 0; i < pixels.length; i += 4) {
+      if (pixels[i] < 250 || pixels[i+1] < 250 || pixels[i+2] < 250) {
+        hasDrawing = true;
+        break;
+      }
+    }
+    
+    if (!hasDrawing) {
       setMessage({ type: 'error', text: 'Please capture the recipient\'s signature' });
       return;
     }
+
+    // Convert canvas to data URL
+    const signatureData = canvas.toDataURL('image/png');
+    setSignature(signatureData);
 
     setActionType('delivered');
 
@@ -331,7 +369,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         receivedBy: receivedByName,
         receivedAt: new Date().toISOString(),
         photoUrl: proofPhoto,
-        signatureData: signature
+        signatureData: signatureData
       };
 
       await uploadProof({
@@ -862,7 +900,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 <button
                   onClick={() => {
                     setShowProofModal(false);
-                    // Don't clear proof data when closing modal
                   }}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -960,12 +997,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     onTouchStart={startDrawing}
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
-                    
-                    className="w-full h-[150px] border border-gray-200 rounded-lg bg-gray-50 cursor-crosshair touch-none"
-                
+                    onTouchCancel={stopDrawing}
+                    className="w-full h-[150px] border border-gray-200 rounded-lg bg-white cursor-crosshair touch-none"
                     style={{
-                      backgroundColor: '#fff',
-                      display: 'block'
+                      display: 'block',
+                      backgroundColor: '#ffffff'
                     }}
                   />
                 </div>
@@ -982,18 +1018,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     Clear Signature
                   </button>
                 </div>
-                
-                {/* Preview signature if exists */}
-                {signature && (
-                  <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500 mb-2">Signature Preview:</p>
-                    <img 
-                      src={signature} 
-                      alt="Signature preview" 
-                      className="max-h-16 border border-gray-200 rounded bg-white"
-                    />
-                  </div>
-                )}
               </div>
 
               {/* Action Buttons */}
@@ -1099,4 +1123,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-    }
+}
