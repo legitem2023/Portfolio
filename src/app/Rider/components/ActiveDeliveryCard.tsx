@@ -82,15 +82,17 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-
-  // Initialize canvas with high resolution
+  const [ctx, setCtx] = useState(null);
+  
+  // Initialize canvas context with high resolution
   useEffect(() => {
-    if (showProofModal && canvasRef.current) {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    
     // Get the display size (CSS pixels)
     const displayWidth = canvas.clientWidth;
     const displayHeight = canvas.clientHeight;
+    
     // Set internal resolution 5x higher
     const scale = 5;
     canvas.width = displayWidth * scale;
@@ -105,38 +107,29 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     context.lineJoin = 'round';
     context.lineCap = 'round';
     context.lineWidth = 3;
-      //const canvas = canvasRef.current;
-      //const ctx = canvas.getContext('2d');
-     /* if (ctx) {
-        // Set canvas size with higher resolution (2x for retina displays)
-        const container = canvas.parentElement;
-        if (container) {
-          
-          // Get the display size (CSS pixels)
-          const displayWidth = canvas.clientWidth;
-          const displayHeight = canvas.clientHeight;
+    context.strokeStyle = '#2e8b57';
     
-          // Set internal resolution 5x higher
-          const scale = 5;
-          canvas.width = displayWidth * scale;
-          canvas.height = displayHeight * scale;
+    setCtx(context);
     
-          const context = canvas.getContext('2d');
+    // Handle window resize to maintain high resolution
+    const handleResize = () => {
+      const displayWidth = canvas.clientWidth;
+      const displayHeight = canvas.clientHeight;
+      canvas.width = displayWidth * scale;
+      canvas.height = displayHeight * scale;
+      context.scale(scale, scale);
+      context.lineJoin = 'round';
+      context.lineCap = 'round';
+      context.lineWidth = 3;
+      context.strokeStyle = '#2e8b57';
+    };
     
-          // Scale context to match CSS size
-          ctx.scale(scale, scale);       
-          ctx.strokeStyle = '#000';
-          ctx.lineWidth = 2;
-          ctx.lineCap = 'round';
-          ctx.lineJoin = 'round';
-          
-          // White background
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-      }*/
-    }
-  }, [showProofModal]);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -226,73 +219,61 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     e.target.value = '';
   };
 
-  // Helper function to get accurate coordinates considering canvas scaling
-  const getCoordinates = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+  // Get coordinates from both mouse and touch events
+  const getCoordinates = (e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    
     const rect = canvas.getBoundingClientRect();
     
-    // Calculate scale factors
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
+    // For touch events
+    if (e.touches && e.touches[0]) {
+      return {
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top
+      };
+    } 
+    // For mouse events
+    else {
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+  };
+
+  // Handle signature drawing
+  const startDrawing = (e) => {
+    if (!ctx) return;
     
-    let clientX, clientY;
-    
-    if ('touches' in e) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
+    // Prevent scrolling on mobile
+    if (e.touches) {
+      e.preventDefault();
     }
     
-    // Calculate canvas coordinates accounting for scaling
-    const x = (clientX - rect.left) * scaleX;
-    const y = (clientY - rect.top) * scaleY;
-    
-    return { x, y };
-  };
-
-  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    setIsDrawing(true);
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    const { x, y } = getCoordinates(e);
     
     ctx.beginPath();
-    
-    const { x, y } = getCoordinates(e);
     ctx.moveTo(x, y);
+    setIsDrawing(true);
   };
-
-  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
-    if (!isDrawing) return;
+  
+  const draw = (e) => {
+    if (!isDrawing || !ctx) return;
     
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    // Prevent scrolling on mobile
+    if (e.touches) {
+      e.preventDefault();
+    }
     
     const { x, y } = getCoordinates(e);
+    
     ctx.lineTo(x, y);
     ctx.stroke();
   };
-
-  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault();
+  
+  const stopDrawing = () => {
+    if (!ctx) return;
+    ctx.closePath();
     setIsDrawing(false);
-    
-    if (canvasRef.current) {
-      // Get the high-quality signature data
-      setSignature(canvasRef.current.toDataURL('image/png', 1.0));
-    }
   };
 
   const clearSignature = (e: React.MouseEvent) => {
