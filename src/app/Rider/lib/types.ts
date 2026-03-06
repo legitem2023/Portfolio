@@ -81,6 +81,13 @@ export const ACTIVE_ORDER_LIST = gql`
           lat
           lng
         }
+        proofOfDelivery {
+          id
+          photoUrl
+          signatureData
+          receivedBy
+          receivedAt
+        }
         items {
           id
           orderId
@@ -251,6 +258,14 @@ export interface OrderUser {
   email: string;
   phone: string;
 }
+export interface ProofOfDelivery {
+  id: String
+  photoUrl: String
+  signatureData: String
+  receivedBy: String
+  receivedAt: String
+}
+
 
 export interface Order {
   id: string;
@@ -263,6 +278,7 @@ export interface Order {
   address: Address;
   items: OrderItem[];
   payments: Payment[];
+  proofOfDelivery: ProofOfDelivery[];
 }
 
 export interface Pagination {
