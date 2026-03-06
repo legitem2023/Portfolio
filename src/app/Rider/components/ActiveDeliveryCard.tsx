@@ -77,77 +77,40 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
   const [receivedByName, setReceivedByName] = useState('');
   const [signature, setSignature] = useState<string | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
   const [hasProofUploaded, setHasProofUploaded] = useState(false);
+  
+  // Canvas refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDrawingRef = useRef(false);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
+  
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
   
-// Initialize canvas context with high resolution
-useEffect(() => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-  
-  // Get the display size (CSS pixels)
-  const displayWidth = canvas.clientWidth;
-  const displayHeight = canvas.clientHeight;
-  
-  // Set internal resolution (2x for better quality without breaking coordinates)
-  const scale = 2;
-  canvas.width = displayWidth * scale;
-  canvas.height = displayHeight * scale;
-  
-  const context = canvas.getContext('2d');
-  if (!context) return;
-  
-  // Scale context to match CSS size
-  context.scale(scale, scale);
-  
-  // Set up canvas properties
-  context.lineJoin = 'round';
-  context.lineCap = 'round';
-  context.lineWidth = 2;
-  context.strokeStyle = '#2e8b57';
-  
-  // Fill with white background
-  context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, displayWidth, displayHeight);
-  
-  setCtx(context);
-  
-  // Handle window resize to maintain high resolution
-  const handleResize = () => {
-    const displayWidth = canvas.clientWidth;
-    const displayHeight = canvas.clientHeight;
-    canvas.width = displayWidth * scale;
-    canvas.height = displayHeight * scale;
-    context.scale(scale, scale);
-    context.lineJoin = 'round';
-    context.lineCap = 'round';
-    context.lineWidth = 2;
-    context.strokeStyle = '#2e8b57';
+  // Initialize canvas
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     
-    // Restore white background after resize
-    context.fillStyle = '#ffffff';
-    context.fillRect(0, 0, displayWidth, displayHeight);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
-    // Redraw existing signature if any
-    if (signature) {
-      const img = document.createElement('img');
-      img.onload = () => {
-        context.drawImage(img, 0, 0, displayWidth, displayHeight);
-      };
-      img.src = signature;
-    }
-  };
-  
-  window.addEventListener('resize', handleResize);
-  
-  return () => {
-    window.removeEventListener('resize', handleResize);
-  };
-}, [signature]);
+    // Set canvas size
+    canvas.width = 400;
+    canvas.height = 200;
+    
+    // Set up context
+    ctx.strokeStyle = '#2e8b57';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Fill with white
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctxRef.current = ctx;
+  }, []);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -224,7 +187,7 @@ useEffect(() => {
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -233,82 +196,78 @@ useEffect(() => {
       };
       reader.readAsDataURL(file);
     }
-    // Clear the input value so the same file can be selected again if needed
     e.target.value = '';
   };
 
-  // Get coordinates from both mouse and touch events
-  const getCoordinates = (e: any) => {
+  // Drawing functions
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
     const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+    const ctx = ctxRef.current;
+    
+    if (!canvas || !ctx) return;
     
     const rect = canvas.getBoundingClientRect();
+    let x, y;
     
-    // For touch events
-    if (e.touches) {
-      e.preventDefault();
-      const touch = e.touches[0];
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    } 
-    // For mouse events
-    else {
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
     }
-  };
-
-  // Handle signature drawing
-  const startDrawing = (e: any) => {
-    e.preventDefault();
-    if (!ctx || !canvasRef.current) return;
     
-    const coords = getCoordinates(e);
-    if (!coords) return;
-    
-    const { x, y } = coords;
+    // Scale coordinates to canvas size
+    x = (x / rect.width) * canvas.width;
+    y = (y / rect.height) * canvas.height;
     
     ctx.beginPath();
     ctx.moveTo(x, y);
-    setIsDrawing(true);
+    isDrawingRef.current = true;
   };
-  
-  const draw = (e: any) => {
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
-    if (!isDrawing || !ctx || !canvasRef.current) return;
+    if (!isDrawingRef.current || !ctxRef.current || !canvasRef.current) return;
     
-    const coords = getCoordinates(e);
-    if (!coords) return;
+    const canvas = canvasRef.current;
+    const ctx = ctxRef.current;
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
     
-    const { x, y } = coords;
+    if ('touches' in e) {
+      x = e.touches[0].clientX - rect.left;
+      y = e.touches[0].clientY - rect.top;
+    } else {
+      x = e.clientX - rect.left;
+      y = e.clientY - rect.top;
+    }
+    
+    // Scale coordinates to canvas size
+    x = (x / rect.width) * canvas.width;
+    y = (y / rect.height) * canvas.height;
     
     ctx.lineTo(x, y);
     ctx.stroke();
   };
-  
+
   const stopDrawing = () => {
-    if (!ctx) return;
-    ctx.closePath();
-    setIsDrawing(false);
+    if (!ctxRef.current) return;
+    ctxRef.current.closePath();
+    isDrawingRef.current = false;
   };
 
   const clearSignature = (e: React.MouseEvent) => {
     e.preventDefault();
     const canvas = canvasRef.current;
+    const ctx = ctxRef.current;
+    
     if (!canvas || !ctx) return;
     
-    const displayWidth = canvas.clientWidth;
-    const displayHeight = canvas.clientHeight;
-    
-    ctx.clearRect(0, 0, displayWidth, displayHeight);
-    // Fill with white background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, displayWidth, displayHeight);
-    setSignature(null);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   };
 
   const handleUploadProofOnly = async () => {
@@ -317,7 +276,6 @@ useEffect(() => {
       return;
     }
 
-    // Validate proof of delivery
     if (!proofPhoto) {
       setMessage({ type: 'error', text: 'Please take a photo of the delivered items' });
       return;
@@ -328,14 +286,13 @@ useEffect(() => {
       return;
     }
 
-    // Capture signature from canvas
     const canvas = canvasRef.current;
     if (!canvas) {
       setMessage({ type: 'error', text: 'Signature pad not available' });
       return;
     }
 
-    // Check if signature is empty (all white)
+    // Check if signature is empty
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
@@ -343,7 +300,6 @@ useEffect(() => {
     const pixels = imageData.data;
     let hasDrawing = false;
     
-    // Check if any non-white pixel exists (with some tolerance)
     for (let i = 0; i < pixels.length; i += 4) {
       if (pixels[i] < 250 || pixels[i+1] < 250 || pixels[i+2] < 250) {
         hasDrawing = true;
@@ -356,14 +312,12 @@ useEffect(() => {
       return;
     }
 
-    // Convert canvas to data URL
     const signatureData = canvas.toDataURL('image/png');
     setSignature(signatureData);
 
     setActionType('delivered');
 
     try {
-      // Upload the proof of delivery only
       const proofInput: ProofOfDeliveryInput = {
         id: delivery.originalOrderId,
         receivedBy: receivedByName,
@@ -399,7 +353,6 @@ useEffect(() => {
     setActionType('delivered');
 
     try {
-      // Update order status to DELIVERED
       const supplierItems = delivery.supplierItems || [];
       for (const item of supplierItems) {
         await updateOrderStatus({
@@ -998,10 +951,12 @@ useEffect(() => {
                     onTouchMove={draw}
                     onTouchEnd={stopDrawing}
                     onTouchCancel={stopDrawing}
-                    className="w-full h-[150px] border border-gray-200 rounded-lg bg-white cursor-crosshair touch-none"
+                    className="w-full h-[200px] cursor-crosshair touch-none"
                     style={{
+                      backgroundColor: '#ffffff',
                       display: 'block',
-                      backgroundColor: '#ffffff'
+                      width: '100%',
+                      height: '200px'
                     }}
                   />
                 </div>
@@ -1123,4 +1078,4 @@ useEffect(() => {
       )}
     </>
   );
-}
+                      }
