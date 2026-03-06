@@ -15,7 +15,7 @@ import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
 import dynamic from 'next/dynamic';
 import { useAuth } from './hooks/useAuth';
-
+import RiderPaymentHistory from './components/RiderPaymentHistory';
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
   ssr: false,
@@ -138,7 +138,11 @@ export default function RiderDashboard() {
           }))}
         />;
       case "performance":
-        return <PerformanceTab isMobile={isMobile} />;
+        return <RiderPaymentHistory
+          riderId={user?.userId}
+          showSummary={true}
+          allowPayoutRequest={false} // Admin can process payouts manually
+        />;
       default:
         return null;
     }
