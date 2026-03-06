@@ -259,11 +259,11 @@ export interface OrderUser {
   phone: string;
 }
 export interface ProofOfDelivery {
-  id: String
-  photoUrl: String
-  signatureData: String
-  receivedBy: String
-  receivedAt: String
+  id: string
+  photoUrl: string
+  signatureData: string
+  receivedBy: string
+  receivedAt: string
 }
 
 
