@@ -271,7 +271,18 @@ export const typeDefs = gql`
     address: Address
     items: [OrderItem]
     payments: [Payment]
+    proofOfDelivery: [ProofOfDelivery]
   }
+
+type ProofOfDelivery {
+  id: String
+  order: Order
+  photoUrl: String
+  signatureData: String
+  receivedBy: String
+  receivedAt: String
+}
+
 
   type OrderItem {
     id: ID
@@ -948,9 +959,18 @@ input OrderPaginationInput {
     apiDashboardStats: DashboardStats
   }
 
+input ProofOfDeliveryInput {
+  id: String
+  receivedBy: String
+  receivedAt: String
+  photoUrl: String
+  signatureData: String
+}
+
+
   type Mutation {
     # Existing mutations
-    
+    uploadDeliveryProof:(file:ProofOfDeliveryInput):Result
     updateUserPhone(id: ID, phone: String): User
     updateUserAvatar(id: ID, avatar: String): User
     addToWishList(userId:ID,productId:ID):Result
