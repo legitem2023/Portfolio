@@ -472,9 +472,10 @@ export default function RiderPaymentHistory({
             >
               <option value="">All Status</option>
               <option value="PENDING">Pending</option>
-              <option value="COMPLETED">Completed</option>
-              <option value="FAILED">Failed</option>
-              <option value="REFUNDED">Refunded</option>
+              <option value="PROCESSING">PROCESSING</option>
+              <option value="SHIPPED">SHIPPED</option>
+              <option value="DELIVERED">DELIVERED</option>
+              <option value="REFUNDED">REFUNDED</option>
             </select>
           </div>
         </div>
