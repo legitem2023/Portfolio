@@ -1,6 +1,6 @@
 // pages/login.tsx
 "use client";
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -19,49 +19,15 @@ interface FormData {
 
 export default function LuxuryLogin() {
   const { user } = useAuth();
-  const { data: session, status } = useSession();
+  const { data:session,status} = useSession();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showTokenModal, setShowTokenModal] = useState(false);
-  const [tokenData, setTokenData] = useState<{
-    raw?: string;
-    decrypted?: any;
-    error?: string;
-  }>({});
   const router = useRouter();
-
-  // Watch for session changes and display token info
-  useEffect(() => {
-    if (status === 'authenticated' && session?.serverToken) {
-      console.log('✅ Session authenticated successfully');
-      console.log('Raw serverToken:', session.serverToken);
-      
-      // Set token data for display
-      const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-      
-      try {
-        const decrypted = decryptToken(session.serverToken, secret);
-        setTokenData({
-          raw: session.serverToken,
-          decrypted: decrypted
-        });
-        console.log('✅ Token decrypted successfully:', decrypted);
-      } catch (error: any) {
-        setTokenData({
-          raw: session.serverToken,
-          error: error.message
-        });
-        console.error('❌ Failed to decrypt token:', error);
-      }
-      
-      setShowTokenModal(true);
-    }
-  }, [session, status]);
-
+console.log(session);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -71,46 +37,47 @@ export default function LuxuryLogin() {
   };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default form submission
     
+   // const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+
+    //const decryption = decryptToken(token,secret);
     if (!formData.email || !formData.password) {
-      alert('Please enter email and password.');
+      // showToast('Please enter email and password.', 'error')
       return;
     }
     
     setIsLoading(true);
     
     try {
+      
+      // Use NextAuth's signIn function with credentials
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false,
+        redirect: false, // Don't redirect automatically
       });
      
-      console.log('SignIn result:', result);
+      //console.log(result);
       
       if (result?.error) {
+        // showToast('Login failed: ' + result.error, 'error')
         console.error('Login error:', result.error);
-        alert('Login failed: ' + result.error);
       } else {
-        console.log('✅ Login successful, waiting for session...');
-        // Session will be picked up by useEffect
+        // showToast('Login successful', 'success')
+        // Use router.push instead of window.location.reload for SPA navigation
+        //console.log(token);
+          //router.push('/'); // Redirect to home page or dashboard
+       
+        // Alternatively, you can refresh the session without full page reload
+        // router.refresh();
       }
     } catch (err) {
       console.error('Login failed:', err);
-      alert('Login failed. Please try again.');
+      // showToast('Login failed', 'error')
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleContinue = () => {
-    setShowTokenModal(false);
-    router.push('/');
-  };
-
-  const handleCloseModal = () => {
-    setShowTokenModal(false);
   };
 
   return (
@@ -216,6 +183,7 @@ export default function LuxuryLogin() {
                 </div>
 
                 <div className="text-sm">
+      
                   <Link href="/ForgotPassword" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                     Forgot Password
                   </Link>
@@ -282,83 +250,6 @@ export default function LuxuryLogin() {
         
         <Footer />
       </div>
-
-      {/* Token Modal - Appears as popup over the page */}
-      {showTokenModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white">
-              <h3 className="text-xl font-semibold text-gray-900">
-                🔐 Login Successful - Token Info
-              </h3>
-              <button
-                onClick={handleCloseModal}
-                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
-              >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-6">
-              {/* Raw Token */}
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Raw Server Token:</p>
-                <div className="bg-gray-50 p-3 rounded border border-gray-200 overflow-x-auto">
-                  <code className="text-xs text-gray-800 break-all">{tokenData.raw}</code>
-                </div>
-              </div>
-              
-              {/* Decrypted Token */}
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">Decrypted Token:</p>
-                {tokenData.error ? (
-                  <div className="bg-red-50 p-3 rounded border border-red-200">
-                    <p className="text-sm text-red-600">❌ Decryption failed: {tokenData.error}</p>
-                  </div>
-                ) : (
-                  <div className="bg-indigo-50 p-4 rounded border border-indigo-200">
-                    <pre className="text-sm text-gray-800 whitespace-pre-wrap overflow-x-auto">
-                      {JSON.stringify(tokenData.decrypted, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </div>
-              
-              {/* Session Info */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                  <span className="text-sm font-medium block text-gray-700">Provider:</span>
-                  <span className="text-sm text-gray-600">{session?.provider || 'N/A'}</span>
-                </div>
-                <div className="bg-gray-50 p-3 rounded border border-gray-200">
-                  <span className="text-sm font-medium block text-gray-700">Status:</span>
-                  <span className="text-sm text-gray-600">{status}</span>
-                </div>
-              </div>
-              
-              {/* Modal Footer */}
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={handleContinue}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Continue to Dashboard →
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
