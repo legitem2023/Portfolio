@@ -54,7 +54,7 @@ export default function LuxuryLogin() {
         
         if (session?.serverToken) {
           console.log('✅ Session found with token');
-          await decryptUserToken(session.serverToken);
+          //await decryptUserToken(session.serverToken);
         } else {
           console.log('No session token found');
           setSessionChecked(true);
