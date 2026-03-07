@@ -104,10 +104,10 @@ export default function LuxuryLogin() {
       setUserData(userDataValid);
       setError(null);
       setSessionChecked(true);
-      setTimeout(async () => {
+      /*setTimeout(async () => {
       // Redirect based on role
         redirectBasedOnRole(userDataValid.role);    
-      }, 3000);
+      }, 3000);*/
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
@@ -195,10 +195,6 @@ export default function LuxuryLogin() {
     } else {
       router.push('/');
     }
-  };
-
-  const handleCloseModal = () => {
-    setShowTokenModal(false);
   };
 
   // Get role badge color
