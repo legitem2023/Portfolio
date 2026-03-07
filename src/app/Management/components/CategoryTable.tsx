@@ -142,11 +142,13 @@ function CategoryImageUploader({
       const cleanBase64 = base64Image.split(',')[1] || base64Image;
       
       console.log('Uploading to category:', category.id, 'Base64 length:', cleanBase64.length);
-
+     if (!base64Image || base64Image.trim() === '') {
+        throw new Error('Generated base64 string is empty');
+     }
       // Upload image using the mutation
       const result = await uploadImage({
         variables: {
-          base64Image: cleanBase64, // Send the base64 string
+          base64Image: base64Image, // Send the base64 string
           categoryId: category.id.toString()
         }
       });
