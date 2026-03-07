@@ -71,6 +71,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [actionType, setActionType] = useState<'pickup' | 'delivered' | 'cancel' | 'failed' | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [showItems, setShowItems] = useState(false);
+  const [showProofSection, setShowProofSection] = useState(false); // New state for proof section
   
   // Proof of delivery states
   const [showProofModal, setShowProofModal] = useState(false);
@@ -438,6 +439,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setShowItems(!showItems);
   };
 
+  const toggleProofSection = () => {
+    setShowProofSection(!showProofSection);
+  };
+
   const openCamera = (e: React.MouseEvent) => {
     e.preventDefault();
     cameraInputRef.current?.click();
@@ -703,60 +708,73 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
           )}
 
-          {/* Proof of Delivery Display */}
+          {/* Collapsible Proof of Delivery Section */}
           {delivery.proofOfDelivery && delivery.proofOfDelivery.length > 0 && (
-            <div className="border-t border-gray-200 pt-4 mt-2">
-              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <Camera size={16} className="text-blue-500" />
-                Proof of Delivery
-              </h4>
-              <div className="space-y-4">
-                {delivery.proofOfDelivery.map((proof, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-4 space-y-3">
-                    {/* Photo */}
-                    {proof.photoUrl && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
-                        <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                          <img 
-                            src={proof.photoUrl} 
-                            alt="Delivery proof" 
-                            className="w-full h-48 object-cover"
-                          />
+            <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
+              <button
+                onClick={toggleProofSection}
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+              >
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Camera size={16} className="text-blue-500" />
+                  Proof of Delivery ({delivery.proofOfDelivery.length})
+                </h4>
+                {showProofSection ? (
+                  <ChevronUp size={18} className="text-gray-500 flex-shrink-0" />
+                ) : (
+                  <ChevronDown size={18} className="text-gray-500 flex-shrink-0" />
+                )}
+              </button>
+
+              {showProofSection && (
+                <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
+                  {delivery.proofOfDelivery.map((proof, index) => (
+                    <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm">
+                      {/* Photo */}
+                      {proof.photoUrl && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
+                          <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                            <img 
+                              src={proof.photoUrl} 
+                              alt="Delivery proof" 
+                              className="w-full h-48 object-cover"
+                            />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Recipient Info */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="text-xs text-gray-500">Received By</p>
+                          <p className="text-sm font-medium break-words">{proof.receivedBy}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Received At</p>
+                          <p className="text-sm font-medium break-words">
+                            {formatDate(proof.receivedAt)}
+                          </p>
                         </div>
                       </div>
-                    )}
-                    
-                    {/* Recipient Info */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <p className="text-xs text-gray-500">Received By</p>
-                        <p className="text-sm font-medium break-words">{proof.receivedBy}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Received At</p>
-                        <p className="text-sm font-medium break-words">
-                          {formatDate(proof.receivedAt)}
-                        </p>
-                      </div>
+                      
+                      {/* Signature */}
+                      {proof.signatureData && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-2">Signature</p>
+                          <div className="bg-white rounded-lg border border-gray-200 p-2">
+                            <img 
+                              src={proof.signatureData} 
+                              alt="Signature" 
+                              className="max-h-16 w-full object-contain"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Signature */}
-                    {proof.signatureData && (
-                      <div>
-                        <p className="text-xs text-gray-500 mb-2">Signature</p>
-                        <div className="bg-white rounded-lg border border-gray-200 p-2">
-                          <img 
-                            src={proof.signatureData} 
-                            alt="Signature" 
-                            className="max-h-16 w-full object-contain"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
