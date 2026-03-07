@@ -84,7 +84,6 @@ export default function LuxuryLogin() {
       
       // Await the decryptToken function since it returns a Promise
       const decrypted = await decryptToken(serverToken, secret);
-      console.log('Decrypted result:', decrypted);
       
       // Validate the decrypted data matches UserData interface
       if (!decrypted || typeof decrypted !== 'object') {
@@ -104,22 +103,15 @@ export default function LuxuryLogin() {
       
       setUserData(userDataValid);
       setError(null);
-      setSessionChecked(true);  
-      
-      // Redirect based on role after 3 seconds
-      setTimeout(() => {
-        redirectBasedOnRole(userDataValid.role);
-      }, 3000);
-      
+      setSessionChecked(true);   
+      // Redirect based on role
+      redirectBasedOnRole(userDataValid.role);
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
       setSessionChecked(true);
-      
       // Still proceed but with default role
-      setTimeout(() => {
-        redirectBasedOnRole('USER');
-      }, 3000);
+      redirectBasedOnRole('USER');
     }
   };
 
@@ -148,21 +140,14 @@ export default function LuxuryLogin() {
         password: formData.password,
         redirect: false,
       });
-     
-      console.log('SignIn result:', result);
-      
+    
       if (result?.error) {
-        console.error('Login error:', result.error);
         setError('Login failed: ' + result.error);
         setIsLoading(false);
       } else {
-        console.log('✅ Login successful, checking session...');
-        
         // Wait a moment for session to be established
         setTimeout(async () => {
           const session = await getSession();
-          console.log('Session after login:', session);
-          
           if (session?.serverToken) {
             await decryptUserToken(session.serverToken);
           } else {
@@ -180,8 +165,7 @@ export default function LuxuryLogin() {
   };
 
   const redirectBasedOnRole = (role: string) => {
-   // setShowTokenModal(false);
-    
+      
     // Redirect based on user role
     switch(role) {
       case 'ADMINISTRATOR':
@@ -280,7 +264,6 @@ export default function LuxuryLogin() {
             )}
             
             {/* Login Form - Hide when showing token modal */}
-            {!showTokenModal && (
               <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                 <div className="rounded-md shadow-sm space-y-4">
                   {/* Email Input */}
@@ -382,10 +365,9 @@ export default function LuxuryLogin() {
                   </p>
                 </div>
               </form>
-            )}
+            
 
             {/* Divider - Hide when showing token modal */}
-            {!showTokenModal && (
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-gray-300"></div>
@@ -394,10 +376,9 @@ export default function LuxuryLogin() {
                   <span className="px-2 bg-white text-gray-500">Or continue with</span>
                 </div>
               </div>
-            )}
+            
 
             {/* Social Login - Hide when showing token modal */}
-            {!showTokenModal && (
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -409,18 +390,7 @@ export default function LuxuryLogin() {
                   </svg>
                   <span className="ml-2">Google</span>
                 </button>
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  className={`w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                    <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
-                  </svg>
-                  <span className="ml-2">Twitter</span>
-                </button>
               </div>
-            )}
           </div>
         </div>
         
@@ -428,7 +398,7 @@ export default function LuxuryLogin() {
       </div>
 
       {/* Token Modal - Shows decrypted user info */}
-      {showTokenModal && userData && (
+      {userData && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
           <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
