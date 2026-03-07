@@ -2,10 +2,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from "react-redux";
-import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
-import { LogOut, CreditCard, ChevronDown, Bell, Menu } from 'lucide-react';
-import Image from 'next/image';
+import { LogOut, CreditCard, ChevronDown, Bell } from 'lucide-react';
 
 interface TopNavProps {
   onMenuClick?: () => void;
@@ -18,16 +17,28 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Mock user data - replace with actual user data from your auth
+  const user = {
+    name: 'John Doe',
+    email: 'john.doe@example.com',
+    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   // Handle escape key
@@ -62,10 +73,7 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
         callbackUrl: '/Login',
       });
       
-      // Clear Redux state
       dispatch(setActiveIndex(0));
-      
-      // Redirect to login
       router.push('/Login');
     } catch (error) {
       console.error('Logout error:', error);
@@ -82,172 +90,109 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 shadow-2xl relative overflow-hidden">
-      {/* Decorative gold line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-200"></div>
-      
-      {/* Background pattern - subtle for mobile */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, gold 1px, transparent 0)`,
-          backgroundSize: '30px 30px'
-        }}></div>
-      </div>
-
-      <div className="relative px-3 sm:px-4 lg:px-6">
-        <div className="flex justify-between items-center h-14 sm:h-16 lg:h-20">
-          {/* Left Section - Logo and Menu */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Mobile menu button - improved touch target */}
-            <button
-              onClick={onMenuClick}
-              className="md:hidden flex items-center justify-center h-10 w-10 rounded-lg text-amber-200 hover:text-white hover:bg-amber-500/20 active:bg-amber-500/30 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-200 touch-manipulation"
-              aria-label="Open main menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            
-            {/* Logo with luxury styling - responsive sizing */}
-            <div className="flex items-center">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-amber-400 to-yellow-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-200"></div>
-                <div className="relative h-10 w-auto sm:h-12 lg:h-16 bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-0.5 sm:p-1">
-                  <Image 
-                    src="/VendorCity_Management.webp" 
-                    alt="VendorCity Management" 
-                    height={64} 
-                    width={64} 
-                    className="h-full w-auto rounded-lg"
-                    priority
+    <nav className="bg-gray-800 shadow-sm sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Left section */}
+          <div className="flex">
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={onMenuClick}
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 transition-colors"
+                aria-label="Open main menu"
+              >
+                <svg 
+                  className="h-6 w-6" 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M4 6h16M4 12h16M4 18h16" 
                   />
-                </div>
-              </div>
-              
-              {/* Brand name - hidden on smallest screens, visible on larger */}
-              <div className="hidden xs:block ml-2 sm:ml-3">
-                <h1 className="text-sm sm:text-base lg:text-xl font-serif font-light tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-400 truncate max-w-[120px] sm:max-w-[200px]">
-                  VendorCity
-                </h1>
-                <p className="hidden sm:block text-[10px] lg:text-xs text-amber-200/60 tracking-widest uppercase">
-                  Management Portal
-                </p>
-              </div>
+                </svg>
+              </button>
+            </div>
+
+            {/* Logo or brand */}
+            <div className="flex-shrink-0 flex items-center">
+              <span className="text-white font-bold text-xl">VendorCity</span>
+              <span className="ml-2 text-gray-300 text-sm hidden sm:inline">Rider</span>
             </div>
           </div>
-          
-          {/* Right Section - Actions */}
-          <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-            {/* Notification Bell - improved touch target */}
-            <button className="relative flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full text-amber-200 hover:text-white hover:bg-amber-500/20 active:bg-amber-500/30 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-200 touch-manipulation">
+
+          {/* Right section */}
+          <div className="flex items-center">
+            {/* Notification Bell */}
+            <button className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative">
               <span className="sr-only">View notifications</span>
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-              {/* Notification badge */}
-              <span className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 block h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 ring-1 ring-slate-900"></span>
+              <Bell className="h-5 w-5" />
+              {/* Notification badge - show when there are notifications */}
+              <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-gray-800"></span>
             </button>
 
             {/* User Menu Dropdown */}
-            <div className="relative" ref={dropdownRef}>
+            <div className="ml-3 relative" ref={dropdownRef}>
               <button
                 onClick={toggleDropdown}
                 disabled={isLoggingOut}
-                className="relative flex items-center space-x-1 sm:space-x-2 pr-2 sm:pr-3 pl-1 py-1 rounded-full bg-gradient-to-r from-slate-800/50 to-slate-900/50 border border-amber-500/20 hover:border-amber-500/40 active:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all duration-200 disabled:opacity-50 touch-manipulation"
+                className="flex items-center gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-1 pr-2 py-1"
                 id="user-menu-button"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
                 <span className="sr-only">Open user menu</span>
-                
-                {/* Avatar with luxury ring - responsive sizing */}
-                <div className="relative">
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-400 to-yellow-600 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-200"></div>
-                  <img 
-                    className="relative h-7 w-7 sm:h-8 sm:w-8 lg:h-9 lg:w-9 rounded-full border-2 border-slate-800" 
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" 
-                    alt="User avatar" 
-                  />
+                <img 
+                  className="h-8 w-8 rounded-full" 
+                  src={user.avatar} 
+                  alt={user.name}
+                />
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-300">VC-001</p>
                 </div>
-                
-                {/* User info - hidden on mobile, visible on tablet/desktop */}
-                <div className="hidden sm:block text-left">
-                  <p className="text-xs lg:text-sm font-medium text-amber-200 truncate max-w-[80px] lg:max-w-[120px]">
-                    John Doe
-                  </p>
-                  <p className="text-[10px] lg:text-xs text-amber-200/60 truncate max-w-[80px] lg:max-w-[120px]">
-                    Administrator
-                  </p>
-                </div>
-                
-                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-amber-300 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* Dropdown Menu - Mobile optimized */}
+              {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <>
-                  {/* Backdrop for mobile - closes menu when tapped outside */}
-                  <div 
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 md:hidden"
-                    onClick={() => setIsDropdownOpen(false)}
-                    aria-hidden="true"
-                  />
-                  
-                  <div className="absolute right-0 mt-2 w-56 sm:w-64 rounded-xl shadow-2xl py-2 bg-slate-800 border border-amber-500/20 focus:outline-none z-50">
-                    {/* Decorative header */}
-                    <div className="absolute -top-1 right-6 w-3 h-3 rotate-45 bg-slate-800 border-t border-l border-amber-500/20"></div>
-                    
-                    {/* User Info with gradient - mobile optimized */}
-                    <div className="px-4 py-3 border-b border-amber-500/20 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
-                      <p className="text-sm font-serif font-medium text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-400">
-                        John Doe
-                      </p>
-                      <p className="text-xs text-amber-200/60 truncate mt-0.5 break-all">
-                        john.doe@vendorcity.com
-                      </p>
-                    </div>
-
-                    {/* Menu Items - improved touch targets for mobile */}
-                    <div className="py-2">
-                      <button
-                        onClick={handlePayments}
-                        className="w-full text-left px-4 py-3.5 sm:py-3 text-sm text-amber-200 hover:text-white hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-yellow-500/10 active:from-amber-500/20 active:to-yellow-500/20 flex items-center gap-3 transition-all duration-200 touch-manipulation"
-                      >
-                        <div className="p-1.5 rounded-lg bg-amber-500/10">
-                          <CreditCard className="h-4 w-4 text-amber-400" />
-                        </div>
-                        <span className="flex-1">Billing & Payments</span>
-                        <span className="text-xs text-amber-500">→</span>
-                      </button>
-                    </div>
-
-                    {/* Logout Button - improved touch target */}
-                    <div className="border-t border-amber-500/20 pt-2">
-                      <button
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                        className="w-full text-left px-4 py-3.5 sm:py-3 text-sm text-rose-400 hover:text-rose-300 hover:bg-gradient-to-r hover:from-rose-500/10 hover:to-rose-600/10 active:from-rose-500/20 active:to-rose-600/20 flex items-center gap-3 transition-all duration-200 disabled:opacity-50 touch-manipulation"
-                      >
-                        <div className="p-1.5 rounded-lg bg-rose-500/10">
-                          <LogOut className={`h-4 w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
-                        </div>
-                        <span className="flex-1">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
-                        <span className="text-xs text-rose-500">↗</span>
-                      </button>
-                    </div>
+                <div className="origin-top-right absolute right-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                  {/* User Info Header */}
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+                    <p className="text-xs text-gray-500">VC-001</p>
+                    <p className="text-xs text-gray-400 mt-1">{user.email}</p>
                   </div>
-                </>
+
+                  {/* Payments Link */}
+                  <button
+                    onClick={handlePayments}
+                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                  >
+                    <CreditCard className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">Billing & Payments</span>
+                  </button>
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
+                  >
+                    <LogOut className={`h-4 w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                    <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Add custom breakpoint for extra small devices */}
-      <style jsx>{`
-        @media (min-width: 480px) {
-          .xs\\:block {
-            display: block;
-          }
-        }
-      `}</style>
     </nav>
   );
-}
+          }
