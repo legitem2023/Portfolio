@@ -389,7 +389,6 @@ model OrderItem {
   @@index([riderId])         // Rider delivery dashboard  
   @@index([status])          // Order processing pipeline
   @@index([supplierId, status])  // Vendor order filtering
-  @@index([createdAt])       // Time-based reports
 
   @@index([orderId])
   @@index([productId])
