@@ -85,7 +85,7 @@ export default function LuxuryLogin() {
       // Await the decryptToken function since it returns a Promise
       const decrypted = await decryptToken(serverToken, secret);
       console.log('Decrypted result:', decrypted);
-      /*
+      
       // Validate the decrypted data matches UserData interface
       if (!decrypted || typeof decrypted !== 'object') {
         throw new Error('Invalid decrypted data');
@@ -105,7 +105,8 @@ export default function LuxuryLogin() {
       setUserData(userDataValid);
       setError(null);
       setSessionChecked(true);
-      
+      setShowTokenModal(true);
+      /*
       console.log('✅ Token decrypted successfully:', userDataValid);
       console.log('👤 User Role:', userDataValid.role);
       
