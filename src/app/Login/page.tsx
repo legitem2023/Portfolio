@@ -474,12 +474,7 @@ export default function LuxuryLogin() {
               
               {/* Modal Footer */}
               <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  onClick={handleCloseModal}
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
-                >
-                  Close
-                </button>
+                
                 <button
                   onClick={handleContinue}
                   className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
