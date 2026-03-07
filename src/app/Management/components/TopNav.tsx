@@ -100,8 +100,8 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
             
             <div className="z-20 h-[100%] flex items-center">
               <Image 
-                src="/VendorCity_Manager.webp" 
-                alt="VendorCity Manager" 
+                src="/VendorCity_Management.webp" 
+                alt="VendorCity Management" 
                 height={60} 
                 width={60} 
                 className="h-[100%] w-auto rounded-lg"
