@@ -38,7 +38,7 @@ export default function LuxuryLogin() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault(); // Prevent default form submission
     const session = await getSession();
-    const token = session?.serverToken;
+    const token:any = session?.serverToken;
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
     const decryption = decryptToken(token,secret);
