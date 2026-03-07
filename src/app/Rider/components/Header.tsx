@@ -4,6 +4,10 @@ import { Bell, Package, LogOut, CreditCard, ChevronDown } from "lucide-react";
 import { useAuth } from '../hooks/useAuth';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useDispatch } from "react-redux";
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+import { persistor } from '../../../../Redux/store';
+import { signOut } from 'next-auth/react';
 
 interface HeaderProps {
   isMobile: boolean;
@@ -23,7 +27,9 @@ export default function Header({
 
   const { user } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -56,14 +62,37 @@ export default function Header({
   };
 
   const handleLogout = async () => {
-    setIsDropdownOpen(false);
-    // Add your logout logic here
-    // await signOut();
-    router.push('/login');
+    const confirmLogout = window.confirm('Are you sure you want to logout?');
+    if (!confirmLogout) {
+      setIsDropdownOpen(false);
+      return;
+    }
+    
+    setIsLoggingOut(true);
+    
+    try {
+      await signOut({
+        redirect: true,
+        callbackUrl: '/Login',
+      });
+      
+      // Clear Redux state if needed
+      dispatch(setActiveIndex(0));
+      
+      // Redirect to login
+      router.push('/Login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+      setIsDropdownOpen(false);
+    }
   };
 
   const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+    if (!isLoggingOut) {
+      setIsDropdownOpen(!isDropdownOpen);
+    }
   };
 
   // Mobile View
@@ -98,7 +127,8 @@ export default function Header({
               {/* User Info & Avatar - Clickable Dropdown Trigger */}
               <button 
                 onClick={toggleDropdown}
-                className="flex items-center gap-2 focus:outline-none"
+                disabled={isLoggingOut}
+                className="flex items-center gap-2 focus:outline-none disabled:opacity-50"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
@@ -139,10 +169,11 @@ export default function Header({
                   {/* Logout Button */}
                   <button
                     onClick={handleLogout}
-                    className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100"
+                    disabled={isLoggingOut}
+                    className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Sign Out</span>
+                    <LogOut className={`w-4 h-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                    <span>{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
                   </button>
                 </div>
               )}
@@ -203,7 +234,8 @@ export default function Header({
             {/* User Info & Avatar - Clickable Dropdown Trigger */}
             <button 
               onClick={toggleDropdown}
-              className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-lime-500"
+              disabled={isLoggingOut}
+              className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-2 transition-colors focus:outline-none focus:ring-2 focus:ring-lime-500 disabled:opacity-50"
               aria-expanded={isDropdownOpen}
               aria-haspopup="true"
             >
@@ -233,7 +265,10 @@ export default function Header({
 
                 {/* Status Toggle */}
                 <button
-                  onClick={() => setIsOnline(!isOnline)}
+                  onClick={() => {
+                    setIsOnline(!isOnline);
+                    setIsDropdownOpen(false);
+                  }}
                   className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors border-b border-gray-100"
                 >
                   <div className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500" : "bg-red-500"}`} />
@@ -252,10 +287,11 @@ export default function Header({
                 {/* Logout Button */}
                 <button
                   onClick={handleLogout}
-                  className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100"
+                  disabled={isLoggingOut}
+                  className="w-full px-4 py-3 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100 disabled:opacity-50 disabled:hover:bg-transparent"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
+                  <LogOut className={`w-4 h-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                  <span>{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
                 </button>
               </div>
             )}
@@ -264,4 +300,4 @@ export default function Header({
       </div>
     </header>
   );
-                    }
+}
