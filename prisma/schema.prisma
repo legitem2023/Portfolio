@@ -9,40 +9,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================
-// API BILLING
-// ============================================
 model ApiBill {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  
+  // Service info
   service     String?
   apiName     String?
+  
+  // Billing period
   month       Int?
   year        Int?
   period      String?
+  
+  // Cost
   amount      Float?
   currency    String?   @default("USD")
+  
+  // Usage metrics (store as embedded object)
   usage       Json?
+  
+  // Status
   status      String?   @default("pending")
   paidAt      DateTime?
   dueDate     DateTime?
+  
+  // Provider invoice info
   invoiceId   String?
   invoiceUrl  String?
+  
+  // Tags for filtering
   tags        String[]
+  
+  // Timestamps
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
-
-  // INDEXES - For billing reports and filtering
-  @@index([service, year, month])  // Monthly billing by service
-  @@index([status])                 // Filter pending/paid bills
-  @@index([dueDate])                 // Find overdue bills
-  @@index([year, month])             // Time-based aggregation
-  @@index([tags])                    // Filter by tags
-  @@index([createdAt])                // Audit trail
+  
+  @@index([service, year, month])
+  @@index([status])
+  @@index([dueDate])
 }
 
-// ============================================
-// VISITOR TRACKING
-// ============================================
 model Visitor {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionId String?
@@ -54,21 +60,14 @@ model Visitor {
   city      String?  @default("Unknown")
   timestamp DateTime? @default(now())
   
-  // INDEXES - Analytics queries
-  @@index([timestamp])                 // Time-based analytics
-  @@index([sessionId])                  // User session tracking
-  @@index([ip])                         // IP-based analysis
-  @@index([page])                        // Page view stats
-  @@index([country])                      // Geographic analytics
-  @@index([referer])                       // Traffic source analysis
-  @@index([timestamp, page])                 // Page views over time
-  @@index([country, timestamp])               // Geo trends
+  @@index([timestamp])
+  @@index([sessionId])
+  @@index([ip])
+  @@index([page])
   @@map("visitors")
 }
 
-// ============================================
-// USER MANAGEMENT
-// ============================================
+// User Management
 model User {
   id              String           @id @default(auto()) @map("_id") @db.ObjectId
   email           String           @unique
@@ -95,8 +94,9 @@ model User {
   supportTickets  SupportTicket[]
   notifications   Notification[]
   ticketResponses TicketResponse[]
-  supplier        OrderItem[] @relation("SupplierOrderItems")
-  rider           OrderItem[] @relation("RiderOrderItems")
+  supplier        OrderItem[] @relation("SupplierOrderItems")  // matches supplier relation in OrderItem
+  rider           OrderItem[] @relation("RiderOrderItems")     // matches rider relation in OrderItem
+  // Social features (NEW) - Using explicit relations for MongoDB
   posts           Post[]
   comments        Comment[]
   likes           Like[]
@@ -105,37 +105,23 @@ model User {
   taggedPosts     PostTaggedUser[]
   blacklistedTokens  BlacklistedToken[]
   
-  // INDEXES - Critical for user lookups
-  @@index([email])                     // Primary lookup field
-  @@index([role])                       // Role-based queries
-  @@index([createdAt])                    // New user analytics
-  @@index([emailVerified])                   // Verification status
-  @@index([phone])                             // Phone lookup
-  @@index([role, createdAt])                     // Role-based analytics
-  @@index([firstName, lastName])                    // Name search
+  // Indexes
+  @@index([createdAt])
   @@map("users")
 }
 
-// ============================================
-// BLACKLISTED TOKENS
-// ============================================
 model BlacklistedToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   token     String   @unique
-  userId    String?  @db.ObjectId
+  userId    String?
   user      User?    @relation(fields: [userId], references: [id])
   createdAt DateTime? @default(now())
   expiresAt DateTime?
-  
-  // INDEXES - Auth cleanup
-  @@index([userId])                     // User's tokens
-  @@index([expiresAt])                    // Cleanup expired tokens
-  @@index([token])                          // Fast token lookup
+  @@index([userId])
+  @@index([expiresAt])
 }
 
-// ============================================
-// SOCIAL MEDIA
-// ============================================
+// Social Media Models (NEW)
 model Post {
   id              String          @id @default(auto()) @map("_id") @db.ObjectId
   userId          String?         @db.ObjectId
@@ -152,16 +138,14 @@ model Post {
   likes           Like[]
   taggedUsers     PostTaggedUser[]
 
-  // INDEXES - Social feed queries
-  @@index([userId])                    // User's posts
-  @@index([createdAt])                   // Chronological feed
-  @@index([privacy])                       // Privacy filtering
-  @@index([userId, createdAt])               // Paginated user posts
-  @@index([privacy, createdAt])                // Public feed with privacy
-  @@fulltext([content])                           // Search posts
+  // Indexes
+  @@index([userId])
+  @@index([createdAt])
+  @@fulltext([content])
   @@map("posts")
 }
 
+// Explicit many-to-many for tagged users (required for MongoDB)
 model PostTaggedUser {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   postId    String?  @db.ObjectId
@@ -169,10 +153,7 @@ model PostTaggedUser {
   post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  // INDEXES - Tag queries
-  @@index([postId])                      // Tags in a post
-  @@index([userId])                         // Posts where user is tagged
-  @@unique([postId, userId])                   // Prevent duplicate tags
+  @@unique([postId, userId])
   @@map("post_tagged_users")
 }
 
@@ -188,17 +169,14 @@ model Comment {
   // Relationships
   post            Post?           @relation(fields: [postId], references: [id], onDelete: Cascade)
   user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction)
+  parent          Comment?        @relation("CommentReplies", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies         Comment[]       @relation("CommentReplies")
   likes           Like[]
 
-  // INDEXES - Comment queries
-  @@index([postId])                     // Comments on a post
-  @@index([userId])                        // User's comments
-  @@index([parentId])                        // Threaded comments
-  @@index([createdAt])                         // Chronological order
-  @@index([postId, createdAt])                   // Paginated post comments
-  @@index([userId, createdAt])                     // Paginated user comments
+  // Indexes
+  @@index([postId])
+  @@index([userId])
+  @@index([parentId])
   @@map("comments")
 }
 
@@ -214,14 +192,11 @@ model Like {
   comment         Comment?        @relation(fields: [commentId], references: [id], onDelete: Cascade)
   user            User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // INDEXES - Like queries
-  @@index([postId])                     // Post likes count
-  @@index([commentId])                   // Comment likes count
-  @@index([userId])                        // User's likes
-  @@index([createdAt])                        // Recent likes
-  @@index([postId, userId])                    // Check if user liked post
-  @@index([commentId, userId])                   // Check if user liked comment
-  @@unique([userId, postId, commentId])              // Prevent double likes
+  // Ensure a like is for either a post or comment, not both
+  @@unique([userId, postId, commentId])
+  @@index([userId])
+  @@index([postId])
+  @@index([commentId])
   @@map("likes")
 }
 
@@ -235,18 +210,14 @@ model Follow {
   follower        User?           @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
   following       User?           @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
 
-  // INDEXES - Follow queries
-  @@index([followerId])                   // Who user follows
-  @@index([followingId])                    // User's followers
-  @@index([createdAt])                         // Recent follows
-  @@index([followerId, followingId])               // Check follow status
-  @@unique([followerId, followingId])                 // Prevent duplicate follows
+  // Ensure unique follow relationships
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
   @@map("follows")
 }
 
-// ============================================
-// ADDRESS MANAGEMENT
-// ============================================
+// Address Management
 model Address {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String?  @db.ObjectId
@@ -266,17 +237,11 @@ model Address {
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders      Order[]
 
-  // INDEXES - Address lookups
-  @@index([userId])                        // User's addresses
-  @@index([userId, isDefault])                 // Default address
-  @@index([city, country])                       // Geographic queries
-  @@index([lat, lng])                              // Geo-spatial (if using 2dsphere)
+  @@index([userId])
   @@map("addresses")
 }
 
-// ============================================
-// PRODUCT CATALOG
-// ============================================
+// Product Catalog
 model Product {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String?
@@ -298,35 +263,26 @@ model Product {
   updatedAt   DateTime? @updatedAt
   supplierId  String? @default("68c8c1765038c47a4b9ef519") @db.ObjectId
   model       String? @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
-
-  // Relationships
   category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
   variants    ProductVariant[]
+  
   reviews     Review[]
   wishlist    WishlistItem[]
   cart        CartItem[]
   
-  // INDEXES - CRITICAL for e-commerce scale
-  @@index([categoryId])                     // Category filtering
-  @@index([supplierId])                      // Vendor's products
-  @@index([price])                             // Price range filtering
-  @@index([brand])                               // Brand filtering
-  @@index([isActive])                              // Active products only
-  @@index([featured])                                // Featured products
-  @@index([createdAt])                                 // New arrivals
-  @@index([sku])                                          // SKU lookup (unique already)
-  @@index([stock])                                          // In-stock filtering
-  @@index([categoryId, isActive])                               // Active in category
-  @@index([supplierId, isActive])                                 // Vendor's active products
-  @@index([price, isActive])                                         // Active price range
-  @@index([brand, isActive])                                           // Active brand filtering
-  @@index([featured, isActive])                                          // Featured active products
-  @@index([createdAt, isActive])                                            // New active arrivals
-  @@index([categoryId, price, isActive])                                      // Multi-filter (category + price)
-  @@fulltext([name, description, tags])                                         // Search
+  @@index([categoryId])
+  @@index([price])
+  @@index([brand])
+  @@index([isActive])
+  @@index([featured])
+  @@index([createdAt])
+  @@fulltext([name, description, tags])
   @@map("products")
 }
+
+
 
 model ProductVariant {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -348,18 +304,11 @@ model ProductVariant {
   product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   orders      OrderItem[]
   
-  // INDEXES - Variant queries
-  @@index([productId])                     // Variants of a product
-  @@index([sku])                              // SKU lookup (unique already)
-  @@index([color])                              // Color filtering
-  @@index([size])                                  // Size filtering
-  @@index([price])                                    // Price filtering
-  @@index([isActive])                                   // Active variants
-  @@index([stock])                                         // Stock levels
-  @@index([productId, color])                                 // Product color variants
-  @@index([productId, size])                                     // Product size variants
-  @@index([productId, isActive])                                    // Active product variants
-  @@index([productId, price])                                          // Variants by price
+  @@index([productId])
+  @@index([color])
+  @@index([size])
+  @@index([price])
+  @@index([isActive])
   @@map("product_variants")
 }
 
@@ -372,21 +321,15 @@ model Category {
   isActive  Boolean?   @default(true)
   createdAt DateTime?  @default(now())
 
-  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction)
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   children  Category[] @relation("CategoryHierarchy")
   products  Product[]
 
-  // INDEXES - Category tree queries
-  @@index([parentId])                      // Child categories
-  @@index([isActive])                         // Active categories
-  @@index([name])                                // Category name search
-  @@index([parentId, isActive])                      // Active child categories
+  @@index([parentId])
   @@map("categories")
 }
 
-// ============================================
-// ORDER MANAGEMENT
-// ============================================
+// Order Management
 model Order {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String?  @db.ObjectId
@@ -407,19 +350,9 @@ model Order {
   items       OrderItem[]
   payments    Payment[]
   proofOfDelivery   ProofOfDelivery[]
-  
-  // INDEXES - Order queries
-  @@index([userId])                         // Customer's orders
-  @@index([riderId])                           // Rider's orders
-  @@index([orderNumber])                          // Order lookup (unique already)
-  @@index([status])                                   // Orders by status
-  @@index([createdAt])                                    // Time-based queries
-  @@index([addressId])                                        // Orders to address
-  @@index([userId, status])                                      // Customer's orders by status
-  @@index([riderId, status])                                        // Rider's orders by status
-  @@index([status, createdAt])                                         // Status changes over time
-  @@index([userId, createdAt])                                            // Customer's order history
-  @@index([riderId, createdAt])                                              // Rider's delivery history
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
   @@map("orders")
 }
 
@@ -435,6 +368,10 @@ model OrderItem {
   variantInfo String?
   status      OrderStatus?
   rejectedBy String[] @default([])
+  supplier    User?    @relation(name:"SupplierOrderItems",fields: [supplierId], references: [id], onDelete: Cascade)
+  order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     ProductVariant? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rider       User?    @relation(name:"RiderOrderItems", fields: [riderId], references: [id], onDelete: Cascade)
   recipientName        String?
   recipientPhone       String?
   pickupAddress        String?
@@ -447,27 +384,8 @@ model OrderItem {
   eta                  String?
   actualDeliveryTime   DateTime?
   ata                  String?
-
-  // Relationships
-  supplier    User?    @relation(name:"SupplierOrderItems", fields: [supplierId], references: [id], onDelete: Cascade)
-  order       Order?  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     ProductVariant? @relation(fields: [productId], references: [id], onDelete: Cascade)
-  rider       User?    @relation(name:"RiderOrderItems", fields: [riderId], references: [id], onDelete: Cascade)
-
-  // INDEXES - CRITICAL for multi-vendor marketplace
-  @@index([orderId])                          // Items in an order
-  @@index([productId])                            // Product sales history
-  @@index([supplierId])                              // Vendor's orders
-  @@index([riderId])                                     // Rider's deliveries
-  @@index([status])                                          // Item status
-  @@index([trackingNumber])                                       // Tracking lookup
-  @@index([supplierId, status])                                       // Vendor's orders by status
-  @@index([riderId, status])                                           // Rider's deliveries by status
-  @@index([orderId, supplierId])                                          // Vendor's items in order
-  @@index([estimatedDeliveryTime])                                            // Delivery scheduling
-  @@index([actualDeliveryTime])                                                   // Delivery completion
-  @@index([pickupLatitude, pickupLongitude])                                          // Geo queries (if using 2dsphere)
-  @@index([dropoffLatitude, dropoffLongitude])                                           // Geo queries (if using 2dsphere)
+  @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -479,16 +397,10 @@ model ProofOfDelivery {
   signatureData String?
   receivedBy    String
   receivedAt    DateTime @default(now())
-  
-  // INDEXES - Delivery proof queries
-  @@index([orderId])                         // Proof for order
-  @@index([receivedBy])                          // Who received
-  @@index([receivedAt])                              // When delivered
 }
 
-// ============================================
-// CART & WISHLIST
-// ============================================
+
+// Cart
 model CartItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   userId      String?  @db.ObjectId
@@ -501,14 +413,11 @@ model CartItem {
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
 
-  // INDEXES - Cart queries
-  @@index([userId])                         // User's cart
-  @@index([productId])                          // Product in carts
-  @@index([userId, productId])                      // Specific item in cart
-  @@index([updatedAt])                                 // Abandoned carts
+  @@index([userId])
   @@map("cart_items")
 }
 
+// Wishlist
 model WishlistItem {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String?  @db.ObjectId
@@ -518,17 +427,12 @@ model WishlistItem {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id])
 
-  // INDEXES - Wishlist queries
-  @@index([userId])                         // User's wishlist
-  @@index([productId])                          // Product popularity
-  @@index([userId, productId])                      // Check if in wishlist
-  @@index([createdAt])                                 // Recently added
+  @@index([userId])
+  @@index([productId])
   @@map("wishlist_items")
 }
 
-// ============================================
-// PAYMENTS
-// ============================================
+// Payments
 model Payment {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   orderId       String?       @db.ObjectId
@@ -543,21 +447,13 @@ model Payment {
   order         Order? @relation(fields: [orderId], references: [id], onDelete: Cascade)
   user          User?  @relation(fields: [userId], references: [id])
 
-  // INDEXES - Payment queries
-  @@index([orderId])                         // Payments for order
-  @@index([userId])                              // User's payments
-  @@index([status])                                  // Payment status
-  @@index([transactionId])                                // Transaction lookup
-  @@index([method])                                           // Payment method analytics
-  @@index([createdAt])                                              // Time-based queries
-  @@index([userId, status])                                             // User's payment status
-  @@index([orderId, status])                                                // Order payment status
+  @@index([orderId])
+  @@index([userId])
+  @@index([status])
   @@map("payments")
 }
 
-// ============================================
-// REVIEWS
-// ============================================
+// Reviews
 model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String?  @db.ObjectId
@@ -571,21 +467,14 @@ model Review {
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id])
 
-  // INDEXES - Review queries
-  @@index([userId])                         // User's reviews
-  @@index([productId])                          // Product reviews
-  @@index([rating])                                 // Rating filtering
-  @@index([isApproved])                               // Approved reviews only
-  @@index([createdAt])                                    // Recent reviews
-  @@index([productId, rating])                                 // Product reviews by rating
-  @@index([productId, isApproved])                                 // Approved product reviews
-  @@index([productId, createdAt])                                      // Chronological product reviews
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isApproved])
   @@map("reviews")
 }
 
-// ============================================
-// MESSAGING
-// ============================================
+// Messaging
 model Message {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   senderId    String?  @db.ObjectId
@@ -598,24 +487,18 @@ model Message {
 
   sender      User?    @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
   recipient   User?    @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
-  parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction)
+  parent      Message? @relation("MessageThread", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   replies     Message[] @relation("MessageThread")
 
-  // INDEXES - Message queries
-  @@index([senderId])                         // Sent messages
-  @@index([recipientId])                          // Received messages
-  @@index([parentId])                                // Thread messages
-  @@index([isRead])                                      // Unread messages
-  @@index([createdAt])                                        // Chronological order
-  @@index([recipientId, isRead])                                  // Unread for user
-  @@index([senderId, recipientId])                                     // Conversation
-  @@index([recipientId, createdAt])                                         // Inbox order
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([parentId])
+  @@index([isRead])
+  @@index([createdAt])
   @@map("messages")
 }
 
-// ============================================
-// SUPPORT
-// ============================================
+// Support
 model SupportTicket {
   id          String         @id @default(auto()) @map("_id") @db.ObjectId
   userId      String?        @db.ObjectId
@@ -630,15 +513,11 @@ model SupportTicket {
   user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
   responses   TicketResponse[]
 
-  // INDEXES - Support queries
-  @@index([userId])                         // User's tickets
-  @@index([status])                              // Tickets by status
-  @@index([priority])                                 // Tickets by priority
-  @@index([assignedTo])                                   // Assigned agent
-  @@index([createdAt])                                          // Time-based queries
-  @@index([status, priority])                                         // Queue filtering
-  @@index([assignedTo, status])                                           // Agent's tickets
-  @@index([userId, status])                                                   // User's tickets by status
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
   @@map("support_tickets")
 }
 
@@ -653,18 +532,13 @@ model TicketResponse {
   ticket    SupportTicket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   user      User?          @relation(fields: [userId], references: [id])
 
-  // INDEXES - Response queries
-  @@index([ticketId])                      // Responses for ticket
-  @@index([userId])                            // User's responses
-  @@index([isInternal])                            // Internal vs public
-  @@index([createdAt])                                 // Chronological order
-  @@index([ticketId, createdAt])                             // Ticket conversation order
+  @@index([ticketId])
+  @@index([userId])
+  @@index([isInternal])
   @@map("ticket_responses")
 }
 
-// ============================================
-// NOTIFICATIONS
-// ============================================
+// Notifications
 model Notification {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
   userId    String?          @db.ObjectId
@@ -677,20 +551,13 @@ model Notification {
 
   user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // INDEXES - Notification queries
-  @@index([userId])                         // User's notifications
-  @@index([isRead])                              // Read/unread
-  @@index([type])                                    // Notification type
-  @@index([createdAt])                                    // Time-based
-  @@index([userId, isRead])                                  // Unread for user
-  @@index([userId, createdAt])                                      // User's notification history
-  @@index([userId, type])                                              // User's notifications by type
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
   @@map("notifications")
 }
 
-// ============================================
-// VEHICLE TYPES (for logistics)
-// ============================================
 model VehicleType {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   name          String   @unique
@@ -703,36 +570,23 @@ model VehicleType {
   cost          Float?
   perKmRate     Float?
   rushTimeAdd   Float?
-  
-  // INDEXES
-  @@index([name])                          // Vehicle type lookup
-  @@index([perKmRate])                          // Pricing queries
 }
 
-// ============================================
-// COUNTERS (for order/tracking numbers)
-// ============================================
+
 model OrderCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   date      DateTime @unique
   counter   Int @default(0)
-  
-  // INDEXES
-  @@index([date])                           // Daily counter lookup
 }
+
 
 model TrackingCounter {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   date      DateTime @unique
   counter   Int @default(0)
-  
-  // INDEXES
-  @@index([date])                           // Daily counter lookup
 }
 
-// ============================================
-// ENUMS (unchanged)
-// ============================================
+// Enums remain the same
 enum Role {
   ADMINISTRATOR
   MANAGER
@@ -794,6 +648,7 @@ enum NotificationType {
   SOCIAL
 }
 
+// NEW Enums for Social Features
 enum PrivacySetting {
   PUBLIC
   FRIENDS
