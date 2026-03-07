@@ -399,10 +399,10 @@ export default function LuxuryLogin() {
       </div>
 
       {/* Token Modal - Shows decrypted user info */}
-      {userData && (
+      {/*userData && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
           <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
+            
             <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white">
               <h3 className="text-xl font-semibold text-gray-900">
                 🔐 Login Successful
@@ -410,9 +410,9 @@ export default function LuxuryLogin() {
         
             </div>
             
-            {/* Modal Body */}
+            
             <div className="p-6">
-              {/* User Role - Highlighted with badge */}
+              
               <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
                 <p className="text-sm font-medium text-gray-700 mb-2">👤 User Role:</p>
                 <div className="flex items-center space-x-3">
@@ -425,7 +425,7 @@ export default function LuxuryLogin() {
                 </div>
               </div>
               
-              {/* User Information Card */}
+              
               <div className="mb-4 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
                 <h4 className="font-medium text-indigo-800 mb-3">👤 User Information</h4>
                 <div className="grid grid-cols-2 gap-3">
@@ -448,7 +448,7 @@ export default function LuxuryLogin() {
                 </div>
               </div>
               
-              {/* Addresses */}
+              
               {userData.addresses && userData.addresses.length > 0 && (
                 <div className="mb-4">
                   <p className="text-sm font-medium text-gray-700 mb-2">📍 Saved Addresses:</p>
@@ -462,7 +462,7 @@ export default function LuxuryLogin() {
                 </div>
               )}
               
-              {/* Full Decrypted Token Data */}
+              
               <div className="mb-4">
                 <p className="text-sm font-medium text-gray-700 mb-2">🔑 Full Decrypted Token Data:</p>
                 <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
@@ -472,7 +472,7 @@ export default function LuxuryLogin() {
                 </div>
               </div>
               
-              {/* Modal Footer */}
+              
               <div className="flex justify-end space-x-3 mt-6">
                 
                 <button
@@ -485,7 +485,7 @@ export default function LuxuryLogin() {
             </div>
           </div>
         </div>
-      )}
+      )*/}
     </>
   );
                 }
