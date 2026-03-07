@@ -104,28 +104,13 @@ export default function LuxuryLogin() {
       
       setUserData(userDataValid);
       setError(null);
-      setSessionChecked(true);
-     // setShowTokenModal(true);
-      /*
-      console.log('✅ Token decrypted successfully:', userDataValid);
-      console.log('👤 User Role:', userDataValid.role);
-      
-      // Store user data in localStorage if needed
-      try {
-        localStorage.setItem('userData', JSON.stringify(userDataValid));
-        localStorage.setItem('userRole', userDataValid.role);
-      } catch (e) {
-        console.warn('Failed to save to localStorage:', e);
-      }
-      
-      // Show modal with user info
-      setShowTokenModal(true);
+      setSessionChecked(true);  
       
       // Redirect based on role after 3 seconds
       setTimeout(() => {
         redirectBasedOnRole(userDataValid.role);
       }, 3000);
-      */
+      
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
