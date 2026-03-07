@@ -137,11 +137,6 @@ function CategoryImageUploader({
     try {
       // Convert file to base64
       const base64Image = await convertToBase64(file);
-      
-      // Extract only the base64 data (remove data:image/... prefix if needed)
-      const cleanBase64 = base64Image.split(',')[1] || base64Image;
-      
-      console.log('Uploading to category:', category.id, 'Base64 length:', cleanBase64.length);
      if (!base64Image || base64Image.trim() === '') {
         throw new Error('Generated base64 string is empty');
      }
