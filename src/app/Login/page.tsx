@@ -50,8 +50,12 @@ export default function LuxuryLogin() {
       
       try {
         const session = await getSession();
-        console.log('Session from getSession():', session);
-        
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+    
+        //console.log('Session from getSession():', session);
+        const decrypted = await decryptToken(session, secret);
+        console.log('Decrypted result:', decrypted);
+      
         if (session?.serverToken) {
           console.log('✅ Session found with token');
           //await decryptUserToken(session.serverToken);
