@@ -49,7 +49,7 @@ export default function LuxuryLogin() {
       if (typeof window === 'undefined') return;
       
       try {
-        const session = await getSession();
+        const session:any = await getSession();
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
     
         //console.log('Session from getSession():', session);
