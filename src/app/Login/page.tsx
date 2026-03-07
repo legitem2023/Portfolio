@@ -85,7 +85,7 @@ export default function LuxuryLogin() {
       // Await the decryptToken function since it returns a Promise
       const decrypted = await decryptToken(serverToken, secret);
       console.log('Decrypted result:', decrypted);
-      
+      /*
       // Validate the decrypted data matches UserData interface
       if (!decrypted || typeof decrypted !== 'object') {
         throw new Error('Invalid decrypted data');
@@ -124,7 +124,7 @@ export default function LuxuryLogin() {
       setTimeout(() => {
         redirectBasedOnRole(userDataValid.role);
       }, 3000);
-      
+      */
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
