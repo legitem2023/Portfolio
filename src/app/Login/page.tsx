@@ -242,15 +242,15 @@ export default function LuxuryLogin() {
   const getRedirectPath = (role: string) => {
     switch(role) {
       case 'ADMINISTRATOR':
-        return 'Admin Dashboard';
+        return 'Management';
       case 'MANAGER':
-        return 'Manager Dashboard';
+        return 'Management';
       case 'RIDER':
-        return 'Rider Dashboard';
+        return 'Rider';
       case 'USER':
-        return 'Home Page';
+        return '';
       default:
-        return 'Home Page';
+        return '';
     }
   };
 
