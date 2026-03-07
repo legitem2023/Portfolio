@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
 import { LogOut, CreditCard, ChevronDown, User } from 'lucide-react';
-
+import Image from 'next/image';
 interface TopNavProps {
   onMenuClick?: () => void;
 }
@@ -97,9 +97,15 @@ export default function TopNav({ onMenuClick }: TopNavProps) {
                 </svg>
               </button>
             </div>
-            <div className="flex-shrink-0 flex items-center">
-              {/* Logo or brand name can go here */}
-              <span className="text-white font-semibold text-lg">VendorCity</span>
+            
+            <div className="z-20 h-[100%] flex items-center">
+              <Image 
+                src="/VendorCity_Manager.webp" 
+                alt="VendorCity Manager" 
+                height={60} 
+                width={60} 
+                className="h-[100%] w-auto rounded-lg"
+              />
             </div>
           </div>
           
