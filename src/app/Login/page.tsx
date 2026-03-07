@@ -36,7 +36,7 @@ export default function LuxuryLogin() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault(); // Prevent default form submission
     const session = await getSession();
-    const userRole = session?.user?.role;
+    const userRole = session;
     if (!formData.email || !formData.password) {
       // showToast('Please enter email and password.', 'error')
       return;
