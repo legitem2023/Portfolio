@@ -6,7 +6,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
-import { signIn } from 'next-auth/react'; 
+import { signIn, getSession } from 'next-auth/react'; 
 import Header from '../components/Header';
 import { useAuth } from '../components/hooks/useAuth';
 interface FormData {
@@ -35,7 +35,8 @@ export default function LuxuryLogin() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault(); // Prevent default form submission
-    
+    const session = await getSession();
+    const userRole = session?.user?.role;
     if (!formData.email || !formData.password) {
       // showToast('Please enter email and password.', 'error')
       return;
@@ -44,6 +45,7 @@ export default function LuxuryLogin() {
     setIsLoading(true);
     
     try {
+      
       // Use NextAuth's signIn function with credentials
       const result = await signIn('credentials', {
         email: formData.email,
@@ -59,8 +61,8 @@ export default function LuxuryLogin() {
       } else {
         // showToast('Login successful', 'success')
         // Use router.push instead of window.location.reload for SPA navigation
-        //console.log(user);
-          router.push('/'); // Redirect to home page or dashboard
+        console.log(userRole);
+          //router.push('/'); // Redirect to home page or dashboard
        
         // Alternatively, you can refresh the session without full page reload
         // router.refresh();
