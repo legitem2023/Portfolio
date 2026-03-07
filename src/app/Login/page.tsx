@@ -102,10 +102,10 @@ export default function LuxuryLogin() {
         image: decrypted.image
       };
       
-      setUserData(userDataValid);
-      setError(null);
-      setSessionChecked(true);
-      setShowTokenModal(true);
+      //setUserData(userDataValid);
+     // setError(null);
+      //setSessionChecked(true);
+     // setShowTokenModal(true);
       /*
       console.log('✅ Token decrypted successfully:', userDataValid);
       console.log('👤 User Role:', userDataValid.role);
@@ -195,7 +195,7 @@ export default function LuxuryLogin() {
   };
 
   const redirectBasedOnRole = (role: string) => {
-    setShowTokenModal(false);
+   // setShowTokenModal(false);
     
     // Redirect based on user role
     switch(role) {
