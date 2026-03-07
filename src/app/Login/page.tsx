@@ -195,13 +195,13 @@ export default function LuxuryLogin() {
     // Redirect based on user role
     switch(role) {
       case 'ADMINISTRATOR':
-        router.push('/admin/dashboard');
+        router.push('/Management');
         break;
       case 'MANAGER':
-        router.push('/manager/dashboard');
+        router.push('/Management');
         break;
       case 'RIDER':
-        router.push('/rider/dashboard');
+        router.push('/Rider');
         break;
       case 'USER':
       default:
