@@ -225,7 +225,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
         {/* Skeleton Cards */}
         <div className="space-y-3 lg:space-y-6">
           {[1, 2, 3].map((i) => (
-            <ActiveDeliveryCardSkeleton key={i} isMobile={isMobile} />
+            <ActiveDeliveryCardSkeleton key={i}/>
           ))}
         </div>
       </div>
