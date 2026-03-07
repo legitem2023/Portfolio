@@ -311,7 +311,7 @@ export default function LuxuryLogin() {
               {/* Sign Up Link */}
               <div className="text-center">
                 <p className="text-sm text-gray-600">
-                  Don't have an account?{' '}
+                  Dont have an account?{' '}
                   <Link href="/Signup" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                     Sign up
                   </Link>
@@ -472,4 +472,4 @@ export default function LuxuryLogin() {
       )}
     </>
   );
-                    }
+}
