@@ -41,7 +41,7 @@ export default function LuxuryLogin() {
     const token:any = session?.serverToken;
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
-    const decryption = decryptToken(token,secret);
+    //const decryption = decryptToken(token,secret);
     if (!formData.email || !formData.password) {
       // showToast('Please enter email and password.', 'error')
       return;
@@ -66,7 +66,7 @@ export default function LuxuryLogin() {
       } else {
         // showToast('Login successful', 'success')
         // Use router.push instead of window.location.reload for SPA navigation
-        console.log(decryption);
+        console.log(token);
           //router.push('/'); // Redirect to home page or dashboard
        
         // Alternatively, you can refresh the session without full page reload
