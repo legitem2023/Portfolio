@@ -3022,48 +3022,48 @@ deleteAllReadNotifications: async (_: any, { userId }: any) => {
 },
   
 
-     categoryImageUpload: async (_: any, args: any) =>{
-        try {
-        const { base64Image, categoryId } = args;
-        
-        // Validate required inputs
-        if (!base64Image || !categoryId) {
-          //throw new Error('base64Image and categoryId are required');
-          return {
-            statusText: "base64Image and categoryId are required"
-          };
-        }
+categoryImageUpload: async (_: any, args: any) => {
+  try {
+    const { base64Image, categoryId } = args;
+    
+    // Validate required inputs - THROW errors, don't return them
+    if (!base64Image || !categoryId) {
+      throw new Error('base64Image and categoryId are required');
+    }
 
-        const imageUUID = uuidv4();
-        
-        // Save images
-        const imageFile = await saveBase64Image(base64Image, `vendorsify_category_${imageUUID}.webp`);
-        if (!imageFile) return { statusText: "Upload failed!" };
-        const updatedProduct = await prisma.category.update({
-          where: { id: categoryId },
-          data: {
-            image: imageFile.url // Or base64Image if storing directly 
-          }
-        });
-        
-        if (!updatedProduct) {
-          return {
-            statusText: "Upload failed!"
-          };
-        }
-        
-        // For this example, we return a success message.
-        return {
-          statusText: "Successfully Uploaded"
-        };
-        
-      } catch (error: any) {
-        //console.error('Error in singleUpload:', error);
-        return {
-            statusText:"Error in singleUpload:", error
-          };
+    const imageUUID = uuidv4();
+    
+    // Save images
+    const imageFile = await saveBase64Image(base64Image, `vendorsify_category_${imageUUID}.webp`);
+    
+    if (!imageFile) {
+      throw new Error('Upload failed - could not save image');
+    }
+    
+    const updatedCategory = await prisma.category.update({
+      where: { id: categoryId },
+      data: {
+        image: imageFile.url
       }
-},
+    });
+    
+    if (!updatedCategory) {
+      throw new Error('Upload failed - category not found or could not be updated');
+    }
+    
+    // Success - return the actual data
+    return {
+      statusText: "Successfully Uploaded",
+    };
+    
+  } catch (error: any) {
+    // Log the error for debugging
+    console.error('Error in categoryImageUpload:', error);
+    
+    // Throw the error for GraphQL to handle properly
+    throw new Error(error.message || 'Upload failed');
+  }
+        },
 upload3DModel: async (_: any, args: any) => {
   try {
     const { file, fileName, productId } = args;
