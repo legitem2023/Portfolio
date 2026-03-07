@@ -107,13 +107,16 @@ export default function LuxuryLogin() {
       setTimeout(async () => {
       // Redirect based on role
         redirectBasedOnRole(userDataValid.role);    
-      }, 2000);
+      }, 3000);
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
       setSessionChecked(true);
       // Still proceed but with default role
-      redirectBasedOnRole('USER');
+      setTimeout(async () => {
+      // Redirect based on role
+        redirectBasedOnRole("USER");    
+      }, 3000);
     }
   };
 
