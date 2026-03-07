@@ -6,7 +6,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
-import { signIn, useSession } from 'next-auth/react'; 
+import { signIn, getSession } from 'next-auth/react'; 
 import Header from '../components/Header';
 import { useAuth } from '../components/hooks/useAuth';
 import { decryptToken } from '../../../utils/decryptToken';
@@ -19,8 +19,7 @@ interface FormData {
 
 export default function LuxuryLogin() {
   const { user } = useAuth();
-  const { data:session,status} = useSession();
-  if(status) return console.log(status);
+  
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
