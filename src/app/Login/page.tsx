@@ -1,15 +1,26 @@
 // pages/login.tsx
 "use client";
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
-import { signIn, getSession } from 'next-auth/react'; 
+import { signIn, useSession } from 'next-auth/react'; 
 import Header from '../components/Header';
 import { useAuth } from '../components/hooks/useAuth';
 import { decryptToken } from '../../../utils/decryptToken';
+
+// Your user interface from decrypted token
+interface UserData {
+  userId: string;
+  role: 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
+  name?: string;
+  email?: string;
+  phone: string;
+  image?: string;
+  addresses: string[];
+}
 
 interface FormData {
   email: string;
@@ -19,14 +30,56 @@ interface FormData {
 
 export default function LuxuryLogin() {
   const { user } = useAuth();
-  
+  const { data: session, status } = useSession();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     rememberMe: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showTokenModal, setShowTokenModal] = useState(false);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const router = useRouter();
+
+  // Decrypt token when session is available
+  useEffect(() => {
+    if (status === 'authenticated' && session?.serverToken) {
+      console.log('✅ Session authenticated successfully');
+      
+      // Decrypt the token
+      const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+      
+      try {
+        const decrypted = decryptToken(session.serverToken, secret) as UserData;
+        setUserData(decrypted);
+        
+        console.log('✅ Token decrypted successfully:', decrypted);
+        console.log('👤 User Role:', decrypted.role);
+        console.log('🆔 User ID:', decrypted.userId);
+        console.log('📞 Phone:', decrypted.phone);
+        console.log('📍 Addresses:', decrypted.addresses);
+        
+        // Store user data in localStorage or context if needed
+        localStorage.setItem('userData', JSON.stringify(decrypted));
+        localStorage.setItem('userRole', decrypted.role);
+        
+        // Show modal with user info
+        setShowTokenModal(true);
+        
+        // Redirect based on role after 3 seconds
+        setTimeout(() => {
+          redirectBasedOnRole(decrypted.role);
+        }, 3000);
+        
+      } catch (error: any) {
+        console.error('❌ Failed to decrypt token:', error);
+        // Still proceed but with default role
+        setTimeout(() => {
+          redirectBasedOnRole('USER');
+        }, 3000);
+      }
+    }
+  }, [session, status]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -37,46 +90,101 @@ export default function LuxuryLogin() {
   };
 
   const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault(); // Prevent default form submission
+    e.preventDefault();
     
-   // const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
-    //const decryption = decryptToken(token,secret);
     if (!formData.email || !formData.password) {
-      // showToast('Please enter email and password.', 'error')
+      alert('Please enter email and password.');
       return;
     }
     
     setIsLoading(true);
     
     try {
-      
-      // Use NextAuth's signIn function with credentials
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
-        redirect: false, // Don't redirect automatically
+        redirect: false,
       });
      
-      //console.log(result);
+      console.log('SignIn result:', result);
       
       if (result?.error) {
-        // showToast('Login failed: ' + result.error, 'error')
         console.error('Login error:', result.error);
+        alert('Login failed: ' + result.error);
       } else {
-        // showToast('Login successful', 'success')
-        // Use router.push instead of window.location.reload for SPA navigation
-        //console.log(token);
-          //router.push('/'); // Redirect to home page or dashboard
-       
-        // Alternatively, you can refresh the session without full page reload
-        // router.refresh();
+        console.log('✅ Login successful, waiting for session...');
+        // Session will be picked up by useEffect
       }
     } catch (err) {
       console.error('Login failed:', err);
-      // showToast('Login failed', 'error')
+      alert('Login failed. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const redirectBasedOnRole = (role: string) => {
+    setShowTokenModal(false);
+    
+    // Redirect based on user role
+    switch(role) {
+      case 'ADMINISTRATOR':
+        router.push('/admin/dashboard');
+        break;
+      case 'MANAGER':
+        router.push('/manager/dashboard');
+        break;
+      case 'RIDER':
+        router.push('/rider/dashboard');
+        break;
+      case 'USER':
+      default:
+        router.push('/');
+        break;
+    }
+  };
+
+  const handleContinue = () => {
+    if (userData) {
+      redirectBasedOnRole(userData.role);
+    } else {
+      router.push('/');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowTokenModal(false);
+  };
+
+  // Get role badge color
+  const getRoleBadgeColor = (role: string) => {
+    switch(role) {
+      case 'ADMINISTRATOR':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'MANAGER':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'RIDER':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'USER':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  // Get redirect path display
+  const getRedirectPath = (role: string) => {
+    switch(role) {
+      case 'ADMINISTRATOR':
+        return 'Admin Dashboard';
+      case 'MANAGER':
+        return 'Manager Dashboard';
+      case 'RIDER':
+        return 'Rider Dashboard';
+      case 'USER':
+        return 'Home Page';
+      default:
+        return 'Home Page';
     }
   };
 
@@ -183,7 +291,6 @@ export default function LuxuryLogin() {
                 </div>
 
                 <div className="text-sm">
-      
                   <Link href="/ForgotPassword" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                     Forgot Password
                   </Link>
@@ -204,7 +311,7 @@ export default function LuxuryLogin() {
               {/* Sign Up Link */}
               <div className="text-center">
                 <p className="text-sm text-gray-600">
-                  Dont have an account?{' '}
+                  Don't have an account?{' '}
                   <Link href="/Signup" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
                     Sign up
                   </Link>
@@ -250,6 +357,119 @@ export default function LuxuryLogin() {
         
         <Footer />
       </div>
+
+      {/* Token Modal - Shows decrypted user info */}
+      {showTokenModal && userData && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white">
+              <h3 className="text-xl font-semibold text-gray-900">
+                🔐 Login Successful
+              </h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6">
+              {/* User Role - Highlighted with badge */}
+              <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <p className="text-sm font-medium text-gray-700 mb-2">👤 User Role:</p>
+                <div className="flex items-center space-x-3">
+                  <span className={`px-4 py-2 rounded-full text-sm font-semibold border ${getRoleBadgeColor(userData.role)}`}>
+                    {userData.role}
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    Redirecting to {getRedirectPath(userData.role)}...
+                  </span>
+                </div>
+              </div>
+              
+              {/* User Information Card */}
+              <div className="mb-4 bg-indigo-50 p-4 rounded-lg border border-indigo-200">
+                <h4 className="font-medium text-indigo-800 mb-3">👤 User Information</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-indigo-600">User ID</p>
+                    <p className="text-sm font-mono bg-white p-1 rounded">{userData.userId}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-indigo-600">Name</p>
+                    <p className="text-sm font-medium">{userData.name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-indigo-600">Email</p>
+                    <p className="text-sm">{userData.email || formData.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-indigo-600">Phone</p>
+                    <p className="text-sm">{userData.phone}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Addresses */}
+              {userData.addresses && userData.addresses.length > 0 && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">📍 Saved Addresses:</p>
+                  <div className="space-y-2">
+                    {userData.addresses.map((address, index) => (
+                      <div key={index} className="bg-gray-50 p-2 rounded border border-gray-200 text-sm">
+                        {address}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Full Decrypted Token Data */}
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-700 mb-2">🔑 Full Decrypted Token Data:</p>
+                <div className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto">
+                  <pre className="text-xs whitespace-pre-wrap font-mono">
+                    {JSON.stringify(userData, null, 2)}
+                  </pre>
+                </div>
+              </div>
+              
+              {/* Session Info */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                  <span className="text-sm font-medium block text-gray-700">Provider:</span>
+                  <span className="text-sm text-gray-600">{session?.provider || 'credentials'}</span>
+                </div>
+                <div className="bg-gray-50 p-3 rounded border border-gray-200">
+                  <span className="text-sm font-medium block text-gray-700">Status:</span>
+                  <span className="text-sm text-gray-600">{status}</span>
+                </div>
+              </div>
+              
+              {/* Modal Footer */}
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleContinue}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                >
+                  Continue to {getRedirectPath(userData.role)} →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
-}
+                    }
