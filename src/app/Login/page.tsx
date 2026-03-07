@@ -43,42 +43,47 @@ export default function LuxuryLogin() {
 
   // Decrypt token when session is available
   useEffect(() => {
-    if (status === 'authenticated' && session?.serverToken) {
-      console.log('✅ Session authenticated successfully');
-      
-      // Decrypt the token
-      const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-      
-      try {
-        const decrypted = decryptToken(session.serverToken, secret) as UserData;
-        setUserData(decrypted);
+    const decryptUserToken = async () => {
+      if (status === 'authenticated' && session?.serverToken) {
+        console.log('✅ Session authenticated successfully');
         
-        console.log('✅ Token decrypted successfully:', decrypted);
-        console.log('👤 User Role:', decrypted.role);
-        console.log('🆔 User ID:', decrypted.userId);
-        console.log('📞 Phone:', decrypted.phone);
-        console.log('📍 Addresses:', decrypted.addresses);
+        // Decrypt the token
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
         
-        // Store user data in localStorage or context if needed
-        localStorage.setItem('userData', JSON.stringify(decrypted));
-        localStorage.setItem('userRole', decrypted.role);
-        
-        // Show modal with user info
-        setShowTokenModal(true);
-        
-        // Redirect based on role after 3 seconds
-        setTimeout(() => {
-          redirectBasedOnRole(decrypted.role);
-        }, 3000);
-        
-      } catch (error: any) {
-        console.error('❌ Failed to decrypt token:', error);
-        // Still proceed but with default role
-        setTimeout(() => {
-          redirectBasedOnRole('USER');
-        }, 3000);
+        try {
+          // Await the decryptToken function since it returns a Promise
+          const decrypted = await decryptToken(session.serverToken, secret) as UserData;
+          setUserData(decrypted);
+          
+          console.log('✅ Token decrypted successfully:', decrypted);
+          console.log('👤 User Role:', decrypted.role);
+          console.log('🆔 User ID:', decrypted.userId);
+          console.log('📞 Phone:', decrypted.phone);
+          console.log('📍 Addresses:', decrypted.addresses);
+          
+          // Store user data in localStorage or context if needed
+          localStorage.setItem('userData', JSON.stringify(decrypted));
+          localStorage.setItem('userRole', decrypted.role);
+          
+          // Show modal with user info
+          setShowTokenModal(true);
+          
+          // Redirect based on role after 3 seconds
+          setTimeout(() => {
+            redirectBasedOnRole(decrypted.role);
+          }, 3000);
+          
+        } catch (error: any) {
+          console.error('❌ Failed to decrypt token:', error);
+          // Still proceed but with default role
+          setTimeout(() => {
+            redirectBasedOnRole('USER');
+          }, 3000);
+        }
       }
-    }
+    };
+
+    decryptUserToken();
   }, [session, status]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -472,4 +477,4 @@ export default function LuxuryLogin() {
       )}
     </>
   );
-}
+                      }
