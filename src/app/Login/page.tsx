@@ -19,7 +19,8 @@ interface FormData {
 
 export default function LuxuryLogin() {
   const { user } = useAuth();
-  //const { data:session,status} = useSession();
+  const { data:session,status} = useSession();
+  if(status) return console.log(status);
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
