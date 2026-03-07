@@ -19,7 +19,7 @@ interface FormData {
 
 export default function LuxuryLogin() {
   const { user } = useAuth();
-  const { data:session,status} = useSession();
+  //const { data:session,status} = useSession();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -27,7 +27,7 @@ export default function LuxuryLogin() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-console.log(session);
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
