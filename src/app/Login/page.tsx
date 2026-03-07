@@ -102,9 +102,9 @@ export default function LuxuryLogin() {
         image: decrypted.image
       };
       
-      //setUserData(userDataValid);
-     // setError(null);
-      //setSessionChecked(true);
+      setUserData(userDataValid);
+      setError(null);
+      setSessionChecked(true);
      // setShowTokenModal(true);
       /*
       console.log('✅ Token decrypted successfully:', userDataValid);
