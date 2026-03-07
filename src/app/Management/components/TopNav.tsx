@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDispatch } from "react-redux";
-import { setActiveIndex } from '..../../../Redux/activeIndexSlice';
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
 import { LogOut, CreditCard, ChevronDown, User } from 'lucide-react';
 
