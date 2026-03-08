@@ -1009,23 +1009,31 @@ type DeleteVehicleTypeResponse {
 input DeleteVehicleTypesInput {
   ids :[String]
 }
+# Input type for creating vehicle type (all fields required except description)
+input CreateVehicleTypeInput {
+  name          :String!
+  maxCapacityKg :Float!
+  maxVolumeM3   :Float!
+  description   :String
+  icon          :String!
+  cost          :Float!
+  perKmRate     :Float!
+  rushTimeAdd   :Float!
+}
 
+# Create mutation response
+type CreateVehicleTypeResponse {
+  success     :Boolean!
+  message     :String
+  vehicleType :VehicleType
+  errors      :[Error!]
+}
   type Mutation {
     # Update a vehicle type by ID
-  updateVehicleType(
-    id   :String
-    input: UpdateVehicleTypeInput
-  ): UpdateVehicleTypeResponse
+    createVehicleType(input: CreateVehicleTypeInput): CreateVehicleTypeResponse  
+    updateVehicleType(id:String,input: UpdateVehicleTypeInput): UpdateVehicleTypeResponse
+    deleteVehicleType(id:String): DeleteVehicleTypeResponse
 
-  # Delete a vehicle type by ID
-  deleteVehicleType(
-    id   :String
-  ): DeleteVehicleTypeResponse
-
-  # Optional: Bulk delete multiple vehicle types
-  deleteVehicleTypes(
-    input: DeleteVehicleTypesInput
-  ): DeleteVehicleTypeResponse
     # Existing mutations
     uploadDeliveryProof(file:ProofOfDeliveryInput): Result
     updateUserPhone(id: ID, phone: String): User
