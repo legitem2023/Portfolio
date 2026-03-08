@@ -1795,7 +1795,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         }
       })
     },
-products: async (
+/*products: async (
   _: any,
   {
     search,
@@ -2044,6 +2044,7 @@ products: async (
     throw new Error("Failed to fetch products");
   }
 },
+    */
 /*products: async (
   _: any,
   {
@@ -2526,7 +2527,7 @@ products: async (
   }
 },
    */ 
-/*
+
     products: async (
       _: any,
       {
@@ -2657,7 +2658,7 @@ products: async (
         throw new Error("Failed to fetch products");
       }
     },
-*/
+
     product: async (_: any, { id }: { id: string }) => {
       const products = await prisma.product.findMany({
           where: {
