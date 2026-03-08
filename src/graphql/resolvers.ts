@@ -831,7 +831,173 @@ const orders = await prisma.order.findMany({
     throw new Error('Failed to fetch orders');
   }
     },
- orderlist: async(parent: any, args: any) => {
+ riderPayments: async(parent: any, args: any) => {
+  // Set default values
+  const filter = args.filter || {};
+  const pagination = args.pagination || {};
+  
+  const page = pagination.page || 1;
+  const pageSize = pagination.pageSize || 10;
+  const skip = (page - 1) * pageSize;
+
+  // Build where clause
+  const where: any = {};
+   const itemWhere: any =  {};
+  // Add status filter if provided
+  if(filter && filter.status) {
+      itemWhere.status = filter.status 
+  }
+
+    
+  // Add supplierId filter through OrderItem relation
+  if (filter && filter.riderId) {
+    itemWhere.riderId = filter.riderId  
+  }
+
+
+  try {
+    // Get orders count
+    const totalCount = await prisma.order.count({ where });
+
+    // Get orders with pagination - COMPLETE QUERY
+    const orders = await prisma.order.findMany({
+      where,
+      skip,
+      take: pageSize,
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        items: {
+          where: Object.keys(itemWhere).length > 0 ? itemWhere : {},
+          select: {
+            id: true,
+            orderId: true,
+            supplierId: true,
+            riderId: true,
+            quantity: true,
+            price: true,
+            variantInfo: true,
+            status: true, // STATUS IS HERE
+            recipientName: true,
+            rejectedBy: true,
+            product:true,
+            rider: true,
+            supplier: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                addresses: {
+                  // Removed isDefault filter to match frontend query
+                  select: {
+                    street: true,
+                    city: true,
+                    state: true,
+                    zipCode: true,
+                    country: true,
+                    isDefault: true,
+                    lat: true,
+                    lng: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true
+          }
+        },
+        address: {
+          select: {
+            id: true,
+            street: true,
+            city: true,
+            state: true,
+            zipCode: true,
+            country: true,
+            lat: true,
+            lng: true
+          }
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            method: true,
+            status: true,
+            transactionId: true,
+            createdAt: true
+          }
+        }
+      }
+    });
+
+    // Format the response to match GraphQL schema
+    const formattedOrders = orders.map(order => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      userId: order.userId,
+      status: order.status,
+      total: order.total,
+      subtotal: order.subtotal || 0,
+      tax: order.tax || 0,
+      shipping: order.shipping || 0,
+      discount: order.discount || 0,
+      createdAt: order.createdAt ? order.createdAt.toISOString() : null,
+      updatedAt: order.updatedAt ? order.updatedAt.toISOString() : null,
+      user: order.user,
+      supplier: order.items.map(item => ({
+        supplier: item.supplier ? [item.supplier] : [], // Wrap in array to match [User] type
+      })),
+      rider: order.items.map(item => ({
+        rider: item.rider ? [item.rider] : [], // Wrap in array to match [User] type
+      })),
+      address: order.address,
+      payments: order.payments,
+      items: order.items.map(item => ({
+        id: item.id,
+        status: item.status,
+        supplierId: item.supplierId,
+        quantity: item.quantity,
+        price: item.price,
+        variantInfo: item.variantInfo,
+        product: [item.product], // Wrap in array to match [Product] type
+        supplier: item.supplier ? [item.supplier] : [], // Wrap in array to match [User] type
+        rider: item.rider ? [item.rider]:[]
+      }))
+    }));
+
+    // Calculate pagination info
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const paginationInfo = {
+      total: totalCount,
+      page,
+      pageSize,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1
+    };
+
+    return {
+      orders: formattedOrders,
+      pagination: paginationInfo
+    };
+
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+    },
+    orderlist: async(parent: any, args: any) => {
   // Set default values
   const filter = args.filter || {};
   const pagination = args.pagination || {};
