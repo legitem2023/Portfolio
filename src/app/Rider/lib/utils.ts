@@ -48,7 +48,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const orderParentId = order.id;
   const dropoffAddress = order.address;
   const proofOfDelivery = order.proofOfDelivery;
-  console.log(order,'mapping stage');
+  
   const customerContact = order.user?.phone;
   // Group items by supplier
   const itemsBySupplier: Record<string, {
