@@ -3344,6 +3344,217 @@ salesList: async (
   },
 
   Mutation: {
+    // createVehicleType resolver
+createVehicleType:async (_parent: any,args: any) => {
+  try {
+    const { input } = args;  
+    // Validate required fields
+    const requiredFields = ['name', 'maxCapacityKg', 'maxVolumeM3', 'icon', 'cost', 'perKmRate', 'rushTimeAdd'];
+    const missingFields = requiredFields.filter(field => !input[field]);
+    
+    if (missingFields.length > 0) {
+      return {
+        success: false,
+        message: "Missing required fields",
+        vehicleType: null,
+        errors: missingFields.map(field => ({
+          field,
+          message: `${field} is required`
+        }))
+      };
+    }
+
+    // Validate numeric fields are positive
+    const numericFields = ['maxCapacityKg', 'maxVolumeM3', 'cost', 'perKmRate', 'rushTimeAdd'];
+    const invalidNumericFields = numericFields.filter(field => input[field] <= 0);
+    
+    if (invalidNumericFields.length > 0) {
+      return {
+        success: false,
+        message: "Numeric fields must be positive",
+        vehicleType: null,
+        errors: invalidNumericFields.map(field => ({
+          field,
+          message: `${field} must be greater than 0`
+        }))
+      };
+    }
+
+    // Check if vehicle type with same name already exists
+    const existingVehicle = await prisma.vehicleType.findUnique({
+      where: { name: input.name }
+    });
+
+    if (existingVehicle) {
+      return {
+        success: false,
+        message: "Vehicle type with this name already exists",
+        vehicleType: null,
+        errors: [
+          {
+            field: "name",
+            message: "Vehicle type name must be unique"
+          }
+        ]
+      };
+    }
+
+    // Create the vehicle type
+    const newVehicle = await prisma.vehicleType.create({
+      data: {
+        name: input.name,
+        maxCapacityKg: input.maxCapacityKg,
+        maxVolumeM3: input.maxVolumeM3,
+        description: input.description || "",
+        icon: input.icon,
+        cost: input.cost,
+        perKmRate: input.perKmRate,
+        rushTimeAdd: input.rushTimeAdd,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+    });
+
+    return {
+      success: true,
+      message: "Vehicle type created successfully",
+      vehicleType: newVehicle,
+      errors: []
+    };
+
+  } catch (error: any) {
+    console.error("Create vehicle type error:", error);
+    
+    // Handle Prisma unique constraint errors
+    if (error.code === 'P2002') {
+      return {
+        success: false,
+        message: "Vehicle type with this name already exists",
+        vehicleType: null,
+        errors: [
+          {
+            field: "name",
+            message: "Vehicle type name must be unique"
+          }
+        ]
+      };
+    }
+
+    return {
+      success: false,
+      message: "Failed to create vehicle type",
+      vehicleType: null,
+      errors: [
+        {
+          field: "general",
+          message: error.message || "Internal server error"
+        }
+      ]
+    };
+  }
+},
+    // updateVehicleType resolver
+updateVehicleType:async (_parent: any,args:any) => {
+  try {
+    const { id, input } = args;
+    
+    // Check if vehicle type exists
+    const existingVehicle = await prisma.vehicleType.findUnique({
+      where: { id }
+    });
+
+    if (!existingVehicle) {
+      return {
+        success: false,
+        message: `Vehicle type with ID ${id} not found`,
+        vehicleType: null,
+        errors: [
+          {
+            field: "id",
+            message: "Vehicle type not found"
+          }
+        ]
+      };
+    }
+
+    // If name is being updated, check if it's unique
+    if (input.name && input.name !== existingVehicle.name) {
+      const nameExists = await prisma.vehicleType.findUnique({
+        where: { name: input.name }
+      });
+
+      if (nameExists) {
+        return {
+          success: false,
+          message: "Vehicle type with this name already exists",
+          vehicleType: null,
+          errors: [
+            {
+              field: "name",
+              message: "Vehicle type name must be unique"
+            }
+          ]
+        };
+      }
+    }
+
+    // Validate numeric fields if provided
+    const numericFields = ['maxCapacityKg', 'maxVolumeM3', 'cost', 'perKmRate', 'rushTimeAdd'];
+    for (const field of numericFields) {
+      if (input[field] !== undefined && input[field] <= 0) {
+        return {
+          success: false,
+          message: "Numeric fields must be positive",
+          vehicleType: null,
+          errors: [
+            {
+              field,
+              message: `${field} must be greater than 0`
+            }
+          ]
+        };
+      }
+    }
+
+    // Update the vehicle type
+    const updatedVehicle = await prisma.vehicleType.update({
+      where: { id },
+      data: {
+        name: input.name,
+        maxCapacityKg: input.maxCapacityKg,
+        maxVolumeM3: input.maxVolumeM3,
+        description: input.description,
+        icon: input.icon,
+        cost: input.cost,
+        perKmRate: input.perKmRate,
+        rushTimeAdd: input.rushTimeAdd,
+        updatedAt: new Date().toISOString()
+      }
+    });
+
+    return {
+      success: true,
+      message: "Vehicle type updated successfully",
+      vehicleType: updatedVehicle,
+      errors: []
+    };
+
+  } catch (error: any) {
+    console.error("Update vehicle type error:", error);
+    
+    return {
+      success: false,
+      message: "Failed to update vehicle type",
+      vehicleType: null,
+      errors: [
+        {
+          field: "general",
+          message: error.message || "Internal server error"
+        }
+      ]
+    };
+  }
+},
       uploadDeliveryProof: async (_parent: any, { file }: any) => {
       const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
       const photoUUID = uuidv4();
