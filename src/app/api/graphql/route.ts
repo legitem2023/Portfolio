@@ -46,16 +46,33 @@ const yoga = createYoga({
   },
   // Add these options for handling large responses
   maxRequestBodySize: 10 * 1024 * 1024, // 10MB max request size
-  fetchAPI: {
-    // Increase the response size limit
-    Response: {
-      // This helps with large responses
-      maxSize: 50 * 1024 * 1024, // 50MB max response
+  
+  // Increase the timeout for long-running queries
+  landingPage: false,
+  
+  // Add logging to debug
+  logging: true,
+  
+  // Disable masked errors in development
+  maskedErrors: false,
+  
+  // Add plugins for monitoring
+  plugins: [
+    {
+      onExecute: () => {
+        console.log('Executing query...');
+      },
+      onResultProcess: ({ result }) => {
+        // Log response size
+        try {
+          const size = new TextEncoder().encode(JSON.stringify(result)).length;
+          console.log(`Response size: ${(size / 1024).toFixed(2)} KB`);
+        } catch (e) {
+          // Ignore size calculation errors
+        }
+      },
     },
-  },
-  // Add timeout for long-running queries
-  maskedErrors: false, // Set to true in production
-  logging: true, // Enable logging to see what's happening
+  ],
 });
 
 export async function GET(request: Request) {
