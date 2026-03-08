@@ -862,19 +862,10 @@ input OrderPaginationInput {
     neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
-    apiBills(
-      filters: ApiBillFilters
-      pagination: PaginationInput
-      sort: SortInput
-    ): ApiBillList
-    
+    riderPayments(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
+    apiBills(filters: ApiBillFilters,pagination: PaginationInput,sort: SortInput): ApiBillList 
     apiBill(id: ID): ApiBill
-    
-    billingSummary(
-      service: String
-      year: Int
-      quarter: Int
-    ): BillingSummary
+    billingSummary(service: String, year: Int, quarter: Int): BillingSummary
     
     # Existing queries
     notifications(userId: ID, filters: NotificationFilters): NotificationConnection
