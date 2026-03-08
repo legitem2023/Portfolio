@@ -9,7 +9,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
   ) {
-    activeorder(filter: $filter, pagination: $pagination) {
+    riderPayments(filter: $filter, pagination: $pagination) {
       orders {
         id
         orderNumber
@@ -259,8 +259,8 @@ export default function RiderPaymentHistory({
 
   // Process orders to extract payment data
   useEffect(() => {
-    if (data?.activeorder?.orders) {
-      const orders = data.activeorder.orders;
+    if (data?.riderPayments?.orders) {
+      const orders = data.riderPayments.orders;
       
       // Extract payments from orders
       const extractedPayments: Payment[] = [];
@@ -331,12 +331,12 @@ export default function RiderPaymentHistory({
       });
 
       // Update pagination
-      if (data.activeorder.pagination) {
+      if (data.riderPayments.pagination) {
         setPagination({
-          page: data.activeorder.pagination.page || 1,
-          pageSize: data.activeorder.pagination.pageSize || 10,
-          total: data.activeorder.pagination.total || 0,
-          totalPages: data.activeorder.pagination.totalPages || 0,
+          page: data.riderPayments.pagination.page || 1,
+          pageSize: data.riderPayments.pagination.pageSize || 10,
+          total: data.riderPayments.pagination.total || 0,
+          totalPages: data.riderPayments.pagination.totalPages || 0,
         });
       }
     }
