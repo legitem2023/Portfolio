@@ -153,7 +153,7 @@ export default function ManagementDashboard() {
         return <SalesList />;
       case 'bills':
         return <ApiBillsTab />;
-      case 'vehicles':
+      case 'vehicle':
         return <VehicleTypeManager/>
       default:
         return <SalesDashboard />;
