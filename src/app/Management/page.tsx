@@ -13,7 +13,7 @@ import CategoriesTab from './components/CategoriesTab';
 import ApiBillsTab from './components/ApiBillsTab';
 import LoadingShimmer from './components/LoadingShimmer';
 import SalesList from './components/SalesList';
-
+import VehicleTypeManager from './components/VehicleTypeManager';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import { useAuth } from './hooks/useAuth';
@@ -153,6 +153,8 @@ export default function ManagementDashboard() {
         return <SalesList />;
       case 'bills':
         return <ApiBillsTab />;
+      case 'vehicles':
+        return <VehicleTypeManager/>
       default:
         return <SalesDashboard />;
     }
