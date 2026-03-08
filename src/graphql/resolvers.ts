@@ -491,8 +491,22 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
+vehicles:async (_parent: any,args: any) => {
+  try {
+    // Fetch all vehicle types from database
+    const vehicleTypes = await prisma.vehicleType.findMany({
+      orderBy: {
+        createdAt: 'desc' // Most recent first
+      }
+    });
 
-    // Find the orderlist resolver function (around line 550-560)
+    return vehicleTypes;
+
+  } catch (error: any) {
+    console.error("List vehicle types error:", error);
+    throw new Error(`Failed to fetch vehicle types: ${error.message}`);
+  }
+},
 neworder: async(parent: any, args: any) => {
   // Set default values
   const filter = args.filter || {};
