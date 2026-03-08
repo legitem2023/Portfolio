@@ -4,7 +4,7 @@ import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
 // Using your existing query
-export const ACTIVE_ORDER_LIST = gql`
+export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
@@ -239,14 +239,14 @@ export default function RiderPaymentHistory({
 
     // Add order status filter if selected
     if (orderStatusFilter) {
-      filter.status = orderStatusFilter;
+      filter.status = OrderStatus.DELIVERED;
     }
 
     return filter;
   };
 
   // Query orders using your existing query
-  const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST, {
+  const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST_PAYMENTS, {
     variables: {
       filter: buildOrderFilter(),
       pagination: {
