@@ -1796,6 +1796,231 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       })
     },
 
+
+products: async (
+  _: any,
+  {
+    search,
+    cursor,
+    limit = 12,
+    category,
+    sortBy,
+  }: {
+    search?: string;
+    cursor?: string;
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+  }
+) => {
+  try {
+    // FOR TESTING ONLY: Generate synthetic massive dataset
+    const TEST_MODE = process.env.NODE_ENV === 'development'; // Only enable in dev
+    
+    if (TEST_MODE && limit > 1000) {
+      console.log('⚠️ TEST MODE: Generating synthetic data for performance testing');
+      
+      const syntheticProducts = [];
+      const targetSize = 10000000; // 10 million rows
+      
+      // Base product template
+      const baseProduct = {
+        id: 'base-id',
+        name: 'Test Product',
+        price: 99.99,
+        images: ['test-image.jpg'],
+        model: 'test-model',
+        featured: false,
+        isActive: true,
+        stock: 100,
+        brand: 'Test Brand',
+        weight: 1.5,
+        dimensions: '10x10x10',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        description: 'Test description',
+        tags: ['test'],
+        sku: 'TEST-SKU',
+        supplierId: 'supplier-id',
+        supplier: {
+          addresses: [{
+            lat: 40.7128,
+            lng: -74.0060
+          }]
+        },
+        category: {
+          id: 'cat-id',
+          name: 'Test Category',
+          description: 'Test category description',
+          image: 'cat-image.jpg',
+          isActive: true,
+          createdAt: new Date(),
+          parent: null
+        },
+        variants: []
+      };
+
+      // Generate data in chunks to manage memory
+      const CHUNK_SIZE = 10000;
+      const totalChunks = Math.ceil(targetSize / CHUNK_SIZE);
+      
+      // Generate only what's needed for the current request
+      const startIndex = cursor ? parseInt(cursor.split('-')[1]) || 0 : 0;
+      const endIndex = Math.min(startIndex + limit, targetSize);
+      
+      for (let i = startIndex; i < endIndex; i++) {
+        syntheticProducts.push({
+          ...baseProduct,
+          id: `test-${i}-${Date.now()}`, // Unique ID with timestamp
+          name: `Test Product ${i}`,
+          sku: `TEST-SKU-${i}`,
+          price: 99.99 + (i % 100),
+          stock: 100 + (i % 900),
+          // Add variation to make data more realistic
+          createdAt: new Date(Date.now() - (i * 86400000)), // Different dates
+          brand: `Test Brand ${i % 10}`,
+          category: {
+            ...baseProduct.category,
+            name: `Category ${i % 20}`,
+            id: `cat-${i % 20}`
+          }
+        });
+
+        // Optional: Log progress every 100k items
+        if (i > 0 && i % 100000 === 0) {
+          console.log(`Generated ${i} synthetic products...`);
+        }
+      }
+      
+      console.log(`✅ Generated ${syntheticProducts.length} synthetic products`);
+      
+      // Simulate pagination with synthetic cursors
+      const syntheticCursor = `cursor-${endIndex}`;
+      const hasMore = endIndex < targetSize;
+      
+      return {
+        items: syntheticProducts,
+        nextCursor: hasMore ? syntheticCursor : null,
+        hasMore,
+      };
+    }
+
+    // Regular database query (unchanged)
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" as const } },
+        { description: { contains: search, mode: "insensitive" as const } },
+        { tags: { has: search } },
+      ];
+    }
+
+    if (category && category !== "All Categories") {
+      where.categoryId = category;
+    }
+
+    let orderBy: any = [{ id: "asc" }];
+    if (sortBy) {
+      switch (sortBy) {
+        case "Newest":
+          orderBy = [{ createdAt: "desc" }];
+          break;
+        case "Price: Low to High":
+          orderBy = [{ price: "asc" }];
+          break;
+        case "Price: High to Low":
+          orderBy = [{ price: "desc" }];
+          break;
+        case "Highest Rated":
+          orderBy = [{ rating: "desc" }];
+          break;
+        default:
+          orderBy = [{ featured: "desc" }, { id: "asc" }];
+      }
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      take: limit + 1,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        images: true,
+        model: true,
+        featured: true,
+        isActive: true,
+        stock: true,
+        brand: true,
+        weight: true,
+        dimensions: true,
+        createdAt: true,
+        updatedAt: true,
+        description: true,
+        tags: true,
+        sku: true,
+        supplierId: true,
+        supplier: {
+          select: {
+            addresses: {
+              where: {
+                isDefault: true
+              },
+              select: {
+                lat: true,
+                lng: true
+              }
+            }
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            image: true,
+            isActive: true,
+            createdAt: true,
+            parent: true
+          }
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            sku: true,
+            color: true,
+            size: true,
+            price: true,
+            salePrice: true,
+            stock: true,
+            images: true,
+            model: true
+          }
+        }
+      },
+    });
+
+    const hasMore = products.length > limit;
+    const items = hasMore ? products.slice(0, -1) : products;
+
+    return {
+      items,
+      nextCursor: hasMore ? products[products.length - 1].id : null,
+      hasMore,
+    };
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    throw new Error("Failed to fetch products");
+  }
+},
+    
+/*
     products: async (
       _: any,
       {
@@ -1926,7 +2151,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         throw new Error("Failed to fetch products");
       }
     },
-
+*/
     product: async (_: any, { id }: { id: string }) => {
       const products = await prisma.product.findMany({
           where: {
