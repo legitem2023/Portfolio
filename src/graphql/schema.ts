@@ -972,8 +972,60 @@ input ProofOfDeliveryInput {
   signatureData: String
 }
 
+# Input type for updating vehicle type (all fields optional)
+input UpdateVehicleTypeInput {
+  name          :String
+  maxCapacityKg :Float
+  maxVolumeM3   :Float
+  description   :String
+  icon          :String
+  cost          :Float
+  perKmRate     :Float
+  rushTimeAdd   :Float
+}
+
+# Update mutation response
+type UpdateVehicleTypeResponse {
+  success     :Boolean
+  message     :String
+  vehicleType :VehicleType
+  errors      :[Error]
+}
+
+# Common error type
+type Error {
+  field   :String
+  message :String
+}
+# Delete mutation response
+type DeleteVehicleTypeResponse {
+  success     :Boolean
+  message     :String
+  deletedId   :String
+  errors      :[Error]
+}
+
+# Optional: Input for bulk delete
+input DeleteVehicleTypesInput {
+  ids :[String]
+}
 
   type Mutation {
+    # Update a vehicle type by ID
+  updateVehicleType(
+    id   :String
+    input: UpdateVehicleTypeInput
+  ): UpdateVehicleTypeResponse
+
+  # Delete a vehicle type by ID
+  deleteVehicleType(
+    id   :String
+  ): DeleteVehicleTypeResponse
+
+  # Optional: Bulk delete multiple vehicle types
+  deleteVehicleTypes(
+    input: DeleteVehicleTypesInput
+  ): DeleteVehicleTypeResponse
     # Existing mutations
     uploadDeliveryProof(file:ProofOfDeliveryInput): Result
     updateUserPhone(id: ID, phone: String): User
