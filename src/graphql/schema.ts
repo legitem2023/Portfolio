@@ -302,6 +302,20 @@ type ProofOfDelivery {
     rejectedBy: [String]
   }
 
+type VehicleType {
+  id            :String
+  name          :String
+  maxCapacityKg :Float
+  maxVolumeM3   :Float
+  description   :String
+  createdAt     :String
+  updatedAt     :String
+  icon          :String
+  cost          :Float
+  perKmRate     :Float
+  rushTimeAdd   :Float
+}
+
   type CartItem {
     id: ID
     quantity: Int
@@ -866,7 +880,7 @@ input OrderPaginationInput {
     apiBills(filters: ApiBillFilters,pagination: PaginationInput,sort: SortInput): ApiBillList 
     apiBill(id: ID): ApiBill
     billingSummary(service: String, year: Int, quarter: Int): BillingSummary
-    
+    vehicles:[VehicleType]
     # Existing queries
     notifications(userId: ID, filters: NotificationFilters): NotificationConnection
     notification(id: ID): Notification
