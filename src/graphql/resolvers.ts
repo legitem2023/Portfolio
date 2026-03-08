@@ -1795,8 +1795,256 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         }
       })
     },
-
 products: async (
+  _: any,
+  {
+    search,
+    cursor,
+    limit = 12,
+    category,
+    sortBy,
+  }: {
+    search?: string;
+    cursor?: string;
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+  }
+) => {
+  try {
+    // FORCE TEST MODE - Set this to true to simulate 10M records
+    const USE_TEST_MODE = true; // Change to false for real data
+    const TOTAL_RECORDS = 10000000; // 10 million
+    
+    if (USE_TEST_MODE) {
+      console.log('⚠️ TEST MODE ACTIVATED: Simulating 10 million records');
+      console.log(`Requested limit: ${limit}, but will use pagination to simulate large dataset`);
+      
+      // Parse cursor to get starting index
+      let startIndex = 0;
+      if (cursor) {
+        const cursorMatch = cursor.match(/^cursor-(\d+)$/);
+        startIndex = cursorMatch ? parseInt(cursorMatch[1], 10) : 0;
+      }
+      
+      // Cap the limit to a reasonable size (prevents overwhelming the response)
+      const effectiveLimit = Math.min(limit, 100); // Max 100 items per request
+      
+      // Fetch ONE real product from database to use as template
+      const realProduct = await prisma.product.findFirst({
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          images: true,
+          model: true,
+          featured: true,
+          isActive: true,
+          stock: true,
+          brand: true,
+          weight: true,
+          dimensions: true,
+          createdAt: true,
+          updatedAt: true,
+          description: true,
+          tags: true,
+          sku: true,
+          supplierId: true,
+          supplier: {
+            select: {
+              addresses: {
+                where: { isDefault: true },
+                select: { lat: true, lng: true }
+              }
+            }
+          },
+          category: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              image: true,
+              isActive: true,
+              createdAt: true,
+              parent: true
+            }
+          },
+          variants: {
+            select: {
+              id: true,
+              name: true,
+              createdAt: true,
+              sku: true,
+              color: true,
+              size: true,
+              price: true,
+              salePrice: true,
+              stock: true,
+              images: true,
+              model: true
+            }
+          }
+        }
+      });
+
+      if (!realProduct) {
+        throw new Error("No product found to use as template");
+      }
+
+      // Generate items for current page
+      const items = [];
+      const endIndex = Math.min(startIndex + effectiveLimit, TOTAL_RECORDS);
+      
+      for (let i = startIndex; i < endIndex; i++) {
+        items.push({
+          ...realProduct,
+          id: `test-${i}`,
+          name: `${realProduct.name} (Copy ${i + 1} of ${TOTAL_RECORDS})`,
+          sku: `${realProduct.sku}-COPY-${i}`,
+          createdAt: new Date(Date.now() - (i * 60000)),
+          updatedAt: new Date(Date.now() - (i * 30000)),
+          supplier: realProduct.supplier ? {
+            addresses: realProduct.supplier.addresses ? [...realProduct.supplier.addresses] : []
+          } : null,
+          category: realProduct.category ? {
+            ...realProduct.category,
+          } : null,
+          variants: realProduct.variants ? realProduct.variants.map(v => ({
+            ...v,
+            id: `var-${i}-${v.id}`,
+            sku: `${v.sku}-COPY-${i}`
+          })) : []
+        });
+      }
+
+      const hasMore = endIndex < TOTAL_RECORDS;
+      const nextCursor = hasMore ? `cursor-${endIndex}` : null;
+
+      console.log(`✅ Returning ${items.length} items (simulated page ${Math.floor(startIndex / effectiveLimit) + 1} of ${Math.ceil(TOTAL_RECORDS / effectiveLimit)})`);
+      console.log(`   Next cursor: ${nextCursor}`);
+
+      return {
+        items,
+        nextCursor,
+        hasMore,
+      };
+    }
+
+    // Regular database query (only runs when USE_TEST_MODE = false)
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" as const } },
+        { description: { contains: search, mode: "insensitive" as const } },
+        { tags: { has: search } },
+      ];
+    }
+
+    if (category && category !== "All Categories") {
+      where.categoryId = category;
+    }
+
+    let orderBy: any = [{ id: "asc" }];
+    if (sortBy) {
+      switch (sortBy) {
+        case "Newest":
+          orderBy = [{ createdAt: "desc" }];
+          break;
+        case "Price: Low to High":
+          orderBy = [{ price: "asc" }];
+          break;
+        case "Price: High to Low":
+          orderBy = [{ price: "desc" }];
+          break;
+        case "Highest Rated":
+          orderBy = [{ rating: "desc" }];
+          break;
+        default:
+          orderBy = [{ featured: "desc" }, { id: "asc" }];
+      }
+    }
+
+    const products = await prisma.product.findMany({
+      where,
+      take: limit + 1,
+      skip: cursor ? 1 : 0,
+      cursor: cursor ? { id: cursor } : undefined,
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        images: true,
+        model: true,
+        featured: true,
+        isActive: true,
+        stock: true,
+        brand: true,
+        weight: true,
+        dimensions: true,
+        createdAt: true,
+        updatedAt: true,
+        description: true,
+        tags: true,
+        sku: true,
+        supplierId: true,
+        supplier: {
+          select: {
+            addresses: {
+              where: {
+                isDefault: true
+              },
+              select: {
+                lat: true,
+                lng: true
+              }
+            }
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            image: true,
+            isActive: true,
+            createdAt: true,
+            parent: true
+          }
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            sku: true,
+            color: true,
+            size: true,
+            price: true,
+            salePrice: true,
+            stock: true,
+            images: true,
+            model: true
+          }
+        }
+      },
+    });
+
+    const hasMore = products.length > limit;
+    const items = hasMore ? products.slice(0, -1) : products;
+
+    return {
+      items,
+      nextCursor: hasMore ? products[products.length - 1].id : null,
+      hasMore,
+    };
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    throw new Error("Failed to fetch products");
+  }
+},
+/*products: async (
   _: any,
   {
     search,
@@ -2052,7 +2300,7 @@ products: async (
     throw new Error("Failed to fetch products");
   }
 },
-    
+ */   
 /*
 
 products: async (
