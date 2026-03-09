@@ -81,27 +81,25 @@ export default function VisitorCounter() {
         <div className="flex flex-row justify-between items-center gap-1 sm:gap-2 mb-2">
           <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
             <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">Total</p>
-            <div className="animate-pulse">
-              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-16 sm:w-20 md:w-24"></div>
+            <div className="relative overflow-hidden bg-gray-200 rounded w-16 sm:w-20 md:w-24 h-6 sm:h-7 md:h-8">
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
             </div>
           </div>
           
           <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
             <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">Today</p>
-            <div className="animate-pulse">
-              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-12 sm:w-16 md:w-20"></div>
+            <div className="relative overflow-hidden bg-gray-200 rounded w-12 sm:w-16 md:w-20 h-6 sm:h-7 md:h-8">
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
             </div>
           </div>
           
           <div className="bg-gray-100 p-2 rounded-lg flex-1 min-w-0">
             <p className="text-[10px] xs:text-xs sm:text-sm text-gray-400 font-medium truncate">24h Unique</p>
-            <div className="animate-pulse">
-              <div className="h-6 sm:h-7 md:h-8 bg-gray-200 rounded w-12 sm:w-16 md:w-20"></div>
+            <div className="relative overflow-hidden bg-gray-200 rounded w-12 sm:w-16 md:w-20 h-6 sm:h-7 md:h-8">
+              <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200"></div>
             </div>
           </div>
         </div>
-        
-        
         
         <p className="text-[10px] xs:text-xs text-gray-400 mt-2 text-center truncate">
           Updates every 30s
