@@ -192,7 +192,7 @@ const DeluxeHomePage: React.FC = () => {
 
       <main>
         <VisitorCounter />
-        {/* <HeroCarousel slides={heroSlides} />*/}
+        <HeroCarousel slides={heroSlides} />
         <CategoryPage />
         
         {/* Featured Products Section */}
