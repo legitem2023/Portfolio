@@ -1,7 +1,7 @@
 import { ShoppingCart } from 'lucide-react';
 import { CartItem, Address } from '../../../../types';
 import { useState, useEffect } from 'react';
-
+import { useVehicleCosts } from '../hooks/useVehicleCosts';
 interface CartStageProps {
   cartItems: CartItem[];
   addresses: Address[];
