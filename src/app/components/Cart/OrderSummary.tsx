@@ -2,6 +2,7 @@ import { ShoppingCart } from 'lucide-react';
 import { CartItem, Address } from '../../../../types';
 import { useState, useEffect } from 'react';
 import { useVehicleCosts } from '../hooks/useVehicleCosts';
+
 interface CartStageProps {
   cartItems: CartItem[];
   addresses: Address[];
@@ -61,9 +62,29 @@ const OrderSummary = ({
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   
-  // Static rates (you can modify these values)
-  const BASE_RATE = 50; // Base rate in pesos (one-time fee)
-  const RATE_PER_KM = 15; // Rate per kilometer in pesos
+  // Use the custom hook to get vehicle costs
+  const { loading: vehiclesLoading, error: vehiclesError, vehicles, getVehicleCosts } = useVehicleCosts();
+  
+  // Get the first vehicle's costs or set defaults
+  const [baseRate, setBaseRate] = useState<number>(0);
+  const [ratePerKm, setRatePerKm] = useState<number>(0);
+
+  // Update rates when vehicles are loaded
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0) {
+      // You can customize this logic to select a specific vehicle
+      // For now, we'll use the first vehicle
+      const firstVehicle = vehicles[0];
+      setBaseRate(firstVehicle.cost || 0);
+      setRatePerKm(firstVehicle.perKmRate || 0);
+      
+      console.log('Vehicle rates loaded:', {
+        baseRate: firstVehicle.cost,
+        ratePerKm: firstVehicle.perKmRate,
+        vehicleName: firstVehicle.name
+      });
+    }
+  }, [vehicles]);
 
   // Fallback Haversine formula in case OSRM API fails
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -159,8 +180,8 @@ const OrderSummary = ({
           // Step 5: Add base rate
           
           const averageDistance = accumulatedDistance / cartItems.length;
-          const distanceCharge = averageDistance * RATE_PER_KM;
-          const totalShippingCost = BASE_RATE + distanceCharge;
+          const distanceCharge = averageDistance * ratePerKm;
+          const totalShippingCost = baseRate + distanceCharge;
           
           setShippingCost(totalShippingCost);
           
@@ -173,8 +194,8 @@ const OrderSummary = ({
           });
           console.log("Step 2 - Sum all distances: ", accumulatedDistance.toFixed(2), "km");
           console.log("Step 3 - Divide by cart length:", accumulatedDistance.toFixed(2), "km ÷", cartItems.length, "= ", averageDistance.toFixed(2), "km (average)");
-          console.log("Step 4 - Multiply by rate per km:", averageDistance.toFixed(2), "km × ₱", RATE_PER_KM, "= ₱", distanceCharge.toFixed(2));
-          console.log("Step 5 - Add base rate: ₱", BASE_RATE, "+ ₱", distanceCharge.toFixed(2), "= ₱", totalShippingCost.toFixed(2));
+          console.log("Step 4 - Multiply by rate per km:", averageDistance.toFixed(2), "km × ₱", ratePerKm, "= ₱", distanceCharge.toFixed(2));
+          console.log("Step 5 - Add base rate: ₱", baseRate, "+ ₱", distanceCharge.toFixed(2), "= ₱", totalShippingCost.toFixed(2));
           console.log("=================================");
         } else {
           setShippingCost(0);
@@ -195,7 +216,7 @@ const OrderSummary = ({
     };
 
     calculateShipping();
-  }, [cartItems, addresses]);
+  }, [cartItems, addresses, baseRate, ratePerKm]);
 
   if (cartItems.length === 0) {
     return (
@@ -211,7 +232,7 @@ const OrderSummary = ({
 
   // Calculate values for display
   const averageDistance = totalDistance / cartItems.length;
-  const distanceCharge = averageDistance * RATE_PER_KM;
+  const distanceCharge = averageDistance * ratePerKm;
 
   // Function to render the appropriate button based on current stage
   const renderStageButton = () => {
@@ -279,6 +300,19 @@ const OrderSummary = ({
           <div className="w-full">
             <div className="bg-indigo-50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5 lg:p-6">
 
+              {vehiclesLoading && (
+                <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-indigo-600 flex items-center gap-1 sm:gap-2">
+                  <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-indigo-600"></div>
+                  <span className="text-xs sm:text-sm">Loading vehicle rates...</span>
+                </div>
+              )}
+              
+              {vehiclesError && (
+                <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-red-600 bg-red-50 p-2 sm:p-3 rounded">
+                  ⚠ Error loading vehicle rates. Using default rates.
+                </div>
+              )}
+              
               {isCalculatingShipping && (
                 <div className="mb-2 sm:mb-3 md:mb-4 text-xs sm:text-sm text-indigo-600 flex items-center gap-1 sm:gap-2">
                   <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-indigo-600"></div>
@@ -303,28 +337,7 @@ const OrderSummary = ({
                     <dt className="text-indigo-700 text-xs sm:text-sm">Shipping</dt>
                     <dd className="font-medium text-indigo-900 text-right">
                       <div className="text-xs sm:text-sm">{formatPesoPrice(shippingCost)}</div>
-                      {/*totalDistance > 0 && individualDistances.length > 0 && (
-                        <div className="text-[10px] sm:text-xs text-indigo-500 mt-0.5 sm:mt-1 space-y-0.5 text-right">
-                          <div className="whitespace-nowrap font-medium text-indigo-700 mb-1">
-                            Shipping calculation:
-                          </div>
-                          <div className="whitespace-nowrap">Individual distances:</div>
-                          {individualDistances.map((dist, index) => (
-                            dist > 0 && (
-                              <div key={index} className="whitespace-nowrap pl-2">
-                                Item {index + 1}: {dist.toFixed(2)} km
-                              </div>
-                            )
-                          ))}
-                          <div className="whitespace-nowrap">Total distance: {totalDistance.toFixed(2)} km</div>
-                          <div className="whitespace-nowrap">÷ {cartItems.length} items = {averageDistance.toFixed(2)} km (avg)</div>
-                          <div className="whitespace-nowrap">× ₱{RATE_PER_KM} = ₱{distanceCharge.toFixed(2)}</div>
-                          <div className="whitespace-nowrap">+ Base rate: ₱{BASE_RATE}</div>
-                          <div className="whitespace-nowrap font-medium border-t border-indigo-200 pt-0.5 mt-0.5">
-                            Total: ₱{BASE_RATE} + ₱{distanceCharge.toFixed(2)} = ₱{shippingCost.toFixed(2)}
-                          </div>
-                        </div>
-                      )*/}
+                      {/* Debug info commented out */}
                     </dd>
                   </div>
                   
@@ -347,14 +360,16 @@ const OrderSummary = ({
                     onCheckout();
                     setCurrentStage('shipping');
                   }}
-                  disabled={isCalculatingShipping || !!shippingError}
+                  disabled={isCalculatingShipping || !!shippingError || vehiclesLoading}
                   className={`mt-3 sm:mt-4 md:mt-5 lg:mt-6 w-full border border-transparent rounded-md sm:rounded-lg py-2 sm:py-2.5 md:py-3 px-3 sm:px-4 text-xs sm:text-sm md:text-base font-medium text-white transition-all duration-200 ${
-                    isCalculatingShipping || shippingError
+                    isCalculatingShipping || shippingError || vehiclesLoading
                       ? 'bg-gray-400 cursor-not-allowed opacity-50'
                       : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transform active:scale-[0.98]'
                   }`}
                 >
-                  {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Checkout'}
+                  {vehiclesLoading ? 'Loading Rates...' : 
+                   isCalculatingShipping ? 'Calculating Shipping...' : 
+                   'Proceed to Checkout'}
                 </button>
               ) : (
                 renderStageButton()
