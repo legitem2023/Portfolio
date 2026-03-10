@@ -14,6 +14,7 @@ import { GET_USER_PROFILE } from '../graphql/query';
 import { CREATE_ORDER } from '../graphql/mutation';
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import CartStageShimmer from './CartStageShimmer';
+import { useVehicleCosts } from '../hooks/useVehicleCosts';
 
 export interface ShippingInfo {
   addressId: string;
@@ -69,24 +70,6 @@ async function getDistanceInKm(
   const route = data.routes[0];
   return route.distance / 1000;
 }
-
-// Shimmer Component - Optimized for mobile
-/*const CartStageShimmer = () => (
-  <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 md:p-6 lg:p-8 animate-pulse">
-    <div className="h-6 sm:h-7 md:h-8 bg-indigo-200 rounded w-32 sm:w-40 md:w-48 mb-4 sm:mb-6"></div>
-    <div className="space-y-3 sm:space-y-4">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex space-x-3 sm:space-x-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-indigo-200 rounded"></div>
-          <div className="flex-1 space-y-2 sm:space-y-3">
-            <div className="h-3 sm:h-4 bg-indigo-200 rounded w-3/4"></div>
-            <div className="h-3 sm:h-4 bg-indigo-200 rounded w-1/2"></div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-);*/
 
 // Cart Stage Component - Mobile optimized
 interface CartStageProps {
@@ -924,8 +907,28 @@ const OrderSummary = ({
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   
-  const BASE_RATE = 50;
-  const RATE_PER_KM = 15;
+  // Use the custom hook to get vehicle costs
+  const { loading: vehiclesLoading, error: vehiclesError, vehicles } = useVehicleCosts();
+  
+  // Get the first vehicle's costs or set defaults
+  const [baseRate, setBaseRate] = useState<number>(0);
+  const [ratePerKm, setRatePerKm] = useState<number>(0);
+
+  // Update rates when vehicles are loaded
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0) {
+      // Use the first vehicle's rates
+      const firstVehicle = vehicles[0];
+      setBaseRate(firstVehicle.cost || 0);
+      setRatePerKm(firstVehicle.perKmRate || 0);
+      
+      console.log('Vehicle rates loaded:', {
+        baseRate: firstVehicle.cost,
+        ratePerKm: firstVehicle.perKmRate,
+        vehicleName: firstVehicle.name
+      });
+    }
+  }, [vehicles]);
 
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371;
@@ -988,8 +991,8 @@ const OrderSummary = ({
 
         if (itemsWithLocation > 0) {
           const averageDistance = accumulatedDistance / cartItems.length;
-          const distanceCharge = averageDistance * RATE_PER_KM;
-          const totalShippingCost = BASE_RATE + distanceCharge;
+          const distanceCharge = averageDistance * ratePerKm;
+          const totalShippingCost = baseRate + distanceCharge;
           setShippingCost(totalShippingCost);
         } else {
           setShippingCost(0);
@@ -1005,7 +1008,7 @@ const OrderSummary = ({
     };
 
     calculateShipping();
-  }, [cartItems, addresses]);
+  }, [cartItems, addresses, baseRate, ratePerKm]);
 
   if (cartItems.length === 0) {
     return (
@@ -1027,14 +1030,16 @@ const OrderSummary = ({
         return (
           <button
             onClick={onProceedToShipping}
-            disabled={!canProceedToShipping || isCalculatingShipping}
+            disabled={!canProceedToShipping || isCalculatingShipping || vehiclesLoading}
             className={`w-full rounded-lg py-2.5 px-3 text-sm font-medium text-white transition-all duration-200 ${
-              !canProceedToShipping || isCalculatingShipping
+              !canProceedToShipping || isCalculatingShipping || vehiclesLoading
                 ? 'bg-gray-400 cursor-not-allowed opacity-50'
                 : 'bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800'
             }`}
           >
-            {isCalculatingShipping ? 'Calculating Shipping...' : 'Proceed to Shipping'}
+            {vehiclesLoading ? 'Loading Rates...' : 
+             isCalculatingShipping ? 'Calculating Shipping...' : 
+             'Proceed to Shipping'}
           </button>
         );
 
@@ -1140,6 +1145,19 @@ const OrderSummary = ({
         </h2>
         
         <div className="bg-indigo-50 rounded-lg p-3">
+          {vehiclesLoading && (
+            <div className="mb-2 text-xs text-indigo-600 flex items-center gap-1">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600"></div>
+              <span>Loading vehicle rates...</span>
+            </div>
+          )}
+          
+          {vehiclesError && (
+            <div className="mb-2 text-xs text-red-600 bg-red-50 p-2 rounded">
+              ⚠ Error loading vehicle rates. Using default rates.
+            </div>
+          )}
+          
           {isCalculatingShipping && (
             <div className="mb-2 text-xs text-indigo-600 flex items-center gap-1">
               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-600"></div>
@@ -1590,31 +1608,31 @@ const DeluxeCart = () => {
         </div>
         
         {/* Order Summary - Separate Card */}
-        {cartItems.length > 0?
+        {cartItems.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm">
-          <OrderSummary
-            cartItems={cartItems}
-            addresses={profileData?.user?.addresses || []}
-            subtotal={subtotal}
-            tax={tax}
-            total={total}
-            currentStage={currentStage}
-            onProceedToShipping={handleProceedToShipping}
-            onProceedToPayment={handleProceedToPayment}
-            onProceedToConfirmation={handleProceedToConfirmation}
-            onPlaceOrder={handlePlaceOrder}
-            onBackToCart={handleBackToCart}
-            onBackToShipping={handleBackToShipping}
-            onBackToPayment={handleBackToPayment}
-            onContinueShopping={handleContinueShopping}
-            isPlacingOrder={isPlacingOrder}
-            canProceedToShipping={canProceedToShipping}
-            canProceedToPayment={canProceedToPayment}
-            canProceedToConfirmation={canProceedToConfirmation}
-            canPlaceOrder={canPlaceOrder}
-          />
-        </div>
-        :(<></>)}
+            <OrderSummary
+              cartItems={cartItems}
+              addresses={profileData?.user?.addresses || []}
+              subtotal={subtotal}
+              tax={tax}
+              total={total}
+              currentStage={currentStage}
+              onProceedToShipping={handleProceedToShipping}
+              onProceedToPayment={handleProceedToPayment}
+              onProceedToConfirmation={handleProceedToConfirmation}
+              onPlaceOrder={handlePlaceOrder}
+              onBackToCart={handleBackToCart}
+              onBackToShipping={handleBackToShipping}
+              onBackToPayment={handleBackToPayment}
+              onContinueShopping={handleContinueShopping}
+              isPlacingOrder={isPlacingOrder}
+              canProceedToShipping={canProceedToShipping}
+              canProceedToPayment={canProceedToPayment}
+              canProceedToConfirmation={canProceedToConfirmation}
+              canPlaceOrder={canPlaceOrder}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
