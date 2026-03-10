@@ -85,7 +85,7 @@ const OrderSummary = ({
       });
     }
   }, [vehicles]);
-
+console.log(baseRate,"",ratePerKm);
   // Fallback Haversine formula in case OSRM API fails
   const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Earth's radius in kilometers
