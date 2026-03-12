@@ -762,8 +762,8 @@ export default function PreciseImageColorSeparator() {
             </div>
           </div>
 
-          {/* Silkscreen Notes}
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+          {/* Silkscreen Notes*/}
+          {/*<div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
             <h3 className="font-semibold text-yellow-800 mb-2">Silkscreen Printing Notes</h3>
             <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
               <li><span className="font-medium">Dominant colors</span> (highlighted in blue) are automatically generated as layers</li>
@@ -773,9 +773,9 @@ export default function PreciseImageColorSeparator() {
               <li>The similarity threshold affects how colors are merged - higher values create fewer distinct colors</li>
               <li>Download individual layers as PNG files for screen preparation</li>
             </ul>
-          </div>
+          </div>*/}
         </div>
-      )*/}
+      )}
 
       {/* Empty state */}
       {/*!originalImage && !isProcessing && (
