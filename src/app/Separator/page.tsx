@@ -10,6 +10,7 @@ interface ColorLayer {
   imageData: ImageData | null;
   percentage: number;
   pixelCount: number;
+  isDominant: boolean;
 }
 
 interface ColorCluster {
@@ -18,11 +19,13 @@ interface ColorCluster {
   b: number;
   count: number;
   hex: string;
+  percentage: number;
 }
 
 export default function PreciseImageColorSeparator() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [colorLayers, setColorLayers] = useState<ColorLayer[]>([]);
+  const [allColors, setAllColors] = useState<ColorCluster[]>([]);
   const [selectedLayer, setSelectedLayer] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [autoColorCount, setAutoColorCount] = useState<number>(0);
@@ -30,6 +33,8 @@ export default function PreciseImageColorSeparator() {
   const [similarityThreshold, setSimilarityThreshold] = useState(30);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   const [useAutoDetect, setUseAutoDetect] = useState(true);
+  const [showAllColors, setShowAllColors] = useState(false);
+  const [minPercentage, setMinPercentage] = useState(0.1); // Minimum percentage to show
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -109,8 +114,19 @@ export default function PreciseImageColorSeparator() {
       }))
       .sort((a, b) => b.count - a.count);
 
+    const totalPixels = colorsArray.reduce((sum, c) => sum + c.count, 0);
+    
+    // Calculate percentages for all colors
+    const colorsWithPercentage = colorsArray.map(color => ({
+      ...color,
+      percentage: (color.count / totalPixels) * 100
+    }));
+
     // Merge similar colors
-    const mergedColors = mergeSimilarColors(colorsArray, similarityThreshold);
+    const mergedColors = mergeSimilarColors(colorsWithPercentage, similarityThreshold);
+    
+    // Store all colors for display
+    setAllColors(mergedColors);
     
     // AUTO-DETECT optimal number of colors
     let optimalColorCount: number;
@@ -122,23 +138,20 @@ export default function PreciseImageColorSeparator() {
       optimalColorCount = manualColorCount;
     }
     
-    // Take optimal number of colors
+    // Take optimal number of colors for dominant layers
     const topColors = mergedColors.slice(0, optimalColorCount);
     
-    const totalPixels = colorsArray.reduce((sum, c) => sum + c.count, 0);
-    
-    // Create layers for each color
+    // Create layers for each color (dominant ones)
     const layers: ColorLayer[] = topColors.map(color => {
-      const percentage = (color.count / totalPixels) * 100;
-      
       const layerImageData = createColorLayer(imageData, color.r, color.g, color.b, similarityThreshold);
       
       return {
         color: color.hex,
         rgb: { r: color.r, g: color.g, b: color.b },
         imageData: layerImageData,
-        percentage,
-        pixelCount: color.count
+        percentage: color.percentage,
+        pixelCount: color.count,
+        isDominant: true
       };
     });
 
@@ -218,7 +231,8 @@ export default function PreciseImageColorSeparator() {
         g: avgG,
         b: avgB,
         count: totalCount,
-        hex: rgbToHex(avgR, avgG, avgB)
+        hex: rgbToHex(avgR, avgG, avgB),
+        percentage: (totalCount / colors.reduce((sum, c) => sum + c.count, 0)) * 100
       });
 
       similarIndices.forEach(idx => used.add(idx));
@@ -273,7 +287,7 @@ export default function PreciseImageColorSeparator() {
     }).join('');
   };
 
-  const renderLayerToCanvas = (layer: ColorLayer, index: number): string | null => {
+  const renderLayerToCanvas = (layer: ColorLayer): string | null => {
     if (!layerCanvasRef.current || !layer.imageData) return null;
     
     const tempCanvas = document.createElement('canvas');
@@ -322,6 +336,9 @@ export default function PreciseImageColorSeparator() {
       reprocessImage();
     }
   }, [useAutoDetect, manualColorCount, similarityThreshold]);
+
+  // Filter colors based on minimum percentage
+  const filteredAllColors = allColors.filter(color => color.percentage >= minPercentage);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
@@ -431,15 +448,15 @@ export default function PreciseImageColorSeparator() {
             </div>
           </div>
 
-          {/* Color layers with full detail */}
+          {/* Dominant Color Layers (for silkscreen) */}
           <div className="bg-white rounded-lg shadow p-4">
             <h3 className="text-lg font-semibold mb-4">
-              Separated Color Layers ({colorLayers.length} colors)
+              Dominant Colors for Silkscreen ({colorLayers.length} colors)
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {colorLayers.map((layer, index) => {
-                const layerPreview = renderLayerToCanvas(layer, index);
+                const layerPreview = renderLayerToCanvas(layer);
                 
                 return (
                   <div key={index} className="border rounded-lg overflow-hidden">
@@ -487,7 +504,7 @@ export default function PreciseImageColorSeparator() {
                         onClick={() => downloadLayer(layer, index)}
                         className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
                       >
-                        Download Layer
+                        Download Layer for Silkscreen
                       </button>
                     </div>
                   </div>
@@ -496,51 +513,161 @@ export default function PreciseImageColorSeparator() {
             </div>
           </div>
 
-          {/* Color distribution visualization */}
+          {/* All Colors (including non-dominant) */}
           <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold mb-4">Color Distribution</h3>
-            
-            {/* Color palette */}
-            <div className="mb-6">
-              <div className="h-12 flex rounded-lg overflow-hidden">
-                {colorLayers.map((layer, index) => (
-                  <div
-                    key={index}
-                    style={{
-                      backgroundColor: layer.color,
-                      width: `${layer.percentage}%`
-                    }}
-                    className="h-full transition-all hover:brightness-110 cursor-pointer"
-                    onClick={() => setSelectedLayer(index === selectedLayer ? null : index)}
-                    title={`${layer.color} - ${layer.percentage.toFixed(1)}%`}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                All Detected Colors ({filteredAllColors.length} colors)
+              </h3>
+              
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowAllColors(!showAllColors)}
+                  className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                >
+                  {showAllColors ? 'Hide' : 'Show'} All Colors
+                </button>
+                
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Min %:</label>
+                  <input
+                    type="range"
+                    min="0.01"
+                    max="5"
+                    step="0.01"
+                    value={minPercentage}
+                    onChange={(e) => setMinPercentage(parseFloat(e.target.value))}
+                    className="w-24"
                   />
-                ))}
+                  <span className="text-sm text-gray-600">{minPercentage}%</span>
+                </div>
               </div>
             </div>
 
-            {/* Color swatches with percentages */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
-              {colorLayers.map((layer, index) => (
-                <div
-                  key={index}
-                  className={`cursor-pointer transition-all ${
-                    selectedLayer === index ? 'ring-2 ring-black scale-105' : ''
-                  }`}
-                  onClick={() => setSelectedLayer(index === selectedLayer ? null : index)}
-                >
-                  <div 
-                    className="w-full aspect-square rounded-lg shadow-md"
-                    style={{ backgroundColor: layer.color }}
-                  />
-                  <div className="mt-1 text-xs text-center font-mono">
-                    {layer.color}
-                  </div>
-                  <div className="text-xs text-center text-gray-600">
-                    {layer.percentage.toFixed(1)}%
+            {showAllColors && (
+              <>
+                {/* Color palette with all colors */}
+                <div className="mb-6">
+                  <div className="h-12 flex rounded-lg overflow-hidden">
+                    {filteredAllColors.map((color, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          backgroundColor: color.hex,
+                          width: `${color.percentage}%`
+                        }}
+                        className="h-full transition-all hover:brightness-110 cursor-pointer"
+                        title={`${color.hex} - ${color.percentage.toFixed(2)}%`}
+                      />
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Color swatches grid */}
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-2">
+                  {filteredAllColors.map((color, index) => {
+                    const isDominant = index < colorLayers.length;
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={`cursor-pointer transition-all ${
+                          isDominant ? 'ring-2 ring-blue-500' : 'opacity-80'
+                        }`}
+                        title={`${color.hex} - ${color.percentage.toFixed(2)}%${isDominant ? ' (Dominant)' : ''}`}
+                      >
+                        <div 
+                          className="w-full aspect-square rounded shadow-md"
+                          style={{ backgroundColor: color.hex }}
+                        />
+                        <div className="mt-1 text-xs text-center font-mono truncate">
+                          {color.hex}
+                        </div>
+                        <div className="text-xs text-center text-gray-600">
+                          {color.percentage.toFixed(2)}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Color list for reference */}
+                <div className="mt-6 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="p-2 text-left">#</th>
+                        <th className="p-2 text-left">Color</th>
+                        <th className="p-2 text-left">Hex</th>
+                        <th className="p-2 text-left">RGB</th>
+                        <th className="p-2 text-left">Percentage</th>
+                        <th className="p-2 text-left">Pixels</th>
+                        <th className="p-2 text-left">Type</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAllColors.map((color, index) => {
+                        const isDominant = index < colorLayers.length;
+                        
+                        return (
+                          <tr key={index} className={isDominant ? 'bg-blue-50' : ''}>
+                            <td className="p-2">{index + 1}</td>
+                            <td className="p-2">
+                              <div 
+                                className="w-6 h-6 rounded"
+                                style={{ backgroundColor: color.hex }}
+                              />
+                            </td>
+                            <td className="p-2 font-mono">{color.hex}</td>
+                            <td className="p-2 font-mono">
+                              {color.r}, {color.g}, {color.b}
+                            </td>
+                            <td className="p-2">{color.percentage.toFixed(2)}%</td>
+                            <td className="p-2">{color.count.toLocaleString()}</td>
+                            <td className="p-2">
+                              {isDominant ? (
+                                <span className="px-2 py-1 bg-blue-500 text-white text-xs rounded">
+                                  Dominant
+                                </span>
+                              ) : (
+                                <span className="px-2 py-1 bg-gray-500 text-white text-xs rounded">
+                                  Non-dominant
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Summary statistics */}
+                <div className="mt-4 p-4 bg-gray-50 rounded">
+                  <h4 className="font-medium mb-2">Color Summary</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600">Total unique colors:</span>
+                      <span className="ml-2 font-medium">{allColors.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Colors shown:</span>
+                      <span className="ml-2 font-medium">{filteredAllColors.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Dominant colors:</span>
+                      <span className="ml-2 font-medium">{colorLayers.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">Coverage:</span>
+                      <span className="ml-2 font-medium">
+                        {filteredAllColors.reduce((sum, c) => sum + c.percentage, 0).toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* RGB channel breakdown */}
@@ -599,6 +726,18 @@ export default function PreciseImageColorSeparator() {
               </div>
             </div>
           </div>
+
+          {/* Silkscreen Notes */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+            <h3 className="font-semibold text-yellow-800 mb-2">Silkscreen Printing Notes</h3>
+            <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+              <li>Dominant colors are shown first - these are your primary silkscreen layers</li>
+              <li>Non-dominant colors (shown in the "All Colors" section) may be too subtle for separate screens</li>
+              <li>Consider combining very similar colors (use the similarity threshold to adjust)</li>
+              <li>Each color layer can be downloaded as a separate PNG file for screen preparation</li>
+              <li>Adjust the minimum percentage filter to see how many colors you're willing to separate</li>
+            </ul>
+          </div>
         </div>
       )}
 
@@ -610,10 +749,12 @@ export default function PreciseImageColorSeparator() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <p className="text-gray-600">Upload an image to separate its colors</p>
-          <p className="text-sm text-gray-400 mt-2">Auto-detects optimal number of colors based on image content</p>
+          <p className="text-gray-600">Upload an image to separate its colors for silkscreen printing</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Shows both dominant and non-dominant colors to help you decide which to use
+          </p>
         </div>
       )}
     </div>
   );
-                                                    }
+}
