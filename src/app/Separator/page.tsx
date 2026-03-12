@@ -583,7 +583,7 @@ export default function PreciseImageColorSeparator() {
                             src={layerPreview}
                             alt={`Color layer ${index + 1} - ${layer.color}`}
                             fill
-                            className="object-contain"
+                            className="object-contain border "
                             unoptimized={true}
                           />
                         </div>
