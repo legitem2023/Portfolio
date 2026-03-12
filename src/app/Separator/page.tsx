@@ -1,7 +1,7 @@
 // components/PreciseImageColorSeparator.tsx
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import NextImage from 'next/image';
 
 interface ColorLayer {
@@ -12,14 +12,24 @@ interface ColorLayer {
   pixelCount: number;
 }
 
+interface ColorCluster {
+  r: number;
+  g: number;
+  b: number;
+  count: number;
+  hex: string;
+}
+
 export default function PreciseImageColorSeparator() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [colorLayers, setColorLayers] = useState<ColorLayer[]>([]);
   const [selectedLayer, setSelectedLayer] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [colorCount, setColorCount] = useState(8);
+  const [autoColorCount, setAutoColorCount] = useState<number>(0);
+  const [manualColorCount, setManualColorCount] = useState<number>(8);
   const [similarityThreshold, setSimilarityThreshold] = useState(30);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
+  const [useAutoDetect, setUseAutoDetect] = useState(true);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -36,7 +46,7 @@ export default function PreciseImageColorSeparator() {
       const imageUrl = e.target?.result as string;
       setOriginalImage(imageUrl);
       
-      const img = new window.Image(); // Fixed: Use window.Image instead of Image
+      const img = new window.Image();
       img.crossOrigin = 'anonymous';
       img.src = imageUrl;
       
@@ -53,34 +63,28 @@ export default function PreciseImageColorSeparator() {
     const canvas = originalCanvasRef.current;
     if (!canvas) return;
 
-    // Set canvas to original image size to preserve details
     canvas.width = img.width;
     canvas.height = img.height;
     
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (!ctx) return;
 
-    // Draw image at full resolution
     ctx.drawImage(img, 0, 0, img.width, img.height);
     
-    // Get full resolution pixel data
     const imageData = ctx.getImageData(0, 0, img.width, img.height);
     const pixels = imageData.data;
     
-    // Perform color analysis with higher precision
+    // Collect all colors with minimal quantization
     const colorMap = new Map<string, { count: number; r: number; g: number; b: number }>();
     
-    // First pass: collect all colors with minimal quantization
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
       const a = pixels[i + 3];
       
-      // Skip transparent pixels
       if (a < 10) continue;
       
-      // Use smaller quantization for better detail preservation
       const quantized = {
         r: Math.round(r / 5) * 5,
         g: Math.round(g / 5) * 5,
@@ -97,7 +101,6 @@ export default function PreciseImageColorSeparator() {
       }
     }
 
-    // Convert to array and sort by frequency
     const colorsArray = Array.from(colorMap.entries())
       .map(([key, value]) => ({
         key,
@@ -106,20 +109,28 @@ export default function PreciseImageColorSeparator() {
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Merge similar colors to reduce noise while preserving distinct colors
+    // Merge similar colors
     const mergedColors = mergeSimilarColors(colorsArray, similarityThreshold);
     
-    // Take top N colors
-    const topColors = mergedColors.slice(0, colorCount);
+    // AUTO-DETECT optimal number of colors
+    let optimalColorCount: number;
     
-    // Calculate total pixels (excluding transparent)
+    if (useAutoDetect) {
+      optimalColorCount = detectOptimalColorCount(mergedColors);
+      setAutoColorCount(optimalColorCount);
+    } else {
+      optimalColorCount = manualColorCount;
+    }
+    
+    // Take optimal number of colors
+    const topColors = mergedColors.slice(0, optimalColorCount);
+    
     const totalPixels = colorsArray.reduce((sum, c) => sum + c.count, 0);
     
     // Create layers for each color
     const layers: ColorLayer[] = topColors.map(color => {
       const percentage = (color.count / totalPixels) * 100;
       
-      // Create mask for this color
       const layerImageData = createColorLayer(imageData, color.r, color.g, color.b, similarityThreshold);
       
       return {
@@ -135,8 +146,39 @@ export default function PreciseImageColorSeparator() {
     setIsProcessing(false);
   };
 
-  const mergeSimilarColors = (colors: any[], threshold: number) => {
-    const merged: any[] = [];
+  const detectOptimalColorCount = (colors: ColorCluster[]): number => {
+    if (colors.length <= 3) return colors.length;
+    
+    // Calculate color significance and find natural breaks
+    const totalPixels = colors.reduce((sum, c) => sum + c.count, 0);
+    const significanceThreshold = 0.01; // 1% minimum significance
+    
+    // Method 1: Include all colors that represent at least 1% of the image
+    const significantColors = colors.filter(c => (c.count / totalPixels) >= significanceThreshold);
+    
+    if (significantColors.length >= 2 && significantColors.length <= 12) {
+      return significantColors.length;
+    }
+    
+    // Method 2: If too many/few significant colors, use elbow method
+    const percentages = colors.map(c => c.count / totalPixels);
+    let optimalK = 8; // default
+    
+    // Find elbow point in cumulative percentage
+    let cumulativePercentage = 0;
+    for (let i = 0; i < colors.length; i++) {
+      cumulativePercentage += percentages[i];
+      if (cumulativePercentage >= 0.85) { // 85% coverage
+        optimalK = Math.max(5, i + 1);
+        break;
+      }
+    }
+    
+    return Math.min(optimalK, 16); // Cap at 16 colors max
+  };
+
+  const mergeSimilarColors = (colors: any[], threshold: number): ColorCluster[] => {
+    const merged: ColorCluster[] = [];
     const used = new Set();
 
     for (let i = 0; i < colors.length; i++) {
@@ -167,7 +209,6 @@ export default function PreciseImageColorSeparator() {
         }
       }
 
-      // Calculate weighted average color
       const avgR = Math.round(totalR / totalCount);
       const avgG = Math.round(totalG / totalCount);
       const avgB = Math.round(totalB / totalCount);
@@ -197,32 +238,27 @@ export default function PreciseImageColorSeparator() {
     const height = sourceData.height;
     const sourcePixels = sourceData.data;
     
-    // Create new ImageData for this layer
     const layerData = new ImageData(width, height);
     const layerPixels = layerData.data;
     
-    // For each pixel, if it matches the target color (within threshold), keep it, otherwise make it transparent
     for (let i = 0; i < sourcePixels.length; i += 4) {
       const r = sourcePixels[i];
       const g = sourcePixels[i + 1];
       const b = sourcePixels[i + 2];
       const a = sourcePixels[i + 3];
       
-      // Calculate color distance
       const colorDist = Math.sqrt(
         Math.pow(r - targetR, 2) +
         Math.pow(g - targetG, 2) +
         Math.pow(b - targetB, 2)
       );
       
-      // If color is within threshold, keep original pixel
       if (colorDist <= threshold) {
         layerPixels[i] = r;
         layerPixels[i + 1] = g;
         layerPixels[i + 2] = b;
         layerPixels[i + 3] = a;
       } else {
-        // Make transparent
         layerPixels[i + 3] = 0;
       }
     }
@@ -240,10 +276,6 @@ export default function PreciseImageColorSeparator() {
   const renderLayerToCanvas = (layer: ColorLayer, index: number): string | null => {
     if (!layerCanvasRef.current || !layer.imageData) return null;
     
-    const ctx = layerCanvasRef.current.getContext('2d');
-    if (!ctx) return null;
-    
-    // Create a temporary canvas for this layer
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = layer.imageData.width;
     tempCanvas.height = layer.imageData.height;
@@ -251,8 +283,6 @@ export default function PreciseImageColorSeparator() {
     if (!tempCtx) return null;
     
     tempCtx.putImageData(layer.imageData, 0, 0);
-    
-    // Convert to data URL for display
     return tempCanvas.toDataURL();
   };
 
@@ -276,6 +306,22 @@ export default function PreciseImageColorSeparator() {
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
+
+  const reprocessImage = () => {
+    if (originalImage) {
+      setIsProcessing(true);
+      const img = new window.Image();
+      img.crossOrigin = 'anonymous';
+      img.src = originalImage;
+      img.onload = () => extractPreciseColors(img);
+    }
+  };
+
+  useEffect(() => {
+    if (originalImage && !isProcessing) {
+      reprocessImage();
+    }
+  }, [useAutoDetect, manualColorCount, similarityThreshold]);
 
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
@@ -302,21 +348,38 @@ export default function PreciseImageColorSeparator() {
             {isProcessing ? 'Processing...' : 'Upload Image'}
           </button>
           
-          <div className="flex gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Color Count: {colorCount}
+          <div className="flex flex-wrap gap-6 items-center">
+            {/* Auto-detect toggle */}
+            <div className="flex items-center gap-2">
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={useAutoDetect}
+                  onChange={(e) => setUseAutoDetect(e.target.checked)}
+                  className="sr-only peer"
+                  disabled={isProcessing}
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                <span className="ml-3 text-sm font-medium text-gray-700">Auto-detect colors</span>
               </label>
-              <input
-                type="range"
-                min="2"
-                max="16"
-                value={colorCount}
-                onChange={(e) => setColorCount(parseInt(e.target.value))}
-                className="w-32"
-                disabled={isProcessing}
-              />
             </div>
+
+            {!useAutoDetect && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Manual Color Count: {manualColorCount}
+                </label>
+                <input
+                  type="range"
+                  min="2"
+                  max="24"
+                  value={manualColorCount}
+                  onChange={(e) => setManualColorCount(parseInt(e.target.value))}
+                  className="w-32"
+                  disabled={isProcessing}
+                />
+              </div>
+            )}
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -338,6 +401,12 @@ export default function PreciseImageColorSeparator() {
         {isProcessing && (
           <div className="mt-4 text-center text-gray-600">
             Processing image... This may take a moment for high-resolution images.
+          </div>
+        )}
+
+        {autoColorCount > 0 && useAutoDetect && !isProcessing && (
+          <div className="mt-4 text-sm text-gray-600 bg-blue-50 p-2 rounded">
+            Auto-detected {autoColorCount} dominant colors based on image content
           </div>
         )}
       </div>
@@ -364,7 +433,9 @@ export default function PreciseImageColorSeparator() {
 
           {/* Color layers with full detail */}
           <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold mb-4">Separated Color Layers</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Separated Color Layers ({colorLayers.length} colors)
+            </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {colorLayers.map((layer, index) => {
@@ -412,7 +483,6 @@ export default function PreciseImageColorSeparator() {
                         Pixels: {layer.pixelCount.toLocaleString()}
                       </p>
                       
-                      {/* Download button */}
                       <button
                         onClick={() => downloadLayer(layer, index)}
                         className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
@@ -448,7 +518,7 @@ export default function PreciseImageColorSeparator() {
               </div>
             </div>
 
-            {/* Color swatches */}
+            {/* Color swatches with percentages */}
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
               {colorLayers.map((layer, index) => (
                 <div
@@ -464,6 +534,9 @@ export default function PreciseImageColorSeparator() {
                   />
                   <div className="mt-1 text-xs text-center font-mono">
                     {layer.color}
+                  </div>
+                  <div className="text-xs text-center text-gray-600">
+                    {layer.percentage.toFixed(1)}%
                   </div>
                 </div>
               ))}
@@ -538,9 +611,9 @@ export default function PreciseImageColorSeparator() {
             </svg>
           </div>
           <p className="text-gray-600">Upload an image to separate its colors</p>
-          <p className="text-sm text-gray-400 mt-2">Supports JPG, PNG, GIF, WebP</p>
+          <p className="text-sm text-gray-400 mt-2">Auto-detects optimal number of colors based on image content</p>
         </div>
       )}
     </div>
   );
-              }
+      }
