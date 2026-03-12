@@ -732,10 +732,10 @@ export default function PreciseImageColorSeparator() {
             <h3 className="font-semibold text-yellow-800 mb-2">Silkscreen Printing Notes</h3>
             <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
               <li>Dominant colors are shown first - these are your primary silkscreen layers</li>
-              <li>Non-dominant colors (shown in the "All Colors" section) may be too subtle for separate screens</li>
+              <li>Non-dominant colors (shown in the All Colors section) may be too subtle for separate screens</li>
               <li>Consider combining very similar colors (use the similarity threshold to adjust)</li>
               <li>Each color layer can be downloaded as a separate PNG file for screen preparation</li>
-              <li>Adjust the minimum percentage filter to see how many colors you're willing to separate</li>
+              <li>Adjust the minimum percentage filter to see how many colors youre willing to separate</li>
             </ul>
           </div>
         </div>
