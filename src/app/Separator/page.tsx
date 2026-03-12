@@ -762,7 +762,7 @@ export default function PreciseImageColorSeparator() {
             </div>
           </div>
 
-          {/* Silkscreen Notes */}
+          {/* Silkscreen Notes}
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
             <h3 className="font-semibold text-yellow-800 mb-2">Silkscreen Printing Notes</h3>
             <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
@@ -775,10 +775,10 @@ export default function PreciseImageColorSeparator() {
             </ul>
           </div>
         </div>
-      )}
+      )*/}
 
       {/* Empty state */}
-      {!originalImage && !isProcessing && (
+      {/*!originalImage && !isProcessing && (
         <div className="text-center py-12 bg-white rounded-lg shadow">
           <div className="text-gray-400 mb-4">
             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -790,7 +790,7 @@ export default function PreciseImageColorSeparator() {
             Automatically generates layers for dominant colors - you can generate any other color later
           </p>
         </div>
-      )}
+      )*/}
     </div>
   );
   }
