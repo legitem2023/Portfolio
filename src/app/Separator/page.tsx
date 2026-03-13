@@ -401,7 +401,7 @@ export default function PreciseImageColorSeparator() {
   // Get layers to display based on toggle
   const layersToDisplay = showAllColors ? allColorLayers : dominantLayers;
 
-  // Generate composite image from all displayed layers
+  // Generate composite image from all displayed layers (with proper alpha blending)
   const generateComposite = useCallback((layers: ColorLayer[]) => {
     if (!layers.length || !layers[0].imageData) {
       setCompositeImage(null);
@@ -415,13 +415,22 @@ export default function PreciseImageColorSeparator() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas (transparent background)
+    // Clear canvas to transparent
     ctx.clearRect(0, 0, width, height);
 
-    // Draw each layer in order (first is most dominant)
+    // Draw each layer using drawImage (respects alpha channel)
     layers.forEach(layer => {
       if (layer.imageData) {
-        ctx.putImageData(layer.imageData, 0, 0);
+        // Create a temporary canvas for this layer
+        const layerCanvas = document.createElement('canvas');
+        layerCanvas.width = width;
+        layerCanvas.height = height;
+        const layerCtx = layerCanvas.getContext('2d');
+        if (layerCtx) {
+          layerCtx.putImageData(layer.imageData, 0, 0);
+          // Draw onto composite canvas with default source-over blending
+          ctx.drawImage(layerCanvas, 0, 0);
+        }
       }
     });
 
@@ -811,7 +820,7 @@ export default function PreciseImageColorSeparator() {
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2 text-center">
-                Layers are overlaid in order of dominance (most dominant first).
+                Layers are overlaid using alpha blending. Order: most dominant first (may affect overlapping areas).
               </p>
             </div>
           )}
@@ -819,4 +828,4 @@ export default function PreciseImageColorSeparator() {
       )}
     </div>
   );
-        }
+      }
