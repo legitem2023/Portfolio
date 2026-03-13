@@ -1,7 +1,7 @@
 // components/PreciseImageColorSeparator.tsx
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import NextImage from 'next/image';
 
 interface ColorLayer {
@@ -36,8 +36,9 @@ export default function PreciseImageColorSeparator() {
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   const [useAutoDetect, setUseAutoDetect] = useState(true);
   const [showAllColors, setShowAllColors] = useState(false);
-  const [minPercentage, setMinPercentage] = useState(0.1); // Minimum percentage to show
+  const [minPercentage, setMinPercentage] = useState(0.1);
   const [selectedColorForLayer, setSelectedColorForLayer] = useState<ColorCluster | null>(null);
+  const [compositeImage, setCompositeImage] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -400,6 +401,37 @@ export default function PreciseImageColorSeparator() {
   // Get layers to display based on toggle
   const layersToDisplay = showAllColors ? allColorLayers : dominantLayers;
 
+  // Generate composite image from all displayed layers
+  const generateComposite = useCallback((layers: ColorLayer[]) => {
+    if (!layers.length || !layers[0].imageData) {
+      setCompositeImage(null);
+      return;
+    }
+
+    const { width, height } = layers[0].imageData;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Clear canvas (transparent background)
+    ctx.clearRect(0, 0, width, height);
+
+    // Draw each layer in order (first is most dominant)
+    layers.forEach(layer => {
+      if (layer.imageData) {
+        ctx.putImageData(layer.imageData, 0, 0);
+      }
+    });
+
+    setCompositeImage(canvas.toDataURL());
+  }, []);
+
+  useEffect(() => {
+    generateComposite(layersToDisplay);
+  }, [layersToDisplay, generateComposite]);
+
   return (
     <div className="w-full max-w-7xl mx-auto p-6">
       {/* Hidden canvases */}
@@ -583,7 +615,7 @@ export default function PreciseImageColorSeparator() {
                             src={layerPreview}
                             alt={`Color layer ${index + 1} - ${layer.color}`}
                             fill
-                            className="object-contain border "
+                            className="object-contain border"
                             unoptimized={true}
                           />
                         </div>
@@ -762,35 +794,29 @@ export default function PreciseImageColorSeparator() {
             </div>
           </div>
 
-          {/* Silkscreen Notes*/}
-          {/*<div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
-            <h3 className="font-semibold text-yellow-800 mb-2">Silkscreen Printing Notes</h3>
-            <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
-              <li><span className="font-medium">Dominant colors</span> (highlighted in blue) are automatically generated as layers</li>
-              <li><span className="font-medium">Non-dominant colors</span> can be generated individually by clicking on them in the palette or table</li>
-              <li>Each color layer shows exactly where that color appears in the image</li>
-              <li>Use the All Colors toggle to see every generated layer</li>
-              <li>The similarity threshold affects how colors are merged - higher values create fewer distinct colors</li>
-              <li>Download individual layers as PNG files for screen preparation</li>
-            </ul>
-          </div>*/}
+          {/* Composite Image Section - at the bottom */}
+          {compositeImage && (
+            <div className="bg-white rounded-lg shadow p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Composite of {showAllColors ? 'All' : 'Dominant'} Layers
+              </h3>
+              <div className="relative w-full" style={{ maxHeight: '400px' }}>
+                <NextImage
+                  src={compositeImage}
+                  alt="Composite of all color layers"
+                  width={originalDimensions.width}
+                  height={originalDimensions.height}
+                  className="object-contain max-h-[400px] w-auto mx-auto border border-gray-300"
+                  unoptimized={true}
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                Layers are overlaid in order of dominance (most dominant first).
+              </p>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Empty state */}
-      {/*!originalImage && !isProcessing && (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <div className="text-gray-400 mb-4">
-            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <p className="text-gray-600">Upload an image to separate its colors for silkscreen printing</p>
-          <p className="text-sm text-gray-400 mt-2">
-            Automatically generates layers for dominant colors - you can generate any other color later
-          </p>
-        </div>
-      )*/}
     </div>
   );
-  }
+        }
