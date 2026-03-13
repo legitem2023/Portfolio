@@ -3,46 +3,41 @@ export const emailTemplates = {
     <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background: #f5f5f5; }
-          .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f5f5f5;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          }
           .header { 
-            background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 50%, #ffffff 100%);
+            background-color: #8B5CF6;
             padding: 30px 20px; 
             text-align: center; 
-            position: relative;
-            border-bottom: 1px solid #EDE9FE;
-          }
-          .logo-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 15px;
-          }
-          .logo {
-            width: 80px;
-            height: 80px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
-          }
-          .logo img {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
           }
           .header h1 { 
-            color: #4C1D95; 
-            margin: 0; 
+            color: white; 
+            margin: 15px 0 0 0; 
             font-size: 28px;
-            text-shadow: 0 2px 4px rgba(255,255,255,0.5);
           }
-          .content { padding: 40px 30px; background: white; }
+          .content { 
+            padding: 40px 30px; 
+            background: white;
+            color: #333333;
+          }
           .button { 
-            background: linear-gradient(135deg, #8B5CF6, #A78BFA); 
+            background-color: #8B5CF6;
             color: white; 
             padding: 14px 28px; 
             text-decoration: none; 
@@ -50,38 +45,51 @@ export const emailTemplates = {
             display: inline-block;
             font-weight: 600;
             margin: 20px 0;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);
           }
           .footer { 
-            background: #F5F3FF; 
+            background-color: #F3F0FF;
             padding: 20px; 
             text-align: center; 
-            color: #6B7280;
-            border-top: 1px solid #EDE9FE;
+            color: #666666;
+            font-size: 12px;
+            border-top: 1px solid #E9E0FF;
+          }
+          .logo {
+            display: block;
+            margin: 0 auto;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 5px;
           }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo-container">
-              <div class="logo">
-                <img src="/VendorCity_Rider.webp" alt="VendorCity Rider" />
-              </div>
-            </div>
+                            <img 
+                src="https://via.placeholder.com/80x80/8B5CF6/ffffff?text=R" 
+                alt="VendorCity Rider" 
+                width="80" 
+                height="80"
+                style="display: block; margin: 0 auto; border-radius: 50%; border: 3px solid white;"
+              />
             <h1>Welcome, ${data.name}!</h1>
           </div>
           <div class="content">
             <p>Thank you for joining us. Your account has been created successfully.</p>
-            <p>Email: <strong>${data.email}</strong></p>
+            <p style="margin: 20px 0;"><strong>Email:</strong> ${data.email}</p>
             ${data.verificationLink ? `
               <p>Please verify your email by clicking below:</p>
-              <p><a href="${data.verificationLink}" class="button">Verify Email</a></p>
+              <p style="text-align: center;">
+                <a href="${data.verificationLink}" class="button" style="color: white; background-color: #8B5CF6;">Verify Email</a>
+              </p>
             ` : ''}
             <p>Best regards,<br>Your Team</p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 VendorCity. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} VendorCity. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -92,40 +100,40 @@ export const emailTemplates = {
     <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background: #f5f5f5; }
-          .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f5f5f5;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          }
           .header { 
-            background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 50%, #ffffff 100%);
+            background-color: #8B5CF6;
             padding: 30px 20px; 
-            text-align: center;
-            border-bottom: 1px solid #EDE9FE;
+            text-align: center; 
           }
-          .logo-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 15px;
+          .header h2 { 
+            color: white; 
+            margin: 15px 0 0 0; 
           }
-          .logo {
-            width: 70px;
-            height: 70px;
+          .content { 
+            padding: 40px 30px; 
             background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
+            color: #333333;
           }
-          .logo img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-          }
-          .header h2 { color: #4C1D95; margin: 0; }
-          .content { padding: 40px 30px; background: white; }
           .button { 
-            background: linear-gradient(135deg, #DC2626, #EF4444); 
+            background-color: #DC2626;
             color: white; 
             padding: 14px 28px; 
             text-decoration: none; 
@@ -133,34 +141,47 @@ export const emailTemplates = {
             display: inline-block;
             font-weight: 600;
             margin: 20px 0;
-            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
           }
           .footer { 
-            background: #F5F3FF; 
+            background-color: #F3F0FF;
             padding: 20px; 
             text-align: center; 
-            color: #6B7280;
-            border-top: 1px solid #EDE9FE;
+            color: #666666;
+            font-size: 12px;
+            border-top: 1px solid #E9E0FF;
+          }
+          .logo {
+            display: block;
+            margin: 0 auto;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 5px;
           }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo-container">
-              <div class="logo">
-                <img src="/VendorCity_Rider.webp" alt="VendorCity Rider" />
-              </div>
-            </div>
+                            <img 
+                src="https://via.placeholder.com/80x80/8B5CF6/ffffff?text=R" 
+                alt="VendorCity Rider" 
+                width="80" 
+                height="80"
+                style="display: block; margin: 0 auto; border-radius: 50%; border: 3px solid white;"
+              />
             <h2>Password Reset Request</h2>
           </div>
           <div class="content">
             <p>Click the link below to reset your password:</p>
-            <p><a href="${data.resetLink}" class="button">Reset Password</a></p>
-            <p>This link expires in 1 hour.</p>
+            <p style="text-align: center;">
+              <a href="${data.resetLink}" class="button" style="color: white; background-color: #DC2626;">Reset Password</a>
+            </p>
+            <p style="color: #666666; font-size: 14px;">This link expires in 1 hour.</p>
           </div>
           <div class="footer">
-            <p>&copy; 2024 VendorCity. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} VendorCity. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -171,63 +192,79 @@ export const emailTemplates = {
     <!DOCTYPE html>
     <html>
       <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background: #f5f5f5; }
-          .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+          body { 
+            font-family: Arial, sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f5f5f5;
+          }
+          .container { 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white; 
+            border-radius: 16px; 
+            overflow: hidden; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          }
           .header { 
-            background: linear-gradient(135deg, #8B5CF6 0%, #C4B5FD 50%, #ffffff 100%);
+            background-color: #8B5CF6;
             padding: 25px 20px; 
-            text-align: center;
-            border-bottom: 1px solid #EDE9FE;
+            text-align: center; 
           }
-          .logo-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 10px;
+          .header h3 { 
+            color: white; 
+            margin: 15px 0 0 0; 
           }
-          .logo {
-            width: 60px;
-            height: 60px;
+          .content { 
+            padding: 30px; 
             background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 10px rgba(139, 92, 246, 0.2);
+            color: #333333;
           }
-          .logo img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-          }
-          .header h3 { color: #4C1D95; margin: 0; }
-          .content { padding: 30px; background: white; }
           .footer { 
-            background: #F5F3FF; 
+            background-color: #F3F0FF;
             padding: 20px; 
             text-align: center; 
-            color: #6B7280;
-            border-top: 1px solid #EDE9FE;
+            color: #666666;
+            font-size: 12px;
+            border-top: 1px solid #E9E0FF;
+          }
+          .logo {
+            display: block;
+            margin: 0 auto;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: white;
+            padding: 5px;
           }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <div class="logo-container">
-              <div class="logo">
-                <img src="/VendorCity_Rider.webp" alt="VendorCity Rider" />
-              </div>
-            </div>
+                            <img 
+                src="https://via.placeholder.com/70x70/8B5CF6/ffffff?text=R" 
+                alt="VendorCity Rider" 
+                width="70" 
+                height="70"
+                style="display: block; margin: 0 auto; border-radius: 50%; border: 3px solid white;"
+              />
             <h3>${data.title}</h3>
           </div>
           <div class="content">
             <p>${data.message}</p>
-            ${data.actionUrl ? `<p><a href="${data.actionUrl}" style="color: #8B5CF6; text-decoration: underline;">View Details →</a></p>` : ''}
+            ${data.actionUrl ? `
+              <p style="margin-top: 20px;">
+                <a href="${data.actionUrl}" style="color: #8B5CF6; text-decoration: underline;">View Details →</a>
+              </p>
+            ` : ''}
           </div>
           <div class="footer">
-            <p>&copy; 2024 VendorCity. All rights reserved.</p>
+            <p>&copy; ${new Date().getFullYear()} VendorCity. All rights reserved.</p>
           </div>
         </div>
       </body>
