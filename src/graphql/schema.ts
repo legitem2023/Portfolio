@@ -264,6 +264,8 @@ export const typeDefs = gql`
     subtotal: Float
     tax: Float
     shipping: Float
+    computedShipping: Float
+    computedDistance: Float
     discount: Float
     createdAt: DateTime
     updatedAt: DateTime
