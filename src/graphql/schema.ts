@@ -297,6 +297,8 @@ type ProofOfDelivery {
     orderId: String
     trackingNumber: String
     order: Order
+    individualShipping: Float
+    individualDistance: Float
     product: [ProductVariant]
     supplier: [User]
     rider: [User]
