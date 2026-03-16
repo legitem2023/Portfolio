@@ -5079,7 +5079,131 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         };
       }
     },
-createOrder: async (_: any, { userId, addressId, items }: any) => {
+    createOrder: async (_: any, { userId, addressId, computedShipping_input, computedDistance_input, items }: any) => {
+  try {
+    // Validate and convert productIds to proper ObjectID format
+    const validItems = items.map((item: any) => {
+      let productId = item.productId;
+      let supplierId = item.supplierId;
+      // If it's a numeric string, pad it to 24 hex characters
+      if (/^\d+$/.test(productId)) {
+        productId = productId.padStart(24, '0');
+      }
+      
+      // If it's already a hex string but wrong length, handle it
+      if (productId.length !== 24) {
+        throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
+      }
+      
+      return {
+        productId,
+        supplierId,
+        quantity: item.quantity,
+        price: item.price,
+        individualShipping: item.individualShipping_input || 0, // Add this field
+        individualDistance: item.individualDistance_input || 0, // Add this field
+        status: "PENDING",
+      };
+    });
+    
+    const orderNumber = await generateOrderNumber(items[0].supplierId);
+    const response = await prisma.order.create({
+      data: {
+        userId,
+        addressId,
+        computedShipping: computedShipping_input,
+        computedDistance: computedDistance_input,
+        orderNumber: orderNumber,
+        status: "PENDING",
+        total: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        subtotal: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        items: {
+          create: validItems,
+        },
+      },
+      include: { items: true },
+    });
+    
+    if (response) {
+      try {
+        // ===== INTEGRATE EMAIL SENDING HERE =====
+        // First fetch user data to get their email
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, firstName: true }
+        });
+        
+        // Send order confirmation email using your email service
+        if (user && user.email) {
+          try {
+            const emailResult = await emailMutations.sendNotificationEmail({
+              recipientEmail: user.email,
+              title: "Order Created Successfully",
+              message: `Your order #${response.orderNumber} has been created and is being processed. Order total: $${response.total}`,
+              actionUrl: `/orders/${response.id}`,
+              userName: user.firstName || 'Customer',
+              subject: `Order Confirmation: ${response.orderNumber}`
+            });
+            
+            console.log(`Order confirmation email sent to ${user.email}, Message ID: ${emailResult.messageId}`);
+          } catch (emailError: any) {
+            console.error('Failed to send order confirmation email:', emailError);
+            // Don't throw - just log the error and continue
+          }
+        }
+        // ===== END EMAIL INTEGRATION =====
+        
+        // Create notification for the order (your existing code)
+        const notificationResult = await createNotification({
+          userId: userId,
+          type: NotificationType.ORDER_UPDATE,
+          title: "Order Created Successfully",
+          message: `Your order #${response.orderNumber} has been created and is being processed.`,
+          link: `/orders/${response.id}`,
+          isRead: false
+        });
+
+        if (!notificationResult.success) {
+          // Return error response
+          return {
+            success: false,
+            statusText: 'Order created but notification failed',
+            order: response,
+            error: {
+              code: 'NOTIFICATION_FAILED',
+              message: notificationResult.error?.message,
+              details: notificationResult.error?.details
+            }
+          };
+        }
+
+        return {
+          success: true,
+          statusText: 'Order Successful!',
+          order: response
+        };
+      } catch (error: any) {
+        console.error('Failed to create order notification or send email:', error);
+        // Don't throw here - we still want to return the order success
+        // even if notification or email fails
+        return {
+          statusText: 'Failed Notification',
+          order: response
+        };
+      }
+    }
+  } catch (error: any) {
+    // Re-throw any errors from the main try block
+    throw error;
+  }
+},
+/*createOrder: async (_: any, { userId, addressId, items }: any) => {
   try {
     // Validate and convert productIds to proper ObjectID format
     const validItems = items.map((item: any) => {
@@ -5197,7 +5321,7 @@ createOrder: async (_: any, { userId, addressId, items }: any) => {
     // Re-throw any errors from the main try block
     throw error;
   }
-},
+},*/
     respondToTicket: async (_: any, { ticketId, userId, message }: any) => {
       return prisma.ticketResponse.create({
         data: { ticketId, userId, message },
