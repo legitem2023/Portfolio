@@ -1081,7 +1081,7 @@ type CreateVehicleTypeResponse {
     deleteProduct(id: ID): Result
     deleteVariant(id: ID): Result
     createCategory(name: String, description: String, status: Boolean): Response
-    createOrder(userId: ID, addressId: ID, items: [OrderItemInput]): Result
+    createOrder(userId: ID, addressId: ID, computedShipping_input: Float,computedDistance_input: Float, items: [OrderItemInput]): Result
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
     singleUpload(base64Image: String, productId: ID): Result
     categoryImageUpload(base64Image: String, categoryId: ID): Result
@@ -1210,5 +1210,7 @@ type CreateVehicleTypeResponse {
     supplierId: ID
     quantity: Int
     price: Float
+    individualShipping_input: Float
+    individualDistance_input: Float
   }
 `;
