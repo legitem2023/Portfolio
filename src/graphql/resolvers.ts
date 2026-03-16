@@ -591,8 +591,7 @@ const orders = await prisma.order.findMany({
         }
       }
     },
-    computedShipping:true,
-    computedDistance:true,
+   ...({ computedShipping: true, computedDistance: true } as any),
     user: {
       select: {
         id: true,
@@ -762,8 +761,7 @@ const orders = await prisma.order.findMany({
             }
           }
         },
-        computedShipping:true,
-        computedDistance:true,
+        ...({ computedShipping: true, computedDistance: true } as any),
         user: {
           select: {
             id: true,
@@ -924,8 +922,7 @@ const orders = await prisma.order.findMany({
             }
           }
         },
-        computedShipping:true,
-        computedDistance:true,
+        ...({ computedShipping: true, computedDistance: true } as any),
         user: {
           select: {
             id: true,
@@ -1092,8 +1089,7 @@ const orders = await prisma.order.findMany({
             }
           }
         },
-        computedShipping:true,
-        computedDistance:true,
+        ...({ computedShipping: true, computedDistance: true } as any),
         user: {
           select: {
             id: true,
