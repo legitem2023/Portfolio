@@ -510,8 +510,8 @@ export const CREATE_ORDER = gql`
   mutation CreateOrder($userId: ID!, $addressId: ID!,$computedShipping_input: Float,$computedDistance_input:Float, $items: [OrderItemInput!]!) {
     createOrder(userId: $userId, 
                 addressId: $addressId, 
-                computedShipping: $computedShipping_input,
-                computedDistance: $computedDistance_input,
+                computedShipping_input: $computedShipping_input,
+                computedDistance_input: $computedDistance_input,
                 items: $items) {
       statusText
     }
