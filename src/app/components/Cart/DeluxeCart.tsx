@@ -1304,28 +1304,44 @@ const DeluxeCart = () => {
     setOrderError(null);
 
     try {
-      // Prepare order items with individual distances
+      // Calculate individual shipping cost per item (total shipping cost divided by number of items)
+      const individualShippingCost = cartItems.length > 0 
+        ? calculatedShippingCost / cartItems.length 
+        : 0;
+
+      // Prepare order items with individual distances and individual shipping costs
       const orderItems = cartItems.map(item => ({
         productId: item.id,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
-        individualShipping_input: 0, // You can calculate this per item if needed
+        individualShipping_input: individualShippingCost,
         individualDistance_input: itemDistances?.[item.id] || 0
       }));
 
       // Calculate total distance from all items
       const totalDistance = Object.values(itemDistances || {}).reduce((sum, dist) => sum + dist, 0);
+      
+      // Calculate average distance (total distance divided by number of items)
+      const averageDistance = cartItems.length > 0 ? totalDistance / cartItems.length : 0;
 
       const orderParams = {
         userId: userId,
         addressId: shippingInfo.addressId,
         computedShipping_input: calculatedShippingCost,
-        computedDistance_input: totalDistance,
+        computedDistance_input: averageDistance,
         items: orderItems
       };
 
       console.log('Placing order with params:', orderParams);
+      console.log('Shipping details:', {
+        totalShippingCost: calculatedShippingCost,
+        itemCount: cartItems.length,
+        individualShippingCost,
+        totalDistance,
+        averageDistance,
+        itemDistances
+      });
 
       const result = await createOrder({
         variables: orderParams
