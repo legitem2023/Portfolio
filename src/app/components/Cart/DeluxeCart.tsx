@@ -870,7 +870,7 @@ interface OrderSummaryProps {
   onProceedToShipping: () => void;
   onProceedToPayment: () => void;
   onProceedToConfirmation: () => void;
-  onPlaceOrder: () => Promise<void>;
+  onPlaceOrder: (itemDistances?: Record<string, number>) => Promise<void>;
   onBackToCart: () => void;
   onBackToShipping: () => void;
   onBackToPayment: () => void;
@@ -906,6 +906,7 @@ const OrderSummary = ({
   onShippingCostCalculated
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
+  const [itemDistances, setItemDistances] = useState<Record<string, number>>({});
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   
@@ -948,6 +949,7 @@ const OrderSummary = ({
     const calculateShipping = async () => {
       if (cartItems.length === 0 || addresses.length === 0) {
         setShippingCost(0);
+        setItemDistances({});
         if (onShippingCostCalculated) onShippingCostCalculated(0);
         return;
       }
@@ -957,6 +959,7 @@ const OrderSummary = ({
       if (!defaultAddress) {
         setShippingError("No default delivery address found");
         setShippingCost(0);
+        setItemDistances({});
         if (onShippingCostCalculated) onShippingCostCalculated(0);
         return;
       }
@@ -967,6 +970,7 @@ const OrderSummary = ({
       try {
         let accumulatedDistance = 0;
         let itemsWithLocation = 0;
+        const newItemDistances: Record<string, number> = {};
 
         for (const item of cartItems) {
           const pickupLat = item.lat;
@@ -981,6 +985,7 @@ const OrderSummary = ({
                 { lat: dropoffLat, lng: dropoffLng }
               );
               accumulatedDistance += distance;
+              newItemDistances[item.id] = distance;
               itemsWithLocation++;
             } catch (error) {
               const fallbackDistance = calculateHaversineDistance(
@@ -988,10 +993,15 @@ const OrderSummary = ({
                 dropoffLat, dropoffLng
               );
               accumulatedDistance += fallbackDistance;
+              newItemDistances[item.id] = fallbackDistance;
               itemsWithLocation++;
             }
+          } else {
+            newItemDistances[item.id] = 0;
           }
         }
+
+        setItemDistances(newItemDistances);
 
         if (itemsWithLocation > 0) {
           const averageDistance = accumulatedDistance / cartItems.length;
@@ -1008,6 +1018,7 @@ const OrderSummary = ({
         console.error("Error calculating shipping:", error);
         setShippingError("Error calculating shipping cost");
         setShippingCost(0);
+        setItemDistances({});
         if (onShippingCostCalculated) onShippingCostCalculated(0);
       } finally {
         setIsCalculatingShipping(false);
@@ -1100,7 +1111,7 @@ const OrderSummary = ({
         return (
           <div className="space-y-2">
             <button
-              onClick={onPlaceOrder}
+              onClick={() => onPlaceOrder(itemDistances)}
               disabled={!canPlaceOrder || isPlacingOrder}
               className={`w-full rounded-lg py-2.5 px-3 text-sm font-medium text-white transition-all duration-200 ${
                 !canPlaceOrder || isPlacingOrder
@@ -1284,7 +1295,7 @@ const DeluxeCart = () => {
     setCalculatedShippingCost(cost);
   };
 
-  const handlePlaceOrder = async (): Promise<void> => {
+  const handlePlaceOrder = async (itemDistances?: Record<string, number>): Promise<void> => {
     if (!validateStageTransition('confirmation', 'completed')) {
       return;
     }
@@ -1293,19 +1304,24 @@ const DeluxeCart = () => {
     setOrderError(null);
 
     try {
-      // Prepare order items with the correct input structure
+      // Prepare order items with individual distances
       const orderItems = cartItems.map(item => ({
         productId: item.id,
         supplierId: item.supplierId,
         quantity: item.quantity,
-        price: item.price
+        price: item.price,
+        individualShipping_input: 0, // You can calculate this per item if needed
+        individualDistance_input: itemDistances?.[item.id] || 0
       }));
+
+      // Calculate total distance from all items
+      const totalDistance = Object.values(itemDistances || {}).reduce((sum, dist) => sum + dist, 0);
 
       const orderParams = {
         userId: userId,
         addressId: shippingInfo.addressId,
         computedShipping_input: calculatedShippingCost,
-        computedDistance_input: 0,
+        computedDistance_input: totalDistance,
         items: orderItems
       };
 
