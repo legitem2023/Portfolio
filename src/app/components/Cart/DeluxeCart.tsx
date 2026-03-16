@@ -880,6 +880,7 @@ interface OrderSummaryProps {
   canProceedToPayment: boolean;
   canProceedToConfirmation: boolean;
   canPlaceOrder: boolean;
+  onShippingCostCalculated?: (cost: number) => void;
 }
 
 const OrderSummary = ({ 
@@ -901,7 +902,8 @@ const OrderSummary = ({
   canProceedToShipping,
   canProceedToPayment,
   canProceedToConfirmation,
-  canPlaceOrder
+  canPlaceOrder,
+  onShippingCostCalculated
 }: OrderSummaryProps) => {
   const [shippingCost, setShippingCost] = useState<number>(0);
   const [isCalculatingShipping, setIsCalculatingShipping] = useState<boolean>(false);
@@ -946,6 +948,7 @@ const OrderSummary = ({
     const calculateShipping = async () => {
       if (cartItems.length === 0 || addresses.length === 0) {
         setShippingCost(0);
+        if (onShippingCostCalculated) onShippingCostCalculated(0);
         return;
       }
 
@@ -954,6 +957,7 @@ const OrderSummary = ({
       if (!defaultAddress) {
         setShippingError("No default delivery address found");
         setShippingCost(0);
+        if (onShippingCostCalculated) onShippingCostCalculated(0);
         return;
       }
 
@@ -994,21 +998,24 @@ const OrderSummary = ({
           const distanceCharge = averageDistance * ratePerKm;
           const totalShippingCost = baseRate + distanceCharge;
           setShippingCost(totalShippingCost);
+          if (onShippingCostCalculated) onShippingCostCalculated(totalShippingCost);
         } else {
           setShippingCost(0);
+          if (onShippingCostCalculated) onShippingCostCalculated(0);
           setShippingError("No items with valid location data found");
         }
       } catch (error) {
         console.error("Error calculating shipping:", error);
         setShippingError("Error calculating shipping cost");
         setShippingCost(0);
+        if (onShippingCostCalculated) onShippingCostCalculated(0);
       } finally {
         setIsCalculatingShipping(false);
       }
     };
 
     calculateShipping();
-  }, [cartItems, addresses, baseRate, ratePerKm]);
+  }, [cartItems, addresses, baseRate, ratePerKm, onShippingCostCalculated]);
 
   if (cartItems.length === 0) {
     return (
@@ -1212,6 +1219,7 @@ const DeluxeCart = () => {
   const [stageError, setStageError] = useState<string | null>(null);
   const [isPlacingOrder, setIsPlacingOrder] = useState<boolean>(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [calculatedShippingCost, setCalculatedShippingCost] = useState<number>(0);
   const [shippingInfo, setShippingInfo] = useState<ShippingInfo>({
     addressId: '',
     receiver: '',
@@ -1248,7 +1256,6 @@ const DeluxeCart = () => {
   const subtotal = cartItems.reduce((total: number, item: any) => 
     total + (item.price * item.quantity), 0
   );
-  const [calculatedShippingCost, setCalculatedShippingCost] = useState<number>(0);
   const tax = subtotal * 0.08;
   const total = subtotal + calculatedShippingCost + tax;
 
@@ -1273,6 +1280,10 @@ const DeluxeCart = () => {
     }
   };
 
+  const handleShippingCostCalculated = (cost: number) => {
+    setCalculatedShippingCost(cost);
+  };
+
   const handlePlaceOrder = async (): Promise<void> => {
     if (!validateStageTransition('confirmation', 'completed')) {
       return;
@@ -1287,19 +1298,14 @@ const DeluxeCart = () => {
         productId: item.id,
         supplierId: item.supplierId,
         quantity: item.quantity,
-        price: item.price,
-        individualShipping_input: item.shippingCost || 0,
-        individualDistance_input: item.distance || 0
+        price: item.price
       }));
-
-      // Calculate total distance across all items
-      const totalDistance = cartItems.reduce((acc, item) => acc + (item.distance || 0), 0);
 
       const orderParams = {
         userId: userId,
         addressId: shippingInfo.addressId,
         computedShipping_input: calculatedShippingCost,
-        computedDistance_input: totalDistance,
+        computedDistance_input: 0,
         items: orderItems
       };
 
@@ -1476,10 +1482,6 @@ const DeluxeCart = () => {
     setCurrentStage('cart');
   };
 
-  const handleShippingCostCalculated = (cost: number) => {
-    setCalculatedShippingCost(cost);
-  };
-
   const canProceedToShipping = Boolean(cartItems.length > 0 && userId);
   const canProceedToPayment = Boolean(
     userId && 
@@ -1644,6 +1646,7 @@ const DeluxeCart = () => {
               canProceedToPayment={canProceedToPayment}
               canProceedToConfirmation={canProceedToConfirmation}
               canPlaceOrder={canPlaceOrder}
+              onShippingCostCalculated={handleShippingCostCalculated}
             />
           </div>
         )}
