@@ -569,6 +569,7 @@ const orders = await prisma.order.findMany({
         recipientName: true,
         rejectedBy: true,
         product: true,
+        trackingNumber:true,
         individualShipping: true,
         individualDistance: true,
         supplier: {
@@ -649,6 +650,7 @@ const orders = await prisma.order.findMany({
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
+        trackingNumber:item.trackingNumber,
         individualShipping: item.individualShipping,
         individualDistance: item.individualDistance,
         supplierId: item.supplierId,
@@ -741,6 +743,7 @@ const orders = await prisma.order.findMany({
             status: true, // STATUS IS HERE
             riderId: true,
             recipientName: true,
+            trackingNumber: true,
             individualShipping: true,
             individualDistance: true,
             rejectedBy: true,
@@ -826,6 +829,7 @@ const orders = await prisma.order.findMany({
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
+        trackingNumber: item.trackingNumber,
         supplierId: item.supplierId,
         individualShipping: item.individualShipping,
         individualDistance: item.individualDistance,
@@ -908,6 +912,7 @@ const orders = await prisma.order.findMany({
             variantInfo: true,
             status: true, // STATUS IS HERE
             recipientName: true,
+            trackingNumber: true,
             rejectedBy: true,
             individualShipping: true,
             individualDistance: true,
@@ -1000,6 +1005,7 @@ const orders = await prisma.order.findMany({
         status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
+        trackingNumber: item.trackingNumber,
         individualShipping: item.individualShipping,
         individualDistance: item.individualDistance,
         price: item.price,
@@ -1079,6 +1085,7 @@ const orders = await prisma.order.findMany({
             quantity: true,
             price: true,
             variantInfo: true,
+            trackingNumber: true,
             status: true, // STATUS IS HERE
             recipientName: true,
             rejectedBy: true,
@@ -1173,6 +1180,7 @@ const orders = await prisma.order.findMany({
         status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
+        trackingNumber: item.trackingNumber,
         individualShipping: item.individualShipping,
         individualDistance: item.individualDistance,
         price: item.price,
