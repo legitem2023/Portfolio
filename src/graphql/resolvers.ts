@@ -554,6 +554,8 @@ const orders = await prisma.order.findMany({
     createdAt: 'desc'
   },
   include: {
+    computedShipping: true,
+    computedDistance: true,
     items: {
       where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
       // REPLACE include+select with a single select
