@@ -554,8 +554,6 @@ const orders = await prisma.order.findMany({
     createdAt: 'desc'
   },
   include: {
-    computedShipping: true,
-    computedDistance: true,
     items: {
       where: Object.keys(itemWhere).length > 0 ? itemWhere : {}, // All filtering happens here
       // REPLACE include+select with a single select
@@ -571,6 +569,8 @@ const orders = await prisma.order.findMany({
         recipientName: true,
         rejectedBy: true,
         product: true,
+        individualShipping: true,
+        individualDistance: true,
         supplier: {
           select: {
             id: true,
@@ -644,9 +644,13 @@ const orders = await prisma.order.findMany({
       user: order.user,
       address: order.address,
       payments: order.payments,
+      computedShipping:order.computedShipping,
+      computedDistance:order.computedDistance,
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
+        individualShipping: item.individualShipping,
+        individualDistance: item.individualDistance,
         supplierId: item.supplierId,
         quantity: item.quantity,
         price: item.price,
