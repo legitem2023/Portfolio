@@ -5144,13 +5144,13 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       try {
         // ===== INTEGRATE EMAIL SENDING HERE =====
         // First fetch user data to get their email
-        const user = await prisma.user.findUnique({
+      /*  const user = await prisma.user.findUnique({
           where: { id: userId },
           select: { email: true, firstName: true }
         });
-        
+        */
         // Send order confirmation email using your email service
-        if (user && user.email) {
+       /* if (user && user.email) {
           try {
             const emailResult = await emailMutations.sendNotificationEmail({
               recipientEmail: user.email,
@@ -5166,20 +5166,20 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
             console.error('Failed to send order confirmation email:', emailError);
             // Don't throw - just log the error and continue
           }
-        }
+        }*/
         // ===== END EMAIL INTEGRATION =====
         
         // Create notification for the order (your existing code)
-        const notificationResult = await createNotification({
+     /*   const notificationResult = await createNotification({
           userId: userId,
           type: NotificationType.ORDER_UPDATE,
           title: "Order Created Successfully",
           message: `Your order #${response.orderNumber} has been created and is being processed.`,
           link: `/orders/${response.id}`,
           isRead: false
-        });
+        });*/
 
-        if (!notificationResult.success) {
+       /* if (!notificationResult.success) {
           // Return error response
           return {
             success: false,
@@ -5191,7 +5191,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
               details: notificationResult.error?.details
             }
           };
-        }
+        }*/
 
         return {
           success: true,
