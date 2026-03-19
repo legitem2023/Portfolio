@@ -326,7 +326,7 @@ export interface Delivery {
   customer: string;
   customerId: string;
   customerContact: string;
-  distance: string;
+  distance: number;
   pickup: string;
   dropoff: string;
   payout: string;
