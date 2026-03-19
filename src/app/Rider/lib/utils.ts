@@ -129,7 +129,8 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       : "Address not available";
     
     // Calculate distance
-    const distance = items.reduce((sum,item) => sum + item.individualDistance);//calculateDistance(pickupAddress, dropoffAddress);
+    //const distance = items.reduce((sum,item) => sum + item.individualDistance);//calculateDistance(pickupAddress, dropoffAddress);
+    const distance = items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length;
     console.log(distance);
     // Calculate expiration time
     const createdAt = new Date(order.createdAt);
