@@ -130,8 +130,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     
     // Calculate distance
     //const distance = items.reduce((sum,item) => sum + item.individualDistance);//calculateDistance(pickupAddress, dropoffAddress);
-    const distance = items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length;
-    console.log(distance);
+    const distance = (items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length).toFixed(2);
     // Calculate expiration time
     const createdAt = new Date(order.createdAt);
     const expiresAt = new Date(createdAt.getTime() + 2 * 60 * 1000);
