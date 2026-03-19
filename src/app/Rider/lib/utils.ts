@@ -82,7 +82,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     customer: string;
     customerId: string;
     customerContact: string;
-    distance: string;
+    distance: number;
     pickup: string;
     dropoff: string;
     payout: string;
