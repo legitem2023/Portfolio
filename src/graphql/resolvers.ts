@@ -741,6 +741,8 @@ const orders = await prisma.order.findMany({
             status: true, // STATUS IS HERE
             riderId: true,
             recipientName: true,
+            individualShipping: true,
+            individualDistance: true,
             rejectedBy: true,
             product:true,
             supplier: {
@@ -818,11 +820,15 @@ const orders = await prisma.order.findMany({
       user: order.user,
       address: order.address,
       payments: order.payments,
+      computedShipping:order.computedShipping,
+      computedDistance:order.computedDistance,
       proofOfDelivery: order.proofOfDelivery,
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
         supplierId: item.supplierId,
+        individualShipping: item.individualShipping,
+        individualDistance: item.individualDistance,
         quantity: item.quantity,
         price: item.price,
         variantInfo: item.variantInfo,
@@ -903,6 +909,8 @@ const orders = await prisma.order.findMany({
             status: true, // STATUS IS HERE
             recipientName: true,
             rejectedBy: true,
+            individualShipping: true,
+            individualDistance: true,
             product:true,
             rider: true,
             supplier: {
@@ -985,11 +993,15 @@ const orders = await prisma.order.findMany({
       })),
       address: order.address,
       payments: order.payments,
+      computedShipping:order.computedShipping,
+      computedDistance:order.computedDistance,
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
+        individualShipping: item.individualShipping,
+        individualDistance: item.individualDistance,
         price: item.price,
         variantInfo: item.variantInfo,
         product: [item.product], // Wrap in array to match [Product] type
@@ -1070,6 +1082,8 @@ const orders = await prisma.order.findMany({
             status: true, // STATUS IS HERE
             recipientName: true,
             rejectedBy: true,
+            individualShipping: true,
+            individualDistance: true,
             product:true,
             rider: true,
             supplier: {
@@ -1152,11 +1166,15 @@ const orders = await prisma.order.findMany({
       })),
       address: order.address,
       payments: order.payments,
+      computedShipping:order.computedShipping,
+      computedDistance:order.computedDistance,
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
+        individualShipping: item.individualShipping,
+        individualDistance: item.individualDistance,
         price: item.price,
         variantInfo: item.variantInfo,
         product: [item.product], // Wrap in array to match [Product] type
