@@ -77,6 +77,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     id: string;
     originalOrderId: string;
     orderId: string;
+    trackingNumber: string;
     orderParentId: string;
     restaurant: string;
     customer: string;
@@ -152,6 +153,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
       id: `${order.id}-${supplierId}`,
       originalOrderId: order.id,
       orderId,
+      trackingNumber:items[0].trackingNumber,
       orderParentId,
       restaurant: supplierName,
       customer: firstName,
