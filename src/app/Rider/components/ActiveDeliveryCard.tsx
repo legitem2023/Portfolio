@@ -18,7 +18,8 @@ import {
   ChevronUp,
   Phone,
   Camera,
-  Image
+  Image,
+  QrCode
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -511,7 +512,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
             
             <div className="flex items-start gap-2">
-              <Shield size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+              <QrCode size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-base break-words">{delivery.trackingNumber}</h3>
               </div>
