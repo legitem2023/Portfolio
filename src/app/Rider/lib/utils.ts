@@ -82,7 +82,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     customer: string;
     customerId: string;
     customerContact: string;
-    distance: number;
+    distance: string;
     pickup: string;
     dropoff: string;
     payout: string;
@@ -130,7 +130,8 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     
     // Calculate distance
     //const distance = items.reduce((sum,item) => sum + item.individualDistance);//calculateDistance(pickupAddress, dropoffAddress);
-    const distance = (items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length).toFixed(2);
+    const avgDistance = items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length;
+    const distance = avgDistance < 1? `${(avgDistance * 1000).toFixed(2)} m`: `${avgDistance.toFixed(2)} km`; 
     // Calculate expiration time
     const createdAt = new Date(order.createdAt);
     const expiresAt = new Date(createdAt.getTime() + 2 * 60 * 1000);
