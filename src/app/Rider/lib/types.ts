@@ -95,6 +95,8 @@ export const ACTIVE_ORDER_LIST = gql`
           quantity
           price
           status
+          individualShipping
+          individualDistance
           product {
             name
             sku
@@ -169,6 +171,8 @@ export const ORDER_LIST_QUERY = gql`
           orderId
           supplierId
           quantity
+          individualShipping
+          individualDistance
           price
           product {
             name
@@ -236,6 +240,8 @@ export interface OrderItem {
   quantity: number;
   price: number;
   status: string;
+  individualShipping:number;
+  individualDistance:number;
   product: Array<{  // Change this to an array
     name: string;
     sku: string;
