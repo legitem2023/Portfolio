@@ -510,6 +510,13 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
             </div>
             
+            <div className="flex items-start gap-2">
+              <Shield size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-base break-words">{delivery.trackingNumber}</h3>
+              </div>
+            </div>
+            
             <div className="bg-green-50 p-3 rounded-xl">
               <div className="text-xl font-bold text-green-600 break-words">{delivery.payout}</div>
               <p className="text-gray-500 text-xs">Payout for this piece</p>
