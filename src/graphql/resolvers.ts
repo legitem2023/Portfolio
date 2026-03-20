@@ -885,12 +885,6 @@ const orders = await prisma.order.findMany({
       itemWhere.status = filter.status 
   }
 
-    
-  // Add supplierId filter through OrderItem relation
-  if (filter && filter.userId) {
-    itemWhere.userId = filter.userId  
-  }
-
   try {
     // Get orders count
     const totalCount = await prisma.order.count({ where });
