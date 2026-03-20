@@ -44,7 +44,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
   };*/
-
+console.log(product.variants);
   return (
     <div className="py-2 px-2 bg-violet-50">
       <div className="container mx-auto">
