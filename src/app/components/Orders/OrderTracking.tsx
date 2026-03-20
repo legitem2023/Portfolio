@@ -210,7 +210,7 @@ type OrderCounts = {
 export default function OrderTracking({ userId }: { userId: string }) {
   const { loading, error, data } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
     variables: { 
-      filter: { user: { id: { eq: userId } } },
+      filter: { userId: userId },
       pagination: { page: 1, pageSize: 50 }
     }
   });
@@ -232,7 +232,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   if (loading) return <OrderLoadingSkeleton />;
   if (error) return <OrderError error={error} />;
 
-  const orders: Order[] = data?.activeorder?.orders || [];
+  const orders: Order[] = data?.ordered_products?.orders || [];
   const pagination = data?.activeorder?.pagination;
   
   // Group orders by status
