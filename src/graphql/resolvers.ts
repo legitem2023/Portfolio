@@ -863,7 +863,7 @@ const orders = await prisma.order.findMany({
     throw new Error('Failed to fetch orders');
   }
     },
-  orders: async(parent: any, args: any) => {
+  ordered_products: async(parent: any, args: any) => {
   // Set default values
   const filter = args.filter || {};
   const pagination = args.pagination || {};
