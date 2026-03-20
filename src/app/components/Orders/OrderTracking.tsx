@@ -233,7 +233,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   if (error) return <OrderError error={error} />;
 
   const orders: Order[] = data?.ordered_products?.orders || [];
-  const pagination = data?.activeorder?.pagination;
+  const pagination = data?.ordered_products?.pagination;
   
   // Group orders by status
   const ordersByStatus = ORDER_STAGES.reduce((acc, stage) => {
