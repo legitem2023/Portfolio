@@ -74,7 +74,7 @@ interface Order {
 }
 
 interface ActiveOrderResponse {
-  activeorder: {
+  ordered_products: {
     orders: Order[];
     pagination: {
       total: number;
@@ -91,7 +91,7 @@ const ACTIVE_ORDER_LIST = gql`
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
   ) {
-    activeorder(filter: $filter, pagination: $pagination) {
+    ordered_products(filter: $filter, pagination: $pagination) {
       orders {
         id
         orderNumber
