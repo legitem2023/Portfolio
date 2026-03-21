@@ -3951,6 +3951,15 @@ updateVehicleType:async (_parent: any,args:any) => {
         status:status
       }
     });
+    if(status ==='DELIVERED') {
+      await prisma.payment.create({
+        data:{
+            orderId:updatedItem.orderId,
+            userId:riderId,
+            amount:updatedItem.individualShipping
+        }
+      })
+    }
      await prisma.notification.create({
         data: { 
           userId: supplierId,
