@@ -514,10 +514,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
                   ? <><QrCode/>{trackingNumber}</>
                   : <><QrCode/>{group.orderNumber || 'N/A'}</>}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {hasTrackingNumber && trackingNumber && `Order #${group.orderNumber} • `}
-                Supplier: {supplierName}
-              </p>
               <p className="text-xs text-gray-500 mt-0.5">
                 {group.createdAt 
                   ? new Date(group.createdAt).toLocaleDateString('en-US', {
