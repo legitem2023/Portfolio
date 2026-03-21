@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
-
+import { QrCode } from "lucide-react";
 // Define types based on your schema - product is an ARRAY
 interface Order {
   id: string;
@@ -511,7 +511,7 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             <div>
               <h2 className="text-xl font-bold text-gray-900">
                 {hasTrackingNumber && trackingNumber 
-                  ? `Tracking #${trackingNumber}` 
+                  ? (<QrCode/>)` ${trackingNumber}` 
                   : `Order #${group.orderNumber || 'N/A'}`}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
