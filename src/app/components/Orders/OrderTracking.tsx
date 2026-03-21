@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 
-// Define types based on your schema
+// Define types based on your schema - product is an ARRAY
 interface Order {
   id: string;
   orderNumber: string;
@@ -43,18 +43,18 @@ interface Order {
     individualShipping: boolean;
     individualDistance: number;
     trackingNumber?: string;
-    product?: {
-      name?: string;
-      sku?: string;
-      images?: string[];
-    };
-    supplier?: {
+    product: Array<{  // This is an ARRAY of products
+      name: string;
+      sku: string;
+      images: string[];
+    }>;
+    supplier: {
       id: string;
       firstName: string;
       lastName: string;
       email: string;
       phone: string;
-      addresses?: {
+      addresses: {
         street: string;
         city: string;
         state: string;
@@ -251,14 +251,17 @@ export default function OrderTracking({ userId }: { userId: string }) {
       filter: { userId: userId },
       pagination: { page: 1, pageSize: 50 }
     },
-    skip: !userId // Skip query if no userId
+    skip: !userId
   });
 
   const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
   if (loading) return <LoadingSpinner />;
-  if (error) return <ErrorMessage error={error} />;
+  if (error) {
+    console.error('GraphQL Error:', error);
+    return <ErrorMessage error={error} />;
+  }
   if (!data?.ordered_products?.orders) return <EmptyState status={activeTab} />;
 
   const orders: Order[] = data.ordered_products.orders;
@@ -374,6 +377,18 @@ function TabButton({ label, count, isActive, onClick }: {
   );
 }
 
+// Helper function to get product info from array
+const getProductInfo = (productArray: Array<{ name: string; sku: string; images?: string[] }> | undefined) => {
+  if (!productArray || productArray.length === 0) {
+    return { name: 'Product Unavailable', sku: 'N/A' };
+  }
+  const firstProduct = productArray[0];
+  return {
+    name: firstProduct.name || 'Product Unavailable',
+    sku: firstProduct.sku || 'N/A'
+  };
+};
+
 // Supplier Order Card Component
 function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect: () => void }) {
   const itemStatuses = group.items.map(item => item.status);
@@ -432,18 +447,21 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
           </div>
         </div>
 
-        {/* Show item preview */}
+        {/* Show item preview - Handle product as ARRAY */}
         <div className="mb-3 space-y-1">
-          {group.items.slice(0, 2).map((item) => (
-            <div key={item.id} className="text-sm text-gray-600 flex justify-between">
-              <span className="truncate mr-2">
-                {item.product?.name || 'Product Unavailable'} × {item.quantity || 0}
-              </span>
-              <span className="text-xs text-gray-500 whitespace-nowrap">
-                {formatPrice((item.price || 0) * (item.quantity || 0))}
-              </span>
-            </div>
-          ))}
+          {group.items.slice(0, 2).map((item) => {
+            const productInfo = getProductInfo(item.product);
+            return (
+              <div key={item.id} className="text-sm text-gray-600 flex justify-between">
+                <span className="truncate mr-2">
+                  {productInfo.name} × {item.quantity || 0}
+                </span>
+                <span className="text-xs text-gray-500 whitespace-nowrap">
+                  {formatPrice((item.price || 0) * (item.quantity || 0))}
+                </span>
+              </div>
+            );
+          })}
           {group.items.length > 2 && (
             <div className="text-xs text-gray-500">+{group.items.length - 2} more items</div>
           )}
@@ -545,33 +563,36 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           </div>
 
-          {/* All Items */}
+          {/* All Items - Handle product as ARRAY */}
           <div className="mb-4">
             <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
             <div className="space-y-3">
-              {group.items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
-                  <div className="flex-1 pr-4">
-                    <div className="font-medium text-gray-900">
-                      {item.product?.name || 'Product Unavailable'}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      SKU: {item.product?.sku || 'N/A'}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      Quantity: {item.quantity || 0} × {formatPrice(item.price || 0)}
-                    </div>
-                    {item.trackingNumber && (
-                      <div className="text-xs text-blue-600 mt-1">
-                        Tracking: {item.trackingNumber}
+              {group.items.map((item) => {
+                const productInfo = getProductInfo(item.product);
+                return (
+                  <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
+                    <div className="flex-1 pr-4">
+                      <div className="font-medium text-gray-900">
+                        {productInfo.name}
                       </div>
-                    )}
+                      <div className="text-xs text-gray-500 mt-1">
+                        SKU: {productInfo.sku}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        Quantity: {item.quantity || 0} × {formatPrice(item.price || 0)}
+                      </div>
+                      {item.trackingNumber && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          Tracking: {item.trackingNumber}
+                        </div>
+                      )}
+                    </div>
+                    <div className="font-semibold text-gray-900 whitespace-nowrap">
+                      {formatPrice((item.price || 0) * (item.quantity || 0))}
+                    </div>
                   </div>
-                  <div className="font-semibold text-gray-900 whitespace-nowrap">
-                    {formatPrice((item.price || 0) * (item.quantity || 0))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -664,4 +685,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No orders{statusLabel}</p>
     </div>
   );
-      }
+                                }
