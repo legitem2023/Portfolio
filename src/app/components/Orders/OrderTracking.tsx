@@ -73,6 +73,20 @@ interface Order {
   }>;
 }
 
+// Add SupplierGroup interface
+interface SupplierGroup {
+  supplierId: string;
+  supplier: Order['items'][0]['supplier'];
+  items: Order['items'];
+  subtotal: number;
+  orderId: string;
+  orderNumber: string;
+  createdAt: string;
+  address: Order['address'];
+  user: Order['user'];
+  payments: Order['payments'];
+}
+
 interface ActiveOrderResponse {
   ordered_products: {
     orders: Order[];
@@ -627,4 +641,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No orders{statusLabel}</p>
     </div>
   );
-    }
+        }
