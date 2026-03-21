@@ -185,7 +185,6 @@ const ACTIVE_ORDER_LIST = gql`
 
 const ORDER_STAGES = [
   { key: 'PENDING', label: 'Placed', color: 'bg-purple-100 text-purple-700' },
-  { key: 'CONFIRMED', label: 'Confirmed', color: 'bg-blue-100 text-blue-700' },
   { key: 'PROCESSING', label: 'Processing', color: 'bg-indigo-100 text-indigo-700' },
   { key: 'SHIPPED', label: 'Shipped', color: 'bg-cyan-100 text-cyan-700' },
   { key: 'DELIVERED', label: 'Delivered', color: 'bg-green-100 text-green-700' },
