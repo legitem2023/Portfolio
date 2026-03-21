@@ -411,7 +411,7 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="text-sm font-semibold text-gray-900 flex flex-row">
+              <span className="text-sm font-semibold text-gray-900 flex flex-row items-center">
                 {hasTrackingNumber && trackingNumber 
                   ? <><QrCode/>{trackingNumber}</>
                   : <><QrCode/>{group.orderNumber || 'N/A'}</>}
@@ -509,7 +509,7 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
         <div className="p-5">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="flex flex-row text-xl font-bold text-gray-900">
+              <h2 className="flex flex-row text-xl font-bold text-gray-900 items-center">
                 {hasTrackingNumber && trackingNumber 
                   ? <><QrCode/>{trackingNumber}</>
                   : <><QrCode/>{group.orderNumber || 'N/A'}</>}
