@@ -625,13 +625,13 @@ function ShimmerLoading() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
         {/* Header Shimmer */}
-        <div className="text-left mb-8">
+        {/*<div className="text-left mb-8">
           <div className="h-8 w-48 bg-gray-200 rounded-lg shimmer"></div>
           <div className="h-4 w-64 bg-gray-200 rounded-lg mt-2 shimmer"></div>
-        </div>
+        </div>*/}
 
         {/* Tabs Shimmer - Imitates tabs look */}
-        <div className="mb-6 overflow-x-auto">
+        {/* <div className="mb-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max pb-2">
             {[...Array(5)].map((_, i) => (
               <div
@@ -640,8 +640,27 @@ function ShimmerLoading() {
               ></div>
             ))}
           </div>
+        </div>*/}
+        {/* Header */}
+        <div className="text-left mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-purple-700 mb-1">My Orders</h1>
+          <p className="text-sm text-gray-500">Track and manage your orders</p>
         </div>
 
+        {/* Status Tabs */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex gap-1 min-w-max pb-2">
+            {ORDER_STAGES.map((stage) => (
+              <TabButton
+                key={stage.key}
+                label={stage.label}
+                status={stage.key}
+              />
+            ))}
+          </div>
+        </div>
+
+        
         {/* Status Header Shimmer */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
