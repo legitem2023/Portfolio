@@ -655,6 +655,8 @@ function ShimmerLoading() {
                 key={stage.key}
                 label={stage.label}
                 status={stage.key}
+                isActive={selectedStatus === stage.key}
+                onClick={() => handleStatusChange(stage.key)}
               />
             ))}
           </div>
