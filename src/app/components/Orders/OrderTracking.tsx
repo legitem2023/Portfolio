@@ -261,7 +261,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   if (error) return <ErrorMessage error={error} />;
 
   const orders: Order[] = data?.ordered_products?.orders || [];
-  
+  console.log(orders);
   // Process all orders to create supplier groups
   const allSupplierGroups: SupplierGroup[] = [];
   orders.forEach(order => {
