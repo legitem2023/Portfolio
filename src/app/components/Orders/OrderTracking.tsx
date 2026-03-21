@@ -260,12 +260,18 @@ export default function OrderTracking({ userId }: { userId: string }) {
     });
   };
 
+  // FIX: Check loading first, then error, then empty state
   if (loading) return <ShimmerLoading />;
   if (error) {
     console.error('GraphQL Error:', error);
     return <ErrorMessage error={error} />;
   }
-  if (!data?.ordered_products?.orders) return <EmptyState status={selectedStatus} />;
+  
+  // Check if there are orders
+  const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
+  
+  // Show empty state only when not loading and no orders
+  if (!hasOrders) return <EmptyState status={selectedStatus} />;
 
   const orders: Order[] = data.ordered_products.orders;
   const currentOrderCount = orders.length;
