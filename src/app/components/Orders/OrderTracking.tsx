@@ -403,9 +403,9 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
                 {hasTrackingNumber && trackingNumber ? `Tracking: ${trackingNumber}` : `#${group.orderNumber}`}
               </span>
               <span className="text-xs text-gray-500">•</span>
-              <span className="text-xs font-medium text-gray-700">
+              { /*<span className="text-xs font-medium text-gray-700">
                 Supplier: {supplierName}
-              </span>
+              </span>*/}
               <span className={`text-xs px-2 py-0.5 rounded-full ${stage?.color}`}>
                 {stage?.label}
               </span>
