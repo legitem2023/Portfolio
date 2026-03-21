@@ -12,6 +12,7 @@ import 'swiper/css';
 import 'swiper/css/pagination';
 import { Heart, Star } from 'lucide-react';
 import CategoryShimmer from '../CategoryShimmer';
+import ProductThumbnailsShimmer from "../ProductThumbnailsShimmer";
 
 interface FeaturedProductsProps {
   products: Product[];
@@ -52,7 +53,7 @@ console.log(products);
           <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>  
         </div>
         {loading ? (
-          <CategoryShimmer count={4} />
+          <ProductThumbnailsShimmer count={4} />
         ) : (
           <>
             <div className="w-full max-w-7xl grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
