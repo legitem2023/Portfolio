@@ -49,8 +49,8 @@ console.log(products);
   return (
     <div className="py-2 px-2 bg-violet-50">
       <div className="container mx-auto">
-        <div className="text-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>  
+        <div className="text-center mb-4">
+          <h2 className="text-3xl font-bold text-gray-900">{title}</h2>  
         </div>
         {loading ? (
           <ProductThumbnailsShimmer count={4} />
