@@ -261,7 +261,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   };
 
   // FIX: Check loading first, then error, then empty state
-  if (loading) return <ShimmerLoading />;
+  if (loading) return <ShimmerLoading status={selectedStatus}/>;
   if (error) {
     console.error('GraphQL Error:', error);
     return <ErrorMessage error={error} />;
@@ -271,7 +271,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   const hasOrders = data?.ordered_products?.orders && data?.ordered_products?.orders.length > 0;
   
   // Show empty state only when not loading and no orders
-   if (!hasOrders) return <ShimmerLoading />;
+   if (!hasOrders) return <ShimmerLoading status={selectedStatus}/>;
 
   const orders: Order[] = data?.ordered_products?.orders;
   const currentOrderCount = orders.length;
@@ -626,7 +626,7 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
 }
 
 // Shimmer Loading Component - Follows UI structure
-function ShimmerLoading() {
+function ShimmerLoading({ status }: { status: string }) {
   const handleStatusChange = (e:any) =>{
     return
   }
@@ -645,7 +645,7 @@ function ShimmerLoading() {
                 key={stage.key}
                 label={stage.label}
                 status={stage.key}
-                isActive={true}
+                isActive={status===stage.key}
                 onClick={() => handleStatusChange(stage.key)}
               />
             ))}
