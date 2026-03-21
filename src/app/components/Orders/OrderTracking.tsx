@@ -26,7 +26,7 @@ interface Order {
     lat: string;
     lng: string;
   };
-  proofOfDelivery: {
+  proofOfDelivery?: {
     id: string;
     photoUrl: string;
     signatureData: string;
@@ -42,19 +42,19 @@ interface Order {
     status: string;
     individualShipping: boolean;
     individualDistance: number;
-    trackingNumber: string;
-    product: {
-      name: string;
-      sku: string;
-      images: string[];
+    trackingNumber?: string;
+    product?: {
+      name?: string;
+      sku?: string;
+      images?: string[];
     };
-    supplier: {
+    supplier?: {
       id: string;
       firstName: string;
       lastName: string;
       email: string;
       phone: string;
-      addresses: {
+      addresses?: {
         street: string;
         city: string;
         state: string;
@@ -73,7 +73,6 @@ interface Order {
   }>;
 }
 
-// Add SupplierGroup interface
 interface SupplierGroup {
   supplierId: string;
   supplier: Order['items'][0]['supplier'];
@@ -240,7 +239,7 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
     
     const group = supplierMap.get(supplierId)!;
     group.items.push(item);
-    group.subtotal += item.price * item.quantity;
+    group.subtotal += (item.price || 0) * (item.quantity || 0);
   });
   
   return Array.from(supplierMap.values());
@@ -251,7 +250,8 @@ export default function OrderTracking({ userId }: { userId: string }) {
     variables: { 
       filter: { userId: userId },
       pagination: { page: 1, pageSize: 50 }
-    }
+    },
+    skip: !userId // Skip query if no userId
   });
 
   const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
@@ -259,14 +259,17 @@ export default function OrderTracking({ userId }: { userId: string }) {
 
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorMessage error={error} />;
+  if (!data?.ordered_products?.orders) return <EmptyState status={activeTab} />;
 
-  const orders: Order[] = data?.ordered_products?.orders || [];
-  console.log(orders);
+  const orders: Order[] = data.ordered_products.orders;
+  
   // Process all orders to create supplier groups
   const allSupplierGroups: SupplierGroup[] = [];
   orders.forEach(order => {
-    const groups = groupOrderBySupplier(order);
-    allSupplierGroups.push(...groups);
+    if (order.items && order.items.length > 0) {
+      const groups = groupOrderBySupplier(order);
+      allSupplierGroups.push(...groups);
+    }
   });
   
   // Group by status for counting (based on original order status)
@@ -302,7 +305,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
           <p className="text-sm text-gray-500">Track and manage your orders</p>
         </div>
 
-        {/* Status Tabs - Simplified */}
+        {/* Status Tabs */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max pb-2">
             <TabButton
@@ -323,7 +326,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* Orders List - Now showing supplier groups */}
+        {/* Orders List */}
         {filteredGroups.length > 0 ? (
           <div className="space-y-3">
             {filteredGroups.map((group, index) => (
@@ -350,7 +353,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   );
 }
 
-// Simplified Tab Button
+// Tab Button Component
 function TabButton({ label, count, isActive, onClick }: { 
   label: string; 
   count: number; 
@@ -386,7 +389,9 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
   const stage = ORDER_STAGES.find(s => s.key === displayStatus);
   const { percentage } = getOrderProgress(displayStatus);
   
-  const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
+  const supplierName = group.supplier 
+    ? `${group.supplier.firstName || ''} ${group.supplier.lastName || ''}`.trim() || 'Unknown Supplier'
+    : 'Unknown Supplier';
   const itemCount = group.items.length;
   
   // Check for tracking number
@@ -400,22 +405,23 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-sm font-semibold text-gray-900">
-                {hasTrackingNumber && trackingNumber ? `Tracking: ${trackingNumber}` : `#${group.orderNumber}`}
+                {hasTrackingNumber && trackingNumber 
+                  ? `Tracking: ${trackingNumber}` 
+                  : `Order #${group.orderNumber || 'N/A'}`}
               </span>
               <span className="text-xs text-gray-500">•</span>
-              { /*<span className="text-xs font-medium text-gray-700">
-                Supplier: {supplierName}
-              </span>*/}
-              <span className={`text-xs px-2 py-0.5 rounded-full ${stage?.color}`}>
-                {stage?.label}
+              <span className={`text-xs px-2 py-0.5 rounded-full ${stage?.color || 'bg-gray-100 text-gray-700'}`}>
+                {stage?.label || displayStatus}
               </span>
             </div>
             <div className="text-xs text-gray-500">
-              {new Date(group.createdAt).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })}
+              {group.createdAt 
+                ? new Date(group.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })
+                : 'Date not available'}
             </div>
           </div>
           <div className="text-right">
@@ -430,8 +436,12 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
         <div className="mb-3 space-y-1">
           {group.items.slice(0, 2).map((item) => (
             <div key={item.id} className="text-sm text-gray-600 flex justify-between">
-              <span>{item.product.name} × {item.quantity}</span>
-              <span className="text-xs text-gray-500">{formatPrice(item.price * item.quantity)}</span>
+              <span className="truncate mr-2">
+                {item.product?.name || 'Product Unavailable'} × {item.quantity || 0}
+              </span>
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                {formatPrice((item.price || 0) * (item.quantity || 0))}
+              </span>
             </div>
           ))}
           {group.items.length > 2 && (
@@ -473,7 +483,9 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
   else if (hasCancelled) displayStatus = 'CANCELLED';
   
   const stage = ORDER_STAGES.find(s => s.key === displayStatus);
-  const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
+  const supplierName = group.supplier 
+    ? `${group.supplier.firstName || ''} ${group.supplier.lastName || ''}`.trim() || 'Unknown Supplier'
+    : 'Unknown Supplier';
   
   // Check for tracking number
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
@@ -494,17 +506,22 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                {hasTrackingNumber && trackingNumber ? `Tracking #${trackingNumber}` : `Order #${group.orderNumber}`}
+                {hasTrackingNumber && trackingNumber 
+                  ? `Tracking #${trackingNumber}` 
+                  : `Order #${group.orderNumber || 'N/A'}`}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                {hasTrackingNumber && trackingNumber ? `Order #${group.orderNumber} • ` : ''}Supplier: {supplierName}
+                {hasTrackingNumber && trackingNumber && `Order #${group.orderNumber} • `}
+                Supplier: {supplierName}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                {new Date(group.createdAt).toLocaleDateString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
+                {group.createdAt 
+                  ? new Date(group.createdAt).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })
+                  : 'Date not available'}
               </p>
             </div>
             <button onClick={onClose} className="text-gray-400 text-2xl hover:text-gray-600">
@@ -516,8 +533,8 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-gray-600">Status</span>
-              <span className={`text-sm px-2 py-0.5 rounded-full ${stage?.color}`}>
-                {stage?.label}
+              <span className={`text-sm px-2 py-0.5 rounded-full ${stage?.color || 'bg-gray-100 text-gray-700'}`}>
+                {stage?.label || displayStatus}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
@@ -530,22 +547,28 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
 
           {/* All Items */}
           <div className="mb-4">
-            {/*<h3 className="font-semibold text-gray-900 mb-2">Items from {supplierName}</h3>*/}
+            <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
             <div className="space-y-3">
               {group.items.map((item) => (
-                <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-2">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">{item.product.name}</div>
-                    <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
+                  <div className="flex-1 pr-4">
+                    <div className="font-medium text-gray-900">
+                      {item.product?.name || 'Product Unavailable'}
+                    </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      Quantity: {item.quantity} × {formatPrice(item.price)}
+                      SKU: {item.product?.sku || 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Quantity: {item.quantity || 0} × {formatPrice(item.price || 0)}
                     </div>
                     {item.trackingNumber && (
-                      <div className="text-xs text-blue-600 mt-1">Tracking: {item.trackingNumber}</div>
+                      <div className="text-xs text-blue-600 mt-1">
+                        Tracking: {item.trackingNumber}
+                      </div>
                     )}
                   </div>
-                  <div className="font-semibold text-gray-900">
-                    {formatPrice(item.price * item.quantity)}
+                  <div className="font-semibold text-gray-900 whitespace-nowrap">
+                    {formatPrice((item.price || 0) * (item.quantity || 0))}
                   </div>
                 </div>
               ))}
@@ -563,7 +586,7 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
           </div>
 
           {/* Supplier Address */}
-          {group.supplier.addresses && (
+          {group.supplier?.addresses && (
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-1">Supplier Address</h3>
               <p className="text-sm text-gray-600">
@@ -641,4 +664,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No orders{statusLabel}</p>
     </div>
   );
-        }
+      }
