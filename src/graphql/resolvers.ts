@@ -3956,7 +3956,8 @@ updateVehicleType:async (_parent: any,args:any) => {
         data:{
             orderId:updatedItem.orderId,
             userId:riderId,
-            amount:updatedItem.individualShipping
+            amount:updatedItem.individualShipping,
+            status:'COMPLETED'
         }
       })
     }
