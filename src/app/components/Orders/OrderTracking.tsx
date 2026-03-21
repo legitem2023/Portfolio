@@ -43,7 +43,7 @@ interface Order {
     individualShipping: boolean;
     individualDistance: number;
     trackingNumber?: string;
-    product: Array<{  // This is an ARRAY of products
+    product: Array<{
       name: string;
       sku: string;
       images: string[];
@@ -235,23 +235,20 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
 };
 
 export default function OrderTracking({ userId }: { userId: string }) {
-  // Default to PENDING status
   const [selectedStatus, setSelectedStatus] = useState<string>('PENDING');
   const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
   
-  // Query with status filter
   const { loading, error, data, refetch } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
     variables: { 
       filter: { 
         userId: userId,
-        status: selectedStatus  // Filter by selected status
+        status: selectedStatus
       },
       pagination: { page: 1, pageSize: 50 }
     },
     skip: !userId
   });
 
-  // Refetch when status changes
   const handleStatusChange = (status: string) => {
     setSelectedStatus(status);
     refetch({
@@ -263,7 +260,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
     });
   };
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <ShimmerLoading />;
   if (error) {
     console.error('GraphQL Error:', error);
     return <ErrorMessage error={error} />;
@@ -271,13 +268,8 @@ export default function OrderTracking({ userId }: { userId: string }) {
   if (!data?.ordered_products?.orders) return <EmptyState status={selectedStatus} />;
 
   const orders: Order[] = data.ordered_products.orders;
-  
-  // Get count for each status (for display on tabs)
-  // We need to fetch counts separately or use a different query
-  // For now, we'll just show the count of current filtered orders
   const currentOrderCount = orders.length;
   
-  // Process all orders to create supplier groups
   const allSupplierGroups: SupplierGroup[] = [];
   orders.forEach(order => {
     if (order.items && order.items.length > 0) {
@@ -286,7 +278,6 @@ export default function OrderTracking({ userId }: { userId: string }) {
     }
   });
 
-  // Find the current status label and color
   const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
 
   return (
@@ -298,7 +289,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
           <p className="text-sm text-gray-500">Track and manage your orders</p>
         </div>
 
-        {/* Status Tabs - No ALL tab, only order stages */}
+        {/* Status Tabs */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max pb-2">
             {ORDER_STAGES.map((stage) => (
@@ -352,7 +343,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   );
 }
 
-// Tab Button Component - Simplified, no count display
+// Tab Button Component
 function TabButton({ label, status, isActive, onClick }: { 
   label: string; 
   status: string;
@@ -405,7 +396,6 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
     : 'Unknown Supplier';
   const itemCount = group.items.length;
   
-  // Check for tracking number
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   
@@ -443,7 +433,6 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
           </div>
         </div>
 
-        {/* Show item preview - Handle product as ARRAY */}
         <div className="mb-3 space-y-1">
           {group.items.slice(0, 2).map((item) => {
             const productInfo = getProductInfo(item.product);
@@ -463,7 +452,6 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
           )}
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-3">
           <div className="w-full bg-gray-200 rounded-full h-1.5">
             <div 
@@ -501,7 +489,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
     ? `${group.supplier.firstName || ''} ${group.supplier.lastName || ''}`.trim() || 'Unknown Supplier'
     : 'Unknown Supplier';
   
-  // Check for tracking number
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   
@@ -509,14 +496,11 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black bg-opacity-50" />
       <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-        {/* Drag Handle */}
         <div className="flex justify-center pt-3 pb-2">
           <div className="w-12 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Content */}
         <div className="p-5">
-          {/* Header */}
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
@@ -543,7 +527,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </button>
           </div>
 
-          {/* Status */}
           <div className="mb-4 p-3 bg-gray-50 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-gray-600">Status</span>
@@ -559,7 +542,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           </div>
 
-          {/* All Items - Handle product as ARRAY */}
           <div className="mb-4">
             <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
             <div className="space-y-3">
@@ -592,7 +574,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           </div>
 
-          {/* Subtotal */}
           <div className="border-t border-gray-200 pt-3 mb-4">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-900">Subtotal</span>
@@ -602,7 +583,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           </div>
 
-          {/* Supplier Address */}
           {group.supplier?.addresses && (
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-1">Supplier Address</h3>
@@ -614,7 +594,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           )}
 
-          {/* Shipping Address */}
           {group.address && (
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-1">Shipping Address</h3>
@@ -626,7 +605,6 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-2">
             <button className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 transition-colors">
               Track Order
@@ -641,14 +619,97 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
   );
 }
 
-// Loading Spinner
-function LoadingSpinner() {
+// Shimmer Loading Component - Follows UI structure
+function ShimmerLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-200 border-t-purple-600" />
-        <p className="mt-2 text-gray-500">Loading orders...</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        {/* Header Shimmer */}
+        <div className="text-left mb-8">
+          <div className="h-8 w-48 bg-gray-200 rounded-lg shimmer"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded-lg mt-2 shimmer"></div>
+        </div>
+
+        {/* Tabs Shimmer - Imitates tabs look */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex gap-1 min-w-max pb-2">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="px-4 py-2 rounded-lg w-24 h-10 bg-gray-200 shimmer"
+              ></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Status Header Shimmer */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-20 bg-gray-200 rounded-full shimmer"></div>
+            <div className="h-5 w-16 bg-gray-200 rounded shimmer"></div>
+          </div>
+        </div>
+
+        {/* Order Cards Shimmer */}
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden p-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-5 w-32 bg-gray-200 rounded shimmer"></div>
+                    <div className="h-5 w-16 bg-gray-200 rounded-full shimmer"></div>
+                  </div>
+                  <div className="h-4 w-24 bg-gray-200 rounded shimmer"></div>
+                </div>
+                <div className="text-right">
+                  <div className="h-6 w-20 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-4 w-16 bg-gray-200 rounded mt-1 shimmer"></div>
+                </div>
+              </div>
+
+              {/* Items Shimmer */}
+              <div className="mb-3 space-y-2">
+                <div className="h-5 w-full bg-gray-200 rounded shimmer"></div>
+                <div className="h-5 w-3/4 bg-gray-200 rounded shimmer"></div>
+              </div>
+
+              {/* Progress Bar Shimmer */}
+              <div className="mb-3">
+                <div className="w-full h-1.5 bg-gray-200 rounded-full">
+                  <div className="w-1/3 h-1.5 bg-gray-300 rounded-full shimmer"></div>
+                </div>
+              </div>
+
+              {/* Button Shimmer */}
+              <div className="h-9 w-full bg-gray-200 rounded-lg shimmer"></div>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Add shimmer animation styles */}
+      <style jsx>{`
+        .shimmer {
+          animation: shimmer 1.5s infinite;
+          background: linear-gradient(
+            to right,
+            #f3f4f6 0%,
+            #e5e7eb 50%,
+            #f3f4f6 100%
+          );
+          background-size: 200% 100%;
+        }
+        
+        @keyframes shimmer {
+          0% {
+            background-position: -200% 0;
+          }
+          100% {
+            background-position: 200% 0;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -681,4 +742,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-      }
+}
