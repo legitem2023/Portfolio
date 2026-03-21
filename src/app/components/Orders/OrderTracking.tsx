@@ -271,7 +271,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
   
   // Show empty state only when not loading and no orders
-  if (!hasOrders) return <EmptyState status={selectedStatus} />;
+  // if (!hasOrders) return <EmptyState status={selectedStatus} />;
 
   const orders: Order[] = data.ordered_products.orders;
   const currentOrderCount = orders.length;
