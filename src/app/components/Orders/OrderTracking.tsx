@@ -250,7 +250,6 @@ export default function OrderTracking({ userId }: { userId: string }) {
   });
 
   const handleStatusChange = (status: string) => {
-    setSelectedStatus(status);
     refetch({
       filter: {
         userId: userId,
@@ -258,6 +257,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
       },
       pagination: { page: 1, pageSize: 50 }
     });
+    setSelectedStatus(status);
   };
 
   // FIX: Check loading first, then error, then empty state
