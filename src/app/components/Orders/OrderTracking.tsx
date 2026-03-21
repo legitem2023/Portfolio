@@ -411,10 +411,10 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 flex flex-row">
                 {hasTrackingNumber && trackingNumber 
                   ? <><QrCode/>{trackingNumber}</>
-                  : `Order #${group.orderNumber || 'N/A'}`}
+                  : <><QrCode/>{group.orderNumber || 'N/A'}</>}
               </span>
               <span className="text-xs text-gray-500">•</span>
               <span className={`text-xs px-2 py-0.5 rounded-full ${stage?.color || 'bg-gray-100 text-gray-700'}`}>
@@ -509,10 +509,10 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
         <div className="p-5">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="flex flex-row text-xl font-bold text-gray-900">
                 {hasTrackingNumber && trackingNumber 
                   ? <><QrCode/>{trackingNumber}</>
-                  : `Order #${group.orderNumber || 'N/A'}`}
+                  : <><QrCode/>{group.orderNumber || 'N/A'}</>}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
                 {hasTrackingNumber && trackingNumber && `Order #${group.orderNumber} • `}
