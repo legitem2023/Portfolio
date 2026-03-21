@@ -73,6 +73,20 @@ interface Order {
   }>;
 }
 
+// New type for grouped order by supplier
+interface SupplierGroup {
+  supplierId: string;
+  supplier: Order['items'][0]['supplier'];
+  items: Order['items'];
+  subtotal: number;
+  orderId: string;
+  orderNumber: string;
+  createdAt: string;
+  address: Order['address'];
+  user: Order['user'];
+  payments: Order['payments'];
+}
+
 interface ActiveOrderResponse {
   ordered_products: {
     orders: Order[];
@@ -202,6 +216,36 @@ type OrderCounts = {
   CANCELLED: number;
 };
 
+// Helper function to group order items by supplier
+const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
+  const supplierMap = new Map<string, SupplierGroup>();
+  
+  order.items.forEach(item => {
+    const supplierId = item.supplierId;
+    
+    if (!supplierMap.has(supplierId)) {
+      supplierMap.set(supplierId, {
+        supplierId: supplierId,
+        supplier: item.supplier,
+        items: [],
+        subtotal: 0,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        createdAt: order.createdAt,
+        address: order.address,
+        user: order.user,
+        payments: order.payments
+      });
+    }
+    
+    const group = supplierMap.get(supplierId)!;
+    group.items.push(item);
+    group.subtotal += item.price * item.quantity;
+  });
+  
+  return Array.from(supplierMap.values());
+};
+
 export default function OrderTracking({ userId }: { userId: string }) {
   const { loading, error, data } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
     variables: { 
@@ -210,7 +254,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
     }
   });
 
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
   const [activeTab, setActiveTab] = useState<string>('ALL');
 
   if (loading) return <LoadingSpinner />;
@@ -218,6 +262,14 @@ export default function OrderTracking({ userId }: { userId: string }) {
 
   const orders: Order[] = data?.ordered_products?.orders || [];
   
+  // Process all orders to create supplier groups
+  const allSupplierGroups: SupplierGroup[] = [];
+  orders.forEach(order => {
+    const groups = groupOrderBySupplier(order);
+    allSupplierGroups.push(...groups);
+  });
+  
+  // Group by status for counting (based on original order status)
   const ordersByStatus = ORDER_STAGES.reduce((acc, stage) => {
     acc[stage.key] = orders.filter(order => order.status === stage.key);
     return acc;
@@ -233,9 +285,13 @@ export default function OrderTracking({ userId }: { userId: string }) {
     CANCELLED: ordersByStatus['CANCELLED']?.length || 0,
   };
 
-  const filteredOrders = activeTab === 'ALL' 
-    ? orders 
-    : ordersByStatus[activeTab] || [];
+  // Filter supplier groups based on active tab (by original order status)
+  const filteredGroups = activeTab === 'ALL' 
+    ? allSupplierGroups 
+    : allSupplierGroups.filter(group => {
+        const originalOrder = orders.find(o => o.id === group.orderId);
+        return originalOrder?.status === activeTab;
+      });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -267,14 +323,14 @@ export default function OrderTracking({ userId }: { userId: string }) {
           </div>
         </div>
 
-        {/* Orders List */}
-        {filteredOrders.length > 0 ? (
+        {/* Orders List - Now showing supplier groups */}
+        {filteredGroups.length > 0 ? (
           <div className="space-y-3">
-            {filteredOrders.map((order) => (
-              <OrderCard 
-                key={order.id} 
-                order={order} 
-                onSelect={() => setSelectedOrder(order)}
+            {filteredGroups.map((group, index) => (
+              <SupplierOrderCard 
+                key={`${group.orderId}-${group.supplierId}-${index}`}
+                group={group} 
+                onSelect={() => setSelectedGroup(group)}
               />
             ))}
           </div>
@@ -283,10 +339,10 @@ export default function OrderTracking({ userId }: { userId: string }) {
         )}
 
         {/* Order Details Modal */}
-        {selectedOrder && (
-          <OrderModal 
-            order={selectedOrder} 
-            onClose={() => setSelectedOrder(null)} 
+        {selectedGroup && (
+          <SupplierOrderModal 
+            group={selectedGroup} 
+            onClose={() => setSelectedGroup(null)} 
           />
         )}
       </div>
@@ -315,26 +371,46 @@ function TabButton({ label, count, isActive, onClick }: {
   );
 }
 
-// Simplified Order Card
-function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) {
-  const stage = ORDER_STAGES.find(s => s.key === order.status);
-  const { percentage } = getOrderProgress(order.status);
+// New Supplier Order Card Component
+function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect: () => void }) {
+  // Get the original order status (you might want to determine this based on items)
+  // For now, using the first item's status or you can derive from order
+  const itemStatuses = group.items.map(item => item.status);
+  const hasCancelled = itemStatuses.includes('CANCELLED');
+  const hasDelivered = itemStatuses.includes('DELIVERED');
+  const hasShipped = itemStatuses.includes('SHIPPED');
+  
+  let displayStatus = 'PROCESSING';
+  if (hasDelivered) displayStatus = 'DELIVERED';
+  else if (hasShipped) displayStatus = 'SHIPPED';
+  else if (hasCancelled) displayStatus = 'CANCELLED';
+  
+  const stage = ORDER_STAGES.find(s => s.key === displayStatus);
+  const { percentage } = getOrderProgress(displayStatus);
+  
+  const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
+  const itemCount = group.items.length;
+  const isMultiSupplier = group.items.length > 0; // This group represents one supplier
   
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       <div className="p-4">
         <div className="flex justify-between items-start mb-3">
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-sm font-semibold text-gray-900">
-                #{order.orderNumber}
+                #{group.orderNumber}
+              </span>
+              <span className="text-xs text-gray-500">•</span>
+              <span className="text-xs font-medium text-gray-700">
+                Supplier: {supplierName}
               </span>
               <span className={`text-xs px-2 py-0.5 rounded-full ${stage?.color}`}>
                 {stage?.label}
               </span>
             </div>
             <div className="text-xs text-gray-500">
-              {new Date(order.createdAt).toLocaleDateString('en-US', {
+              {new Date(group.createdAt).toLocaleDateString('en-US', {
                 month: 'short',
                 day: 'numeric',
                 year: 'numeric'
@@ -343,10 +419,23 @@ function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) 
           </div>
           <div className="text-right">
             <div className="text-lg font-bold text-purple-700">
-              {formatPrice(order.total)}
+              {formatPrice(group.subtotal)}
             </div>
-            <div className="text-xs text-gray-500">{order.items.length} item(s)</div>
+            <div className="text-xs text-gray-500">{itemCount} item(s)</div>
           </div>
+        </div>
+
+        {/* Show item preview */}
+        <div className="mb-3 space-y-1">
+          {group.items.slice(0, 2).map((item) => (
+            <div key={item.id} className="text-sm text-gray-600 flex justify-between">
+              <span>{item.product.name} × {item.quantity}</span>
+              <span className="text-xs text-gray-500">{formatPrice(item.price * item.quantity)}</span>
+            </div>
+          ))}
+          {group.items.length > 2 && (
+            <div className="text-xs text-gray-500">+{group.items.length - 2} more items</div>
+          )}
         </div>
 
         {/* Progress Bar */}
@@ -370,9 +459,21 @@ function OrderCard({ order, onSelect }: { order: Order; onSelect: () => void }) 
   );
 }
 
-// Simplified Modal
-function OrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
-  const stage = ORDER_STAGES.find(s => s.key === order.status);
+// New Supplier Order Modal Component
+function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose: () => void }) {
+  // Determine status based on items
+  const itemStatuses = group.items.map(item => item.status);
+  const hasCancelled = itemStatuses.includes('CANCELLED');
+  const hasDelivered = itemStatuses.includes('DELIVERED');
+  const hasShipped = itemStatuses.includes('SHIPPED');
+  
+  let displayStatus = 'PROCESSING';
+  if (hasDelivered) displayStatus = 'DELIVERED';
+  else if (hasShipped) displayStatus = 'SHIPPED';
+  else if (hasCancelled) displayStatus = 'CANCELLED';
+  
+  const stage = ORDER_STAGES.find(s => s.key === displayStatus);
+  const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
   
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -389,10 +490,13 @@ function OrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                Order #{order.orderNumber}
+                Order #{group.orderNumber}
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                {new Date(order.createdAt).toLocaleDateString('en-US', {
+              <p className="text-sm text-gray-600 mt-1">
+                Supplier: {supplierName}
+              </p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {new Date(group.createdAt).toLocaleDateString('en-US', {
                   month: 'long',
                   day: 'numeric',
                   year: 'numeric'
@@ -415,47 +519,65 @@ function OrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-purple-600 h-2 rounded-full"
-                style={{ width: `${((ORDER_STAGES.findIndex(s => s.key === order.status) + 1) / ORDER_STAGES.length) * 100}%` }}
+                style={{ width: `${((ORDER_STAGES.findIndex(s => s.key === displayStatus) + 1) / ORDER_STAGES.length) * 100}%` }}
               />
             </div>
           </div>
 
-          {/* Items Summary */}
+          {/* All Items */}
           <div className="mb-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Items</h3>
-            <div className="space-y-2">
-              {order.items.slice(0, 3).map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    {item.product.name} × {item.quantity}
-                  </span>
-                  <span className="font-medium">{formatPrice(item.price * item.quantity)}</span>
+            <h3 className="font-semibold text-gray-900 mb-2">Items from {supplierName}</h3>
+            <div className="space-y-3">
+              {group.items.map((item) => (
+                <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-2">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">{item.product.name}</div>
+                    <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Quantity: {item.quantity} × {formatPrice(item.price)}
+                    </div>
+                    {item.trackingNumber && (
+                      <div className="text-xs text-blue-600 mt-1">Tracking: {item.trackingNumber}</div>
+                    )}
+                  </div>
+                  <div className="font-semibold text-gray-900">
+                    {formatPrice(item.price * item.quantity)}
+                  </div>
                 </div>
               ))}
-              {order.items.length > 3 && (
-                <p className="text-xs text-gray-500">+{order.items.length - 3} more items</p>
-              )}
             </div>
           </div>
 
-          {/* Total */}
+          {/* Subtotal */}
           <div className="border-t border-gray-200 pt-3 mb-4">
             <div className="flex justify-between items-center">
-              <span className="font-semibold text-gray-900">Total</span>
+              <span className="font-semibold text-gray-900">Subtotal</span>
               <span className="text-xl font-bold text-purple-700">
-                {formatPrice(order.total)}
+                {formatPrice(group.subtotal)}
               </span>
             </div>
           </div>
 
+          {/* Supplier Address */}
+          {group.supplier.addresses && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 mb-1">Supplier Address</h3>
+              <p className="text-sm text-gray-600">
+                {group.supplier.addresses.street}<br />
+                {group.supplier.addresses.city}, {group.supplier.addresses.state} {group.supplier.addresses.zipCode}<br />
+                {group.supplier.addresses.country}
+              </p>
+            </div>
+          )}
+
           {/* Shipping Address */}
-          {order.address && (
+          {group.address && (
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-1">Shipping Address</h3>
               <p className="text-sm text-gray-600">
-                {order.address.street}<br />
-                {order.address.city}, {order.address.state} {order.address.zipCode}<br />
-                {order.address.country}
+                {group.address.street}<br />
+                {group.address.city}, {group.address.state} {group.address.zipCode}<br />
+                {group.address.country}
               </p>
             </div>
           )}
@@ -466,7 +588,7 @@ function OrderModal({ order, onClose }: { order: Order; onClose: () => void }) {
               Track Order
             </button>
             <button className="flex-1 border border-purple-600 text-purple-600 py-2.5 rounded-lg font-medium text-sm hover:bg-purple-50 transition-colors">
-              Contact Support
+              Contact Supplier
             </button>
           </div>
         </div>
@@ -515,4 +637,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No orders{statusLabel}</p>
     </div>
   );
-    }
+        }
