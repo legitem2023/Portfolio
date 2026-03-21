@@ -73,20 +73,6 @@ interface Order {
   }>;
 }
 
-// New type for grouped order by supplier
-interface SupplierGroup {
-  supplierId: string;
-  supplier: Order['items'][0]['supplier'];
-  items: Order['items'];
-  subtotal: number;
-  orderId: string;
-  orderNumber: string;
-  createdAt: string;
-  address: Order['address'];
-  user: Order['user'];
-  payments: Order['payments'];
-}
-
 interface ActiveOrderResponse {
   ordered_products: {
     orders: Order[];
@@ -371,10 +357,8 @@ function TabButton({ label, count, isActive, onClick }: {
   );
 }
 
-// New Supplier Order Card Component
+// Supplier Order Card Component
 function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect: () => void }) {
-  // Get the original order status (you might want to determine this based on items)
-  // For now, using the first item's status or you can derive from order
   const itemStatuses = group.items.map(item => item.status);
   const hasCancelled = itemStatuses.includes('CANCELLED');
   const hasDelivered = itemStatuses.includes('DELIVERED');
@@ -390,7 +374,10 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
   
   const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
   const itemCount = group.items.length;
-  const isMultiSupplier = group.items.length > 0; // This group represents one supplier
+  
+  // Check for tracking number
+  const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
+  const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -399,7 +386,7 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="text-sm font-semibold text-gray-900">
-                #{group.orderNumber}
+                {hasTrackingNumber && trackingNumber ? `Tracking: ${trackingNumber}` : `#${group.orderNumber}`}
               </span>
               <span className="text-xs text-gray-500">•</span>
               <span className="text-xs font-medium text-gray-700">
@@ -459,9 +446,8 @@ function SupplierOrderCard({ group, onSelect }: { group: SupplierGroup; onSelect
   );
 }
 
-// New Supplier Order Modal Component
+// Supplier Order Modal Component
 function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose: () => void }) {
-  // Determine status based on items
   const itemStatuses = group.items.map(item => item.status);
   const hasCancelled = itemStatuses.includes('CANCELLED');
   const hasDelivered = itemStatuses.includes('DELIVERED');
@@ -474,6 +460,10 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
   
   const stage = ORDER_STAGES.find(s => s.key === displayStatus);
   const supplierName = `${group.supplier.firstName} ${group.supplier.lastName}`;
+  
+  // Check for tracking number
+  const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
+  const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -490,10 +480,10 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
           <div className="flex justify-between items-start mb-4">
             <div>
               <h2 className="text-xl font-bold text-gray-900">
-                Order #{group.orderNumber}
+                {hasTrackingNumber && trackingNumber ? `Tracking #${trackingNumber}` : `Order #${group.orderNumber}`}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Supplier: {supplierName}
+                {hasTrackingNumber && trackingNumber ? `Order #${group.orderNumber} • ` : ''}Supplier: {supplierName}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
                 {new Date(group.createdAt).toLocaleDateString('en-US', {
@@ -637,4 +627,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No orders{statusLabel}</p>
     </div>
   );
-        }
+    }
