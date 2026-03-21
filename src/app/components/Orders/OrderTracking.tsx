@@ -530,7 +530,7 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
 
           {/* All Items */}
           <div className="mb-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Items from {supplierName}</h3>
+            {/*<h3 className="font-semibold text-gray-900 mb-2">Items from {supplierName}</h3>*/}
             <div className="space-y-3">
               {group.items.map((item) => (
                 <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-2">
