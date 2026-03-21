@@ -205,16 +205,6 @@ const formatPrice = (amount: number): string => {
   })}`;
 };
 
-type OrderCounts = {
-  ALL: number;
-  PENDING: number;
-  CONFIRMED: number;
-  PROCESSING: number;
-  SHIPPED: number;
-  DELIVERED: number;
-  CANCELLED: number;
-};
-
 // Helper function to group order items by supplier
 const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
   const supplierMap = new Map<string, SupplierGroup>();
@@ -246,25 +236,47 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
 };
 
 export default function OrderTracking({ userId }: { userId: string }) {
-  const { loading, error, data } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
+  // Default to PENDING status
+  const [selectedStatus, setSelectedStatus] = useState<string>('PENDING');
+  const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
+  
+  // Query with status filter
+  const { loading, error, data, refetch } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
     variables: { 
-      filter: { userId: userId },
+      filter: { 
+        userId: userId,
+        status: selectedStatus  // Filter by selected status
+      },
       pagination: { page: 1, pageSize: 50 }
     },
     skip: !userId
   });
 
-  const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('ALL');
+  // Refetch when status changes
+  const handleStatusChange = (status: string) => {
+    setSelectedStatus(status);
+    refetch({
+      filter: {
+        userId: userId,
+        status: status
+      },
+      pagination: { page: 1, pageSize: 50 }
+    });
+  };
 
   if (loading) return <LoadingSpinner />;
   if (error) {
     console.error('GraphQL Error:', error);
     return <ErrorMessage error={error} />;
   }
-  if (!data?.ordered_products?.orders) return <EmptyState status={activeTab} />;
+  if (!data?.ordered_products?.orders) return <EmptyState status={selectedStatus} />;
 
   const orders: Order[] = data.ordered_products.orders;
+  
+  // Get count for each status (for display on tabs)
+  // We need to fetch counts separately or use a different query
+  // For now, we'll just show the count of current filtered orders
+  const currentOrderCount = orders.length;
   
   // Process all orders to create supplier groups
   const allSupplierGroups: SupplierGroup[] = [];
@@ -274,30 +286,9 @@ export default function OrderTracking({ userId }: { userId: string }) {
       allSupplierGroups.push(...groups);
     }
   });
-  
-  // Group by status for counting (based on original order status)
-  const ordersByStatus = ORDER_STAGES.reduce((acc, stage) => {
-    acc[stage.key] = orders.filter(order => order.status === stage.key);
-    return acc;
-  }, {} as Record<string, Order[]>);
 
-  const orderCounts: OrderCounts = {
-    ALL: orders.length,
-    PENDING: ordersByStatus['PENDING']?.length || 0,
-    CONFIRMED: ordersByStatus['CONFIRMED']?.length || 0,
-    PROCESSING: ordersByStatus['PROCESSING']?.length || 0,
-    SHIPPED: ordersByStatus['SHIPPED']?.length || 0,
-    DELIVERED: ordersByStatus['DELIVERED']?.length || 0,
-    CANCELLED: ordersByStatus['CANCELLED']?.length || 0,
-  };
-
-  // Filter supplier groups based on active tab (by original order status)
-  const filteredGroups = activeTab === 'ALL' 
-    ? allSupplierGroups 
-    : allSupplierGroups.filter(group => {
-        const originalOrder = orders.find(o => o.id === group.orderId);
-        return originalOrder?.status === activeTab;
-      });
+  // Find the current status label and color
+  const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -308,31 +299,37 @@ export default function OrderTracking({ userId }: { userId: string }) {
           <p className="text-sm text-gray-500">Track and manage your orders</p>
         </div>
 
-        {/* Status Tabs */}
+        {/* Status Tabs - No ALL tab, only order stages */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max pb-2">
-            <TabButton
-              label="All"
-              count={orderCounts.ALL}
-              isActive={activeTab === 'ALL'}
-              onClick={() => setActiveTab('ALL')}
-            />
             {ORDER_STAGES.map((stage) => (
               <TabButton
                 key={stage.key}
                 label={stage.label}
-                count={orderCounts[stage.key as keyof OrderCounts]}
-                isActive={activeTab === stage.key}
-                onClick={() => setActiveTab(stage.key)}
+                status={stage.key}
+                isActive={selectedStatus === stage.key}
+                onClick={() => handleStatusChange(stage.key)}
               />
             ))}
           </div>
         </div>
 
+        {/* Current Status Header */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm px-3 py-1 rounded-full ${currentStatus?.color || 'bg-gray-100 text-gray-700'}`}>
+              {currentStatus?.label || selectedStatus}
+            </span>
+            <span className="text-sm text-gray-500">
+              {currentOrderCount} order{currentOrderCount !== 1 ? 's' : ''}
+            </span>
+          </div>
+        </div>
+
         {/* Orders List */}
-        {filteredGroups.length > 0 ? (
+        {allSupplierGroups.length > 0 ? (
           <div className="space-y-3">
-            {filteredGroups.map((group, index) => (
+            {allSupplierGroups.map((group, index) => (
               <SupplierOrderCard 
                 key={`${group.orderId}-${group.supplierId}-${index}`}
                 group={group} 
@@ -341,7 +338,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
             ))}
           </div>
         ) : (
-          <EmptyState status={activeTab} />
+          <EmptyState status={selectedStatus} />
         )}
 
         {/* Order Details Modal */}
@@ -356,10 +353,10 @@ export default function OrderTracking({ userId }: { userId: string }) {
   );
 }
 
-// Tab Button Component
-function TabButton({ label, count, isActive, onClick }: { 
+// Tab Button Component - Simplified, no count display
+function TabButton({ label, status, isActive, onClick }: { 
   label: string; 
-  count: number; 
+  status: string;
   isActive: boolean; 
   onClick: () => void;
 }) {
@@ -372,7 +369,7 @@ function TabButton({ label, count, isActive, onClick }: {
           : 'bg-white text-gray-600 hover:bg-gray-100'
       }`}
     >
-      {label} ({count})
+      {label}
     </button>
   );
 }
@@ -678,11 +675,11 @@ function ErrorMessage({ error }: { error: any }) {
 
 // Empty State
 function EmptyState({ status }: { status: string }) {
-  const statusLabel = status === 'ALL' ? '' : ` in ${ORDER_STAGES.find(s => s.key === status)?.label || ''}`;
+  const statusLabel = ORDER_STAGES.find(s => s.key === status)?.label || status;
   return (
     <div className="bg-white rounded-lg p-8 text-center border border-gray-200">
       <div className="text-4xl mb-2">📦</div>
-      <p className="text-gray-500">No orders{statusLabel}</p>
+      <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-                                }
+      }
