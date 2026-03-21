@@ -268,12 +268,12 @@ export default function OrderTracking({ userId }: { userId: string }) {
   }
   
   // Check if there are orders
-  const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
+  const hasOrders = data?.ordered_products?.orders && data?.ordered_products?.orders.length > 0;
   
   // Show empty state only when not loading and no orders
   // if (!hasOrders) return <EmptyState status={selectedStatus} />;
 
-  const orders: Order[] = data.ordered_products.orders;
+  const orders: Order[] = data?.ordered_products?.orders;
   const currentOrderCount = orders.length;
   
   const allSupplierGroups: SupplierGroup[] = [];
