@@ -56,7 +56,7 @@ const formatPesoPrice = (price: number): string => {
     maximumFractionDigits: 2
   })}`;
 };
-
+/*
 async function getDistanceInKm(
   pickup: Coordinate,
   dropoff: Coordinate
@@ -73,7 +73,7 @@ async function getDistanceInKm(
   const route = data.routes[0];
   return route.distance / 1000;
 }
-
+*/
 // Cart Stage Component - Mobile optimized
 interface CartStageProps {
   cartItems: CartItem[];
