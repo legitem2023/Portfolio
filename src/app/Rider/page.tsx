@@ -108,14 +108,6 @@ export default function RiderDashboard() {
             onRejectDelivery={handleRejectDelivery}
           />
         );
-      case "tracking":
-        return (
-          <TrackingTab
-            isMobile={isMobile}
-            isOnline={isOnline}
-            setIsOnline={setIsOnline}
-          />
-        );
       case "deliveries":
         return <ActiveDeliveriesTab 
                  isMobile={isMobile} 
