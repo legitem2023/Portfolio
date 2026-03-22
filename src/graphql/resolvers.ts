@@ -5354,6 +5354,17 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     
     if (response) {
       try {
+        await Promise.all(items.map(async (item: any) => {
+          await prisma.productVariant.update({
+                where: {
+                  id: item.productId,
+                },
+                data: {
+                  stock: stock - item.quantity
+                }
+             });
+           }));
+        
         // ===== INTEGRATE EMAIL SENDING HERE =====
         // First fetch user data to get their email
       /*  const user = await prisma.user.findUnique({
