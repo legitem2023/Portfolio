@@ -1313,7 +1313,7 @@ const DeluxeCart = () => {
         variables: orderParams
       });
 
-      if (result.data?.createOrder?.statusText === 'success' || result.data?.createOrder?.statusText === 'Success') {
+      if (result.data?.createOrder?.statusText === 'Order Successful!') {
         dispatch(clearCart());
         setCurrentStage('completed');
       } else {
