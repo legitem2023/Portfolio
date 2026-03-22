@@ -14,7 +14,7 @@ import { GET_USER_PROFILE } from '../graphql/query';
 import { CREATE_ORDER } from '../graphql/mutation';
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import CartStageShimmer from './CartStageShimmer';
-
+import { getDistanceInKm } from '../../../../utils/getDistanceInKm';
 export interface ShippingInfo {
   addressId: string;
   receiver: string;
