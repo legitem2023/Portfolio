@@ -96,10 +96,10 @@ export default function MobileProductCard({
           <PriceDisplay price={product.price} salePrice={product.salePrice} />
         </div>
         
-        <div className="flex justify-between items-center">
+        {/*<div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Stock</span>
           <span className="text-sm text-gray-900">{product.stock} units</span>
-        </div>
+        </div>*/}
 
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Variants</span>
