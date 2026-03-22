@@ -5,7 +5,8 @@ import {
   Package, 
   Map, 
   BarChart,
-  Bell
+  Bell,
+  Clock
 } from "lucide-react";
 
 
@@ -45,10 +46,10 @@ const TABS_WITH_ICONS: TabType[] = [
     desktopLabel: "Navigation Map" 
   },
   { 
-    id: "performance", 
-    label: "Stats", 
-    icon: <BarChart />,
-    desktopLabel: "Performance" 
+    id: "history", 
+    label: "History", 
+    icon: <Clock />,
+    desktopLabel: "History" 
   }
 ];
 
