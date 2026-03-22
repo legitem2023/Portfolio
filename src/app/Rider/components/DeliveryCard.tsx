@@ -18,7 +18,7 @@ import { useMutation } from '@apollo/client';
 import { ACCEPT_BY_RIDER, REJECT_BY_RIDER_MUTATION } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-
+import { showToast } from '../../../../utils/toastify';
 interface DeliveryCardProps {
   delivery: Delivery;
   isMobile: boolean;
