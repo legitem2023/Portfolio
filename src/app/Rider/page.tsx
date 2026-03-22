@@ -129,7 +129,7 @@ export default function RiderDashboard() {
             status: 'PENDING'
           }))}
         />;
-      case "history":
+      case "History":
         return <RiderPaymentHistory
           riderId={user?.userId}
           showSummary={true}
