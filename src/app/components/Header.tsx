@@ -825,7 +825,7 @@ const Header: React.FC = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        handleTabClick(5);
+                        handleTabClick(9);
                         //router.push('/Messaging');
                       }}
                     >
@@ -940,7 +940,7 @@ const Header: React.FC = () => {
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
-                      handleTabClick(5);
+                      handleTabClick(9);
                       //router.push('/Messaging');
                     }}
                   >
