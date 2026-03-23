@@ -262,11 +262,11 @@ const formatDate = (dateString: string) => {
 
 // Loading Skeleton Component
 const LoadingSkeleton = () => (
-  <div className="min-h-screen bg-gray-50">
+  <div className="min-h-screen bg-gray-50 overflow-y-auto">
     {/* Cover Photo Skeleton */}
     <div className="h-48 sm:h-64 md:h-80 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
     
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8">
       {/* Profile Header Skeleton */}
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -329,7 +329,7 @@ const PostCard = ({ post }: { post: Post }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
       {/* Post Header */}
       <div className="p-3 sm:p-4 border-b border-gray-100">
         <div className="flex items-center justify-between">
@@ -359,7 +359,7 @@ const PostCard = ({ post }: { post: Post }) => {
         {/* Tagged Users */}
         {post.taggedUsers.length > 0 && (
           <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-lime-600 flex-wrap">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+            <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             <span>with {post.taggedUsers.map(u => `${u.firstName} ${u.lastName}`).join(', ')}</span>
           </div>
         )}
@@ -443,7 +443,7 @@ const PostCard = ({ post }: { post: Post }) => {
               />
               <button
                 onClick={handleComment}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-lime-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-lime-600 transition"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-lime-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-lime-600 transition whitespace-nowrap"
               >
                 Post
               </button>
@@ -461,8 +461,8 @@ const ProductCard = ({ product }: { product: Product }) => {
   const originalPrice = product.salePrice ? product.price : null;
 
   return (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-      <div className="relative aspect-square overflow-hidden">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group h-full flex flex-col">
+      <div className="relative aspect-square overflow-hidden flex-shrink-0">
         <img
           src={product.images?.[0] || 'https://via.placeholder.com/300'}
           alt={product.name}
@@ -479,16 +479,16 @@ const ProductCard = ({ product }: { product: Product }) => {
           </div>
         )}
       </div>
-      <div className="p-2 sm:p-3">
+      <div className="p-2 sm:p-3 flex-1 flex flex-col">
         <h4 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2">{product.name}</h4>
-        <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2 flex-wrap mt-auto">
           <span className="text-lime-600 font-bold text-sm sm:text-base">${displayPrice}</span>
           {originalPrice && (
             <span className="text-gray-400 text-xs sm:text-sm line-through">${originalPrice}</span>
           )}
         </div>
         {product.stock > 0 && product.stock < 10 && (
-          <span className="text-xs text-orange-600">Only {product.stock} left</span>
+          <span className="text-xs text-orange-600 mt-1">Only {product.stock} left</span>
         )}
       </div>
     </div>
@@ -503,7 +503,6 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
   });
 
   const [activeTab, setActiveTab] = React.useState<'posts' | 'products' | 'wishlist'>('posts');
-  const [showMobileMenu, setShowMobileMenu] = React.useState(false);
 
   if (loading) return <LoadingSkeleton />;
   if (error) return <ErrorState message={error.message} />;
@@ -514,17 +513,17 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
   const initials = `${user.firstName?.[0]}${user.lastName?.[0]}`;
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50">
       {/* Cover Photo */}
-      <div className="relative h-40 sm:h-56 md:h-64 lg:h-80 bg-gradient-to-r from-lime-400 to-emerald-500">
+      <div className="relative h-40 sm:h-56 md:h-64 lg:h-80 bg-gradient-to-r from-lime-400 to-emerald-500 w-full">
         <div className="absolute inset-0 bg-black/20" />
-        <button className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium text-gray-700 hover:bg-white transition flex items-center gap-1 sm:gap-2">
+        <button className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium text-gray-700 hover:bg-white transition flex items-center gap-1 sm:gap-2 z-10">
           <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
           <span className="hidden sm:inline">Edit Cover Photo</span>
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8 sm:pb-12">
         {/* Profile Header */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 md:gap-6">
@@ -550,22 +549,22 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">{fullName}</h1>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">{fullName}</h1>
                   {user.phone && (
                     <p className="text-gray-500 flex items-center gap-1 mt-1 justify-center sm:justify-start text-sm">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4" />
-                      {user.phone}
+                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                      <span className="break-words">{user.phone}</span>
                     </p>
                   )}
                 </div>
                 <div className="flex gap-2 sm:gap-3 justify-center sm:justify-end">
-                  <button className="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full transition text-sm">
+                  <button className="bg-lime-500 hover:bg-lime-600 text-white font-semibold px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full transition text-sm whitespace-nowrap">
                     {user.isFollowing ? 'Following' : 'Follow'}
                   </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full transition text-sm">
+                  <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 sm:px-5 md:px-6 py-1.5 sm:py-2 rounded-full transition text-sm whitespace-nowrap">
                     Message
                   </button>
-                  <button className="bg-gray-100 hover:bg-gray-200 p-1.5 sm:p-2 rounded-full transition">
+                  <button className="bg-gray-100 hover:bg-gray-200 p-1.5 sm:p-2 rounded-full transition flex-shrink-0">
                     <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
@@ -574,19 +573,19 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               {/* Stats */}
               <div className="flex gap-4 sm:gap-6 mt-3 sm:mt-4 justify-center sm:justify-start">
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
                   <span className="font-semibold text-sm sm:text-base">{user.followerCount.toLocaleString()}</span>
                   <span className="text-gray-500 text-xs sm:text-sm">followers</span>
                 </div>
                 <div className="flex items-center gap-1 sm:gap-2">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
                   <span className="font-semibold text-sm sm:text-base">{user.followingCount.toLocaleString()}</span>
                   <span className="text-gray-500 text-xs sm:text-sm">following</span>
                 </div>
               </div>
 
               {/* Bio Placeholder */}
-              <p className="mt-3 sm:mt-4 text-gray-700 text-sm sm:text-base">
+              <p className="mt-3 sm:mt-4 text-gray-700 text-sm sm:text-base break-words">
                 🌟 Digital creator | 🛍️ Shop my products below | 📍 Living life in green
               </p>
             </div>
@@ -601,19 +600,19 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
                 <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
-                    Address
+                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+                    <span>Address</span>
                   </h3>
-                  <button className="text-lime-600 text-xs sm:text-sm hover:text-lime-700">Add New</button>
+                  <button className="text-lime-600 text-xs sm:text-sm hover:text-lime-700 whitespace-nowrap">Add New</button>
                 </div>
-                {user.addresses.map(address => (
-                  <div key={address.id} className="mb-3 last:mb-0">
-                    <div className="flex items-start gap-2 sm:gap-3">
+                <div className="space-y-3">
+                  {user.addresses.map(address => (
+                    <div key={address.id} className="flex items-start gap-2 sm:gap-3">
                       <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-lime-100 flex items-center justify-center flex-shrink-0 text-sm">
                         {address.type === 'home' ? '🏠' : address.type === 'work' ? '💼' : '📍'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm">{address.receiver}</p>
+                        <p className="font-medium text-gray-900 text-sm break-words">{address.receiver}</p>
                         <p className="text-xs sm:text-sm text-gray-500 break-words">
                           {address.street}, {address.city}, {address.state} {address.zipCode}
                         </p>
@@ -624,27 +623,27 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 
             {/* Social Links Placeholder */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
               <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-                <Link2 className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
-                Social Links
+                <Link2 className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+                <span>Social Links</span>
               </h3>
               <div className="space-y-2 sm:space-y-3">
                 <button className="w-full flex items-center gap-2 sm:gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
-                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600" />
-                  <span className="text-gray-700 text-sm sm:text-base">Instagram</span>
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-auto text-gray-400" />
+                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 flex-shrink-0" />
+                  <span className="text-gray-700 text-sm sm:text-base flex-1 text-left">Instagram</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                 </button>
                 <button className="w-full flex items-center gap-2 sm:gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
-                  <Twitter className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
-                  <span className="text-gray-700 text-sm sm:text-base">Twitter</span>
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-auto text-gray-400" />
+                  <Twitter className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
+                  <span className="text-gray-700 text-sm sm:text-base flex-1 text-left">Twitter</span>
+                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
                 </button>
               </div>
             </div>
@@ -659,7 +658,7 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-3 sm:py-4 font-semibold capitalize transition relative text-sm sm:text-base whitespace-nowrap ${
+                    className={`flex-1 py-3 sm:py-4 font-semibold capitalize transition relative text-sm sm:text-base whitespace-nowrap px-2 sm:px-4 ${
                       activeTab === tab
                         ? 'text-lime-600'
                         : 'text-gray-500 hover:text-gray-700'
@@ -687,7 +686,7 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                       <input
                         type="text"
                         placeholder="What's on your mind?"
-                        className="flex-1 bg-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
+                        className="flex-1 bg-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 min-w-0"
                       />
                       <button className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition flex-shrink-0">
                         <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -695,9 +694,11 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                     </div>
 
                     {/* Posts */}
-                    {user.posts.map(post => (
-                      <PostCard key={post.id} post={post} />
-                    ))}
+                    <div className="space-y-3 sm:space-y-4">
+                      {user.posts.map(post => (
+                        <PostCard key={post.id} post={post} />
+                      ))}
+                    </div>
                     {user.posts.length === 0 && (
                       <div className="text-center py-8 sm:py-12 text-gray-500">
                         <p className="text-sm sm:text-base">No posts yet</p>
