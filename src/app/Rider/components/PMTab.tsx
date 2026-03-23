@@ -537,7 +537,50 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+const handleSendMessage = async () => {
+  if (newMessage.trim() === "" || !selectedUser || isSending) return;
 
+  setIsSending(true);
+
+  try {
+    const { data } = await sendMessageMutation({
+      variables: {
+        input: {
+          senderId: userId, // Changed from UserId to userId
+          recipientId: selectedUser.id,
+          body: newMessage.trim()
+        }
+      }
+    });
+
+    if (data?.sendMessage) {
+      const newMsg: Message = {
+        id: data.sendMessage.id,
+        sender: name,
+        avatar: avatar,
+        timestamp: data.sendMessage.createdAt,
+        content: data.sendMessage.body,
+        likes: 0,
+        comments: 0,
+        isLikedByMe: false,
+        images: [],
+        isOwnMessage: true,
+        isRead: data.sendMessage.isRead,
+        graphQLData: data.sendMessage
+      };
+
+      setMessages(prev => [...prev, newMsg]);
+      setNewMessage("");
+      refetchThreads();
+      refetchConversation();
+    }
+  } catch (error) {
+    console.error('Error sending message:', error);
+  } finally {
+    setIsSending(false);
+  }
+};
+/*
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !selectedUser || isSending) return; // Add isSending check
 
@@ -580,7 +623,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     } finally {
       setIsSending(false); // Set loading state to false after completion
     }
-  };
+  };*/
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isSending) { // Add isSending check
