@@ -734,7 +734,7 @@ console.log(threadsData,"<<<<");
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            ${isMobile ? 'fixed inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+            ${isMobile ? 'relative inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-green-50 to-lime-50 border-r border-green-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
