@@ -1863,7 +1863,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
     },
 
-    messageThreads: async (_: any, { page = 1, limit = 20 }: any, { userId }: any): Promise<any> => {
+    messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
 
       // Get unique users that current user has conversations with
