@@ -610,7 +610,7 @@ const Header: React.FC = () => {
                     
                     {/* Popup Container with enhanced slide-up animation */}
                     <div className={`
-                      fixed bottom-0 left-0 right-0 
+                      fixed z-50 bottom-0 left-0 right-0 
                       md:absolute md:bottom-auto md:top-full 
                       bg-white rounded-t-2xl md:rounded-2xl 
                       shadow-2xl border border-gray-200 
