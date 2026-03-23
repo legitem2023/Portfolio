@@ -371,7 +371,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       setIsMobile(mobile);
       // On mobile, sidebar starts closed; on desktop, it starts open
       if (mobile) {
-        setIsSidebarOpen(true);
+        setIsSidebarOpen(false);
       } else {
         setIsSidebarOpen(true);
       }
