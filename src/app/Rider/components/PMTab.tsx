@@ -286,7 +286,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -623,7 +623,7 @@ const handleSendMessage = async () => {
       setIsSending(false); // Set loading state to false after completion
     }
   };*/
-console.log(threadsData,"<<<<");
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isSending) { // Add isSending check
       e.preventDefault();
@@ -726,7 +726,7 @@ console.log(threadsData,"<<<<");
   // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
-
+ console.log("sidebar",shouldShowSidebar);
   return (
     <div>
     <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100 safe-area-inset-bottom">
