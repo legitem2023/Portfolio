@@ -685,7 +685,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
+    <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
       <div 
         className="fixed bottom-0 w-full bg-white shadow-xl overflow-hidden"
         style={containerStyle}
