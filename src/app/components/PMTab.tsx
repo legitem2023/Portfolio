@@ -1,12 +1,11 @@
 'use client';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import Image from 'next/image';
 import { decryptToken } from '../../../utils/decryptToken';
 import { 
   Search, 
   X, 
-  ChevronLeft, 
   Menu, 
   Phone, 
   Check, 
@@ -16,8 +15,8 @@ import {
   Image as ImageIcon,
   MessageSquare,
   ChevronRight,
-  User,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from 'lucide-react';
 
 // GraphQL Queries & Mutations
@@ -254,11 +253,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const [isSending, setIsSending] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -285,84 +284,38 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     pollInterval: 30000,
   });
 
-  // GraphQL Mutations
   const [sendMessageMutation] = useMutation(SEND_MESSAGE);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
 
-  // Combine and filter contacts
-  const allContacts = useMemo(() => {
-    const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
-    const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId &&
-      !threadUsers.some(threadUser => threadUser.id === user.id)
-    ) || [];
+  // Helper functions
+  const getUserFullName = (user: User) => `${user.firstName} ${user.lastName}`;
+  const getUserAvatar = (user: User) => user.avatar || "/NoImage.webp";
+  const formatTime = (timestamp: string) => new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
     
-    return [...threadUsers, ...otherUsers];
-  }, [messageThreads, usersData?.users, userId]);
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
-  // Filter contacts based on search term
-  const filteredContacts = useMemo(() => {
-    if (!searchTerm.trim()) return allContacts;
-    
-    const searchLower = searchTerm.toLowerCase();
-    return allContacts.filter(user => 
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower)
-    );
-  }, [allContacts, searchTerm]);
-
-  // Filter contacts by tab
-  const displayContacts = useMemo(() => {
-    if (activeTab === "threads") {
-      return filteredContacts.filter(user => 
-        messageThreads.some(thread => thread.user.id === user.id)
-      );
-    } else {
-      return filteredContacts;
-    }
-  }, [filteredContacts, activeTab, messageThreads]);
-
-  // Check if mobile on mount and resize
-  useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Scroll to bottom function
-  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
-    
-    scrollTimeoutRef.current = setTimeout(() => {
+  // Scroll to bottom
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+    setTimeout(() => {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTo({
           top: messagesContainerRef.current.scrollHeight,
-          behavior: behavior
+          behavior
         });
       }
-    }, 50);
-  };
+    }, 100);
+  }, []);
 
-  // Immediate scroll to bottom
-  const immediateScrollToBottom = () => {
-    if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-    }
-  };
-
-  // Handle keyboard visibility for mobile
+  // Keyboard handling for mobile
   useEffect(() => {
     if (!isMobile) return;
     
@@ -372,46 +325,31 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       
       const windowHeight = window.innerHeight;
       const viewportHeight = visualViewport.height;
-      const newKeyboardHeight = windowHeight - viewportHeight;
+      const newKeyboardHeight = Math.max(0, windowHeight - viewportHeight);
+      
+      setKeyboardHeight(newKeyboardHeight);
       
       if (newKeyboardHeight > 100) {
-        setKeyboardHeight(newKeyboardHeight);
-        // Scroll to bottom when keyboard appears
-        setTimeout(() => {
-          scrollToBottom('auto');
-        }, 100);
-      } else {
-        setKeyboardHeight(0);
+        setTimeout(() => scrollToBottom('auto'), 150);
       }
     };
-
-    window.visualViewport?.addEventListener('resize', handleResize);
-    handleResize();
     
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, [isMobile]);
+    window.visualViewport?.addEventListener('resize', handleResize);
+    return () => window.visualViewport?.removeEventListener('resize', handleResize);
+  }, [isMobile, scrollToBottom]);
 
+  // Get user data
   useEffect(() => {
     const getRole = async () => {
       try {
-        const response = await fetch('/api/protected', {
-          credentials: 'include'
-        });
-        
-        if (response.status === 401) {
-          throw new Error('Unauthorized');
-        }
+        const response = await fetch('/api/protected', { credentials: 'include' });
+        if (response.status === 401) throw new Error('Unauthorized');
         
         const data = await response.json();
         const token = data?.user;
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
         const payload = await decryptToken(token, secret.toString());
+        
         setUserId(payload.userId);
         setName(payload.name);
         setAvatar(payload.image || "/NoImage.webp");
@@ -422,23 +360,23 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     getRole();
   }, []);
 
-  // Update message threads when data loads
+  // Update message threads
   useEffect(() => {
     if (threadsData?.messageThreads?.threads) {
-      const sortedThreads = [...threadsData.messageThreads.threads].sort((a, b) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      const sortedThreads = [...threadsData.messageThreads.threads].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
       setMessageThreads(sortedThreads);
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages
+  // Convert and set messages
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      const sortedMessages = [...conversationData.conversation.messages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
-
+      
       const uiMessages: Message[] = sortedMessages.map((msg: GraphQLMessage) => ({
         id: msg.id,
         sender: `${msg.sender.firstName} ${msg.sender.lastName}`,
@@ -453,36 +391,31 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         isRead: msg.isRead,
         graphQLData: msg
       }));
-
-      setMessages(uiMessages);
       
-      // Scroll to bottom when messages load
-      setTimeout(() => {
-        immediateScrollToBottom();
-      }, 100);
-
+      setMessages(uiMessages);
+      scrollToBottom('auto');
+      
+      // Mark unread messages as read
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
-        markMultipleAsReadMutation({
-          variables: { messageIds: unreadIds }
-        });
+        markMultipleAsReadMutation({ variables: { messageIds: unreadIds } });
       }
     }
-  }, [conversationData, userId, markMultipleAsReadMutation]);
+  }, [conversationData, userId, markMultipleAsReadMutation, scrollToBottom]);
 
-  // Scroll to bottom whenever messages change
+  // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
       scrollToBottom('smooth');
     }
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
+  // Send message
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !selectedUser || isSending) return;
-
+    
     setIsSending(true);
-
     try {
       const { data } = await sendMessageMutation({
         variables: {
@@ -493,7 +426,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           }
         }
       });
-
+      
       if (data?.sendMessage) {
         const newMsg: Message = {
           id: data.sendMessage.id,
@@ -509,7 +442,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           isRead: data.sendMessage.isRead,
           graphQLData: data.sendMessage
         };
-
+        
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
         
@@ -519,11 +452,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         
         refetchThreads();
         refetchConversation();
-        
-        // Scroll to bottom after sending
-        setTimeout(() => {
-          immediateScrollToBottom();
-        }, 50);
+        scrollToBottom('auto');
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -539,40 +468,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
-  const handleUserSelect = async (user: User) => {
-    setSelectedUser(user);
-    
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-    
-    try {
-      await refetchConversation({ userId: user.id });
-      setTimeout(() => {
-        immediateScrollToBottom();
-      }, 100);
-    } catch (error) {
-      console.error('Error fetching conversation:', error);
-    }
-  };
-
-  const handleBackToContacts = () => {
-    setSelectedUser(null);
-    if (isMobile) {
-      setIsSidebarOpen(true);
-    }
-  };
-
-  const handleToggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleTextareaFocus = () => {
-    setTimeout(() => {
-      scrollToBottom('auto');
-    }, 200);
-  };
-
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
     if (textareaRef.current) {
@@ -581,188 +476,193 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleUserSelect = async (user: User) => {
+    setSelectedUser(user);
+    if (isMobile) setIsSidebarOpen(false);
+    await refetchConversation({ userId: user.id });
+    scrollToBottom('auto');
   };
 
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-    }
-  };
-
-  const getThreadInfo = (user: User) => {
-    return messageThreads.find(thread => thread.user.id === user.id);
-  };
-
-  const groupMessagesByDate = () => {
+  // Group messages by date
+  const messageGroups = useMemo(() => {
     const groups: { [key: string]: Message[] } = {};
-    
     messages.forEach(message => {
       const date = formatDate(message.timestamp);
-      if (!groups[date]) {
-        groups[date] = [];
-      }
+      if (!groups[date]) groups[date] = [];
       groups[date].push(message);
     });
-    
     return groups;
-  };
+  }, [messages]);
 
-  const messageGroups = groupMessagesByDate();
+  // Filter contacts
+  const allContacts = useMemo(() => {
+    const threadUsers = messageThreads.map(t => t.user);
+    const otherUsers = usersData?.users?.filter((user: User) => 
+      user.id !== userId && !threadUsers.some(tu => tu.id === user.id)
+    ) || [];
+    return [...threadUsers, ...otherUsers];
+  }, [messageThreads, usersData?.users, userId]);
 
-  const getUserFullName = (user: User) => {
-    return `${user.firstName} ${user.lastName}`;
-  };
+  const filteredContacts = useMemo(() => {
+    if (!searchTerm.trim()) return allContacts;
+    const searchLower = searchTerm.toLowerCase();
+    return allContacts.filter(user => 
+      getUserFullName(user).toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower)
+    );
+  }, [allContacts, searchTerm]);
 
-  const getUserAvatar = (user: User) => {
-    return user.avatar || "/NoImage.webp";
-  };
+  const displayContacts = useMemo(() => {
+    if (activeTab === "threads") {
+      return filteredContacts.filter(user => 
+        messageThreads.some(thread => thread.user.id === user.id)
+      );
+    }
+    return filteredContacts;
+  }, [filteredContacts, activeTab, messageThreads]);
+
+  const getThreadInfo = (user: User) => messageThreads.find(thread => thread.user.id === user.id);
+
+  // Check mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsSidebarOpen(!mobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="relative top-0 h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
-        <div className="flex h-full relative">
+    <div className="h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
+      <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
+        <div className="flex h-full">
           {/* Sidebar */}
           <div className={`
-            ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
-            bg-gradient-to-b from-purple-50 via-white to-purple-50 border-r border-purple-100
-            transform transition-all duration-300 ease-out
-            ${shouldShowSidebar ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}
-            flex flex-col shadow-xl
+            ${isMobile ? 'absolute inset-0 z-30' : 'relative w-80'}
+            bg-white border-r border-gray-200
+            transform transition-transform duration-300 ease-in-out
+            ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
+            flex flex-col
           `}>
-            <div className="flex-shrink-0">
-              <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                  <div className="z-20 h-[100%] flex items-center">
-                    <Image 
-                      src="/VendorCity_Store.webp" 
-                      alt="Logo" 
-                      height={100} 
-                      width={100} 
-                      className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                    />
-                  </div>
-                  {isMobile && (
-                    <button 
-                      onClick={handleToggleSidebar}
-                      className="z-20 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
-                    >
-                      <X className="w-5 h-5 text-gray-700" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="p-3 md:p-4 bg-white border-b border-purple-100">
-                <div className="relative mb-3 transform transition-all duration-300">
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white transition-all duration-300"
+            {/* Sidebar Header */}
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Image 
+                    src="/VendorCity_Store.webp" 
+                    alt="Logo" 
+                    height={40} 
+                    width={40} 
+                    className="rounded-lg bg-white p-1"
                   />
-                  <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400 transition-all duration-300" />
+                  <div>
+                    <h1 className="text-white font-bold text-lg">Messages</h1>
+                    <p className="text-purple-200 text-xs">Connect with others</p>
+                  </div>
                 </div>
-
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setActiveTab("threads")}
-                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] ${
-                      activeTab === "threads"
-                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
-                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                    }`}
-                  >
-                    Conversations
+                {isMobile && (
+                  <button onClick={() => setIsSidebarOpen(false)} className="text-white">
+                    <X className="w-6 h-6" />
                   </button>
-                  <button
-                    onClick={() => setActiveTab("allUsers")}
-                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-all duration-300 transform hover:scale-[1.02] ${
-                      activeTab === "allUsers"
-                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
-                        : "bg-purple-100 text-purple-600 hover:bg-purple-200"
-                    }`}
-                  >
-                    All Users
-                  </button>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto">
-              {displayContacts.map((user, index) => {
+            {/* Search */}
+            <div className="p-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search conversations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="px-4 pb-4">
+              <div className="flex space-x-2 bg-gray-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setActiveTab("threads")}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                    activeTab === "threads"
+                      ? "bg-white text-purple-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  Conversations
+                </button>
+                <button
+                  onClick={() => setActiveTab("allUsers")}
+                  className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                    activeTab === "allUsers"
+                      ? "bg-white text-purple-600 shadow-sm"
+                      : "text-gray-600 hover:text-gray-900"
+                  }`}
+                >
+                  All Users
+                </button>
+              </div>
+            </div>
+
+            {/* Contacts List */}
+            <div className="flex-1 overflow-y-auto px-2">
+              {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
                 return (
-                  <div
+                  <button
                     key={user.id}
+                    onClick={() => handleUserSelect(user)}
                     className={`
-                      flex items-center p-3 border-b border-purple-50 cursor-pointer 
-                      transition-all duration-300 ease-out transform
+                      w-full flex items-center space-x-3 p-3 rounded-xl transition-all mb-1
                       ${selectedUser?.id === user.id 
-                        ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-l-purple-500' 
-                        : 'hover:bg-purple-50 hover:pl-4'
+                        ? 'bg-purple-50 border-l-4 border-purple-500' 
+                        : 'hover:bg-gray-50'
                       }
                     `}
-                    onClick={() => handleUserSelect(user)}
                   >
-                    <div className="relative flex-shrink-0">
+                    <div className="relative">
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover border-2 border-purple-200 transition-all duration-300 hover:scale-105"
+                        className="w-12 h-12 rounded-full object-cover"
                       />
                       {thread && thread.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                           {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
                         </div>
                       )}
                     </div>
-                    <div className="ml-3 flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-800 text-sm md:text-base truncate">
-                          {getUserFullName(user)}
-                        </h3>
-                        {thread?.lastMessage && (
-                          <span className="text-xs text-purple-400 whitespace-nowrap ml-2">
-                            {formatTime(thread.lastMessage.createdAt)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs md:text-sm text-purple-500 truncate">
+                    <div className="flex-1 text-left">
+                      <h3 className="font-semibold text-gray-800">{getUserFullName(user)}</h3>
+                      <p className="text-sm text-gray-500 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-purple-300 opacity-0 group-hover:opacity-100 transition-all duration-300" />
-                  </div>
+                    {thread?.lastMessage && (
+                      <span className="text-xs text-gray-400">
+                        {formatTime(thread.lastMessage.createdAt)}
+                      </span>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                  </button>
                 );
               })}
               
               {displayContacts.length === 0 && (
-                <div className="text-center py-8 text-purple-400">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-3 animate-pulse" />
-                  <p className="text-sm">
-                    {searchTerm ? 'No users found' : 
-                     activeTab === "threads" ? 'No conversations yet' : 'No users available'}
+                <div className="text-center py-12">
+                  <MessageCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                  <p className="text-gray-500">
+                    {searchTerm ? 'No users found' : 'No conversations yet'}
                   </p>
                 </div>
               )}
@@ -771,80 +671,61 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
           {/* Chat Area */}
           {shouldShowChat && (
-            <div className="flex-1 flex flex-col h-full bg-white">
-              {/* Chat Header - Fixed at top */}
+            <div className="flex-1 flex flex-col h-full bg-gray-50">
+              {/* Chat Header */}
               {selectedUser ? (
-                <div className="flex-shrink-0">
-                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                      <div className="z-20 h-[100%] flex items-center gap-3">
-                        <Image 
-                          onClick={handleBackToContacts}
-                          src="/VendorCity_Store.webp" 
-                          alt="Logo" 
-                          height={100} 
-                          width={100} 
-                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                        />
-                        <div className="flex flex-col">
-                          <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
-                            {getUserFullName(selectedUser)}
-                          </h2>
-                          <p className="text-xs text-purple-600 truncate">
-                            {selectedUser.email}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
-                          <Phone className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={handleToggleSidebar}
-                          className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
-                        >
-                          <Menu className="w-5 h-5" />
-                        </button>
-                      </div>
+                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
+                  <div className="flex items-center space-x-3">
+                    {isMobile && (
+                      <button onClick={() => setIsSidebarOpen(true)} className="p-2">
+                        <ArrowLeft className="w-5 h-5 text-gray-600" />
+                      </button>
+                    )}
+                    <img
+                      src={getUserAvatar(selectedUser)}
+                      alt={getUserFullName(selectedUser)}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    <div>
+                      <h2 className="font-semibold text-gray-800">{getUserFullName(selectedUser)}</h2>
+                      <p className="text-xs text-gray-500">{selectedUser.email}</p>
                     </div>
                   </div>
+                  <button className="p-2 text-gray-600 hover:text-purple-600 transition-colors">
+                    <Phone className="w-5 h-5" />
+                  </button>
                 </div>
               ) : (
-                <div className="flex-shrink-0">
-                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                      <div className="z-20 h-[100%] flex items-center">
-                        <Image 
-                          src="/VendorCity_Store.webp" 
-                          alt="Logo" 
-                          height={100} 
-                          width={100} 
-                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                        />
-                      </div>
+                <div className="bg-white border-b border-gray-200 px-4 py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <Image 
+                        src="/VendorCity_Store.webp" 
+                        alt="Logo" 
+                        height={40} 
+                        width={40} 
+                        className="rounded-lg"
+                      />
                       <div>
-                        <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
-                        <p className="text-xs text-purple-600">Select a conversation</p>
+                        <h2 className="font-semibold text-gray-800">Messages</h2>
+                        <p className="text-xs text-gray-500">Select a conversation to start messaging</p>
                       </div>
-                      {isMobile && (
-                        <button 
-                          onClick={handleToggleSidebar}
-                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
-                        >
-                          <Menu className="w-5 h-5 text-gray-700" />
-                        </button>
-                      )}
                     </div>
+                    {isMobile && (
+                      <button onClick={() => setIsSidebarOpen(true)} className="p-2">
+                        <Menu className="w-5 h-5 text-gray-600" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
-              
-              {/* Messages Container - Scrollable area */}
+
+              {/* Messages Container - Scrollable */}
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-purple-50"
+                className="flex-1 overflow-y-auto"
                 style={{
-                  paddingBottom: isMobile && keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
+                  paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
                 }}
               >
                 {selectedUser ? (
@@ -852,7 +733,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
-                          <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                          <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
                             {date}
                           </span>
                         </div>
@@ -862,36 +743,41 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                               key={message.id}
                               className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
                             >
-                              <div className={`flex items-end max-w-[85%] md:max-w-xs lg:max-w-md gap-2 ${
-                                message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                              }`}>
+                              {!message.isOwnMessage && (
                                 <img
                                   src={message.avatar}
                                   alt={message.sender}
-                                  className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0 mb-1"
+                                  className="w-8 h-8 rounded-full object-cover mr-2 self-end mb-1"
                                 />
-                                <div className={`flex flex-col ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
-                                  <div className={`rounded-2xl md:rounded-3xl p-3 md:p-4 ${
-                                    message.isOwnMessage
-                                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
-                                      : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none'
-                                  }`}>
-                                    <p className="text-sm md:text-base whitespace-pre-wrap break-words">
-                                      {message.content}
-                                    </p>
-                                  </div>
-                                  <div className={`flex items-center gap-1 mt-1 text-xs ${
-                                    message.isOwnMessage ? 'justify-end' : 'justify-start'
-                                  }`}>
-                                    <span className={message.isOwnMessage ? 'text-purple-400' : 'text-gray-400'}>
-                                      {formatTime(message.timestamp)}
-                                    </span>
-                                    {message.isOwnMessage && (
-                                      <Check className="w-3 h-3 text-purple-400" />
-                                    )}
-                                  </div>
+                              )}
+                              <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
+                                <div className={`
+                                  rounded-2xl px-4 py-2
+                                  ${message.isOwnMessage 
+                                    ? 'bg-purple-600 text-white rounded-br-none' 
+                                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                                  }
+                                `}>
+                                  <p className="text-sm whitespace-pre-wrap break-words">
+                                    {message.content}
+                                  </p>
+                                </div>
+                                <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                                  <span className={message.isOwnMessage ? 'text-purple-500' : 'text-gray-400'}>
+                                    {formatTime(message.timestamp)}
+                                  </span>
+                                  {message.isOwnMessage && (
+                                    <Check className="w-3 h-3 text-purple-500" />
+                                  )}
                                 </div>
                               </div>
+                              {message.isOwnMessage && (
+                                <img
+                                  src={message.avatar}
+                                  alt={message.sender}
+                                  className="w-8 h-8 rounded-full object-cover ml-2 self-end mb-1"
+                                />
+                              )}
                             </div>
                           ))}
                         </div>
@@ -901,58 +787,53 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-purple-400">
-                      <MessageSquare className="w-16 h-16 mx-auto mb-4" />
-                      <p className="text-lg font-medium">Select a conversation</p>
-                      <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
+                    <div className="text-center">
+                      <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-600 mb-2">No conversation selected</h3>
+                      <p className="text-sm text-gray-500">Choose a contact to start messaging</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Input Area - Fixed at bottom */}
+              {/* Input Area */}
               {selectedUser && (
-                <div className="border-t border-purple-100 bg-white flex-shrink-0">
-                  <div className="p-4">
-                    <div className="flex space-x-3">
-                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 transition-all duration-300">
-                        <textarea
-                          ref={textareaRef}
-                          value={newMessage}
-                          onChange={handleTextareaChange}
-                          onKeyPress={handleKeyPress}
-                          onFocus={handleTextareaFocus}
-                          placeholder="Type your message..."
-                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
-                          rows={1}
-                          style={{ height: 'auto' }}
-                        />
-                      </div>
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || isSending}
-                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 active:scale-95 min-w-[52px]"
-                      >
-                        {isSending ? (
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <Send className="w-6 h-6" />
-                        )}
-                      </button>
+                <div className="bg-white border-t border-gray-200 px-4 py-3">
+                  <div className="flex space-x-3">
+                    <div className="flex-1 bg-gray-100 rounded-2xl focus-within:ring-2 focus-within:ring-purple-500">
+                      <textarea
+                        ref={textareaRef}
+                        value={newMessage}
+                        onChange={handleTextareaChange}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Type a message..."
+                        className="w-full px-4 py-2 bg-transparent focus:outline-none resize-none rounded-2xl min-h-[40px] max-h-[100px] text-sm"
+                        rows={1}
+                        style={{ height: 'auto' }}
+                      />
                     </div>
-                    <div className="flex justify-between items-center mt-2 px-1">
-                      <div className="flex space-x-2">
-                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
-                          <Paperclip className="w-5 h-5" />
-                        </button>
-                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
-                          <ImageIcon className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div className="text-xs text-purple-400 hidden md:block">
-                        Press Enter to send • Shift+Enter for new line
-                      </div>
-                    </div>
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={!newMessage.trim() || isSending}
+                      className="bg-purple-600 text-white p-2 rounded-2xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] h-[44px] flex items-center justify-center"
+                    >
+                      {isSending ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <div className="flex space-x-2 mt-2 px-1">
+                    <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
+                      <Paperclip className="w-4 h-4" />
+                    </button>
+                    <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
+                      <ImageIcon className="w-4 h-4" />
+                    </button>
+                    <span className="text-xs text-gray-400 ml-auto hidden md:block">
+                      Enter to send • Shift+Enter for new line
+                    </span>
                   </div>
                 </div>
               )}
