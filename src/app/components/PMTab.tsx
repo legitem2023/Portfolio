@@ -253,7 +253,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
-  const [isSending, setIsSending] = useState(false); // Add loading state for send button
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -525,7 +525,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !selectedUser || isSending) return;
 
-    setIsSending(true); // Set loading state
+    setIsSending(true);
 
     try {
       const { data } = await sendMessageMutation({
@@ -564,7 +564,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         refetchThreads();
         refetchConversation();
         
-        // Immediate scroll after sending
         setTimeout(() => {
           immediateScrollToBottom();
         }, 50);
@@ -572,7 +571,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
-      setIsSending(false); // Reset loading state
+      setIsSending(false);
     }
   };
 
@@ -690,7 +689,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     <div className="relative top-0 h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
-          {/* Sidebar - Enhanced with animations similar to Header */}
+          {/* Sidebar */}
           <div className={`
             ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 via-white to-purple-50 border-r border-purple-100
@@ -699,7 +698,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             flex flex-col shadow-xl
           `}>
             <div className="flex-shrink-0">
-              {/* Header with Logo - Copied exactly from Header component */}
               <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
                 <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
                   <div className="z-20 h-[100%] flex items-center">
@@ -722,7 +720,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
               
-              {/* Search and Tabs with hover effects */}
               <div className="p-3 md:p-4 bg-white border-b border-purple-100">
                 <div className="relative mb-3 transform transition-all duration-300">
                   <input
@@ -760,7 +757,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            {/* Contacts List with staggered animations */}
             <div className="flex-1 overflow-y-auto">
               {displayContacts.map((user, index) => {
                 const thread = getThreadInfo(user);
@@ -825,7 +821,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             </div>
           </div>
 
-          {/* Chat Area - Enhanced with animations */}
+          {/* Chat Area */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-white">
               {/* Chat Header - Fixed at top */}
@@ -903,61 +899,58 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 {selectedUser ? (
                   <div className="p-4 space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                      <div key={date} className="transform transition-all duration-300">
+                      <div key={date}>
                         <div className="flex justify-center my-4">
                           <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
                             {date}
                           </span>
                         </div>
-                        {dateMessages.map((message, index) => (
-                          <div
-                            key={message.id}
-                            className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'} 
-                              transform transition-all duration-300 ease-out
-                              ${shouldShowChat ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}
-                            style={{
-                              transitionDelay: `${index * 50}ms`
-                            }}
-                          >
-                            <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
-                              message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                            }`}>
-                              <img
-                                src={message.avatar}
-                                alt={message.sender}
-                                className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0 transition-all duration-300 hover:scale-105"
-                              />
-                              <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
-                                <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 
-                                  transform transition-all duration-300 hover:scale-[1.02]
-                                  ${
-                                  message.isOwnMessage
-                                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md'
-                                    : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none shadow-sm'
-                                }`}>
-                                  <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
-                                </div>
-                                <div className={`flex items-center mt-1 space-x-2 text-xs ${
-                                  message.isOwnMessage ? 'justify-end' : 'justify-start'
-                                }`}>
-                                  <span className={message.isOwnMessage ? 'text-purple-400' : 'text-gray-400'}>
-                                    {formatTime(message.timestamp)}
-                                  </span>
-                                  {message.isOwnMessage && (
-                                    <Check className="w-3 h-3 md:w-4 md:h-4 text-purple-400" />
-                                  )}
+                        <div className="space-y-3">
+                          {dateMessages.map((message, index) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div className={`flex items-end max-w-[85%] md:max-w-xs lg:max-w-md gap-2 ${
+                                message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                              }`}>
+                                <img
+                                  src={message.avatar}
+                                  alt={message.sender}
+                                  className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-purple-200 flex-shrink-0 mb-1"
+                                />
+                                <div className={`flex flex-col ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
+                                  <div className={`rounded-2xl md:rounded-3xl p-3 md:p-4 ${
+                                    message.isOwnMessage
+                                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none'
+                                      : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none'
+                                  }`}>
+                                    <p className="text-sm md:text-base whitespace-pre-wrap break-words">
+                                      {message.content}
+                                    </p>
+                                  </div>
+                                  <div className={`flex items-center gap-1 mt-1 text-xs ${
+                                    message.isOwnMessage ? 'justify-end' : 'justify-start'
+                                  }`}>
+                                    <span className={message.isOwnMessage ? 'text-purple-400' : 'text-gray-400'}>
+                                      {formatTime(message.timestamp)}
+                                    </span>
+                                    {message.isOwnMessage && (
+                                      <Check className="w-3 h-3 text-purple-400" />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     ))}
                     <div ref={messagesEndRef} />
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full transform transition-all duration-300">
-                    <div className="text-center text-purple-400 animate-pulse">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center text-purple-400">
                       <MessageSquare className="w-16 h-16 mx-auto mb-4" />
                       <p className="text-lg font-medium">Select a conversation</p>
                       <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
@@ -966,7 +959,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Input Area - Fixed at bottom with animations */}
+              {/* Input Area - Fixed at bottom */}
               {selectedUser && (
                 <div className="border-t border-purple-100 bg-white flex-shrink-0">
                   <div className="p-4">
@@ -980,7 +973,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           onFocus={handleTextareaFocus}
                           onBlur={handleTextareaBlur}
                           placeholder="Type your message..."
-                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px] transition-all duration-300"
+                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
                           rows={1}
                           style={{ height: 'auto' }}
                         />
