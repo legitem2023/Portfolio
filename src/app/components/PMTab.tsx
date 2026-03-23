@@ -251,6 +251,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   
   // Keyboard handling
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
@@ -337,6 +338,42 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Enhanced scroll to bottom function with smooth behavior
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (messagesContainerRef.current) {
+        const scrollElement = messagesContainerRef.current;
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: behavior
+        });
+      }
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: behavior,
+          block: 'end'
+        });
+      }
+    }, 50);
+  };
+
+  // Immediate scroll to bottom (no delay)
+  const immediateScrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      const scrollElement = messagesContainerRef.current;
+      scrollElement.scrollTop = scrollElement.scrollHeight;
+    }
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        block: 'end'
+      });
+    }
+  };
+
   // Keyboard detection for mobile
   useEffect(() => {
     if (!isMobile) return;
@@ -353,8 +390,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
         
+        // Scroll to bottom when keyboard appears
         setTimeout(() => {
-          scrollToBottom();
+          scrollToBottom('auto');
         }, 150);
       } else if (!isInputFocused) {
         setIsKeyboardVisible(false);
@@ -364,7 +402,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
-        setIsInputFocused(true);      
+        setIsInputFocused(true);
+        setTimeout(() => {
+          scrollToBottom('auto');
+        }, 100);
       }
     };
 
@@ -378,16 +419,19 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    //window.visualViewport?.addEventListener('resize', handleResize);
+    window.visualViewport?.addEventListener('resize', handleResize);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
     handleResize();
 
     return () => {
-     // window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('resize', handleResize);
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('focusout', handleFocusOut);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     };
   }, [isMobile, isInputFocused]);
 
@@ -450,6 +494,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }));
 
       setMessages(uiMessages);
+      
+      // Immediate scroll to bottom when messages load
+      setTimeout(() => {
+        immediateScrollToBottom();
+      }, 100);
 
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
@@ -461,19 +510,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   }, [conversationData, userId, markMultipleAsReadMutation]);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTo({
-          top: messagesContainerRef.current.scrollHeight,
-          behavior: 'smooth'
-        });
-      }
-    }, 100);
-  };
-
+  // Scroll to bottom whenever messages change
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0) {
+      scrollToBottom('smooth');
+    }
   }, [messages]);
 
   const handleSendMessage = async () => {
@@ -515,7 +556,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         
         refetchThreads();
         refetchConversation();
-        scrollToBottom();
+        
+        // Immediate scroll after sending
+        setTimeout(() => {
+          immediateScrollToBottom();
+        }, 50);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -539,7 +584,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     try {
       await refetchConversation({ userId: user.id });
       setTimeout(() => {
-        scrollToBottom();
+        immediateScrollToBottom();
       }, 100);
     } catch (error) {
       console.error('Error fetching conversation:', error);
@@ -560,7 +605,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const handleTextareaFocus = () => {
     setIsInputFocused(true);
     setTimeout(() => {
-      scrollToBottom();
+      scrollToBottom('auto');
     }, 200);
   };
 
@@ -632,9 +677,19 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
+  // Calculate container height
+  const containerStyle = {
+    height: '80vh',
+    maxHeight: '80vh',
+    overflow: 'hidden'
+  };
+
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl shadow-none md:shadow-xl h-full overflow-hidden">
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center items-center p-4">
+      <div 
+        className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden"
+        style={containerStyle}
+      >
         <div className="flex h-full relative">
           {/* Sidebar */}
           <div className={`
@@ -820,17 +875,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages */}
-              
+              {/* Messages Container - THIS IS THE ONLY SCROLLABLE AREA */}
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-red"
+                className="flex-1 overflow-y-auto"
                 style={{
-                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px'
+                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight}px` : '16px'
                 }}
               >
                 {selectedUser ? (
-                  <div className="space-y-4">
+                  <div className="p-4 space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
@@ -888,7 +942,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Input Area */}
+              {/* Input Area - FIXED AT BOTTOM */}
               {selectedUser && (
                 <div className="border-t border-purple-200 bg-white flex-shrink-0">
                   <div className="p-4">
