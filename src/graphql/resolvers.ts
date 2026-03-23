@@ -1902,9 +1902,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           threadMap.get(otherUserId).unreadCount++;
         }
       }
-  if (userId) {
-      throw new Error(`other userid is ${otherUserId}`);
-  }
+  
       const threads: any = await Promise.all(
         Array.from(threadMap.entries()).map(async ([otherUserId, data]: any) => {
           const user = await prisma.user.findMany({
@@ -1928,9 +1926,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           };
         })
       );
-if (userId) {
+   if (userId) {
       throw new Error(`tread is ${threads}`);
-}
+   }
       // Sort by last message date
       threads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
