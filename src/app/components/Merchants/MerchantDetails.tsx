@@ -11,16 +11,17 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import TabContent from './TabContent';
+import { useRouter, usePathname } from 'next/navigation';
 
 const MerchantDetails = ({ userId }: { userId: string }) => {
   // Hooks must be called unconditionally at the top
   const [activeTab, setActiveTab] = useState<string>('product');
   const dispatch = useDispatch();
-  
+  const router = useRouter();
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
     variables: { id: userId },
   });
-
+  
   if (loading) return <UserProfileShimmer />;
   if (error) return <UserProfileShimmerRed />;
   if (!data?.user) return <div className="min-h-screen flex items-center justify-center text-gray-600">User not found!</div>;
@@ -77,7 +78,7 @@ const MerchantDetails = ({ userId }: { userId: string }) => {
             
             <div className="flex gap-2 mt-4 md:mt-0 w-full md:w-auto justify-start md:justify-end">
               <button 
-                onClick={() => dispatch(setActiveIndex(9))} 
+                onClick={() => router.push(`/Messaging?id=${userId}`)} 
                 className="px-3 py-2 md:px-4 md:py-2 bg-gray-200 text-gray-800 rounded-md font-semibold hover:bg-gray-300 transition-colors flex items-center text-sm md:text-base flex-1 md:flex-initial justify-center"
               >
                 <svg className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" fill="currentColor" viewBox="0 0 20 20">
