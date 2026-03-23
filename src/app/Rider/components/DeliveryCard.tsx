@@ -345,7 +345,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
                 <span className="text-sm font-medium text-gray-600">Shipping Summary</span>
                 <div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">This supplier's items shipping:</span>
+                    <span className="text-sm text-gray-600">This suppliers items shipping:</span>
                     <span className="text-lg font-semibold text-orange-600">
                       {formatPeso(originalShipping)}
                     </span>
