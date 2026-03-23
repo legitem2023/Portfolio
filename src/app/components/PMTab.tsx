@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
-import Header from './Header';
 import { 
   Search, 
   X, 
@@ -17,7 +16,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-// GraphQL Queries & Mutations (same as before)
+// GraphQL Queries & Mutations
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -294,16 +293,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   
-  // Add these new state variables for keyboard handling
+  // Keyboard handling
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const inputWrapperRef = useRef<HTMLDivElement>(null);
+  const inputFixedRef = useRef<HTMLDivElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
-    variables: { page: 1, limit: 50, userId:UserId },
+    variables: { page: 1, limit: 50, userId: UserId },
     skip: !userId,
     pollInterval: 30000,
   });
@@ -328,9 +327,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // GraphQL Mutations
   const [sendMessageMutation] = useMutation(SEND_MESSAGE);
-  const [markAsReadMutation] = useMutation(MARK_AS_READ);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
-  const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
 
   // Combine and filter contacts
   const allContacts = useMemo(() => {
@@ -382,7 +379,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Enhanced keyboard detection for mobile
+  // Keyboard detection for mobile
   useEffect(() => {
     if (!isMobile) return;
     
@@ -684,8 +681,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
+    <div className="h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl h-full overflow-hidden">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
@@ -821,7 +818,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           {shouldShowChat && (
             <div className={`
               ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-              flex flex-col h-full bg-white
+              flex flex-col h-full bg-white relative
             `}>
               {/* Fixed Chat Header */}
               {selectedUser ? (
@@ -882,12 +879,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - Scrollable area */}
+              {/* Messages Container - Scrollable area with bottom padding for fixed input */}
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar"
                 style={{
-                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight}px` : '0px',
+                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px',
                   transition: 'padding-bottom 0.3s ease-out'
                 }}
               >
@@ -950,20 +947,18 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Message Input - Always visible at bottom */}
+              {/* Fixed Message Input - Always at bottom */}
               {selectedUser && (
                 <div 
-                  ref={inputWrapperRef}
-                  className="border-t border-purple-200 bg-white flex-shrink-0"
+                  ref={inputFixedRef}
+                  className="border-t border-purple-200 bg-white fixed bottom-0 left-0 right-0 z-50"
                   style={{
-                    position: 'relative',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    backgroundColor: 'white'
+                    marginLeft: isMobile ? '0' : (shouldShowSidebar ? '33.333%' : '0'),
+                    width: isMobile ? '100%' : (shouldShowSidebar ? '66.667%' : '100%'),
+                    transition: 'all 0.3s ease-out'
                   }}
                 >
-                  <div className="p-4">
+                  <div className="p-4 max-w-6xl mx-auto">
                     <div className="flex space-x-3">
                       <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
                         <textarea
@@ -1007,6 +1002,15 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           )}
         </div>
       </div>
+
+      {/* Add bottom padding to body when keyboard is visible */}
+      {isMobile && isKeyboardVisible && (
+        <style jsx global>{`
+          body {
+            padding-bottom: ${keyboardHeight}px;
+          }
+        `}</style>
+      )}
 
       <style jsx global>{`
         .messages-scrollbar::-webkit-scrollbar {
