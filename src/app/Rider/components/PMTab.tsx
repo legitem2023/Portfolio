@@ -729,7 +729,7 @@ const handleSendMessage = async () => {
  console.log("sidebar",shouldShowSidebar);
   return (
     <div>
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100 safe-area-inset-bottom">
+    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
