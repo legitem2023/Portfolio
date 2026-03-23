@@ -1884,9 +1884,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         },
         orderBy: { createdAt: 'desc' }
       });
-    if (userId) {
-      throw new Error(`convo is ${conversations}`);
-    }
+    
       // Group by other user and get latest message
       const threadMap = new Map();
       
@@ -1904,10 +1902,12 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           threadMap.get(otherUserId).unreadCount++;
         }
       }
-
+  if (userId) {
+      throw new Error(`other userid is ${otherUserId}`);
+  }
       const threads: any = await Promise.all(
         Array.from(threadMap.entries()).map(async ([otherUserId, data]: any) => {
-          const user = await prisma.user.findUnique({
+          const user = await prisma.user.findMany({
             where: { id: otherUserId },
             select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
           });
@@ -1928,7 +1928,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           };
         })
       );
-
+if (userId) {
+      throw new Error(`tread is ${threads}`);
+}
       // Sort by last message date
       threads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
