@@ -681,10 +681,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   
 
   return (
-    <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
-      <div 
-        className="w-full bg-white shadow-xl overflow-hidden">
-        <div className="flex h-full relative">
+    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
+        <div className="flex h-full relative">          
           {/* Sidebar */}
           <div className={`
             ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
