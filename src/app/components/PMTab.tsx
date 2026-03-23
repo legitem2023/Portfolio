@@ -364,10 +364,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
-        setIsInputFocused(true);
-        setTimeout(() => {
-          handleResize();
-        }, 100);
+        setIsInputFocused(true);      
       }
     };
 
@@ -381,14 +378,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    window.visualViewport?.addEventListener('resize', handleResize);
+    //window.visualViewport?.addEventListener('resize', handleResize);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
     handleResize();
 
     return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
+     // window.visualViewport?.removeEventListener('resize', handleResize);
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('focusout', handleFocusOut);
     };
