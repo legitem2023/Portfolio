@@ -867,7 +867,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               )}
 
               {/* Messages */}
-            <div className="bottom-0 flex">
+            <div className="bottom-0 flex fixed">
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-4"
