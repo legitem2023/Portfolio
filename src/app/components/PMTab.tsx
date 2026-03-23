@@ -824,9 +824,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               )}
 
               {/* Messages */}
+              <div className="fixed bottom-0 p-200 bg-green">
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4"
+                className="flex-1 overflow-y-auto p-4 bg-red"
                 style={{
                   paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px'
                 }}
@@ -933,6 +934,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>
