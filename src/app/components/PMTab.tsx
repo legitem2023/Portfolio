@@ -257,7 +257,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -303,14 +302,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Scroll to bottom - immediate with no delay
+  // Scroll to bottom
   const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, []);
 
-  // Smooth scroll to bottom
   const smoothScrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTo({
@@ -319,29 +317,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       });
     }
   }, []);
-
-  // Keyboard handling for mobile
-  useEffect(() => {
-    if (!isMobile) return;
-    
-    const handleResize = () => {
-      const visualViewport = window.visualViewport;
-      if (!visualViewport) return;
-      
-      const windowHeight = window.innerHeight;
-      const viewportHeight = visualViewport.height;
-      const newKeyboardHeight = Math.max(0, windowHeight - viewportHeight);
-      
-      setKeyboardHeight(newKeyboardHeight);
-      
-      if (newKeyboardHeight > 100) {
-        setTimeout(scrollToBottom, 100);
-      }
-    };
-    
-    window.visualViewport?.addEventListener('resize', handleResize);
-    return () => window.visualViewport?.removeEventListener('resize', handleResize);
-  }, [isMobile, scrollToBottom]);
 
   // Get user data
   useEffect(() => {
@@ -398,8 +373,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }));
       
       setMessages(uiMessages);
-      
-      // Immediate scroll to bottom
       setTimeout(scrollToBottom, 100);
       
       // Mark unread messages as read
@@ -459,8 +432,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         
         refetchThreads();
         refetchConversation();
-        
-        // Immediate scroll after sending
         setTimeout(scrollToBottom, 50);
       }
     } catch (error) {
@@ -560,25 +531,24 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             flex flex-col
             h-full
           `}>
-            {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+            {/* Sidebar Header - Original Gradient Design */}
+            <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
+              <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                <div className="z-20 h-[100%] flex items-center">
                   <Image 
                     src="/VendorCity_Store.webp" 
                     alt="Logo" 
-                    height={40} 
-                    width={40} 
-                    className="rounded-lg bg-white p-1"
+                    height={100} 
+                    width={100} 
+                    className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
                   />
-                  <div>
-                    <h1 className="text-white font-bold text-lg">Messages</h1>
-                    <p className="text-purple-200 text-xs">Connect with others</p>
-                  </div>
                 </div>
                 {isMobile && (
-                  <button onClick={() => setIsSidebarOpen(false)} className="text-white">
-                    <X className="w-6 h-6" />
+                  <button 
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="z-20 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
+                  >
+                    <X className="w-5 h-5 text-gray-700" />
                   </button>
                 )}
               </div>
@@ -587,26 +557,26 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             {/* Search */}
             <div className="p-4 flex-shrink-0">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-purple-400" />
                 <input
                   type="text"
                   placeholder="Search conversations..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full pl-9 pr-4 py-2 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
               </div>
             </div>
 
             {/* Tabs */}
             <div className="px-4 pb-4 flex-shrink-0">
-              <div className="flex space-x-2 bg-gray-100 p-1 rounded-xl">
+              <div className="flex space-x-2">
                 <button
                   onClick={() => setActiveTab("threads")}
                   className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                     activeTab === "threads"
-                      ? "bg-white text-purple-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
                   }`}
                 >
                   Conversations
@@ -615,8 +585,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   onClick={() => setActiveTab("allUsers")}
                   className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                     activeTab === "allUsers"
-                      ? "bg-white text-purple-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
+                      : "bg-purple-100 text-purple-600 hover:bg-purple-200"
                   }`}
                 >
                   All Users
@@ -635,8 +605,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     className={`
                       w-full flex items-center space-x-3 p-3 rounded-xl transition-all mb-1
                       ${selectedUser?.id === user.id 
-                        ? 'bg-purple-50 border-l-4 border-purple-500' 
-                        : 'hover:bg-gray-50'
+                        ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500' 
+                        : 'hover:bg-purple-50'
                       }
                     `}
                   >
@@ -644,34 +614,34 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-purple-200"
                       />
                       {thread && thread.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
                           {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
                         </div>
                       )}
                     </div>
                     <div className="flex-1 text-left min-w-0">
                       <h3 className="font-semibold text-gray-800 truncate">{getUserFullName(user)}</h3>
-                      <p className="text-sm text-gray-500 truncate">
+                      <p className="text-sm text-purple-500 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                     </div>
                     {thread?.lastMessage && (
-                      <span className="text-xs text-gray-400 flex-shrink-0">
+                      <span className="text-xs text-purple-400 flex-shrink-0">
                         {formatTime(thread.lastMessage.createdAt)}
                       </span>
                     )}
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
                   </button>
                 );
               })}
               
               {displayContacts.length === 0 && (
                 <div className="text-center py-12">
-                  <MessageCircle className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto text-purple-300 mb-3" />
+                  <p className="text-purple-500">
                     {searchTerm ? 'No users found' : 'No conversations yet'}
                   </p>
                 </div>
@@ -681,70 +651,97 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
           {/* Chat Area */}
           {shouldShowChat && (
-            <div className="flex-1 flex flex-col h-full bg-gray-50">
-              {/* Chat Header - Fixed */}
+            <div className="flex-1 flex flex-col h-full bg-white">
+              {/* Chat Header - Original Gradient Design */}
               {selectedUser ? (
-                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0">
-                  <div className="flex items-center space-x-3 min-w-0">
-                    {isMobile && (
-                      <button onClick={() => setIsSidebarOpen(true)} className="p-2 flex-shrink-0">
-                        <ArrowLeft className="w-5 h-5 text-gray-600" />
-                      </button>
-                    )}
-                    <img
-                      src={getUserAvatar(selectedUser)}
-                      alt={getUserFullName(selectedUser)}
-                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <h2 className="font-semibold text-gray-800 truncate">{getUserFullName(selectedUser)}</h2>
-                      <p className="text-xs text-gray-500 truncate">{selectedUser.email}</p>
-                    </div>
-                  </div>
-                  <button className="p-2 text-gray-600 hover:text-purple-600 transition-colors flex-shrink-0">
-                    <Phone className="w-5 h-5" />
-                  </button>
-                </div>
-              ) : (
-                <div className="bg-white border-b border-gray-200 px-4 py-4 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <Image 
-                        src="/VendorCity_Store.webp" 
-                        alt="Logo" 
-                        height={40} 
-                        width={40} 
-                        className="rounded-lg"
-                      />
-                      <div>
-                        <h2 className="font-semibold text-gray-800">Messages</h2>
-                        <p className="text-xs text-gray-500">Select a conversation to start messaging</p>
+                <div className="flex-shrink-0">
+                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                      <div className="z-20 h-[100%] flex items-center gap-3">
+                        {isMobile && (
+                          <button 
+                            onClick={() => setIsSidebarOpen(true)}
+                            className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300"
+                          >
+                            <ArrowLeft className="w-5 h-5 text-gray-700" />
+                          </button>
+                        )}
+                        <Image 
+                          onClick={() => {
+                            setSelectedUser(null);
+                            if (isMobile) setIsSidebarOpen(true);
+                          }}
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                        <div className="flex flex-col">
+                          <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
+                            {getUserFullName(selectedUser)}
+                          </h2>
+                          <p className="text-xs text-purple-600 truncate">
+                            {selectedUser.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
+                          <Phone className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={() => setIsSidebarOpen(true)}
+                          className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
+                        >
+                          <Menu className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    {isMobile && (
-                      <button onClick={() => setIsSidebarOpen(true)} className="p-2">
-                        <Menu className="w-5 h-5 text-gray-600" />
-                      </button>
-                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-shrink-0">
+                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                      <div className="z-20 h-[100%] flex items-center">
+                        <Image 
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
+                        <p className="text-xs text-purple-600">Select a conversation</p>
+                      </div>
+                      {isMobile && (
+                        <button 
+                          onClick={() => setIsSidebarOpen(true)}
+                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
+                        >
+                          <Menu className="w-5 h-5 text-gray-700" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* Messages Container - Scrollable with proper height */}
+              {/* Messages Container - Scrollable */}
               <div className="flex-1 relative overflow-hidden">
                 <div 
                   ref={messagesContainerRef}
-                  className="absolute inset-0 overflow-y-auto"
-                  style={{
-                    paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '16px'
-                  }}
+                  className="absolute inset-0 overflow-y-auto bg-gradient-to-br from-gray-50 to-purple-50"
                 >
                   {selectedUser ? (
                     <div className="p-4">
                       {Object.entries(messageGroups).map(([date, dateMessages]) => (
                         <div key={date}>
                           <div className="flex justify-center my-4">
-                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
+                            <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
                               {date}
                             </span>
                           </div>
@@ -758,15 +755,15 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                   <img
                                     src={message.avatar}
                                     alt={message.sender}
-                                    className="w-8 h-8 rounded-full object-cover mr-2 self-end mb-1 flex-shrink-0"
+                                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 mr-2 self-end mb-1 flex-shrink-0"
                                   />
                                 )}
                                 <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
                                   <div className={`
                                     rounded-2xl px-4 py-2
                                     ${message.isOwnMessage 
-                                      ? 'bg-purple-600 text-white rounded-br-none' 
-                                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md' 
+                                      : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none shadow-sm'
                                     }
                                   `}>
                                     <p className="text-sm whitespace-pre-wrap break-words">
@@ -786,7 +783,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                   <img
                                     src={message.avatar}
                                     alt={message.sender}
-                                    className="w-8 h-8 rounded-full object-cover ml-2 self-end mb-1 flex-shrink-0"
+                                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 ml-2 self-end mb-1 flex-shrink-0"
                                   />
                                 )}
                               </div>
@@ -798,10 +795,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <div className="text-center">
-                        <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-600 mb-2">No conversation selected</h3>
-                        <p className="text-sm text-gray-500">Choose a contact to start messaging</p>
+                      <div className="text-center text-purple-400">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4" />
+                        <p className="text-lg font-medium">Select a conversation</p>
+                        <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
                       </div>
                     </div>
                   )}
@@ -810,42 +807,46 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
               {/* Input Area - Fixed at bottom */}
               {selectedUser && (
-                <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
-                  <div className="flex space-x-3">
-                    <div className="flex-1 bg-gray-100 rounded-2xl focus-within:ring-2 focus-within:ring-purple-500">
-                      <textarea
-                        ref={textareaRef}
-                        value={newMessage}
-                        onChange={handleTextareaChange}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Type a message..."
-                        className="w-full px-4 py-2 bg-transparent focus:outline-none resize-none rounded-2xl min-h-[40px] max-h-[100px] text-sm"
-                        rows={1}
-                        style={{ height: 'auto' }}
-                      />
+                <div className="border-t border-purple-100 bg-white flex-shrink-0">
+                  <div className="p-4">
+                    <div className="flex space-x-3">
+                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 transition-all duration-300">
+                        <textarea
+                          ref={textareaRef}
+                          value={newMessage}
+                          onChange={handleTextareaChange}
+                          onKeyPress={handleKeyPress}
+                          placeholder="Type your message..."
+                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
+                          rows={1}
+                          style={{ height: 'auto' }}
+                        />
+                      </div>
+                      <button
+                        onClick={handleSendMessage}
+                        disabled={!newMessage.trim() || isSending}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 active:scale-95 min-w-[52px]"
+                      >
+                        {isSending ? (
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <Send className="w-6 h-6" />
+                        )}
+                      </button>
                     </div>
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim() || isSending}
-                      className="bg-purple-600 text-white p-2 rounded-2xl hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] h-[44px] flex items-center justify-center"
-                    >
-                      {isSending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
-                    </button>
-                  </div>
-                  <div className="flex space-x-2 mt-2 px-1">
-                    <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
-                      <Paperclip className="w-4 h-4" />
-                    </button>
-                    <button className="p-1 text-gray-400 hover:text-purple-600 transition-colors">
-                      <ImageIcon className="w-4 h-4" />
-                    </button>
-                    <span className="text-xs text-gray-400 ml-auto hidden md:block">
-                      Enter to send • Shift+Enter for new line
-                    </span>
+                    <div className="flex justify-between items-center mt-2 px-1">
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
+                          <Paperclip className="w-5 h-5" />
+                        </button>
+                        <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
+                          <ImageIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                      <div className="text-xs text-purple-400 hidden md:block">
+                        Press Enter to send • Shift+Enter for new line
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
