@@ -28,28 +28,28 @@ const TABS_WITH_ICONS: TabType[] = [
     hasNotification: true 
   },
   { 
-    id: "tracking", 
-    label: "Tracking", 
-    icon: <Navigation />,
-    desktopLabel: "Live Tracking" 
-  },
-  { 
     id: "deliveries", 
     label: "Active", 
     icon: <Package />,
     desktopLabel: "Active Deliveries" 
   },
   { 
-    id: "map", 
-    label: "Map", 
-    icon: <Map />,
-    desktopLabel: "Navigation Map" 
-  },
-  { 
     id: "history", 
     label: "History", 
     icon: <Clock />,
     desktopLabel: "History" 
+  },
+  { 
+    id: "tracking", 
+    label: "Tracking", 
+    icon: <Navigation />,
+    desktopLabel: "Live Tracking" 
+  },
+  { 
+    id: "map", 
+    label: "Map", 
+    icon: <Map />,
+    desktopLabel: "Navigation Map" 
   }
 ];
 
