@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../utils/decryptToken';
-import Header from './Header';
 import { 
   Search, 
   X, 
@@ -17,7 +16,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-// GraphQL Queries & Mutations (same as before)
+// GraphQL Queries & Mutations
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -188,49 +187,9 @@ const SEND_MESSAGE = gql`
   }
 `;
 
-const MARK_AS_READ = gql`
-  mutation MarkAsRead($messageId: ID!) {
-    markAsRead(messageId: $messageId) {
-      id
-      isRead
-    }
-  }
-`;
-
 const MARK_MULTIPLE_AS_READ = gql`
   mutation MarkMultipleAsRead($messageIds: [ID!]!) {
     markMultipleAsRead(messageIds: $messageIds)
-  }
-`;
-
-const REPLY_MESSAGE = gql`
-  mutation ReplyMessage($input: ReplyMessageInput!) {
-    replyMessage(input: $input) {
-      id
-      body
-      isRead
-      createdAt
-      sender {
-        id
-        firstName
-        lastName
-        avatar
-      }
-      recipient {
-        id
-        firstName
-        lastName
-        avatar
-      }
-      parent {
-        id
-        body
-        sender {
-          firstName
-          lastName
-        }
-      }
-    }
   }
 `;
 
@@ -285,7 +244,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
@@ -293,10 +251,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
   
-  // Add these new state variables for keyboard handling
+  // Keyboard handling
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -304,9 +260,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
-    variables: { page: 1, limit: 50, userId:UserId },
+    variables: { page: 1, limit: 50, userId: UserId },
     skip: !userId,
-    pollInterval: 30000, // Refresh every 30 seconds
+    pollInterval: 30000,
   });
 
   const { data: usersData } = useQuery(GET_ALL_USERS, {
@@ -329,15 +285,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // GraphQL Mutations
   const [sendMessageMutation] = useMutation(SEND_MESSAGE);
-  const [markAsReadMutation] = useMutation(MARK_AS_READ);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
-  const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
 
   // Combine and filter contacts
   const allContacts = useMemo(() => {
     const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
     const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId && // Exclude current user
+      user.id !== userId &&
       !threadUsers.some(threadUser => threadUser.id === user.id)
     ) || [];
     
@@ -371,7 +325,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // On mobile, sidebar starts closed; on desktop, it starts open
       if (mobile) {
         setIsSidebarOpen(false);
       } else {
@@ -384,7 +337,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Enhanced keyboard detection for mobile
+  // Keyboard detection for mobile
   useEffect(() => {
     if (!isMobile) return;
     
@@ -396,12 +349,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const viewportHeight = visualViewport.height;
       const newKeyboardHeight = windowHeight - viewportHeight;
       
-      // More reliable keyboard detection
       if (newKeyboardHeight > 100 && isInputFocused) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
         
-        // Scroll to bottom when keyboard appears
         setTimeout(() => {
           scrollToBottom();
         }, 150);
@@ -411,11 +362,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Handle focus events
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
         setIsInputFocused(true);
-        // Small delay to allow keyboard to start appearing
         setTimeout(() => {
           handleResize();
         }, 100);
@@ -425,7 +374,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const handleFocusOut = (e: FocusEvent) => {
       if (!textareaRef.current?.contains(e.target as Node)) {
         setIsInputFocused(false);
-        // Small delay to ensure keyboard is fully dismissed
         setTimeout(() => {
           setIsKeyboardVisible(false);
           setKeyboardHeight(0);
@@ -433,12 +381,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Add event listeners
     window.visualViewport?.addEventListener('resize', handleResize);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
-    // Initial check
     handleResize();
 
     return () => {
@@ -447,18 +393,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       document.removeEventListener('focusout', handleFocusOut);
     };
   }, [isMobile, isInputFocused]);
-
-  // Adjust chat container padding when keyboard is visible
-  useEffect(() => {
-    if (chatContainerRef.current && isMobile) {
-      if (isKeyboardVisible && keyboardHeight > 0) {
-        // Add padding to the bottom of the chat container to prevent content from being hidden
-        chatContainerRef.current.style.paddingBottom = `${keyboardHeight + 80}px`;
-      } else {
-        chatContainerRef.current.style.paddingBottom = '0px';
-      }
-    }
-  }, [isKeyboardVisible, keyboardHeight, isMobile]);
 
   useEffect(() => {
     const getRole = async () => {
@@ -496,10 +430,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
+  // Convert GraphQL messages to UI messages
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      // Sort messages by createdAt in ascending order (oldest first)
       const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -521,7 +454,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
       setMessages(uiMessages);
 
-      // Mark messages as read when conversation is opened
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
@@ -533,7 +465,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   }, [conversationData, userId, markMultipleAsReadMutation]);
 
   const scrollToBottom = () => {
-    // Use setTimeout to ensure DOM has updated
     setTimeout(() => {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTo({
@@ -581,15 +512,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
         
-        // Reset textarea height
         if (textareaRef.current) {
           textareaRef.current.style.height = 'auto';
         }
         
         refetchThreads();
         refetchConversation();
-        
-        // Scroll to bottom after sending
         scrollToBottom();
       }
     } catch (error) {
@@ -606,7 +534,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const handleUserSelect = async (user: User) => {
     setSelectedUser(user);
-    setSelectedThread(messageThreads.find(thread => thread.user.id === user.id) || null);
     
     if (isMobile) {
       setIsSidebarOpen(false);
@@ -614,7 +541,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     
     try {
       await refetchConversation({ userId: user.id });
-      // Scroll to bottom after conversation loads
       setTimeout(() => {
         scrollToBottom();
       }, 100);
@@ -625,7 +551,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const handleBackToContacts = () => {
     setSelectedUser(null);
-    setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
     }
@@ -635,24 +560,19 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Handle textarea focus
   const handleTextareaFocus = () => {
     setIsInputFocused(true);
-    // Scroll to bottom when focusing
     setTimeout(() => {
       scrollToBottom();
     }, 200);
   };
 
-  // Handle textarea blur
   const handleTextareaBlur = () => {
     setIsInputFocused(false);
   };
 
-  // Auto-resize textarea
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
-    // Auto-resize
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
@@ -684,12 +604,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
-  // Get thread info for a user
   const getThreadInfo = (user: User) => {
     return messageThreads.find(thread => thread.user.id === user.id);
   };
 
-  // Group messages by date - messages are already sorted by time
   const groupMessagesByDate = () => {
     const groups: { [key: string]: Message[] } = {};
     
@@ -714,24 +632,21 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return user.avatar || "/NoImage.webp";
   };
 
-  // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div>
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
+    <div className="h-screen bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl shadow-none md:shadow-xl h-full overflow-hidden">
         <div className="flex h-full relative">
-          {/* Sidebar/Contacts List */}
+          {/* Sidebar */}
           <div className={`
-            ${isMobile ? 'relative inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
-            bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
+            ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+            bg-gradient-to-b from-purple-50 to-purple-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
             flex flex-col
           `}>
-            {/* Fixed Sidebar Header */}
             <div className="flex-shrink-0">
               <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                 <div className="flex items-center justify-between">
@@ -755,7 +670,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
               
-              {/* Search and Tabs */}
               <div className="p-3 md:p-4 bg-white border-b border-purple-200">
                 <div className="relative mb-3">
                   <input
@@ -763,12 +677,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     placeholder="Search conversations..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
                   />
                   <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
                 </div>
 
-                {/* Tabs */}
                 <div className="flex space-x-1">
                   <button
                     onClick={() => setActiveTab("threads")}
@@ -794,15 +707,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            {/* Scrollable Contacts List */}
-            <div className="flex-1 overflow-y-auto messages-scrollbar">
+            <div className="flex-1 overflow-y-auto">
               {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
                 return (
                   <div
                     key={user.id}
                     className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
-                      selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
+                      selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-50'
                     }`}
                     onClick={() => handleUserSelect(user)}
                   >
@@ -810,7 +722,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover border-2 border-purple-200"
                       />
                       {thread && thread.unreadCount > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -832,11 +744,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <p className="text-xs md:text-sm text-purple-600 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
-                      {!thread && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">
-                          New
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
@@ -849,27 +756,17 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     {searchTerm ? 'No users found' : 
                      activeTab === "threads" ? 'No conversations yet' : 'No users available'}
                   </p>
-                  <p className="text-xs mt-1">
-                    {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
-                  </p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Chat Area - Only show when not in sidebar mode on mobile */}
+          {/* Chat Area */}
           {shouldShowChat && (
-            <div 
-              ref={chatContainerRef}
-              className={`
-                ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-                flex flex-col h-full bg-white
-                transform transition-transform duration-300 ease-in-out
-              `}
-            >
-              {/* Fixed Chat Header */}
+            <div className="flex-1 flex flex-col h-full bg-white relative">
+              {/* Header */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200 p-4 flex-shrink-0">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
@@ -882,7 +779,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     <img
                       src={getUserAvatar(selectedUser)}
                       alt={getUserFullName(selectedUser)}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover border-2 border-purple-200"
                     />
                     <div className="ml-3 flex-1 min-w-0">
                       <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
@@ -906,7 +803,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 border-b border-purple-200 p-4 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {isMobile && (
@@ -926,13 +823,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - This is the scrollable part */}
+              {/* Messages */}
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-red messages-scrollbar"
+                className="flex-1 overflow-y-auto p-4"
+                style={{
+                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px'
+                }}
               >
                 {selectedUser ? (
-                  <div className="space-y-4 pb-4">
+                  <div className="space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
@@ -964,7 +864,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                 <div className={`flex items-center mt-1 space-x-2 text-xs ${
                                   message.isOwnMessage ? 'justify-end' : 'justify-start'
                                 }`}>
-                                  <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
+                                  <span className={message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}>
                                     {formatTime(message.timestamp)}
                                   </span>
                                   {message.isOwnMessage && (
@@ -990,15 +890,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Message Input */}
+              {/* Input Area */}
               {selectedUser && (
-                <div 
-                  ref={inputContainerRef}
-                  className="border-t border-purple-200 bg-white flex-shrink-0"
-                >
+                <div className="border-t border-purple-200 bg-white flex-shrink-0">
                   <div className="p-4">
                     <div className="flex space-x-3">
-                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300">
                         <textarea
                           ref={textareaRef}
                           value={newMessage}
@@ -1036,49 +933,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               )}
-            </div>{/* Messages Div? */}
+            </div>
           )}
         </div>
       </div>
-
-      {/* Custom Styles */}
-      <style jsx global>{`
-        /* Custom scrollbar */
-        .messages-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 10px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-thumb {
-          background: #c4b5fd;
-          border-radius: 10px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #a78bfa;
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-          .messages-scrollbar::-webkit-scrollbar {
-            width: 3px;
-          }
-        }
-
-        /* Custom colors */
-        .bg-lavender-100 {
-          background-color: #f4f0ff;
-        }
-
-        .bg-purple-25 {
-          background-color: #faf9ff;
-        }
-      `}</style>
-    </div>
     </div>
   );
 };
