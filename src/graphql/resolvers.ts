@@ -1865,7 +1865,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
 
     messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
-    if (userId) {
+    if (!userId) {
       throw new Error(`User ID is required ${userId}`);
     }
       // Get unique users that current user has conversations with
@@ -1884,7 +1884,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         },
         orderBy: { createdAt: 'desc' }
       });
-
+    if (userId) {
+      throw new Error(`convo is ${conversations}`);
+    }
       // Group by other user and get latest message
       const threadMap = new Map();
       
