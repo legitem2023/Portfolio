@@ -681,15 +681,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const containerStyle = {
     height: '80vh',
     maxHeight: '80vh',
-    overflow: 'hidden',
-    position: 'fixed',
-    bottom: '0px'
+    overflow: 'hidden'
   };
 
   return (
-    <div className="bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center items-center">
+    <div className="bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
       <div 
-        className="w-full bg-white shadow-xl overflow-hidden"
+        className="fixed bottom-0 w-full bg-white shadow-xl overflow-hidden"
         style={containerStyle}
       >
         <div className="flex h-full relative">
