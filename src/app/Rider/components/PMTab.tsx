@@ -116,7 +116,7 @@ const GET_CONVERSATION = gql`
 
 const GET_MESSAGE_THREADS = gql`
   query GetMessageThreads($page: Int, $limit: Int, $userId:ID) {
-    messageThreads(page: $page, limit: $limit) {
+    messageThreads(page: $page, limit: $limit, userId:$userId) {
       threads {
         user {
           id
