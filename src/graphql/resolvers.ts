@@ -1866,7 +1866,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
     messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
     if (userId) {
-      throw new Error('User ID is required',userId);
+      throw new Error(`User ID is required ${userId}`);
     }
       // Get unique users that current user has conversations with
       const conversations: any = await prisma.message.findMany({
