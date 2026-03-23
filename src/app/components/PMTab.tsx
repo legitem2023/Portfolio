@@ -863,8 +863,29 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
+              <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                  <div className="z-20 h-[100%] flex items-center">
+                    <Image 
+                      src="/VendorCity_Store.webp" 
+                      alt="Logo" 
+                      height={100} 
+                      width={100} 
+                      className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                    />
+                  </div>
+                  {isMobile && (
+                      <button 
+                        onClick={handleToggleSidebar}
+                        className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
+                      >
+                        <Menu className="w-5 h-5 text-gray-700" />
+                      </button>
+                    )}
+                </div>
+              </div>
                 /* Initial Display Header - Logo on left, drawer button on right */
-               <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+              {/*<div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
                  <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
                   <div className="z-20 h-[100%] flex items-center">
                     <Image 
@@ -875,10 +896,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
                     />
                   </div>
-                 { /*<div>
+                 <div>
                     <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
                     <p className="text-xs text-purple-600">Select a conversation</p>
-                  </div>*/}
+                  </div>
                     {isMobile && (
                       <button 
                         onClick={handleToggleSidebar}
@@ -888,9 +909,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       </button>
                     )}
                   </div>
-                </div>
+                </div>*/}
               )}
-
               {/* Messages Container - Scrollable area */}
               <div 
                 ref={messagesContainerRef}
