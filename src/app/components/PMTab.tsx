@@ -298,7 +298,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const inputFixedRef = useRef<HTMLDivElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -395,7 +394,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
         
-        // Scroll to bottom when keyboard appears
         setTimeout(() => {
           scrollToBottom();
         }, 150);
@@ -681,10 +679,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden">
-      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl h-full overflow-hidden">
+    <div className="h-screen bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden">
+      <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl shadow-none md:shadow-xl h-full overflow-hidden">
         <div className="flex h-full relative">
-          {/* Sidebar/Contacts List */}
+          {/* Sidebar */}
           <div className={`
             ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
@@ -722,7 +720,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     placeholder="Search conversations..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 focus:border-transparent bg-white"
+                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl border border-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-300 bg-white"
                   />
                   <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
                 </div>
@@ -752,14 +750,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto messages-scrollbar">
+            <div className="flex-1 overflow-y-auto">
               {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
                 return (
                   <div
                     key={user.id}
                     className={`flex items-center p-3 border-b border-purple-50 cursor-pointer transition-all duration-200 ${
-                      selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-25'
+                      selectedUser?.id === user.id ? 'bg-purple-50 border-l-4 border-l-purple-500' : 'hover:bg-purple-50'
                     }`}
                     onClick={() => handleUserSelect(user)}
                   >
@@ -767,7 +765,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover border-2 border-purple-200"
                       />
                       {thread && thread.unreadCount > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -789,11 +787,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <p className="text-xs md:text-sm text-purple-600 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
-                      {!thread && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">
-                          New
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
@@ -806,9 +799,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     {searchTerm ? 'No users found' : 
                      activeTab === "threads" ? 'No conversations yet' : 'No users available'}
                   </p>
-                  <p className="text-xs mt-1">
-                    {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
-                  </p>
                 </div>
               )}
             </div>
@@ -816,13 +806,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
           {/* Chat Area */}
           {shouldShowChat && (
-            <div className={`
-              ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-              flex flex-col h-full bg-white relative
-            `}>
-              {/* Fixed Chat Header */}
+            <div className="flex-1 flex flex-col h-full bg-white relative">
+              {/* Header */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 flex-shrink-0">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
@@ -835,7 +822,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     <img
                       src={getUserAvatar(selectedUser)}
                       alt={getUserFullName(selectedUser)}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-purple-200"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover border-2 border-purple-200"
                     />
                     <div className="ml-3 flex-1 min-w-0">
                       <h2 className="font-bold text-purple-900 text-sm md:text-base truncate">
@@ -859,7 +846,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {isMobile && (
@@ -879,13 +866,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - Scrollable area with bottom padding for fixed input */}
+              {/* Messages */}
+            <div className="bottom-0 flex">
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar"
+                className="flex-1 overflow-y-auto p-4"
                 style={{
-                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px',
-                  transition: 'padding-bottom 0.3s ease-out'
+                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight + 80}px` : '80px'
                 }}
               >
                 {selectedUser ? (
@@ -921,7 +908,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                 <div className={`flex items-center mt-1 space-x-2 text-xs ${
                                   message.isOwnMessage ? 'justify-end' : 'justify-start'
                                 }`}>
-                                  <span className={`${message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}`}>
+                                  <span className={message.isOwnMessage ? 'text-purple-300' : 'text-purple-400'}>
                                     {formatTime(message.timestamp)}
                                   </span>
                                   {message.isOwnMessage && (
@@ -947,20 +934,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Fixed Message Input - Always at bottom */}
+              {/* Fixed Input */}
               {selectedUser && (
-                <div 
-                  ref={inputFixedRef}
-                  className="border-t border-purple-200 bg-white fixed bottom-0 left-0 right-0 z-50"
-                  style={{
-                    marginLeft: isMobile ? '0' : (shouldShowSidebar ? '33.333%' : '0'),
-                    width: isMobile ? '100%' : (shouldShowSidebar ? '66.667%' : '100%'),
-                    transition: 'all 0.3s ease-out'
-                  }}
-                >
-                  <div className="p-4 max-w-6xl mx-auto">
+                <div className="border-t border-purple-200 bg-white flex-shrink-0">
+                  <div className="p-4">
                     <div className="flex space-x-3">
-                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 focus-within:border-purple-300">
+                      <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300">
                         <textarea
                           ref={textareaRef}
                           value={newMessage}
@@ -999,50 +978,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
             </div>
+            </div>{/*******/}
           )}
         </div>
       </div>
 
-      {/* Add bottom padding to body when keyboard is visible */}
-      {isMobile && isKeyboardVisible && (
-        <style jsx global>{`
-          body {
-            padding-bottom: ${keyboardHeight}px;
-          }
-        `}</style>
-      )}
-
       <style jsx global>{`
-        .messages-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 10px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-thumb {
-          background: #c4b5fd;
-          border-radius: 10px;
-        }
-        
-        .messages-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #a78bfa;
-        }
-
-        @media (max-width: 768px) {
-          .messages-scrollbar::-webkit-scrollbar {
-            width: 3px;
-          }
-        }
-
         .bg-lavender-100 {
           background-color: #f4f0ff;
-        }
-
-        .bg-purple-25 {
-          background-color: #faf9ff;
         }
       `}</style>
     </div>
