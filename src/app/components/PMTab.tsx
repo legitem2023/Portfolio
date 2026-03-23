@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
-import Image from 'next/image'; // Added Image import for Logo
+import Image from 'next/image';
 import { decryptToken } from '../../../utils/decryptToken';
 import { 
   Search, 
@@ -822,38 +822,44 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           {/* Chat Area - Enhanced with animations */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-white relative">
-              {/* Header with gradient */}
+              {/* Chat Header with Logo - Same style as Header */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-purple-50 via-white to-purple-50 border-b border-purple-100 p-4 flex-shrink-0 transform transition-all duration-300">
-                  <div className="flex items-center">
-                    {isMobile && (
-                      <button 
-                        onClick={handleBackToContacts}
-                        className="mr-3 p-2 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-600 transition-all duration-300 hover:scale-110"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                    )}
-                    <img
-                      src={getUserAvatar(selectedUser)}
-                      alt={getUserFullName(selectedUser)}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-cover border-2 border-purple-200 transition-all duration-300 hover:scale-105"
-                    />
-                    <div className="ml-3 flex-1 min-w-0">
-                      <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
-                        {getUserFullName(selectedUser)}
-                      </h2>
-                      <p className="text-xs md:text-sm text-purple-500 truncate">
-                        {selectedUser.email}
-                      </p>
+                <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
+                  <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                    <div className="flex items-center space-x-3">
+                      {isMobile && (
+                        <button 
+                          onClick={handleBackToContacts}
+                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:scale-110"
+                        >
+                          <ChevronLeft className="w-5 h-5 text-gray-700" />
+                        </button>
+                      )}
+                      <div className="z-20 h-[100%] flex items-center">
+                        <Image 
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
+                          {getUserFullName(selectedUser)}
+                        </h2>
+                        <p className="text-xs text-purple-600 truncate">
+                          {selectedUser.email}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex space-x-2">
-                      <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
+                      <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
                         <Phone className="w-5 h-5" />
                       </button>
                       <button 
                         onClick={handleToggleSidebar}
-                        className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110 md:hidden"
+                        className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
                       >
                         <Menu className="w-5 h-5" />
                       </button>
@@ -861,20 +867,30 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-purple-50 via-white to-purple-50 border-b border-purple-100 p-4 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
+                /* Initial Display Header with Logo - Same style as Header */
+                <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
+                  <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                    <div className="flex items-center space-x-3">
                       {isMobile && (
                         <button 
                           onClick={handleToggleSidebar}
-                          className="mr-3 p-2 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-600 transition-all duration-300 hover:scale-110"
+                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:scale-110"
                         >
-                          <Menu className="w-5 h-5" />
+                          <Menu className="w-5 h-5 text-gray-700" />
                         </button>
                       )}
+                      <div className="z-20 h-[100%] flex items-center">
+                        <Image 
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                      </div>
                       <div>
                         <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
-                        <p className="text-xs md:text-sm text-purple-500">Select a conversation</p>
+                        <p className="text-xs text-purple-600">Select a conversation</p>
                       </div>
                     </div>
                   </div>
