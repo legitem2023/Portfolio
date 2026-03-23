@@ -17,7 +17,7 @@ import dynamic from 'next/dynamic';
 import { useAuth } from './hooks/useAuth';
 import RiderPaymentHistory from './components/RiderPaymentHistory';
 import PMTab from './components/PMTab';
-import UserProfileTab from './components//UserProfileTab
+import UserProfileTab from './components/UserProfileTab';
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
   ssr: false,
