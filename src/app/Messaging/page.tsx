@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import PMTab from '../components/PMTab';
 
-import Header from '../Header';
+import Header from '../components/Header';
 import { decryptToken } from '../../../utils/decryptToken';
 
 export default function Page() {
