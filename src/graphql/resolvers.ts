@@ -1863,7 +1863,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
     },
 
-    messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
+ /*   messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
       const skip = (page - 1) * limit;
     if (!userId) {
       throw new Error(`User ID is required ${userId}`);
@@ -1940,7 +1940,119 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         page
       };
     },
+*/
+    messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
+  const skip = (page - 1) * limit;
+  if (!userId) {
+    throw new Error(`User ID is required ${userId}`);
+  }
+  
+  // Get unique users that current user has conversations with
+  const conversations: any = await prisma.message.findMany({
+    where: {
+      OR: [
+        { senderId: userId },
+        { recipientId: userId }
+      ]
+    },
+    select: {
+      id: true,
+      senderId: true,
+      recipientId: true,
+      createdAt: true,
+      isRead: true,
+      body: true  // Added body for last message content
+    },
+    orderBy: { createdAt: 'desc' }
+  });
 
+  // Group by other user and get latest message
+  const threadMap = new Map();
+  
+  for (const msg of conversations) {
+    // Skip if senderId or recipientId is undefined
+    if (!msg.senderId || !msg.recipientId) continue;
+    
+    const otherUserId = msg.senderId === userId ? msg.recipientId : msg.senderId;
+    
+    // Skip if otherUserId is undefined
+    if (!otherUserId) continue;
+    
+    if (!threadMap.has(otherUserId)) {
+      threadMap.set(otherUserId, {
+        lastMessage: msg,
+        unreadCount: 0
+      });
+    }
+    
+    if (!msg.isRead && msg.recipientId === userId) {
+      const thread = threadMap.get(otherUserId);
+      if (thread) {
+        thread.unreadCount++;
+      }
+    }
+  }
+
+  const threads: any = await Promise.all(
+    Array.from(threadMap.entries()).map(async ([otherUserId, data]: [string, any]) => {
+      try {
+        // Make sure otherUserId is a valid string
+        if (!otherUserId || otherUserId === 'undefined' || otherUserId === 'null') {
+          console.error('Invalid otherUserId:', otherUserId);
+          return null;
+        }
+        
+        const user = await prisma.user.findUnique({
+          where: { id: otherUserId },
+          select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
+        });
+
+        // Skip if user doesn't exist
+        if (!user) {
+          console.error(`User not found for ID: ${otherUserId}`);
+          return null;
+        }
+
+        const lastMessage = await prisma.message.findUnique({
+          where: { id: data.lastMessage.id },
+          include: {
+            sender: {
+              select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
+            },
+            recipient: {
+              select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
+            }
+          }
+        });
+
+        return {
+          user,
+          lastMessage,
+          unreadCount: data.unreadCount,
+          updatedAt: data.lastMessage.createdAt
+        };
+      } catch (error) {
+        console.error(`Error processing thread for user ${otherUserId}:`, error);
+        return null;
+      }
+    })
+  );
+  
+  // Filter out any null threads
+  const validThreads = threads.filter(thread => thread !== null && thread.user !== null);
+  
+  // Sort by last message date
+  validThreads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  const paginatedThreads = validThreads.slice(skip, skip + limit);
+
+  return {
+    threads: paginatedThreads,
+    totalCount: validThreads.length,
+    hasNextPage: validThreads.length > skip + limit,
+    page
+  };
+    },
     // Existing e-commerce queries
     users: async () => await prisma.user.findMany({
       include: {
