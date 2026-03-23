@@ -679,8 +679,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // Calculate container height
   const containerStyle = {
-    height: '80vh',
-    maxHeight: '80vh',
+    height: '70vh',
+    maxHeight: '70vh',
     overflow: 'hidden'
   };
 
@@ -688,7 +688,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
       <div 
         className="fixed bottom-0 w-full bg-white shadow-xl overflow-hidden"
-        style={containerStyle}
+        {/*style={containerStyle}*/}
       >
         <div className="flex h-full relative">
           {/* Sidebar */}
