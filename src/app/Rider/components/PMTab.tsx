@@ -624,7 +624,7 @@ const handleSendMessage = async () => {
       setIsSending(false); // Set loading state to false after completion
     }
   };*/
-
+console.log(threadsData,"<<<<");
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey && !isSending) { // Add isSending check
       e.preventDefault();
