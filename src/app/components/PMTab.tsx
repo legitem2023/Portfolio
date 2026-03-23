@@ -303,16 +303,21 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Scroll to bottom
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    setTimeout(() => {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTo({
-          top: messagesContainerRef.current.scrollHeight,
-          behavior
-        });
-      }
-    }, 100);
+  // Scroll to bottom - immediate with no delay
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  // Smooth scroll to bottom
+  const smoothScrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, []);
 
   // Keyboard handling for mobile
@@ -330,7 +335,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       setKeyboardHeight(newKeyboardHeight);
       
       if (newKeyboardHeight > 100) {
-        setTimeout(() => scrollToBottom('auto'), 150);
+        setTimeout(scrollToBottom, 100);
       }
     };
     
@@ -393,7 +398,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }));
       
       setMessages(uiMessages);
-      scrollToBottom('auto');
+      
+      // Immediate scroll to bottom
+      setTimeout(scrollToBottom, 100);
       
       // Mark unread messages as read
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
@@ -407,9 +414,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom('smooth');
+      smoothScrollToBottom();
     }
-  }, [messages, scrollToBottom]);
+  }, [messages, smoothScrollToBottom]);
 
   // Send message
   const handleSendMessage = async () => {
@@ -452,7 +459,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         
         refetchThreads();
         refetchConversation();
-        scrollToBottom('auto');
+        
+        // Immediate scroll after sending
+        setTimeout(scrollToBottom, 50);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -472,7 +481,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     setNewMessage(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 100)}px`;
     }
   };
 
@@ -480,7 +489,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     setSelectedUser(user);
     if (isMobile) setIsSidebarOpen(false);
     await refetchConversation({ userId: user.id });
-    scrollToBottom('auto');
+    setTimeout(scrollToBottom, 100);
   };
 
   // Group messages by date
@@ -539,7 +548,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
+    <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
       <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar */}
@@ -549,9 +558,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             transform transition-transform duration-300 ease-in-out
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
             flex flex-col
+            h-full
           `}>
             {/* Sidebar Header */}
-            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-indigo-600 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Image 
@@ -575,7 +585,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             </div>
 
             {/* Search */}
-            <div className="p-4">
+            <div className="p-4 flex-shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
@@ -589,7 +599,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             </div>
 
             {/* Tabs */}
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 flex-shrink-0">
               <div className="flex space-x-2 bg-gray-100 p-1 rounded-xl">
                 <button
                   onClick={() => setActiveTab("threads")}
@@ -614,8 +624,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            {/* Contacts List */}
-            <div className="flex-1 overflow-y-auto px-2">
+            {/* Contacts List - Scrollable */}
+            <div className="flex-1 overflow-y-auto px-2 pb-4">
               {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
                 return (
@@ -630,7 +640,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       }
                     `}
                   >
-                    <div className="relative">
+                    <div className="relative flex-shrink-0">
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
@@ -642,18 +652,18 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 text-left">
-                      <h3 className="font-semibold text-gray-800">{getUserFullName(user)}</h3>
+                    <div className="flex-1 text-left min-w-0">
+                      <h3 className="font-semibold text-gray-800 truncate">{getUserFullName(user)}</h3>
                       <p className="text-sm text-gray-500 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                     </div>
                     {thread?.lastMessage && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-400 flex-shrink-0">
                         {formatTime(thread.lastMessage.createdAt)}
                       </span>
                     )}
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   </button>
                 );
               })}
@@ -672,31 +682,31 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           {/* Chat Area */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-gray-50">
-              {/* Chat Header */}
+              {/* Chat Header - Fixed */}
               {selectedUser ? (
-                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
-                  <div className="flex items-center space-x-3">
+                <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm flex-shrink-0">
+                  <div className="flex items-center space-x-3 min-w-0">
                     {isMobile && (
-                      <button onClick={() => setIsSidebarOpen(true)} className="p-2">
+                      <button onClick={() => setIsSidebarOpen(true)} className="p-2 flex-shrink-0">
                         <ArrowLeft className="w-5 h-5 text-gray-600" />
                       </button>
                     )}
                     <img
                       src={getUserAvatar(selectedUser)}
                       alt={getUserFullName(selectedUser)}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                     />
-                    <div>
-                      <h2 className="font-semibold text-gray-800">{getUserFullName(selectedUser)}</h2>
-                      <p className="text-xs text-gray-500">{selectedUser.email}</p>
+                    <div className="min-w-0">
+                      <h2 className="font-semibold text-gray-800 truncate">{getUserFullName(selectedUser)}</h2>
+                      <p className="text-xs text-gray-500 truncate">{selectedUser.email}</p>
                     </div>
                   </div>
-                  <button className="p-2 text-gray-600 hover:text-purple-600 transition-colors">
+                  <button className="p-2 text-gray-600 hover:text-purple-600 transition-colors flex-shrink-0">
                     <Phone className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
-                <div className="bg-white border-b border-gray-200 px-4 py-4">
+                <div className="bg-white border-b border-gray-200 px-4 py-4 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <Image 
@@ -720,85 +730,87 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - Scrollable */}
-              <div 
-                ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto"
-                style={{
-                  paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
-                }}
-              >
-                {selectedUser ? (
-                  <div className="p-4">
-                    {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                      <div key={date}>
-                        <div className="flex justify-center my-4">
-                          <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
-                            {date}
-                          </span>
-                        </div>
-                        <div className="space-y-3">
-                          {dateMessages.map((message) => (
-                            <div
-                              key={message.id}
-                              className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                            >
-                              {!message.isOwnMessage && (
-                                <img
-                                  src={message.avatar}
-                                  alt={message.sender}
-                                  className="w-8 h-8 rounded-full object-cover mr-2 self-end mb-1"
-                                />
-                              )}
-                              <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
-                                <div className={`
-                                  rounded-2xl px-4 py-2
-                                  ${message.isOwnMessage 
-                                    ? 'bg-purple-600 text-white rounded-br-none' 
-                                    : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
-                                  }
-                                `}>
-                                  <p className="text-sm whitespace-pre-wrap break-words">
-                                    {message.content}
-                                  </p>
+              {/* Messages Container - Scrollable with proper height */}
+              <div className="flex-1 relative overflow-hidden">
+                <div 
+                  ref={messagesContainerRef}
+                  className="absolute inset-0 overflow-y-auto"
+                  style={{
+                    paddingBottom: keyboardHeight > 0 ? `${keyboardHeight}px` : '16px'
+                  }}
+                >
+                  {selectedUser ? (
+                    <div className="p-4">
+                      {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                        <div key={date}>
+                          <div className="flex justify-center my-4">
+                            <span className="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
+                              {date}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {dateMessages.map((message) => (
+                              <div
+                                key={message.id}
+                                className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                              >
+                                {!message.isOwnMessage && (
+                                  <img
+                                    src={message.avatar}
+                                    alt={message.sender}
+                                    className="w-8 h-8 rounded-full object-cover mr-2 self-end mb-1 flex-shrink-0"
+                                  />
+                                )}
+                                <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
+                                  <div className={`
+                                    rounded-2xl px-4 py-2
+                                    ${message.isOwnMessage 
+                                      ? 'bg-purple-600 text-white rounded-br-none' 
+                                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'
+                                    }
+                                  `}>
+                                    <p className="text-sm whitespace-pre-wrap break-words">
+                                      {message.content}
+                                    </p>
+                                  </div>
+                                  <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                                    <span className={message.isOwnMessage ? 'text-purple-500' : 'text-gray-400'}>
+                                      {formatTime(message.timestamp)}
+                                    </span>
+                                    {message.isOwnMessage && (
+                                      <Check className="w-3 h-3 text-purple-500" />
+                                    )}
+                                  </div>
                                 </div>
-                                <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                                  <span className={message.isOwnMessage ? 'text-purple-500' : 'text-gray-400'}>
-                                    {formatTime(message.timestamp)}
-                                  </span>
-                                  {message.isOwnMessage && (
-                                    <Check className="w-3 h-3 text-purple-500" />
-                                  )}
-                                </div>
+                                {message.isOwnMessage && (
+                                  <img
+                                    src={message.avatar}
+                                    alt={message.sender}
+                                    className="w-8 h-8 rounded-full object-cover ml-2 self-end mb-1 flex-shrink-0"
+                                  />
+                                )}
                               </div>
-                              {message.isOwnMessage && (
-                                <img
-                                  src={message.avatar}
-                                  alt={message.sender}
-                                  className="w-8 h-8 rounded-full object-cover ml-2 self-end mb-1"
-                                />
-                              )}
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center">
-                      <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                      <h3 className="text-lg font-medium text-gray-600 mb-2">No conversation selected</h3>
-                      <p className="text-sm text-gray-500">Choose a contact to start messaging</p>
+                      ))}
+                      <div ref={messagesEndRef} />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center">
+                        <MessageSquare className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                        <h3 className="text-lg font-medium text-gray-600 mb-2">No conversation selected</h3>
+                        <p className="text-sm text-gray-500">Choose a contact to start messaging</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Input Area */}
+              {/* Input Area - Fixed at bottom */}
               {selectedUser && (
-                <div className="bg-white border-t border-gray-200 px-4 py-3">
+                <div className="bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0">
                   <div className="flex space-x-3">
                     <div className="flex-1 bg-gray-100 rounded-2xl focus-within:ring-2 focus-within:ring-purple-500">
                       <textarea
