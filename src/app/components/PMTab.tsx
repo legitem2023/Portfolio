@@ -875,10 +875,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
                     />
                   </div>
-                  <div>
+                 { /*<div>
                     <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
                     <p className="text-xs text-purple-600">Select a conversation</p>
-                  </div>
+                  </div>*/}
                     {isMobile && (
                       <button 
                         onClick={handleToggleSidebar}
