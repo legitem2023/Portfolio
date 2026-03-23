@@ -115,7 +115,7 @@ const GET_CONVERSATION = gql`
 `;
 
 const GET_MESSAGE_THREADS = gql`
-  query GetMessageThreads($page: Int, $limit: Int) {
+  query GetMessageThreads($page: Int, $limit: Int, $userId:ID) {
     messageThreads(page: $page, limit: $limit) {
       threads {
         user {
@@ -303,8 +303,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
-    variables: { page: 1, limit: 50 },
-    skip: !userId,
+    variables: { page: 1, limit: 50, userId: UserId },
     pollInterval: 30000, // Refresh every 30 seconds
   });
 
