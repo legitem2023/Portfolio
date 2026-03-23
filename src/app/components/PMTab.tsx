@@ -16,7 +16,8 @@ import {
   Image as ImageIcon,
   MessageSquare,
   ChevronRight,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 
 // GraphQL Queries & Mutations (same as before)
@@ -252,6 +253,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
+  const [isSending, setIsSending] = useState(false); // Add loading state for send button
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -521,7 +523,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !selectedUser) return;
+    if (newMessage.trim() === "" || !selectedUser || isSending) return;
+
+    setIsSending(true); // Set loading state
 
     try {
       const { data } = await sendMessageMutation({
@@ -567,11 +571,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      setIsSending(false); // Reset loading state
     }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -821,81 +827,78 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
           {/* Chat Area - Enhanced with animations */}
           {shouldShowChat && (
-            <div className="flex-1 flex flex-col h-full bg-white relative">
-              {/* Chat Header - Same gradient style without logo */}
+            <div className="flex-1 flex flex-col h-full bg-white">
+              {/* Chat Header - Fixed at top */}
               {selectedUser ? (
-              <div className="flex-shrink-0">
-                <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                  <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                    <div className="z-20 h-[100%] flex items-center">
-                      <Image 
-                        onClick={handleBackToContacts}
-                        src="/VendorCity_Store.webp" 
-                        alt="Logo" 
-                        height={100} 
-                        width={100} 
-                        className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                       />
-    
-                      <div className="flex flex-col">
-                        <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
-                          {getUserFullName(selectedUser)}
-                        </h2>
-                        <p className="text-xs text-purple-600 truncate">
-                          {selectedUser.email}
-                        </p>
+                <div className="flex-shrink-0">
+                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                      <div className="z-20 h-[100%] flex items-center gap-3">
+                        <Image 
+                          onClick={handleBackToContacts}
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                        <div className="flex flex-col">
+                          <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
+                            {getUserFullName(selectedUser)}
+                          </h2>
+                          <p className="text-xs text-purple-600 truncate">
+                            {selectedUser.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
+                          <Phone className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={handleToggleSidebar}
+                          className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
+                        >
+                          <Menu className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
-                        <Phone className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={handleToggleSidebar}
-                        className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
-                      >
-                        <Menu className="w-5 h-5" />
-                      </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-shrink-0">
+                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                      <div className="z-20 h-[100%] flex items-center">
+                        <Image 
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
+                        <p className="text-xs text-purple-600">Select a conversation</p>
+                      </div>
+                      {isMobile && (
+                        <button 
+                          onClick={handleToggleSidebar}
+                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
+                        >
+                          <Menu className="w-5 h-5 text-gray-700" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-              ) : (
-            <div className="flex-shrink-0">
-              <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                  <div className="z-20 h-[100%] flex items-center">
-                    <Image 
-                      src="/VendorCity_Store.webp" 
-                      alt="Logo" 
-                      height={100} 
-                      width={100} 
-                      className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                      <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
-                      <p className="text-xs text-purple-600">Select a conversation</p>
-                  </div>
-                   {isMobile && (
-                      <button 
-                        onClick={handleToggleSidebar}
-                        className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
-                      >
-                        <Menu className="w-5 h-5 text-gray-700" />
-                      </button>
-                    )}
-                </div>
-              </div>
-            </div>
               )}
-              {/* Messages Container - Scrollable area */}
+              
+              {/* Messages Container - Only this area scrolls */}
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-purple-50"
-                style={{
-                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight}px` : '16px'
-                }}
               >
                 {selectedUser ? (
                   <div className="p-4 space-y-4">
@@ -965,7 +968,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
               {/* Input Area - Fixed at bottom with animations */}
               {selectedUser && (
-                <div className="border-t border-purple-100 bg-white flex-shrink-0 transform transition-all duration-300">
+                <div className="border-t border-purple-100 bg-white flex-shrink-0">
                   <div className="p-4">
                     <div className="flex space-x-3">
                       <div className="flex-1 bg-purple-50 rounded-2xl border border-purple-200 focus-within:ring-2 focus-within:ring-purple-300 transition-all duration-300">
@@ -984,10 +987,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       </div>
                       <button
                         onClick={handleSendMessage}
-                        disabled={!newMessage.trim()}
-                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 active:scale-95"
+                        disabled={!newMessage.trim() || isSending}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-3 rounded-2xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 active:scale-95 min-w-[52px]"
                       >
-                        <Send className="w-6 h-6" />
+                        {isSending ? (
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                          <Send className="w-6 h-6" />
+                        )}
                       </button>
                     </div>
                     <div className="flex justify-between items-center mt-2 px-1">
