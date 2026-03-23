@@ -678,18 +678,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   // Calculate container height
-  const containerStyle = {
-    height: '70vh',
-    maxHeight: '70vh',
-    overflow: 'hidden'
-  };
+  
 
   return (
     <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
       <div 
-        className="fixed bottom-0 w-full bg-white shadow-xl overflow-hidden"
-        style={containerStyle}
-      >
+        className="w-full bg-white shadow-xl overflow-hidden">
         <div className="flex h-full relative">
           {/* Sidebar */}
           <div className={`
