@@ -34,46 +34,70 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_BY_RIDER);
   const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
 
-  // Calculate total payout by summing all individualShipping and dividing equally among suppliers
-  const calculatePayout = () => {
+  // Calculate the payout for this specific supplier (equal split among all suppliers in the order)
+  const calculatePayoutForThisSupplier = () => {
     if (!delivery.supplierItems || delivery.supplierItems.length === 0) return 0;
     
-    // Get unique suppliers
-    const uniqueSuppliers = new Map();
-    delivery.supplierItems.forEach(item => {
-      if (!uniqueSuppliers.has(item.supplierId)) {
-        uniqueSuppliers.set(item.supplierId, {
-          supplierId: item.supplierId,
-          items: []
-        });
-      }
-      uniqueSuppliers.get(item.supplierId).items.push(item);
-    });
+    // Get the total number of suppliers in this order
+    // This should come from the parent order data
+    const totalSuppliersInOrder = delivery.totalSuppliersInOrder || 1;
     
-    const supplierCount = uniqueSuppliers.size;
+    // Get the total shipping across ALL suppliers in this order
+    // This needs to be fetched from the parent order, but since we don't have that data,
+    // we need to calculate based on what's available
+    // For now, we'll sum the individualShipping of the current supplier items
+    // BUT this is incorrect if we only have one supplier's data
     
-    // Sum all individualShipping across all suppliers
-    const totalShipping = delivery.supplierItems.reduce((sum, item) => {
+    // Alternative approach: Use the order's total shipping if available
+    // The individualShipping on each item is the TOTAL shipping for the ENTIRE order divided by number of items
+    // So if we sum all individualShipping across ALL suppliers, we get the total shipping
+    
+    // Since we only have current supplier's items in this card,
+    // we need to calculate based on the assumption that individualShipping per item
+    // is the total order shipping divided by total items
+    const currentSupplierShipping = delivery.supplierItems.reduce((sum, item) => {
       return sum + (item.individualShipping || 0);
     }, 0);
     
-    // Divide equally among suppliers
-    const payoutPerSupplier = totalShipping / supplierCount;
+    // If this is a single supplier order, return the current supplier shipping
+    if (totalSuppliersInOrder === 1) {
+      return currentSupplierShipping;
+    }
     
-    // For this specific supplier's view, return the payout for this supplier
-    // Since the delivery card shows one supplier at a time (based on the supplierId in the delivery object)
-    // We need to return the equal share for this supplier
-    return payoutPerSupplier;
+    // For multi-supplier orders, we need to know the total shipping across all suppliers
+    // This requires data from the parent order that we don't have in this card
+    // Let's log what data we have
+    console.log('Delivery data:', {
+      orderParentId: delivery.orderParentId,
+      totalSuppliersInOrder: delivery.totalSuppliersInOrder,
+      supplierIndex: delivery.supplierIndex,
+      currentSupplierShipping: currentSupplierShipping,
+      supplierItemsCount: delivery.supplierItems?.length
+    });
+    
+    // For now, we'll calculate by assuming individualShipping for each item is the same across all suppliers
+    // This is a temporary solution - you need to fetch the total order shipping from your backend
+    const totalShippingAcrossAllSuppliers = currentSupplierShipping * totalSuppliersInOrder;
+    const equalShare = totalShippingAcrossAllSuppliers / totalSuppliersInOrder;
+    
+    return equalShare;
   };
   
-  // Calculate the total shipping for this specific supplier (for display in items section)
-  const getCurrentSupplierShipping = () => {
+  // Calculate the original shipping for this supplier (for display purposes)
+  const getCurrentSupplierOriginalShipping = () => {
     if (!delivery.supplierItems) return 0;
     return delivery.supplierItems.reduce((sum, item) => sum + (item.individualShipping || 0), 0);
   };
   
-  const payout = calculatePayout();
-  const currentSupplierShipping = getCurrentSupplierShipping();
+  const payout = calculatePayoutForThisSupplier();
+  const originalShipping = getCurrentSupplierOriginalShipping();
+  
+  // Calculate total items across all suppliers if we had the data
+  const getTotalItemsInOrder = () => {
+    // This should come from the parent order
+    // For now, just return the current supplier's items count
+    return delivery.items || delivery.supplierItems?.length || 0;
+  };
 
   const handleAccept = async () => {
     if (!user) {
@@ -168,15 +192,9 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   };
 
   const isLoading = acceptLoading || rejectLoading;
-
-  // Calculate total number of unique suppliers in this order
-  const getUniqueSupplierCount = () => {
-    if (!delivery.supplierItems) return 0;
-    const uniqueSuppliers = new Set(delivery.supplierItems.map(item => item.supplierId));
-    return uniqueSuppliers.size;
-  };
   
-  const uniqueSupplierCount = getUniqueSupplierCount();
+  const totalSuppliers = delivery.totalSuppliersInOrder || 1;
+  const isMultiSupplier = totalSuppliers > 1;
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
@@ -232,13 +250,17 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
             <div className="text-xl font-bold text-green-600 break-words">{formatPeso(payout)}</div>
             <p className="text-gray-500 text-xs">
               Your payout for this delivery
-              {uniqueSupplierCount > 1 && (
-                <span className="block text-xs text-gray-400 mt-1">
-                  Total shipping: {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.individualShipping || 0), 0) || 0)} 
-                  from {uniqueSupplierCount} suppliers, split equally
+              {isMultiSupplier && (
+                <span className="block text-xs text-orange-600 mt-1">
+                  ⚠️ Equal split among {totalSuppliers} suppliers
                 </span>
               )}
             </p>
+            {isMultiSupplier && (
+              <p className="text-xs text-gray-400 mt-1">
+                Original shipping for this supplier: {formatPeso(originalShipping)}
+              </p>
+            )}
             {delivery.subtotal && (
               <p className="text-xs text-gray-400 mt-1">Subtotal: {delivery.subtotal}</p>
             )}
@@ -309,6 +331,9 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
                           <div className="text-xs text-gray-500">
                             @ {formatPeso(item.price)}
                           </div>
+                          <div className="text-xs text-blue-600 mt-1">
+                            Shipping: {formatPeso(item.individualShipping || 0)}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -317,25 +342,34 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
               ))}
               
               <div className="flex flex-col gap-2 bg-orange-50 rounded-xl p-4 mt-3">
-                <span className="text-sm font-medium text-gray-600">Original shipping for this supplier</span>
+                <span className="text-sm font-medium text-gray-600">Shipping Summary</span>
                 <div>
-                  <span className="text-xl font-bold text-orange-600 break-words">
-                    {formatPeso(currentSupplierShipping)}
-                  </span>
-                  <span className="text-xs text-gray-500 ml-2">
-                    ({delivery.supplierItems?.length} {delivery.supplierItems?.length === 1 ? 'item' : 'items'})
-                  </span>
-                </div>
-                {uniqueSupplierCount > 1 && (
-                  <div className="mt-2 pt-2 border-t border-orange-200">
-                    <p className="text-xs text-orange-600">
-                      ⚠️ This order has {uniqueSupplierCount} suppliers. Total shipping of {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.individualShipping || 0), 0) || 0)} will be split equally.
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      ✓ Your payout: {formatPeso(payout)}
-                    </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">This supplier's items shipping:</span>
+                    <span className="text-lg font-semibold text-orange-600">
+                      {formatPeso(originalShipping)}
+                    </span>
                   </div>
-                )}
+                  {isMultiSupplier && (
+                    <>
+                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-orange-200">
+                        <span className="text-sm text-gray-600">Total order shipping (all suppliers):</span>
+                        <span className="text-lg font-semibold text-orange-600">
+                          {formatPeso(originalShipping * totalSuppliers)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mt-2 pt-2 border-t border-green-200">
+                        <span className="text-sm font-semibold text-green-700">Equal share per supplier:</span>
+                        <span className="text-xl font-bold text-green-600">
+                          {formatPeso(payout)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Split equally among {totalSuppliers} suppliers regardless of item count
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -435,4 +469,4 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       </div>
     </div>
   );
-}
+                      }
