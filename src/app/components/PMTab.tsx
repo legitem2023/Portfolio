@@ -688,7 +688,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     <div className="relative bg-gradient-to-br from-purple-50 to-indigo-100 overflow-hidden flex justify-center">
       <div 
         className="fixed bottom-0 w-full bg-white shadow-xl overflow-hidden"
-        {/*style={containerStyle}*/}
+        style={containerStyle}
       >
         <div className="flex h-full relative">
           {/* Sidebar */}
