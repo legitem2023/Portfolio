@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
+import Image from 'next/image'; // Added Image import for Logo
 import { decryptToken } from '../../../utils/decryptToken';
 import { 
   Search, 
@@ -12,7 +13,7 @@ import {
   MessageCircle, 
   Send, 
   Paperclip, 
-  Image,
+  Image as ImageIcon,
   MessageSquare,
   ChevronRight,
   User
@@ -692,24 +693,24 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             flex flex-col shadow-xl
           `}>
             <div className="flex-shrink-0">
-              {/* Header with gradient similar to Header component */}
-              <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white">
-                <div className="flex items-center justify-between">
-                  <div className="transform transition-all duration-300">
-                    <h1 className="text-xl md:text-2xl font-bold tracking-tight">Messages</h1>
-                    <p className="text-purple-200 text-sm hidden md:block">
-                      {unreadCountData?.unreadMessageCount > 0 
-                        ? `${unreadCountData.unreadMessageCount} unread messages`
-                        : 'Chat with your connections'
-                      }
-                    </p>
+              {/* Header with Logo - Copied exactly from Header component */}
+              <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+                <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                  <div className="z-20 h-[100%] flex items-center">
+                    <Image 
+                      src="/VendorCity_Store.webp" 
+                      alt="Logo" 
+                      height={100} 
+                      width={100} 
+                      className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                    />
                   </div>
                   {isMobile && (
                     <button 
                       onClick={handleToggleSidebar}
-                      className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:scale-110"
+                      className="z-20 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-5 h-5 text-gray-700" />
                     </button>
                   )}
                 </div>
@@ -987,7 +988,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           <Paperclip className="w-5 h-5" />
                         </button>
                         <button className="p-2 text-purple-400 hover:text-purple-600 transition-all duration-300 hover:scale-110">
-                          <Image className="w-5 h-5" />
+                          <ImageIcon className="w-5 h-5" />
                         </button>
                       </div>
                       <div className="text-xs text-purple-400 hidden md:block">
