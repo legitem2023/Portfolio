@@ -293,20 +293,19 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
-  const inputContainerRef = useRef<HTMLDivElement>(null);
   
   // Add these new state variables for keyboard handling
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputWrapperRef = useRef<HTMLDivElement>(null);
 
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId:UserId },
     skip: !userId,
-    pollInterval: 30000, // Refresh every 30 seconds
+    pollInterval: 30000,
   });
 
   const { data: usersData } = useQuery(GET_ALL_USERS, {
@@ -337,7 +336,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const allContacts = useMemo(() => {
     const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
     const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId && // Exclude current user
+      user.id !== userId &&
       !threadUsers.some(threadUser => threadUser.id === user.id)
     ) || [];
     
@@ -371,7 +370,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // On mobile, sidebar starts closed; on desktop, it starts open
       if (mobile) {
         setIsSidebarOpen(false);
       } else {
@@ -396,7 +394,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const viewportHeight = visualViewport.height;
       const newKeyboardHeight = windowHeight - viewportHeight;
       
-      // More reliable keyboard detection
       if (newKeyboardHeight > 100 && isInputFocused) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
@@ -411,11 +408,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Handle focus events
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
         setIsInputFocused(true);
-        // Small delay to allow keyboard to start appearing
         setTimeout(() => {
           handleResize();
         }, 100);
@@ -425,7 +420,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const handleFocusOut = (e: FocusEvent) => {
       if (!textareaRef.current?.contains(e.target as Node)) {
         setIsInputFocused(false);
-        // Small delay to ensure keyboard is fully dismissed
         setTimeout(() => {
           setIsKeyboardVisible(false);
           setKeyboardHeight(0);
@@ -433,12 +427,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Add event listeners
     window.visualViewport?.addEventListener('resize', handleResize);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
-    // Initial check
     handleResize();
 
     return () => {
@@ -447,18 +439,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       document.removeEventListener('focusout', handleFocusOut);
     };
   }, [isMobile, isInputFocused]);
-
-  // Adjust chat container padding when keyboard is visible
-  useEffect(() => {
-    if (chatContainerRef.current && isMobile) {
-      if (isKeyboardVisible && keyboardHeight > 0) {
-        // Add padding to the bottom of the chat container to prevent content from being hidden
-        chatContainerRef.current.style.paddingBottom = `${keyboardHeight + 80}px`;
-      } else {
-        chatContainerRef.current.style.paddingBottom = '0px';
-      }
-    }
-  }, [isKeyboardVisible, keyboardHeight, isMobile]);
 
   useEffect(() => {
     const getRole = async () => {
@@ -496,10 +476,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
+  // Convert GraphQL messages to UI messages
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      // Sort messages by createdAt in ascending order (oldest first)
       const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -521,7 +500,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
       setMessages(uiMessages);
 
-      // Mark messages as read when conversation is opened
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
@@ -533,7 +511,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   }, [conversationData, userId, markMultipleAsReadMutation]);
 
   const scrollToBottom = () => {
-    // Use setTimeout to ensure DOM has updated
     setTimeout(() => {
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTo({
@@ -581,15 +558,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
         
-        // Reset textarea height
         if (textareaRef.current) {
           textareaRef.current.style.height = 'auto';
         }
         
         refetchThreads();
         refetchConversation();
-        
-        // Scroll to bottom after sending
         scrollToBottom();
       }
     } catch (error) {
@@ -614,7 +588,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     
     try {
       await refetchConversation({ userId: user.id });
-      // Scroll to bottom after conversation loads
       setTimeout(() => {
         scrollToBottom();
       }, 100);
@@ -635,24 +608,19 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Handle textarea focus
   const handleTextareaFocus = () => {
     setIsInputFocused(true);
-    // Scroll to bottom when focusing
     setTimeout(() => {
       scrollToBottom();
     }, 200);
   };
 
-  // Handle textarea blur
   const handleTextareaBlur = () => {
     setIsInputFocused(false);
   };
 
-  // Auto-resize textarea
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNewMessage(e.target.value);
-    // Auto-resize
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
@@ -684,12 +652,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
-  // Get thread info for a user
   const getThreadInfo = (user: User) => {
     return messageThreads.find(thread => thread.user.id === user.id);
   };
 
-  // Group messages by date - messages are already sorted by time
   const groupMessagesByDate = () => {
     const groups: { [key: string]: Message[] } = {};
     
@@ -714,24 +680,21 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return user.avatar || "/NoImage.webp";
   };
 
-  // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div>
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100 safe-area-inset-bottom">
+    <div className="h-[100vh] bg-gradient-to-br from-purple-50 to-indigo-100">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
-            ${isMobile ? 'relative inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+            ${isMobile ? 'absolute inset-0 z-30' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
             bg-gradient-to-b from-purple-50 to-lavender-100 border-r border-purple-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
             flex flex-col
           `}>
-            {/* Fixed Sidebar Header */}
             <div className="flex-shrink-0">
               <div className="p-4 md:p-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                 <div className="flex items-center justify-between">
@@ -755,7 +718,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
               
-              {/* Search and Tabs */}
               <div className="p-3 md:p-4 bg-white border-b border-purple-200">
                 <div className="relative mb-3">
                   <input
@@ -768,7 +730,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-purple-400" />
                 </div>
 
-                {/* Tabs */}
                 <div className="flex space-x-1">
                   <button
                     onClick={() => setActiveTab("threads")}
@@ -794,7 +755,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            {/* Scrollable Contacts List */}
             <div className="flex-1 overflow-y-auto messages-scrollbar">
               {displayContacts.map((user) => {
                 const thread = getThreadInfo(user);
@@ -857,16 +817,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             </div>
           </div>
 
-          {/* Chat Area - Only show when not in sidebar mode on mobile */}
+          {/* Chat Area */}
           {shouldShowChat && (
-            <div 
-              ref={chatContainerRef}
-              className={`
-                ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-                flex flex-col h-full bg-white
-                transform transition-transform duration-300 ease-in-out
-              `}
-            >
+            <div className={`
+              ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
+              flex flex-col h-full bg-white
+            `}>
               {/* Fixed Chat Header */}
               {selectedUser ? (
                 <div className="bg-gradient-to-r from-purple-50 to-lavender-50 border-b border-purple-200 p-4 safe-area-inset-top flex-shrink-0">
@@ -926,13 +882,17 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - This is the scrollable part */}
+              {/* Messages Container - Scrollable area */}
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-purple-25 messages-scrollbar"
+                style={{
+                  paddingBottom: isMobile && isKeyboardVisible ? `${keyboardHeight}px` : '0px',
+                  transition: 'padding-bottom 0.3s ease-out'
+                }}
               >
                 {selectedUser ? (
-                  <div className="space-y-4 pb-4">
+                  <div className="space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
@@ -990,11 +950,18 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 )}
               </div>
 
-              {/* Message Input */}
+              {/* Message Input - Always visible at bottom */}
               {selectedUser && (
                 <div 
-                  ref={inputContainerRef}
+                  ref={inputWrapperRef}
                   className="border-t border-purple-200 bg-white flex-shrink-0"
+                  style={{
+                    position: 'relative',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    backgroundColor: 'white'
+                  }}
                 >
                   <div className="p-4">
                     <div className="flex space-x-3">
@@ -1041,9 +1008,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         </div>
       </div>
 
-      {/* Custom Styles */}
       <style jsx global>{`
-        /* Custom scrollbar */
         .messages-scrollbar::-webkit-scrollbar {
           width: 4px;
         }
@@ -1062,14 +1027,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           background: #a78bfa;
         }
 
-        /* Mobile optimizations */
         @media (max-width: 768px) {
           .messages-scrollbar::-webkit-scrollbar {
             width: 3px;
           }
         }
 
-        /* Custom colors */
         .bg-lavender-100 {
           background-color: #f4f0ff;
         }
@@ -1078,7 +1041,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           background-color: #faf9ff;
         }
       `}</style>
-    </div>
     </div>
   );
 };
