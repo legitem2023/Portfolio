@@ -135,6 +135,18 @@ export default function RiderDashboard() {
           showSummary={true}
            // Admin can process payouts manually
         />;
+      case "message":
+        return <RiderPaymentHistory
+          riderId={user?.userId}
+          showSummary={true}
+           // Admin can process payouts manually
+        />;
+      case "user":
+        return <RiderPaymentHistory
+          riderId={user?.userId}
+          showSummary={true}
+           // Admin can process payouts manually
+        />;
       default:
         return null;
     }
