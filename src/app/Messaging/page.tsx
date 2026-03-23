@@ -2,6 +2,8 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import PMTab from '../components/PMTab';
+
+import Header from '../Header';
 import { decryptToken } from '../../../utils/decryptToken';
 
 export default function Page() {
@@ -34,5 +36,12 @@ export default function Page() {
     };
     getRole();
   }, []);
-  return <PMTab UserId={userId} />;
+  return (
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+        <Header/>
+        <PMTab UserId={userId} />
+      </div> 
+    </>
+  )    
 }
