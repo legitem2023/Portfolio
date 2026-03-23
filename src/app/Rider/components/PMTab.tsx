@@ -286,7 +286,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -371,7 +371,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       setIsMobile(mobile);
       // On mobile, sidebar starts closed; on desktop, it starts open
       if (mobile) {
-        setIsSidebarOpen(false);
+        setIsSidebarOpen(true);
       } else {
         setIsSidebarOpen(true);
       }
