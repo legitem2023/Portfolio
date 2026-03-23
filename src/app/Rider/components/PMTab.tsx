@@ -720,7 +720,7 @@ const handleSendMessage = async () => {
   };
 
   const getUserAvatar = (user: User) => {
-    return user.avatar || "/NoImage.webp";
+    return user.avatar || "/NoImage_1.webp";
   };
 
   // Determine which view to show based on mobile/desktop and state
