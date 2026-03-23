@@ -1877,6 +1877,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           ]
         },
         select: {
+          id:true,
           senderId: true,
           recipientId: true,
           createdAt: true,
@@ -1926,9 +1927,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           };
         })
       );
-   if (userId) {
-      throw new Error(`tread is ${threads}`);
-   }
+   
       // Sort by last message date
       threads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
