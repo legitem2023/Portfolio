@@ -822,7 +822,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           {/* Chat Area - Enhanced with animations */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-white relative">
-              {/* Chat Header with Logo - Same style as Header */}
+              {/* Chat Header - Same gradient style without logo */}
               {selectedUser ? (
                 <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
                   <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
@@ -835,15 +835,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           <ChevronLeft className="w-5 h-5 text-gray-700" />
                         </button>
                       )}
-                      <div className="z-20 h-[100%] flex items-center">
-                        <Image 
-                          src="/VendorCity_Store.webp" 
-                          alt="Logo" 
-                          height={100} 
-                          width={100} 
-                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                        />
-                      </div>
+                      <img
+                        src={getUserAvatar(selectedUser)}
+                        alt={getUserFullName(selectedUser)}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl object-cover border-2 border-purple-200 transition-all duration-300 hover:scale-105"
+                      />
                       <div className="flex flex-col">
                         <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
                           {getUserFullName(selectedUser)}
@@ -867,18 +863,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
                 </div>
               ) : (
-                /* Initial Display Header with Logo - Same style as Header */
+                /* Initial Display Header - Logo on left, drawer button on right */
                 <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
                   <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
                     <div className="flex items-center space-x-3">
-                      {isMobile && (
-                        <button 
-                          onClick={handleToggleSidebar}
-                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:scale-110"
-                        >
-                          <Menu className="w-5 h-5 text-gray-700" />
-                        </button>
-                      )}
                       <div className="z-20 h-[100%] flex items-center">
                         <Image 
                           src="/VendorCity_Store.webp" 
@@ -893,6 +881,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                         <p className="text-xs text-purple-600">Select a conversation</p>
                       </div>
                     </div>
+                    {isMobile && (
+                      <button 
+                        onClick={handleToggleSidebar}
+                        className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
+                      >
+                        <Menu className="w-5 h-5 text-gray-700" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
