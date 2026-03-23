@@ -905,7 +905,7 @@ input OrderPaginationInput {
     message(id: ID): Message
   
     # Get message threads (conversations list)
-    messageThreads(page: Int, limit: Int): MessageThreadConnection
+    messageThreads(page: Int, limit: Int, userId:ID): MessageThreadConnection
   
     users: [User]
     user(id: ID): User
