@@ -825,7 +825,8 @@ const Header: React.FC = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        router.push('/Messaging');
+                        handleTabClick(5);
+                        //router.push('/Messaging');
                       }}
                     >
                       <MessageCircle className="mr-2 text-gray-400 w-4 h-4" />
@@ -939,7 +940,8 @@ const Header: React.FC = () => {
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
-                      router.push('/Messaging');
+                      handleTabClick(5);
+                      //router.push('/Messaging');
                     }}
                   >
                     <MessageCircle className="mr-3 text-gray-400 w-5 h-5" />
