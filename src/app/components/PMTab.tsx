@@ -681,7 +681,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
   return (
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
+    <div className="relative top-0 h-full bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
           {/* Sidebar - Enhanced with animations similar to Header */}
