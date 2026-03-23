@@ -7,7 +7,8 @@ import {
   BarChart,
   Bell,
   Clock,
-  MessageCircle
+  MessageCircle,
+  User
 } from "lucide-react";
 
 
@@ -41,10 +42,10 @@ const TABS_WITH_ICONS: TabType[] = [
     desktopLabel: "History" 
   },
   { 
-    id: "tracking", 
-    label: "Tracking", 
-    icon: <Navigation />,
-    desktopLabel: "Live Tracking" 
+    id: "user", 
+    label: "Profile", 
+    icon: <User/>,
+    desktopLabel: "User" 
   },
   { 
     id: "message", 
