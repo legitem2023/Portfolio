@@ -20,7 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-// GraphQL Queries & Mutations (same as before)
+// GraphQL Queries & Mutations
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -257,11 +257,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
-  
-  // Keyboard handling
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // GraphQL Queries
@@ -343,7 +339,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Enhanced scroll to bottom function with smooth behavior
+  // Scroll to bottom function
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
@@ -351,35 +347,22 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     
     scrollTimeoutRef.current = setTimeout(() => {
       if (messagesContainerRef.current) {
-        const scrollElement = messagesContainerRef.current;
-        scrollElement.scrollTo({
-          top: scrollElement.scrollHeight,
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
           behavior: behavior
-        });
-      }
-      if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ 
-          behavior: behavior,
-          block: 'end'
         });
       }
     }, 50);
   };
 
-  // Immediate scroll to bottom (no delay)
+  // Immediate scroll to bottom
   const immediateScrollToBottom = () => {
     if (messagesContainerRef.current) {
-      const scrollElement = messagesContainerRef.current;
-      scrollElement.scrollTop = scrollElement.scrollHeight;
-    }
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ 
-        block: 'end'
-      });
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   };
 
-  // Keyboard detection for mobile
+  // Handle keyboard visibility for mobile
   useEffect(() => {
     if (!isMobile) return;
     
@@ -391,54 +374,27 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const viewportHeight = visualViewport.height;
       const newKeyboardHeight = windowHeight - viewportHeight;
       
-      if (newKeyboardHeight > 100 && isInputFocused) {
-        setIsKeyboardVisible(true);
+      if (newKeyboardHeight > 100) {
         setKeyboardHeight(newKeyboardHeight);
-        
         // Scroll to bottom when keyboard appears
         setTimeout(() => {
           scrollToBottom('auto');
-        }, 150);
-      } else if (!isInputFocused) {
-        setIsKeyboardVisible(false);
+        }, 100);
+      } else {
         setKeyboardHeight(0);
       }
     };
 
-    const handleFocusIn = (e: FocusEvent) => {
-      if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
-        setIsInputFocused(true);
-        setTimeout(() => {
-          scrollToBottom('auto');
-        }, 100);
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      if (!textareaRef.current?.contains(e.target as Node)) {
-        setIsInputFocused(false);
-        setTimeout(() => {
-          setIsKeyboardVisible(false);
-          setKeyboardHeight(0);
-        }, 100);
-      }
-    };
-
     window.visualViewport?.addEventListener('resize', handleResize);
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-    
     handleResize();
-
+    
     return () => {
       window.visualViewport?.removeEventListener('resize', handleResize);
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
     };
-  }, [isMobile, isInputFocused]);
+  }, [isMobile]);
 
   useEffect(() => {
     const getRole = async () => {
@@ -500,7 +456,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
       setMessages(uiMessages);
       
-      // Immediate scroll to bottom when messages load
+      // Scroll to bottom when messages load
       setTimeout(() => {
         immediateScrollToBottom();
       }, 100);
@@ -564,6 +520,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         refetchThreads();
         refetchConversation();
         
+        // Scroll to bottom after sending
         setTimeout(() => {
           immediateScrollToBottom();
         }, 50);
@@ -611,14 +568,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleTextareaFocus = () => {
-    setIsInputFocused(true);
     setTimeout(() => {
       scrollToBottom('auto');
     }, 200);
-  };
-
-  const handleTextareaBlur = () => {
-    setIsInputFocused(false);
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -770,11 +722,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                         ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-l-purple-500' 
                         : 'hover:bg-purple-50 hover:pl-4'
                       }
-                      ${shouldShowSidebar ? 'translate-x-0 opacity-100' : '-translate-x-10 opacity-0'}
                     `}
-                    style={{
-                      transitionDelay: `${index * 50}ms`
-                    }}
                     onClick={() => handleUserSelect(user)}
                   >
                     <div className="relative flex-shrink-0">
@@ -791,7 +739,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
                       <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-gray-800 text-sm md:text-base truncate transition-all duration-300">
+                        <h3 className="font-semibold text-gray-800 text-sm md:text-base truncate">
                           {getUserFullName(user)}
                         </h3>
                         {thread?.lastMessage && (
@@ -800,7 +748,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs md:text-sm text-purple-500 truncate transition-all duration-300">
+                      <p className="text-xs md:text-sm text-purple-500 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                     </div>
@@ -810,7 +758,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               })}
               
               {displayContacts.length === 0 && (
-                <div className="text-center py-8 text-purple-400 transform transition-all duration-300">
+                <div className="text-center py-8 text-purple-400">
                   <MessageCircle className="w-12 h-12 mx-auto mb-3 animate-pulse" />
                   <p className="text-sm">
                     {searchTerm ? 'No users found' : 
@@ -891,13 +839,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               )}
               
-              {/* Messages Container - Only this area scrolls */}
+              {/* Messages Container - Scrollable area */}
               <div 
                 ref={messagesContainerRef}
                 className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-50 to-purple-50"
+                style={{
+                  paddingBottom: isMobile && keyboardHeight > 0 ? `${keyboardHeight}px` : '0px'
+                }}
               >
                 {selectedUser ? (
-                  <div className="p-4 space-y-4">
+                  <div className="p-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
@@ -906,7 +857,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           </span>
                         </div>
                         <div className="space-y-3">
-                          {dateMessages.map((message, index) => (
+                          {dateMessages.map((message) => (
                             <div
                               key={message.id}
                               className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
@@ -971,7 +922,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           onChange={handleTextareaChange}
                           onKeyPress={handleKeyPress}
                           onFocus={handleTextareaFocus}
-                          onBlur={handleTextareaBlur}
                           placeholder="Type your message..."
                           className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px]"
                           rows={1}
