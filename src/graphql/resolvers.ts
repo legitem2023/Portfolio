@@ -2039,7 +2039,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
   );
   
   // Filter out any null threads
-  const validThreads = threads.filter(thread => thread !== null && thread.user !== null);
+  const validThreads = threads.filter((thread:any) => thread !== null && thread.user !== null);
   
   // Sort by last message date
   validThreads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
