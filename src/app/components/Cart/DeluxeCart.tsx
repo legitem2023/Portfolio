@@ -47,9 +47,9 @@ type Coordinate = {
 type PaymentMethod = 'gcash' | 'bank' | 'cod';
 type CartStage = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed';
 
-// Static shipping rates - removed dependency on useVehicleCosts hook
-const BASE_RATE = 50; // Base rate in PHP
-const RATE_PER_KM = 15; // Rate per kilometer in PHP
+// Static shipping rates
+const BASE_RATE = 50;
+const RATE_PER_KM = 15;
 
 const formatPesoPrice = (price: number): string => {
   return `₱${price.toLocaleString('en-PH', {
@@ -58,22 +58,24 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
-// Helper function to group items by supplier
+// Helper function to group items by supplier ID
 const groupItemsBySupplier = (items: CartItem[]): Map<string | number, CartItem[]> => {
   const supplierMap = new Map<string | number, CartItem[]>();
   
   items.forEach(item => {
-    const supplierId = item.supplierId || 'unknown';
-    if (!supplierMap.has(supplierId)) {
-      supplierMap.set(supplierId, []);
+    const supplierId = item.supplierId;
+    if (supplierId) {
+      if (!supplierMap.has(supplierId)) {
+        supplierMap.set(supplierId, []);
+      }
+      supplierMap.get(supplierId)!.push(item);
     }
-    supplierMap.get(supplierId)!.push(item);
   });
   
   return supplierMap;
 };
 
-// Cart Stage Component - Mobile optimized
+// Cart Stage Component
 interface CartStageProps {
   cartItems: CartItem[];
   subtotal: number;
@@ -128,7 +130,6 @@ const CartStage = ({ cartItems, onQuantityChange }: CartStageProps) => {
                               title={item.color}
                             />
                             <p className="text-xs text-indigo-600">{item.size}</p>
-                            <p className="text-xs text-indigo-600">Supplier: {item.supplierName || item.supplierId || 'N/A'}</p>
                           </div>
                         </div>
                         <p className="text-xs sm:text-sm md:text-base font-medium text-indigo-700 mt-1 xs:mt-0 xs:ml-2 whitespace-nowrap">
@@ -179,7 +180,7 @@ const CartStage = ({ cartItems, onQuantityChange }: CartStageProps) => {
   );
 };
 
-// Shipping Stage Component - Mobile optimized
+// Shipping Stage Component
 interface ShippingStageProps {
   shippingInfo: ShippingInfo;
   addresses: Address[];
@@ -413,7 +414,7 @@ const ShippingStage = ({
   );
 };
 
-// Payment Stage Component - Mobile optimized
+// Payment Stage Component
 interface PaymentStageProps {
   paymentInfo: PaymentInfo;
   setPaymentInfo: (info: PaymentInfo) => void;
@@ -661,7 +662,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
   );
 };
 
-// Confirmation Stage Component - Mobile optimized
+// Confirmation Stage Component
 interface ConfirmationStageProps {
   cartItems: CartItem[];
   shippingInfo: ShippingInfo;
@@ -712,10 +713,8 @@ const ConfirmationStage = ({
 
   const paymentDisplay = getPaymentMethodDisplay();
   
-  // Group items by supplier for display
+  // Group items by supplier
   const supplierGroups = groupItemsBySupplier(cartItems);
-  
-  // Calculate shipping cost per supplier (total shipping divided by number of suppliers)
   const supplierCount = supplierGroups.size;
   const shippingCostPerSupplier = supplierCount > 0 ? shippingCost / supplierCount : 0;
 
@@ -748,7 +747,7 @@ const ConfirmationStage = ({
         <div className="space-y-4">
           <section>
             <div className="bg-gray-50 rounded-lg p-3">
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Order Items by Supplier ({supplierGroups.size} {supplierGroups.size === 1 ? 'Supplier' : 'Suppliers'})</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Order Items by Supplier ({supplierCount} {supplierCount === 1 ? 'Supplier' : 'Suppliers'})</h3>
               
               {Array.from(supplierGroups.entries()).map(([supplierId, items]) => {
                 const supplierItemCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -762,7 +761,7 @@ const ConfirmationStage = ({
                       <div className="flex justify-between items-center">
                         <div>
                           <h4 className="text-sm font-semibold text-indigo-900">
-                            Supplier: {items[0]?.supplierName || supplierId}
+                            Supplier ID: {supplierId}
                           </h4>
                           <p className="text-xs text-indigo-600">
                             {supplierItemCount} {supplierItemCount === 1 ? 'item' : 'items'} • {itemsPerSupplier} {itemsPerSupplier === 1 ? 'product type' : 'product types'}
@@ -906,7 +905,7 @@ const CompletedStage = ({ onContinueShopping }: CompletedStageProps) => {
   );
 };
 
-// Order Summary Component - Mobile optimized
+// Order Summary Component
 interface OrderSummaryProps {
   cartItems: CartItem[];
   addresses: Address[];
@@ -1029,7 +1028,6 @@ const OrderSummary = ({
 
         if (itemsWithLocation > 0) {
           const averageDistance = accumulatedDistance / cartItems.length;
-          // Using static BASE_RATE and RATE_PER_KM instead of dynamic vehicle rates
           const distanceCharge = averageDistance * RATE_PER_KM;
           const totalShippingCost = BASE_RATE + distanceCharge;
           setShippingCost(totalShippingCost);
@@ -1053,13 +1051,13 @@ const OrderSummary = ({
     calculateShipping();
   }, [cartItems, addresses, onShippingCostCalculated]);
 
-  // Group items by supplier for shipping cost distribution
+  // Group items by supplier for shipping distribution
   const supplierGroups = groupItemsBySupplier(cartItems);
   const supplierCount = supplierGroups.size;
   const shippingCostPerSupplier = supplierCount > 0 ? shippingCost / supplierCount : 0;
   
-  // Calculate shipping cost per item per supplier
-  const getShippingCostPerItem = (supplierId: string | number): number => {
+  // Calculate shipping per item by supplier
+  const getShippingPerItem = (supplierId: string | number): number => {
     const itemsInSupplier = supplierGroups.get(supplierId) || [];
     const itemCount = itemsInSupplier.length;
     return itemCount > 0 ? shippingCostPerSupplier / itemCount : 0;
@@ -1190,7 +1188,6 @@ const OrderSummary = ({
     }
   };
 
-  // Show detailed shipping breakdown when in confirmation stage
   const showShippingBreakdown = currentStage === 'confirmation';
 
   return (
@@ -1230,7 +1227,7 @@ const OrderSummary = ({
                     return (
                       <div key={supplierId} className="flex items-center justify-between text-xs pl-2 mb-1">
                         <span className="text-indigo-600">
-                          Supplier {items[0]?.supplierName || supplierId} ({supplierItemCount} {supplierItemCount === 1 ? 'item' : 'items'}):
+                          Supplier {supplierId} ({supplierItemCount} {supplierItemCount === 1 ? 'item' : 'items'}):
                         </span>
                         <span className="font-medium text-indigo-900">{formatPesoPrice(shippingForSupplier)}</span>
                       </div>
@@ -1319,7 +1316,6 @@ const DeluxeCart = () => {
   const tax = subtotal * 0.08;
   const total = subtotal + calculatedShippingCost + tax;
 
-  // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -1327,7 +1323,6 @@ const DeluxeCart = () => {
     });
   };
 
-  // Scroll to top whenever stage changes
   useEffect(() => {
     scrollToTop();
   }, [currentStage]);
@@ -1353,7 +1348,7 @@ const DeluxeCart = () => {
     setOrderError(null);
 
     try {
-      // Group items by supplier
+      // Group items by supplier ID
       const supplierGroups = groupItemsBySupplier(cartItems);
       const supplierCount = supplierGroups.size;
       
@@ -1369,7 +1364,7 @@ const DeluxeCart = () => {
 
       // Prepare order items with individual shipping costs based on supplier grouping
       const orderItems = cartItems.map(item => {
-        const supplierId = item.supplierId || 'unknown';
+        const supplierId = item.supplierId;
         const individualShippingCost = getShippingCostPerItem(supplierId);
         
         return {
@@ -1385,7 +1380,7 @@ const DeluxeCart = () => {
       // Calculate total distance from all items
       const totalDistance = Object.values(itemDistances || {}).reduce((sum, dist) => sum + dist, 0);
       
-      // Calculate average distance (total distance divided by number of items)
+      // Calculate average distance
       const averageDistance = cartItems.length > 0 ? totalDistance / cartItems.length : 0;
 
       const orderParams = {
@@ -1616,7 +1611,7 @@ const DeluxeCart = () => {
   return (
     <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 py-4 px-2 sm:py-6 sm:px-3 md:py-8 md:px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Progress Steps - Mobile Optimized */}
+        {/* Progress Steps */}
         <div className="flex justify-between relative mb-6 sm:mb-8 md:mb-10">
           <div className="absolute top-3 left-0 right-0 h-0.5 bg-indigo-200 z-0"></div>
           
@@ -1719,7 +1714,7 @@ const DeluxeCart = () => {
           )}
         </div>
         
-        {/* Order Summary - Separate Card */}
+        {/* Order Summary */}
         {cartItems.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm">
             <OrderSummary
