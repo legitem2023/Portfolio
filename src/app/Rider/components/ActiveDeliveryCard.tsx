@@ -72,7 +72,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [actionType, setActionType] = useState<'pickup' | 'delivered' | 'cancel' | 'failed' | null>(null);
   const [showMap, setShowMap] = useState(false);
   const [showItems, setShowItems] = useState(false);
-  const [showProofSection, setShowProofSection] = useState(false); // New state for proof section
+  const [showProofSection, setShowProofSection] = useState(false);
   
   // Proof of delivery states
   const [showProofModal, setShowProofModal] = useState(false);
@@ -84,6 +84,17 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  // Calculate total payout as sum of individualShipping for all items
+  const calculatePayout = () => {
+    if (!delivery.supplierItems) return 0;
+    
+    return delivery.supplierItems.reduce((sum, item) => {
+      return sum + (item.individualShipping || 0);
+    }, 0);
+  };
+  
+  const payout = calculatePayout();
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -160,7 +171,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -169,12 +180,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       };
       reader.readAsDataURL(file);
     }
-    // Clear the input value so the same file can be selected again if needed
     e.target.value = '';
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -184,7 +194,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     ctx.beginPath();
     
-    // Get coordinates
     let clientX, clientY;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
@@ -194,18 +203,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       clientY = e.clientY;
     }
     
-    // Get canvas position and dimensions
     const rect = canvas.getBoundingClientRect();
-    
-    // Calculate position relative to canvas (0-1 range)
     const relativeX = (clientX - rect.left) / rect.width;
     const relativeY = (clientY - rect.top) / rect.height;
-    
-    // Clamp values to prevent drawing outside canvas
     const clampedX = Math.max(0, Math.min(1, relativeX));
     const clampedY = Math.max(0, Math.min(1, relativeY));
-    
-    // Convert to canvas pixel coordinates
     const canvasX = clampedX * canvas.width;
     const canvasY = clampedY * canvas.height;
     
@@ -213,7 +215,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     if (!isDrawing) return;
     
     const canvas = canvasRef.current;
@@ -224,10 +226,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     ctx.strokeStyle = '#000';
     ctx.lineWidth = 2;
-    ctx.lineCap = 'round'; // Make lines smoother
-    ctx.lineJoin = 'round'; // Make lines smoother
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     
-    // Get coordinates
     let clientX, clientY;
     if ('touches' in e) {
       clientX = e.touches[0].clientX;
@@ -237,18 +238,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       clientY = e.clientY;
     }
     
-    // Get canvas position and dimensions
     const rect = canvas.getBoundingClientRect();
-    
-    // Calculate position relative to canvas (0-1 range)
     const relativeX = (clientX - rect.left) / rect.width;
     const relativeY = (clientY - rect.top) / rect.height;
-    
-    // Clamp values to prevent drawing outside canvas
     const clampedX = Math.max(0, Math.min(1, relativeX));
     const clampedY = Math.max(0, Math.min(1, relativeY));
-    
-    // Convert to canvas pixel coordinates
     const canvasX = clampedX * canvas.width;
     const canvasY = clampedY * canvas.height;
     
@@ -256,14 +250,13 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     ctx.stroke();
   };
 
-  // Add this new function to handle touch events better
   const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent scrolling while drawing
+    e.preventDefault();
     draw(e);
   };
 
   const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
-    e.preventDefault(); // Prevent page refresh on touch devices
+    e.preventDefault();
     setIsDrawing(false);
     if (canvasRef.current) {
       setSignature(canvasRef.current.toDataURL());
@@ -271,7 +264,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
 
   const clearSignature = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent page refresh
+    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     
@@ -288,7 +281,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       return;
     }
 
-    // Validate proof of delivery
     if (!proofPhoto) {
       setMessage({ type: 'error', text: 'Please take a photo of the delivered items' });
       return;
@@ -307,7 +299,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setActionType('delivered');
 
     try {
-      // Upload the proof of delivery only
       const proofInput: ProofOfDeliveryInput = {
         id: delivery.originalOrderId,
         receivedBy: receivedByName,
@@ -343,7 +334,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setActionType('delivered');
 
     try {
-      // Update order status to DELIVERED
       const supplierItems = delivery.supplierItems || [];
       for (const item of supplierItems) {
         await updateOrderStatus({
@@ -454,11 +444,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     galleryInputRef.current?.click();
   };
 
-  // Helper function to format date safely
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
-      // Check if date is valid
       if (isNaN(date.getTime())) {
         return 'Invalid date';
       }
@@ -519,7 +507,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
             </div>
             
             <div className="bg-green-50 p-3 rounded-xl">
-              <div className="text-xl font-bold text-green-600 break-words">{delivery.payout}</div>
+              <div className="text-xl font-bold text-green-600 break-words">{formatPeso(payout)}</div>
               <p className="text-gray-500 text-xs">Payout for this piece</p>
               {delivery.subtotal && (
                 <p className="text-xs text-gray-400 mt-1">Subtotal: {delivery.subtotal}</p>
@@ -1110,4 +1098,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-          }
+  }
