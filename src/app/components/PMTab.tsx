@@ -742,83 +742,83 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
           {/* Chat Area */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-white">
-              {/* Chat Header - Original Gradient Design */}
-              {selectedUser ? (
-                <div className="flex-shrink-0">
-                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                      <div className="z-20 h-[100%] flex items-center gap-3">
-                        {isMobile && (
-                          <button 
-                            onClick={() => setIsSidebarOpen(true)}
-                            className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300"
-                          >
-                            <ArrowLeft className="w-5 h-5 text-gray-700" />
-                          </button>
-                        )}
-                        <Image 
-                          onClick={() => {
-                            setSelectedUser(null);
-                            if (isMobile) setIsSidebarOpen(true);
-                          }}
-                          src="/VendorCity_Store.webp" 
-                          alt="Logo" 
-                          height={100} 
-                          width={100} 
-                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                        />
-                        <div className="flex flex-col">
-                          <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
-                            {getUserFullName(selectedUser)}
-                          </h2>
-                          <p className="text-xs text-purple-600 truncate">
-                            {selectedUser.email}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
-                          <Phone className="w-5 h-5" />
-                        </button>
-                        <button 
-                          onClick={() => setIsSidebarOpen(true)}
-                          className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
-                        >
-                          <Menu className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-shrink-0">
-                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                      <div className="z-20 h-[100%] flex items-center">
-                        <Image 
-                          src="/VendorCity_Store.webp" 
-                          alt="Logo" 
-                          height={100} 
-                          width={100} 
-                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                        />
-                      </div>
-                      <div>
-                        <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
-                        <p className="text-xs text-purple-600">Select a conversation</p>
-                      </div>
-                      {isMobile && (
-                        <button 
-                          onClick={() => setIsSidebarOpen(true)}
-                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90"
-                        >
-                          <Menu className="w-5 h-5 text-gray-700" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
+{/* Chat Header - Fixed truncation */}
+{selectedUser ? (
+  <div className="flex-shrink-0">
+    <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+      <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+        <div className="z-20 h-[100%] flex items-center gap-3 min-w-0 flex-1">
+          {isMobile && (
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 flex-shrink-0"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
+          <Image 
+            onClick={() => {
+              setSelectedUser(null);
+              if (isMobile) setIsSidebarOpen(true);
+            }}
+            src="/VendorCity_Store.webp" 
+            alt="Logo" 
+            height={100} 
+            width={100} 
+            className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
+          />
+          <div className="flex flex-col min-w-0 flex-1">
+            <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
+              {getUserFullName(selectedUser)}
+            </h2>
+            <p className="text-xs text-purple-600 truncate">
+              {selectedUser.email}
+            </p>
+          </div>
+        </div>
+        <div className="flex space-x-2 flex-shrink-0">
+          <button className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 text-purple-600 hover:text-purple-800 transition-all duration-300 hover:scale-110 md:hidden"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+) : (
+  <div className="flex-shrink-0">
+    <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
+      <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+        <div className="z-20 h-[100%] flex items-center min-w-0 flex-1">
+          <Image 
+            src="/VendorCity_Store.webp" 
+            alt="Logo" 
+            height={100} 
+            width={100} 
+            className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
+          />
+          <div className="ml-3 min-w-0">
+            <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">Messages</h2>
+            <p className="text-xs text-purple-600 truncate">Select a conversation</p>
+          </div>
+        </div>
+        {isMobile && (
+          <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 hover:rotate-90 flex-shrink-0"
+          >
+            <Menu className="w-5 h-5 text-gray-700" />
+          </button>
+        )}
+      </div>
+    </div>
+  </div>
+)}
 
               {/* Messages Container - Scrollable with Shimmer */}
               <div className="flex-1 relative overflow-hidden">
