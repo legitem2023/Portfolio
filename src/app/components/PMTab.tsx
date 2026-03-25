@@ -241,6 +241,37 @@ interface Message {
   graphQLData?: GraphQLMessage;
 }
 
+// Shimmer Components
+const ContactShimmer = () => (
+  <div className="w-full flex items-center space-x-3 p-3 rounded-xl mb-1 animate-pulse">
+    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-200 to-pink-200"></div>
+    <div className="flex-1">
+      <div className="h-4 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-3/4 mb-2"></div>
+      <div className="h-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded w-1/2"></div>
+    </div>
+    <div className="w-4 h-4 bg-purple-200 rounded"></div>
+  </div>
+);
+
+const MessageShimmer = ({ isOwnMessage = false }: { isOwnMessage?: boolean }) => (
+  <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 animate-pulse`}>
+    {!isOwnMessage && (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-200 to-pink-200 mr-2 self-end mb-1"></div>
+    )}
+    <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+      <div className={`rounded-2xl px-4 py-2 ${isOwnMessage ? 'bg-gradient-to-r from-purple-300 to-indigo-300' : 'bg-gray-200'}`}>
+        <div className="h-4 bg-white/50 rounded w-32"></div>
+      </div>
+      <div className="mt-1">
+        <div className="h-3 bg-purple-200 rounded w-16"></div>
+      </div>
+    </div>
+    {isOwnMessage && (
+      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-200 to-pink-200 ml-2 self-end mb-1"></div>
+    )}
+  </div>
+);
+
 const PMTab = ({ UserId }: { UserId?: string }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -259,23 +290,24 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const [isSending, setIsSending] = useState(false);
   const [hasAttemptedUrlSelection, setHasAttemptedUrlSelection] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // GraphQL Queries
-  const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
+  const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
     skip: !userId,
     pollInterval: 30000,
   });
 
-  const { data: usersData } = useQuery(GET_ALL_USERS, {
+  const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS, {
     skip: !userId
   });
 
-  const { data: conversationData, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
+  const { data: conversationData, loading: conversationLoading, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
       userId: selectedUser?.id,
       page: 1,
@@ -328,6 +360,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   useEffect(() => {
     const getRole = async () => {
       try {
+        setIsInitialLoading(true);
         const response = await fetch('/api/protected', { credentials: 'include' });
         if (response.status === 401) throw new Error('Unauthorized');
         
@@ -341,6 +374,8 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
         setAvatar(payload.image || "/NoImage.webp");
       } catch (err) {
         console.error('Error getting role:', err);
+      } finally {
+        setIsInitialLoading(false);
       }
     };
     getRole();
@@ -348,7 +383,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
 
   // Handle URL parameter to auto-select user
   useEffect(() => {
-    if (userIdFromUrl && usersData?.users && !hasAttemptedUrlSelection && !selectedUser) {
+    if (userIdFromUrl && usersData?.users && !hasAttemptedUrlSelection && !selectedUser && !usersLoading) {
       const userFromUrl = usersData.users.find((user: User) => user.id === userIdFromUrl);
       if (userFromUrl) {
         handleUserSelect(userFromUrl);
@@ -360,7 +395,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
         router.replace(newUrl.pathname + newUrl.search);
       }
     }
-  }, [userIdFromUrl, usersData?.users, selectedUser, hasAttemptedUrlSelection, router]);
+  }, [userIdFromUrl, usersData?.users, selectedUser, hasAttemptedUrlSelection, router, usersLoading]);
 
   // Update message threads
   useEffect(() => {
@@ -540,6 +575,10 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
 
+  // Loading states
+  const isSidebarLoading = isInitialLoading || threadsLoading || usersLoading;
+  const isChatLoading = conversationLoading && selectedUser;
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
       <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
@@ -618,57 +657,70 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
               </div>
             </div>
 
-            {/* Contacts List - Scrollable */}
+            {/* Contacts List - Scrollable with Shimmer */}
             <div className="flex-1 overflow-y-auto px-2 pb-4">
-              {displayContacts.map((user) => {
-                const thread = getThreadInfo(user);
-                return (
-                  <button
-                    key={user.id}
-                    onClick={() => handleUserSelect(user)}
-                    className={`
-                      w-full flex items-center space-x-3 p-3 rounded-xl transition-all mb-1
-                      ${selectedUser?.id === user.id 
-                        ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500' 
-                        : 'hover:bg-purple-50'
-                      }
-                    `}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={getUserAvatar(user)}
-                        alt={getUserFullName(user)}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-purple-200"
-                      />
-                      {thread && thread.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
-                          {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+              {isSidebarLoading ? (
+                // Show shimmer while loading
+                <>
+                  <ContactShimmer />
+                  <ContactShimmer />
+                  <ContactShimmer />
+                  <ContactShimmer />
+                  <ContactShimmer />
+                </>
+              ) : (
+                <>
+                  {displayContacts.map((user) => {
+                    const thread = getThreadInfo(user);
+                    return (
+                      <button
+                        key={user.id}
+                        onClick={() => handleUserSelect(user)}
+                        className={`
+                          w-full flex items-center space-x-3 p-3 rounded-xl transition-all mb-1
+                          ${selectedUser?.id === user.id 
+                            ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500' 
+                            : 'hover:bg-purple-50'
+                          }
+                        `}
+                      >
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={getUserAvatar(user)}
+                            alt={getUserFullName(user)}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-purple-200"
+                          />
+                          {thread && thread.unreadCount > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                              {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <h3 className="font-semibold text-gray-800 truncate">{getUserFullName(user)}</h3>
-                      <p className="text-sm text-purple-500 truncate">
-                        {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
+                        <div className="flex-1 text-left min-w-0">
+                          <h3 className="font-semibold text-gray-800 truncate">{getUserFullName(user)}</h3>
+                          <p className="text-sm text-purple-500 truncate">
+                            {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
+                          </p>
+                        </div>
+                        {thread?.lastMessage && (
+                          <span className="text-xs text-purple-400 flex-shrink-0">
+                            {formatTime(thread.lastMessage.createdAt)}
+                          </span>
+                        )}
+                        <ChevronRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
+                      </button>
+                    );
+                  })}
+                  
+                  {displayContacts.length === 0 && (
+                    <div className="text-center py-12">
+                      <MessageCircle className="w-12 h-12 mx-auto text-purple-300 mb-3" />
+                      <p className="text-purple-500">
+                        {searchTerm ? 'No users found' : 'No conversations yet'}
                       </p>
                     </div>
-                    {thread?.lastMessage && (
-                      <span className="text-xs text-purple-400 flex-shrink-0">
-                        {formatTime(thread.lastMessage.createdAt)}
-                      </span>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
-                  </button>
-                );
-              })}
-              
-              {displayContacts.length === 0 && (
-                <div className="text-center py-12">
-                  <MessageCircle className="w-12 h-12 mx-auto text-purple-300 mb-3" />
-                  <p className="text-purple-500">
-                    {searchTerm ? 'No users found' : 'No conversations yet'}
-                  </p>
-                </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -754,69 +806,83 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - Scrollable */}
+              {/* Messages Container - Scrollable with Shimmer */}
               <div className="flex-1 relative overflow-hidden">
                 <div 
                   ref={messagesContainerRef}
                   className="absolute inset-0 overflow-y-auto bg-gradient-to-br from-gray-50 to-purple-50"
                 >
                   {selectedUser ? (
-                    <div className="p-4">
-                      {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                        <div key={date}>
-                          <div className="flex justify-center my-4">
-                            <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
-                              {date}
-                            </span>
-                          </div>
-                          <div className="space-y-3">
-                            {dateMessages.map((message) => (
-                              <div
-                                key={message.id}
-                                className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                              >
-                                {!message.isOwnMessage && (
-                                  <img
-                                    src={message.avatar}
-                                    alt={message.sender}
-                                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 mr-2 self-end mb-1 flex-shrink-0"
-                                  />
-                                )}
-                                <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
-                                  <div className={`
-                                    rounded-2xl px-4 py-2
-                                    ${message.isOwnMessage 
-                                      ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md' 
-                                      : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none shadow-sm'
-                                    }
-                                  `}>
-                                    <p className="text-sm whitespace-pre-wrap break-words">
-                                      {message.content}
-                                    </p>
-                                  </div>
-                                  <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                                    <span className={message.isOwnMessage ? 'text-purple-500' : 'text-gray-400'}>
-                                      {formatTime(message.timestamp)}
-                                    </span>
-                                    {message.isOwnMessage && (
-                                      <Check className="w-3 h-3 text-purple-500" />
-                                    )}
-                                  </div>
-                                </div>
-                                {message.isOwnMessage && (
-                                  <img
-                                    src={message.avatar}
-                                    alt={message.sender}
-                                    className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 ml-2 self-end mb-1 flex-shrink-0"
-                                  />
-                                )}
-                              </div>
-                            ))}
-                          </div>
+                    isChatLoading ? (
+                      // Show shimmer while loading messages
+                      <div className="p-4">
+                        <div className="flex justify-center my-4">
+                          <div className="h-6 w-20 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full animate-pulse"></div>
                         </div>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </div>
+                        <MessageShimmer />
+                        <MessageShimmer isOwnMessage={true} />
+                        <MessageShimmer />
+                        <MessageShimmer isOwnMessage={true} />
+                        <MessageShimmer />
+                      </div>
+                    ) : (
+                      <div className="p-4">
+                        {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                          <div key={date}>
+                            <div className="flex justify-center my-4">
+                              <span className="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
+                                {date}
+                              </span>
+                            </div>
+                            <div className="space-y-3">
+                              {dateMessages.map((message) => (
+                                <div
+                                  key={message.id}
+                                  className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                                >
+                                  {!message.isOwnMessage && (
+                                    <img
+                                      src={message.avatar}
+                                      alt={message.sender}
+                                      className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 mr-2 self-end mb-1 flex-shrink-0"
+                                    />
+                                  )}
+                                  <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
+                                    <div className={`
+                                      rounded-2xl px-4 py-2
+                                      ${message.isOwnMessage 
+                                        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-br-none shadow-md' 
+                                        : 'bg-white text-gray-800 border border-purple-100 rounded-bl-none shadow-sm'
+                                      }
+                                    `}>
+                                      <p className="text-sm whitespace-pre-wrap break-words">
+                                        {message.content}
+                                      </p>
+                                    </div>
+                                    <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
+                                      <span className={message.isOwnMessage ? 'text-purple-500' : 'text-gray-400'}>
+                                        {formatTime(message.timestamp)}
+                                      </span>
+                                      {message.isOwnMessage && (
+                                        <Check className="w-3 h-3 text-purple-500" />
+                                      )}
+                                    </div>
+                                  </div>
+                                  {message.isOwnMessage && (
+                                    <img
+                                      src={message.avatar}
+                                      alt={message.sender}
+                                      className="w-8 h-8 rounded-full object-cover border-2 border-purple-200 ml-2 self-end mb-1 flex-shrink-0"
+                                    />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )
                   ) : (
                     <div className="flex items-center justify-center h-full">
                       <div className="text-center text-purple-400">
@@ -830,7 +896,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
               </div>
 
               {/* Input Area - Fixed at bottom */}
-              {selectedUser && (
+              {selectedUser && !isChatLoading && (
                 <div className="border-t border-purple-100 bg-white flex-shrink-0">
                   <div className="p-4">
                     <div className="flex space-x-3">
