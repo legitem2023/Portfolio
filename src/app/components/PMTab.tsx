@@ -242,8 +242,9 @@ interface Message {
 }
 
 // Shimmer Components with proper shimmer effect
-const Shimmer = ({ className }: { className?: string }) => (
+const Shimmer = ({ className, children }: { className?: string; children?: React.ReactNode }) => (
   <div className={`relative overflow-hidden bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 ${className}`}>
+    {children}
     <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
   </div>
 );
@@ -265,8 +266,8 @@ const MessageShimmer = ({ isOwnMessage = false }: { isOwnMessage?: boolean }) =>
       <Shimmer className="w-8 h-8 rounded-full mr-2 self-end mb-1" />
     )}
     <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-      <Shimmer className={`rounded-2xl px-4 py-2 ${isOwnMessage ? 'w-48' : 'w-64'}`}>
-        <div className="h-4 bg-transparent"></div>
+      <Shimmer className={`rounded-2xl ${isOwnMessage ? 'w-48' : 'w-64'}`}>
+        <div className="h-10"></div>
       </Shimmer>
       <div className="mt-1">
         <Shimmer className="h-3 rounded w-16" />
