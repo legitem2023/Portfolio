@@ -241,33 +241,39 @@ interface Message {
   graphQLData?: GraphQLMessage;
 }
 
-// Shimmer Components
+// Shimmer Components with proper shimmer effect
+const Shimmer = ({ className }: { className?: string }) => (
+  <div className={`relative overflow-hidden bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 ${className}`}>
+    <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+  </div>
+);
+
 const ContactShimmer = () => (
-  <div className="w-full flex items-center space-x-3 p-3 rounded-xl mb-1 animate-pulse">
-    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-200 to-pink-200"></div>
+  <div className="w-full flex items-center space-x-3 p-3 rounded-xl mb-1">
+    <Shimmer className="w-12 h-12 rounded-full" />
     <div className="flex-1">
-      <div className="h-4 bg-gradient-to-r from-purple-200 to-pink-200 rounded w-3/4 mb-2"></div>
-      <div className="h-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded w-1/2"></div>
+      <Shimmer className="h-4 rounded w-3/4 mb-2" />
+      <Shimmer className="h-3 rounded w-1/2" />
     </div>
-    <div className="w-4 h-4 bg-purple-200 rounded"></div>
+    <Shimmer className="w-4 h-4 rounded" />
   </div>
 );
 
 const MessageShimmer = ({ isOwnMessage = false }: { isOwnMessage?: boolean }) => (
-  <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3 animate-pulse`}>
+  <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3`}>
     {!isOwnMessage && (
-      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-200 to-pink-200 mr-2 self-end mb-1"></div>
+      <Shimmer className="w-8 h-8 rounded-full mr-2 self-end mb-1" />
     )}
     <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-      <div className={`rounded-2xl px-4 py-2 ${isOwnMessage ? 'bg-gradient-to-r from-purple-300 to-indigo-300' : 'bg-gray-200'}`}>
-        <div className="h-4 bg-white/50 rounded w-32"></div>
-      </div>
+      <Shimmer className={`rounded-2xl px-4 py-2 ${isOwnMessage ? 'w-48' : 'w-64'}`}>
+        <div className="h-4 bg-transparent"></div>
+      </Shimmer>
       <div className="mt-1">
-        <div className="h-3 bg-purple-200 rounded w-16"></div>
+        <Shimmer className="h-3 rounded w-16" />
       </div>
     </div>
     {isOwnMessage && (
-      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-200 to-pink-200 ml-2 self-end mb-1"></div>
+      <Shimmer className="w-8 h-8 rounded-full ml-2 self-end mb-1" />
     )}
   </div>
 );
@@ -581,6 +587,13 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
+      <style jsx global>{`
+        @keyframes shimmer {
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
       <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar */}
@@ -691,7 +704,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                             className="w-12 h-12 rounded-full object-cover border-2 border-purple-200"
                           />
                           {thread && thread.unreadCount > 0 && (
-                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                               {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
                             </div>
                           )}
@@ -817,7 +830,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                       // Show shimmer while loading messages
                       <div className="p-4">
                         <div className="flex justify-center my-4">
-                          <div className="h-6 w-20 bg-gradient-to-r from-purple-200 to-pink-200 rounded-full animate-pulse"></div>
+                          <Shimmer className="h-6 w-20 rounded-full" />
                         </div>
                         <MessageShimmer />
                         <MessageShimmer isOwnMessage={true} />
