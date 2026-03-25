@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+
 import { decryptToken } from '../../../utils/decryptToken';
 import { 
   Search, 
@@ -527,6 +530,11 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
     setTimeout(scrollToBottom, 100);
   }, [isMobile, refetchConversation, scrollToBottom]);
 
+const handleLogoClick = () =>{
+    router.push('/');  
+    dispatch(setActiveIndex(1));
+}
+  
   // Group messages by date
   const messageGroups = useMemo(() => {
     const groups: { [key: string]: Message[] } = {};
@@ -617,7 +625,8 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                       height={100} 
                       width={100} 
                       className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                    />
+                      onClick={()=>handleLogoClick()
+                      />
                   </div>
                   {isMobile && (
                     <button 
@@ -801,7 +810,8 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
             height={100} 
             width={100} 
             className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
-          />
+            onClick={()=>handleLogoClick()
+            />
           <div className="ml-3 min-w-0">
             <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">Messages</h2>
             <p className="text-xs text-purple-600 truncate">Select a conversation</p>
