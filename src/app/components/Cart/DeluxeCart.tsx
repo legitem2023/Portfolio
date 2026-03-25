@@ -48,8 +48,8 @@ type PaymentMethod = 'gcash' | 'bank' | 'cod';
 type CartStage = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'completed';
 
 // Static shipping rates
-const BASE_RATE:number = process.env.NEXT_PUBLIC_BASE_RATE || 50;
-const RATE_PER_KM:number = process.env.NEXT_PUBLIC_RATE_PER_KM || 15;
+const BASE_RATE:number = Number(process.env.NEXT_PUBLIC_BASE_RATE) || 50;
+const RATE_PER_KM:number = Number(process.env.NEXT_PUBLIC_RATE_PER_KM) || 15;
 
 const formatPesoPrice = (price: number): string => {
   return `₱${price.toLocaleString('en-PH', {
