@@ -596,13 +596,6 @@ const handleLogoClick = () =>{
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50">
-      <style jsx global>{`
-        @keyframes shimmer {
-          100% {
-            transform: translateX(100%);
-          }
-        }
-      `}</style>
       <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar */}
