@@ -4784,7 +4784,7 @@ upload3DModel: async (_: any, args: any) => {
       });
 
    const notificationResult = await createNotification({
-          userId:recipientId,
+          userId:senderId,
           type: NotificationType.SOCIAL,
           title: "Message Received",
           message: body,
