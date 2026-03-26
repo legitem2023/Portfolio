@@ -58,12 +58,6 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const bellRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
-  const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  };
-
   const triggerPushNotification = useCallback((notification: Notification) => {
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
       return;
@@ -725,12 +719,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                 <span className="sr-only">Open user menu</span>
                 <img 
                   className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  src={user.avatar} 
+                  src={user.image} 
                   alt={user.name}
                 />
                 <div className="hidden sm:block text-left">
                   <p className="text-xs sm:text-sm font-medium text-white">{user.name}</p>
-                  <p className="text-[10px] sm:text-xs text-gray-300">Rider ID: VC-001</p>
                 </div>
                 <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
