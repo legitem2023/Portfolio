@@ -286,7 +286,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const userIdFromUrl = searchParams.get('id');
-  
+  const dispatch = useDispatch();
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
