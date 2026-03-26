@@ -6,7 +6,7 @@ import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
 import { LogOut, CreditCard, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
-import { GET_NOTIFICATIONS } from './graphql/query';
+import { GET_NOTIFICATIONS } from '../../components/graphql/query';
 import { 
   MARK_AS_READ,
   MARK_ALL_AS_READ,
