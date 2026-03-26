@@ -10,6 +10,7 @@ export enum NotificationType {
   NEW_MESSAGE = 'NEW_MESSAGE',
   SYSTEM_ALERT = 'SYSTEM_ALERT',
   PROMOTIONAL = 'PROMOTIONAL',
+  SOCIAL = 'SOCIAL'
 }
 
 export interface User {
