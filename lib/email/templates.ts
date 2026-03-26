@@ -30,7 +30,7 @@ export const emailTemplates = {
               box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
             .header { 
-              background-color: #8B5CF6;
+              background: linear-gradient(135deg,rgba(255, 255, 255, 0.9) 0%,rgba(200, 180, 255, 0.5) 100%);
               padding: 30px 20px; 
               text-align: center; 
             }
@@ -135,7 +135,7 @@ export const emailTemplates = {
               box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
             .header { 
-              background-color: #8B5CF6;
+              background: linear-gradient(135deg,rgba(255, 255, 255, 0.9) 0%,rgba(200, 180, 255, 0.5) 100%);
               padding: 30px 20px; 
               text-align: center; 
             }
@@ -227,7 +227,7 @@ export const emailTemplates = {
               box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             }
             .header { 
-              background-color: #8B5CF6;
+              background: linear-gradient(135deg,rgba(255, 255, 255, 0.9) 0%,rgba(200, 180, 255, 0.5) 100%);
               padding: 25px 20px; 
               text-align: center; 
             }
