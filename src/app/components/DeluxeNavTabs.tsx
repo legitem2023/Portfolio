@@ -12,7 +12,7 @@ import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation';
 import ParticleBackground from './ParticleBackground';
-import { CartItem } from '../../../Redux/types'; // Import CartItem type
+import { CartItem } from '../../../types'; // Import CartItem type
 
 import {
   Home,
