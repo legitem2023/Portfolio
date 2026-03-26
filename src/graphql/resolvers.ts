@@ -5510,16 +5510,16 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         // ===== END EMAIL INTEGRATION =====
         
         // Create notification for the order (your existing code)
-     /*   const notificationResult = await createNotification({
+       const notificationResult = await createNotification({
           userId: userId,
           type: NotificationType.ORDER_UPDATE,
           title: "Order Created Successfully",
           message: `Your order #${response.orderNumber} has been created and is being processed.`,
           link: `/orders/${response.id}`,
           isRead: false
-        });*/
-
-       /* if (!notificationResult.success) {
+        });
+        
+        if (!notificationResult.success) {
           // Return error response
           return {
             success: false,
@@ -5531,7 +5531,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
               details: notificationResult.error?.details
             }
           };
-        }*/
+        }
 
         return {
           success: true,
