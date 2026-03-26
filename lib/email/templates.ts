@@ -77,7 +77,7 @@ export const emailTemplates = {
           <div class="container">
             <div class="header">
               <img 
-                src="https://via.placeholder.com/80x80/8B5CF6/ffffff?text=R" 
+                src="https://portfolio-xi-eight-92.vercel.app/_next/image?url=%2FVendorCity_Store.webp&w=256&q=75" 
                 alt="VendorCity Rider" 
                 width="80" 
                 height="80"
@@ -172,7 +172,7 @@ export const emailTemplates = {
           <div class="container">
             <div class="header">
               <img 
-                src="https://via.placeholder.com/80x80/8B5CF6/ffffff?text=R" 
+                src="https://portfolio-xi-eight-92.vercel.app/_next/image?url=%2FVendorCity_Store.webp&w=256&q=75" 
                 alt="VendorCity Rider" 
                 width="80" 
                 height="80"
@@ -254,7 +254,7 @@ export const emailTemplates = {
           <div class="container">
             <div class="header">
               <img 
-                src="https://via.placeholder.com/70x70/8B5CF6/ffffff?text=R" 
+                src="https://portfolio-xi-eight-92.vercel.app/_next/image?url=%2FVendorCity_Store.webp&w=256&q=75" 
                 alt="VendorCity Rider" 
                 width="70" 
                 height="70"
