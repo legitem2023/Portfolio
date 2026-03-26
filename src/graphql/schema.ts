@@ -64,6 +64,7 @@ export const typeDefs = gql`
     SHIPMENT
     PROMOTIONAL
     SUPPORT
+    SOCIAL
   }
 
   # ================= API Bill Enums =================
