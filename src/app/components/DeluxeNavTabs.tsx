@@ -10,8 +10,9 @@ import PMTab from './PMTab';
 import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
-import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
+import { useRouter, usePathname } from 'next/navigation';
 import ParticleBackground from './ParticleBackground';
+import { CartItem } from '../../../Redux/types'; // Import CartItem type
 
 import {
   Home,
@@ -42,7 +43,7 @@ import { useSearchParams } from 'next/navigation';
 import InstallPWAButton from './InstallPWAButton';
 import BellBadge from './ui/BellBadge';
 
-interface Tab  {
+interface Tab {
   id: number;
   label: string;
   icon: React.ReactNode;
@@ -52,13 +53,18 @@ interface Tab  {
 const DeluxeNavTabs: React.FC = () => {
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   const activePostId = useSelector((state: any) => state.activePostId.value);
+  // Import cart items from Redux store
+  const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]);
   const dispatch = useDispatch();
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   
+  // Calculate total cart count
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  
   const router = useRouter();
-  const pathname = usePathname(); // Get current path
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const merchantIdFromUrl = searchParams.get('id');
 
@@ -89,15 +95,12 @@ const DeluxeNavTabs: React.FC = () => {
   }, []);
   
   const handleTabClick = (tabId: number) => {
-    // If not on homepage, redirect to homepage first
     if (pathname !== '/') {
       router.push('/');
-      // Optionally, you can set a timeout to dispatch the active index after navigation
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
       }, 100);
     } else {
-      // If already on homepage, just update the active tab
       dispatch(setActiveIndex(tabId));
     }
   };
@@ -115,21 +118,11 @@ const DeluxeNavTabs: React.FC = () => {
       icon: <Tags size={20} />,
       content: <ProductsTab />,
     },
-    /*{
-      id: 3,
-      label: 'Exclusive Deals',
-      icon: <Target size={20} />,
-      content: (
-        <FlashSale/>
-      ),
-    },*/
     {
-      id:4,
+      id: 4,
       label: 'Merchants',
       icon: <Store size={20} />,
-      content: (
-        <MerchantsPage/>
-      ),
+      content: <MerchantsPage/>,
     },
     {
       id: 5,
@@ -147,7 +140,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 7,
       label: 'Profile',
       icon: <ShoppingCart size={20} />,
-      content: <UserProfile userId={userId} /> // Uses JWT userId
+      content: <UserProfile userId={userId} />
     },
     {
       id: 8,
@@ -162,16 +155,16 @@ const DeluxeNavTabs: React.FC = () => {
       content: <PMTab UserId={userId}/>
     },
     {
-      id:10,
+      id: 10,
       label: 'Order',
       icon: <ShoppingCart size={20} />,
-      content:<OrderTracking userId={userId} /> // Uses JWT userId
+      content: <OrderTracking userId={userId} />
     },
     {
-      id:11,
+      id: 11,
       label: 'Merchants',
       icon: <ShoppingCart size={20} />,
-      content:<MerchantDetails userId={merchantIdFromUrl || ""} /> // Uses URL id instead of JWT userId
+      content: <MerchantDetails userId={merchantIdFromUrl || ""} />
     }
   ];
 
@@ -191,7 +184,7 @@ const DeluxeNavTabs: React.FC = () => {
 
   return (
     <div className="w-full mx-auto font-sans z-10">
-       <div className="fixed bg-violet-50 md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar  z-50 md:z-20 md:mb-1">
+      <div className="fixed bg-violet-50 md:static bottom-0 left-0 right-0 w-full flex justify-between md:justify-center overflow-x-auto hide-scrollbar z-50 md:z-20 md:mb-1">
         {tabs.slice(0,5).map((tab) => (
           <button
             key={tab.id}
@@ -204,9 +197,12 @@ const DeluxeNavTabs: React.FC = () => {
           >
             <span className="text-xl">{tab.icon}</span>
             <span className="text-xl ml-2 hidden md:inline">{tab.label}</span>
-            {tab.label==='Cart' && (
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">0</span>
-          )}
+            {/* Cart notification badge with dynamic count */}
+            {tab.label === 'Cart' && cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
