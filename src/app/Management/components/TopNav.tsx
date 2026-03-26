@@ -719,7 +719,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                 <span className="sr-only">Open user menu</span>
                 <img 
                   className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  src={user?.image} 
+                  src={user?.image || '/NoImage_2.webp'} 
                   alt={user?.name}
                 />
                 <div className="hidden sm:block text-left">
