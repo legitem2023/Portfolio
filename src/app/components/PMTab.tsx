@@ -618,7 +618,7 @@ const handleLogoClick = () =>{
                       height={100} 
                       width={100} 
                       className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                      onClick={()=>handleLogoClick()
+                      onClick={()=>handleLogoClick()}
                       />
                   </div>
                   {isMobile && (
@@ -803,7 +803,7 @@ const handleLogoClick = () =>{
             height={100} 
             width={100} 
             className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
-            onClick={()=>handleLogoClick()
+            onClick={()=>handleLogoClick()}
             />
           <div className="ml-3 min-w-0">
             <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">Messages</h2>
