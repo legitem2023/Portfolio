@@ -1107,7 +1107,7 @@ export default function OrderListComponent({
                                     <p className="text-xs text-gray-500 mt-0.5">
                                       Items: {supplier.items.length}
                                     </p>
-                                    {supplier.trackingNumbers.length > 0 && (
+                                    {/*supplier.trackingNumbers.length > 0 && (
                                       <div className="mt-2">
                                         <p className="text-xs font-medium text-gray-600">Tracking Numbers:</p>
                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -1118,9 +1118,9 @@ export default function OrderListComponent({
                                           ))}
                                         </div>
                                       </div>
-                                    )}
+                                    )*/}
                                   </div>
-                                  <div className="text-right min-w-[120px]">
+                                  {/*<div className="text-right min-w-[120px]">
                                     <div className="text-xs text-gray-500">Subtotal</div>
                                     <div className="text-sm font-semibold text-gray-700">
                                       {formatCurrency(supplier.subtotal)}
@@ -1139,7 +1139,7 @@ export default function OrderListComponent({
                                         {formatCurrency(supplier.grandTotal)}
                                       </div>
                                     </div>
-                                  </div>
+                                  </div>*/}
                                 </div>
                                 {supplier.totalDistance > 0 && (
                                   <div className="mt-2 text-xs text-gray-500">
@@ -1282,14 +1282,14 @@ export default function OrderListComponent({
                                     {/* Show shipping details */}
                                     {(item.individualShipping || item.trackingNumber) && (
                                       <div className="mt-1 space-y-1">
-                                        {item.individualShipping !== undefined && item.individualShipping > 0 && (
+                                        {/*item.individualShipping !== undefined && item.individualShipping > 0 && (
                                           <div className="flex items-center gap-1">
                                             <Truck size={10} className="text-blue-500" />
                                             <span className="text-xs text-gray-600">
                                               Shipping: {formatCurrency(item.individualShipping)}
                                             </span>
                                           </div>
-                                        )}
+                                        )*/}
                                         {item.individualDistance !== undefined && item.individualDistance > 0 && (
                                           <div className="flex items-center gap-1">
                                             <TrendingUp size={10} className="text-gray-500" />
