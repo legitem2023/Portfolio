@@ -230,7 +230,7 @@ interface ClientDateFilter {
 }
 
 // VAT rate (12% in Philippines)
-const VAT_RATE = 0.12;
+const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
 
 // Format currency function for Philippine Peso
 const formatCurrency = (amount: number): string => {
