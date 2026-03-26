@@ -20,10 +20,12 @@ import {
   RefreshCw,
   Loader2,
   Calendar,
-  Bike
+  Bike,
+  TrendingUp,
+  Receipt
 } from "lucide-react";
 
-// GraphQL Query - KEEP EXACTLY AS ORIGINAL
+// GraphQL Query - Updated to include shipping fields
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -59,6 +61,9 @@ const ORDER_LIST_QUERY = gql`
           quantity
           price
           status
+          individualShipping
+          individualDistance
+          trackingNumber
           product {
             name
             sku
@@ -143,13 +148,16 @@ interface OrderItem {
   quantity: number;
   price: number;
   status?: OrderStatus;
+  individualShipping?: number;
+  individualDistance?: number;
+  trackingNumber?: string;
   product: Array<{
     name: string;
     sku: string;
     images: string[];
   }>;
-  rider?: User;  // Rider at item level
-  supplier?: User; // Supplier at item level
+  rider?: User;
+  supplier?: User;
 }
 
 interface Order {
@@ -221,6 +229,9 @@ interface ClientDateFilter {
   to?: string;
 }
 
+// VAT rate (12% in Philippines)
+const VAT_RATE = 0.12;
+
 // Format currency function for Philippine Peso
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-PH', {
@@ -262,12 +273,17 @@ const getUserFromItem = (user: User | User[] | undefined): User | undefined => {
   return Array.isArray(user) ? user[0] : user;
 };
 
-// Helper to calculate total per supplier
+// Helper to calculate total per supplier with shipping and VAT
 interface SupplierTotal {
   supplierId: string;
   supplierName: string;
-  total: number;
+  subtotal: number;
+  totalShipping: number;
+  totalDistance: number;
+  vat: number;
+  grandTotal: number;
   items: OrderItem[];
+  trackingNumbers: string[];
 }
 
 const calculateSupplierTotals = (items: OrderItem[]): SupplierTotal[] => {
@@ -280,23 +296,67 @@ const calculateSupplierTotals = (items: OrderItem[]): SupplierTotal[] => {
       ? `${supplier.firstName} ${supplier.lastName || ''}`.trim() || 'Unknown Supplier'
       : 'Unknown Supplier';
     
-    const itemTotal = item.price * item.quantity;
+    const itemSubtotal = item.price * item.quantity;
+    const itemShipping = item.individualShipping || 0;
+    const itemDistance = item.individualDistance || 0;
     
     if (supplierMap.has(supplierId)) {
       const existing = supplierMap.get(supplierId)!;
-      existing.total += itemTotal;
+      existing.subtotal += itemSubtotal;
+      existing.totalShipping += itemShipping;
+      existing.totalDistance += itemDistance;
       existing.items.push(item);
+      if (item.trackingNumber) {
+        existing.trackingNumbers.push(item.trackingNumber);
+      }
     } else {
       supplierMap.set(supplierId, {
         supplierId,
         supplierName,
-        total: itemTotal,
-        items: [item]
+        subtotal: itemSubtotal,
+        totalShipping: itemShipping,
+        totalDistance: itemDistance,
+        vat: 0,
+        grandTotal: 0,
+        items: [item],
+        trackingNumbers: item.trackingNumber ? [item.trackingNumber] : []
       });
     }
   });
   
-  return Array.from(supplierMap.values());
+  // Calculate VAT and Grand Total for each supplier
+  const suppliers = Array.from(supplierMap.values());
+  suppliers.forEach(supplier => {
+    const totalBeforeVAT = supplier.subtotal + supplier.totalShipping;
+    supplier.vat = totalBeforeVAT * VAT_RATE;
+    supplier.grandTotal = totalBeforeVAT + supplier.vat;
+  });
+  
+  return suppliers;
+};
+
+// Helper to calculate order totals
+interface OrderTotals {
+  subtotal: number;
+  totalShipping: number;
+  totalVAT: number;
+  grandTotal: number;
+  supplierBreakdown: SupplierTotal[];
+}
+
+const calculateOrderTotals = (supplierTotals: SupplierTotal[]): OrderTotals => {
+  const subtotal = supplierTotals.reduce((sum, s) => sum + s.subtotal, 0);
+  const totalShipping = supplierTotals.reduce((sum, s) => sum + s.totalShipping, 0);
+  const totalVAT = supplierTotals.reduce((sum, s) => sum + s.vat, 0);
+  const grandTotal = supplierTotals.reduce((sum, s) => sum + s.grandTotal, 0);
+  
+  return {
+    subtotal,
+    totalShipping,
+    totalVAT,
+    grandTotal,
+    supplierBreakdown: supplierTotals
+  };
 };
 
 // Shimmer loading component
@@ -968,6 +1028,7 @@ export default function OrderListComponent({
               {ordersWithItems.map((order) => {
                 // Calculate supplier totals for this order
                 const supplierTotals = calculateSupplierTotals(order.items);
+                const orderTotals = calculateOrderTotals(supplierTotals);
                 const orderSuppliers = getOrderSuppliers(order.items);
                 const orderRiders = getOrderRiders(order.items);
                 
@@ -1005,7 +1066,6 @@ export default function OrderListComponent({
                             <span className="text-sm lg:text-base">{formatDate(order.createdAt)}</span>
                           </div>
                         </div>
-                        {/* Removed the total amount display here */}
                       </div>
 
                       {/* Delivery Address */}
@@ -1024,20 +1084,20 @@ export default function OrderListComponent({
                         </div>
                       )}
 
-                      {/* Suppliers Section with Totals - REPLACES the old total display */}
+                      {/* Suppliers Section with Detailed Totals */}
                       {supplierTotals.length > 0 && (
                         <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
                           <div className="flex items-center gap-2 mb-3">
                             <Building size={isMobile ? 16 : 18} className="text-blue-600" />
                             <h4 className="font-semibold text-sm lg:text-base text-blue-700">
-                              Suppliers & Totals ({supplierTotals.length})
+                              Suppliers Breakdown ({supplierTotals.length})
                             </h4>
                           </div>
-                          <div className="space-y-3">
+                          <div className="space-y-4">
                             {supplierTotals.map((supplier) => (
                               <div key={supplier.supplierId} className="border-l-2 border-blue-200 pl-3">
-                                <div className="flex justify-between items-start">
-                                  <div>
+                                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                                  <div className="flex-1">
                                     <p className="text-sm font-medium text-gray-800">
                                       {supplier.supplierName}
                                     </p>
@@ -1047,24 +1107,76 @@ export default function OrderListComponent({
                                     <p className="text-xs text-gray-500 mt-0.5">
                                       Items: {supplier.items.length}
                                     </p>
+                                    {supplier.trackingNumbers.length > 0 && (
+                                      <div className="mt-2">
+                                        <p className="text-xs font-medium text-gray-600">Tracking Numbers:</p>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                          {supplier.trackingNumbers.map((tn, idx) => (
+                                            <span key={idx} className="text-xs bg-white px-2 py-0.5 rounded border border-gray-200">
+                                              {tn}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                  <div className="text-right">
-                                    <div className="text-base lg:text-lg font-bold text-green-600">
-                                      {formatCurrency(supplier.total)}
+                                  <div className="text-right min-w-[120px]">
+                                    <div className="text-xs text-gray-500">Subtotal</div>
+                                    <div className="text-sm font-semibold text-gray-700">
+                                      {formatCurrency(supplier.subtotal)}
                                     </div>
-                                    <p className="text-xs text-gray-500">Supplier Total</p>
+                                    <div className="text-xs text-gray-500 mt-1">Shipping</div>
+                                    <div className="text-sm font-semibold text-blue-600">
+                                      {formatCurrency(supplier.totalShipping)}
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-1">VAT (12%)</div>
+                                    <div className="text-sm font-semibold text-orange-600">
+                                      {formatCurrency(supplier.vat)}
+                                    </div>
+                                    <div className="border-t border-blue-200 mt-2 pt-2">
+                                      <div className="text-xs font-bold text-gray-700">Supplier Total</div>
+                                      <div className="text-base font-bold text-green-600">
+                                        {formatCurrency(supplier.grandTotal)}
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
+                                {supplier.totalDistance > 0 && (
+                                  <div className="mt-2 text-xs text-gray-500">
+                                    Total Distance: {supplier.totalDistance.toFixed(2)} km
+                                  </div>
+                                )}
                               </div>
                             ))}
                           </div>
-                          {/* Optional: Show grand total */}
-                          <div className="mt-3 pt-3 border-t border-blue-200">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm font-semibold text-gray-700">Order Grand Total:</span>
-                              <span className="text-lg font-bold text-green-700">
-                                {formatCurrency(supplierTotals.reduce((sum, s) => sum + s.total, 0))}
-                              </span>
+                          
+                          {/* Order Grand Total with breakdown */}
+                          <div className="mt-4 pt-4 border-t-2 border-blue-300">
+                            <div className="bg-white rounded-lg p-3">
+                              <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                <Receipt size={16} className="text-green-600" />
+                                Order Summary
+                              </h5>
+                              <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Subtotal (Items):</span>
+                                  <span className="font-medium">{formatCurrency(orderTotals.subtotal)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Total Shipping:</span>
+                                  <span className="font-medium text-blue-600">{formatCurrency(orderTotals.totalShipping)}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">VAT (12%):</span>
+                                  <span className="font-medium text-orange-600">{formatCurrency(orderTotals.totalVAT)}</span>
+                                </div>
+                                <div className="border-t border-gray-200 pt-2 mt-2">
+                                  <div className="flex justify-between font-bold">
+                                    <span className="text-gray-900">GRAND TOTAL:</span>
+                                    <span className="text-green-700 text-lg">{formatCurrency(orderTotals.grandTotal)}</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1167,21 +1279,42 @@ export default function OrderListComponent({
                                       {item.product[0]?.name || 'Unknown Product'}
                                     </h4>
 
-                                    {/* Show supplier name and ID */}
+                                    {/* Show shipping details */}
+                                    {(item.individualShipping || item.trackingNumber) && (
+                                      <div className="mt-1 space-y-1">
+                                        {item.individualShipping !== undefined && item.individualShipping > 0 && (
+                                          <div className="flex items-center gap-1">
+                                            <Truck size={10} className="text-blue-500" />
+                                            <span className="text-xs text-gray-600">
+                                              Shipping: {formatCurrency(item.individualShipping)}
+                                            </span>
+                                          </div>
+                                        )}
+                                        {item.individualDistance !== undefined && item.individualDistance > 0 && (
+                                          <div className="flex items-center gap-1">
+                                            <TrendingUp size={10} className="text-gray-500" />
+                                            <span className="text-xs text-gray-600">
+                                              Distance: {item.individualDistance.toFixed(2)} km
+                                            </span>
+                                          </div>
+                                        )}
+                                        {item.trackingNumber && (
+                                          <div className="flex items-center gap-1">
+                                            <Receipt size={10} className="text-gray-500" />
+                                            <span className="text-xs text-gray-600">
+                                              Tracking: {item.trackingNumber}
+                                            </span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* Show supplier name */}
                                     {item.supplierId && (
                                       <div className="flex items-center gap-1 mt-1">
                                         <Building size={10} className="text-gray-400" />
                                         <span className="text-xs text-gray-500">
                                           Supplier: {getUserFromItem(item.supplier)?.firstName || item.supplierId}
-                                        </span>
-                                      </div>
-                                    )}
-
-                                    {item.riderId && (
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <Bike size={10} className="text-gray-400" />
-                                        <span className="text-xs text-gray-500">
-                                          Rider ID: {item.riderId}
                                         </span>
                                       </div>
                                     )}
@@ -1270,4 +1403,4 @@ export default function OrderListComponent({
       )}
     </div>
   );
-}
+  }
