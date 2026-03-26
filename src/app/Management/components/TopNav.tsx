@@ -49,7 +49,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
-  const [userId, setUserId] = useState(user.userId);
+  const [userId, setUserId] = useState(user?.userId);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -719,11 +719,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                 <span className="sr-only">Open user menu</span>
                 <img 
                   className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  src={user.image} 
-                  alt={user.name}
+                  src={user?.image} 
+                  alt={user?.name}
                 />
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs sm:text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
                 </div>
                 <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
@@ -732,9 +732,9 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               {isDropdownOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                   <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100">
-                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{user.name}</p>
+                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
                     <p className="text-[10px] sm:text-xs text-gray-500">Rider ID: VC-001</p>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate">{user.email}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate">{user?.email}</p>
                   </div>
 
                   <button
