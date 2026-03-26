@@ -2,7 +2,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import PMTab from '../components/PMTab';
-import DeluxeNavTabs from '../components/DeluxeNavTabs';
+import OutFolderTabs from '../components/OutFolderTabs';
 import Header from '../components/Header';
 import { decryptToken } from '../../../utils/decryptToken';
 
@@ -39,6 +39,7 @@ export default function Page() {
   return (
     <>
       <div className="h-[100vh] bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+        <OutFolderTabs/>
         <PMTab UserId={userId} />
       </div> 
     </>
