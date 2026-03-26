@@ -42,7 +42,7 @@ interface User {
 }
 interface TopNavProps {
   onMenuClick?: () => void;
-  user?:User;
+  user: User | null | undefined;
 }
 
 export default function TopNav({ onMenuClick, user }: TopNavProps) {
