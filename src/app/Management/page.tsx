@@ -177,8 +177,7 @@ export default function ManagementDashboard() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <TopNav onMenuClick={() => setSidebarOpen(true)} />
-      
+      <TopNav onMenuClick={()=> setSidebarOpen(true)} userId={user?.userId} />
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
