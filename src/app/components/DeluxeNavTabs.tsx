@@ -61,7 +61,7 @@ const DeluxeNavTabs: React.FC = () => {
   const [avatar, setAvatar] = useState("");
   
   // Calculate total cart count
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const cartCount = cartItems.reduce((total:number, item:any) => total + item?.quantity, 0);
   
   const router = useRouter();
   const pathname = usePathname();
