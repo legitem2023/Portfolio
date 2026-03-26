@@ -4766,7 +4766,8 @@ upload3DModel: async (_: any, args: any) => {
         throw new Error('Cannot send message to yourself');
       }
 
-      return prisma.message.create({
+ 
+      const result = await prisma.message.create({
         data: {
           senderId,
           recipientId,
@@ -4781,6 +4782,17 @@ upload3DModel: async (_: any, args: any) => {
           replies: true
         }
       });
+
+   const notificationResult = await createNotification({
+          userId:recipientId,
+          type: NotificationType.ORDER_UPDATE,
+          title: "Message Received",
+          message: body,
+          link: `https://portfolio-xi-eight-92.vercel.app/Messaging?id=${recipientId}`,
+          isRead: false
+        });
+      return result;
+      
     },
 
     replyMessage: async (_: any, { input }: any, { userId }: any): Promise<any> => {
