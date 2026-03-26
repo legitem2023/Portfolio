@@ -32,15 +32,24 @@ interface Notification {
   };
 }
 
+interface User {
+  userId: string;
+  role: string;
+  name?: string;
+  email?: string;
+  phone: string; 
+  image?: string;
+}
 interface TopNavProps {
   onMenuClick?: () => void;
-  userId?: string;
+  user?:User;
 }
 
-export default function TopNav({ onMenuClick, userId }: TopNavProps) {
+export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const router = useRouter();
   const pathname = usePathname();
   const dispatch = useDispatch();
+  const [userId, setUserId] = useState(user.userId);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
