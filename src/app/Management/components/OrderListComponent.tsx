@@ -952,7 +952,7 @@ export default function OrderListComponent({
 
                     <div className="p-2 lg:p-6">
                       {/* Order info */}
-                      <div className="flex justify-between items-start mb-3 lg:mb-4">
+                      <div className="flex flex-col justify-between items-start mb-3 lg:mb-4">
                         <div>
                           <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
                             <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
