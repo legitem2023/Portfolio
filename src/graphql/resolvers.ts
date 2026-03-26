@@ -4785,7 +4785,7 @@ upload3DModel: async (_: any, args: any) => {
 
    const notificationResult = await createNotification({
           userId:recipientId,
-          type: NotificationType.ORDER_UPDATE,
+          type: NotificationType.SOCIAL,
           title: "Message Received",
           message: body,
           link: `https://portfolio-xi-eight-92.vercel.app/Messaging?id=${recipientId}`,
