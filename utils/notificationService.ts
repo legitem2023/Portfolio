@@ -8,7 +8,8 @@ export enum NotificationType {
   PAYMENT_CONFIRMATION = 'PAYMENT_CONFIRMATION',
   SHIPMENT = 'SHIPMENT',
   PROMOTIONAL = 'PROMOTIONAL',
-  SUPPORT = 'SUPPORT'
+  SUPPORT = 'SUPPORT',
+  SOCIAL = 'SOCIAL'
 }
 
 // Types based on your actual Notification schema - NO metadata
