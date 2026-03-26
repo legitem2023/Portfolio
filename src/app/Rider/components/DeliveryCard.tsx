@@ -18,7 +18,6 @@ import { useMutation } from '@apollo/client';
 import { ACCEPT_BY_RIDER, REJECT_BY_RIDER_MUTATION } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
-import { showToast } from '../../../../utils/toastify';
 
 interface DeliveryCardProps {
   delivery: Delivery;
@@ -48,11 +47,17 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   
   const payout = calculatePayout();
 
-  // Compute subtotal (from delivery.subtotal)
-  const subtotal = typeof delivery.subtotal === 'number' 
-    ? delivery.subtotal 
-    : parseFloat(delivery.subtotal) || 0;
+  // Calculate subtotal as sum of item price × quantity
+  const calculateSubtotal = () => {
+    if (!delivery.supplierItems) return 0;
+    return delivery.supplierItems.reduce((sum, item) => {
+      const price = item.price || 0;
+      const qty = item.quantity || 0;
+      return sum + (price * qty);
+    }, 0);
+  };
   
+  const subtotal = calculateSubtotal();
   const shipping = payout; // same as payout
   const grandTotal = (subtotal + shipping) * (1 + VAT_RATE);
 
@@ -203,24 +208,20 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
           <div className="bg-green-50 p-3 rounded-xl space-y-1">
             <div className="text-xl font-bold text-green-600">{formatPeso(payout)}</div>
             <p className="text-gray-500 text-xs">Total shipping payout</p>
-            {delivery.subtotal && (
-              <>
-                <div className="border-t border-green-100 pt-2 mt-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-medium">{formatPeso(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-gray-600">Shipping:</span>
-                    <span className="font-medium">{formatPeso(shipping)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm font-bold mt-1">
-                    <span className="text-gray-800">Grand Total (incl. VAT {VAT_RATE * 100}%):</span>
-                    <span className="text-green-700">{formatPeso(grandTotal)}</span>
-                  </div>
-                </div>
-              </>
-            )}
+            <div className="border-t border-green-100 pt-2 mt-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-600">Subtotal:</span>
+                <span className="font-medium">{formatPeso(subtotal)}</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-gray-600">Shipping:</span>
+                <span className="font-medium">{formatPeso(shipping)}</span>
+              </div>
+              <div className="flex justify-between text-sm font-bold mt-1">
+                <span className="text-gray-800">Grand Total (incl. VAT {VAT_RATE * 100}%):</span>
+                <span className="text-green-700">{formatPeso(grandTotal)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -404,4 +405,4 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       </div>
     </div>
   );
-}
+                          }
