@@ -11,7 +11,8 @@ import {
   Truck,
   Building2,
   Landmark,
-  DollarSign
+  DollarSign,
+  Tag
 } from "lucide-react";
 
 // GraphQL query (same as before)
@@ -467,6 +468,13 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                         </div>
                         
                         <div className="grid grid-cols-1 gap-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Tag className="w-4 h-4" />
+                              <span>Products</span>
+                            </div>
+                            <span className="text-sm font-semibold text-green-600">{formatCurrency(subtotal)}</span>
+                          </div>
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <Truck className="w-4 h-4" />
