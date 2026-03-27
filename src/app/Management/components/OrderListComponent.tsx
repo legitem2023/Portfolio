@@ -1107,39 +1107,7 @@ export default function OrderListComponent({
                                     <p className="text-xs text-gray-500 mt-0.5">
                                       Items: {supplier.items.length}
                                     </p>
-                                    {/*supplier.trackingNumbers.length > 0 && (
-                                      <div className="mt-2">
-                                        <p className="text-xs font-medium text-gray-600">Tracking Numbers:</p>
-                                        <div className="flex flex-wrap gap-1 mt-1">
-                                          {supplier.trackingNumbers.map((tn, idx) => (
-                                            <span key={idx} className="text-xs bg-white px-2 py-0.5 rounded border border-gray-200">
-                                              {tn}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    )*/}
                                   </div>
-                                  {/*<div className="text-right min-w-[120px]">
-                                    <div className="text-xs text-gray-500">Subtotal</div>
-                                    <div className="text-sm font-semibold text-gray-700">
-                                      {formatCurrency(supplier.subtotal)}
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">Shipping</div>
-                                    <div className="text-sm font-semibold text-blue-600">
-                                      {formatCurrency(supplier.totalShipping)}
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1">VAT (12%)</div>
-                                    <div className="text-sm font-semibold text-orange-600">
-                                      {formatCurrency(supplier.vat)}
-                                    </div>
-                                    <div className="border-t border-blue-200 mt-2 pt-2">
-                                      <div className="text-xs font-bold text-gray-700">Supplier Total</div>
-                                      <div className="text-base font-bold text-green-600">
-                                        {formatCurrency(supplier.grandTotal)}
-                                      </div>
-                                    </div>
-                                  </div>*/}
                                 </div>
                                 {supplier.totalDistance > 0 && (
                                   <div className="mt-2 text-xs text-gray-500">
