@@ -9,6 +9,7 @@ import { CREATE_POST } from './graphql/mutation';
 import { decryptToken } from '../../../utils/decryptToken';
 import { useInView } from 'react-intersection-observer';
 import ColdStartErrorUI from './ColdStartErrorUI';
+import { useAuth } from './hooks/useAuth';
 interface User {
   id: string;
   name: string;
@@ -35,10 +36,11 @@ interface Post {
 }
 
 const MessagesTab = () => {
+  const { user:ActiveDetails } = useAuth();
   const [page, setPage] = useState(1);
-  const [userId, setUserId] = useState("");
-  const [name, setName] = useState("");
-  const [avatar, setAvatar] = useState("");
+  const [userId, setUserId] = useState(ActiveDetails?.userId);
+  const [name, setName] = useState(ActiveDetails?.name);
+  const [avatar, setAvatar] = useState(ActiveDetails?.image || './NoImage.webp);
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
@@ -48,7 +50,7 @@ const MessagesTab = () => {
     rootMargin: '100px',
   });
 
-  useEffect(() => {
+  /*useEffect(() => {
     const getRole = async () => {
       try {
         const response = await fetch('/api/protected', {
@@ -72,7 +74,7 @@ const MessagesTab = () => {
       }
     };
     getRole();
-  }, []);
+  }, []);*/
 
   // Using GET_ALL_POSTS instead of GET_USER_FEED
   const { data, loading: postsLoading, error: postsError, fetchMore } = useQuery(GET_ALL_POSTS, {
