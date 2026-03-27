@@ -945,16 +945,16 @@ export default function OrderListComponent({
 
   // Print handler
   const handlePrintOrder = (order: Order) => {
-    if (!printContainerRef.current) return;
-    const printHtml = generateOrderPrintHTML(order);
-    printContainerRef.current.innerHTML = printHtml;
-    // Wait for content to be rendered
-    setTimeout(() => {
-      window.print();
-      // Clear after printing
-      printContainerRef.current!.innerHTML = '';
-    }, 100);
-  };
+  const printHtml = generateOrderPrintHTML(order);
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  if (printWindow) {
+    printWindow.document.write(printHtml);
+    printWindow.document.close();
+    printWindow.print();
+  } else {
+    alert('Please allow pop-ups to print orders.');
+  }
+};
 
   // Error state
   if (error) {
