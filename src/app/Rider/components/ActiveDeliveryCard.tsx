@@ -85,6 +85,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  // VAT rate from environment (default 0.12 if not set)
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
+
   // Calculate total payout as sum of individualShipping for all items
   const calculatePayout = () => {
     if (!delivery.supplierItems) return 0;
@@ -95,6 +98,23 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   };
   
   const payout = calculatePayout();
+
+  // Calculate subtotal as sum of item price × quantity
+  const calculateSubtotal = () => {
+    if (!delivery.supplierItems) return 0;
+    return delivery.supplierItems.reduce((sum, item) => {
+      const price = item.price || 0;
+      const qty = item.quantity || 0;
+      return sum + (price * qty);
+    }, 0);
+  };
+  
+  const subtotal = calculateSubtotal();
+  const shipping = payout; // same as payout
+
+  // Calculate VAT amount (not just rate) and grand total
+  const VAT = (VAT_RATE * subtotal);
+  const grandTotal = (subtotal + shipping + VAT);
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -506,12 +526,28 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
             </div>
             
-            <div className="bg-green-50 p-3 rounded-xl">
-              <div className="text-xl font-bold text-green-600 break-words">{formatPeso(payout)}</div>
-              <p className="text-gray-500 text-xs">Payout for this piece</p>
-              {delivery.subtotal && (
-                <p className="text-xs text-gray-400 mt-1">Subtotal: {delivery.subtotal}</p>
-              )}
+            {/* Updated payout section with full breakdown */}
+            <div className="bg-green-50 p-3 rounded-xl space-y-1">
+              <div className="text-xl font-bold text-green-600">{formatPeso(payout)}</div>
+              <p className="text-gray-500 text-xs">Total shipping payout</p>
+              <div className="border-t border-green-100 pt-2 mt-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">{formatPeso(subtotal)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">Shipping:</span>
+                  <span className="font-medium">{formatPeso(shipping)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-600">VAT ({VAT_RATE * 100}%):</span>
+                  <span className="font-medium">{formatPeso(vatAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm font-bold mt-1">
+                  <span className="text-gray-800">Grand Total:</span>
+                  <span className="text-green-700">{formatPeso(grandTotal)}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1098,4 +1134,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-  }
+      }
