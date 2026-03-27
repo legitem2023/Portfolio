@@ -1036,6 +1036,8 @@ type CreateVehicleTypeResponse {
   errors      :[Error!]
 }
   type Mutation {
+    remit(id:ID): Result
+    finishorder(id:ID): Result
     # Update a vehicle type by ID
     createVehicleType(input: CreateVehicleTypeInput): CreateVehicleTypeResponse  
     updateVehicleType(id:String,input: UpdateVehicleTypeInput): UpdateVehicleTypeResponse
