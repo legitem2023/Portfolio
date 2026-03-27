@@ -192,6 +192,7 @@ interface OrderPaginationInput {
 }
 
 interface RemittancePageProps {
+  initialSupplierId: string;
   isMobile?: boolean;
 }
 
@@ -336,7 +337,10 @@ const RemittanceTableShimmer = () => {
   );
 };
 
-export default function RemittancePage({ isMobile = false }: RemittancePageProps) {
+export default function RemittancePage({
+  initialSupplierId,
+  isMobile=false
+}:RemittancePageProps) {
   // State for pagination
   const [pagination, setPagination] = useState({
     page: 1,
@@ -346,7 +350,7 @@ export default function RemittancePage({ isMobile = false }: RemittancePageProps
   // Fetch delivered orders only
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
-      filter: { status: 'DELIVERED' },
+      filter: { status: 'DELIVERED', supplierId:initialSupplierId},
       pagination
     },
     fetchPolicy: 'network-only'
