@@ -22,7 +22,8 @@ import {
   Calendar,
   Bike,
   TrendingUp,
-  Receipt
+  Receipt,
+  QrCode
 } from "lucide-react";
 
 // GraphQL Query - Updated to include shipping fields
