@@ -32,7 +32,7 @@ const DeluxeHomePage: React.FC = () => {
 
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
-  useEffect(() => {
+ /* useEffect(() => {
     if (categoryData?.categories) {
       const categoriesData = categoryData.categories.map((data: any) => ({
         id: data.id,
@@ -42,7 +42,7 @@ const DeluxeHomePage: React.FC = () => {
       }));
       setCategories(categoriesData);
     }
-    
+    const products = productData?.products?.items || [];
     if (productData?.products?.items) {
       // Transform API response to match your Product type
     // console.log("->",productData?.products?.items);
@@ -58,8 +58,8 @@ const DeluxeHomePage: React.FC = () => {
       }));
       setFeaturedProducts(productsData);
     }
-  }, [categoryData, productData]);
-
+  }, [categoryData, productData]);*/
+const products = productData?.products?.items || [];
   // Complete Hero carousel data
   const heroSlides = [
     {
@@ -200,8 +200,8 @@ const DeluxeHomePage: React.FC = () => {
         {/* Featured Products Section */}
           {productLoading ? (
             <ProductThumbnailsShimmer count={8} />
-            ) : featuredProducts.length > 0 ? (
-            <ProductThumbnails products={featuredProducts} />
+            ) : products.length > 0 ? (
+            <ProductThumbnails products={products} />
             ) : (
                 <div className="text-center py-12 text-gray-500">
                   No products found
