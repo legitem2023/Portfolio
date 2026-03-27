@@ -192,9 +192,9 @@ const MessagesTab = () => {
         {ActiveLoading?<DeluxeMessageCardLoading />:(
         <PostInput
           user={{
-            id: ActiveDetails?.userId,
-            name: ActiveDetails?.name,
-            avatar: ActiveDetails?.image
+            id: ActiveDetails?.userId as string,
+            name: ActiveDetails?.name as string,
+            avatar: ActiveDetails?.image as string
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
