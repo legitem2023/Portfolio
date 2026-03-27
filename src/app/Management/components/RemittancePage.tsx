@@ -12,7 +12,8 @@ import {
   Building2,
   Landmark,
   DollarSign,
-  Tag
+  Tag,
+  PhilippinePeso
 } from "lucide-react";
 
 // GraphQL query (same as before)
@@ -502,7 +503,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                         
                         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
                           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                            <DollarSign className="w-4 h-4" />
+                            <PhilippinePeso className="w-4 h-4" />
                             <span>Remittance</span>
                           </div>
                           <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
