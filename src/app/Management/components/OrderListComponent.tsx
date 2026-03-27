@@ -746,10 +746,6 @@ export default function OrderListComponent({
               <div class="info-value">${formatDateForPrint(order.createdAt)}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Status:</div>
-              <div class="info-value">${order.status}</div>
-            </div>
-            <div class="info-item">
               <div class="info-label">Customer:</div>
               <div class="info-value">${order.user.firstName} ${order.user.lastName || ''}</div>
             </div>
@@ -1195,25 +1191,25 @@ export default function OrderListComponent({
                                           </span>
                                         </div>
                                       )}
-                                      {item.trackingNumber && (
+                                      {/*item.trackingNumber && (
                                         <div className="flex items-center gap-1">
                                           <Receipt size={10} className="text-gray-500" />
                                           <span className="text-xs text-gray-600">
                                             Tracking: {item.trackingNumber}
                                           </span>
                                         </div>
-                                      )}
+                                      )*/}
                                     </div>
                                   )}
 
-                                  {item.supplierId && (
+                                  {/*item.supplierId && (
                                     <div className="flex items-center gap-1 mt-1">
                                       <Building size={10} className="text-gray-400" />
                                       <span className="text-xs text-gray-500">
                                         Supplier: {getUserFromItem(item.supplier)?.firstName || item.supplierId}
                                       </span>
                                     </div>
-                                  )}
+                                  )*/}
                                 </div>
                               </div>
                               
