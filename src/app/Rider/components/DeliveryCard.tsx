@@ -220,8 +220,8 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
                 <span className="font-medium">{formatPeso(shipping)}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-600">VAT:({VAT * 100})%:</span>
-                <span className="font-medium">{VAT}</span>
+                <span className="text-gray-600">VAT({VAT_RATE * 100})%:</span>
+                <span className="font-medium">{formatPeso(VAT)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold mt-1">
                 <span className="text-gray-800">Grand Total (incl. VAT):</span>
