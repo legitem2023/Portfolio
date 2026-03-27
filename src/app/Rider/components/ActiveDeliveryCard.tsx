@@ -91,7 +91,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   // Calculate total payout as sum of individualShipping for all items
   const calculatePayout = () => {
     if (!delivery.supplierItems) return 0;
-    
     return delivery.supplierItems.reduce((sum, item) => {
       return sum + (item.individualShipping || 0);
     }, 0);
@@ -112,9 +111,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const subtotal = calculateSubtotal();
   const shipping = payout; // same as payout
 
-  // Calculate VAT amount (not just rate) and grand total
-  const VAT = (VAT_RATE * subtotal);
-  const grandTotal = (subtotal + shipping + VAT);
+  // CORRECT VAT calculation (matches original DeliveryCard)
+  const VAT = VAT_RATE * subtotal;
+  const grandTotal = subtotal + shipping + VAT;
 
   const [updateOrderStatus, { loading: mutationLoading }] = useMutation(UPDATE_ORDER_STATUS, {
     onCompleted: (data) => {
@@ -526,7 +525,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               </div>
             </div>
             
-            {/* Updated payout section with full breakdown */}
+            {/* Payout section with correct VAT calculation */}
             <div className="bg-green-50 p-3 rounded-xl space-y-1">
               <div className="text-xl font-bold text-green-600">{formatPeso(payout)}</div>
               <p className="text-gray-500 text-xs">Total shipping payout</p>
@@ -541,10 +540,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-600">VAT ({VAT_RATE * 100}%):</span>
-                  <span className="font-medium">{formatPeso(vatAmount)}</span>
+                  <span className="font-medium">{formatPeso(VAT)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold mt-1">
-                  <span className="text-gray-800">Grand Total:</span>
+                  <span className="text-gray-800">Grand Total (incl. VAT):</span>
                   <span className="text-green-700">{formatPeso(grandTotal)}</span>
                 </div>
               </div>
@@ -1134,4 +1133,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-      }
+}
