@@ -38,9 +38,9 @@ interface Post {
 const MessagesTab = () => {
   const { user:ActiveDetails } = useAuth();
   const [page, setPage] = useState(1);
-  const [userId, setUserId] = useState(ActiveDetails?.userId);
-  const [name, setName] = useState(ActiveDetails?.name);
-  const [avatar, setAvatar] = useState(ActiveDetails?.image || './NoImage.webp');
+//  const [userId, setUserId] = useState(ActiveDetails?.userId);
+ // const [name, setName] = useState(ActiveDetails?.name);
+ // const [avatar, setAvatar] = useState(ActiveDetails?.image || './NoImage.webp');
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
@@ -191,9 +191,9 @@ const MessagesTab = () => {
       <div className="max-w-2xl mx-auto">
         <PostInput
           user={{
-            id: userId,
-            name: name,
-            avatar: avatar
+            id: ActiveDetails?.userId,
+            name: ActiveDetails?.name,
+            avatar: ActiveDetails?.image
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
