@@ -203,6 +203,7 @@ interface OrderPaginationInput {
 }
 
 interface OrderListComponentProps {
+  initialSupplierId?: string;
   initialStatus?: OrderStatus;
   isMobile?: boolean;
 }
@@ -421,6 +422,7 @@ const OrderCardShimmer = () => {
 };
 
 export default function OrderListComponent({ 
+  initialSupplierId,
   initialStatus,
   isMobile = false
 }: OrderListComponentProps) {
