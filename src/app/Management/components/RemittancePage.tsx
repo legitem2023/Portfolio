@@ -471,7 +471,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <Tag className="w-4 h-4" />
-                              <span>Products</span>
+                              <span>Sub Total</span>
                             </div>
                             <span className="text-sm font-semibold text-green-600">{formatCurrency(subtotal)}</span>
                           </div>
@@ -486,7 +486,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                           <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                               <Building2 className="w-4 h-4" />
-                              <span>VendorCity Earnings (5%)</span>
+                              <span>VC Earnings (5%)</span>
                             </div>
                             <span className="text-sm font-semibold text-blue-600">{formatCurrency(vendorCityEarnings)}</span>
                           </div>
@@ -504,6 +504,12 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                             <DollarSign className="w-4 h-4" />
                             <span>Remittance</span>
+                          </div>
+                          <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
+                        </div>
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <button>Remit</button>
                           </div>
                           <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
                         </div>
