@@ -13,7 +13,8 @@ import {
   Landmark,
   DollarSign,
   Tag,
-  PhilippinePeso
+  PhilippinePeso,
+  Activity
 } from "lucide-react";
 
 // GraphQL query (same as before)
@@ -510,9 +511,12 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                         </div>
                         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
                           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                            <button>Remit</button>
+                            <Activity className="w-4 h-4" />
+                            <span>Action</span>
                           </div>
-                          <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
+                          <span className="text-base font-bold text-purple-700">
+                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Remit</button>
+                          </span>
                         </div>
                       </div>
                     </div>
