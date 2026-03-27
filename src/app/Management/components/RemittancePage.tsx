@@ -6,13 +6,11 @@ import {
   Package, 
   AlertCircle, 
   RefreshCw,
-  TrendingUp,
   Receipt,
-  QrCode,
-  Printer
+  QrCode
 } from "lucide-react";
 
-// Reuse the same GraphQL query (but filter by status DELIVERED)
+// GraphQL query with supplierId filter (if schema supports it)
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -105,7 +103,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types (reused from the original component)
+// Types (unchanged from original)
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface Address {
@@ -184,6 +182,7 @@ interface OrderListResponse {
 
 interface OrderFilterInput {
   status?: OrderStatus;
+  supplierId?: string; // added supplierId filter
 }
 
 interface OrderPaginationInput {
@@ -193,7 +192,6 @@ interface OrderPaginationInput {
 
 interface RemittancePageProps {
   initialSupplierId?: string;
-  isMobile?: boolean;
 }
 
 // VAT rate (12% in Philippines)
@@ -215,7 +213,7 @@ const getUserFromItem = (user: User | User[] | undefined): User | undefined => {
   return Array.isArray(user) ? user[0] : user;
 };
 
-// Helper to calculate supplier totals (reused)
+// Helper to calculate supplier totals
 interface SupplierTotal {
   supplierId: string;
   supplierName: string;
@@ -305,30 +303,54 @@ const getTrackingNumber = (order: Order): string => {
   return order.items[0]?.trackingNumber || 'N/A';
 };
 
-// Shimmer loading component for the table
+// Shimmer loading component
 const RemittanceTableShimmer = () => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200 rounded-lg">
         <thead className="bg-gray-50">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grand Total</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rider Earnings</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">VendorCity Earnings (5%)</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TAX (12%)</th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remittance</th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Tracking #
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Grand Total
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Rider Earnings
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              VendorCity Earnings (5%)
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              TAX (12%)
+            </th>
+            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Remittance
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
           {[1, 2, 3, 4, 5].map((i) => (
             <tr key={i} className="animate-pulse">
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-24"></div></td>
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
-              <td className="px-4 py-3"><div className="h-4 bg-gray-200 rounded w-20"></div></td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-20 sm:w-24"></div>
+              </td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
+              </td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
+              </td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
+              </td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
+              </td>
+              <td className="px-3 sm:px-4 py-2 sm:py-3">
+                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -337,20 +359,23 @@ const RemittanceTableShimmer = () => {
   );
 };
 
-export default function RemittancePage({
-  initialSupplierId,
-  isMobile=false
-}:RemittancePageProps) {
+export default function RemittancePage({ initialSupplierId }: RemittancePageProps) {
   // State for pagination
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: 10
   });
 
-  // Fetch delivered orders only
+  // Build filter object with supplierId if provided
+  const filter: OrderFilterInput = { status: 'DELIVERED' };
+  if (initialSupplierId) {
+    filter.supplierId = initialSupplierId;
+  }
+
+  // Fetch delivered orders, optionally filtered by supplier
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
-      filter: { status: 'DELIVERED', supplierId:initialSupplierId},
+      filter,
       pagination
     },
     fetchPolicy: 'network-only'
@@ -379,10 +404,8 @@ export default function RemittancePage({
     return (
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center">
-            <div className="text-red-500 mr-0 sm:mr-3 mb-2 sm:mb-0">
-              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
             <div>
               <h3 className="text-base sm:text-lg font-medium text-red-800">Failed to load remittance data</h3>
               <p className="text-sm sm:text-base text-red-700 mt-1">{error.message}</p>
@@ -398,13 +421,16 @@ export default function RemittancePage({
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-            <Receipt size={isMobile ? 20 : 24} className="text-green-600" />
+            <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
             <span>Remittances</span>
           </h1>
-          <p className="text-sm text-gray-600">Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts</p>
+          <p className="text-sm text-gray-600">
+            Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts
+            {initialSupplierId && ' (filtered by supplier)'}
+          </p>
         </div>
         <button 
           onClick={handleRefresh}
@@ -420,9 +446,9 @@ export default function RemittancePage({
 
       {/* No data state */}
       {!loading && hasNoData && (
-        <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
-          <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Delivered Orders</h3>
+        <div className="bg-gray-50 rounded-lg p-6 sm:p-8 lg:p-12 text-center border border-gray-200">
+          <Package className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-300 mb-4" />
+          <h3 className="text-lg sm:text-xl font-semibold text-gray-500 mb-2">No Delivered Orders</h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
             There are no delivered orders to process remittances at this moment.
           </p>
@@ -436,22 +462,22 @@ export default function RemittancePage({
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Tracking #
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Grand Total
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Rider Earnings
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     VendorCity Earnings (5%)
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     TAX (12%)
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Remittance
                   </th>
                 </tr>
@@ -467,30 +493,42 @@ export default function RemittancePage({
                   const riderEarnings = totals.totalShipping;
                   const vendorCityEarnings = subtotal * 0.05; // 5% of subtotal
                   const taxAmount = totals.totalVAT; // VAT (12% of subtotal)
-                  const remittance = subtotal - vendorCityEarnings + taxAmount;
-                  
+                  const remittance = subtotal - vendorCityEarnings;
+                  const grandtotal = subtotal + totalShipping + taxAmount;
                   return (
                     <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <QrCode size={16} className="text-gray-400" />
-                          <span className="text-sm font-mono text-gray-900">{trackingNumber}</span>
+                          <QrCode className="w-4 h-4 text-gray-400" />
+                          <span className="text-xs sm:text-sm font-mono text-gray-900 max-w-[100px] truncate">
+                            {trackingNumber}
+                          </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-semibold text-gray-900">{formatCurrency(totals.grandTotal)}</span>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm font-semibold text-gray-900">
+                          {formatCurrency(grandtotal)}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-green-600">{formatCurrency(riderEarnings)}</span>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm text-green-600">
+                          {formatCurrency(riderEarnings)}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-blue-600">{formatCurrency(vendorCityEarnings)}</span>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm text-blue-600">
+                          {formatCurrency(vendorCityEarnings)}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-orange-600">{formatCurrency(taxAmount)}</span>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm text-orange-600">
+                          {formatCurrency(taxAmount)}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-bold text-purple-700">{formatCurrency(remittance)}</span>
+                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
+                        <span className="text-xs sm:text-sm font-bold text-purple-700">
+                          {formatCurrency(remittance)}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -501,8 +539,8 @@ export default function RemittancePage({
 
           {/* Pagination */}
           {paginationInfo && paginationInfo.totalPages > 1 && (
-            <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-2 order-2 sm:order-1">
+            <div className="mt-6 flex flex-wrap justify-between items-center gap-4">
+              <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm text-gray-600">Show:</span>
                 <select
                   value={pagination.pageSize}
@@ -516,11 +554,11 @@ export default function RemittancePage({
                 </select>
               </div>
 
-              <div className="text-xs sm:text-sm text-gray-600 order-1 sm:order-2">
+              <div className="text-xs sm:text-sm text-gray-600">
                 Page {paginationInfo.page} of {paginationInfo.totalPages}
               </div>
 
-              <div className="flex gap-2 order-3">
+              <div className="flex gap-2">
                 <button
                   onClick={() => handlePageChange(paginationInfo.page - 1)}         
                   disabled={paginationInfo.page === 1}
@@ -551,4 +589,4 @@ export default function RemittancePage({
       )}
     </div>
   );
-}
+      }
