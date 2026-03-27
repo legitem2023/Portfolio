@@ -1114,11 +1114,6 @@ export default function OrderListComponent({
                                     </p>
                                   </div>
                                 </div>
-                                {supplier.totalDistance > 0 && (
-                                  <div className="mt-2 text-xs text-gray-500">
-                                    Total Distance: {supplier.totalDistance.toFixed(2)} km
-                                  </div>
-                                )}
                               </div>
                             ))}
                           </div>
