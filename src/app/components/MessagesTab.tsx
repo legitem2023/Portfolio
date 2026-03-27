@@ -113,7 +113,7 @@ const MessagesTab = () => {
       images: images.length > 0 ? images : undefined,
       taggedUsers: taggedUsers,
       privacy: 'PUBLIC',
-      userId: userId
+      userId: ActiveDetails?.userId
     };
 
     try {
