@@ -10,6 +10,7 @@ import CategoryPage from '../CategoryPage';
 import FeaturedProducts from './FeaturedProducts';
 import VisitorCounter from '../VisitorCounter';
 import ProductThumbnails from '../ProductThumbnails';
+import ProductThumbnailsShimmer from '../ProductThumbnailsShimmer';
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categories, setCategories] = useState<category[]>([]);
@@ -197,9 +198,15 @@ const DeluxeHomePage: React.FC = () => {
         <CategoryPage />
         
         {/* Featured Products Section */}
-        <ProductThumbnails 
-          products={featuredProducts} 
-        />
+          {productLoading ? (
+            <ProductThumbnailsShimmer count={queryVariables.limit} />
+            ) : featuredProducts.length > 0 ? (
+            <ProductThumbnails products={featuredProducts} />
+            ) : (
+                <div className="text-center py-12 text-gray-500">
+                  No products found for {debouncedSearch}
+                </div>
+        )}
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
         {/* 
         <section className="py-16 bg-gray-50">
