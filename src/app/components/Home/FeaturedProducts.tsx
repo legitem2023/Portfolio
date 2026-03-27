@@ -1,18 +1,19 @@
 // components/FeaturedProducts.tsx
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-
 import Image from 'next/image';
 import { showToast } from '../../../../utils/toastify';
 import { Product } from '../../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
-// Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/pagination';
 import { Heart, Star } from 'lucide-react';
 import CategoryShimmer from '../CategoryShimmer';
 import ProductThumbnailsShimmer from "../ProductThumbnailsShimmer";
+import QuickViewModal from '../QuickViewModal';              // Import Quick View Modal
+import { useAuth } from '../hooks/useAuth';                  // Authentication hook
+import { addToCart } from '../../../../Redux/cartSlice';       // Redux action (optional)
 
 interface FeaturedProductsProps {
   products: Product[];
@@ -38,19 +39,60 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
-
+  const { user } = useAuth(); // Get current user (if needed)
 
   // Helper function to get unique colors from variants
-/*  const getUniqueColors = (variants: Product['variants']) => {
+  const getUniqueColors = (variants: Product['variants']) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
     return Array.from(new Set(colors));
-  };*/
-console.log(products);
+  };
+
+  // Quick View handlers
+  const handleQuickView = (product: Product) => {
+    setSelectedProduct(product);
+    setIsQuickViewOpen(true);
+  };
+
+  const handleCloseQuickView = () => {
+    setIsQuickViewOpen(false);
+    setTimeout(() => setSelectedProduct(null), 300);
+  };
+
+  // Add to Cart handler (optional – uncomment when ready)
+  const handleAddToCart = (product: Product) => {
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      onSale: product.onSale,
+      isNew: product.isNew,
+      isFeatured: product.isFeatured,
+      originalPrice: product.originalPrice,
+      rating: product.rating,
+      reviewCount: product.reviewCount,
+      image: product.image,
+      colors: product.colors,
+      description: product.description,
+      productCode: product.productCode,
+      category: product.category,
+      sku: product.sku,
+      variants: product.variants,
+      userId: user?.userId,
+      quantity: 1,
+      color: product.colors,
+      size: product.size,
+    };
+    // dispatch(addToCart(cartItem));  // Uncomment when Redux slice is ready
+    showToast('Added to Cart', 'success');
+  };
+
+  console.log(products); // optional logging
+
   return (
     <div className="py-2 px-2 bg-violet-50">
       <div className="container mx-auto">
         <div className="text-left mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>  
+          <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
         </div>
         {loading ? (
           <ProductThumbnailsShimmer count={4} />
@@ -58,15 +100,15 @@ console.log(products);
           <>
             <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
               {products.map((product) => {
-             //   const uniqueColors = getUniqueColors(product.variants);
+                const uniqueColors = getUniqueColors(product.variants);
                 
                 return (
                   <div 
                     key={product.id} 
                     className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
                     style={{
-                      border:'solid 1px transparent',
-                      borderRadius:'1px',
+                      border: 'solid 1px transparent',
+                      borderRadius: '1px',
                       background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
                       backdropFilter: 'blur(3px)',
                       WebkitBackdropFilter: 'blur(3px)'
@@ -122,7 +164,7 @@ console.log(products);
                                   <Image
                                     height={400}
                                     width={400}
-                                    
+                                    onClick={() => handleQuickView(product)}
                                     src={image || '/NoImage.webp'}
                                     alt={product.name}
                                     quality={25}
@@ -136,7 +178,7 @@ console.log(products);
                           <Image
                             height={400}
                             width={400}
-                            
+                            onClick={() => handleQuickView(product)}
                             src={product.image || '/NoImage.webp'}
                             alt={product.name}
                             quality={25}
@@ -144,9 +186,14 @@ console.log(products);
                           />
                         )}
                         
-                        {/* Quick View Button */}
+                        {/* Quick View Overlay Button */}
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                          
+                          <button 
+                            onClick={() => handleQuickView(product)} 
+                            className="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 bg-white text-gray-900 font-medium px-2 py-1 text-[10px] xs:text-xs rounded-md"
+                          >
+                            Quick View
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -180,7 +227,7 @@ console.log(products);
                         </div>
                       </div>
                       
-                      {/* Price */}
+                      {/* Price & Add to Cart Button */}
                       <div className="flex items-center justify-between mt-auto">
                         <div className="flex items-center space-x-1">
                           <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
@@ -193,11 +240,19 @@ console.log(products);
                           )}
                         </div>
                         
-                        
+                        {/* Add to Cart Button (uncomment when ready) */}
+                        <button 
+                          className="bg-violet-200 hover:bg-violet-300 text-white p-1 xs:p-1.5 sm:p-2 rounded-full transition-colors flex-shrink-0"
+                          onClick={() => handleAddToCart(product)}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                        </button>
                       </div>
                       
                       {/* Color Options */}
-                      {/*uniqueColors.length > 0 && (
+                      {uniqueColors.length > 0 && (
                         <div className="mt-1 sm:mt-2 flex items-center space-x-1">
                           <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                           <div className="flex space-x-0.5 xs:space-x-1">
@@ -213,15 +268,24 @@ console.log(products);
                             )}
                           </div>
                         </div>
-                      )*/}
+                      )}
                     </div>
                   </div>
                 );
               })}
-            </div>    
+            </div>
           </>
         )}
       </div>
+
+      {/* Quick View Modal */}
+      <QuickViewModal 
+        product={selectedProduct} 
+        isOpen={isQuickViewOpen} 
+        onClose={handleCloseQuickView} 
+        onAddToCart={handleAddToCart}
+        userId={user?.userId}
+      />
     </div>
   );
 };
