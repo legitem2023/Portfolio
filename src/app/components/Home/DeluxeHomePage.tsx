@@ -193,17 +193,17 @@ const products = productData?.products?.items || [];
       <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
 
       <main>
-        <div className="text-left mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Visits</h2>
+        <div className="text-left mb-2 mt-2">
+          <h2 className="text-2xl font-bold text-gray-600">Visits</h2>
         </div>
         <VisitorCounter />
         {/*<HeroCarousel slides={heroSlides} />*/}
-        <div className="text-left mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Category</h2>
+        <div className="text-left mb-2 mt-2">
+          <h2 className="text-2xl font-bold text-gray-600">Category</h2>
         </div>
         <CategoryPage />
-        <div className="text-left mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Featured Products</h2>
+        <div className="text-left mb-2 mt-2">
+          <h2 className="text-2xl font-bold text-gray-600">Featured Products</h2>
         </div>
         {/* Featured Products Section */}
           {productLoading ? (
