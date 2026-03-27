@@ -1053,6 +1053,10 @@ export default function OrderListComponent({
                       {/* Order info */}
                       <div className="flex flex-col justify-between items-start mb-3 lg:mb-4">
                         <div>
+                          <div className="flex items-start gap-2">
+                            <QrCode size={isMobile ? 16 : 18} className="text-blue-500" />
+                            <h3 className="font-bold text-base break-words">{order.trackingNumber}</h3> 
+                          </div>      
                           <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
                             <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
                             <h3 className="font-bold text-base lg:text-xl">Order #{order.orderNumber}</h3>
