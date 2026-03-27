@@ -944,10 +944,6 @@ export default function OrderListComponent({
               <div class="info-value">${formatDateForPrint(order.createdAt)}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Status:</div>
-              <div class="info-value">${order.status}</div>
-            </div>
-            <div class="info-item">
               <div class="info-label">Customer:</div>
               <div class="info-value">${order.user.firstName} ${order.user.lastName || ''}</div>
             </div>
