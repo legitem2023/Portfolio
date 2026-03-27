@@ -388,7 +388,8 @@ model OrderItem {
   eta                  String?
   actualDeliveryTime   DateTime?
   ata                  String?
- 
+  remitted             Boolean? @default(false)
+  finished             Boolean? @default(false)
   @@index([supplierId])      // Vendor order dashboard
   @@index([riderId])         // Rider delivery dashboard  
   @@index([status])          // Order processing pipeline
