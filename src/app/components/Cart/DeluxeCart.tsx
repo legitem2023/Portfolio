@@ -1078,7 +1078,9 @@ const OrderSummary = ({
     );
   }
 
-  const totalWithShipping = total + shippingCost;
+  // FIX: Use the total prop directly (already includes shipping + tax)
+  // Previously it was total + shippingCost, causing duplication
+  const totalWithShipping = total;
 
   const renderNavigationButtons = () => {
     switch (currentStage) {
@@ -1317,7 +1319,7 @@ const DeluxeCart = () => {
     total + (item.price * item.quantity), 0
   );
   const tax = subtotal * VAT;
-  const total = subtotal + calculatedShippingCost + tax;
+  const total = subtotal + calculatedShippingCost + tax;   // total already includes shipping
 
   const scrollToTop = () => {
     window.scrollTo({
