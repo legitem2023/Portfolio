@@ -701,6 +701,9 @@ export default function OrderListComponent({
     const orderTotals = calculateOrderTotals(supplierTotals);
     const orderRiders = getOrderRiders(order.items);
 
+    // Get tracking number from the first item or fallback
+    const trackingNumber = order.items[0]?.trackingNumber || 'N/A';
+
     const formatDateForPrint = (dateString: string) => {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -739,14 +742,30 @@ export default function OrderListComponent({
               font-size: 9pt;
             }
             .print-header {
-              margin-bottom: 0.3cm;
+              display: flex;
+              align-items: center;
+              gap: 0.3cm;
+              margin-bottom: 0.4cm;
               padding-bottom: 0.2cm;
+              border-bottom: 1px solid #ccc;
+              text-align: left;
             }
-            .print-header h1 {
-              font-size: 12pt;
+            .qr-code img {
+              width: 0.8cm;
+              height: 0.8cm;
+              display: block;
+            }
+            .header-text {
+              flex: 1;
+            }
+            .header-text h1 {
               margin: 0;
+              font-size: 12pt;
+              color: #444;
             }
-            .print-header p {
+            .header-text p {
+              margin: 0.1cm 0 0;
+              color: #666;
               font-size: 9pt;
             }
             .section-title {
@@ -802,17 +821,28 @@ export default function OrderListComponent({
             }
           }
           .print-header {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 0.3cm;
             margin-bottom: 0.4cm;
             padding-bottom: 0.2cm;
             border-bottom: 1px solid #ccc;
+            text-align: left;
           }
-          .print-header h1 {
+          .qr-code img {
+            width: 0.8cm;
+            height: 0.8cm;
+            display: block;
+          }
+          .header-text {
+            flex: 1;
+          }
+          .header-text h1 {
             margin: 0;
-            font-size: 14pt;
+            font-size: 12pt;
             color: #444;
           }
-          .print-header p {
+          .header-text p {
             margin: 0.1cm 0 0;
             color: #666;
             font-size: 9pt;
@@ -897,8 +927,13 @@ export default function OrderListComponent({
       </head>
       <body>
         <div class="print-header">
-          <h1>Order Details</h1>
-          <p>Tracking #${order.items[0]?.trackingNumber}</p>
+          <div class="qr-code">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(trackingNumber)}" alt="QR Code" />
+          </div>
+          <div class="header-text">
+            <h1>Order Details</h1>
+            <p>Tracking #${trackingNumber}</p>
+          </div>
         </div>
 
         <div class="order-section">
@@ -1696,4 +1731,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-}
+  }
