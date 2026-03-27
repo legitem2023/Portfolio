@@ -59,8 +59,9 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   
   const subtotal = calculateSubtotal();
   const shipping = payout; // same as payout
-  
-  const grandTotal = (subtotal + shipping) * (VAT_RATE * 100);
+
+  const VAT = VAT_RATE * 100;
+  const grandTotal = (subtotal + shipping) + (VAT);
 
   const handleAccept = async () => {
     if (!user) {
