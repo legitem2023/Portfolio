@@ -695,7 +695,7 @@ export default function OrderListComponent({
     return Array.from(ridersMap.values());
   };
 
-  // Generate HTML for printing a specific order
+  // Generate HTML for printing a specific order - A6 Waybill size
   const generateOrderPrintHTML = (order: Order): string => {
     const supplierTotals = calculateSupplierTotals(order.items);
     const orderTotals = calculateOrderTotals(supplierTotals);
@@ -717,113 +717,181 @@ export default function OrderListComponent({
       <head>
         <title>Order #${order.orderNumber}</title>
         <style>
+          * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+          }
           body {
             font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
+            padding: 0.3cm;
             color: #333;
+            line-height: 1.3;
+          }
+          @media print {
+            @page {
+              size: A6;
+              margin: 0.4cm;
+            }
+            body {
+              margin: 0;
+              padding: 0.2cm;
+              font-size: 9pt;
+            }
+            .print-header {
+              margin-bottom: 0.3cm;
+              padding-bottom: 0.2cm;
+            }
+            .print-header h1 {
+              font-size: 12pt;
+              margin: 0;
+            }
+            .print-header p {
+              font-size: 9pt;
+            }
+            .section-title {
+              font-size: 10pt;
+              margin-bottom: 0.2cm;
+              padding-bottom: 0.1cm;
+            }
+            .info-grid {
+              margin-bottom: 0.2cm;
+            }
+            .info-item {
+              margin-bottom: 0.1cm;
+            }
+            .info-label {
+              font-weight: bold;
+              margin-bottom: 0.05cm;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 0.3cm;
+              font-size: 8pt;
+            }
+            th, td {
+              border: 1px solid #ccc;
+              padding: 0.1cm 0.15cm;
+            }
+            th {
+              background-color: #f0f0f0;
+            }
+            .totals-table {
+              width: 100%;
+              margin-top: 0.2cm;
+            }
+            .totals-table td {
+              border: none;
+              padding: 0.05cm 0;
+            }
+            .address-block {
+              padding: 0.1cm;
+              margin-top: 0.1cm;
+              font-size: 8pt;
+            }
+            .supplier-block, .rider-block {
+              margin-top: 0.2cm;
+              padding-left: 0.2cm;
+              border-left: 2px solid #007bff;
+            }
+            .footer {
+              font-size: 7pt;
+              margin-top: 0.3cm;
+              padding-top: 0.1cm;
+            }
           }
           .print-header {
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #ccc;
+            margin-bottom: 0.4cm;
+            padding-bottom: 0.2cm;
+            border-bottom: 1px solid #ccc;
           }
           .print-header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 14pt;
             color: #444;
           }
           .print-header p {
-            margin: 5px 0 0;
+            margin: 0.1cm 0 0;
             color: #666;
+            font-size: 9pt;
           }
           .order-section {
-            margin-bottom: 25px;
+            margin-bottom: 0.3cm;
             page-break-inside: avoid;
           }
           .section-title {
-            font-size: 18px;
+            font-size: 11pt;
             font-weight: bold;
-            margin-bottom: 10px;
-            padding-bottom: 5px;
+            margin-bottom: 0.2cm;
+            padding-bottom: 0.1cm;
             border-bottom: 1px solid #ddd;
             color: #555;
           }
           .info-grid {
             display: flex;
             flex-wrap: wrap;
-            margin-bottom: 15px;
+            margin-bottom: 0.2cm;
           }
           .info-item {
             flex: 1;
-            min-width: 200px;
-            margin-bottom: 10px;
+            min-width: 150px;
+            margin-bottom: 0.15cm;
           }
           .info-label {
             font-weight: bold;
             color: #666;
-            margin-bottom: 5px;
+            margin-bottom: 0.1cm;
+            font-size: 8.5pt;
           }
           .info-value {
             color: #333;
+            font-size: 9pt;
           }
           table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 0.4cm;
           }
           th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 0.15cm;
             text-align: left;
+            font-size: 8.5pt;
           }
           th {
             background-color: #f5f5f5;
-            font-weight: bold;
           }
           .totals-table {
-            width: 300px;
-            margin-left: auto;
-            margin-top: 20px;
+            width: 100%;
+            margin-left: 0;
+            margin-top: 0.2cm;
           }
           .totals-table td {
             border: none;
-            padding: 5px;
-          }
-          .totals-table tr:last-child td {
-            border-top: 2px solid #333;
-            font-weight: bold;
+            padding: 0.1cm 0;
+            font-size: 8.5pt;
           }
           .address-block {
             background-color: #f9f9f9;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
+            padding: 0.15cm;
+            border-radius: 2px;
+            margin-top: 0.15cm;
+            font-size: 8.5pt;
           }
           .supplier-block, .rider-block {
-            margin-top: 15px;
-            padding-left: 15px;
-            border-left: 3px solid #007bff;
-          }
-          .supplier-block:not(:first-child) {
-            margin-top: 20px;
+            margin-top: 0.2cm;
+            padding-left: 0.2cm;
+            border-left: 2px solid #007bff;
           }
           .footer {
-            margin-top: 30px;
+            margin-top: 0.3cm;
             text-align: center;
-            font-size: 12px;
+            font-size: 7.5pt;
             color: #999;
             border-top: 1px solid #eee;
-            padding-top: 20px;
-          }
-          @media print {
-            body {
-              padding: 0;
-            }
-            .no-print {
-              display: none;
-            }
+            padding-top: 0.2cm;
           }
         </style>
       </head>
@@ -874,8 +942,8 @@ export default function OrderListComponent({
               <tr>
                 <th>SKU</th>
                 <th>Product</th>
-                <th>Quantity</th>
-                <th>Unit Price</th>
+                <th>Qty</th>
+                <th>Price</th>
                 <th>Total</th>
               </tr>
             </thead>
@@ -898,13 +966,13 @@ export default function OrderListComponent({
           ${supplierTotals.map(supplier => `
             <div class="supplier-block">
               <div><strong>Supplier:</strong> ${supplier.supplierName} (ID: ${supplier.supplierId})</div>
-              <div><strong>Items in this shipment:</strong> ${supplier.items.length}</div>
+              <div><strong>Items:</strong> ${supplier.items.length}</div>
               <div><strong>Subtotal:</strong> ${formatCurrency(supplier.subtotal)}</div>
               <div><strong>Shipping:</strong> ${formatCurrency(supplier.totalShipping)}</div>
               <div><strong>VAT (12%):</strong> ${formatCurrency(supplier.vat)}</div>
               <div><strong>Grand Total:</strong> ${formatCurrency(supplier.grandTotal)}</div>
               ${supplier.trackingNumbers.length > 0 ? `
-                <div><strong>Tracking Number(s):</strong> ${supplier.trackingNumbers.join(', ')}</div>
+                <div><strong>Tracking:</strong> ${supplier.trackingNumbers.join(', ')}</div>
               ` : ''}
             </div>
           `).join('')}
@@ -918,7 +986,7 @@ export default function OrderListComponent({
                 <div><strong>Name:</strong> ${rider.firstName} ${rider.lastName || ''}</div>
                 <div><strong>Phone:</strong> ${rider.phone || 'N/A'}</div>
                 ${rider.addresses && rider.addresses[0] ? `
-                  <div><strong>Address:</strong> ${rider.addresses[0].street}, ${rider.addresses[0].city}, ${rider.addresses[0].state} ${rider.addresses[0].zipCode}</div>
+                  <div><strong>Address:</strong> ${rider.addresses[0].street}, ${rider.addresses[0].city}</div>
                 ` : ''}
               </div>
             `).join('')}
@@ -945,16 +1013,16 @@ export default function OrderListComponent({
 
   // Print handler
   const handlePrintOrder = (order: Order) => {
-  const printHtml = generateOrderPrintHTML(order);
-  const printWindow = window.open('', '_blank', 'width=800,height=600');
-  if (printWindow) {
-    printWindow.document.write(printHtml);
-    printWindow.document.close();
-    printWindow.print();
-  } else {
-    alert('Please allow pop-ups to print orders.');
-  }
-};
+    const printHtml = generateOrderPrintHTML(order);
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    if (printWindow) {
+      printWindow.document.write(printHtml);
+      printWindow.document.close();
+      printWindow.print();
+    } else {
+      alert('Please allow pop-ups to print orders.');
+    }
+  };
 
   // Error state
   if (error) {
