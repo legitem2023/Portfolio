@@ -1312,13 +1312,16 @@ export default function OrderListComponent({
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handlePrintOrder(order)}
-                            className="text-gray-600 hover:text-indigo-700 transition-colors"
-                            title="Print Order"
-                          >
-                            <Printer size={16} />
-                          </button>
+                          {/* Conditionally show print button only if status is not PENDING */}
+                          {order.status !== 'PENDING' && (
+                            <button
+                              onClick={() => handlePrintOrder(order)}
+                              className="text-gray-600 hover:text-indigo-700 transition-colors"
+                              title="Print Order"
+                            >
+                              <Printer size={16} />
+                            </button>
+                          )}
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusColors[order.status]}`}>
                             {order.items[0]?.status || order.status}
                           </span>
