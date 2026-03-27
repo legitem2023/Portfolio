@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes, FaPaintBrush } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
 import { CREATE_POST } from './graphql/mutation';
-// Define the GraphQL mutation
-
+import { USERS } from './graphql/queries'; // Adjust the path as needed
 
 interface User {
   id: string;
@@ -14,10 +13,10 @@ interface User {
 
 interface PostInputProps {
   user: User;
-  onPostSubmit?: (content: string, images: string[], taggedUsers: string[], background?: string ) => void;
+  onPostSubmit?: (content: string, images: string[], taggedUsers: string[], background?: string) => void;
   placeholder?: string;
   friends?: User[];
-  isLoading:boolean;
+  isLoading: boolean;
 }
 
 const PostInput: React.FC<PostInputProps> = ({ 
@@ -27,11 +26,27 @@ const PostInput: React.FC<PostInputProps> = ({
   friends = [],
   isLoading
 }) => {
-  const [createPost, { loading, error }] = useMutation(CREATE_POST,{
-    onCompleted:(e:any) =>{
+  // GraphQL mutation
+  const [createPost, { loading: mutationLoading, error: mutationError }] = useMutation(CREATE_POST, {
+    onCompleted: (e: any) => {
       console.log(e);
     }
   });
+
+  // Fetch all users if no friends prop provided
+  const { data: usersData, loading: usersLoading, error: usersError } = useQuery(USERS, {
+    skip: friends.length > 0
+  });
+
+  // Determine the user list for tagging
+  const availableUsers = friends.length > 0 ? friends : (usersData?.users || []);
+  const userList: User[] = availableUsers.map((u: any) => ({
+    id: u.id,
+    name: `${u.firstName} ${u.lastName}`,
+    avatar: u.avatar || '/NoImage.webp'
+  }));
+
+  // Component state
   const [content, setContent] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -44,10 +59,10 @@ const PostInput: React.FC<PostInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sample emojis for the emoji picker
+  // Sample emojis
   const emojis = ['😀', '😂', '😍', '🥰', '😎', '🤩', '🥳', '😭', '😡', '👍', '❤️', '🔥', '👏', '🎉'];
 
-  // Background options (colors and gradients)
+  // Background options
   const backgroundOptions = [
     { id: 'default', value: null, label: 'Default', color: '#ffffff' },
     { id: 'blue', value: 'linear-gradient(135deg, #3498db, #2c3e50)', label: 'Blue Gradient' },
@@ -62,6 +77,12 @@ const PostInput: React.FC<PostInputProps> = ({
     { id: 'solid-green', value: '#2ecc71', label: 'Solid Green' },
   ];
 
+  // Filter users for tagging
+  const filteredUsers = userList.filter(user =>
+    user.name.toLowerCase().includes(tagSearch.toLowerCase())
+  );
+
+  // Submit post
   const handleSubmit = async () => {
     if ((content.trim() || images.length > 0)) {
       try {
@@ -69,55 +90,45 @@ const PostInput: React.FC<PostInputProps> = ({
           content: content.trim(),
           background: selectedBackground || undefined,
           images: images.length > 0 ? images : undefined,
-          taggedUsers: taggedUsers?.map((user:any) => user.id),
-          privacy: 'PUBLIC' // Default privacy setting
+          taggedUsers: taggedUsers.map((user: any) => user.id),
+          privacy: 'PUBLIC'
         };
 
-        // Use the mutation if no custom onSubmit handler is provided
         if (!onPostSubmit) {
           const result = await createPost({
             variables: { input },
             update: (cache, { data }) => {
-              // Handle cache update if needed
               if (data?.createPost) {
-                // Optional: Update the cache with the new post
+                // Optional cache update
               }
             }
           });
-          
-          // Reset form after successful submission
           if (result.data) {
-            setContent('');
-            setImages([]);
-            setTaggedUsers([]);
-            setSelectedBackground(null);
-            if (textareaRef.current) {
-              textareaRef.current.style.height = 'auto';
-            }
+            resetForm();
           }
         } else {
-          // Use the custom onSubmit handler if provided
-          //onPostSubmit(content, images, taggedUsers, selectedBackground || undefined);
-          onPostSubmit(content,images,taggedUsers?.map((user:any) => user?.id),selectedBackground || undefined);
-          setContent('');
-          setImages([]);
-          setTaggedUsers([]);
-          setSelectedBackground(null);
-          if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
-          }
+          onPostSubmit(content, images, taggedUsers.map((user: any) => user.id), selectedBackground || undefined);
+          resetForm();
         }
       } catch (err) {
         console.error('Error creating post:', err);
-        // Handle error (show notification, etc.)
       }
     }
   };
 
+  const resetForm = () => {
+    setContent('');
+    setImages([]);
+    setTaggedUsers([]);
+    setSelectedBackground(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+  };
+
+  // Textarea handlers
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-    
-    // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
@@ -131,12 +142,12 @@ const PostInput: React.FC<PostInputProps> = ({
     }
   };
 
+  // Image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    // Reset background if user uploads images (Facebook behavior)
-    setSelectedBackground(null);
+    setSelectedBackground(null); // Reset background on image upload
 
     const newImages: string[] = [];
     for (let i = 0; i < files.length; i++) {
@@ -157,41 +168,34 @@ const PostInput: React.FC<PostInputProps> = ({
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Emoji
   const addEmoji = (emoji: string) => {
     setContent(prev => prev + emoji);
     setShowEmojiPicker(false);
   };
 
-  const handleTagUser = (user: User) => {
-    if (!taggedUsers.some(u => u.id === user.id)) {
-      setTaggedUsers(prev => [...prev, user]);
-      setContent(prev => prev + ` @${user.name}`);
+  // Tagging
+  const handleTagUser = (taggedUser: User) => {
+    if (!taggedUsers.some(u => u.id === taggedUser.id)) {
+      setTaggedUsers(prev => [...prev, taggedUser]);
+      setContent(prev => prev + ` @${taggedUser.name}`);
     }
     setShowTagging(false);
     setTagSearch('');
   };
 
+  // Backgrounds
   const handleBackgroundSelect = (background: string | null) => {
     setSelectedBackground(background);
     setShowBackgrounds(false);
-    
-    // If user selects a background, clear any images (Facebook behavior)
     if (background) {
       setImages([]);
     }
   };
 
-  const filteredFriends = friends.filter(friend => 
-    friend.name.toLowerCase().includes(tagSearch.toLowerCase())
-  );
-
-  // Determine text color based on background
   const getTextColor = () => {
     if (!selectedBackground) return '#050505';
-    
-    // For solid colors
     if (selectedBackground.startsWith('#')) {
-      // Simple brightness calculation
       const hex = selectedBackground.replace('#', '');
       const r = parseInt(hex.substr(0, 2), 16);
       const g = parseInt(hex.substr(2, 2), 16);
@@ -199,10 +203,11 @@ const PostInput: React.FC<PostInputProps> = ({
       const brightness = (r * 299 + g * 587 + b * 114) / 1000;
       return brightness > 128 ? '#050505' : '#ffffff';
     }
-    
-    // For gradients, assume they're dark
     return '#ffffff';
   };
+
+  // Combined loading state
+  const loading = mutationLoading || isLoading;
 
   return (
     <div className="post-input-container">
@@ -251,7 +256,12 @@ const PostInput: React.FC<PostInputProps> = ({
               className="tag-search-input"
             />
             <div className="tagging-results">
-              {filteredFriends.map(friend => (
+              {usersLoading && <div className="tagging-loading">Loading users...</div>}
+              {usersError && <div className="tagging-error">Failed to load users</div>}
+              {!usersLoading && !usersError && filteredUsers.length === 0 && (
+                <div className="tagging-empty">No users found</div>
+              )}
+              {filteredUsers.map(friend => (
                 <div 
                   key={friend.id} 
                   className="tagging-result-item"
@@ -382,9 +392,9 @@ const PostInput: React.FC<PostInputProps> = ({
           </button>
         </div>
 
-        {error && (
+        {mutationError && (
           <div className="error-message">
-            Error creating post: {error.message}
+            Error creating post: {mutationError.message}
           </div>
         )}
       </div>
@@ -393,7 +403,7 @@ const PostInput: React.FC<PostInputProps> = ({
         .post-input-container {
           width: 100%;
           max-width: 680px;
-          margin-bottom:0.5rem;
+          margin-bottom: 0.5rem;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
         
@@ -527,6 +537,18 @@ const PostInput: React.FC<PostInputProps> = ({
           border-radius: 50%;
           object-fit: cover;
           margin-right: 10px;
+        }
+        
+        .tagging-loading,
+        .tagging-error,
+        .tagging-empty {
+          padding: 8px;
+          text-align: center;
+          color: #65676b;
+        }
+        
+        .tagging-error {
+          color: #f3425f;
         }
         
         .backgrounds-container {
