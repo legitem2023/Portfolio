@@ -194,16 +194,16 @@ const products = productData?.products?.items || [];
 
       <main>
         <div className="text-left m-2">
-          <h2 className="text-2xl font-bold text-gray-400">Visits</h2>
+          <h2 className="text-1xl font-bold text-gray-500">Visits</h2>
         </div>
         <VisitorCounter />
         {/*<HeroCarousel slides={heroSlides} />*/}
         <div className="text-left m-2">
-          <h2 className="text-2xl font-bold text-gray-400">Category</h2>
+          <h2 className="text-1xl font-bold text-gray-500">Category</h2>
         </div>
         <CategoryPage />
         <div className="text-left m-2">
-          <h2 className="text-2xl font-bold text-gray-400">Featured Products</h2>
+          <h2 className="text-1xl font-bold text-gray-500">Featured Products</h2>
         </div>
         {/* Featured Products Section */}
           {productLoading ? (
