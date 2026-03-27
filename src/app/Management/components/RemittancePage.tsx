@@ -7,10 +7,14 @@ import {
   AlertCircle, 
   RefreshCw,
   Receipt,
-  QrCode
+  QrCode,
+  Truck,
+  Building2,
+  Landmark,
+  DollarSign
 } from "lucide-react";
 
-// GraphQL query with supplierId filter (if schema supports it)
+// GraphQL query (same as before)
 const ORDER_LIST_QUERY = gql`
   query OrderList(
     $filter: OrderFilterInput
@@ -103,7 +107,7 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
-// Types (unchanged from original)
+// Types (unchanged)
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
 
 interface Address {
@@ -182,7 +186,7 @@ interface OrderListResponse {
 
 interface OrderFilterInput {
   status?: OrderStatus;
-  supplierId?: string; // added supplierId filter
+  supplierId?: string;
 }
 
 interface OrderPaginationInput {
@@ -303,58 +307,25 @@ const getTrackingNumber = (order: Order): string => {
   return order.items[0]?.trackingNumber || 'N/A';
 };
 
-// Shimmer loading component
-const RemittanceTableShimmer = () => {
+// Card Shimmer Loading
+const CardShimmer = () => {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Tracking #
-            </th>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Grand Total
-            </th>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Rider Earnings
-            </th>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              VendorCity Earnings (5%)
-            </th>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              TAX (12%)
-            </th>
-            <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Remittance
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <tr key={i} className="animate-pulse">
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-20 sm:w-24"></div>
-              </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
-              </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
-              </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
-              </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
-              </td>
-              <td className="px-3 sm:px-4 py-2 sm:py-3">
-                <div className="h-4 bg-gray-200 rounded w-16 sm:w-20"></div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm animate-pulse">
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-5 bg-gray-200 rounded w-24"></div>
+            <div className="h-4 bg-gray-200 rounded w-16"></div>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between"><div className="h-4 bg-gray-200 rounded w-20"></div><div className="h-4 bg-gray-200 rounded w-16"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-gray-200 rounded w-20"></div><div className="h-4 bg-gray-200 rounded w-16"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-gray-200 rounded w-20"></div><div className="h-4 bg-gray-200 rounded w-16"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-gray-200 rounded w-20"></div><div className="h-4 bg-gray-200 rounded w-16"></div></div>
+            <div className="flex justify-between"><div className="h-4 bg-gray-200 rounded w-20"></div><div className="h-4 bg-gray-200 rounded w-16"></div></div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
@@ -385,7 +356,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
   const orders: Order[] = orderData?.orders || [];
   const paginationInfo = orderData?.pagination;
 
-  // Filter orders that have items (should all have items, but safe)
+  // Filter orders that have items
   const validOrders = orders.filter(order => order.items.length > 0);
 
   const handleRefresh = () => {
@@ -400,89 +371,64 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
     setPagination(prev => ({ ...prev, pageSize, page: 1 }));
   };
 
-  if (error) {
-    return (
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
-            <div>
-              <h3 className="text-base sm:text-lg font-medium text-red-800">Failed to load remittance data</h3>
-              <p className="text-sm sm:text-base text-red-700 mt-1">{error.message}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const hasNoData = !loading && validOrders.length === 0;
-
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-            <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-            <span>Remittances</span>
-          </h1>
-          <p className="text-sm text-gray-600">
-            Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts
-            {initialSupplierId && ' (filtered by supplier)'}
-          </p>
+      {/* Card wrapper */}
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Header section */}
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+              <span>Remittances</span>
+            </h1>
+            <p className="text-sm text-gray-600">
+              Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts
+              {initialSupplierId && ' (filtered by supplier)'}
+            </p>
+          </div>
+          <button 
+            onClick={handleRefresh}
+            className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
+            title="Refresh"
+          >
+            <RefreshCw size={18} />
+          </button>
         </div>
-        <button 
-          onClick={handleRefresh}
-          className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
-          title="Refresh"
-        >
-          <RefreshCw size={18} />
-        </button>
-      </div>
 
-      {/* Loading state */}
-      {loading && <RemittanceTableShimmer />}
+        {/* Content area with padding */}
+        <div className="p-4 sm:p-6">
+          {/* Error state */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+                <div>
+                  <h3 className="text-base sm:text-lg font-medium text-red-800">Failed to load remittance data</h3>
+                  <p className="text-sm sm:text-base text-red-700 mt-1">{error.message}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* No data state */}
-      {!loading && hasNoData && (
-        <div className="bg-gray-50 rounded-lg p-6 sm:p-8 lg:p-12 text-center border border-gray-200">
-          <Package className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-500 mb-2">No Delivered Orders</h3>
-          <p className="text-sm text-gray-400 max-w-md mx-auto">
-            There are no delivered orders to process remittances at this moment.
-          </p>
-        </div>
-      )}
+          {/* Loading state */}
+          {loading && !error && <CardShimmer />}
 
-      {/* Data table */}
-      {!loading && !hasNoData && (
-        <>
-          <div className="overflow-x-auto bg-white rounded-lg shadow border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tracking #
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Grand Total
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rider Earnings
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    VendorCity Earnings (5%)
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    TAX (12%)
-                  </th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Remittance
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+          {/* No data state */}
+          {!loading && !error && validOrders.length === 0 && (
+            <div className="bg-gray-50 rounded-lg p-6 sm:p-8 lg:p-12 text-center border border-gray-200">
+              <Package className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-500 mb-2">No Delivered Orders</h3>
+              <p className="text-sm text-gray-400 max-w-md mx-auto">
+                There are no delivered orders to process remittances at this moment.
+              </p>
+            </div>
+          )}
+
+          {/* Data cards grid */}
+          {!loading && !error && validOrders.length > 0 && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {validOrders.map((order) => {
                   const supplierTotals = calculateSupplierTotals(order.items);
                   const totals = calculateOrderTotals(supplierTotals);
@@ -492,101 +438,125 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                   const subtotal = totals.subtotal;
                   const riderEarnings = totals.totalShipping;
                   const vendorCityEarnings = subtotal * 0.05; // 5% of subtotal
-                  const taxAmount = totals.totalVAT; // VAT (12% of subtotal)
+                  const taxAmount = totals.totalVAT;
                   const remittance = subtotal - vendorCityEarnings;
                   const grandtotal = subtotal + riderEarnings + taxAmount;
+                  
                   return (
-                    <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <QrCode className="w-4 h-4 text-gray-400" />
-                          <span className="text-xs sm:text-sm font-mono text-gray-900 max-w-[100px] truncate">
-                            {trackingNumber}
-                          </span>
+                    <div key={order.id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                      {/* Card Header with tracking */}
+                      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <QrCode className="w-4 h-4 text-gray-500" />
+                            <span className="text-xs font-mono font-medium text-gray-700">
+                              {trackingNumber}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            Order #{order.orderNumber}
+                          </div>
                         </div>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <span className="text-xs sm:text-sm font-semibold text-gray-900">
-                          {formatCurrency(grandtotal)}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <span className="text-xs sm:text-sm text-green-600">
-                          {formatCurrency(riderEarnings)}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <span className="text-xs sm:text-sm text-blue-600">
-                          {formatCurrency(vendorCityEarnings)}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <span className="text-xs sm:text-sm text-orange-600">
-                          {formatCurrency(taxAmount)}
-                        </span>
-                      </td>
-                      <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
-                        <span className="text-xs sm:text-sm font-bold text-purple-700">
-                          {formatCurrency(remittance)}
-                        </span>
-                      </td>
-                    </tr>
+                      </div>
+                      
+                      {/* Card Body */}
+                      <div className="p-4 space-y-3">
+                        <div className="flex justify-between items-center border-b border-gray-100 pb-2">
+                          <span className="text-sm font-medium text-gray-500">Grand Total</span>
+                          <span className="text-lg font-bold text-gray-900">{formatCurrency(grandtotal)}</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Truck className="w-4 h-4" />
+                              <span>Rider Earnings</span>
+                            </div>
+                            <span className="text-sm font-semibold text-green-600">{formatCurrency(riderEarnings)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Building2 className="w-4 h-4" />
+                              <span>VendorCity Earnings (5%)</span>
+                            </div>
+                            <span className="text-sm font-semibold text-blue-600">{formatCurrency(vendorCityEarnings)}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Landmark className="w-4 h-4" />
+                              <span>TAX (12%)</span>
+                            </div>
+                            <span className="text-sm font-semibold text-orange-600">{formatCurrency(taxAmount)}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                            <DollarSign className="w-4 h-4" />
+                            <span>Remittance</span>
+                          </div>
+                          <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {paginationInfo && paginationInfo.totalPages > 1 && (
-            <div className="mt-6 flex flex-wrap justify-between items-center gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm text-gray-600">Show:</span>
-                <select
-                  value={pagination.pageSize}
-                  onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
-                >
-                  <option value="5">5 per page</option>
-                  <option value="10">10 per page</option>
-                  <option value="20">20 per page</option>
-                  <option value="50">50 per page</option>
-                </select>
               </div>
 
-              <div className="text-xs sm:text-sm text-gray-600">
-                Page {paginationInfo.page} of {paginationInfo.totalPages}
-              </div>
+              {/* Pagination */}
+              {paginationInfo && paginationInfo.totalPages > 1 && (
+                <div className="mt-6 flex flex-wrap justify-between items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs sm:text-sm text-gray-600">Show:</span>
+                    <select
+                      value={pagination.pageSize}
+                      onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+                      className="px-2 sm:px-3 py-1 text-xs sm:text-sm border border-gray-300 rounded focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="5">5 per page</option>
+                      <option value="10">10 per page</option>
+                      <option value="20">20 per page</option>
+                      <option value="50">50 per page</option>
+                    </select>
+                  </div>
 
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handlePageChange(paginationInfo.page - 1)}         
-                  disabled={paginationInfo.page === 1}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                    paginationInfo.page === 1 
-                      ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Previous
-                </button>
-                
-                <button
-                  onClick={() => handlePageChange(paginationInfo.page + 1)}
-                  disabled={paginationInfo.page === paginationInfo.totalPages}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
-                    paginationInfo.page === paginationInfo.totalPages 
-                      ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    Page {paginationInfo.page} of {paginationInfo.totalPages}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePageChange(paginationInfo.page - 1)}         
+                      disabled={paginationInfo.page === 1}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
+                        paginationInfo.page === 1 
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Previous
+                    </button>
+                    
+                    <button
+                      onClick={() => handlePageChange(paginationInfo.page + 1)}
+                      disabled={paginationInfo.page === paginationInfo.totalPages}
+                      className={`px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded border ${
+                        paginationInfo.page === paginationInfo.totalPages 
+                          ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
+                          : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
-      }
+                    }
