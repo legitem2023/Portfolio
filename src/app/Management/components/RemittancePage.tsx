@@ -515,7 +515,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                             <span>Action</span>
                           </div>
                           <span className="text-base font-bold text-purple-700">
-                            <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Remit</button>
+                            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Remit</button>
                           </span>
                         </div>
                       </div>
