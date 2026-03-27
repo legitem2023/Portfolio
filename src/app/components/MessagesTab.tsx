@@ -36,7 +36,7 @@ interface Post {
 }
 
 const MessagesTab = () => {
-  const { user:ActiveDetails } = useAuth();
+  const { user:ActiveDetails,loading:ActiveLoading } = useAuth();
   const [page, setPage] = useState(1);
 //  const [userId, setUserId] = useState(ActiveDetails?.userId);
  // const [name, setName] = useState(ActiveDetails?.name);
@@ -113,7 +113,7 @@ const MessagesTab = () => {
       images: images.length > 0 ? images : undefined,
       taggedUsers: taggedUsers,
       privacy: 'PUBLIC',
-      userId: ActiveDetails?.userId
+      userId: ActiveDetails.userId
     };
 
     try {
@@ -189,17 +189,18 @@ const MessagesTab = () => {
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
+        {ActiveLoading?<DeluxeMessageCardLoading />:(
         <PostInput
           user={{
-            id: ActiveDetails?.userId,
-            name: ActiveDetails?.name,
-            avatar: ActiveDetails?.image
+            id: ActiveDetails.userId,
+            name: ActiveDetails.name,
+            avatar: ActiveDetails.image
           }}
           onPostSubmit={handlePostSubmit}
           placeholder="What's on your mind?"
           isLoading={creatingPost}
-        />
-        
+        />)
+        }
         {/* Loading state for initial load */}
         {showLoader && <DeluxeMessageCardLoading />}
         
