@@ -10,7 +10,8 @@ import {
   DollarSign,
   FileText,
   HeadphonesIcon,
-  Truck
+  Truck,
+  BanknoteArrowUp
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 'products', label: 'Products', icon: Package },
     { id: 'categories', label: 'Categories', icon: FolderOpen },
     { id: 'orders', label: 'Orders', icon: ShoppingCart },
+    { id: 'remit', label: 'Remittance',icon: BanknoteArrowUp },
     { id: 'sales', label: 'Sales', icon: DollarSign },
     { id: 'bills', label: 'Bills', icon: FileText },
     { id: 'support', label: 'Support Tickets', icon: HeadphonesIcon },
