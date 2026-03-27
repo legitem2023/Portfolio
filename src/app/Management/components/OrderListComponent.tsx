@@ -453,10 +453,20 @@ export default function OrderListComponent({
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
   
-  // Filter orders with items
-  const ordersWithItems = useMemo(() => {
-    return allOrders.filter((order: Order) => order.items.length > 0);
-  }, [allOrders]);
+  // Filter orders and items based on initialSupplierId
+  const filteredOrders = useMemo(() => {
+    if (!initialSupplierId) {
+      // No filter: return orders that have at least one item
+      return allOrders.filter(order => order.items.length > 0);
+    }
+
+    return allOrders
+      .map(order => ({
+        ...order,
+        items: order.items.filter(item => item.supplierId === initialSupplierId)
+      }))
+      .filter(order => order.items.length > 0);
+  }, [allOrders, initialSupplierId]);
   
   const paginationInfo = orderData?.pagination;
 
@@ -769,7 +779,7 @@ export default function OrderListComponent({
 
         <div class="order-section">
           <div class="section-title">Items</div>
-           <table>
+          <table>
             <thead>
               <tr>
                 <th>SKU</th>
@@ -856,7 +866,7 @@ export default function OrderListComponent({
     );
   }
 
-  const hasNoData = !loading && ordersWithItems.length === 0;
+  const hasNoData = !loading && filteredOrders.length === 0;
 
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -953,9 +963,13 @@ export default function OrderListComponent({
       {!loading && hasNoData && (
         <div className="bg-gray-50 rounded-lg p-8 lg:p-12 text-center border border-gray-200">
           <Package size={isMobile ? 48 : 64} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">No Orders with Items</h3>
+          <h3 className="text-lg lg:text-xl font-semibold text-gray-500 mb-2">
+            {initialSupplierId ? 'No Orders for this Supplier' : 'No Orders with Items'}
+          </h3>
           <p className="text-sm text-gray-400 max-w-md mx-auto">
-            There are no orders with items to display at this moment.
+            {initialSupplierId
+              ? `There are no orders containing items from the selected supplier.`
+              : 'There are no orders with items to display at this moment.'}
           </p>
         </div>
       )}
@@ -963,7 +977,7 @@ export default function OrderListComponent({
       {!loading && !hasNoData && (
         <>
           <div className="space-y-3 sm:space-y-4">
-            {ordersWithItems.map((order) => {
+            {filteredOrders.map((order) => {
               const supplierTotals = calculateSupplierTotals(order.items);
               const orderTotals = calculateOrderTotals(supplierTotals);
               const orderRiders = getOrderRiders(order.items);
@@ -1293,4 +1307,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-    }
+}
