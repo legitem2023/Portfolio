@@ -199,7 +199,7 @@ const DeluxeHomePage: React.FC = () => {
         
         {/* Featured Products Section */}
           {productLoading ? (
-            <ProductThumbnailsShimmer count={queryVariables.limit} />
+            <ProductThumbnailsShimmer count={8} />
             ) : featuredProducts.length > 0 ? (
             <ProductThumbnails products={featuredProducts} />
             ) : (
