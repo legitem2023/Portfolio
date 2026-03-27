@@ -44,6 +44,7 @@ const DeluxeHomePage: React.FC = () => {
     
     if (productData?.products?.items) {
       // Transform API response to match your Product type
+     console.log("->",productData?.products?.items);
       const productsData = productData.products.items.map((data: any) => ({
         id: data.id,
         name: data.name,
