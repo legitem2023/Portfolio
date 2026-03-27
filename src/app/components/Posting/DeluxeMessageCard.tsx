@@ -145,6 +145,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
    dispatch(setActivePostId(id));
    dispatch(setActiveIndex(8));
  }
+  console.log("bg->",background);
   return (
     <>
       <div className={`max-w-2xl mx-auto shadow-lg overflow-hidden mb-0 ${className}`}
