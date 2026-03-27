@@ -494,7 +494,7 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                   const vendorCityEarnings = subtotal * 0.05; // 5% of subtotal
                   const taxAmount = totals.totalVAT; // VAT (12% of subtotal)
                   const remittance = subtotal - vendorCityEarnings;
-                  const grandtotal = subtotal + totalShipping + taxAmount;
+                  const grandtotal = subtotal + riderEarnings + taxAmount;
                   return (
                     <tr key={order.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-3 sm:px-4 py-2 sm:py-3 whitespace-nowrap">
