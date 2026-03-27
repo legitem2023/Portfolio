@@ -44,7 +44,7 @@ const DeluxeHomePage: React.FC = () => {
     
     if (productData?.products?.items) {
       // Transform API response to match your Product type
-     console.log("->",productData?.products?.items);
+    // console.log("->",productData?.products?.items);
       const productsData = productData.products.items.map((data: any) => ({
         id: data.id,
         name: data.name,
@@ -197,9 +197,8 @@ const DeluxeHomePage: React.FC = () => {
         <CategoryPage />
         
         {/* Featured Products Section */}
-        <FeaturedProducts 
+        <ProductThumbnails 
           products={featuredProducts} 
-          loading={productLoading} 
         />
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
         {/* 
