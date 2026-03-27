@@ -328,7 +328,7 @@ const calculateSupplierTotals = (items: OrderItem[]): SupplierTotal[] => {
   const suppliers = Array.from(supplierMap.values());
   suppliers.forEach(supplier => {
     const totalBeforeVAT = supplier.subtotal + supplier.totalShipping;
-    supplier.vat = totalBeforeVAT * VAT_RATE;
+    supplier.vat = supplier.subtotal * VAT_RATE;
     supplier.grandTotal = totalBeforeVAT + supplier.vat;
   });
   
