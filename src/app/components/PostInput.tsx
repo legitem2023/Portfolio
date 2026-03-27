@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { FaPhotoVideo, FaSmile, FaUserTag, FaMapMarkerAlt, FaEllipsisH, FaTimes, FaPaintBrush } from 'react-icons/fa';
 import { FiMoreHorizontal } from 'react-icons/fi';
 import { CREATE_POST } from './graphql/mutation';
-import { USERS } from './graphql/queries'; // Adjust the path as needed
+import { USERS } from './graphql/query'; // Adjust the path as needed
 
 interface User {
   id: string;
