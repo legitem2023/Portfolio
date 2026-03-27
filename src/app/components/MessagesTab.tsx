@@ -40,7 +40,7 @@ const MessagesTab = () => {
   const [page, setPage] = useState(1);
   const [userId, setUserId] = useState(ActiveDetails?.userId);
   const [name, setName] = useState(ActiveDetails?.name);
-  const [avatar, setAvatar] = useState(ActiveDetails?.image || './NoImage.webp);
+  const [avatar, setAvatar] = useState(ActiveDetails?.image || './NoImage.webp');
   const [hasMore, setHasMore] = useState(true);
   const limit = 10;
 
