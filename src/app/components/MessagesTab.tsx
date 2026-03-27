@@ -224,7 +224,7 @@ const MessagesTab = () => {
               privacy: post.privacy,
               taggedUsers: post.taggedUsers,
               user: post.user,
-              isOwnMessage: post.user.id === userId
+              isOwnMessage: post.user.id === ActiveDetails?.userId
             }} 
             className="mb-2"
           />
