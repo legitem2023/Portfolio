@@ -192,7 +192,7 @@ interface OrderPaginationInput {
 }
 
 interface RemittancePageProps {
-  initialSupplierId: string;
+  initialSupplierId?: string;
   isMobile?: boolean;
 }
 
