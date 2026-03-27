@@ -107,8 +107,7 @@ export default function VisitorCounter() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2">
-      <h3 className="text-xs sm:text-sm md:text-base font-semibold text-gray-900 mb-2 text-left">📊 Visits</h3>
+    <div className="bg-white border p-2">
       
       <div className="flex flex-row justify-between items-center gap-1 sm:gap-2 mb-2">
         <div className="bg-blue-50 p-2 rounded-lg flex-1 min-w-0">
