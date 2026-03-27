@@ -43,6 +43,7 @@ const ORDER_LIST_QUERY = gql`
         user {
           id
           firstName
+          lastName
           email
         }
         address {
