@@ -898,6 +898,7 @@ export const GET_ALL_POSTS = gql`
         createdAt
         privacy
         isLikedByMe
+        background
         likeCount
         commentCount
         images
