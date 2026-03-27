@@ -11,13 +11,11 @@ import {
   AlertCircle,
   Bell,
   Shield,
-  Truck,
   ShoppingBag,
   CheckCircle,
   XCircle,
   RefreshCw,
   Loader2,
-  Calendar,
   Bike,
   TrendingUp,
   Receipt,
@@ -196,7 +194,6 @@ interface OrderListResponse {
 }
 
 interface OrderFilterInput {
-  supplierId?: string;
   status?: OrderStatus;
 }
 
@@ -206,7 +203,6 @@ interface OrderPaginationInput {
 }
 
 interface OrderListComponentProps {
-  initialSupplierId?: string;
   initialStatus?: OrderStatus;
   isMobile?: boolean;
 }
@@ -231,6 +227,16 @@ const statusColors = {
   SHIPPED: 'bg-blue-100 text-blue-700',
   DELIVERED: 'bg-green-100 text-green-700',
   CANCELLED: 'bg-red-100 text-red-800'
+};
+
+// Status icons mapping for tabs
+const statusIcons = {
+  ALL: ShoppingBag,
+  PENDING: Clock,
+  PROCESSING: Loader2,
+  SHIPPED: Package,
+  DELIVERED: CheckCircle,
+  CANCELLED: XCircle
 };
 
 // Format address
@@ -415,10 +421,12 @@ const OrderCardShimmer = () => {
 };
 
 export default function OrderListComponent({ 
-  initialSupplierId, 
   initialStatus,
   isMobile = false
 }: OrderListComponentProps) {
+  // State for status filter (sent to GraphQL)
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(initialStatus || 'ALL');
+  
   // State for pagination
   const [pagination, setPagination] = useState({
     page: 1,
@@ -432,8 +440,7 @@ export default function OrderListComponent({
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: initialStatus,
-        supplierId: initialSupplierId
+        status: activeTab === 'ALL' ? undefined : activeTab
       },
       pagination
     },
@@ -736,10 +743,6 @@ export default function OrderListComponent({
               <div class="info-value">${formatDateForPrint(order.createdAt)}</div>
             </div>
             <div class="info-item">
-              <div class="info-label">Status:</div>
-              <div class="info-value">${order.status}</div>
-            </div>
-            <div class="info-item">
               <div class="info-label">Customer:</div>
               <div class="info-value">${order.user.firstName} ${order.user.lastName || ''}</div>
             </div>
@@ -764,7 +767,7 @@ export default function OrderListComponent({
 
         <div class="order-section">
           <div class="section-title">Items</div>
-          <table>
+           <table>
             <thead>
               <tr>
                 <th>SKU</th>
@@ -901,6 +904,40 @@ export default function OrderListComponent({
         >
           <RefreshCw size={18} />
         </button>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+          {['ALL', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
+            const Icon = statusIcons[status as keyof typeof statusIcons] || ShoppingBag;
+            return (
+              <button
+                key={status}
+                onClick={() => setActiveTab(status as OrderStatus | 'ALL')}
+                className={`
+                  group inline-flex items-center gap-2 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200
+                  ${activeTab === status
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+              >
+                <Icon 
+                  size={16} 
+                  className={`
+                    transition-colors duration-200
+                    ${activeTab === status 
+                      ? 'text-orange-500' 
+                      : 'text-gray-400 group-hover:text-gray-500'
+                    }
+                  `} 
+                />
+                {status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
       {loading && (
@@ -1254,4 +1291,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-                      }
+    }
