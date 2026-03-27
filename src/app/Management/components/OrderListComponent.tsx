@@ -898,7 +898,7 @@ export default function OrderListComponent({
       <body>
         <div class="print-header">
           <h1>Order Details</h1>
-          <p>Order #${order.orderNumber}</p>
+          <p>Tracking #${order.items[0]?.trackingNumber}</p>
         </div>
 
         <div class="order-section">
@@ -959,23 +959,6 @@ export default function OrderListComponent({
               `).join('')}
             </tbody>
           </table>
-        </div>
-
-        <div class="order-section">
-          <div class="section-title">Suppliers & Shipping</div>
-          ${supplierTotals.map(supplier => `
-            <div class="supplier-block">
-              <div><strong>Supplier:</strong> ${supplier.supplierName} (ID: ${supplier.supplierId})</div>
-              <div><strong>Items:</strong> ${supplier.items.length}</div>
-              <div><strong>Subtotal:</strong> ${formatCurrency(supplier.subtotal)}</div>
-              <div><strong>Shipping:</strong> ${formatCurrency(supplier.totalShipping)}</div>
-              <div><strong>VAT (12%):</strong> ${formatCurrency(supplier.vat)}</div>
-              <div><strong>Grand Total:</strong> ${formatCurrency(supplier.grandTotal)}</div>
-              ${supplier.trackingNumbers.length > 0 ? `
-                <div><strong>Tracking:</strong> ${supplier.trackingNumbers.join(', ')}</div>
-              ` : ''}
-            </div>
-          `).join('')}
         </div>
 
         ${orderRiders.length > 0 ? `
