@@ -204,7 +204,7 @@ const DeluxeHomePage: React.FC = () => {
             <ProductThumbnails products={featuredProducts} />
             ) : (
                 <div className="text-center py-12 text-gray-500">
-                  No products found for {debouncedSearch}
+                  No products found
                 </div>
         )}
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
