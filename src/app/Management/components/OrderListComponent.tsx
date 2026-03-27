@@ -916,7 +916,7 @@ export default function OrderListComponent({
       {/* Status Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-          {['ALL', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
+          {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
             const Icon = statusIcons[status as keyof typeof statusIcons] || ShoppingBag;
             return (
               <button
@@ -1037,7 +1037,7 @@ export default function OrderListComponent({
 
                     {supplierTotals.length > 0 && (
                       <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
-                        <div className="flex items-center gap-2 mb-3">
+                        {/*<div className="flex items-center gap-2 mb-3">
                           <Building size={isMobile ? 16 : 18} className="text-blue-600" />
                           <h4 className="font-semibold text-sm lg:text-base text-blue-700">
                             Suppliers Breakdown ({supplierTotals.length})
@@ -1061,7 +1061,7 @@ export default function OrderListComponent({
                               </div>
                             </div>
                           ))}
-                        </div>
+                        </div>*/}
                         
                         <div className="mt-4 pt-4 border-t-2 border-blue-300">
                           <div className="bg-white rounded-lg p-3">
