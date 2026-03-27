@@ -8,6 +8,7 @@ import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import ProductsTab from './components/ProductsTab';
 import OrderListComponent from './components/OrderListComponent';
+import RemittancePage from './components/RemittancePage';
 import SalesDashboard from'./components/SalesDashboard';
 import CategoriesTab from './components/CategoriesTab';
 import ApiBillsTab from './components/ApiBillsTab';
@@ -142,6 +143,12 @@ export default function ManagementDashboard() {
         );
       case 'users':
         return <UsersTab />;
+      case 'remit':
+        return (
+          <RemittancePage
+            initialSupplierId={user?.userId}
+          />
+        );
       case 'orders':
         return (
           <OrderListComponent
