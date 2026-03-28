@@ -803,7 +803,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
               >
                 <h4 className="font-semibold text-sm flex items-center gap-2">
                   <Camera size={16} className="text-blue-500" />
-                  Proof of Delivery ({delivery.proofOfDelivery.length})
+                  Proof of Delivery ({ delivery.proofOfDelivery.filter(proof => { return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;}).length})
                 </h4>
                 {showProofSection ? (
                   <ChevronUp size={18} className="text-gray-500 flex-shrink-0" />
@@ -815,22 +815,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
 {showProofSection && (
   <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
-    {/* Add tracking number filter header */}
-    <div className="bg-blue-50 p-3 rounded-lg mb-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <QrCode size={16} className="text-blue-600" />
-          <span className="text-sm font-medium text-blue-900">Tracking Number:</span>
-          <span className="text-sm font-mono bg-blue-100 px-2 py-1 rounded text-blue-800">
-            {delivery.trackingNumber}
-          </span>
-        </div>
-        <div className="text-xs text-blue-600">
-          {delivery.proofOfDelivery.length} proof(s)
-        </div>
-      </div>
-    </div>
-
     {/* Filter and display proofs - ONLY show those matching the current tracking number */}
     {delivery.proofOfDelivery
       .filter(proof => {
