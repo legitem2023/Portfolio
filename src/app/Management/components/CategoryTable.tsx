@@ -18,6 +18,7 @@ const CATEGORY_IMAGE_UPLOAD_MUTATION = gql`
 `;
 
 export default function CategoryTable({ categories, refetchCategories }: CategoryTableProps) {
+  console.log(categories);
   return (
     <>
       {/* Desktop Table View */}
