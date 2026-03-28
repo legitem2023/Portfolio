@@ -237,7 +237,7 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
 export default function OrderTracking({ userId }: { userId: string }) {
   const [selectedStatus, setSelectedStatus] = useState<string>('PENDING');
   const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
-  
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
   const { loading, error, data, refetch } = useQuery<ActiveOrderResponse>(ACTIVE_ORDER_LIST, {
     variables: { 
       filter: { 
