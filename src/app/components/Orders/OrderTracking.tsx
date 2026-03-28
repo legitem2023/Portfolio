@@ -484,7 +484,11 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
   
   // Calculate shipping by summing all individualShipping values
   const shipping = group.items.reduce((total, item) => {
-    return total + (item.individualShipping ? item.individualShipping : 0);
+    // Ensure individualShipping is treated as a number
+    const shippingAmount = typeof item.individualShipping === 'number' 
+      ? item.individualShipping 
+      : (item.individualShipping ? Number(item.individualShipping) : 0);
+    return total + shippingAmount;
   }, 0);
   
   // Calculate VAT based on subtotal
@@ -562,6 +566,9 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
             <div className="space-y-3">
               {group.items.map((item) => {
                 const productInfo = getProductInfo(item.product);
+                const shippingAmount = typeof item.individualShipping === 'number' 
+                  ? item.individualShipping 
+                  : (item.individualShipping ? Number(item.individualShipping) : 0);
                 return (
                   <div key={item.id} className="flex justify-between items-start border-b border-gray-100 pb-3">
                     <div className="flex-1 pr-4">
@@ -574,9 +581,9 @@ function SupplierOrderModal({ group, onClose }: { group: SupplierGroup; onClose:
                       <div className="text-xs text-gray-500 mt-1">
                         Quantity: {item.quantity || 0} × {formatPrice(item.price || 0)}
                       </div>
-                      {item.individualShipping && item.individualShipping > 0 && (
+                      {shippingAmount > 0 && (
                         <div className="text-xs text-gray-500 mt-1">
-                          Shipping: {formatPrice(item.individualShipping)}
+                          Shipping: {formatPrice(shippingAmount)}
                         </div>
                       )}
                       {item.trackingNumber && (
@@ -786,4 +793,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-        }
+    }
