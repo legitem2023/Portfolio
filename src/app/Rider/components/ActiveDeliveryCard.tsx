@@ -810,11 +810,118 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 )}
               </button>
 
-              {showProofSection && (
+
+{showProofSection && (
+  <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
+    {/* Add tracking number filter header */}
+    <div className="bg-blue-50 p-3 rounded-lg mb-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <QrCode size={16} className="text-blue-600" />
+          <span className="text-sm font-medium text-blue-900">Tracking Number:</span>
+          <span className="text-sm font-mono bg-blue-100 px-2 py-1 rounded text-blue-800">
+            {delivery.trackingNumber}
+          </span>
+        </div>
+        <div className="text-xs text-blue-600">
+          {delivery.proofOfDelivery.length} proof(s)
+        </div>
+      </div>
+    </div>
+
+    {/* Filter and display proofs - only show those matching the current tracking number */}
+    {delivery.proofOfDelivery
+      .filter(proof => {
+        // If proof has a trackingNumber field, filter by it
+        // Otherwise, assume all proofs belong to this delivery's tracking number
+        if (proof.trackingNumber) {
+          return proof.trackingNumber === delivery.trackingNumber;
+        }
+        // If no trackingNumber field, show all proofs (backward compatibility)
+        return true;
+      })
+      .map((proof, index) => (
+        <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm border border-gray-200">
+          {/* Add tracking number badge to each proof */}
+          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <QrCode size={14} className="text-gray-400" />
+              <span className="text-xs font-medium text-gray-500">Proof #{index + 1}</span>
+            </div>
+            {proof.trackingNumber && proof.trackingNumber !== delivery.trackingNumber ? (
+              <span className="text-xs font-mono bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                Track: {proof.trackingNumber}
+              </span>
+            ) : (
+              <span className="text-xs font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                Current Order
+              </span>
+            )}
+          </div>
+
+          {/* Photo */}
+          {proof.photoUrl && (
+            <div>
+              <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
+              <div className="relative rounded-lg overflow-hidden border border-gray-200">
+                <img 
+                  src={proof.photoUrl} 
+                  alt="Delivery proof" 
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Recipient Info */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-xs text-gray-500">Received By</p>
+              <p className="text-sm font-medium break-words">{proof.receivedBy}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Received At</p>
+              <p className="text-sm font-medium break-words">
+                {formatDate(proof.receivedAt)}
+              </p>
+            </div>
+          </div>
+          
+          {/* Signature */}
+          {proof.signatureData && (
+            <div>
+              <p className="text-xs text-gray-500 mb-2">Signature</p>
+              <div className="bg-white rounded-lg border border-gray-200 p-2">
+                <img 
+                  src={proof.signatureData} 
+                  alt="Signature" 
+                  className="max-h-16 w-full object-contain"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      ))}
+    
+    {/* Show message if no proofs match the tracking number */}
+    {delivery.proofOfDelivery.filter(proof => {
+      if (proof.trackingNumber) {
+        return proof.trackingNumber === delivery.trackingNumber;
+      }
+      return true;
+    }).length === 0 && (
+      <div className="text-center py-6 text-gray-500">
+        <p className="text-sm">No proof of delivery found for tracking number: {delivery.trackingNumber}</p>
+      </div>
+    )}
+  </div>
+)}
+              
+              {/*showProofSection && (
                 <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
                   {delivery.proofOfDelivery.map((proof, index) => (
                     <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm">
-                      {/* Photo */}
+                      
                       {proof.photoUrl && (
                         <div>
                           <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
@@ -828,7 +935,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                         </div>
                       )}
                       
-                      {/* Recipient Info */}
+                      
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <p className="text-xs text-gray-500">Received By</p>
@@ -842,7 +949,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                         </div>
                       </div>
                       
-                      {/* Signature */}
+                      
                       {proof.signatureData && (
                         <div>
                           <p className="text-xs text-gray-500 mb-2">Signature</p>
@@ -858,7 +965,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                     </div>
                   ))}
                 </div>
-              )}
+              )*/}
             </div>
           )}
 
