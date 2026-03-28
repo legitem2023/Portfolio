@@ -405,7 +405,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
             <ThumbsUp size={20} />
-            <span>{acceptLoading ? 'Accepting...' : 'Accept Delivery'}</span>
+            <span>{acceptLoading ? 'Accepting...' : 'Accept'}</span>
           </button>
         </div>
       </div>
