@@ -469,6 +469,7 @@ model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String?  @db.ObjectId
   productId String?  @db.ObjectId
+  variantId String?
   rating    Int?
   title     String?
   comment   String?
