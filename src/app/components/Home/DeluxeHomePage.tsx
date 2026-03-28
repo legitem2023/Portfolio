@@ -197,7 +197,7 @@ const products = productData?.products?.items || [];
           <h2 className="text-1xl font-bold text-gray-500">Visits</h2>
         </div>
         <VisitorCounter />
-         <HeroCarousel slides={heroSlides} />
+        {/*<HeroCarousel slides={heroSlides} />*/}
         <div className="text-left m-2">
           <h2 className="text-1xl font-bold text-gray-500">Category</h2>
         </div>
