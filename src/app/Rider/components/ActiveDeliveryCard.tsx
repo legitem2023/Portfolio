@@ -530,6 +530,16 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   };
 
+
+const isHasproof = useMemo(() => {
+  if (!delivery?.proofOfDelivery) return false;
+  return delivery.proofOfDelivery.some(proof => 
+    proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber
+  );
+}, [delivery]);
+
+
+  
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
@@ -929,13 +939,12 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                 {/* Complete Delivery Button - only enabled if proof exists */}
                 <button
                   onClick={handleCompleteDelivery}
-                  disabled={delivery?.proofOfDelivery?.filter(proof => { return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;})?.length < 1}
+                  disabled={!isHasproof}
                   className={`
                     w-full px-4 py-4 rounded-xl font-semibold 
                     transition flex items-center justify-center gap-2 
                     text-sm disabled:opacity-50 disabled:cursor-not-allowed
-                    ${delivery?.proofOfDelivery?.filter(proof => { return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;})?.length > 0
-                      ? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg' 
+                    ${isHasproof? 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg' 
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }
                   `}
