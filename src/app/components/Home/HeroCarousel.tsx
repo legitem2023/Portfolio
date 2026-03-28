@@ -152,18 +152,22 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
     width: "100%",
     position: "relative" as const,
     padding: isMobile ? "10px" : "15px",
-    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+    fontFamily: "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    height: "auto", // Remove fixed height
+    minHeight: "auto" // Ensure no minimum height constraint
   }), [isMobile]);
 
   const swiperStyle = useMemo(() => ({
     width: "100%",
     paddingTop: isMobile ? '8px' : '15px',
-    paddingBottom: isMobile ? '25px' : '35px'
+    paddingBottom: isMobile ? '25px' : '35px',
+    height: "auto" // Remove fixed height from swiper container
   }), [isMobile]);
 
   const swiperWrapperStyle = useMemo(() => ({
     alignItems: "center",
-    padding: isMobile ? '4px 0' : '8px 0'
+    padding: isMobile ? '4px 0' : '8px 0',
+    height: "auto" // Ensure wrapper doesn't constrain height
   }), [isMobile]);
 
   const slideTitleStyle = useMemo(() => ({
@@ -309,12 +313,21 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
     // Add style tag for Swiper-specific styles that need to be global
     const style = document.createElement('style');
     style.textContent = `
+      .swiper {
+        height: auto !important;
+      }
+      
+      .swiper-wrapper {
+        height: auto !important;
+      }
+      
       .swiper-slide {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         opacity: 0.7;
         transform: scale(0.92) translateZ(0);
         filter: brightness(0.85);
         will-change: transform, opacity;
+        height: auto !important;
       }
       
       .swiper-slide-active {
@@ -384,7 +397,6 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
           }
           
           .swiper-slide {
-            height: auto !important;
             min-height: 200px;
           }
         }
@@ -436,7 +448,8 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
               alignItems: 'center',
               justifyContent: 'center',
               padding: '0px',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              height: 'auto'
             }}
           >
             <div 
@@ -448,7 +461,8 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
                 boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.4)',
                 transform: 'translateZ(0)',
                 willChange: 'transform',
-                position: 'relative'
+                position: 'relative',
+                aspectRatio: '16/9'
               }}
             >
               <Image
