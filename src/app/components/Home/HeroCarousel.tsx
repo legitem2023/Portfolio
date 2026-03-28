@@ -443,7 +443,6 @@ const HeroCarousel3D: React.FC<HeroCarousel3DProps> = ({ slides }) => {
               className={`slide-content ${slide.bgColor}`}
               style={{
                 width: '100%',
-                aspectRatio: '4 / 3',
                 overflow: 'hidden',
                 borderRadius: '6px',
                 boxShadow: '0.5px 0.5px 3px rgba(0,0,0,0.4)',
