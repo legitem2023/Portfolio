@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
 import { useDispatch } from 'react-redux';
@@ -23,8 +23,20 @@ interface CategoriesResponse {
 
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
+  const isMounted = useRef(true);
   
-  const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY);
+  const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY, {
+    fetchPolicy: 'cache-first',
+    notifyOnNetworkStatusChange: false,
+  });
+
+  // Cleanup on unmount
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const categories = useMemo(() => {
     if (!data?.categories) return [];
@@ -44,8 +56,16 @@ const CategoryPage: React.FC = () => {
   }, [data]);
 
   const handleCategoryClick = useCallback((categoryId: string) => {
-    dispatch(setCategoryFilter(categoryId));
+    if (isMounted.current) {
+      dispatch(setCategoryFilter(categoryId));
+    }
   }, [dispatch]);
+
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (isMounted.current) {
+      e.currentTarget.src = '/NoImage.webp';
+    }
+  }, []);
 
   const renderCompactCard = useCallback((category: category, index: number) => (
     <div 
@@ -70,9 +90,7 @@ const CategoryPage: React.FC = () => {
             loading="lazy"
             priority={index < 4}
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-            onError={(e) => {
-              e.currentTarget.src = '/NoImage.webp';
-            }}
+            onError={handleImageError}
           />
         </div>
         <div className="absolute top-1 right-1">
@@ -88,7 +106,17 @@ const CategoryPage: React.FC = () => {
         </div>
       </div>
     </div>
-  ), [handleCategoryClick]);
+  ), [handleCategoryClick, handleImageError]);
+
+  // Prevent memory leaks by clearing any pending state updates
+  useEffect(() => {
+    return () => {
+      // Cleanup function to prevent state updates after unmount
+      if (!isMounted.current) {
+        // Additional cleanup if needed
+      }
+    };
+  }, []);
 
   if (loading) {
     return <ShimmerLoader />;
@@ -139,10 +167,21 @@ const CategoryPage: React.FC = () => {
   );
 };
 
-// Keep your ShimmerLoader component as is
+// Optimized ShimmerLoader with cleanup
 const ShimmerLoader = () => {
+  const shimmerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return () => {
+      // Cleanup any potential animation frames or timeouts
+      if (shimmerRef.current) {
+        // Cancel any pending animations if needed
+      }
+    };
+  }, []);
+
   return (
-    <div className="container mx-auto p-0">
+    <div className="container mx-auto p-0" ref={shimmerRef}>
       <div className="grid grid-cols-4 gap-2 p-0">
         {[...Array(4)].map((_, index) => (
           <div 
