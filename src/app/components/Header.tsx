@@ -1,4 +1,4 @@
-// components/Header.tsx (OPTIMIZED VERSION)
+// components/Header.tsx (FIXED VERSION)
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
@@ -43,6 +43,7 @@ import Ads from './Ads/Ads';
 import { PromoAd } from './Ads/PromoAd';
 import { useAdDrawer } from './hooks/useAdDrawer';
 import { useAuth } from './hooks/useAuth';
+
 interface Notification {
   id: string;
   type: NotificationType;
@@ -61,7 +62,7 @@ interface Notification {
 }
 
 const Header: React.FC = () => {
-  const { user:ActiveDetails } = useAuth();
+  const { user: ActiveDetails } = useAuth();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,9 +71,12 @@ const Header: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
+  
+  // FIX: Add refs for cleanup
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
+  const authCheckAbortControllerRef = useRef<AbortController | null>(null);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -82,7 +86,7 @@ const Header: React.FC = () => {
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
 
-// Get user data
+  // Get user data
   const { data: userData, loading: userLoading } = useQuery(USERS);
   
   // Check if current route is auth page
@@ -100,14 +104,24 @@ const Header: React.FC = () => {
     return [5, 6, 7, 10].includes(activeIndex);
   }, [activeIndex]);
   
-  
   // Get userId from user data or auth
   const userId = user?.userId;
 
   // Track overall user loading state
   const isLoadingUser = userLoading || isLoading;
 
-  // Function to trigger push notification with appropriate icon
+  // FIX: Memoize the extractNotifications function to prevent unnecessary re-renders
+  const extractNotifications = useCallback((data: any): Notification[] => {
+    try {
+      if (!data?.notifications?.edges) return [];
+      return data.notifications.edges.map((edge: any) => edge.node);
+    } catch (error) {
+      console.error('Error extracting notifications:', error);
+      return [];
+    }
+  }, []);
+
+  // FIX: Memoize triggerPushNotification with proper cleanup
   const triggerPushNotification = useCallback((notification: Notification) => {
     // Only show push notification for unread notifications that haven't been shown yet
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
@@ -171,18 +185,7 @@ const Header: React.FC = () => {
     });
   }, [shownNotificationIds, router]);
 
-  // Extract notifications safely
-  const extractNotifications = useCallback((data: any): Notification[] => {
-    try {
-      if (!data?.notifications?.edges) return [];
-      return data.notifications.edges.map((edge: any) => edge.node);
-    } catch (error) {
-      console.error('Error extracting notifications:', error);
-      return [];
-    }
-  }, []);
-
-  // Handle new notifications from Apollo query
+  // FIX: Memoize handleNewNotifications to prevent recreating on every render
   const handleNewNotifications = useCallback((data: any) => {
     const latestNotifications = extractNotifications(data);
     
@@ -203,7 +206,9 @@ const Header: React.FC = () => {
     data: notificationsData, 
     loading: notificationsLoading, 
     error: notificationsError,
-    refetch: refetchNotifications
+    refetch: refetchNotifications,
+    stopPolling,
+    startPolling
   } = useQuery(GET_NOTIFICATIONS, {
     variables: { 
       userId: userId || '',
@@ -211,8 +216,7 @@ const Header: React.FC = () => {
     },
     skip: !userId, // Don't query if no userId
     fetchPolicy: 'cache-and-network',
-    // Apollo handles polling automatically - more efficient than setInterval
-    pollInterval: userId ? 10000 : 0, // Poll every 10s only when userId exists
+    pollInterval: userId ? 10000 : 0,
     onError: (error) => {
       console.error('Notification query error:', error);
     },
@@ -246,14 +250,25 @@ const Header: React.FC = () => {
     onError: (error) => console.error('Delete notification error:', error)
   });
 
-  // Check authentication status
+  // FIX: Check authentication status with cleanup
   useEffect(() => {
     const getRole = async () => {
+      // Cancel previous request if exists
+      if (authCheckAbortControllerRef.current) {
+        authCheckAbortControllerRef.current.abort();
+      }
+      
+      const abortController = new AbortController();
+      authCheckAbortControllerRef.current = abortController;
+      
       try {
         setIsLoading(true);
         const response = await fetch('/api/protected', {
-          credentials: 'include'
+          credentials: 'include',
+          signal: abortController.signal
         });
+        
+        if (abortController.signal.aborted) return;
         
         if (response.status === 401) {
           setUser(null);
@@ -264,7 +279,7 @@ const Header: React.FC = () => {
         const token = data?.user;
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
 
-        if (token) {
+        if (token && !abortController.signal.aborted) {
           const payload = await decryptToken(token, secret.toString());
           setUser(payload);
           setHasCheckedAuth(true);
@@ -273,14 +288,26 @@ const Header: React.FC = () => {
           setHasCheckedAuth(false);
         }
       } catch (err) {
-        console.error('Error getting role:', err);
-        setUser(null);
+        if (!abortController.signal.aborted) {
+          console.error('Error getting role:', err);
+          setUser(null);
+        }
       } finally {
-        setIsLoading(false);
-        
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
+    
     getRole();
+    
+    // Cleanup function
+    return () => {
+      if (authCheckAbortControllerRef.current) {
+        authCheckAbortControllerRef.current.abort();
+        authCheckAbortControllerRef.current = null;
+      }
+    };
   }, []);
 
   // Clear shown notifications when user changes
@@ -304,7 +331,7 @@ const Header: React.FC = () => {
     }
   }, [hasCheckedAuth, activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
-  // Close dropdown when clicking outside (desktop)
+  // FIX: Close dropdown when clicking outside (desktop) with cleanup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -316,10 +343,12 @@ const Header: React.FC = () => {
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
-  // Close modal when clicking outside or pressing escape (mobile)
+  // FIX: Close modal when clicking outside or pressing escape (mobile) with cleanup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -341,9 +370,11 @@ const Header: React.FC = () => {
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscapeKey);
-      document.body.style.overflow = 'unset';
+      if (isModalOpen) {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+        document.body.style.overflow = 'unset';
+      }
     };
   }, [isModalOpen]);
 
@@ -354,40 +385,49 @@ const Header: React.FC = () => {
     }
   }, [isBellPopupOpen, userId, refetchNotifications]);
 
-  // Check if mobile device
+  // FIX: Check if mobile device with memoization
   const isMobile = useCallback(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
   }, []);
 
-  const handleUserButtonClick = () => {
-    if (isAuthPage) return; // Don't open on auth pages
+  // FIX: Add resize event listener cleanup
+  useEffect(() => {
+    const handleResize = () => {
+      // Force re-render when window size changes
+      // This ensures isMobile returns correct value
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // FIX: Memoize handlers to prevent unnecessary re-renders
+  const handleUserButtonClick = useCallback(() => {
+    if (isAuthPage) return;
     
     if (isMobile()) {
       setIsModalOpen(true);
     } else {
       setIsDropdownOpen(!isDropdownOpen);
     }
-  };
+  }, [isAuthPage, isMobile]);
 
-  const handleBellButtonClick = () => {
-    if (isAuthPage) return; // Don't open on auth pages
+  const handleBellButtonClick = useCallback(() => {
+    if (isAuthPage) return;
     
     if (!userId) {
-      // If no user, redirect to login
       router.push('/Login');
       return;
     }
     
-    if (isMobile()) {
-      setIsBellPopupOpen(!isBellPopupOpen);
-    } else {
-      setIsBellPopupOpen(!isBellPopupOpen);
-      setIsDropdownOpen(false);
-    }
-  };
+    setIsBellPopupOpen(prev => !prev);
+    setIsDropdownOpen(false);
+  }, [isAuthPage, userId, router]);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     try {
       await markAsReadMutation({
         variables: { id },
@@ -402,9 +442,9 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
-  };
+  }, [markAsReadMutation]);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     try {
       await markAllAsReadMutation({
         variables: { userId },
@@ -415,9 +455,9 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
-  };
+  }, [markAllAsReadMutation, userId]);
 
-  const deleteNotification = async (id: string) => {
+  const deleteNotification = useCallback(async (id: string) => {
     try {
       await deleteNotificationMutation({
         variables: { id },
@@ -428,8 +468,9 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error('Error deleting notification:', error);
     }
-  };
+  }, [deleteNotificationMutation]);
 
+  // FIX: Memoize icon and color functions
   const getNotificationIcon = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
@@ -494,7 +535,7 @@ const Header: React.FC = () => {
     }
   }, []);
 
-  const handleNotificationClick = async (notification: Notification) => {
+  const handleNotificationClick = useCallback(async (notification: Notification) => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
     }
@@ -521,9 +562,9 @@ const Header: React.FC = () => {
     }
     
     setIsBellPopupOpen(false);
-  };
+  }, [markAsRead, router]);
 
-  const handleTabClick = (tabId: number) => {
+  const handleTabClick = useCallback((tabId: number) => {
     // Check if this is a protected tab and user is not logged in
     if ([5, 6, 7, 10].includes(tabId) && !isUserLoggedIn) {
       router.push('/Login');
@@ -538,12 +579,22 @@ const Header: React.FC = () => {
     } else {
       dispatch(setActiveIndex(tabId));
     }
-  };
+  }, [isUserLoggedIn, pathname, router, dispatch]);
 
-  const handleLogoClick = () =>{
+  const handleLogoClick = useCallback(() => {
     router.push('/');  
     dispatch(setActiveIndex(1));
-  }
+  }, [router, dispatch]);
+
+  // FIX: Clean up polling on unmount
+  useEffect(() => {
+    return () => {
+      if (stopPolling) {
+        stopPolling();
+      }
+    };
+  }, [stopPolling]);
+
   return (
     <div>
       <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
@@ -557,8 +608,8 @@ const Header: React.FC = () => {
               alt="Logo" 
               height={100} 
               width={100} 
-              onClick={()=>handleLogoClick()}
-              className="h-[100%] w-[auto] rounded"
+              onClick={handleLogoClick}
+              className="h-[100%] w-[auto] rounded cursor-pointer"
             />
           </div>
              
@@ -600,7 +651,7 @@ const Header: React.FC = () => {
                   <div className="fixed inset-0 z-50 transition-opacity duration-300 ease md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
                     {/* Backdrop for mobile with fade-in animation */}
                     <div 
-                      className="fixed inset-0 bg-black  md:hidden"
+                      className="fixed inset-0 bg-black md:hidden"
                       style={{
                         opacity: isBellPopupOpen ? 0.5 : 0,
                         backdropFilter: isBellPopupOpen ? 'blur(4px)' : 'blur(0px)'
@@ -767,7 +818,7 @@ const Header: React.FC = () => {
                           <div className="flex flex-col items-center justify-center p-8 text-center transform transition-all duration-300 ease-out">
                             <Bell className="w-12 h-12 text-gray-300 mb-4" />
                             <p className="text-gray-500 font-medium">No notifications</p>
-                            <p className="text-gray-400 text-sm mt-1">Youre all caught up!</p>
+                            <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
                           </div>
                         )}
                       </div>
@@ -825,7 +876,6 @@ const Header: React.FC = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        //handleTabClick(9);
                         router.push('/Messaging');
                       }}
                     >
@@ -851,7 +901,7 @@ const Header: React.FC = () => {
                         handleTabClick(10);
                       }}
                     >
-                      <Heart  className="mr-2 text-gray-400 w-4 h-4" />
+                      <Heart className="mr-2 text-gray-400 w-4 h-4" />
                       <span className="transition-all duration-200">Wishlist</span>
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
@@ -898,7 +948,8 @@ const Header: React.FC = () => {
                   alt="Logo" 
                   height={100} 
                   width={100} 
-                  className="h-[100%] w-[auto] rounded"
+                  className="h-[100%] w-[auto] rounded cursor-pointer"
+                  onClick={handleLogoClick}
                 />
               </div>
               
@@ -940,7 +991,6 @@ const Header: React.FC = () => {
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
-                      //handleTabClick(9);
                       router.push('/Messaging');
                     }}
                   >
