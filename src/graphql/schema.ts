@@ -284,6 +284,7 @@ type ProofOfDelivery {
   signatureData: String
   receivedBy: String
   receivedAt: String
+  trackingNumber: String
 }
 
 
