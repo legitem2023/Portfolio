@@ -977,6 +977,7 @@ input ProofOfDeliveryInput {
   receivedAt: String
   photoUrl: String
   signatureData: String
+  trackingNumber: String
 }
 
 # Input type for updating vehicle type (all fields optional)
