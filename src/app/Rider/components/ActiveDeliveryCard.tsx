@@ -838,84 +838,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;
       })
       .map((proof, index) => (
-        <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm border border-gray-200">
-          {/* Add tracking number badge to each proof */}
-          <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <QrCode size={14} className="text-gray-400" />
-              <span className="text-xs font-medium text-gray-500">Proof #{index + 1}</span>
-            </div>
-            {proof.trackingNumber && proof.trackingNumber !== delivery.trackingNumber ? (
-              <span className="text-xs font-mono bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                Track: {proof.trackingNumber}
-              </span>
-            ) : (
-              <span className="text-xs font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                Current Order
-              </span>
-            )}
-          </div>
-
-          {/* Photo */}
-          {proof.photoUrl && (
-            <div>
-              <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
-              <div className="relative rounded-lg overflow-hidden border border-gray-200">
-                <img 
-                  src={proof.photoUrl} 
-                  alt="Delivery proof" 
-                  className="w-full h-48 object-cover"
-                />
-              </div>
-            </div>
-          )}
-          
-          {/* Recipient Info */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-xs text-gray-500">Received By</p>
-              <p className="text-sm font-medium break-words">{proof.receivedBy}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Received At</p>
-              <p className="text-sm font-medium break-words">
-                {formatDate(proof.receivedAt)}
-              </p>
-            </div>
-          </div>
-          
-          {/* Signature */}
-          {proof.signatureData && (
-            <div>
-              <p className="text-xs text-gray-500 mb-2">Signature</p>
-              <div className="bg-white rounded-lg border border-gray-200 p-2">
-                <img 
-                  src={proof.signatureData} 
-                  alt="Signature" 
-                  className="max-h-16 w-full object-contain"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      ))}
-    
-    {/* Show message if no proofs match the tracking number */}
-    {delivery.proofOfDelivery.filter(proof => {
-      return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;
-    }).length === 0 && (
-      <div className="text-center py-6 text-gray-500">
-        <p className="text-sm">No proof of delivery found for tracking number: {delivery.trackingNumber}</p>
-      </div>
-    )}
-  </div>
-)}
-              {/*showProofSection && (
-                <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
-                  {delivery.proofOfDelivery.map((proof, index) => (
-                    <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm">
-                      
-                      {proof.photoUrl && (
+                <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm">     
+                    {proof.photoUrl && (
                         <div>
                           <p className="text-xs text-gray-500 mb-2">Delivery Photo</p>
                           <div className="relative rounded-lg overflow-hidden border border-gray-200">
@@ -956,9 +880,19 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
                         </div>
                       )}
                     </div>
-                  ))}
-                </div>
-              )*/}
+      ))}
+    
+    {/* Show message if no proofs match the tracking number */}
+    {delivery.proofOfDelivery.filter(proof => {
+      return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;
+    }).length === 0 && (
+      <div className="text-center py-6 text-gray-500">
+        <p className="text-sm">No proof of delivery found for tracking number: {delivery.trackingNumber}</p>
+      </div>
+    )}
+  </div>
+)}
+              
             </div>
           )}
 
