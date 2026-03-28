@@ -3696,7 +3696,7 @@ salesList: async (
     remit: async (_parent: any,args: any) => {
      try{
       const { id } = args;
-       await prisma.orderItems.update({
+       await prisma.orderItem.update({
          where :{
            id:id
          },
@@ -3704,6 +3704,9 @@ salesList: async (
            remitted:true
          }
        })
+       return {
+         statusText:"Successfully remitted!"
+       }
      } catch (error:any) {
         
         throw new Error('Failed to remit payments');
@@ -3712,14 +3715,17 @@ salesList: async (
     finishorder: async (_parent: any,args: any) => {
      try{
       const { id } = args;
-       await prisma.orderItems.update({
+       await prisma.orderItem.update({
          where :{
            id:id
          },
          data :{
            finished:true
          }
-       }) 
+       })
+       return {
+         statusText:"Successfully finished!"
+       }
      } catch (error:any) {    
         throw new Error('Failed to finish order');
      } 
