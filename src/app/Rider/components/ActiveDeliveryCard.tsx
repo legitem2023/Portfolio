@@ -68,6 +68,7 @@ interface ProofOfDeliveryInput {
   receivedAt: string;
   photoUrl: string;
   signatureData: string;
+  trackingNumber: string;
 }
 
 export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus = 'PROCESSING', onReset }: ActiveDeliveryCardProps) {
@@ -352,7 +353,8 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         receivedBy: receivedByName,
         receivedAt: new Date().toISOString(),
         photoUrl: proofPhoto,
-        signatureData: signature
+        signatureData: signature,
+        trackingNumber:delivery.trackingNumber
       };
 
       await uploadProof({
