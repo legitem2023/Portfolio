@@ -411,11 +411,15 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     setActionType('delivered');
 
     try {
-      await finishOrder({
+    const supplierItems = delivery.supplierItems || []
+      for (const item of supplierItems) {
+        await finishOrder({
         variables: {
-          id: delivery.originalOrderId
+          id: item.id
         }
       });
+      }
+      
     } catch (error) {
       console.error('Error finishing order:', error);
       setActionType(null);
