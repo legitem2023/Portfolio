@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, useMutation, gql } from '@apollo/client';
 import { 
   Package, 
   AlertCircle, 
@@ -348,6 +348,12 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
     pageSize: 10
   });
 
+  // State to track which orders are being remitted
+  const [remittingOrders, setRemittingOrders] = useState<Record<string, boolean>>({});
+
+  // Mutation hook
+  const [remit] = useMutation(REMIT_MUTATION);
+
   // Build filter object with supplierId if provided
   const filter: OrderFilterInput = { status: 'DELIVERED' };
   if (initialSupplierId) {
@@ -380,6 +386,43 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
 
   const handlePageSizeChange = (pageSize: number) => {
     setPagination(prev => ({ ...prev, pageSize, page: 1 }));
+  };
+
+  // Handle remit action for a whole order
+  const handleRemit = async (order: Order) => {
+    // Prevent multiple clicks
+    if (remittingOrders[order.id]) return;
+    
+    setRemittingOrders(prev => ({ ...prev, [order.id]: true }));
+    
+    try {
+      // Call remit mutation for each item in the order
+      const results = await Promise.allSettled(
+        order.items.map(item => 
+          remit({ variables: { id: item.id } })
+        )
+      );
+      
+      // Check for failures
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error(`${failed.length} items failed to remit.`);
+        // Optionally show an error toast
+      } else {
+        // All succeeded
+        console.log('All items remitted successfully');
+        // Refetch the list to update UI
+        await refetch();
+      }
+    } catch (err) {
+      console.error('Unexpected error during remit:', err);
+    } finally {
+      setRemittingOrders(prev => {
+        const newState = { ...prev };
+        delete newState[order.id];
+        return newState;
+      });
+    }
   };
 
   return (
@@ -453,6 +496,8 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                   const remittance = subtotal - vendorCityEarnings;
                   const grandtotal = subtotal + riderEarnings + taxAmount;
                   
+                  const isRemitting = remittingOrders[order.id];
+                  
                   return (
                     <div key={order.id} className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                       {/* Card Header with tracking */}
@@ -517,14 +562,22 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
                           </div>
                           <span className="text-base font-bold text-purple-700">{formatCurrency(remittance)}</span>
                         </div>
+                        
+                        {/* Remit Now Button with loading state */}
                         <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
                           <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
                             <Activity className="w-4 h-4" />
                             <span>Action</span>
                           </div>
-                          <span className="text-base font-bold text-purple-700">
-                            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Remit Now</button>
-                          </span>
+                          <button
+                            onClick={() => handleRemit(order)}
+                            disabled={isRemitting}
+                            className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition-colors ${
+                              isRemitting ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            {isRemitting ? 'Remitting...' : 'Remit Now'}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -586,4 +639,4 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
       </div>
     </div>
   );
-                    }
+          }
