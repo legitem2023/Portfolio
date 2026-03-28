@@ -376,11 +376,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       return;
     }
 
-    if (!hasProofUploaded) {
-      setMessage({ type: 'error', text: 'Please upload proof of delivery first' });
-      return;
-    }
-
     setActionType('delivered');
 
     try {
