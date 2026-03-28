@@ -3943,7 +3943,7 @@ updateVehicleType:async (_parent: any,args:any) => {
   }
 },
       uploadDeliveryProof: async (_parent: any, { file }: any) => {
-      const { id, receivedBy, receivedAt, photoUrl, signatureData } = file;
+      const { id, receivedBy, receivedAt, photoUrl, signatureData, trackingNumber } = file;
       const photoUUID = uuidv4();
       const signatureUUID = uuidv4();
       // Save images
@@ -3958,6 +3958,7 @@ updateVehicleType:async (_parent: any,args:any) => {
           receivedAt: new Date(receivedAt),
           photoUrl: photoFile.url,
           signatureData: signatureFile.url,
+          trackingNumber:trackingNumber
         },
       });
 
