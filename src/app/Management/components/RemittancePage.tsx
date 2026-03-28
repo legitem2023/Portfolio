@@ -17,7 +17,7 @@ import {
   Activity
 } from "lucide-react";
 
-export const REMIT_MUTATION = gql`
+const REMIT_MUTATION = gql`
   mutation Remit($id: ID!) {
     remit(id: $id) {
       statusText
