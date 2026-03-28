@@ -733,7 +733,8 @@ const orders = await prisma.order.findMany({
               photoUrl:true,
               signatureData:true,
               receivedBy: true,
-              receivedAt: true
+              receivedAt: true,
+              trackingNumber: true
           }
         },
         items: {
