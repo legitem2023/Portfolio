@@ -864,6 +864,7 @@ type newOrderListResponse {
 }
 
 input OrderFilterInput {
+  trackingNumber: String
   supplierId: String
   riderId: String
   userId: String
