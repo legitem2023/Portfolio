@@ -17,6 +17,14 @@ import {
   Activity
 } from "lucide-react";
 
+export const REMIT_MUTATION = gql`
+  mutation Remit($id: ID!) {
+    remit(id: $id) {
+      statusText
+    }
+  }
+`;
+
 // GraphQL query (same as before)
 const ORDER_LIST_QUERY = gql`
   query OrderList(
