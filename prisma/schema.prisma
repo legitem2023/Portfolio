@@ -403,7 +403,7 @@ model OrderItem {
 model ProofOfDelivery {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId       String   @db.ObjectId
-  variantId     String?
+  trackingNumber     String?
   order         Order  @relation(fields: [orderId], references: [id])
   photoUrl      String?
   signatureData String?
