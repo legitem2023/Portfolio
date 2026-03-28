@@ -831,16 +831,11 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       </div>
     </div>
 
-    {/* Filter and display proofs - only show those matching the current tracking number */}
+    {/* Filter and display proofs - ONLY show those matching the current tracking number */}
     {delivery.proofOfDelivery
       .filter(proof => {
-        // If proof has a trackingNumber field, filter by it
-        // Otherwise, assume all proofs belong to this delivery's tracking number
-        if (proof.trackingNumber) {
-          return proof.trackingNumber === delivery.trackingNumber;
-        }
-        // If no trackingNumber field, show all proofs (backward compatibility)
-        return true;
+        // Only show proofs that have a trackingNumber AND it matches the delivery's tracking number
+        return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;
       })
       .map((proof, index) => (
         <div key={index} className="bg-white rounded-lg p-4 space-y-3 shadow-sm border border-gray-200">
@@ -907,10 +902,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     
     {/* Show message if no proofs match the tracking number */}
     {delivery.proofOfDelivery.filter(proof => {
-      if (proof.trackingNumber) {
-        return proof.trackingNumber === delivery.trackingNumber;
-      }
-      return true;
+      return proof.trackingNumber && proof.trackingNumber === delivery.trackingNumber;
     }).length === 0 && (
       <div className="text-center py-6 text-gray-500">
         <p className="text-sm">No proof of delivery found for tracking number: {delivery.trackingNumber}</p>
@@ -918,7 +910,6 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     )}
   </div>
 )}
-              
               {/*showProofSection && (
                 <div className="px-4 pb-4 space-y-4 border-t border-gray-200 pt-3">
                   {delivery.proofOfDelivery.map((proof, index) => (
