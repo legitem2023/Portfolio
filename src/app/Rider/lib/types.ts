@@ -105,6 +105,7 @@ export const ACTIVE_ORDER_LIST = gql`
           signatureData
           receivedBy
           receivedAt
+          trackingNumber
         }
         items {
           id
@@ -291,6 +292,7 @@ export interface ProofOfDelivery {
   signatureData: string
   receivedBy: string
   receivedAt: string
+  trackingNumber: string
 }
 
 
