@@ -26,7 +26,7 @@ import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
 import { UPDATE_ORDER_STATUS } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
-import { useState, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import DeliveryMap from './DeliveryMap';
 import { gql } from '@apollo/client';
 
