@@ -1,6 +1,24 @@
 
 import { gql } from "@apollo/client";
 
+
+export const REMIT_MUTATION = gql`
+  mutation Remit($id: ID!) {
+    remit(id: $id) {
+      statusText
+    }
+  }
+`;
+
+export const FINISH_ORDER_MUTATION = gql`
+  mutation FinishOrder($id: ID!) {
+    finishorder(id: $id) {
+      statusText
+    }
+  }
+`;
+
+
 export const UPDATE_ORDER_STATUS = gql`
   mutation UpdateOrderStatus(
     $itemId: ID!, 
