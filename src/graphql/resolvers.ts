@@ -709,6 +709,11 @@ const orders = await prisma.order.findMany({
     itemWhere.riderId = filter.riderId  
   }
 
+ if (filter) {
+    itemWhere.finished = false
+ }
+
+    
   try {
     // Get orders count
     const totalCount = await prisma.order.count({ where });
@@ -1237,6 +1242,9 @@ const orders = await prisma.order.findMany({
     itemWhere.supplierId = filter.supplierId  
   }
 
+  if (filter) {
+    itemWhere.remitted = false
+  }
 
   try {
     // Get orders count
@@ -3685,7 +3693,38 @@ salesList: async (
   },
 
   Mutation: {
-    // createVehicleType resolver
+    remit: async (_parent: any,args: any) => {
+     try{
+      const { id } = args;
+       await prisma.orderItems.update({
+         where :{
+           id:id
+         },
+         data :{
+           remitted:true
+         }
+       })
+     } catch (error:any) {
+        
+        throw new Error('Failed to remit payments');
+     }
+    },
+    finishorder: async (_parent: any,args: any) => {
+     try{
+      const { id } = args;
+       await prisma.orderItems.update({
+         where :{
+           id:id
+         },
+         data :{
+           finished:true
+         }
+       }) 
+     } catch (error:any) {    
+        throw new Error('Failed to finish order');
+     } 
+    },
+    
 createVehicleType:async (_parent: any,args: any) => {
   try {
     const { input } = args;  
