@@ -1,5 +1,5 @@
 // Products/VariantsCollapsible.tsx
-import { Product } from '../../../../types';
+import { Product } from '../../../../../types';
 import VariantList from '../Variants/VariantList';
 
 interface VariantsCollapsibleProps {
