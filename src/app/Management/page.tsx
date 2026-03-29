@@ -57,7 +57,6 @@ export default function ManagementDashboard() {
 
   const [newCategory, setNewCategory] = useState<NewCategory>({
     name: "",
-    image: "",
     description: "",
     parentId: "",
     isActive: true
