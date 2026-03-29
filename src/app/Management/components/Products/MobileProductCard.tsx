@@ -251,7 +251,7 @@ export default function MobileProductCard({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   <p className="text-gray-500 text-sm">No variants yet</p>
-                  <p className="text-gray-400 text-xs mt-1">Click "Add New Variant" to start</p>
+                  <p className="text-gray-400 text-xs mt-1">Click &qoute;Add New Variant&qoute; to start</p>
                 </div>
               )}
             </div>
