@@ -41,7 +41,7 @@ export default function VariantCard({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-   console.log(variant.id, file);
+   
     if (file) {
       onImageUpload(variant.id, file);
       if (fileInputRef.current) {
@@ -238,7 +238,7 @@ export default function VariantCard({
                     {variant.images!.map((image, index) => (
                       <SwiperSlide key={index}>
                         <div className="relative group/thumb">
-                          <div className="aspect-video bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-transparent transition-all duration-200 group-[.swiper-slide-thumb-active]:border-blue-500 group-[.swiper-slide-thumb-active]:shadow-md">
+                          <div className="bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-transparent transition-all duration-200 group-[.swiper-slide-thumb-active]:border-blue-500 group-[.swiper-slide-thumb-active]:shadow-md">
                             <img 
                               src={image} 
                               alt={`Thumbnail ${index + 1}`}
