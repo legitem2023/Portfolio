@@ -135,6 +135,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
   };
 
   const handleVariantImageUpload = async (variantId: string, file: File) => {
+    console.log(variantId,file);
     if (!file.type.startsWith('image/')) {
       alert('Please select an image file');
       return;
