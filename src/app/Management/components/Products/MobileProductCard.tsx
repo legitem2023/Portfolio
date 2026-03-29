@@ -1,5 +1,5 @@
 // Products/MobileProductCard.tsx
-import { Product } from '../../../../types';
+import { Product } from '../../../../../types';
 import ImageUploader from '../UI/ImageUploader';
 
 interface MobileProductCardProps {
