@@ -164,6 +164,7 @@ export default function VariantsModal({
                       ">
                         <VariantCard 
                           variant={variant} 
+                          refetch={refetch}
                           onImageDelete={handleVariantImageDelete}
                           onImageUpload={handleImageUploadWithLogging}
                           isUploading={uploadingVariantId === variant.id}
