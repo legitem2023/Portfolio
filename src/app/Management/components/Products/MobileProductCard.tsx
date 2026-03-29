@@ -11,9 +11,11 @@ interface MobileProductCardProps {
   onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
   onDeleteProduct: (productId: string) => void;
-  onUpdateVariant?: (productId: string, variantId: string, updates: any) => void;
-  onVariantImageUpload: (variantId: string, file: File) => void;
-  uploadingVariantId: string | null;
+
+  // ✅ NOW OPTIONAL (fixes your error)
+  onVariantImageUpload?: (variantId: string, file: File) => void;
+  uploadingVariantId?: string | null;
+
   refetch?: any;
   isUploading: boolean;
 }
@@ -23,7 +25,6 @@ export default function MobileProductCard({
   onViewVariants,
   onImageUpload,
   onDeleteProduct,
-  onUpdateVariant,
   onVariantImageUpload,
   uploadingVariantId,
   refetch,
@@ -31,7 +32,6 @@ export default function MobileProductCard({
 }: MobileProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // 🔥 VariantsModal states (moved inline)
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
@@ -57,9 +57,8 @@ export default function MobileProductCard({
     setIsExpanded(!isExpanded);
   };
 
-  // 🔥 Variant logic (same as modal)
   const handleVariantImageDelete = (variantId: string, imageIndex: number) => {
-    console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
+    console.log(`Delete image ${imageIndex} from ${variantId}`);
   };
 
   const handleEditVariant = (variant: Variant) => {
@@ -83,14 +82,14 @@ export default function MobileProductCard({
     setShowAddForm(!showAddForm);
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) onImageUpload(product.id, file);
   };
 
   return (
     <div className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-      
+
       {/* HEADER */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
@@ -98,7 +97,6 @@ export default function MobileProductCard({
             {hasVariantsWithImages ? (
               <img
                 src={safeVariants[0].images![0]}
-                alt={product.name}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -107,7 +105,6 @@ export default function MobileProductCard({
               </div>
             )}
 
-            {/* Upload overlay */}
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition">
               <label className="text-white text-xs cursor-pointer">
                 Upload
@@ -148,7 +145,7 @@ export default function MobileProductCard({
 
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Stock</span>
-          <span className="text-sm">{product.stock}</span>
+          <span>{product.stock}</span>
         </div>
 
         <div className="flex justify-between items-center">
@@ -157,9 +154,9 @@ export default function MobileProductCard({
             onClick={toggleExpand}
             className="flex items-center text-blue-600 text-sm"
           >
-            {safeVariants.length} variants
+            {safeVariants.length}
             <svg
-              className={`w-4 h-4 ml-1 transform ${
+              className={`w-4 h-4 ml-1 ${
                 isExpanded ? 'rotate-180' : ''
               }`}
               fill="none"
@@ -172,7 +169,7 @@ export default function MobileProductCard({
         </div>
       </div>
 
-      {/* 🔥 INLINE VARIANTS (REPLACES MODAL) */}
+      {/* INLINE VARIANTS */}
       <div
         className={`overflow-hidden transition-all duration-300 ${
           isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
@@ -180,15 +177,13 @@ export default function MobileProductCard({
       >
         <div className="border-t pt-3">
 
-          {/* Header */}
+          {/* HEADER */}
           <div className="flex justify-between items-center mb-3">
-            <div>
-              <p className="text-xs text-gray-500">
-                {safeVariants.length} variant
-                {safeVariants.length !== 1 ? 's' : ''}
-                {editingVariant && ' • Editing'}
-              </p>
-            </div>
+            <p className="text-xs text-gray-500">
+              {safeVariants.length} variant
+              {safeVariants.length !== 1 ? 's' : ''}
+              {editingVariant && ' • Editing'}
+            </p>
 
             <button
               onClick={toggleAddForm}
@@ -202,7 +197,7 @@ export default function MobileProductCard({
             </button>
           </div>
 
-          {/* Add/Edit Form */}
+          {/* FORM */}
           {showAddForm && (
             <div className="mb-4 border rounded-lg overflow-hidden">
               <AddVariantForm
@@ -216,7 +211,7 @@ export default function MobileProductCard({
             </div>
           )}
 
-          {/* Variant List */}
+          {/* LIST */}
           <div className="max-h-[500px] overflow-y-auto">
             {safeVariants.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -228,7 +223,9 @@ export default function MobileProductCard({
                     <VariantCard
                       variant={variant}
                       onImageDelete={handleVariantImageDelete}
-                      onImageUpload={onVariantImageUpload}
+                      onImageUpload={(variantId, file) =>
+                        onVariantImageUpload?.(variantId, file)
+                      }
                       isUploading={uploadingVariantId === variant.id}
                       onEdit={handleEditVariant}
                     />
@@ -253,4 +250,4 @@ export default function MobileProductCard({
       </div>
     </div>
   );
-                }
+}
