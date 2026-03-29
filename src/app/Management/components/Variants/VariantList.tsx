@@ -66,31 +66,14 @@ export default function VariantList({
                   <span className="text-gray-500">Stock:</span>
                   <span className="ml-2 font-medium text-gray-900">{variant.stock || 0}</span>
                 </div>
-                {/*variant.weight && (
-                  <div>
-                    <span className="text-gray-500">Weight:</span>
-                       <span className="ml-2 text-gray-900">{variant.weight}g</span>
-                  </div>
-               )
-                */}
               </div>
-              
-              {/*variant.attributes && Object.keys(variant.attributes).length > 0 && (
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {Object.entries(variant.attributes).map(([key, value]) => (
-                    <span key={key} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                      {key}: {value}
-                    </span>
-                  ))}
-                </div>
-              )*/}
             </div>
             
             <div className="flex items-center gap-2">
               <ImageUploader
                 onImageUpload={(file) => onImageUpload(variant.id, file)}
                 isUploading={uploadingVariantId === variant.id}
-                currentImage={variant.images}
+                currentImage={variant.images && variant.images.length > 0 ? variant.images[0] : undefined}
                 buttonText="Upload Image"
                 className="flex-shrink-0"
               />
