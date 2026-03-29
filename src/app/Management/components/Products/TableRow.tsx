@@ -1,5 +1,5 @@
 // Products/TableRow.tsx
-import { Product } from '../../../../types';
+import { Product } from '../../../../../types';
 import ImageUploader from '../UI/ImageUploader';
 
 interface TableRowProps {
@@ -8,7 +8,7 @@ interface TableRowProps {
   onImageUpload: (productId: string, file: File) => Promise<void>;
   onDeleteProduct: (productId: string) => void;
   isUploading: boolean;
-  isVariantsOpen?: boolean; // Add this optional prop
+  isVariantsOpen?: boolean;
 }
 
 export default function TableRow({ 
@@ -17,7 +17,7 @@ export default function TableRow({
   onImageUpload, 
   onDeleteProduct, 
   isUploading,
-  isVariantsOpen = false // Default to false
+  isVariantsOpen = false
 }: TableRowProps) {
   return (
     <tr className="hover:bg-gray-50">
@@ -41,13 +41,13 @@ export default function TableRow({
             )}
           </div>
         </div>
-      </td>
+       </td>
       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">${product.price?.toFixed(2) || '0.00'}</div>
-      </td>
+       </td>
       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
         <div className="text-sm text-gray-900">{product.stock || 0}</div>
-      </td>
+       </td>
       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
         <button
           onClick={() => onViewVariants(product)}
@@ -63,16 +63,16 @@ export default function TableRow({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
-      </td>
+       </td>
       <td className="px-4 lg:px-6 py-4 whitespace-nowrap">
         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-          product.status === 'active' 
+          product.status?.toLowerCase() === 'active' 
             ? 'bg-green-100 text-green-800' 
             : 'bg-red-100 text-red-800'
         }`}>
-          {product.status || 'active'}
+          {product.status || 'Active'}
         </span>
-      </td>
+       </td>
       <td className="px-4 lg:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <div className="flex items-center gap-2">
           <ImageUploader
@@ -88,7 +88,7 @@ export default function TableRow({
             Delete
           </button>
         </div>
-      </td>
-    </tr>
+       </td>
+     </tr>
   );
 }
