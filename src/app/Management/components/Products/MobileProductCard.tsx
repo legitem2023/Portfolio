@@ -8,7 +8,7 @@ interface MobileProductCardProps {
   onImageUpload: (productId: string, file: File) => Promise<void>;
   onDeleteProduct: (productId: string) => void;
   isUploading: boolean;
-  isVariantsOpen?: boolean; // Add this optional prop
+  isVariantsOpen?: boolean;
 }
 
 export default function MobileProductCard({ 
@@ -17,7 +17,7 @@ export default function MobileProductCard({
   onImageUpload, 
   onDeleteProduct, 
   isUploading,
-  isVariantsOpen = false // Default to false
+  isVariantsOpen = false
 }: MobileProductCardProps) {
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-3">
@@ -44,11 +44,11 @@ export default function MobileProductCard({
             </span>
             <span className="text-xs text-gray-500">Stock: {product.stock || 0}</span>
             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-              product.status === 'active' 
+              product.status?.toLowerCase() === 'active' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-red-100 text-red-800'
             }`}>
-              {product.status || 'active'}
+              {product.status || 'Active'}
             </span>
           </div>
         </div>
