@@ -253,6 +253,7 @@ export default function MobileProductCard({
                       variant={variant}
                       onImageDelete={handleVariantImageDelete}
                       onImageUpload={handleVariantImageUploadWithLogging}
+                      refetch={refetch}
                       isUploading={uploadingVariantId === variant.id}
                       onEdit={handleEditVariant}
                     />
