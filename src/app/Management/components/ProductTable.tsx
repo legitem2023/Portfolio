@@ -239,7 +239,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
           <MobileProductCard 
             key={product.id} 
             product={product}
-           // onViewVariants={openVariantsModal}
+            onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
             onDeleteProduct={handleDelete}
             isUploading={uploadingProductId === product.id}
