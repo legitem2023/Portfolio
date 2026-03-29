@@ -31,11 +31,6 @@ export default function MobileProductCard({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
-  // Debug log for props
-  console.log('🟠 MOBILE CARD - Component mounted for product:', product.name);
-  console.log('🟠 MOBILE CARD - onVariantImageUpload prop:', onVariantImageUpload);
-  console.log('🟠 MOBILE CARD - typeof onVariantImageUpload:', typeof onVariantImageUpload);
-
   const safeVariants = (product.variants || []).map((variant) => ({
     ...variant,
     name: variant.name || '',
@@ -90,14 +85,11 @@ export default function MobileProductCard({
 
   // Wrapper function for variant image upload with logging
   const handleVariantImageUploadWithLogging = (variantId: string, file: File) => {
-    console.log('🟠 MOBILE CARD - INTERCEPTOR CALLED with:', { variantId, file });
-    console.log('🟠 MOBILE CARD - file name:', file.name);
-    console.log('🟠 MOBILE CARD - onVariantImageUpload exists?', !!onVariantImageUpload);
     
     if (onVariantImageUpload) {
-      console.log('🟠 MOBILE CARD - calling onVariantImageUpload now...');
+     // console.log('🟠 MOBILE CARD - calling onVariantImageUpload now...');
       onVariantImageUpload(variantId, file);
-      console.log('🟠 MOBILE CARD - onVariantImageUpload completed');
+      //console.log('🟠 MOBILE CARD - onVariantImageUpload completed');
     } else {
       console.error('🟠 MOBILE CARD - onVariantImageUpload is UNDEFINED!');
     }
