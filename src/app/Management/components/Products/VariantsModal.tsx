@@ -1,0 +1,197 @@
+import { useState } from 'react';
+import { Product, Variant } from '../../../../../types';
+import VariantCard from './VariantCard';
+import AddVariantForm from './AddVariantForm';
+
+interface VariantsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  product: Product | null;
+  refetch: any;
+  onVariantImageUpload: (variantId: string, file: File) => void;
+  uploadingVariantId: string | null;
+}
+
+export default function VariantsModal({ 
+  isOpen, 
+  onClose, 
+  product, 
+  refetch,
+  onVariantImageUpload,
+  uploadingVariantId 
+}: VariantsModalProps) {
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
+
+  // Add debug log for the prop
+  console.log('🔴 VARIANTS MODAL - onVariantImageUpload prop:', onVariantImageUpload);
+  console.log('🔴 VARIANTS MODAL - typeof onVariantImageUpload:', typeof onVariantImageUpload);
+
+  if (!isOpen || !product) return null;
+
+  const safeVariants = (product.variants || []).map(variant => ({
+    ...variant,
+    name: variant.name || '',
+    sku: variant.sku || '',
+    color: variant.color || '',
+    size: variant.size || '',
+    price: variant.price || 0,
+    salePrice: variant.salePrice || 0,
+    stock: variant.stock || 0,
+    images: variant.images || [],
+    createdAt: variant.createdAt || new Date().toISOString()
+  }));
+
+  const handleVariantImageDelete = async (variantId: string, imageIndex: number) => {
+    console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
+  };
+
+  // Handle edit variant
+  const handleEditVariant = (variant: Variant) => {
+    setEditingVariant(variant);
+    setShowAddForm(true);
+  };
+
+  // Handle form success
+  const handleFormSuccess = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+    refetch(); // Refresh the variant list
+  };
+
+  // Handle form cancel
+  const handleFormCancel = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+  };
+
+  // Toggle add form (for new variant)
+  const toggleAddForm = () => {
+    if (showAddForm) {
+      // If canceling, clear editing state
+      setEditingVariant(null);
+    }
+    setShowAddForm(!showAddForm);
+  };
+
+  // Wrapper function to add logging
+  const handleImageUploadWithLogging = (variantId: string, file: File) => {
+    console.log('🔴 VARIANTS MODAL - INTERCEPTOR CALLED with:', { variantId, file });
+    console.log('🔴 VARIANTS MODAL - calling onVariantImageUpload with:', variantId, file);
+    if (onVariantImageUpload) {
+      onVariantImageUpload(variantId, file);
+      console.log('🔴 VARIANTS MODAL - onVariantImageUpload CALLED successfully');
+    } else {
+      console.error('🔴 VARIANTS MODAL - onVariantImageUpload is undefined!');
+    }
+  };
+
+  return (
+    <div className={`fixed inset-0 z-50 overflow-y-auto transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onClose}
+      />
+      
+      <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
+        <div className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] bg-white shadow-xl rounded-t-2xl sm:rounded-2xl transform transition-all duration-300 ease-out">
+          
+          {/* Header - Responsive padding */}
+          <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
+            <div className="flex-1 min-w-0 pr-2">
+              <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">{product.name}</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                {safeVariants.length} variant{safeVariants.length !== 1 ? 's' : ''}
+                {editingVariant && ' • Editing'}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 ml-2 sm:ml-4 p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Add Variant Button - Responsive padding and sizing */}
+          <div className="p-3 sm:p-6 border-b border-gray-200 bg-gray-50">
+            <button
+              onClick={toggleAddForm}
+              className="w-full bg-red-600 text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center space-x-1.5 sm:space-x-2 text-sm sm:text-base font-medium"
+            >
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>
+                {showAddForm ? 'Cancel' : 
+                 editingVariant ? 'Cancel Editing' : 'Add New Variant'}
+              </span>
+            </button>
+          </div>
+
+          {/* Add Form Container */}
+          {showAddForm && (
+            <div className="border-b border-gray-200 max-h-[50vh] sm:max-h-none overflow-y-auto">
+              <AddVariantForm 
+                productId={product.id} 
+                refetch={refetch}
+                onSuccess={handleFormSuccess}
+                onCancel={handleFormCancel}
+                editingVariant={editingVariant}
+                setEditingVariant={setEditingVariant}
+              />
+            </div>
+          )}
+
+          {/* Variants List - Responsive grid */}
+          <div className="overflow-y-auto max-h-[calc(90vh-250px)] sm:max-h-[calc(80vh-250px)]">
+            {safeVariants.length > 0 ? (
+              <div className="p-3 sm:p-6">
+                <div className="
+                  grid grid-cols-1 gap-3 sm:gap-4 md:gap-6
+                  sm:grid-cols-2 lg:grid-cols-3
+                ">
+                  {safeVariants.map((variant) => {
+                    console.log('🔴 VARIANTS MODAL - rendering variant:', variant.id);
+                    return (
+                      <div key={variant.id} className="
+                        w-full
+                        sm:bg-gray-50 sm:p-3 lg:p-4 sm:rounded-lg
+                        transition-all duration-200 hover:shadow-md
+                      ">
+                        <VariantCard 
+                          variant={variant} 
+                          onImageDelete={handleVariantImageDelete}
+                          onImageUpload={handleImageUploadWithLogging}
+                          isUploading={uploadingVariantId === variant.id}
+                          onEdit={handleEditVariant}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <EmptyVariantsState />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyVariantsState() {
+  return (
+    <div className="p-6 sm:p-8 text-center text-gray-500">
+      <svg className="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <p className="mt-3 sm:mt-4 text-base sm:text-lg font-medium text-gray-900">No variants available</p>
+      <p className="mt-1 sm:mt-2 text-xs sm:text-sm">Click Add New Variant to create your first variant</p>
+    </div>
+  );
+                }
