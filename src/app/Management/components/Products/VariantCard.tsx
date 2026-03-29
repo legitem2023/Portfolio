@@ -392,7 +392,6 @@ export default function VariantCard({
         className="hidden"
         accept="image/*"
         onChange={handleFileChange}
-        disabled={isUploading}
       />
     </div>
   );
