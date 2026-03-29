@@ -389,7 +389,7 @@ export default function VariantCard({
       <input
         ref={fileInputRef}
         type="file"
-        className="hidden"
+        className=""
         accept="image/*"
         onChange={handleFileChange}
       />
