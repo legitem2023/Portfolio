@@ -80,6 +80,7 @@ export default function ManagementDashboard() {
     if (categoryData?.categories) {
       const categoriesData = categoryData.categories.map((data: any) => ({
         id: data.id,
+        image: data.imagd,
         name: data.name,
         description: data.description,
         productCount: 0,
