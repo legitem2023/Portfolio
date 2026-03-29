@@ -31,6 +31,11 @@ export default function MobileProductCard({
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
+  // Debug log for props
+  console.log('🟠 MOBILE CARD - Component mounted for product:', product.name);
+  console.log('🟠 MOBILE CARD - onVariantImageUpload prop:', onVariantImageUpload);
+  console.log('🟠 MOBILE CARD - typeof onVariantImageUpload:', typeof onVariantImageUpload);
+
   const safeVariants = (product.variants || []).map((variant) => ({
     ...variant,
     name: variant.name || '',
@@ -81,6 +86,21 @@ export default function MobileProductCard({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) onImageUpload(product.id, file);
+  };
+
+  // Wrapper function for variant image upload with logging
+  const handleVariantImageUploadWithLogging = (variantId: string, file: File) => {
+    console.log('🟠 MOBILE CARD - INTERCEPTOR CALLED with:', { variantId, file });
+    console.log('🟠 MOBILE CARD - file name:', file.name);
+    console.log('🟠 MOBILE CARD - onVariantImageUpload exists?', !!onVariantImageUpload);
+    
+    if (onVariantImageUpload) {
+      console.log('🟠 MOBILE CARD - calling onVariantImageUpload now...');
+      onVariantImageUpload(variantId, file);
+      console.log('🟠 MOBILE CARD - onVariantImageUpload completed');
+    } else {
+      console.error('🟠 MOBILE CARD - onVariantImageUpload is UNDEFINED!');
+    }
   };
 
   // Calculate total stock across variants
@@ -233,25 +253,26 @@ export default function MobileProductCard({
             {/* Variants List */}
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
               {safeVariants.length > 0 ? (
-                safeVariants.map((variant) => (
-                  <VariantCard
-                    key={variant.id}
-                    variant={variant}
-                    onImageDelete={handleVariantImageDelete}
-                    onImageUpload={(variantId, file) =>
-                      onVariantImageUpload?.(variantId, file)
-                    }
-                    isUploading={uploadingVariantId === variant.id}
-                    onEdit={handleEditVariant}
-                  />
-                ))
+                safeVariants.map((variant) => {
+                  console.log('🟠 MOBILE CARD - rendering variant:', variant.id, variant.name);
+                  return (
+                    <VariantCard
+                      key={variant.id}
+                      variant={variant}
+                      onImageDelete={handleVariantImageDelete}
+                      onImageUpload={handleVariantImageUploadWithLogging}
+                      isUploading={uploadingVariantId === variant.id}
+                      onEdit={handleEditVariant}
+                    />
+                  );
+                })
               ) : (
                 <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
                   <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   <p className="text-gray-500 text-sm">No variants yet</p>
-                  <p className="text-gray-400 text-xs mt-1">Click &qoute;Add New Variant&qoute; to start</p>
+                  <p className="text-gray-400 text-xs mt-1">Click "Add New Variant" to start</p>
                 </div>
               )}
             </div>
@@ -268,4 +289,4 @@ export default function MobileProductCard({
       </div>
     </div>
   );
-                }
+}
