@@ -90,7 +90,7 @@ export default function VariantList({
               <ImageUploader
                 onImageUpload={(file) => onImageUpload(variant.id, file)}
                 isUploading={uploadingVariantId === variant.id}
-                currentImage={variant.image}
+                currentImage={variant.images}
                 buttonText="Upload Image"
                 className="flex-shrink-0"
               />
