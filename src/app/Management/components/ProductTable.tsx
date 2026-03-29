@@ -243,6 +243,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
             onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
             onDeleteProduct={handleDelete}
+            refetch={refetch}
             isUploading={uploadingProductId === product.id}
           />
         ))}
