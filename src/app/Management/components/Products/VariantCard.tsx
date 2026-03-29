@@ -45,7 +45,7 @@ export default function VariantCard({
     if (file) {
       onImageUpload(variant.id, file);
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+       // fileInputRef.current.value = '';
       }
     }
   };
