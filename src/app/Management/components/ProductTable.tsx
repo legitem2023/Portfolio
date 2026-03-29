@@ -26,7 +26,7 @@ const sortOptions: SortOption[] = [
   { value: 'createdAt-asc', label: 'Oldest First', direction: 'asc' },
 ];
 
-export default function ProductTable({ products,refetch, onProductDeleted }: ProductTableProps) {
+export default function ProductTableB({ products,refetch, onProductDeleted }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCollapsibleOpen, setIsCollapsibleOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
