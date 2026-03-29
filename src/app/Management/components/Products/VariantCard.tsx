@@ -13,6 +13,7 @@ interface VariantCardProps {
   variant: Variant;
   onImageUpload: (variantId: string, file: File) => void;
   onImageDelete: (variantId: string, imageIndex: number) => void;
+  refetch: any;
   isUploading: boolean;
   onEdit?: (variant: Variant) => void;
 }
@@ -21,6 +22,7 @@ export default function VariantCard({
   variant, 
   onImageUpload,
   onImageDelete,
+  refetch,
   isUploading,
   onEdit
 }: VariantCardProps) {
@@ -48,6 +50,7 @@ export default function VariantCard({
    // console.log('🟡 VARIANT CARD - onImageUpload CALLED');
     
     if (fileInputRef.current) {
+      refetch();
       fileInputRef.current.value = '';
     }
   }
