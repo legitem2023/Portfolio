@@ -41,6 +41,7 @@ export default function VariantCard({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+   console.log(variant.id, file);
     if (file) {
       onImageUpload(variant.id, file);
       if (fileInputRef.current) {
