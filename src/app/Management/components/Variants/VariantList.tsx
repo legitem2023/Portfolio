@@ -66,12 +66,13 @@ export default function VariantList({
                   <span className="text-gray-500">Stock:</span>
                   <span className="ml-2 font-medium text-gray-900">{variant.stock || 0}</span>
                 </div>
-                {variant.weight && (
+                {/*variant.weight && (
                   <div>
                     <span className="text-gray-500">Weight:</span>
-                    <span className="ml-2 text-gray-900">{variant.weight}g</span>
+                       <span className="ml-2 text-gray-900">{variant.weight}g</span>
                   </div>
-                )}
+               )
+                */}
               </div>
               
               {variant.attributes && Object.keys(variant.attributes).length > 0 && (
