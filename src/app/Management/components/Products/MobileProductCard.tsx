@@ -88,168 +88,137 @@ export default function MobileProductCard({
   const hasSale = product.salePrice && product.salePrice < product.price;
 
   return (
-    <div className="bg-white shadow-lg rounded-2xl overflow-hidden border-0 transition-all duration-300 hover:shadow-xl">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       
-      {/* Minimalist Header - Clean and Modern */}
-      <div className="relative">
-        {/* Subtle Brand Accent */}
-        <div className="absolute top-0 left-0 w-20 h-1 bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full" />
-        
-        <div className="pt-5 px-5 pb-3">
-          <div className="flex items-start justify-between gap-3">
-            {/* Product Image with Modern Frame */}
-            <div className="relative flex-shrink-0">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 overflow-hidden shadow-md ring-1 ring-gray-100">
-                {hasVariantsWithImages ? (
-                  <img
-                    src={safeVariants[0].images![0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
+      {/* Product Header - Simple & Clean */}
+      <div className="p-4">
+        <div className="flex gap-3">
+          {/* Product Image */}
+          <div className="relative flex-shrink-0">
+            <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden">
+              {hasVariantsWithImages ? (
+                <img
+                  src={safeVariants[0].images![0]}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+
+              {/* Upload Overlay */}
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                <label className="cursor-pointer p-1">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
                   />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-[10px] text-gray-400 mt-1">No img</span>
-                  </div>
-                )}
-
-                {/* Upload Overlay - Minimal */}
-                <div className="absolute inset-0 bg-indigo-900/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 backdrop-blur-sm">
-                  <label className="cursor-pointer text-white">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={isUploading}
-                    />
-                  </label>
-                </div>
-
-                {isUploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-indigo-900/90 backdrop-blur-sm">
-                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  </div>
-                )}
+                </label>
               </div>
-            </div>
 
-            {/* Product Title & SKU */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800 leading-tight mb-0.5 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs text-gray-400 font-mono tracking-tight">{product.sku}</p>
+              {isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/70">
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
                 </div>
-                <StatusBadge status={product.isActive} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Key Metrics Bar - Clean Card Style */}
-      <div className="mx-5 mb-4 p-3 bg-gray-50/80 rounded-xl border border-gray-100">
-        <div className="flex items-center justify-between">
-          {/* Price Section */}
-          <div className="flex-1">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Price</p>
-            <div className="flex items-baseline gap-1.5">
-              <span className={`text-base font-bold text-gray-800 ${hasSale ? 'line-through text-gray-400 text-sm' : ''}`}>
-                ₱{product.price.toLocaleString()}
-              </span>
-              {hasSale && (
-                <span className="text-base font-bold text-indigo-600">
-                  ₱{product.salePrice?.toLocaleString()}
-                </span>
               )}
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="w-px h-8 bg-gray-200" />
-
-          {/* Stock Section */}
-          <div className="flex-1 text-right">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Total Stock</p>
-            <p className={`text-base font-bold ${totalStock === 0 ? 'text-red-500' : 'text-gray-800'}`}>
-              {totalStock} units
-            </p>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-8 bg-gray-200" />
-
-          {/* Variants Section */}
-          <div className="flex-1 text-right">
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Variants</p>
-            <button
-              onClick={toggleExpand}
-              className="flex items-center justify-end gap-1 w-full group"
-            >
-              <span className="text-base font-bold text-indigo-600">
-                {safeVariants.length}
-              </span>
-              <svg
-                className={`w-4 h-4 text-indigo-500 transition-transform duration-200 group-hover:translate-y-0.5 ${
-                  isExpanded ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+          {/* Product Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <h3 className="text-base font-semibold text-gray-900 flex-1 line-clamp-2">
+                {product.name}
+              </h3>
+              <StatusBadge status={product.isActive} />
+            </div>
+            <p className="text-xs text-gray-500 font-mono mb-2">{product.sku}</p>
+            
+            {/* Price & Stock Row */}
+            <div className="flex items-center gap-3">
+              <div>
+                <span className="text-xs text-gray-500">Price</span>
+                <div className="flex items-baseline gap-1">
+                  {hasSale && (
+                    <span className="text-xs text-gray-400 line-through">
+                      ₱{product.price.toLocaleString()}
+                    </span>
+                  )}
+                  <span className="text-sm font-bold text-gray-900">
+                    ₱{(hasSale ? product.salePrice : product.price)?.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              <div className="w-px h-6 bg-gray-200" />
+              <div>
+                <span className="text-xs text-gray-500">Stock</span>
+                <p className="text-sm font-semibold text-gray-900">{totalStock} units</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Variants Toggle - Full Width Button */}
+      <button
+        onClick={toggleExpand}
+        className="w-full px-4 py-3 bg-gray-50 flex items-center justify-between border-t border-gray-100 active:bg-gray-100 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700">
+            Variants ({safeVariants.length})
+          </span>
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+            isExpanded ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
       {/* Collapsible Variants Section */}
       <div
-        className={`transition-all duration-400 ease-out ${
-          isExpanded ? 'max-h-[2500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+        className={`transition-all duration-300 ease-in-out ${
+          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
-        <div className="border-t border-gray-100 bg-gray-50/40">
-          <div className="p-5">
+        <div className="border-t border-gray-100 bg-gray-50">
+          <div className="p-4">
             
-            {/* Section Header with Action */}
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
-              <div>
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Product Variations
-                </h4>
-                {editingVariant && (
-                  <p className="text-[11px] text-indigo-600 mt-0.5">Editing: {editingVariant.name}</p>
-                )}
-              </div>
-              
+            {/* Add Variant Button */}
+            {!showAddForm && (
               <button
                 onClick={toggleAddForm}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
-                  showAddForm
-                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
-                }`}
+                className="w-full mb-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm font-medium text-indigo-600 active:bg-gray-50 transition-colors flex items-center justify-center gap-2"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                {showAddForm ? 'Cancel' : editingVariant ? 'Cancel' : 'Add Variant'}
+                Add New Variant
               </button>
-            </div>
+            )}
 
             {/* Add/Edit Form */}
             {showAddForm && (
-              <div className="mb-5 rounded-xl border border-indigo-200 bg-white overflow-hidden shadow-sm">
+              <div className="mb-4 rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <AddVariantForm
                   productId={product.id}
                   refetch={refetch}
@@ -262,7 +231,7 @@ export default function MobileProductCard({
             )}
 
             {/* Variants List */}
-            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
+            <div className="space-y-3 max-h-[500px] overflow-y-auto">
               {safeVariants.length > 0 ? (
                 safeVariants.map((variant) => (
                   <VariantCard
@@ -277,22 +246,12 @@ export default function MobileProductCard({
                   />
                 ))
               ) : (
-                <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
-                  <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                  <p className="text-gray-500 text-sm mb-3">No variants created yet</p>
-                  <button
-                    onClick={toggleAddForm}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    Create Your First Variant
-                  </button>
+                <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+                  <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                  <p className="text-gray-500 text-sm">No variants yet</p>
+                  <p className="text-gray-400 text-xs mt-1">Click "Add New Variant" to start</p>
                 </div>
               )}
             </div>
@@ -300,8 +259,8 @@ export default function MobileProductCard({
         </div>
       </div>
 
-      {/* Action Buttons - Minimal Footer */}
-      <div className="px-5 py-3.5 bg-white border-t border-gray-100">
+      {/* Action Buttons */}
+      <div className="px-4 py-3 bg-white border-t border-gray-100">
         <ActionButtons
           productId={product.id}
           onDelete={onDeleteProduct}
@@ -309,4 +268,4 @@ export default function MobileProductCard({
       </div>
     </div>
   );
-              }
+                }
