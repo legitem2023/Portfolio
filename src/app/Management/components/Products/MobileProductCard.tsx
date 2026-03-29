@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Product } from '../../../../../types';
+import { Product, Variant } from '../../../../../types';
 import PriceDisplay from './PriceDisplay';
 import StatusBadge from './StatusBadge';
 import ActionButtons from './ActionButtons';
 import VariantCard from './VariantCard';
+import AddVariantForm from './AddVariantForm';
 
 interface MobileProductCardProps {
   product: Product;
@@ -11,7 +12,9 @@ interface MobileProductCardProps {
   onImageUpload: (productId: string, file: File) => void;
   onDeleteProduct: (productId: string) => void;
   onUpdateVariant?: (productId: string, variantId: string, updates: any) => void;
-  onVariantImageUpload?: (variantId: string, file: File) => void;
+  onVariantImageUpload: (variantId: string, file: File) => void;
+  uploadingVariantId: string | null;
+  refetch?: any;
   isUploading: boolean;
 }
 
@@ -22,11 +25,15 @@ export default function MobileProductCard({
   onDeleteProduct,
   onUpdateVariant,
   onVariantImageUpload,
+  uploadingVariantId,
+  refetch,
   isUploading
 }: MobileProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
-  const [editData, setEditData] = useState<any>({});
+
+  // 🔥 VariantsModal states (moved inline)
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
 
   const safeVariants = (product.variants || []).map((variant) => ({
     ...variant,
@@ -48,29 +55,32 @@ export default function MobileProductCard({
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
-    setEditingVariantId(null);
   };
 
-  const startEditing = (variantId: string, variant: any) => {
-    setEditingVariantId(variantId);
-    setEditData({ ...variant });
+  // 🔥 Variant logic (same as modal)
+  const handleVariantImageDelete = (variantId: string, imageIndex: number) => {
+    console.log(`Deleting image ${imageIndex} from variant ${variantId}`);
   };
 
-  const cancelEditing = () => {
-    setEditingVariantId(null);
-    setEditData({});
+  const handleEditVariant = (variant: Variant) => {
+    setEditingVariant(variant);
+    setShowAddForm(true);
   };
 
-  const saveEdit = (variantId: string) => {
-    if (onUpdateVariant) {
-      onUpdateVariant(product.id, variantId, editData);
-    }
-    setEditingVariantId(null);
-    setEditData({});
+  const handleFormSuccess = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+    refetch?.();
   };
 
-  const handleEditChange = (field: string, value: any) => {
-    setEditData((prev: any) => ({ ...prev, [field]: value }));
+  const handleFormCancel = () => {
+    setShowAddForm(false);
+    setEditingVariant(null);
+  };
+
+  const toggleAddForm = () => {
+    if (showAddForm) setEditingVariant(null);
+    setShowAddForm(!showAddForm);
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +90,8 @@ export default function MobileProductCard({
 
   return (
     <div className="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-      {/* Header */}
+      
+      {/* HEADER */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center space-x-3">
           <div className="relative h-12 w-12 bg-gray-300 rounded-md overflow-hidden">
@@ -103,14 +114,24 @@ export default function MobileProductCard({
                 <input
                   type="file"
                   className="hidden"
+                  accept="image/*"
                   onChange={handleFileChange}
+                  disabled={isUploading}
                 />
               </label>
             </div>
+
+            {isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-60">
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+              </div>
+            )}
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold">{product.name}</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {product.name}
+            </h3>
             <p className="text-sm text-gray-500">{product.sku}</p>
           </div>
         </div>
@@ -118,150 +139,113 @@ export default function MobileProductCard({
         <StatusBadge status={product.isActive} />
       </div>
 
-      {/* Details */}
+      {/* DETAILS */}
       <div className="space-y-2 mb-4">
         <div className="flex justify-between">
-          <span>Price</span>
-          <PriceDisplay
-            price={product.price}
-            salePrice={product.salePrice}
-          />
+          <span className="text-sm text-gray-600">Price</span>
+          <PriceDisplay price={product.price} salePrice={product.salePrice} />
         </div>
 
         <div className="flex justify-between">
-          <span>Stock</span>
-          <span>{product.stock}</span>
+          <span className="text-sm text-gray-600">Stock</span>
+          <span className="text-sm">{product.stock}</span>
         </div>
 
         <div className="flex justify-between items-center">
-          <span>Variants</span>
+          <span className="text-sm text-gray-600">Variants</span>
           <button
             onClick={toggleExpand}
-            className="text-blue-600 text-sm flex items-center"
+            className="flex items-center text-blue-600 text-sm"
           >
             {safeVariants.length} variants
-            <span className={`ml-1 ${isExpanded ? 'rotate-180' : ''}`}>
-              ▼
-            </span>
+            <svg
+              className={`w-4 h-4 ml-1 transform ${
+                isExpanded ? 'rotate-180' : ''
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
         </div>
       </div>
 
-      {/* Collapsible */}
+      {/* 🔥 INLINE VARIANTS (REPLACES MODAL) */}
       <div
-        className={`transition-all duration-300 ${
+        className={`overflow-hidden transition-all duration-300 ${
           isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-        } overflow-hidden`}
+        }`}
       >
-        <div className="border-t pt-3 space-y-3">
-          {safeVariants.length > 0 ? (
-            safeVariants.map((variant) => (
-              <div
-                key={variant.id}
-                className="bg-gray-50 p-3 rounded-lg"
-              >
-                <VariantCard
-                  variant={variant}
-                  onImageDelete={() => {}}
-                  onImageUpload={(variantId, file) =>
-                    onVariantImageUpload?.(variantId, file)
-                  }
-                  isUploading={false}
-                  onEdit={(v) => startEditing(v.id!, v)}
-                />
+        <div className="border-t pt-3">
 
-                {/* EDIT MODE */}
-                {editingVariantId === variant.id && (
-                  <div className="mt-3 space-y-2 border-t pt-3">
-                    <input
-                      value={editData.name}
-                      onChange={(e) =>
-                        handleEditChange('name', e.target.value)
-                      }
-                      className="w-full border px-2 py-1 text-sm"
-                    />
+          {/* Header */}
+          <div className="flex justify-between items-center mb-3">
+            <div>
+              <p className="text-xs text-gray-500">
+                {safeVariants.length} variant
+                {safeVariants.length !== 1 ? 's' : ''}
+                {editingVariant && ' • Editing'}
+              </p>
+            </div>
 
-                    <input
-                      value={editData.sku}
-                      onChange={(e) =>
-                        handleEditChange('sku', e.target.value)
-                      }
-                      className="w-full border px-2 py-1 text-sm"
-                    />
+            <button
+              onClick={toggleAddForm}
+              className="text-xs bg-red-600 text-white px-3 py-1 rounded"
+            >
+              {showAddForm
+                ? 'Cancel'
+                : editingVariant
+                ? 'Cancel Editing'
+                : '+ Add Variant'}
+            </button>
+          </div>
 
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        value={editData.color}
-                        onChange={(e) =>
-                          handleEditChange('color', e.target.value)
-                        }
-                        className="border px-2 py-1 text-sm"
-                      />
-                      <input
-                        value={editData.size}
-                        onChange={(e) =>
-                          handleEditChange('size', e.target.value)
-                        }
-                        className="border px-2 py-1 text-sm"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="number"
-                        value={editData.price}
-                        onChange={(e) =>
-                          handleEditChange('price', +e.target.value)
-                        }
-                        className="border px-2 py-1 text-sm"
-                      />
-                      <input
-                        type="number"
-                        value={editData.salePrice}
-                        onChange={(e) =>
-                          handleEditChange('salePrice', +e.target.value)
-                        }
-                        className="border px-2 py-1 text-sm"
-                      />
-                    </div>
-
-                    <input
-                      type="number"
-                      value={editData.stock}
-                      onChange={(e) =>
-                        handleEditChange('stock', +e.target.value)
-                      }
-                      className="w-full border px-2 py-1 text-sm"
-                    />
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => saveEdit(variant.id!)}
-                        className="flex-1 bg-green-600 text-white py-1 rounded text-sm"
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={cancelEditing}
-                        className="flex-1 bg-gray-500 text-white py-1 rounded text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="text-center text-sm text-gray-500">
-              No variants
+          {/* Add/Edit Form */}
+          {showAddForm && (
+            <div className="mb-4 border rounded-lg overflow-hidden">
+              <AddVariantForm
+                productId={product.id}
+                refetch={refetch}
+                onSuccess={handleFormSuccess}
+                onCancel={handleFormCancel}
+                editingVariant={editingVariant}
+                setEditingVariant={setEditingVariant}
+              />
             </div>
           )}
+
+          {/* Variant List */}
+          <div className="max-h-[500px] overflow-y-auto">
+            {safeVariants.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {safeVariants.map((variant) => (
+                  <div
+                    key={variant.id}
+                    className="bg-gray-50 p-3 rounded-lg"
+                  >
+                    <VariantCard
+                      variant={variant}
+                      onImageDelete={handleVariantImageDelete}
+                      onImageUpload={onVariantImageUpload}
+                      isUploading={uploadingVariantId === variant.id}
+                      onEdit={handleEditVariant}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500 text-sm">
+                No variants available
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="pt-3 border-t">
+      {/* ACTIONS */}
+      <div className="pt-3 border-t mt-3">
         <ActionButtons
           productId={product.id}
           onDelete={onDeleteProduct}
@@ -269,4 +253,4 @@ export default function MobileProductCard({
       </div>
     </div>
   );
-          }
+                }
