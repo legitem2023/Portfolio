@@ -185,7 +185,7 @@ export default function MobileProductCard({
             </button>
           </div>
           
-          <div className="space-y-3 max-h-[600px] overflow-y-auto">
+          {/*<div className="space-y-3 max-h-[600px] overflow-y-auto">
             {safeVariants.length > 0 ? (
               safeVariants.map((variant, index) => (
                 <div key={variant.id || index} className="bg-gray-50 rounded-lg p-3">
@@ -304,7 +304,7 @@ export default function MobileProductCard({
                         </div>
                       </div>
                       
-                      {/* Variant Images Section */}
+                      
                       <div className="mt-2">
                         <label className="text-xs text-gray-500 block mb-1">Variant Images</label>
                         <div className="flex items-center space-x-2">
@@ -318,7 +318,7 @@ export default function MobileProductCard({
                                     className="w-12 h-12 object-cover rounded"
                                   />
                                   <button
-                                    onClick={() => {/* Remove image logic */}}
+                                    onClick={() => {}}
                                     className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs"
                                   >
                                     ×
@@ -363,14 +363,14 @@ export default function MobileProductCard({
               <div className="text-center py-6">
                 <p className="text-sm text-gray-500 mb-2">No variants available</p>
                 <button
-                  onClick={() => {/* Add new variant logic */}}
+                  onClick={() => {}}
                   className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
                 >
                   Create First Variant
                 </button>
               </div>
             )}
-          </div>
+          </div>*/}
         </div>
       </div>
       
