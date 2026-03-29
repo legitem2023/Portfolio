@@ -6,6 +6,7 @@ import ActionButtons from './ActionButtons';
 
 interface MobileProductCardProps {
   product: Product;
+  onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
   onDeleteProduct: (productId: string) => void;
   onUpdateVariant?: (productId: string, variantId: string, updates: any) => void;
@@ -14,6 +15,7 @@ interface MobileProductCardProps {
 
 export default function MobileProductCard({ 
   product, 
+  onViewVariants,
   onImageUpload,
   onDeleteProduct,
   onUpdateVariant,
