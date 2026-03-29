@@ -41,11 +41,11 @@ export default function VariantCard({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-   
+    console.log(file);
     if (file) {
       onImageUpload(variant.id, file);
       if (fileInputRef.current) {
-       // fileInputRef.current.value = '';
+       fileInputRef.current.value = '';
       }
     }
   };
@@ -392,7 +392,7 @@ export default function VariantCard({
         className=""
         accept="image/*"
         onChange={handleFileChange}
-      />
+        />
     </div>
   );
-                  }
+}
