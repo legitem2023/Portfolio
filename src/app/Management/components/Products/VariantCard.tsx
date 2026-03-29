@@ -76,14 +76,16 @@ export default function VariantCard({
   };
 
   // Stock status indicator
-  const getStockStatus = (stock: number) => {
-    if (stock === 0) return { label: 'Out of Stock', color: 'bg-red-100 text-red-800' };
-    if (stock < 10) return { label: 'Low Stock', color: 'bg-orange-100 text-orange-800' };
-    return { label: `${stock} in stock`, color: 'bg-green-100 text-green-800' };
-  };
+  // Keep original function but add type guard
+const getStockStatus = (stock: number) => {
+  if (stock === 0) return { label: 'Out of Stock', color: 'bg-red-100 text-red-800' };
+  if (stock < 10) return { label: 'Low Stock', color: 'bg-orange-100 text-orange-800' };
+  return { label: `${stock} in stock`, color: 'bg-green-100 text-green-800' };
+};
 
-  const stockStatus = getStockStatus(variant.stock);
-
+// Then use nullish coalescing to provide a default
+const stockStatus = getStockStatus(variant.stock ?? 0);
+  
   return (
     <div className="group bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
       {/* Header Section with Gradient Border */}
