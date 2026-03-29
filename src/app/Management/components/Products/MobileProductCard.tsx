@@ -83,142 +83,173 @@ export default function MobileProductCard({
     if (file) onImageUpload(product.id, file);
   };
 
+  // Calculate total stock across variants
+  const totalStock = safeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
+  const hasSale = product.salePrice && product.salePrice < product.price;
+
   return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
-      {/* Header Section with Gradient Accent */}
+    <div className="bg-white shadow-lg rounded-2xl overflow-hidden border-0 transition-all duration-300 hover:shadow-xl">
+      
+      {/* Minimalist Header - Clean and Modern */}
       <div className="relative">
-        <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+        {/* Subtle Brand Accent */}
+        <div className="absolute top-0 left-0 w-20 h-1 bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full" />
         
-        {/* Header Content */}
-        <div className="p-3 sm:p-4 md:p-5">
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-              {/* Product Image */}
-              <div className="relative flex-shrink-0">
-                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden shadow-sm">
-                  {hasVariantsWithImages ? (
-                    <img
-                      src={safeVariants[0].images![0]}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-
-                  {/* Upload Overlay */}
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-                    <label className="cursor-pointer text-white p-1">
-                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleFileChange}
-                        disabled={isUploading}
-                      />
-                    </label>
+        <div className="pt-5 px-5 pb-3">
+          <div className="flex items-start justify-between gap-3">
+            {/* Product Image with Modern Frame */}
+            <div className="relative flex-shrink-0">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 overflow-hidden shadow-md ring-1 ring-gray-100">
+                {hasVariantsWithImages ? (
+                  <img
+                    src={safeVariants[0].images![0]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <svg className="w-6 h-6 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-[10px] text-gray-400 mt-1">No img</span>
                   </div>
+                )}
 
-                  {isUploading && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                      <div className="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                    </div>
-                  )}
+                {/* Upload Overlay - Minimal */}
+                <div className="absolute inset-0 bg-indigo-900/80 flex items-center justify-center opacity-0 hover:opacity-100 transition-all duration-200 backdrop-blur-sm">
+                  <label className="cursor-pointer text-white">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                    />
+                  </label>
                 </div>
-              </div>
 
-              {/* Product Info */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
-                  <h3 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 truncate max-w-[120px] sm:max-w-[200px] md:max-w-none">
+                {isUploading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-indigo-900/90 backdrop-blur-sm">
+                    <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Product Title & SKU */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800 leading-tight mb-0.5 line-clamp-2">
                     {product.name}
                   </h3>
-                  <StatusBadge status={product.isActive} />
+                  <p className="text-xs text-gray-400 font-mono tracking-tight">{product.sku}</p>
                 </div>
-                <p className="text-[11px] sm:text-xs text-gray-500 font-mono truncate">{product.sku}</p>
+                <StatusBadge status={product.isActive} />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Product Details Section */}
-      <div className="px-3 sm:px-4 md:px-5 py-2.5 sm:py-3 bg-gray-50/50 border-y border-gray-100">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
-          <div className="flex items-center justify-between sm:justify-start space-x-4 sm:space-x-6">
-            <div>
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-0.5">Price</p>
-              <PriceDisplay price={product.price} salePrice={product.salePrice} />
-            </div>
-            <div className="w-px h-6 bg-gray-200 hidden sm:block" />
-            <div>
-              <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-0.5">Stock</p>
-              <p className="text-xs sm:text-sm font-semibold text-gray-900">{product.stock} units</p>
+      {/* Key Metrics Bar - Clean Card Style */}
+      <div className="mx-5 mb-4 p-3 bg-gray-50/80 rounded-xl border border-gray-100">
+        <div className="flex items-center justify-between">
+          {/* Price Section */}
+          <div className="flex-1">
+            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Price</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className={`text-base font-bold text-gray-800 ${hasSale ? 'line-through text-gray-400 text-sm' : ''}`}>
+                ₱{product.price.toLocaleString()}
+              </span>
+              {hasSale && (
+                <span className="text-base font-bold text-indigo-600">
+                  ₱{product.salePrice?.toLocaleString()}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Variants Toggle Button */}
-          <button
-            onClick={toggleExpand}
-            className="flex items-center justify-between sm:justify-start space-x-2 px-3 py-1.5 sm:px-3 sm:py-1.5 bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-200 active:bg-gray-50"
-          >
-            <span className="text-xs sm:text-sm font-medium text-gray-700">
-              {safeVariants.length} {safeVariants.length === 1 ? 'Variant' : 'Variants'}
-            </span>
-            <svg
-              className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 transform transition-transform duration-200 ${
-                isExpanded ? 'rotate-180' : ''
-              }`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Divider */}
+          <div className="w-px h-8 bg-gray-200" />
+
+          {/* Stock Section */}
+          <div className="flex-1 text-right">
+            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Total Stock</p>
+            <p className={`text-base font-bold ${totalStock === 0 ? 'text-red-500' : 'text-gray-800'}`}>
+              {totalStock} units
+            </p>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-8 bg-gray-200" />
+
+          {/* Variants Section */}
+          <div className="flex-1 text-right">
+            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider mb-1">Variants</p>
+            <button
+              onClick={toggleExpand}
+              className="flex items-center justify-end gap-1 w-full group"
             >
-              <path strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+              <span className="text-base font-bold text-indigo-600">
+                {safeVariants.length}
+              </span>
+              <svg
+                className={`w-4 h-4 text-indigo-500 transition-transform duration-200 group-hover:translate-y-0.5 ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Collapsible Variants Section */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+        className={`transition-all duration-400 ease-out ${
+          isExpanded ? 'max-h-[2500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
-        <div className="border-t border-gray-100">
-          <div className="p-3 sm:p-4 md:p-5">
-            {/* Header with Add Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
-              <p className="text-[11px] sm:text-xs text-gray-500">
-                {safeVariants.length} variant{safeVariants.length !== 1 ? 's' : ''}
-                {editingVariant && ' • Editing'}
-              </p>
-
+        <div className="border-t border-gray-100 bg-gray-50/40">
+          <div className="p-5">
+            
+            {/* Section Header with Action */}
+            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+              <div>
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Product Variations
+                </h4>
+                {editingVariant && (
+                  <p className="text-[11px] text-indigo-600 mt-0.5">Editing: {editingVariant.name}</p>
+                )}
+              </div>
+              
               <button
                 onClick={toggleAddForm}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-1.5 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors active:bg-blue-800 shadow-sm"
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                  showAddForm
+                    ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm'
+                }`}
               >
-                <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                 </svg>
-                {showAddForm
-                  ? 'Cancel'
-                  : editingVariant
-                  ? 'Cancel Editing'
-                  : 'Add Variant'}
+                {showAddForm ? 'Cancel' : editingVariant ? 'Cancel' : 'Add Variant'}
               </button>
             </div>
 
             {/* Add/Edit Form */}
             {showAddForm && (
-              <div className="mb-4 sm:mb-5 rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+              <div className="mb-5 rounded-xl border border-indigo-200 bg-white overflow-hidden shadow-sm">
                 <AddVariantForm
                   productId={product.id}
                   refetch={refetch}
@@ -230,39 +261,37 @@ export default function MobileProductCard({
               </div>
             )}
 
-            {/* Variants Grid */}
-            <div className="max-h-[500px] overflow-y-auto custom-scrollbar">
+            {/* Variants List */}
+            <div className="space-y-3 max-h-[600px] overflow-y-auto custom-scrollbar">
               {safeVariants.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                  {safeVariants.map((variant) => (
-                    <VariantCard
-                      key={variant.id}
-                      variant={variant}
-                      onImageDelete={handleVariantImageDelete}
-                      onImageUpload={(variantId, file) =>
-                        onVariantImageUpload?.(variantId, file)
-                      }
-                      isUploading={uploadingVariantId === variant.id}
-                      onEdit={handleEditVariant}
-                    />
-                  ))}
-                </div>
+                safeVariants.map((variant) => (
+                  <VariantCard
+                    key={variant.id}
+                    variant={variant}
+                    onImageDelete={handleVariantImageDelete}
+                    onImageUpload={(variantId, file) =>
+                      onVariantImageUpload?.(variantId, file)
+                    }
+                    isUploading={uploadingVariantId === variant.id}
+                    onEdit={handleEditVariant}
+                  />
+                ))
               ) : (
-                <div className="text-center py-8 sm:py-12">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                <div className="text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                  <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                   </div>
-                  <p className="text-gray-500 text-sm mb-3">No variants available</p>
+                  <p className="text-gray-500 text-sm mb-3">No variants created yet</p>
                   <button
                     onClick={toggleAddForm}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                   >
-                    <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    Create First Variant
+                    Create Your First Variant
                   </button>
                 </div>
               )}
@@ -271,8 +300,8 @@ export default function MobileProductCard({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="px-3 sm:px-4 md:px-5 py-3 sm:py-4 border-t border-gray-100 bg-gray-50/30">
+      {/* Action Buttons - Minimal Footer */}
+      <div className="px-5 py-3.5 bg-white border-t border-gray-100">
         <ActionButtons
           productId={product.id}
           onDelete={onDeleteProduct}
@@ -280,32 +309,4 @@ export default function MobileProductCard({
       </div>
     </div>
   );
-}
-
-// Add custom scrollbar styles (add to your global CSS)
-const styles = `
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
-  }
-  
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-  }
-  
-  @media (max-width: 640px) {
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 4px;
-    }
-  }
-`;
+              }
