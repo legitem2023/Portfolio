@@ -41,15 +41,14 @@ export default function VariantCard({
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];
-  console.log('File:', file);
-  console.log('onImageUpload type:', typeof onImageUpload); // ← Add this line
+  console.log('🟡 VARIANT CARD - file selected:', file);
+  console.log('🟡 VARIANT CARD - onImageUpload type:', typeof onImageUpload);
   
   if (file) {
-    if (typeof onImageUpload === 'function') {
-      onImageUpload(variant.id, file);
-    } else {
-      console.error('onImageUpload is NOT a function!', onImageUpload);
-    }
+    console.log('🟡 VARIANT CARD - ABOUT to call onImageUpload with:', variant.id, file);
+    onImageUpload(variant.id, file);
+    console.log('🟡 VARIANT CARD - onImageUpload CALLED');
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
