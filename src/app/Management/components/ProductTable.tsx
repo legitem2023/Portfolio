@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React,{ useState, useMemo } from 'react';
 import { useMutation } from '@apollo/client'; 
 import { Product } from '../../../../types';
 import { DELETE_PRODUCT } from '../../components/graphql/mutation';
