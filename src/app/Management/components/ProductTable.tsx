@@ -7,7 +7,7 @@ import SearchSortBar from './UI/SearchSortBar';
 import { SortOption } from './UI/SortDropdown';
 import TableRow from './Products/TableRow';
 import MobileProductCard from './Products/MobileProductCard';
-import VariantsModal from './Products/VariantsModal';
+//import VariantsModal from './Products/VariantsModal';
 import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
@@ -252,14 +252,14 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
         <EmptyState searchQuery={searchQuery} />
       )}
 
-      <VariantsModal 
+      {/* <VariantsModal 
         isOpen={isModalOpen} 
         onClose={closeModal}
         product={selectedProduct}
         refetch={refetch}
         onVariantImageUpload={handleVariantImageUpload}
         uploadingVariantId={uploadingVariantId}
-      />
+      /> */}
     </>
   );
 }
