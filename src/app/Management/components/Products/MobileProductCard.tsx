@@ -3,6 +3,7 @@ import { Product } from '../../../../../types';
 import PriceDisplay from './PriceDisplay';
 import StatusBadge from './StatusBadge';
 import ActionButtons from './ActionButtons';
+import VariantButton from './VariantButton';
 
 interface MobileProductCardProps {
   product: Product;
