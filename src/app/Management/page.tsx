@@ -57,6 +57,7 @@ export default function ManagementDashboard() {
 
   const [newCategory, setNewCategory] = useState<NewCategory>({
     name: "",
+    image: "",
     description: "",
     parentId: "",
     isActive: true
@@ -80,7 +81,7 @@ export default function ManagementDashboard() {
     if (categoryData?.categories) {
       const categoriesData = categoryData.categories.map((data: any) => ({
         id: data.id,
-        image: data.imagd,
+        image: data.image,
         name: data.name,
         description: data.description,
         productCount: 0,
