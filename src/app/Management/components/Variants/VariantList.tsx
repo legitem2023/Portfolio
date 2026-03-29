@@ -1,8 +1,8 @@
 // Products/VariantList.tsx
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Variant } from '../../../../types';
-import { DELETE_VARIANT } from '../../components/graphql/mutation';
+import { Variant } from '../../../../../types';
+import { DELETE_VARIANT } from '../../../components/graphql/mutation';
 import ImageUploader from '../UI/ImageUploader';
 
 interface VariantListProps {
