@@ -18,7 +18,7 @@ const CATEGORY_IMAGE_UPLOAD_MUTATION = gql`
 `;
 
 export default function CategoryTable({ categories, refetchCategories }: CategoryTableProps) {
-  console.log(categories);
+  
   return (
     <>
       {/* Desktop Table View */}
@@ -191,7 +191,7 @@ function CategoryImageUploader({
       reader.readAsDataURL(file);
     });
   };
-
+console.log(category,"<---");
   return (
     <div className="flex flex-col items-center">
       {/* Current Image Display */}
