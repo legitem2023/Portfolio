@@ -3,9 +3,7 @@ import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
 // VAT Rate from environment variable
-const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12; // Default to 12% if not set
-
-// Website earnings rate (6%)
+const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
 const WEBSITE_EARNINGS_RATE = 0.06;
 
 // GraphQL Query
@@ -204,13 +202,12 @@ interface OrderListVariables {
 type SummaryPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 type TabType = 'summary' | 'charts' | 'export' | 'compare';
 
-// Helper function to format currency in Philippine Peso
+// Helper function to format currency
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('en-PH', {
     style: 'currency',
     currency: 'PHP',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
   }).format(amount);
 };
 
@@ -223,7 +220,7 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-// Helper function to format date for different periods
+// Helper function to format period date
 const formatPeriodDate = (date: Date, period: SummaryPeriod): string => {
   switch (period) {
     case 'daily':
@@ -294,6 +291,22 @@ const calculateOrderFinancials = (order: Order) => {
   };
 };
 
+// Export Data Type
+interface ExportData {
+  orderNumber: string;
+  date: string;
+  customer: string;
+  customerEmail: string;
+  subtotal: number;
+  vat: number;
+  shipping: number;
+  commission: number;
+  vendorsIncome: number;
+  total: number;
+  items: number;
+  itemsList: string;
+}
+
 // ==================== SUMMARY TAB COMPONENT ====================
 const SummaryTab: React.FC<{
   orders: Order[];
@@ -304,7 +317,6 @@ const SummaryTab: React.FC<{
 }> = ({ orders, period, selectedDate, onDateChange, onPeriodChange }) => {
   const [showBottomSheet, setShowBottomSheet] = useState(false);
   
-  // Filter orders based on selected period and date
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
       const orderDate = new Date(order.createdAt);
@@ -343,7 +355,6 @@ const SummaryTab: React.FC<{
     });
   }, [orders, period, selectedDate]);
 
-  // Calculate summaries
   const summary = useMemo(() => {
     const totals = filteredOrders.reduce(
       (acc, order) => {
@@ -376,7 +387,6 @@ const SummaryTab: React.FC<{
     return { ...totals, averageOrderValue, date: selectedDate };
   }, [filteredOrders, selectedDate]);
 
-  // Navigation functions
   const goToPrevious = () => {
     const newDate = new Date(selectedDate);
     switch (period) {
@@ -450,7 +460,7 @@ const SummaryTab: React.FC<{
       <div className="flex items-center justify-between bg-white rounded-lg p-3 shadow-sm border border-gray-200">
         <button
           onClick={goToPrevious}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95 touch-manipulation"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           ←
         </button>
@@ -467,7 +477,7 @@ const SummaryTab: React.FC<{
         </div>
         <button
           onClick={goToNext}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors active:scale-95 touch-manipulation"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           →
         </button>
@@ -518,7 +528,6 @@ const SummaryTab: React.FC<{
           </div>
         </div>
         
-        {/* Progress Bar */}
         {summary.grandTotal > 0 && (
           <div className="mt-3 pt-3 border-t border-gray-200">
             <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -538,7 +547,7 @@ const SummaryTab: React.FC<{
       {/* Mobile View Details Button */}
       <button
         onClick={() => setShowBottomSheet(true)}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors active:scale-95 touch-manipulation lg:hidden"
+        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors lg:hidden"
       >
         View Full Details
       </button>
@@ -736,7 +745,7 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
   const exportData = useCallback(async () => {
     setIsExporting(true);
     try {
-      const data = filteredOrders.map(order => {
+      const exportDataList: ExportData[] = filteredOrders.map(order => {
         const financials = calculateOrderFinancials(order);
         return {
           orderNumber: order.orderNumber,
@@ -762,16 +771,30 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
           'Order #', 'Date', 'Customer', 'Email', 'Subtotal', 'VAT', 
           'Shipping', 'Commission', 'Vendors Income', 'Total', 'Items', 'Products'
         ];
-        const csvRows = [headers];
-        data.forEach(row => {
-          csvRows.push(Object.values(row).map(value => 
-            typeof value === 'string' && value.includes(',') ? `"${value}"` : value
-          ).join(','));
+        const csvRows: string[] = [headers.join(',')];
+        
+        exportDataList.forEach(row => {
+          const values = [
+            row.orderNumber,
+            row.date,
+            `"${row.customer}"`,
+            row.customerEmail,
+            row.subtotal.toString(),
+            row.vat.toString(),
+            row.shipping.toString(),
+            row.commission.toString(),
+            row.vendorsIncome.toString(),
+            row.total.toString(),
+            row.items.toString(),
+            `"${row.itemsList.replace(/"/g, '""')}"`,
+          ];
+          csvRows.push(values.join(','));
         });
+        
         blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         filename = `earnings_report_${dateRange.start}_to_${dateRange.end}.csv`;
       } else {
-        blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        blob = new Blob([JSON.stringify(exportDataList, null, 2)], { type: 'application/json' });
         filename = `earnings_report_${dateRange.start}_to_${dateRange.end}.json`;
       }
       
@@ -821,12 +844,12 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
           { label: 'Today', days: 0 },
           { label: 'Last 7 Days', days: 7 },
           { label: 'Last 30 Days', days: 30 },
-          { label: 'This Month', days: 'month' as const },
-        ].map(range => (
+          { label: 'This Month', isMonth: true },
+        ].map((range, idx) => (
           <button
-            key={range.label}
+            key={idx}
             onClick={() => {
-              if (range.days === 'month') {
+              if ('isMonth' in range && range.isMonth) {
                 const now = new Date();
                 const start = new Date(now.getFullYear(), now.getMonth(), 1);
                 setDateRange({
@@ -925,7 +948,7 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
         className={`w-full py-2.5 rounded-lg font-medium transition-all ${
           filteredOrders.length === 0 || isExporting
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : 'bg-green-600 text-white hover:bg-green-700 active:scale-95'
+            : 'bg-green-600 text-white hover:bg-green-700'
         }`}
       >
         {isExporting ? (
@@ -1097,7 +1120,7 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
                 <span className={`text-sm font-bold ${item.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                   {item.value >= 0 ? '↑' : '↓'} {Math.abs(item.value).toFixed(1)}%
                 </span>
-                <div className={`w-16 h-1.5 rounded-full overflow-hidden bg-gray-200`}>
+                <div className="w-16 h-1.5 rounded-full overflow-hidden bg-gray-200">
                   <div
                     className={`h-full rounded-full transition-all ${item.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
                     style={{ width: `${Math.min(Math.abs(item.value), 100)}%` }}
@@ -1125,7 +1148,65 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
   );
 };
 
+// Order Card Component
+const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
+  const [expanded, setExpanded] = useState(false);
+  const financials = calculateOrderFinancials(order);
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div
+        className="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
+              <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+            </div>
+            <p className="text-sm text-gray-600 mt-1">{order.user.firstName} {order.user.lastName}</p>
+          </div>
+          <div className="text-right">
+            <p className="font-bold text-green-600">{formatCurrency(financials.grandTotal)}</p>
+            <p className="text-xs text-gray-500">{order.items.length} items</p>
+          </div>
+        </div>
+        <div className="flex justify-center mt-1">
+          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </div>
+      
+      {expanded && (
+        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
+          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+            <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
+            <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
+            <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
+            <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
+          </div>
+          {order.items.slice(0, 3).map(item => (
+            <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
+              {item.quantity}x {item.product.name}
+            </div>
+          ))}
+          {order.items.length > 3 && (
+            <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ==================== MAIN SALES LIST COMPONENT ====================
+interface SalesListProps {
+  filter?: OrderListVariables['filter'];
+  pageSize?: number;
+}
+
 const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
   const [summaryPeriod, setSummaryPeriod] = useState<SummaryPeriod>('daily');
@@ -1285,63 +1366,5 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     </div>
   );
 };
-
-// Order Card Component (Simplified for space)
-const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
-  const [expanded, setExpanded] = useState(false);
-  const financials = calculateOrderFinancials(order);
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div
-        className="px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
-        <div className="flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
-              <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">{order.user.firstName} {order.user.lastName}</p>
-          </div>
-          <div className="text-right">
-            <p className="font-bold text-green-600">{formatCurrency(financials.grandTotal)}</p>
-            <p className="text-xs text-gray-500">{order.items.length} items</p>
-          </div>
-        </div>
-        <div className="flex justify-center mt-1">
-          <svg className={`w-4 h-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </div>
-      
-      {expanded && (
-        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-            <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
-            <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
-            <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
-            <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
-          </div>
-          {order.items.slice(0, 3).map(item => (
-            <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
-              {item.quantity}x {item.product.name}
-            </div>
-          ))}
-          {order.items.length > 3 && (
-            <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface SalesListProps {
-  filter?: OrderListVariables['filter'];
-  pageSize?: number;
-}
 
 export default SalesList;
