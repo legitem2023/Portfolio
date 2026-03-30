@@ -228,12 +228,16 @@ const formatPeriodDate = (date: Date, period: SummaryPeriod): string => {
     case 'daily':
       return date.toLocaleDateString('en-PH', {
         year: 'numeric',
-        month: 'short',
+        month: 'long',
         day: 'numeric',
       });
     case 'weekly':
       const weekNumber = getWeekNumber(date);
-      return `Week ${weekNumber}, ${date.getFullYear()}`;
+      const startOfWeek = new Date(date);
+      startOfWeek.setDate(date.getDate() - date.getDay());
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      return `${formatDate(startOfWeek.toISOString())} - ${formatDate(endOfWeek.toISOString())}`;
     case 'monthly':
       return date.toLocaleDateString('en-PH', {
         year: 'numeric',
@@ -290,7 +294,97 @@ const calculateOrderFinancials = (order: Order) => {
   };
 };
 
-// Summary Report Component
+// Mobile Bottom Sheet Component for Detailed Summary
+interface BottomSheetProps {
+  isOpen: boolean;
+  onClose: () => void;
+  summary: any;
+  period: SummaryPeriod;
+}
+
+const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, summary, period }) => {
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
+        onClick={onClose}
+      />
+      
+      {/* Bottom Sheet */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-xl z-50 transform transition-transform animate-slide-up max-h-[80vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+          <h3 className="text-lg font-semibold text-gray-900">Detailed Breakdown</h3>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="p-4 space-y-4">
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Period</p>
+            <p className="text-base font-semibold text-gray-900">{formatPeriodDate(summary.date, period)}</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500">Subtotal</p>
+              <p className="text-base font-semibold">{formatCurrency(summary.subtotal)}</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500">VAT</p>
+              <p className="text-base font-semibold text-orange-600">{formatCurrency(summary.vatAmount)}</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500">Shipping</p>
+              <p className="text-base font-semibold">{formatCurrency(summary.totalShipping)}</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500">Commission</p>
+              <p className="text-base font-semibold text-blue-600">{formatCurrency(summary.websiteEarnings)}</p>
+            </div>
+          </div>
+          
+          <div className="border-t border-gray-200 pt-3">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-sm text-gray-600">Commission Rate</p>
+              <p className="text-sm font-semibold text-blue-600">{Math.round(WEBSITE_EARNINGS_RATE * 100)}%</p>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-blue-600 rounded-full h-2 transition-all duration-300"
+                style={{ width: `${(summary.websiteEarnings / summary.grandTotal) * 100}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <style jsx>{`
+        @keyframes slide-up {
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.3s ease-out;
+        }
+      `}</style>
+    </>
+  );
+};
+
+// Summary Report Component - Fully Responsive
 interface SummaryReportProps {
   orders: Order[];
   period: SummaryPeriod;
@@ -306,6 +400,8 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
   onDateChange,
   onPeriodChange,
 }) => {
+  const [showBottomSheet, setShowBottomSheet] = useState(false);
+  
   // Filter orders based on selected period and date
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -375,8 +471,8 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
 
     const averageOrderValue = totals.orderCount > 0 ? totals.grandTotal / totals.orderCount : 0;
     
-    return { ...totals, averageOrderValue };
-  }, [filteredOrders]);
+    return { ...totals, averageOrderValue, date: selectedDate };
+  }, [filteredOrders, selectedDate]);
 
   // Navigation functions
   const goToPrevious = () => {
@@ -421,50 +517,55 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
     onDateChange(new Date());
   };
 
-  const periodOptions: { value: SummaryPeriod; label: string }[] = [
-    { value: 'daily', label: 'Daily' },
-    { value: 'weekly', label: 'Weekly' },
-    { value: 'monthly', label: 'Monthly' },
-    { value: 'yearly', label: 'Yearly' },
+  const periodOptions: { value: SummaryPeriod; label: string; icon: string }[] = [
+    { value: 'daily', label: 'Day', icon: '📅' },
+    { value: 'weekly', label: 'Week', icon: '📆' },
+    { value: 'monthly', label: 'Month', icon: '📊' },
+    { value: 'yearly', label: 'Year', icon: '📈' },
   ];
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-lg p-6 mb-8">
-      {/* Header with Period Selection */}
-      <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-        <div className="flex gap-2">
-          {periodOptions.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => onPeriodChange(option.value)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                period === option.value
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+    <>
+      <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-lg overflow-hidden mb-6">
+        {/* Period Selector - Horizontal Scroll on Mobile */}
+        <div className="px-4 pt-4 pb-2 overflow-x-auto scrollbar-hide">
+          <div className="flex gap-2 min-w-max">
+            {periodOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => onPeriodChange(option.value)}
+                className={`px-4 py-2 rounded-full font-medium transition-all whitespace-nowrap ${
+                  period === option.value
+                    ? 'bg-white text-blue-600 shadow-md'
+                    : 'bg-white/20 text-white hover:bg-white/30'
+                }`}
+              >
+                <span className="mr-1">{option.icon}</span>
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
+
+        {/* Date Navigation */}
+        <div className="px-4 py-3 flex items-center justify-between border-t border-white/20">
           <button
             onClick={goToPrevious}
-            className="p-2 bg-white rounded-lg hover:bg-gray-100 transition-colors shadow-sm"
+            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors active:scale-95 touch-manipulation"
+            aria-label="Previous"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           
-          <div className="text-center">
-            <h3 className="text-xl font-bold text-gray-800">
+          <div className="text-center flex-1">
+            <h3 className="text-base sm:text-lg font-bold text-white px-2">
               {formatPeriodDate(selectedDate, period)}
             </h3>
             <button
               onClick={goToToday}
-              className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+              className="text-xs text-white/80 hover:text-white mt-1 active:scale-95 transition"
             >
               Today
             </button>
@@ -472,81 +573,88 @@ const SummaryReport: React.FC<SummaryReportProps> = ({
           
           <button
             onClick={goToNext}
-            className="p-2 bg-white rounded-lg hover:bg-gray-100 transition-colors shadow-sm"
+            className="p-2 bg-white/20 rounded-full hover:bg-white/30 transition-colors active:scale-95 touch-manipulation"
+            aria-label="Next"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
-      </div>
 
-      {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">Total Orders</p>
-          <p className="text-2xl font-bold text-gray-900">{summary.orderCount}</p>
-          <p className="text-xs text-gray-400 mt-1">{summary.itemCount} items sold</p>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.grandTotal)}</p>
-          <p className="text-xs text-gray-400 mt-1">Avg order: {formatCurrency(summary.averageOrderValue)}</p>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">Website Earnings</p>
-          <p className="text-2xl font-bold text-blue-600">{formatCurrency(summary.websiteEarnings)}</p>
-          <p className="text-xs text-gray-400 mt-1">{Math.round(WEBSITE_EARNINGS_RATE * 100)}% commission</p>
-        </div>
-        
-        <div className="bg-white rounded-lg p-4 shadow-sm">
-          <p className="text-sm text-gray-500 mb-1">Vendors Payout</p>
-          <p className="text-2xl font-bold text-purple-600">{formatCurrency(summary.vendorsIncome)}</p>
-          <p className="text-xs text-gray-400 mt-1">After commission</p>
-        </div>
-      </div>
-
-      {/* Detailed Breakdown */}
-      <div className="bg-white rounded-lg p-4 shadow-sm">
-        <h4 className="font-semibold text-gray-700 mb-3">Financial Breakdown</h4>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div>
-            <p className="text-xs text-gray-500">Subtotal</p>
-            <p className="text-sm font-semibold">{formatCurrency(summary.subtotal)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">VAT ({Math.round(VAT_RATE * 100)}%)</p>
-            <p className="text-sm font-semibold text-orange-600">{formatCurrency(summary.vatAmount)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Shipping</p>
-            <p className="text-sm font-semibold">{formatCurrency(summary.totalShipping)}</p>
-          </div>
-        </div>
-        
-        {/* Progress Bar for Commission */}
-        {summary.grandTotal > 0 && (
-          <div className="mt-4 pt-3 border-t border-gray-200">
-            <div className="flex justify-between text-xs text-gray-600 mb-1">
-              <span>Website Commission</span>
-              <span>{Math.round((summary.websiteEarnings / summary.grandTotal) * 100)}% of revenue</span>
+        {/* Summary Statistics - Responsive Grid */}
+        <div className="p-4 bg-white/10 backdrop-blur-sm">
+          {/* Main Stats - 2x2 Grid on Mobile, 4 columns on Desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+            <div className="bg-white rounded-xl p-3 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Orders</p>
+              <p className="text-xl sm:text-2xl font-bold text-gray-900">{summary.orderCount}</p>
+              <p className="text-xs text-gray-400 mt-1">{summary.itemCount} items</p>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 rounded-full h-2 transition-all duration-300"
-                style={{ width: `${(summary.websiteEarnings / summary.grandTotal) * 100}%` }}
-              />
+            
+            <div className="bg-white rounded-xl p-3 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Revenue</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600 truncate">
+                {formatCurrency(summary.grandTotal)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Avg {formatCurrency(summary.averageOrderValue)}</p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-3 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Commission</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-600 truncate">
+                {formatCurrency(summary.websiteEarnings)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">{Math.round(WEBSITE_EARNINGS_RATE * 100)}%</p>
+            </div>
+            
+            <div className="bg-white rounded-xl p-3 shadow-sm">
+              <p className="text-xs text-gray-500 mb-1">Vendors</p>
+              <p className="text-xl sm:text-2xl font-bold text-purple-600 truncate">
+                {formatCurrency(summary.vendorsIncome)}
+              </p>
+              <p className="text-xs text-gray-400 mt-1">Net payout</p>
             </div>
           </div>
-        )}
+
+          {/* Quick Stats Row */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/90 rounded-lg p-2 text-center">
+              <p className="text-xs text-gray-500">Subtotal</p>
+              <p className="text-sm font-semibold">{formatCurrency(summary.subtotal)}</p>
+            </div>
+            <div className="bg-white/90 rounded-lg p-2 text-center">
+              <p className="text-xs text-gray-500">VAT</p>
+              <p className="text-sm font-semibold text-orange-600">{formatCurrency(summary.vatAmount)}</p>
+            </div>
+            <div className="bg-white/90 rounded-lg p-2 text-center">
+              <p className="text-xs text-gray-500">Shipping</p>
+              <p className="text-sm font-semibold">{formatCurrency(summary.totalShipping)}</p>
+            </div>
+          </div>
+
+          {/* Mobile: View Details Button */}
+          <button
+            onClick={() => setShowBottomSheet(true)}
+            className="mt-3 w-full bg-white text-blue-600 py-2 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors active:scale-95 touch-manipulation lg:hidden"
+          >
+            View Full Breakdown
+          </button>
+        </div>
       </div>
-    </div>
+
+      {/* Bottom Sheet for Mobile */}
+      <BottomSheet
+        isOpen={showBottomSheet}
+        onClose={() => setShowBottomSheet(false)}
+        summary={summary}
+        period={period}
+      />
+    </>
   );
 };
 
-// Collapsible Items Component
+// Collapsible Items Component - Mobile Optimized
 const CollapsibleItems: React.FC<{ items: OrderItem[] }> = ({ items }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -558,9 +666,12 @@ const CollapsibleItems: React.FC<{ items: OrderItem[] }> = ({ items }) => {
     <div className="mt-3 border-t border-gray-200 pt-3">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none"
+        className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 focus:outline-none active:bg-gray-50 p-2 -m-2 rounded-lg touch-manipulation"
       >
-        <span>
+        <span className="flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
           {items.length} {items.length === 1 ? 'Item' : 'Items'}
         </span>
         <svg
@@ -577,61 +688,32 @@ const CollapsibleItems: React.FC<{ items: OrderItem[] }> = ({ items }) => {
         <div className="mt-2 space-y-3">
           {items.map((item) => (
             <div key={item.id} className="bg-gray-50 rounded-lg p-3 text-sm">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    {item.product.images && item.product.images[0] && (
-                      <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    )}
-                    <div>
-                      <p className="font-medium text-gray-900">{item.product.name}</p>
-                      <p className="text-xs text-gray-500">SKU: {item.product.sku}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <div className="flex gap-3">
+                {item.product.images && item.product.images[0] && (
+                  <img
+                    src={item.product.images[0]}
+                    alt={item.product.name}
+                    className="w-16 h-16 object-cover rounded-lg"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{item.product.name}</p>
+                  <p className="text-xs text-gray-500">SKU: {item.product.sku}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
                     <p>
-                      <span className="text-gray-500">Quantity:</span> {item.quantity}
+                      <span className="text-gray-500">Qty:</span> {item.quantity}
                     </p>
                     <p>
                       <span className="text-gray-500">Price:</span> {formatCurrency(item.price)}
                     </p>
-                    <p>
+                    <p className="col-span-2">
                       <span className="text-gray-500">Subtotal:</span>{' '}
                       {formatCurrency(item.quantity * item.price)}
                     </p>
-                    <p>
-                      <span className="text-gray-500">Shipping:</span>{' '}
-                      {formatCurrency(item.individualShipping)}
-                    </p>
-                    <p>
-                      <span className="text-gray-500">Tracking:</span>{' '}
-                      {item.trackingNumber || 'Not assigned'}
-                    </p>
-                    <p>
-                      <span className="text-gray-500">Item Status:</span>{' '}
-                      <span
-                        className={`inline-block px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                          item.status
-                        )}`}
-                      >
-                        {item.status}
-                      </span>
-                    </p>
                   </div>
                   {item.rider && (
-                    <p className="mt-1 text-xs text-gray-500">
-                      <span className="font-medium">Rider:</span> {item.rider.firstName}{' '}
-                      {item.rider.lastName} ({item.rider.phone})
-                    </p>
-                  )}
-                  {item.supplier && (
-                    <p className="mt-1 text-xs text-gray-500">
-                      <span className="font-medium">Supplier:</span> {item.supplier.firstName}{' '}
-                      {item.supplier.lastName} ({item.supplier.phone})
+                    <p className="mt-1 text-xs text-gray-500 truncate">
+                      🛵 {item.rider.firstName} {item.rider.lastName}
                     </p>
                   )}
                 </div>
@@ -644,134 +726,134 @@ const CollapsibleItems: React.FC<{ items: OrderItem[] }> = ({ items }) => {
   );
 };
 
-// Order Card Component
+// Order Card Component - Mobile Optimized
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   const financials = calculateOrderFinancials(order);
-
-  // Get tracking info from items that have tracking number
-  const hasTracking = order.items.some((item) => item.trackingNumber);
-  const trackingNumbers = order.items
-    .filter((item) => item.trackingNumber)
-    .map((item) => item.trackingNumber);
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 mb-4">
-      {/* Order Header */}
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <div className="flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              Order #{order.orderNumber}
-            </h3>
-            <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
-          </div>
-          <div className="flex items-center gap-3">
-            {/* <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                order.status
-              )}`}
-            >
-              {order.status}
-            </span>*/}
-          </div>
-        </div>
-      </div>
-
-      {/* Order Body */}
-      <div className="p-4">
-        {/* Customer Info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm font-medium text-gray-700">Customer</p>
-            <p className="text-sm text-gray-900">
+    <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 mb-3">
+      {/* Order Header - Always Visible */}
+      <div 
+        className="px-4 py-3 bg-gray-50 border-b border-gray-200 cursor-pointer active:bg-gray-100 transition-colors touch-manipulation"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-semibold text-gray-900 truncate">
+                #{order.orderNumber}
+              </h3>
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                {formatDate(order.createdAt)}
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 truncate mt-1">
               {order.user.firstName} {order.user.lastName}
             </p>
-            <p className="text-sm text-gray-500">{order.user.email}</p>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-700">Shipping Address</p>
-            <p className="text-sm text-gray-900">
-              {order.address.street}, {order.address.city}, {order.address.state}{' '}
-              {order.address.zipCode}
+          <div className="text-right">
+            <p className="text-base font-bold text-green-600">
+              {formatCurrency(financials.grandTotal)}
             </p>
-            <p className="text-sm text-gray-500">{order.address.country}</p>
+            <p className="text-xs text-gray-500">
+              {order.items.length} item{order.items.length !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
-
-        {/* Financial Summary */}
-        <div className="bg-gray-50 rounded-lg p-3 mb-4">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div>
-              <p className="text-xs text-gray-500">Subtotal</p>
-              <p className="text-sm font-semibold text-gray-900">{formatCurrency(financials.subtotal)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">VAT ({Math.round(VAT_RATE * 100)}%)</p>
-              <p className="text-sm font-semibold text-orange-600">{formatCurrency(financials.vatAmount)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Shipping</p>
-              <p className="text-sm font-semibold text-gray-900">{formatCurrency(financials.totalShipping)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Website Earnings ({Math.round(WEBSITE_EARNINGS_RATE * 100)}%)</p>
-              <p className="text-sm font-semibold text-green-600">{formatCurrency(financials.websiteEarnings)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Vendors Income</p>
-              <p className="text-sm font-semibold text-blue-600">{formatCurrency(financials.vendorsIncome)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Grand Total</p>
-              <p className="text-sm font-semibold text-purple-600">{formatCurrency(financials.grandTotal)}</p>
-            </div>
-          </div>
+        
+        {/* Expand/Collapse Indicator */}
+        <div className="flex justify-center mt-2">
+          <svg
+            className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
+      </div>
 
-        {/* Tracking Information */}
-        <div className="mb-3">
-          <p className="text-sm font-medium text-gray-700 mb-1">Tracking Information</p>
-          {hasTracking ? (
-            <div className="space-y-1">
-              {trackingNumbers.map((tracking, idx) => (
-                <p key={idx} className="text-sm text-blue-600">
-                  Tracking #{tracking}
+      {/* Expanded Content */}
+      {expanded && (
+        <div className="p-4 space-y-3">
+          {/* Customer & Address - Scrollable on Mobile */}
+          <div className="space-y-2">
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500">Customer</p>
+                <p className="text-sm text-gray-900 break-words">
+                  {order.user.firstName} {order.user.lastName}
                 </p>
-              ))}
+                <p className="text-xs text-gray-500 break-all">{order.user.email}</p>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">No tracking information available</p>
-          )}
-        </div>
+            
+            <div className="flex items-start gap-2">
+              <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500">Shipping Address</p>
+                <p className="text-sm text-gray-900 break-words">
+                  {order.address.street}, {order.address.city}, {order.address.state}
+                </p>
+              </div>
+            </div>
+          </div>
 
-        {/* Collapsible Items */}
-        <CollapsibleItems items={order.items} />
+          {/* Financial Summary - Horizontal Scroll on Mobile */}
+          <div className="bg-gray-50 rounded-lg p-3 overflow-x-auto">
+            <div className="flex gap-4 min-w-max">
+              <div>
+                <p className="text-xs text-gray-500 whitespace-nowrap">Subtotal</p>
+                <p className="text-sm font-semibold whitespace-nowrap">{formatCurrency(financials.subtotal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 whitespace-nowrap">VAT</p>
+                <p className="text-sm font-semibold text-orange-600 whitespace-nowrap">{formatCurrency(financials.vatAmount)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 whitespace-nowrap">Shipping</p>
+                <p className="text-sm font-semibold whitespace-nowrap">{formatCurrency(financials.totalShipping)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 whitespace-nowrap">Commission</p>
+                <p className="text-sm font-semibold text-green-600 whitespace-nowrap">{formatCurrency(financials.websiteEarnings)}</p>
+              </div>
+            </div>
+          </div>
 
-        {/* Payment Info */}
-        {order.payments && order.payments.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <p className="text-xs text-gray-500">Payment</p>
-            {order.payments.map((payment) => (
-              <div key={payment.id} className="flex items-center gap-2 text-sm">
-                <span className="font-medium">{formatCurrency(payment.amount)}</span>
-                <span className="text-gray-500">via {payment.method}</span>
-                <span
-                  className={`px-1.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                    payment.status
-                  )}`}
-                >
-                  {payment.status}
+          {/* Items */}
+          <CollapsibleItems items={order.items} />
+
+          {/* Payment Info */}
+          {order.payments && order.payments.length > 0 && (
+            <div className="pt-2 border-t border-gray-200">
+              <div className="flex items-center gap-2 text-sm flex-wrap">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span className="font-medium">{formatCurrency(order.payments[0].amount)}</span>
+                <span className="text-gray-500">via {order.payments[0].method}</span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.payments[0].status)}`}>
+                  {order.payments[0].status}
                 </span>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-// Main SalesList Component
+// Main SalesList Component - Fully Responsive
 interface SalesListProps {
   filter?: OrderListVariables['filter'];
   pageSize?: number;
@@ -797,25 +879,23 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     }
   );
 
-  // Get all orders from all pages (for summary calculation)
-  // Note: In a real app, you might want to fetch all orders or use a separate query
   const allOrders = data?.orderlist.orders || [];
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-        <p className="text-red-600">Error loading orders: {error.message}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center mx-4">
+        <p className="text-red-600 mb-3">Error loading orders: {error.message}</p>
         <button
           onClick={() => refetch()}
-          className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors active:scale-95 touch-manipulation"
         >
           Retry
         </button>
@@ -827,78 +907,105 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
   const pagination = data?.orderlist.pagination;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Header with Toggle */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Sales Orders</h2>
-          {pagination && (
-            <p className="text-sm text-gray-500 mt-1">
-              Total {pagination.total} orders • Page {pagination.page} of {pagination.totalPages}
-            </p>
-          )}
-          <div className="flex gap-4 text-xs text-gray-400 mt-1">
-            <span>VAT Rate: {Math.round(VAT_RATE * 100)}%</span>
-            <span>Website Commission: {Math.round(WEBSITE_EARNINGS_RATE * 100)}%</span>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        {/* Header - Responsive */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Sales Orders</h1>
+            {pagination && (
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                {pagination.total} orders • Page {pagination.page} of {pagination.totalPages}
+              </p>
+            )}
+            <div className="flex flex-wrap gap-2 text-xs text-gray-400 mt-1">
+              <span>VAT: {Math.round(VAT_RATE * 100)}%</span>
+              <span>Commission: {Math.round(WEBSITE_EARNINGS_RATE * 100)}%</span>
+            </div>
           </div>
+          
+          <button
+            onClick={() => setShowSummary(!showSummary)}
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors active:scale-95 touch-manipulation flex items-center justify-center gap-2 text-sm sm:text-base"
+          >
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            {showSummary ? 'Hide Summary' : 'Show Summary'}
+          </button>
         </div>
-        <button
-          onClick={() => setShowSummary(!showSummary)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-          {showSummary ? 'Hide Summary' : 'Show Summary'}
-        </button>
+
+        {/* Summary Report */}
+        {showSummary && allOrders.length > 0 && (
+          <SummaryReport
+            orders={allOrders}
+            period={summaryPeriod}
+            selectedDate={summaryDate}
+            onDateChange={setSummaryDate}
+            onPeriodChange={setSummaryPeriod}
+          />
+        )}
+
+        {/* Orders List */}
+        {orders.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <svg className="w-16 h-16 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p className="text-gray-500">No orders found</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {orders.map((order) => (
+              <OrderCard key={order.id} order={order} />
+            ))}
+          </div>
+        )}
+
+        {/* Pagination - Responsive */}
+        {pagination && pagination.totalPages > 1 && (
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mt-6">
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95 touch-manipulation"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
+                disabled={currentPage === pagination.totalPages}
+                className="px-3 py-2 rounded-lg border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 active:scale-95 touch-manipulation"
+              >
+                Next
+              </button>
+            </div>
+            <span className="text-sm text-gray-600">
+              Page {pagination.page} of {pagination.totalPages}
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Summary Report */}
-      {showSummary && allOrders.length > 0 && (
-        <SummaryReport
-          orders={allOrders}
-          period={summaryPeriod}
-          selectedDate={summaryDate}
-          onDateChange={setSummaryDate}
-          onPeriodChange={setSummaryPeriod}
-        />
-      )}
-
-      {/* Orders List */}
-      {orders.length === 0 ? (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <p className="text-gray-500">No orders found</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
-        </div>
-      )}
-
-      {/* Pagination Controls */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Previous
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {pagination.page} of {pagination.totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((prev) => Math.min(pagination.totalPages, prev + 1))}
-            disabled={currentPage === pagination.totalPages}
-            className="px-3 py-1 rounded-md border border-gray-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-          >
-            Next
-          </button>
-        </div>
-      )}
+      {/* Add viewport meta tag for responsive scaling */}
+      <style jsx global>{`
+        @media (max-width: 640px) {
+          html {
+            font-size: 14px;
+          }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .touch-manipulation {
+          touch-action: manipulation;
+        }
+      `}</style>
     </div>
   );
 };
