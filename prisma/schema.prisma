@@ -466,7 +466,7 @@ model Payment {
 }
 
 // Reviews
-model Review {
+/*model Review {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   userId    String?  @db.ObjectId
   productId String?  @db.ObjectId
@@ -485,7 +485,44 @@ model Review {
   @@index([rating])
   @@index([isApproved])
   @@map("reviews")
+}*/
+
+model ReviewImage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  reviewId  String   @db.ObjectId
+  url       String   // Cloud storage URL (S3, Cloudinary, etc.)
+  publicId  String?  // For cloud storage management
+  position  Int      @default(0) // Order of images
+  createdAt DateTime @default(now())
+  
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  
+  @@index([reviewId])
+  @@map("review_images")
 }
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?  @db.ObjectId
+  productId String?  @db.ObjectId
+  variantId String?
+  rating    Int?
+  title     String?
+  comment   String?
+  isApproved Boolean? @default(false)
+  createdAt DateTime? @default(now())
+  
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id])
+  images    ReviewImage[] // Add this relation
+  
+  @@index([userId])
+  @@index([productId])
+  @@index([rating])
+  @@index([isApproved])
+  @@map("reviews")
+}
+
 
 // Messaging
 model Message {
