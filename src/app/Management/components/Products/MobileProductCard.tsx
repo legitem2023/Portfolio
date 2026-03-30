@@ -209,10 +209,10 @@ export default function MobileProductCard({
       {/* Collapsible Variants Section */}
       <div
         className={`bg-amber-200 transition-all duration-300 ease-in-out ${
-          isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+          isExpanded ? 'max-h-none opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
-        <div className="border-t border-gray-100 bg-gray-50">
+        <div className="border-t border-gray-100 bg-amber-200">
           <div className="p-4">
             
             {/* Add Variant Button */}
