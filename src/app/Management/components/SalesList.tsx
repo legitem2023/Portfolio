@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 
+// VAT Rate from environment variable
+const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12; // Default to 12% if not set
+
 // GraphQL Query
 const ORDER_LIST_QUERY = gql`
   query OrderList(
@@ -338,6 +341,12 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   // Calculate total shipping (sum of individualShipping for all items)
   const totalShipping = order.items.reduce((sum, item) => sum + (item.individualShipping || 0), 0);
 
+  // Calculate VAT amount (subtotal × VAT_RATE)
+  const vatAmount = subtotal * VAT_RATE;
+  
+  // Calculate grand total (subtotal + vatAmount + totalShipping)
+  const grandTotal = subtotal + vatAmount + totalShipping;
+
   // Calculate website earnings (subtotal * 0.6)
   const websiteEarnings = subtotal * 0.6;
 
@@ -396,10 +405,14 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
 
         {/* Financial Summary */}
         <div className="bg-gray-50 rounded-lg p-3 mb-4">
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <div>
               <p className="text-xs text-gray-500">Subtotal</p>
               <p className="text-sm font-semibold text-gray-900">{formatCurrency(subtotal)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">VAT ({Math.round(VAT_RATE * 100)}%)</p>
+              <p className="text-sm font-semibold text-orange-600">{formatCurrency(vatAmount)}</p>
             </div>
             <div>
               <p className="text-xs text-gray-500">Shipping</p>
@@ -414,8 +427,8 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
               <p className="text-sm font-semibold text-blue-600">{formatCurrency(vendorsIncome)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Order Total</p>
-              <p className="text-sm font-semibold text-gray-900">{formatCurrency(order.total)}</p>
+              <p className="text-xs text-gray-500">Grand Total</p>
+              <p className="text-sm font-semibold text-purple-600">{formatCurrency(grandTotal)}</p>
             </div>
           </div>
         </div>
@@ -520,7 +533,7 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Sales Orders</h2>
         {pagination && (
@@ -528,6 +541,9 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
             Total {pagination.total} orders • Page {pagination.page} of {pagination.totalPages}
           </p>
         )}
+        <p className="text-xs text-gray-400 mt-1">
+          VAT Rate: {Math.round(VAT_RATE * 100)}%
+        </p>
       </div>
 
       <div className="space-y-4">
