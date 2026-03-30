@@ -208,7 +208,7 @@ export default function MobileProductCard({
 
       {/* Collapsible Variants Section */}
       <div
-        className={`transition-all duration-300 ease-in-out ${
+        className={`bg-amber-200 transition-all duration-300 ease-in-out ${
           isExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
         }`}
       >
@@ -246,7 +246,7 @@ export default function MobileProductCard({
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
               {safeVariants.length > 0 ? (
                 safeVariants.map((variant) => {
-                  console.log('🟠 MOBILE CARD - rendering variant:', variant.id, variant.name);
+                 // console.log('🟠 MOBILE CARD - rendering variant:', variant.id, variant.name);
                   return (
                     <VariantCard
                       key={variant.id}
