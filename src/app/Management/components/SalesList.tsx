@@ -374,13 +374,13 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
             <p className="text-sm text-gray-500">{formatDate(order.createdAt)}</p>
           </div>
           <div className="flex items-center gap-3">
-            <span
+            {/* <span
               className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                 order.status
               )}`}
             >
               {order.status}
-            </span>
+            </span>*/}
           </div>
         </div>
       </div>
