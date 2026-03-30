@@ -5,6 +5,9 @@ import { gql } from '@apollo/client';
 // VAT Rate from environment variable
 const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12; // Default to 12% if not set
 
+// Website earnings rate (6%)
+const WEBSITE_EARNINGS_RATE = 0.06;
+
 // GraphQL Query
 const ORDER_LIST_QUERY = gql`
   query OrderList(
@@ -347,8 +350,8 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   // Calculate grand total (subtotal + vatAmount + totalShipping)
   const grandTotal = subtotal + vatAmount + totalShipping;
 
-  // Calculate website earnings (subtotal * 0.6)
-  const websiteEarnings = subtotal * 0.6;
+  // Calculate website earnings (6% of subtotal)
+  const websiteEarnings = subtotal * WEBSITE_EARNINGS_RATE;
 
   // Calculate vendors income (subtotal - website earnings)
   const vendorsIncome = subtotal - websiteEarnings;
@@ -419,7 +422,7 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
               <p className="text-sm font-semibold text-gray-900">{formatCurrency(totalShipping)}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">Website Earnings (60%)</p>
+              <p className="text-xs text-gray-500">Website Earnings ({Math.round(WEBSITE_EARNINGS_RATE * 100)}%)</p>
               <p className="text-sm font-semibold text-green-600">{formatCurrency(websiteEarnings)}</p>
             </div>
             <div>
@@ -541,9 +544,10 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
             Total {pagination.total} orders • Page {pagination.page} of {pagination.totalPages}
           </p>
         )}
-        <p className="text-xs text-gray-400 mt-1">
-          VAT Rate: {Math.round(VAT_RATE * 100)}%
-        </p>
+        <div className="flex gap-4 text-xs text-gray-400 mt-1">
+          <span>VAT Rate: {Math.round(VAT_RATE * 100)}%</span>
+          <span>Website Commission: {Math.round(WEBSITE_EARNINGS_RATE * 100)}%</span>
+        </div>
       </div>
 
       <div className="space-y-4">
