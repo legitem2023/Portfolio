@@ -195,6 +195,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
       </div>
 
       {/* Desktop Table View - Hidden on mobile */}
+      {/*
       <div className="hidden md:block bg-white shadow-md rounded-lg overflow-hidden overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -233,7 +234,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
           </tbody>
         </table>
       </div>
-
+     */}
       {/* Mobile Card View - Visible only on mobile */}
       <div className="md:hidden space-y-3 px-1">
         {filteredAndSortedProducts.map((product) => (
