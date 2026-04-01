@@ -730,7 +730,9 @@ export const GETPRODUCTS = gql`
         }
         reviews { 
           rating
-          images
+          images {
+             url
+          }
           userId
           variantId
         }
