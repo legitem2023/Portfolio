@@ -3133,6 +3133,11 @@ products: async (
                 images: true,
                 model: true
               }
+            },
+            reviews: {
+                id:true,
+                rating:true,
+                images:true
             }
           },
         });
