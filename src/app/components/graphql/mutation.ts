@@ -1,5 +1,148 @@
 import { gql } from "@apollo/client";
 
+export const CREATE_REVIEW = gql`
+  mutation CreateReview($data: CreateReviewInput!) {
+    createReview(data: $data) {
+      id
+      userId
+      productId
+      variantId
+      rating
+      title
+      comment
+      isApproved
+      createdAt
+      user {
+        id
+        name
+        email
+      }
+      product {
+        id
+        name
+      }
+      images {
+        id
+        url
+        publicId
+        position
+        createdAt
+      }
+    }
+  }
+`;
+
+export const UPDATE_REVIEW = gql`
+  mutation UpdateReview($id: String!, $data: UpdateReviewInput!) {
+    updateReview(id: $id, data: $data) {
+      id
+      userId
+      productId
+      variantId
+      rating
+      title
+      comment
+      isApproved
+      createdAt
+      user {
+        id
+        name
+        email
+      }
+      product {
+        id
+        name
+      }
+      images {
+        id
+        url
+        publicId
+        position
+        createdAt
+      }
+    }
+  }
+`;
+
+export const DELETE_REVIEW = gql`
+  mutation DeleteReview($id: String!) {
+    deleteReview(id: $id)
+  }
+`;
+
+export const APPROVE_REVIEW = gql`
+  mutation ApproveReview($id: String!) {
+    approveReview(id: $id) {
+      id
+      isApproved
+      rating
+      title
+      comment
+      user {
+        id
+        name
+      }
+      images {
+        id
+        url
+      }
+    }
+  }
+`;
+
+export const ADD_IMAGE_TO_REVIEW = gql`
+  mutation AddImageToReview($input: AddImageToReviewInput!) {
+    addImageToReview(input: $input) {
+      id
+      reviewId
+      url
+      publicId
+      position
+      createdAt
+      review {
+        id
+        title
+      }
+    }
+  }
+`;
+
+export const UPDATE_REVIEW_IMAGE = gql`
+  mutation UpdateReviewImage($imageId: String!, $url: String, $publicId: String, $position: Int) {
+    updateReviewImage(imageId: $imageId, url: $url, publicId: $publicId, position: $position) {
+      id
+      reviewId
+      url
+      publicId
+      position
+      createdAt
+      review {
+        id
+        title
+      }
+    }
+  }
+`;
+
+export const DELETE_REVIEW_IMAGE = gql`
+  mutation DeleteReviewImage($imageId: String!) {
+    deleteReviewImage(imageId: $imageId)
+  }
+`;
+
+export const REORDER_IMAGES = gql`
+  mutation ReorderImages($input: ReorderImagesInput!) {
+    reorderImages(input: $input) {
+      id
+      reviewId
+      url
+      publicId
+      position
+      createdAt
+    }
+  }
+`;
+
 export const UPDATE_USER_PHONE = gql`
   mutation UpdateUserPhone($id: ID!, $phone: String!) {
     updateUserPhone(id: $id, phone: $phone) {
