@@ -4000,8 +4000,8 @@ addImageToReview: async (_: any, { input }: { input: any }) => {
     return {
       statusText:"Successfully Added!"
     };
-  } catch (error) {
-    throw new Error('Failed to add image');
+  } catch (error:any) {
+    throw new Error('Failed to add image'+ error);
   }
 },
 
@@ -4031,7 +4031,7 @@ updateReviewImage: async (
     return {
       statusText:"Successfully Added!"
     };
-  } catch (error) {
+  } catch (error:any) {
     throw new Error('Failed to update image');
   }
 },
@@ -4053,7 +4053,7 @@ deleteReviewImage: async (_: any, { imageId }: { imageId: string }) => {
     return {
       statusText:"Successfully Added!"
     };
-  } catch (error) {
+  } catch (error:any) {
     throw new Error('Failed to delete image');
   }
 },
