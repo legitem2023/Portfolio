@@ -64,6 +64,7 @@ interface ReorderImagesInput {
 }
 
 interface MutationResponse {
+  id: string;
   statusText: string;
 }
 
