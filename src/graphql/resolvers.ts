@@ -491,6 +491,148 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
+    getReviews: async (_: any, { filters }: { filters?: any }) => {
+      try {
+        const {
+          productId,
+          userId,
+          isApproved,
+          minRating,
+          maxRating,
+          page = 1,
+          limit = 10,
+          sortBy = 'createdAt',
+          sortOrder = 'desc',
+        } = filters || {};
+
+        const skip = (page - 1) * limit;
+
+        const where: any = {};
+        if (productId) where.productId = productId;
+        if (userId) where.userId = userId;
+        if (isApproved !== undefined) where.isApproved = isApproved;
+        if (minRating !== undefined) where.rating = { gte: minRating };
+        if (maxRating !== undefined) where.rating = { ...where.rating, lte: maxRating };
+
+        const [reviews, total] = await Promise.all([
+          prisma.review.findMany({
+            where,
+            include: {
+              user: true,
+              product: true,
+              images: {
+                orderBy: { position: 'asc' },
+              },
+            },
+            skip,
+            take: limit,
+            orderBy: { [sortBy]: sortOrder },
+          }),
+          prisma.review.count({ where }),
+        ]);
+
+        return {
+          data: reviews,
+          meta: {
+            total,
+            page,
+            limit,
+            totalPages: Math.ceil(total / limit),
+          },
+        };
+      } catch (error) {
+        throw new GraphQLError('Failed to fetch reviews', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+        });
+      }
+    },
+
+    // Get single review by ID
+    getReviewById: async (_: any, { id }: { id: string }) => {
+      try {
+        const review = await prisma.review.findUnique({
+          where: { id },
+          include: {
+            user: true,
+            product: true,
+            images: {
+              orderBy: { position: 'asc' },
+            },
+          },
+        });
+
+        if (!review) {
+          throw new GraphQLError('Review not found', {
+            extensions: { code: 'NOT_FOUND' },
+          });
+        }
+
+        return review;
+      } catch (error) {
+        if (error instanceof GraphQLError) throw error;
+        throw new GraphQLError('Failed to fetch review', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+        });
+      }
+    },
+
+    // Get product review statistics
+    getProductReviewStats: async (_: any, { productId }: { productId: string }) => {
+      try {
+        const stats = await prisma.review.aggregate({
+          where: { productId, isApproved: true },
+          _avg: { rating: true },
+          _count: true,
+          _min: { rating: true },
+          _max: { rating: true },
+        });
+
+        const ratingDistribution = await prisma.review.groupBy({
+          by: ['rating'],
+          where: { productId, isApproved: true, rating: { not: null } },
+          _count: true,
+        });
+
+        const distribution = ratingDistribution.reduce((acc, curr) => {
+          acc[curr.rating!] = curr._count;
+          return acc;
+        }, {} as Record<number, number>);
+
+        // Fill in missing ratings (1-5)
+        for (let i = 1; i <= 5; i++) {
+          if (!distribution[i]) distribution[i] = 0;
+        }
+
+        return {
+          averageRating: stats._avg.rating || 0,
+          totalReviews: stats._count,
+          minRating: stats._min.rating,
+          maxRating: stats._max.rating,
+          ratingDistribution: distribution,
+        };
+      } catch (error) {
+        throw new GraphQLError('Failed to fetch review stats', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+        });
+      }
+    },
+
+    // Get all images for a review
+    getReviewImages: async (_: any, { reviewId }: { reviewId: string }) => {
+      try {
+        const images = await prisma.reviewImage.findMany({
+          where: { reviewId },
+          orderBy: { position: 'asc' },
+          include: { review: true },
+        });
+
+        return images;
+      } catch (error) {
+        throw new GraphQLError('Failed to fetch review images', {
+          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+        });
+      }
+    },
 vehicles:async (_parent: any,args: any) => {
   try {
     // Fetch all vehicle types from database
