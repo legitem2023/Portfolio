@@ -1146,10 +1146,10 @@ type CreateVehicleTypeResponse {
   deleteReview(id: String): Result
   approveReview(id: String): Result
   
-  addImageToReview(input: AddImageToReviewInput): ReviewImage
-  updateReviewImage(imageId: String, url: String, publicId: String, position: Int): ReviewImage
-  deleteReviewImage(imageId: String): Boolean
-  reorderImages(input: ReorderImagesInput): [ReviewImage]
+  addImageToReview(input: AddImageToReviewInput): Result
+  updateReviewImage(imageId: String, url: String, publicId: String, position: Int): Result
+  deleteReviewImage(imageId: String): Result
+  reorderImages(input: ReorderImagesInput):Result
     
     
     
