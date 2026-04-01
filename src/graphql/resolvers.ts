@@ -3836,6 +3836,241 @@ salesList: async (
   },
 
   Mutation: {
+    createReview: async (_: any, { data }: { data: any }) => {
+  try {
+    const { images, ...reviewData } = data;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const review = await tx.review.create({
+        data: {
+          ...reviewData,
+          isApproved: reviewData.isApproved || false,
+        },
+      });
+
+      if (images && images.length > 0) {
+        await tx.reviewImage.createMany({
+          data: images.map((image: any, index: number) => ({
+            reviewId: review.id,
+            url: image.url,
+            publicId: image.publicId,
+            position: image.position ?? index,
+          })),
+        });
+      }
+
+      return await tx.review.findUnique({
+        where: { id: review.id },
+        include: {
+          user: true,
+          product: true,
+          images: {
+            orderBy: { position: 'asc' },
+          },
+        },
+      });
+    });
+
+    return result;
+  } catch (error) {
+    throw new Error('Failed to create review');
+  }
+},
+
+updateReview: async (_: any, { id, data }: { id: string; data: any }) => {
+  try {
+    const existingReview = await prisma.review.findUnique({
+      where: { id },
+    });
+
+    if (!existingReview) {
+      throw new Error('Review not found');
+    }
+
+    const updatedReview = await prisma.review.update({
+      where: { id },
+      data,
+      include: {
+        user: true,
+        product: true,
+        images: {
+          orderBy: { position: 'asc' },
+        },
+      },
+    });
+
+    return updatedReview;
+  } catch (error) {
+    throw new Error('Failed to update review');
+  }
+},
+
+deleteReview: async (_: any, { id }: { id: string }) => {
+  try {
+    const existingReview = await prisma.review.findUnique({
+      where: { id },
+    });
+
+    if (!existingReview) {
+      throw new Error('Review not found');
+    }
+
+    await prisma.review.delete({
+      where: { id },
+    });
+
+    return true;
+  } catch (error) {
+    throw new Error('Failed to delete review');
+  }
+},
+
+approveReview: async (_: any, { id }: { id: string }) => {
+  try {
+    const existingReview = await prisma.review.findUnique({
+      where: { id },
+    });
+
+    if (!existingReview) {
+      throw new Error('Review not found');
+    }
+
+    const updatedReview = await prisma.review.update({
+      where: { id },
+      data: { isApproved: true },
+      include: {
+        user: true,
+        product: true,
+        images: {
+          orderBy: { position: 'asc' },
+        },
+      },
+    });
+
+    return updatedReview;
+  } catch (error) {
+    throw new Error('Failed to approve review');
+  }
+},
+
+addImageToReview: async (_: any, { input }: { input: any }) => {
+  try {
+    const { reviewId, url, publicId, position } = input;
+
+    const existingReview = await prisma.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    if (!existingReview) {
+      throw new Error('Review not found');
+    }
+
+    let finalPosition = position;
+    if (finalPosition === undefined) {
+      const maxPositionImage = await prisma.reviewImage.findFirst({
+        where: { reviewId },
+        orderBy: { position: 'desc' },
+      });
+      finalPosition = maxPositionImage ? maxPositionImage.position + 1 : 0;
+    }
+
+    const image = await prisma.reviewImage.create({
+      data: {
+        reviewId,
+        url,
+        publicId,
+        position: finalPosition,
+      },
+      include: { review: true },
+    });
+
+    return image;
+  } catch (error) {
+    throw new Error('Failed to add image');
+  }
+},
+
+updateReviewImage: async (
+  _: any,
+  { imageId, url, publicId, position }: { imageId: string; url?: string; publicId?: string; position?: number }
+) => {
+  try {
+    const existingImage = await prisma.reviewImage.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!existingImage) {
+      throw new Error('Image not found');
+    }
+
+    const updatedImage = await prisma.reviewImage.update({
+      where: { id: imageId },
+      data: {
+        ...(url && { url }),
+        ...(publicId && { publicId }),
+        ...(position !== undefined && { position }),
+      },
+      include: { review: true },
+    });
+
+    return updatedImage;
+  } catch (error) {
+    throw new Error('Failed to update image');
+  }
+},
+
+deleteReviewImage: async (_: any, { imageId }: { imageId: string }) => {
+  try {
+    const existingImage = await prisma.reviewImage.findUnique({
+      where: { id: imageId },
+    });
+
+    if (!existingImage) {
+      throw new Error('Image not found');
+    }
+
+    await prisma.reviewImage.delete({
+      where: { id: imageId },
+    });
+
+    return true;
+  } catch (error) {
+    throw new Error('Failed to delete image');
+  }
+},
+
+reorderImages: async (_: any, { input }: { input: any }) => {
+  try {
+    const { reviewId, imageIds } = input;
+
+    const images = await prisma.reviewImage.findMany({
+      where: { reviewId },
+    });
+
+    if (images.length !== imageIds.length) {
+      throw new Error('Invalid image IDs provided');
+    }
+
+    await prisma.$transaction(
+      imageIds.map((imageId: string, index: number) =>
+        prisma.reviewImage.update({
+          where: { id: imageId },
+          data: { position: index },
+        })
+      )
+    );
+
+    const updatedImages = await prisma.reviewImage.findMany({
+      where: { reviewId },
+      orderBy: { position: 'asc' },
+      include: { review: true },
+    });
+
+    return updatedImages;
+  } catch (error) {
+    throw new Error('Failed to reorder images');
+  }
+},
     remit: async (_parent: any,args: any) => {
      try{
       const { id } = args;
