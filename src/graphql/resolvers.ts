@@ -541,8 +541,8 @@ export const resolvers = {
           },
         };
       } catch (error:any) {
-        error = new Error('Failed to fetch reviews');
-        error.extensions = { code: 'INTERNAL_SERVER_ERROR', originalError: error };
+       // error = new Error('Failed to fetch reviews');
+     //   error.extensions = { code: 'INTERNAL_SERVER_ERROR', originalError: error };
         throw error;
       }
     },
