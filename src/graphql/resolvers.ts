@@ -540,8 +540,8 @@ export const resolvers = {
             totalPages: Math.ceil(total / limit),
           },
         };
-      } catch (error) {
-        throw new GraphQLError('Failed to fetch reviews', {
+      } catch (error:any) {
+        throw new Error('Failed to fetch reviews', {
           extensions: { code: 'INTERNAL_SERVER_ERROR', error },
         });
       }
@@ -562,15 +562,15 @@ export const resolvers = {
         });
 
         if (!review) {
-          throw new GraphQLError('Review not found', {
+          throw new Error('Review not found', {
             extensions: { code: 'NOT_FOUND' },
           });
         }
 
         return review;
-      } catch (error) {
-        if (error instanceof GraphQLError) throw error;
-        throw new GraphQLError('Failed to fetch review', {
+      } catch (error:any) {
+        //if (error instanceof GraphQLError) throw error;
+        throw new Error('Failed to fetch review', {
           extensions: { code: 'INTERNAL_SERVER_ERROR', error },
         });
       }
@@ -610,8 +610,8 @@ export const resolvers = {
           maxRating: stats._max.rating,
           ratingDistribution: distribution,
         };
-      } catch (error) {
-        throw new GraphQLError('Failed to fetch review stats', {
+      } catch (error:any) {
+        throw new Error('Failed to fetch review stats', {
           extensions: { code: 'INTERNAL_SERVER_ERROR', error },
         });
       }
@@ -627,8 +627,8 @@ export const resolvers = {
         });
 
         return images;
-      } catch (error) {
-        throw new GraphQLError('Failed to fetch review images', {
+      } catch (error:any) {
+        throw new Error('Failed to fetch review images', {
           extensions: { code: 'INTERNAL_SERVER_ERROR', error },
         });
       }
