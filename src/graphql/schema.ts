@@ -1141,10 +1141,10 @@ type CreateVehicleTypeResponse {
 }
   type Mutation {
     
-  createReview(data: CreateReviewInput): Review
-  updateReview(id: String, data: UpdateReviewInput!): Review
-  deleteReview(id: String): Boolean
-  approveReview(id: String): Review
+  createReview(data: CreateReviewInput): Result
+  updateReview(id: String, data: UpdateReviewInput!): Result
+  deleteReview(id: String): Result
+  approveReview(id: String): Result
   
   addImageToReview(input: AddImageToReviewInput): ReviewImage
   updateReviewImage(imageId: String, url: String, publicId: String, position: Int): ReviewImage
