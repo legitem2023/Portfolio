@@ -45,7 +45,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
       // 2. Skip image upload if no ID is available
       
       // If your mutation returns the review ID, you can uncomment this:
-      /*
+      
       const reviewId = data.createReview.id;
       
       // Then upload images if any
@@ -63,7 +63,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
           });
         }
       }
-      */
+      
 
       alert('Review created successfully!');
       // Reset form
