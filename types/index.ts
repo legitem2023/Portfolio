@@ -98,7 +98,7 @@ export interface OrderItem {
 export interface Review {
   id: string;
   rating: number;
-  images:string[];
+  images:ReviewImage[];
   userId:string;
   variantId:string;
   comment: string;
@@ -106,6 +106,17 @@ export interface Review {
   user: User;
   createdAt: Date | string;
 }
+
+export interface ReviewImage {
+  id       : string;
+  reviewId  : string;
+  url       : string;
+  publicId  : string;
+  position : Int; 
+  createdAt : Date | string;
+}
+
+
 
 export interface WishlistItem {
   id: string;
