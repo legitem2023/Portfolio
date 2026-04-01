@@ -18,7 +18,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log(productId,"UserId",userId,rating,title,comment);
+    //console.log(productId,"UserId",userId,rating,title,comment);
     try {
       // First create the review
       const { data } = await createReview({
@@ -31,7 +31,8 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
           isApproved: false,
         },
       });
-
+      
+      console.log(data);
       // Check if review was created successfully
       if (data?.createReview?.statusText !== 'success') {
         throw new Error('Failed to create review');
