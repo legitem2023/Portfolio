@@ -728,6 +728,12 @@ export const GETPRODUCTS = gql`
           images
           model
         }
+        reviews { 
+          rating
+          images
+          userId
+          variantId
+        }
         brand
         weight
         dimensions
