@@ -351,17 +351,111 @@ type VehicleType {
     user: User
   }
 
-  type Review {
-    id: ID
-    rating: Int
-    title: String
-    comment: String
-    isApproved: Boolean
-    createdAt: DateTime
-    user: User
-    product: Product
-  }
+#  type Review {
+#    id: ID
+#    rating: Int
+#    title: String
+#    comment: String
+#    isApproved: Boolean
+#    createdAt: DateTime
+#    user: User
+#    product: Product
+#  }
+# ------------Review start
+type Review {
+  id: ID!
+  userId: String
+  productId: String
+  variantId: String
+  rating: Int
+  title: String
+  comment: String
+  isApproved: Boolean
+  createdAt: DateTime
+  user: User
+  product: Product
+  images: [ReviewImage!]
+}
 
+type ReviewImage {
+  id: ID!
+  reviewId: String!
+  url: String!
+  publicId: String
+  position: Int!
+  createdAt: DateTime!
+  review: Review!
+}
+
+type ReviewStats {
+  averageRating: Float!
+  totalReviews: Int!
+  minRating: Int
+  maxRating: Int
+  ratingDistribution: JSON!
+}
+
+type ReviewsResponse {
+  data: [Review!]!
+  meta: PaginationMeta!
+}
+
+type PaginationMeta {
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+
+input CreateReviewInput {
+  userId: String
+  productId: String
+  variantId: String
+  rating: Int!
+  title: String
+  comment: String
+  isApproved: Boolean
+  images: [CreateReviewImageInput!]
+}
+
+input CreateReviewImageInput {
+  url: String!
+  publicId: String
+  position: Int
+}
+
+input UpdateReviewInput {
+  rating: Int
+  title: String
+  comment: String
+  isApproved: Boolean
+  variantId: String
+}
+
+input AddImageToReviewInput {
+  reviewId: String!
+  url: String!
+  publicId: String
+  position: Int
+}
+
+input ReorderImagesInput {
+  reviewId: String!
+  imageIds: [String!]!
+}
+
+input GetReviewsInput {
+  productId: String
+  userId: String
+  isApproved: Boolean
+  minRating: Int
+  maxRating: Int
+  page: Int
+  limit: Int
+  sortBy: String
+  sortOrder: String
+}
+#--------Review End---------
   type Message {
     id: ID
     subject: String
@@ -881,6 +975,13 @@ input OrderPaginationInput {
   
   # ================= Queries & Mutations =================
   type Query {
+
+   getReviews(filters: GetReviewsInput): ReviewsResponse
+   getReviewById(id: String): Review
+   getProductReviewStats(productId: String): ReviewStats
+   getReviewImages(reviewId: String): [ReviewImage]
+
+  
     neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
@@ -1039,6 +1140,19 @@ type CreateVehicleTypeResponse {
   errors      :[Error!]
 }
   type Mutation {
+    
+  createReview(data: CreateReviewInput): Review
+  updateReview(id: String, data: UpdateReviewInput!): Review
+  deleteReview(id: String): Boolean
+  approveReview(id: String): Review
+  
+  addImageToReview(input: AddImageToReviewInput): ReviewImage
+  updateReviewImage(imageId: String, url: String, publicId: String, position: Int): ReviewImage
+  deleteReviewImage(imageId: String): Boolean
+  reorderImages(input: ReorderImagesInput): [ReviewImage]
+    
+    
+    
     remit(id:ID): Result
     finishorder(id:ID): Result
     # Update a vehicle type by ID
