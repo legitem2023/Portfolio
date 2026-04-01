@@ -34,7 +34,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
       
       console.log(data);
       // Check if review was created successfully
-      if (data?.createReview?.statusText !== 'success') {
+      if (data?.createReview?.statusText !== 'Successfully Added!') {
         throw new Error('Failed to create review');
       }
 
