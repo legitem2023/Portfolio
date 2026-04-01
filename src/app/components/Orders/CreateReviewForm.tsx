@@ -18,7 +18,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    //console.log(productId,"UserId",userId,rating,title,comment);
+    
     try {
       // First create the review
       const { data } = await createReview({
@@ -32,39 +32,29 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
         },
       });
       
-      console.log(data);
       // Check if review was created successfully
       if (data?.createReview?.statusText !== 'Successfully Added!') {
         throw new Error('Failed to create review');
       }
 
-      // Note: If your mutation doesn't return the review ID, 
-      // you won't be able to associate images with it.
-      // You'll need to either:
-      // 1. Update the mutation to return the ID, or
-      // 2. Skip image upload if no ID is available
-      
-      // If your mutation returns the review ID, you can uncomment this:
-      
       const reviewId = data.createReview.id;
       
       // Then upload images if any
       if (images.length > 0 && reviewId) {
         for (const image of images) {
-          // Upload image to cloud storage first
-          const uploadedUrl = await uploadImageToCloud(image);
+          // Convert image file to base64 string or blob URL
+          const imageUrl = await fileToBase64(image);
           
           await addImage({
             input: {
               reviewId,
-              url: uploadedUrl,
+              url: imageUrl, // Send base64 string
               publicId: `review/${reviewId}/${image.name}`,
             },
           });
         }
       }
       
-
       alert('Review created successfully!');
       // Reset form
       setRating(5);
@@ -81,6 +71,16 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
 
   const removeImage = (indexToRemove: number) => {
     setImages(images.filter((_, index) => index !== indexToRemove));
+  };
+
+  // Helper function to convert File to base64 string
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
   };
 
   return (
@@ -227,11 +227,4 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
       </button>
     </form>
   );
-};
-
-// Helper function to upload image
-const uploadImageToCloud = async (file: File): Promise<string> => {
-  // Implement your cloud upload logic here
-  // Return the uploaded image URL
-  return 'https://cdn.example.com/uploaded-image.jpg';
 };
