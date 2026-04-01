@@ -3135,8 +3135,10 @@ products: async (
               }
             },
             reviews: {
+              select: {
                 rating:true,
                 images:true
+              }
             }
           },
         });
