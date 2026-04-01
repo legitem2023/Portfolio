@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 export const CREATE_REVIEW = gql`
   mutation CreateReview($data: CreateReviewInput) {
     createReview(data: $data) {
+       id
        statusText
     }
   }
