@@ -45,8 +45,9 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
           // Convert image file to base64 string or blob URL
           const imageUrl = await fileToBase64(image);
           if (!imageUrl || imageUrl.trim() === '') {
-        throw new Error('Generated base64 string is empty');
+          throw new Error('Generated base64 string is empty');
           }
+          console.log(imageUrl,reviewId);
           await addImage({
             input: {
               reviewId,
