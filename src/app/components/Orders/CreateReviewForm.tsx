@@ -34,10 +34,13 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
         },
       });
 
-      const reviewId = data.createReview.id;
+      // Check if review was created successfully
+      if (data?.createReview?.statusText !== 'success') {
+        throw new Error('Failed to create review');
+      }
 
       // Then upload images if any
-      if (images.length > 0 && reviewId) {
+      if (images.length > 0) {
         for (const image of images) {
           // Upload image to cloud storage first
           const uploadedUrl = await uploadImageToCloud(image);
@@ -45,9 +48,9 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
           await addImage({
             variables: {
               input: {
-                reviewId,
+                reviewId: data.createReview.id, // You might need to return the ID from your mutation
                 url: uploadedUrl,
-                publicId: `review/${reviewId}/${image.name}`,
+                publicId: `review/${data.createReview.id}/${image.name}`,
               },
             },
           });
