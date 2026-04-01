@@ -971,7 +971,10 @@ input OrderPaginationInput {
   pageSize: Int
 }
 
-
+type ReviewResult {
+  id: ID
+  statusText: String
+}
   
   # ================= Queries & Mutations =================
   type Query {
@@ -1141,7 +1144,7 @@ type CreateVehicleTypeResponse {
 }
   type Mutation {
     
-  createReview(data: CreateReviewInput): Result
+  createReview(data: CreateReviewInput): ReviewResult
   updateReview(id: String, data: UpdateReviewInput!): Result
   deleteReview(id: String): Result
   approveReview(id: String): Result
