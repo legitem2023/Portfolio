@@ -1,5 +1,107 @@
 import { gql } from '@apollo/client';
 
+// graphql/queries/review.queries.ts
+
+export const GET_REVIEWS = gql`
+  query GetReviews($filters: GetReviewsInput) {
+    getReviews(filters: $filters) {
+      data {
+        id
+        userId
+        productId
+        variantId
+        rating
+        title
+        comment
+        isApproved
+        createdAt
+        user {
+          id
+          name
+          email
+        }
+        product {
+          id
+          name
+        }
+        images {
+          id
+          url
+          publicId
+          position
+          createdAt
+        }
+      }
+      meta {
+        total
+        page
+        limit
+        totalPages
+      }
+    }
+  }
+`;
+
+export const GET_REVIEW_BY_ID = gql`
+  query GetReviewById($id: String!) {
+    getReviewById(id: $id) {
+      id
+      userId
+      productId
+      variantId
+      rating
+      title
+      comment
+      isApproved
+      createdAt
+      user {
+        id
+        name
+        email
+      }
+      product {
+        id
+        name
+      }
+      images {
+        id
+        url
+        publicId
+        position
+        createdAt
+      }
+    }
+  }
+`;
+
+export const GET_PRODUCT_REVIEW_STATS = gql`
+  query GetProductReviewStats($productId: String!) {
+    getProductReviewStats(productId: $productId) {
+      averageRating
+      totalReviews
+      minRating
+      maxRating
+      ratingDistribution
+    }
+  }
+`;
+
+export const GET_REVIEW_IMAGES = gql`
+  query GetReviewImages($reviewId: String!) {
+    getReviewImages(reviewId: $reviewId) {
+      id
+      reviewId
+      url
+      publicId
+      position
+      createdAt
+      review {
+        id
+        title
+      }
+    }
+  }
+`;
 // Query to get notifications with pagination
 export const GET_NOTIFICATIONS = gql`
   query GetNotifications($userId: ID!, $filters: NotificationFilters) {
