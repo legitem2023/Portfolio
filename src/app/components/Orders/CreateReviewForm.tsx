@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useCreateReview, useAddImageToReview } from '../hooks/useReviews';
-import { Star, Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Star, Upload, X } from 'lucide-react';
 
 export const CreateReviewForm = ({ productId, userId }: { productId: string; userId: string }) => {
   const [rating, setRating] = useState(5);
@@ -12,7 +12,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
   const [images, setImages] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [createReview] = useCreateReview();
+  const [createReview, { loading: createLoading }] = useCreateReview();
   const [addImage] = useAddImageToReview();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -22,15 +22,13 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
     try {
       // First create the review
       const { data } = await createReview({
-        variables: {
-          data: {
-            userId,
-            productId,
-            rating,
-            title,
-            comment,
-            isApproved: false,
-          },
+        data: {
+          userId,
+          productId,
+          rating,
+          title,
+          comment,
+          isApproved: false,
         },
       });
 
@@ -39,23 +37,32 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
         throw new Error('Failed to create review');
       }
 
+      // Note: If your mutation doesn't return the review ID, 
+      // you won't be able to associate images with it.
+      // You'll need to either:
+      // 1. Update the mutation to return the ID, or
+      // 2. Skip image upload if no ID is available
+      
+      // If your mutation returns the review ID, you can uncomment this:
+      /*
+      const reviewId = data.createReview.id;
+      
       // Then upload images if any
-      if (images.length > 0) {
+      if (images.length > 0 && reviewId) {
         for (const image of images) {
           // Upload image to cloud storage first
           const uploadedUrl = await uploadImageToCloud(image);
           
           await addImage({
-            variables: {
-              input: {
-                reviewId: data.createReview.id, // You might need to return the ID from your mutation
-                url: uploadedUrl,
-                publicId: `review/${data.createReview.id}/${image.name}`,
-              },
+            input: {
+              reviewId,
+              url: uploadedUrl,
+              publicId: `review/${reviewId}/${image.name}`,
             },
           });
         }
       }
+      */
 
       alert('Review created successfully!');
       // Reset form
@@ -205,10 +212,10 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || createLoading}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
       >
-        {isSubmitting ? (
+        {isSubmitting || createLoading ? (
           <>
             <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             <span>Submitting...</span>
