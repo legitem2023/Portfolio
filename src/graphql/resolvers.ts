@@ -3859,7 +3859,7 @@ salesList: async (
         });
       }
 
-      return await tx.review.findUnique({
+      /*return await tx.review.findUnique({
         where: { id: review.id },
         include: {
           user: true,
@@ -3868,10 +3868,12 @@ salesList: async (
             orderBy: { position: 'asc' },
           },
         },
-      });
+      });*/
     });
 
-    return result;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to create review');
   }
@@ -3899,7 +3901,9 @@ updateReview: async (_: any, { id, data }: { id: string; data: any }) => {
       },
     });
 
-    return updatedReview;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to update review');
   }
@@ -3919,7 +3923,9 @@ deleteReview: async (_: any, { id }: { id: string }) => {
       where: { id },
     });
 
-    return true;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to delete review');
   }
@@ -3947,7 +3953,9 @@ approveReview: async (_: any, { id }: { id: string }) => {
       },
     });
 
-    return updatedReview;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to approve review');
   }
@@ -3984,7 +3992,9 @@ addImageToReview: async (_: any, { input }: { input: any }) => {
       include: { review: true },
     });
 
-    return image;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to add image');
   }
@@ -4013,7 +4023,9 @@ updateReviewImage: async (
       include: { review: true },
     });
 
-    return updatedImage;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to update image');
   }
@@ -4033,7 +4045,9 @@ deleteReviewImage: async (_: any, { imageId }: { imageId: string }) => {
       where: { id: imageId },
     });
 
-    return true;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to delete image');
   }
@@ -4066,7 +4080,9 @@ reorderImages: async (_: any, { input }: { input: any }) => {
       include: { review: true },
     });
 
-    return updatedImages;
+    return {
+      statusText:"Successfully Added!"
+    };
   } catch (error) {
     throw new Error('Failed to reorder images');
   }
