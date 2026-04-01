@@ -3135,7 +3135,6 @@ products: async (
               }
             },
             reviews: {
-                id:true,
                 rating:true,
                 images:true
             }
