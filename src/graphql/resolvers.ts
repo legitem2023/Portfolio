@@ -3982,9 +3982,10 @@ addImageToReview: async (_: any, { input }: { input: any }) => {
       });
       finalPosition = maxPositionImage ? maxPositionImage.position + 1 : 0;
     }
-    
+    throw new Error(existingReview);
     const imageUUID = uuidv4();
     const imageFile = await saveBase64Image(url, `review_image_${imageUUID}.webp`);
+    throw new Error(url);
     const image = await prisma.reviewImage.create({
       data: {
         reviewId,
