@@ -392,7 +392,7 @@ type ReviewStats {
   totalReviews: Int!
   minRating: Int
   maxRating: Int
-  ratingDistribution: JSON!
+  ratingDistribution: Json!
 }
 
 type ReviewsResponse {
