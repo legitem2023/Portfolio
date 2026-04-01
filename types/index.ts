@@ -98,6 +98,9 @@ export interface OrderItem {
 export interface Review {
   id: string;
   rating: number;
+  images:string[];
+  userId:string;
+  variantId:string;
   comment: string;
   product: Product;
   user: User;
@@ -155,6 +158,7 @@ export interface Product {
   stock: number;
   status: 'Active' | 'Inactive';
   variants: Variant[];
+  reviews: Review[];
   images: string[];
   user: User;
 }
