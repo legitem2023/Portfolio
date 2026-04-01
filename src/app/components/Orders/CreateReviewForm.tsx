@@ -18,7 +18,7 @@ export const CreateReviewForm = ({ productId, userId }: { productId: string; use
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+    console.log(productId,"UserId",userId,rating,title,comment);
     try {
       // First create the review
       const { data } = await createReview({
