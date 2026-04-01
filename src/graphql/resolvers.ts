@@ -562,17 +562,17 @@ export const resolvers = {
         });
 
         if (!review) {
-          throw new Error('Review not found', {
-            extensions: { code: 'NOT_FOUND' },
-          });
+          throw new Error('Review not found');//,{
+          //  extensions: { code: 'NOT_FOUND' },
+          //});
         }
 
         return review;
       } catch (error:any) {
         //if (error instanceof GraphQLError) throw error;
-        throw new Error('Failed to fetch review', {
-          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
-        });
+        throw new Error('Failed to fetch review');//, {
+        //  extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+       // });
       }
     },
 
@@ -611,9 +611,9 @@ export const resolvers = {
           ratingDistribution: distribution,
         };
       } catch (error:any) {
-        throw new Error('Failed to fetch review stats', {
-          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
-        });
+        throw new Error('Failed to fetch review stats');//, {
+        //  extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+       // });
       }
     },
 
@@ -628,9 +628,9 @@ export const resolvers = {
 
         return images;
       } catch (error:any) {
-        throw new Error('Failed to fetch review images', {
-          extensions: { code: 'INTERNAL_SERVER_ERROR', error },
-        });
+        throw new Error('Failed to fetch review images');//, {
+        //  extensions: { code: 'INTERNAL_SERVER_ERROR', error },
+       // });
       }
     },
 vehicles:async (_parent: any,args: any) => {
