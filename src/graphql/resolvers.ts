@@ -3872,7 +3872,7 @@ salesList: async (
     });
 
     return {
-      id:result.id,
+      id:result?.id,
       statusText:"Successfully Added!"
     };
   } catch (error) {
