@@ -58,7 +58,12 @@ const CategoryPage: React.FC = () => {
     }));
   }, [data]);
 
-  const handleCategoryClick = useCallback((categoryId: string) => {
+  const handleCategoryClick = useCallback((categoryId: string, variantCount: number) => {
+    if (variantCount < 1) {
+      showToast('This category has no items available', 'error');
+      return;
+    }
+    
     if (isMounted.current) {
       dispatch(setCategoryFilter(categoryId));
     }
@@ -80,7 +85,7 @@ const CategoryPage: React.FC = () => {
         backdropFilter: 'blur(3px)',
         WebkitBackdropFilter: 'blur(3px)'
       }}
-      onClick={() => handleCategoryClick(category.id)}
+      onClick={() => handleCategoryClick(category.id, category.variantCount)}
     >
       <div className="relative aspect-[1/1] bg-gray-50">
         <div className="relative h-full w-full">
@@ -89,7 +94,7 @@ const CategoryPage: React.FC = () => {
             alt={category.name}
             fill
             quality={25}
-            className="object-cover"
+            className={`object-cover ${category.variantCount < 1 ? 'grayscale' : ''}`}
             loading="lazy"
             priority={index < 4}
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
