@@ -99,6 +99,7 @@ export interface Review {
   id: string;
   rating: number;
   images:ReviewImage[];
+  productId: string;
   userId:string;
   variantId:string;
   comment: string;
