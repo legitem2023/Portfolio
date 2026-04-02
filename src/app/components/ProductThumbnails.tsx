@@ -31,7 +31,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const { user, loading: userloading } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
+  const [selectedVariantId, setSelectedVariantId] = useState<Record<string, string>>({});
   
   // Refs for cleanup
   const quickViewTimeoutRef = useRef<NodeJS.Timeout>();
@@ -64,6 +64,20 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       });
       swiperInstancesRef.current.clear();
     };
+  }, []);
+
+  // Get unique variant identifiers (using color, sku, or size)
+  const getUniqueVariantIdentifiers = useCallback((variants: Product['variants']) => {
+    if (!variants || variants.length === 0) return [];
+    
+    const identifiers = variants.map(variant => ({
+      id: variant.sku || variant.color || variant.size || `variant-${Math.random()}`,
+      displayName: variant.color || variant.size || variant.sku || 'Variant',
+      colorValue: variant.color || null,
+      variant: variant
+    }));
+    
+    return identifiers;
   }, []);
 
   // Get all variants for a product with their images
@@ -120,7 +134,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         onSale: product.onSale,
         isNew: product.isNew,
         isFeatured: product.isFeatured,
-        originalPrice: product.originalPrice, // Use product's original price
+        originalPrice: product.originalPrice,
         rating: product.rating,
         reviewCount: product.reviewCount,
         image: selectedVariantToUse?.images?.[0] || product.image,
@@ -144,24 +158,22 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     }
   }, []);
 
-  const getUniqueColors = useCallback((variants: Product['variants']) => {
-    if (!variants || variants.length === 0) return [];
-    const colors = variants.map(variant => variant.color).filter((color): color is string => Boolean(color));
-    return Array.from(new Set(colors));
-  }, []);
-
-  const handleColorSelect = useCallback((productId: string, color: string) => {
-    setSelectedColor(prev => ({
+  const handleVariantSelect = useCallback((productId: string, variantId: string) => {
+    setSelectedVariantId(prev => ({
       ...prev,
-      [productId]: color
+      [productId]: variantId
     }));
   }, []);
 
-  const getCurrentVariant = useCallback((product: Product, selectedColorValue?: string) => {
+  const getCurrentVariant = useCallback((product: Product, selectedVariantIdentifier?: string) => {
     if (!product.variants || product.variants.length === 0) return null;
     
-    if (selectedColorValue) {
-      const foundVariant = product.variants.find(v => v.color === selectedColorValue);
+    if (selectedVariantIdentifier) {
+      const foundVariant = product.variants.find(v => 
+        v.sku === selectedVariantIdentifier || 
+        v.color === selectedVariantIdentifier || 
+        v.size === selectedVariantIdentifier
+      );
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
@@ -170,19 +182,19 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   if (userloading) return null;
 
   const userId = user?.userId;
-  console.log(memoizedProducts);
+
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
         {memoizedProducts.map((product) => {
-          const uniqueColors = getUniqueColors(product.variants || []);
-          const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
+          const variantIdentifiers = getUniqueVariantIdentifiers(product.variants || []);
+          const currentVariant = getCurrentVariant(product, selectedVariantId[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
           
           return (
             <div 
               key={product.id} 
-              className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
+              className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full relative"
               style={{
                 border: 'solid 1px transparent',
                 borderRadius: '3px',
@@ -237,15 +249,17 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                               width={400}
                               onClick={() => variant && handleQuickView(product, variant)}
                               src={image || '/NoImage.webp'}
-                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
+                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}${variant?.size ? ` - ${variant.size}` : ''}`}
                               quality={25}
                               loading="lazy"
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                             />
-                            {/* Show variant color badge */}
-                            {variant?.color && (
+                            {/* Show variant details badge */}
+                            {(variant?.color || variant?.size) && (
                               <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
-                                {variant.color}
+                                {variant.color && variant.color}
+                                {variant.color && variant.size && ' - '}
+                                {variant.size && variant.size}
                               </div>
                             )}
                           </div>
@@ -266,7 +280,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                       alt={product.name}
                       quality={25}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
                     />
                   )}
                   
@@ -325,50 +339,65 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                   </div>
                 </div>
                 
-                {/* Color selection */}
-                {uniqueColors.length > 0 && (
+                {/* Variant selection - Shows ALL variants */}
+                {variantIdentifiers.length > 0 && (
                   <div className="mt-1 sm:mt-2">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
-                      <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleColorSelect(product.id, color)}
-                            className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 rounded-full border transition-all ${
-                              selectedColor[product.id] === color 
-                                ? 'border-2 border-amber-500 scale-110' 
-                                : 'border-gray-200 hover:scale-110'
-                            }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
-                        ))}
-                        {uniqueColors.length > 4 && (
-                          <span className="text-[10px] xs:text-xs text-gray-500">+{uniqueColors.length - 4}</span>
-                        )}
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-[10px] xs:text-xs text-gray-500 font-medium">Available Variants:</span>
+                      <div className="flex flex-wrap gap-1 xs:gap-1.5">
+                        {variantIdentifiers.map((identifier, index) => {
+                          const isSelected = selectedVariantId[product.id] === identifier.id;
+                          return (
+                            <button
+                              key={index}
+                              onClick={() => handleVariantSelect(product.id, identifier.id)}
+                              className={`
+                                px-1.5 py-0.5 text-[9px] xs:text-[10px] sm:text-xs 
+                                rounded-full border transition-all duration-200
+                                ${isSelected 
+                                  ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium shadow-sm' 
+                                  : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300 hover:bg-amber-50'
+                                }
+                              `}
+                              title={identifier.displayName}
+                            >
+                              {identifier.colorValue ? (
+                                <div className="flex items-center space-x-1">
+                                  <div 
+                                    className="w-2 h-2 xs:w-2.5 xs:h-2.5 rounded-full" 
+                                    style={{ backgroundColor: identifier.colorValue }}
+                                  />
+                                  <span>{identifier.displayName}</span>
+                                </div>
+                              ) : (
+                                identifier.displayName
+                              )}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
-                    
-                    {/* Show selected color name */}
-                    {selectedColor[product.id] && (
-                      <div className="mt-1 text-[8px] xs:text-[10px] text-gray-500">
-                        Selected: {selectedColor[product.id]}
-                      </div>
-                    )}
                   </div>
                 )}
                 
                 {/* Show current variant details */}
-                {currentVariant?.size && (
-                  <div className="mt-1 text-[8px] xs:text-[10px] text-gray-500">
-                    Size: {currentVariant.size}
-                  </div>
-                )}
-                
-                {currentVariant?.sku && (
-                  <div className="mt-0.5 text-[8px] xs:text-[10px] text-gray-400">
-                    SKU: {currentVariant.sku}
+                {currentVariant && (
+                  <div className="mt-1 space-y-0.5">
+                    {currentVariant.color && (
+                      <div className="text-[8px] xs:text-[10px] text-gray-500">
+                        Color: {currentVariant.color}
+                      </div>
+                    )}
+                    {currentVariant.size && (
+                      <div className="text-[8px] xs:text-[10px] text-gray-500">
+                        Size: {currentVariant.size}
+                      </div>
+                    )}
+                    {currentVariant.sku && (
+                      <div className="text-[8px] xs:text-[10px] text-gray-400">
+                        SKU: {currentVariant.sku}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -379,7 +408,6 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       
       <QuickViewModal 
         product={selectedVariant?.product || null}
-       // selectedVariant={selectedVariant?.variant || null}
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={(product) => handleAddToCart(product, selectedVariant?.variant)}
