@@ -20,14 +20,6 @@ interface SelectedVariant {
   variant: Product['variants'][0];
 }
 
-interface Review {
-  productId: string;
-  rating: number;
-  images?: { url: string }[];
-  userId: string;
-  variantId: string;
-}
-
 const formatPesoPrice = (price: number): string => {
   return `₱${price.toLocaleString('en-PH', {
     minimumFractionDigits: 2,
@@ -39,7 +31,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   const { user, loading: userloading } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
-  const [selectedVariantId, setSelectedVariantId] = useState<Record<string, string>>({});
+  const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
   
   // Refs for cleanup
   const quickViewTimeoutRef = useRef<NodeJS.Timeout>();
@@ -61,12 +53,10 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   // Cleanup all Swipers on unmount
   useEffect(() => {
     return () => {
-      // Clear all timeouts
       if (quickViewTimeoutRef.current) {
         clearTimeout(quickViewTimeoutRef.current);
       }
       
-      // Destroy all Swiper instances
       swiperInstancesRef.current.forEach((swiper) => {
         if (swiper) swiper.destroy(true, true);
       });
@@ -81,7 +71,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
     const averageRating = totalRating / variant.reviews.length;
     
-    return Math.round(averageRating * 10) / 10; // Round to 1 decimal place
+    return Math.round(averageRating * 10) / 10;
   }, []);
 
   // Calculate total review count for a variant
@@ -119,20 +109,6 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     };
   }, []);
 
-  // Get unique variant identifiers (using color, sku, or size)
-  const getUniqueVariantIdentifiers = useCallback((variants: Product['variants']) => {
-    if (!variants || variants.length === 0) return [];
-    
-    const identifiers = variants.map(variant => ({
-      id: variant.sku || variant.color || variant.size || variant.id || `variant-${Math.random()}`,
-      displayName: variant.color || variant.size || variant.name || variant.sku || 'Variant',
-      colorValue: variant.color || null,
-      variant: variant
-    }));
-    
-    return identifiers;
-  }, []);
-
   // Get all variants for a product with their images
   const getAllVariantsWithImages = useCallback((product: Product) => {
     if (!product.variants || product.variants.length === 0) return [];
@@ -144,14 +120,13 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         return images.map((image: string, index: number) => ({
           image,
           variant: variant,
-          key: `${variant.sku || variant.color || variant.id || index}-${index}`
+          key: `${variant.sku || variant.color || index}-${index}`
         }));
       } else if (variant.color) {
-        // If no images but has color, show placeholder with color indicator
         return [{
           image: '/NoImage.webp',
           variant: variant,
-          key: `${variant.sku || variant.color || variant.id}-noimage`
+          key: `${variant.sku || variant.color}-noimage`
         }];
       }
       return [];
@@ -177,32 +152,29 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     try {
       const selectedVariantToUse = variant || (product.variants && product.variants[0]);
       
-      // Calculate price - use variant salePrice or price if available
-      const finalPrice = selectedVariantToUse?.salePrice || selectedVariantToUse?.price || product.salePrice || product.price;
-      const originalPrice = selectedVariantToUse?.price || product.price;
-      const isOnSale = !!(selectedVariantToUse?.salePrice || product.salePrice);
+      const finalPrice = selectedVariantToUse?.price || product.price;
       
       const cartItem = {
         id: product.id,
         name: product.name,
         price: finalPrice,
-        originalPrice: originalPrice,
-        onSale: isOnSale,
-        isNew: false, // You might want to calculate this based on createdAt
-        isFeatured: product.isFeatured || false,
-        rating: calculateAverageRating(selectedVariantToUse),
-        reviewCount: calculateTotalReviews(selectedVariantToUse),
-        image: selectedVariantToUse?.images?.[0] || product.images?.[0] || '/NoImage.webp',
+        onSale: product.onSale,
+        isNew: product.isNew,
+        isFeatured: product.isFeatured,
+        originalPrice: product.originalPrice,
+        rating: product.rating,
+        reviewCount: product.reviewCount,
+        image: selectedVariantToUse?.images?.[0] || product.image,
+        colors: product.colors,
         description: product.description,
-        productCode: product.sku,
-        category: product.category?.id || '',
+        productCode: product.productCode,
+        category: product.category,
         sku: selectedVariantToUse?.sku,
         variants: product.variants,
         userId: 'current-user-id',
         quantity: 1,
         color: selectedVariantToUse?.color,
         size: selectedVariantToUse?.size,
-        model: selectedVariantToUse?.model || product.model,
       };
       
       // dispatch(addToCart(cartItem));
@@ -211,25 +183,26 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       console.error('Error adding to cart:', error);
       showToast('Failed to add to cart', 'error');
     }
-  }, [calculateAverageRating, calculateTotalReviews]);
+  }, []);
 
-  const handleVariantSelect = useCallback((productId: string, variantId: string) => {
-    setSelectedVariantId(prev => ({
+  const getUniqueColors = useCallback((variants: Product['variants']) => {
+    if (!variants || variants.length === 0) return [];
+    const colors = variants.map(variant => variant.color).filter((color): color is string => Boolean(color));
+    return Array.from(new Set(colors));
+  }, []);
+
+  const handleColorSelect = useCallback((productId: string, color: string) => {
+    setSelectedColor(prev => ({
       ...prev,
-      [productId]: variantId
+      [productId]: color
     }));
   }, []);
 
-  const getCurrentVariant = useCallback((product: Product, selectedVariantIdentifier?: string) => {
+  const getCurrentVariant = useCallback((product: Product, selectedColorValue?: string) => {
     if (!product.variants || product.variants.length === 0) return null;
     
-    if (selectedVariantIdentifier) {
-      const foundVariant = product.variants.find(v => 
-        v.sku === selectedVariantIdentifier || 
-        v.color === selectedVariantIdentifier || 
-        v.size === selectedVariantIdentifier ||
-        v.id === selectedVariantIdentifier
-      );
+    if (selectedColorValue) {
+      const foundVariant = product.variants.find(v => v.color === selectedColorValue);
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
@@ -239,39 +212,31 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
 
   const userId = user?.userId;
 
-  
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
         {memoizedProducts.map((product) => {
-          const variantIdentifiers = getUniqueVariantIdentifiers(product.variants || []);
-          const currentVariant = getCurrentVariant(product, selectedVariantId[product.id]);
+          const uniqueColors = getUniqueColors(product.variants || []);
+          const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
           
-          // Get rating for current variant or overall product rating
+          // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
           
           if (currentVariant) {
-            // Use current variant's reviews
             displayRating = calculateAverageRating(currentVariant);
             displayReviewCount = calculateTotalReviews(currentVariant);
           } else {
-            // Use overall product rating from all variants
             const overallRating = getOverallProductRating(product.variants || []);
             displayRating = overallRating.averageRating;
             displayReviewCount = overallRating.totalReviews;
           }
           
-          // Get price display
-          const displayPrice = currentVariant?.salePrice || currentVariant?.price || product.salePrice || product.price;
-          const displayOriginalPrice = currentVariant?.price || product.price;
-          const isOnSale = !!(currentVariant?.salePrice || product.salePrice);
-          
           return (
             <div 
               key={product.id} 
-              className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full relative"
+              className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
               style={{
                 border: 'solid 1px transparent',
                 borderRadius: '3px',
@@ -280,14 +245,20 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                 WebkitBackdropFilter: 'blur(2px)'
               }}>
               {/* Badges */}
-              {(isOnSale || product.featured) && (
+              {(product.onSale || product.isNew) && (
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-                  {isOnSale && (
+                  {product.onSale && (
                     <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
                   )}
-                  {product.featured && (
-                    <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-amber-600 text-white rounded-md">FEATURED</span>
+                  {product.isNew && (
+                    <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
                   )}
+                </div>
+              )}
+              
+              {product.isFeatured && (
+                <div className="absolute top-2 right-2 z-10">
+                  <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-amber-600 text-white rounded-md">FEATURED</span>
                 </div>
               )}
               
@@ -319,17 +290,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                               width={400}
                               onClick={() => variant && handleQuickView(product, variant)}
                               src={image || '/NoImage.webp'}
-                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}${variant?.size ? ` - ${variant.size}` : ''}`}
+                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
                               quality={25}
                               loading="lazy"
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {/* Show variant details badge */}
-                            {(variant?.color || variant?.size) && (
+                            {variant?.color && (
                               <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
-                                {variant.color && variant.color}
-                                {variant.color && variant.size && ' - '}
-                                {variant.size && variant.size}
+                                {variant.color}
                               </div>
                             )}
                           </div>
@@ -346,11 +314,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                           handleQuickView(product, defaultVariant);
                         }
                       }} 
-                      src={product.images?.[0] || '/NoImage.webp'}
+                      src={product.image || '/NoImage.webp'}
                       alt={product.name}
                       quality={25}
                       loading="lazy"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   )}
                   
@@ -380,36 +348,21 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                   </button>
                 </div>
                 
-                {/* Dynamic Rating Stars */}
+                {/* Dynamic Rating Stars from Variant Reviews */}
                 <div className="flex items-center mb-1 sm:mb-2">
                   <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((star) => {
                       const starValue = displayRating;
                       const isFullStar = star <= Math.floor(starValue);
-                      const isHalfStar = star === Math.ceil(starValue) && starValue % 1 !== 0;
                       
                       return (
                         <svg
                           key={star}
-                          className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${
-                            isFullStar ? 'text-amber-400' : isHalfStar ? 'text-amber-400' : 'text-gray-300'
-                          }`}
-                          fill={isHalfStar ? "url(#half-star-gradient)" : "currentColor"}
+                          className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${isFullStar ? 'text-amber-400' : 'text-gray-300'}`}
+                          fill="currentColor"
                           viewBox="0 0 20 20"
                         >
-                          {isHalfStar ? (
-                            <>
-                              <defs>
-                                <linearGradient id="half-star-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
-                                  <stop offset="50%" stopColor="currentColor" />
-                                  <stop offset="50%" stopColor="#D1D5DB" />
-                                </linearGradient>
-                              </defs>
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </>
-                          ) : (
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          )}
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                         </svg>
                       );
                     })}
@@ -418,96 +371,64 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                         ({displayReviewCount})
                       </span>
                     )}
-                    {displayReviewCount === 0 && displayRating > 0 && (
-                      <span className="text-[10px] xs:text-xs text-gray-500 ml-0.5 xs:ml-1">
-                        ({displayRating.toFixed(1)})
-                      </span>
-                    )}
                   </div>
                 </div>
                 
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center space-x-1">
                     <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
-                      {formatPesoPrice(displayPrice)}
+                      {formatPesoPrice(currentVariant?.price || product.price)}
                     </span>
-                    {isOnSale && displayOriginalPrice > displayPrice && (
+                    {product.originalPrice && product.originalPrice > (currentVariant?.price || product.price) && (
                       <span className="text-[10px] xs:text-xs text-gray-500 line-through">
-                        {formatPesoPrice(displayOriginalPrice)}
+                        {formatPesoPrice(product.originalPrice)}
                       </span>
                     )}
                   </div>
                 </div>
                 
-                {/* Variant selection - Shows ALL variants */}
-                {variantIdentifiers.length > 0 && (
+                {/* Color selection */}
+                {uniqueColors.length > 0 && (
                   <div className="mt-1 sm:mt-2">
-                    <div className="flex flex-col space-y-1">
-                      <span className="text-[10px] xs:text-xs text-gray-500 font-medium">Available Variants:</span>
-                      <div className="flex flex-wrap gap-1 xs:gap-1.5">
-                        {variantIdentifiers.map((identifier, index) => {
-                          const isSelected = selectedVariantId[product.id] === identifier.id;
-                          return (
-                            <button
-                              key={index}
-                              onClick={() => handleVariantSelect(product.id, identifier.id)}
-                              className={`
-                                px-1.5 py-0.5 text-[9px] xs:text-[10px] sm:text-xs 
-                                rounded-full border transition-all duration-200
-                                ${isSelected 
-                                  ? 'border-amber-500 bg-amber-50 text-amber-700 font-medium shadow-sm' 
-                                  : 'border-gray-200 bg-white text-gray-600 hover:border-amber-300 hover:bg-amber-50'
-                                }
-                              `}
-                              title={identifier.displayName}
-                            >
-                              {identifier.colorValue ? (
-                                <div className="flex items-center space-x-1">
-                                  <div 
-                                    className="w-2 h-2 xs:w-2.5 xs:h-2.5 rounded-full" 
-                                    style={{ backgroundColor: identifier.colorValue }}
-                                  />
-                                  <span>{identifier.displayName}</span>
-                                </div>
-                              ) : (
-                                identifier.displayName
-                              )}
-                            </button>
-                          );
-                        })}
+                    <div className="flex items-center space-x-1">
+                      <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
+                      <div className="flex space-x-0.5 xs:space-x-1">
+                        {uniqueColors.slice(0, 4).map((color, index) => (
+                          <button
+                            key={index}
+                            onClick={() => handleColorSelect(product.id, color)}
+                            className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 rounded-full border transition-all ${
+                              selectedColor[product.id] === color 
+                                ? 'border-2 border-amber-500 scale-110' 
+                                : 'border-gray-200 hover:scale-110'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                        {uniqueColors.length > 4 && (
+                          <span className="text-[10px] xs:text-xs text-gray-500">+{uniqueColors.length - 4}</span>
+                        )}
                       </div>
                     </div>
+                    
+                    {selectedColor[product.id] && (
+                      <div className="mt-1 text-[8px] xs:text-[10px] text-gray-500">
+                        Selected: {selectedColor[product.id]}
+                      </div>
+                    )}
                   </div>
                 )}
                 
-                {/* Show current variant details */}
-                {currentVariant && (
-                  <div className="mt-1 space-y-0.5">
-                    {currentVariant.color && (
-                      <div className="text-[8px] xs:text-[10px] text-gray-500">
-                        Color: {currentVariant.color}
-                      </div>
-                    )}
-                    {currentVariant.size && (
-                      <div className="text-[8px] xs:text-[10px] text-gray-500">
-                        Size: {currentVariant.size}
-                      </div>
-                    )}
-                    {currentVariant.sku && (
-                      <div className="text-[8px] xs:text-[10px] text-gray-400">
-                        SKU: {currentVariant.sku}
-                      </div>
-                    )}
-                    {currentVariant.model && (
-                      <div className="text-[8px] xs:text-[10px] text-gray-400">
-                        Model: {currentVariant.model}
-                      </div>
-                    )}
-                    {currentVariant.stock !== undefined && (
-                      <div className={`text-[8px] xs:text-[10px] ${currentVariant.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        Stock: {currentVariant.stock > 0 ? `${currentVariant.stock} available` : 'Out of stock'}
-                      </div>
-                    )}
+                {currentVariant?.size && (
+                  <div className="mt-1 text-[8px] xs:text-[10px] text-gray-500">
+                    Size: {currentVariant.size}
+                  </div>
+                )}
+                
+                {currentVariant?.sku && (
+                  <div className="mt-0.5 text-[8px] xs:text-[10px] text-gray-400">
+                    SKU: {currentVariant.sku}
                   </div>
                 )}
               </div>
