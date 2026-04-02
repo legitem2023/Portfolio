@@ -15,8 +15,11 @@ interface ReviewImage {
 
 interface ReviewUser {
   id: string;
-  name: string;
-  email: string;
+  name?: string;  // Made optional
+  firstName?: string;  // Alternative field
+  lastName?: string;   // Alternative field
+  email?: string;      // Made optional
+  username?: string;   // Alternative field
 }
 
 interface ReviewProduct {
@@ -87,6 +90,7 @@ interface ReviewsListProps {
 
 // ============ GRAPHQL QUERY ============
 
+// FIXED QUERY - Removed 'name' field if it doesn't exist on User
 export const GET_REVIEWS = gql`
   query GetReviews($filters: GetReviewsInput) {
     getReviews(filters: $filters) {
@@ -102,7 +106,52 @@ export const GET_REVIEWS = gql`
         createdAt
         user {
           id
+          email
+          # Remove 'name' if it doesn't exist, or use alternative fields:
+          # firstName
+          # lastName
+          # username
+        }
+        product {
+          id
           name
+        }
+        images {
+          id
+          url
+          publicId
+          position
+          createdAt
+        }
+      }
+      meta {
+        total
+        page
+        limit
+        totalPages
+      }
+    }
+  }
+`;
+
+// Alternative query if you have firstName and lastName:
+export const GET_REVIEWS_ALTERNATIVE = gql`
+  query GetReviews($filters: GetReviewsInput) {
+    getReviews(filters: $filters) {
+      data {
+        id
+        userId
+        productId
+        variantId
+        rating
+        title
+        comment
+        isApproved
+        createdAt
+        user {
+          id
+          firstName
+          lastName
           email
         }
         product {
@@ -166,6 +215,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     ? review.comment
     : `${review.comment?.slice(0, maxCommentLength)}...`;
 
+  // Helper function to get user display name
+  const getUserDisplayName = (user: ReviewUser): string => {
+    if (user.name) return user.name;
+    if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+    if (user.firstName) return user.firstName;
+    if (user.username) return user.username;
+    if (user.email) return user.email.split('@')[0];
+    return 'Anonymous';
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
@@ -185,7 +244,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
 
       <div className="mb-3">
         <p className="text-sm text-gray-600">
-          by <span className="font-medium">{review.user.name}</span>
+          by <span className="font-medium">{getUserDisplayName(review.user)}</span>
           {review.product && (
             <span className="text-gray-400">
               {' '}on <span className="font-medium">{review.product.name}</span>
@@ -210,6 +269,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         <div className="flex gap-2 mt-3">
           {review.images.slice(0, 3).map((image, index) => (
             <div key={image.id} className="relative group">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image.url}
                 alt={`Review image ${image.position}`}
@@ -462,6 +522,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, l
   };
 
   if (error) {
+    console.error('GraphQL Error:', error);
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
         <p className="text-red-600 mb-2">Error loading reviews</p>
