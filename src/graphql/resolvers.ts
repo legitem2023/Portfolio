@@ -3161,7 +3161,7 @@ products: async (
       }
     },
 */
-    products: async (
+products: async (
   _: any,
   {
     search,
@@ -3207,7 +3207,6 @@ products: async (
           orderBy = [{ price: "desc" }];
           break;
         case "Highest Rated":
-          // For rating sort, we'll handle it manually
           isRatingSort = true;
           break;
         default:
@@ -3243,12 +3242,12 @@ products: async (
         supplier: {
           select: {
             addresses: {
-              where:{
-                isDefault:true
+              where: {
+                isDefault: true
               },
               select: {
-                lat:true,
-                lng:true
+                lat: true,
+                lng: true
               }
             }
           }
@@ -3279,31 +3278,36 @@ products: async (
             model: true,
             reviews: {
               select: {
-                productId:true,
-                rating:true,
-                images:true,
+                productId: true,
+                rating: true,
+                images: true,
                 userId: true,
-                variantId:true
-             }
-           }
+                variantId: true
+              }
+            }
+          }
         }
-      },
-    },
+      }
     });
 
     // Handle Highest Rated sorting
     if (isRatingSort) {
       // Calculate average rating for each product
       const productsWithRatings = products.map(product => {
-        // Collect all reviews from variants
         let totalRating = 0;
         let reviewCount = 0;
         
         product.variants.forEach(variant => {
-          variant.reviews.forEach(review => {
-            totalRating += review.rating;
-            reviewCount++;
-          });
+          if (variant.reviews && variant.reviews.length > 0) {
+            variant.reviews.forEach(review => {
+              // Fix: Handle null or undefined ratings
+              const rating = review.rating;
+              if (rating !== null && rating !== undefined && typeof rating === 'number') {
+                totalRating += rating;
+                reviewCount++;
+              }
+            });
+          }
         });
         
         const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
@@ -3314,14 +3318,16 @@ products: async (
         };
       });
       
-      // Sort by average rating
+      // Sort by average rating (highest first)
       productsWithRatings.sort((a, b) => b.averageRating - a.averageRating);
       
       // Apply pagination manually
       let startIndex = 0;
       if (cursor) {
         const cursorIndex = productsWithRatings.findIndex(p => p.id === cursor);
-        startIndex = cursorIndex + 1;
+        if (cursorIndex !== -1) {
+          startIndex = cursorIndex + 1;
+        }
       }
       
       const paginatedProducts = productsWithRatings.slice(startIndex, startIndex + limit + 1);
@@ -3354,6 +3360,7 @@ products: async (
     throw new Error("Failed to fetch products");
   }
 },
+
     product: async (_: any, { id }: { id: string }) => {
       const products = await prisma.product.findMany({
           where: {
