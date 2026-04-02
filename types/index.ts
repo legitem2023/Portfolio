@@ -1,5 +1,5 @@
 // Core User interface with all fields from GraphQL type
-export interface User {
+export interface User { 
   id: string;
   email: string;
   password: string;
