@@ -20,6 +20,14 @@ interface SelectedVariant {
   variant: Product['variants'][0];
 }
 
+interface Review {
+  productId: string;
+  rating: number;
+  images?: { url: string }[];
+  userId: string;
+  variantId: string;
+}
+
 const formatPesoPrice = (price: number): string => {
   return `₱${price.toLocaleString('en-PH', {
     minimumFractionDigits: 2,
@@ -66,25 +74,49 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     };
   }, []);
 
-  // Calculate average rating from variants
-  const calculateAverageRating = useCallback((variants: Product['variants']): number => {
-    if (!variants || variants.length === 0) return 0;
+  // Calculate average rating from variant reviews
+  const calculateAverageRating = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews || variant.reviews.length === 0) return 0;
     
-    const variantsWithRating = variants.filter(variant => variant.rating !== undefined && variant.rating !== null);
-    
-    if (variantsWithRating.length === 0) return 0;
-    
-    const totalRating = variantsWithRating.reduce((sum, variant) => sum + (variant.rating || 0), 0);
-    const averageRating = totalRating / variantsWithRating.length;
+    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = totalRating / variant.reviews.length;
     
     return Math.round(averageRating * 10) / 10; // Round to 1 decimal place
   }, []);
 
-  // Calculate total review count from variants
-  const calculateTotalReviews = useCallback((variants: Product['variants']): number => {
-    if (!variants || variants.length === 0) return 0;
+  // Calculate total review count for a variant
+  const calculateTotalReviews = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews) return 0;
+    return variant.reviews.length;
+  }, []);
+
+  // Get overall product rating from all variants
+  const getOverallProductRating = useCallback((variants: Product['variants']): { averageRating: number; totalReviews: number } => {
+    if (!variants || variants.length === 0) return { averageRating: 0, totalReviews: 0 };
     
-    return variants.reduce((total, variant) => total + (variant.reviewCount || 0), 0);
+    let allRatings: number[] = [];
+    let totalReviews = 0;
+    
+    variants.forEach(variant => {
+      if (variant.reviews && variant.reviews.length > 0) {
+        variant.reviews.forEach(review => {
+          if (review.rating) {
+            allRatings.push(review.rating);
+          }
+        });
+        totalReviews += variant.reviews.length;
+      }
+    });
+    
+    if (allRatings.length === 0) return { averageRating: 0, totalReviews: 0 };
+    
+    const totalRating = allRatings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = totalRating / allRatings.length;
+    
+    return {
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews
+    };
   }, []);
 
   // Get unique variant identifiers (using color, sku, or size)
@@ -92,8 +124,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     if (!variants || variants.length === 0) return [];
     
     const identifiers = variants.map(variant => ({
-      id: variant.sku || variant.color || variant.size || `variant-${Math.random()}`,
-      displayName: variant.color || variant.size || variant.sku || 'Variant',
+      id: variant.sku || variant.color || variant.size || variant.id || `variant-${Math.random()}`,
+      displayName: variant.color || variant.size || variant.name || variant.sku || 'Variant',
       colorValue: variant.color || null,
       variant: variant
     }));
@@ -112,14 +144,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         return images.map((image: string, index: number) => ({
           image,
           variant: variant,
-          key: `${variant.sku || variant.color || index}-${index}`
+          key: `${variant.sku || variant.color || variant.id || index}-${index}`
         }));
       } else if (variant.color) {
         // If no images but has color, show placeholder with color indicator
         return [{
           image: '/NoImage.webp',
           variant: variant,
-          key: `${variant.sku || variant.color}-noimage`
+          key: `${variant.sku || variant.color || variant.id}-noimage`
         }];
       }
       return [];
@@ -145,30 +177,32 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     try {
       const selectedVariantToUse = variant || (product.variants && product.variants[0]);
       
-      // Calculate price - use variant price if available, otherwise use product price
-      const finalPrice = selectedVariantToUse?.price || product.price;
+      // Calculate price - use variant salePrice or price if available
+      const finalPrice = selectedVariantToUse?.salePrice || selectedVariantToUse?.price || product.salePrice || product.price;
+      const originalPrice = selectedVariantToUse?.price || product.price;
+      const isOnSale = !!(selectedVariantToUse?.salePrice || product.salePrice);
       
       const cartItem = {
         id: product.id,
         name: product.name,
         price: finalPrice,
-        onSale: product.onSale,
-        isNew: product.isNew,
-        isFeatured: product.isFeatured,
-        originalPrice: product.originalPrice,
-        rating: selectedVariantToUse?.rating || product.rating,
-        reviewCount: selectedVariantToUse?.reviewCount || product.reviewCount,
-        image: selectedVariantToUse?.images?.[0] || product.image,
-        colors: product.colors,
+        originalPrice: originalPrice,
+        onSale: isOnSale,
+        isNew: false, // You might want to calculate this based on createdAt
+        isFeatured: product.featured || false,
+        rating: calculateAverageRating(selectedVariantToUse),
+        reviewCount: calculateTotalReviews(selectedVariantToUse),
+        image: selectedVariantToUse?.images?.[0] || product.images?.[0] || '/NoImage.webp',
         description: product.description,
-        productCode: product.productCode,
-        category: product.category,
+        productCode: product.sku,
+        category: product.category?.id || '',
         sku: selectedVariantToUse?.sku,
         variants: product.variants,
         userId: 'current-user-id',
         quantity: 1,
         color: selectedVariantToUse?.color,
         size: selectedVariantToUse?.size,
+        model: selectedVariantToUse?.model || product.model,
       };
       
       // dispatch(addToCart(cartItem));
@@ -177,7 +211,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       console.error('Error adding to cart:', error);
       showToast('Failed to add to cart', 'error');
     }
-  }, []);
+  }, [calculateAverageRating, calculateTotalReviews]);
 
   const handleVariantSelect = useCallback((productId: string, variantId: string) => {
     setSelectedVariantId(prev => ({
@@ -193,7 +227,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       const foundVariant = product.variants.find(v => 
         v.sku === selectedVariantIdentifier || 
         v.color === selectedVariantIdentifier || 
-        v.size === selectedVariantIdentifier
+        v.size === selectedVariantIdentifier ||
+        v.id === selectedVariantIdentifier
       );
       return foundVariant || product.variants[0];
     }
@@ -212,13 +247,25 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
           const currentVariant = getCurrentVariant(product, selectedVariantId[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
           
-          // Calculate dynamic ratings from variants
-          const averageRating = calculateAverageRating(product.variants || []);
-          const totalReviews = calculateTotalReviews(product.variants || []);
+          // Get rating for current variant or overall product rating
+          let displayRating = 0;
+          let displayReviewCount = 0;
           
-          // Use variant rating if available, otherwise use product rating, otherwise use calculated average
-          const displayRating = currentVariant?.rating || product.rating || averageRating;
-          const displayReviewCount = currentVariant?.reviewCount || product.reviewCount || totalReviews;
+          if (currentVariant) {
+            // Use current variant's reviews
+            displayRating = calculateAverageRating(currentVariant);
+            displayReviewCount = calculateTotalReviews(currentVariant);
+          } else {
+            // Use overall product rating from all variants
+            const overallRating = getOverallProductRating(product.variants || []);
+            displayRating = overallRating.averageRating;
+            displayReviewCount = overallRating.totalReviews;
+          }
+          
+          // Get price display
+          const displayPrice = currentVariant?.salePrice || currentVariant?.price || product.salePrice || product.price;
+          const displayOriginalPrice = currentVariant?.price || product.price;
+          const isOnSale = !!(currentVariant?.salePrice || product.salePrice);
           
           return (
             <div 
@@ -232,20 +279,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                 WebkitBackdropFilter: 'blur(2px)'
               }}>
               {/* Badges */}
-              {(product.onSale || product.isNew) && (
+              {(isOnSale || product.featured) && (
                 <div className="absolute top-2 left-2 z-10 flex flex-col space-y-1">
-                  {product.onSale && (
+                  {isOnSale && (
                     <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-red-600 text-white rounded-md">SALE</span>
                   )}
-                  {product.isNew && (
-                    <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
+                  {product.featured && (
+                    <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-amber-600 text-white rounded-md">FEATURED</span>
                   )}
-                </div>
-              )}
-              
-              {product.isFeatured && (
-                <div className="absolute top-2 right-2 z-10">
-                  <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-amber-600 text-white rounded-md">FEATURED</span>
                 </div>
               )}
               
@@ -255,7 +296,6 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                   {allVariantsWithImages.length > 0 ? (
                     <Swiper
                       onSwiper={(swiper) => {
-                        // Store Swiper instance for cleanup
                         swiperInstancesRef.current.set(product.id, swiper);
                       }}
                       spaceBetween={10}
@@ -305,7 +345,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                           handleQuickView(product, defaultVariant);
                         }
                       }} 
-                      src={product.image || '/NoImage.webp'}
+                      src={product.images?.[0] || '/NoImage.webp'}
                       alt={product.name}
                       quality={25}
                       loading="lazy"
@@ -388,11 +428,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                 <div className="flex items-center justify-between mt-auto">
                   <div className="flex items-center space-x-1">
                     <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
-                      {formatPesoPrice(currentVariant?.price || product.price)}
+                      {formatPesoPrice(displayPrice)}
                     </span>
-                    {product.originalPrice && product.originalPrice > (currentVariant?.price || product.price) && (
+                    {isOnSale && displayOriginalPrice > displayPrice && (
                       <span className="text-[10px] xs:text-xs text-gray-500 line-through">
-                        {formatPesoPrice(product.originalPrice)}
+                        {formatPesoPrice(displayOriginalPrice)}
                       </span>
                     )}
                   </div>
@@ -457,9 +497,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                         SKU: {currentVariant.sku}
                       </div>
                     )}
-                    {currentVariant.rating && (
+                    {currentVariant.model && (
                       <div className="text-[8px] xs:text-[10px] text-gray-400">
-                        Rating: {currentVariant.rating.toFixed(1)} ⭐
+                        Model: {currentVariant.model}
+                      </div>
+                    )}
+                    {currentVariant.stock !== undefined && (
+                      <div className={`text-[8px] xs:text-[10px] ${currentVariant.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        Stock: {currentVariant.stock > 0 ? `${currentVariant.stock} available` : 'Out of stock'}
                       </div>
                     )}
                   </div>
