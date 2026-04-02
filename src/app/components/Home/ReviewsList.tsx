@@ -108,8 +108,8 @@ export const GET_REVIEWS = gql`
           id
           email
           # Remove 'name' if it doesn't exist, or use alternative fields:
-          # firstName
-          # lastName
+          firstName
+          lastName
           # username
         }
         product {
