@@ -1,4 +1,5 @@
 // components/QuickViewModal.tsx
+import { showToast } from '../../../utils/toastify';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { useMutation } from '@apollo/client';
