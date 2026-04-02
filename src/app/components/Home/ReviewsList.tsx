@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client';
 import { Star, StarHalf, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
