@@ -3,7 +3,90 @@ import { gql } from '@apollo/client';
 import { useQuery } from '@apollo/client';
 import { Star, StarHalf, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
-// GraphQL Query
+// ============ TYPES ============
+
+interface ReviewImage {
+  id: string;
+  url: string;
+  publicId: string;
+  position: number;
+  createdAt: string;
+}
+
+interface ReviewUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface ReviewProduct {
+  id: string;
+  name: string;
+}
+
+interface Review {
+  id: string;
+  userId: string;
+  productId: string;
+  variantId?: string;
+  rating: number;
+  title: string;
+  comment: string;
+  isApproved: boolean;
+  createdAt: string;
+  user: ReviewUser;
+  product?: ReviewProduct;
+  images: ReviewImage[];
+}
+
+interface GetReviewsInput {
+  productId?: string;
+  rating?: number;
+  isApproved?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+interface MetaData {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface GetReviewsResponse {
+  getReviews: {
+    data: Review[];
+    meta: MetaData;
+  };
+}
+
+interface RatingStarsProps {
+  rating: number;
+  size?: number;
+}
+
+interface ReviewCardProps {
+  review: Review;
+}
+
+interface ReviewFiltersProps {
+  filters: GetReviewsInput;
+  onFilterChange: (filters: GetReviewsInput) => void;
+  onApplyFilters: (filters: GetReviewsInput) => void;
+}
+
+interface PaginationProps {
+  meta: MetaData;
+  onPageChange: (page: number) => void;
+}
+
+interface ReviewsListProps {
+  initialFilters?: GetReviewsInput;
+}
+
+// ============ GRAPHQL QUERY ============
+
 export const GET_REVIEWS = gql`
   query GetReviews($filters: GetReviewsInput) {
     getReviews(filters: $filters) {
@@ -44,8 +127,9 @@ export const GET_REVIEWS = gql`
   }
 `;
 
-// Rating Stars Component
-const RatingStars = ({ rating, size = 16 }:any) => {
+// ============ RATING STARS COMPONENT ============
+
+const RatingStars: React.FC<RatingStarsProps> = ({ rating, size = 16 }) => {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
@@ -63,12 +147,13 @@ const RatingStars = ({ rating, size = 16 }:any) => {
   );
 };
 
-// Individual Review Component
-const ReviewCard = ({ review }:any) => {
-  const [showFullComment, setShowFullComment] = useState(false);
-  const maxCommentLength = 200;
+// ============ REVIEW CARD COMPONENT ============
 
-  const formatDate = (dateString) => {
+const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
+  const [showFullComment, setShowFullComment] = useState<boolean>(false);
+  const maxCommentLength: number = 200;
+
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -76,8 +161,8 @@ const ReviewCard = ({ review }:any) => {
     });
   };
 
-  const shouldTruncate = review.comment?.length > maxCommentLength;
-  const displayedComment = showFullComment || !shouldTruncate
+  const shouldTruncate: boolean = review.comment?.length > maxCommentLength;
+  const displayedComment: string = showFullComment || !shouldTruncate
     ? review.comment
     : `${review.comment?.slice(0, maxCommentLength)}...`;
 
@@ -123,7 +208,7 @@ const ReviewCard = ({ review }:any) => {
 
       {review.images && review.images.length > 0 && (
         <div className="flex gap-2 mt-3">
-          {review.images.slice(0, 3).map((image) => (
+          {review.images.slice(0, 3).map((image, index) => (
             <div key={image.id} className="relative group">
               <img
                 src={image.url}
@@ -131,7 +216,7 @@ const ReviewCard = ({ review }:any) => {
                 className="w-16 h-16 object-cover rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
                 onClick={() => window.open(image.url, '_blank')}
               />
-              {review.images.length > 3 && image.id === review.images[2].id && (
+              {review.images.length > 3 && index === 2 && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 rounded-md flex items-center justify-center text-white text-sm font-medium">
                   +{review.images.length - 3}
                 </div>
@@ -152,20 +237,21 @@ const ReviewCard = ({ review }:any) => {
   );
 };
 
-// Filter Component
-const ReviewFilters = ({ filters, onFilterChange, onApplyFilters }) => {
-  const [localFilters, setLocalFilters] = useState(filters);
+// ============ FILTER COMPONENT ============
 
-  const handleChange = (key, value) => {
+const ReviewFilters: React.FC<ReviewFiltersProps> = ({ filters, onFilterChange, onApplyFilters }) => {
+  const [localFilters, setLocalFilters] = useState<GetReviewsInput>(filters);
+
+  const handleChange = (key: keyof GetReviewsInput, value: any): void => {
     setLocalFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleApply = () => {
+  const handleApply = (): void => {
     onApplyFilters(localFilters);
   };
 
-  const handleReset = () => {
-    const resetFilters = { page: 1, limit: 10 };
+  const handleReset = (): void => {
+    const resetFilters: GetReviewsInput = { page: 1, limit: 10 };
     setLocalFilters(resetFilters);
     onApplyFilters(resetFilters);
   };
@@ -257,13 +343,14 @@ const ReviewFilters = ({ filters, onFilterChange, onApplyFilters }) => {
   );
 };
 
-// Pagination Component
-const Pagination = ({ meta, onPageChange }) => {
+// ============ PAGINATION COMPONENT ============
+
+const Pagination: React.FC<PaginationProps> = ({ meta, onPageChange }) => {
   const { page, totalPages } = meta;
-  const maxVisible = 5;
+  const maxVisible: number = 5;
   
-  const getPageNumbers = () => {
-    const pages = [];
+  const getPageNumbers = (): number[] => {
+    const pages: number[] = [];
     let start = Math.max(1, page - Math.floor(maxVisible / 2));
     let end = Math.min(totalPages, start + maxVisible - 1);
     
@@ -314,8 +401,9 @@ const Pagination = ({ meta, onPageChange }) => {
   );
 };
 
-// Loading Skeleton
-const ReviewSkeleton = () => (
+// ============ LOADING SKELETON ============
+
+const ReviewSkeleton: React.FC = () => (
   <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 animate-pulse">
     <div className="flex justify-between items-start mb-3">
       <div className="flex-1">
@@ -335,8 +423,9 @@ const ReviewSkeleton = () => (
   </div>
 );
 
-// Empty State Component
-const EmptyState = () => (
+// ============ EMPTY STATE COMPONENT ============
+
+const EmptyState: React.FC = () => (
   <div className="text-center py-12">
     <div className="text-gray-400 mb-3">
       <ImageIcon size={48} className="mx-auto" />
@@ -346,25 +435,29 @@ const EmptyState = () => (
   </div>
 );
 
-// Main Reviews Component
-const ReviewsList = ({ initialFilters = { page: 1, limit: 10 } }) => {
-  const [filters, setFilters] = useState(initialFilters);
-  
-  const { loading, error, data, refetch } = useQuery(GET_REVIEWS, {
-    variables: { filters },
-    fetchPolicy: 'network-only',
-  });
+// ============ MAIN REVIEWS COMPONENT ============
 
-  const handleFilterChange = (newFilters) => {
+const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, limit: 10 } }) => {
+  const [filters, setFilters] = useState<GetReviewsInput>(initialFilters);
+  
+  const { loading, error, data, refetch } = useQuery<GetReviewsResponse, { filters: GetReviewsInput }>(
+    GET_REVIEWS,
+    {
+      variables: { filters },
+      fetchPolicy: 'network-only',
+    }
+  );
+
+  const handleFilterChange = (newFilters: GetReviewsInput): void => {
     setFilters(newFilters);
   };
 
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number): void => {
     setFilters(prev => ({ ...prev, page: newPage }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleRefetch = () => {
+  const handleRefetch = (): void => {
     refetch({ filters });
   };
 
@@ -383,8 +476,8 @@ const ReviewsList = ({ initialFilters = { page: 1, limit: 10 } }) => {
     );
   }
 
-  const reviews = data?.getReviews?.data || [];
-  const meta = data?.getReviews?.meta;
+  const reviews: Review[] = data?.getReviews?.data || [];
+  const meta: MetaData | undefined = data?.getReviews?.meta;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
