@@ -226,7 +226,7 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white p-6 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-semibold text-gray-900">{review.title}</h3>
