@@ -727,16 +727,17 @@ export const GETPRODUCTS = gql`
           stock
           images
           model
-        }
-        reviews { 
-          productId
-          rating
-          images {
+          reviews { 
+            productId
+            rating
+            images {
              url
+            }
+            userId
+            variantId
           }
-          userId
-          variantId
         }
+        
         brand
         weight
         dimensions
