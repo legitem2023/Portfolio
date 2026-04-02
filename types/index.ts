@@ -170,7 +170,7 @@ export interface Product {
   stock: number;
   status: 'Active' | 'Inactive';
   variants: Variant[];
-  reviews: Review[];
+  
   images: string[];
   user: User;
 }
@@ -187,6 +187,7 @@ export interface Variant {
   model?: string;
   stock?: number;
   createdAt?: string;
+  reviews: Review[];
 }
 
 export interface Payment {
