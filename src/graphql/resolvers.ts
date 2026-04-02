@@ -3215,9 +3215,43 @@ products: async (
       return products;
     },
       
-    categories: async () => {
-      return prisma.category.findMany();
-    },
+   categories: async () => {
+      const categories = await prisma.category.findMany({
+        include: {
+            children: true,
+            parent: true
+        }
+    });
+    
+    const categoryIds = categories.map(cat => cat.id);
+    
+    const products = await prisma.product.findMany({
+        where: {
+            categoryId: { in: categoryIds }
+        },
+        include: {
+            variants: true
+        }
+    });
+    
+    const variantCountMap = new Map();
+    
+    products.forEach(product => {
+        const categoryId = product.categoryId;
+        const variantCount = product.variants.length;
+        
+        if (variantCountMap.has(categoryId)) {
+            variantCountMap.set(categoryId, variantCountMap.get(categoryId) + variantCount);
+        } else {
+            variantCountMap.set(categoryId, variantCount);
+        }
+    });
+    
+    return categories.map(category => ({
+        ...category,
+        variantCount: variantCountMap.get(category.id) || 0
+    }));
+},
 
     orders: async (_: any, { userId }: { userId: string }) => {
       try {
