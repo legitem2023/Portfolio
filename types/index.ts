@@ -112,7 +112,7 @@ export interface ReviewImage {
   reviewId  : string;
   url       : string;
   publicId  : string;
-  position : Int; 
+  position : number; 
   createdAt : Date | string;
 }
 
