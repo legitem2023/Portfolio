@@ -2205,12 +2205,30 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
   };
     },
     // Existing e-commerce queries
-    users: async () => await prisma.user.findMany({
+   /* users: async () => await prisma.user.findMany({
       include: {
         addresses: true,
         products: true
       }
-    }),
+    }),*/
+  users: async () => {
+    const users = await prisma.user.findMany({
+    include: {
+      addresses: true,
+      products: true,
+      reviews: {
+        select: { rating: true }
+       }
+     }
+   });
+  
+   // Transform the data to include ratings array
+   return users.map(user => ({
+     ...user,
+     ratings: user.reviews.map(review => review.rating)
+   }));
+ },
+
     
     user: async (_: any, { id }: { id: string }) => {
       if (!id || id.length === 0) {
