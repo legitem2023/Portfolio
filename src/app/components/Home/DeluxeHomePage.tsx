@@ -218,7 +218,7 @@ const products = productData?.products?.items || [];
         )}
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
         <div className="text-left m-2">
-          <h2 className="text-1xl font-bold text-gray-500">Testimonial&qoute;s</h2>
+          <h2 className="text-1xl font-bold text-gray-500">Testimonial's</h2>
         </div>
         <ReviewsList/>
         {/* 
