@@ -729,6 +729,7 @@ export const GETPRODUCTS = gql`
           model
         }
         reviews { 
+          productId
           rating
           images {
              url
