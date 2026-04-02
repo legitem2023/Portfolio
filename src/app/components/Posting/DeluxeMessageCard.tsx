@@ -175,7 +175,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         
         {/* Message Content */}
         <div className="p-0">    
-          <div onClick={navigate} className="mb-3 p-2" style={background ? { background: background, color: 'white' } : {}}>
+          <div onClick={navigate} className="mb-3 p-2" style={background ? { background: background, color: 'white',minHeight:'100px',justifyContent:'center',display:'flex',alignItem:'center' } : {}}>
             {content}
           </div>
           
