@@ -1,6 +1,7 @@
 // components/DeluxeMessageCard.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
+import { MoreHorizontal, MessageCircle, User, Globe, Lock } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import EngagementModal from './EngagementModal';
 import PostImages from './PostImages';
@@ -91,7 +92,10 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
+  
   const {
     id,
     sender,
@@ -114,6 +118,20 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     taggedUsers = [],
     user
   } = message;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const openModal = (type: ModalType) => {
     setModalType(type);
@@ -141,22 +159,43 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     // Handle comment submission
     console.log('New comment:', comment);
   };
- const navigate = () => {
-   dispatch(setActivePostId(id));
-   dispatch(setActiveIndex(8));
- }
+  
+  const navigate = () => {
+    dispatch(setActivePostId(id));
+    dispatch(setActiveIndex(8));
+  };
+
+  const handleRedirectToUser = () => {
+    const userId = user?.id || id;
+    // Redirect logic - adjust based on your routing setup
+    window.location.href = `/user/${userId}`;
+    setDropdownOpen(false);
+  };
+
+  const handleSendMessage = () => {
+    const userId = user?.id || id;
+    // Redirect to messages with this user
+    window.location.href = `/messages/${userId}`;
+    setDropdownOpen(false);
+  };
+
+  const toggleDropdown = () => {
+    setDropdownOpen(!dropdownOpen);
+  };
+
   console.log("bg->",background);
+  
   return (
     <>
       <div className={`max-w-2xl mx-auto shadow-lg overflow-hidden mb-0 ${className}`}
         style={{
-                 border:'solid 1px transparent',
-                 borderRadius:'3px',
-                 background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
-                 backdropFilter: 'blur(2px)',
-                 WebkitBackdropFilter: 'blur(2px)'
-              }}
-        >
+          border:'solid 1px transparent',
+          borderRadius:'3px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(200,180,255,0.5) 100%)',
+          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)'
+        }}
+      >
         {/* Card Header */}
         <div className="flex items-center p-4 border-b border-gray-200">
           <UserAvatar src={avatar} alt={sender || 'User'} className="mr-3" />
@@ -166,47 +205,77 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
             <p className="text-xs text-gray-500">{formatDate(timestamp)}</p>
           </div>
           
-          <button className="text-gray-500 hover:text-gray-700">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
-            </svg>
-          </button>
+          {/* Three Dots Dropdown Menu */}
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={toggleDropdown}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
+              aria-label="Menu"
+            >
+              <MoreHorizontal className="h-5 w-5" />
+            </button>
+            
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 overflow-hidden">
+                <div className="py-1">
+                  {/* Messages Icon Option */}
+                  <button
+                    onClick={handleSendMessage}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex items-center gap-3"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Send Message</span>
+                  </button>
+                  
+                  {/* Redirect to User Profile Option */}
+                  <button
+                    onClick={handleRedirectToUser}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex items-center gap-3"
+                  >
+                    <User className="h-4 w-4" />
+                    <span>View Profile</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Message Content */}
         <div className="p-0">    
           <div
-  onClick={navigate}
-  className="mb-3 p-2"
-  style={
-    background
-      ? {
-          background: background,
-          color: 'white',
-          minHeight: '100px',
-          justifyContent: 'center',
-          display: 'flex',
-          alignItems: 'center', // fixed typo here
-        }
-      : {}
-  }
->
-  {content}
-</div>
+            onClick={navigate}
+            className="mb-3 p-2 cursor-pointer"
+            style={
+              background
+                ? {
+                    background: background,
+                    color: 'white',
+                    minHeight: '100px',
+                    justifyContent: 'center',
+                    display: 'flex',
+                    alignItems: 'center',
+                  }
+                : {}
+            }
+          >
+            {content}
+          </div>
           
           {/* Post Images */}
           {images && images.length > 0 && (
-          <div onClick={navigate}>
-            <PostImages images={images} />
-          </div>
-            )}
+            <div onClick={navigate} className="cursor-pointer">
+              <PostImages images={images} />
+            </div>
+          )}
           
           {/* Single Post Image for backward compatibility */}
           {postImage && !images?.length && (
-            <div onClick={navigate}>
+            <div onClick={navigate} className="cursor-pointer">
               <PostImages images={[postImage]} />
             </div>
-              )}
+          )}
           
           {/* Tagged Users */}
           {taggedUsers && taggedUsers.length > 0 && (
@@ -224,13 +293,11 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           {/* Privacy Setting */}
           {privacy && (
             <div className="mx-3 mb-3 text-sm text-gray-500 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {privacy === 'PUBLIC' ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                )}
-              </svg>
+              {privacy === 'PUBLIC' ? (
+                <Globe className="h-4 w-4 mr-1" />
+              ) : (
+                <Lock className="h-4 w-4 mr-1" />
+              )}
               {privacy.charAt(0) + privacy.slice(1).toLowerCase()}
             </div>
           )}
