@@ -3131,18 +3131,19 @@ products: async (
                 salePrice: true,
                 stock: true,
                 images: true,
-                model: true
+                model: true,
+                reviews: {
+                  select: {
+                    productId:true,
+                    rating:true,
+                    images:true,
+                    userId: true,
+                    variantId:true
+                 }
+               }
               }
             },
-            reviews: {
-              select: {
-                productId:true,
-                rating:true,
-                images:true,
-                userId: true,
-                variantId:true
-              }
-            }
+            
           },
         });
 
