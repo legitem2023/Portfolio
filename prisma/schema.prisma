@@ -268,7 +268,7 @@ model Product {
 
   variants    ProductVariant[]
   
-  reviews     Review[]
+  
   wishlist    WishlistItem[]
   cart        CartItem[]
   
@@ -303,7 +303,7 @@ model ProductVariant {
 
   product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   orders      OrderItem[]
-  
+  reviews     Review[]
   @@index([productId])
   @@index([color])
   @@index([size])
@@ -513,7 +513,7 @@ model Review {
   createdAt DateTime? @default(now())
   
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product? @relation(fields: [productId], references: [id])
+  product   ProductVariant? @relation(fields: [productId], references: [id])
   images    ReviewImage[] // Add this relation
   
   @@index([userId])
