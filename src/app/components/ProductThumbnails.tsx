@@ -150,7 +150,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
 
   const handleAddToCart = useCallback((product: Product, variant?: Product['variants'][0]) => {
     try {
-      const selectedVariantToUse = variant || (product.variants && product.variants[0]);
+    /*  const selectedVariantToUse = variant || (product.variants && product.variants[0]);
       
       const finalPrice = selectedVariantToUse?.price || product.price;
       
@@ -178,7 +178,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
       };
       
       // dispatch(addToCart(cartItem));
-      showToast('Added to Cart', 'success');
+      showToast('Added to Cart', 'success');*/
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add to cart', 'error');
