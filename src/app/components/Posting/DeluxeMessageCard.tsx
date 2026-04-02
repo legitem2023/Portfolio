@@ -10,6 +10,7 @@ import ActionButtons from './ActionButtons';
 import CommentInput from './CommentInput';
 import { setActivePostId } from '../../../../Redux/activePostIdSlice';
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+import { useRouter, usePathname } from 'next/navigation';
 
 // ... keep your existing interfaces ...
 interface User {
@@ -95,7 +96,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
-  
+  const router = useRouter();
   const {
     id,
     sender,
@@ -175,7 +176,8 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const handleSendMessage = () => {
     const userId = user?.id || id;
     // Redirect to messages with this user
-    window.location.href = `/messages/${userId}`;
+    //window.location.href = `/messages/${userId}`;
+    router.push(`/Messaging?id=${userId}`
     setDropdownOpen(false);
   };
 
