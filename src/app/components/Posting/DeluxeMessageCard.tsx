@@ -168,8 +168,8 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   const handleRedirectToUser = () => {
     const userId = user?.id || id;
-    // Redirect logic - adjust based on your routing setup
-    window.location.href = `/user/${userId}`;
+    dispatch(setActiveIndex(11));
+    router.push(`?id=${id}`);
     setDropdownOpen(false);
   };
 
