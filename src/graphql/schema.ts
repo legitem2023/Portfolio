@@ -245,7 +245,7 @@ export const typeDefs = gql`
     reviews: [Review]
   }
 
-  type Category {
+type Category {
     id: ID
     name: String
     description: String
@@ -255,7 +255,14 @@ export const typeDefs = gql`
     parent: Category
     children: [Category]
     products: [Product]
-  }
+    variantCount: Int
+}
+
+type Query {
+    categories: [Category]
+}
+
+
 
   type Order {
     id: ID
