@@ -189,7 +189,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         originalPrice: originalPrice,
         onSale: isOnSale,
         isNew: false, // You might want to calculate this based on createdAt
-        isFeatured: product.featured || false,
+        isFeatured: product.isFeatured || false,
         rating: calculateAverageRating(selectedVariantToUse),
         reviewCount: calculateTotalReviews(selectedVariantToUse),
         image: selectedVariantToUse?.images?.[0] || product.images?.[0] || '/NoImage.webp',
