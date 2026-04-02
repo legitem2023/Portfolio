@@ -3019,7 +3019,7 @@ products: async (
   }
 },
    */ 
-
+/*
     products: async (
       _: any,
       {
@@ -3160,7 +3160,200 @@ products: async (
         throw new Error("Failed to fetch products");
       }
     },
+*/
+    products: async (
+  _: any,
+  {
+    search,
+    cursor,
+    limit = 12,
+    category,
+    sortBy,
+  }: {
+    search?: string;
+    cursor?: string;
+    limit?: number;
+    category?: string;
+    sortBy?: string;
+  }
+) => {
+  try {
+    const where: any = {};
 
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" as const } },
+        { description: { contains: search, mode: "insensitive" as const } },
+        { tags: { has: search } },
+      ];
+    }
+
+    if (category && category !== "All Categories") {
+      where.categoryId = category;
+    }
+
+    let orderBy: any = [{ id: "asc" }];
+    let isRatingSort = false;
+    
+    if (sortBy) {
+      switch (sortBy) {
+        case "Newest":
+          orderBy = [{ createdAt: "desc" }];
+          break;
+        case "Price: Low to High":
+          orderBy = [{ price: "asc" }];
+          break;
+        case "Price: High to Low":
+          orderBy = [{ price: "desc" }];
+          break;
+        case "Highest Rated":
+          // For rating sort, we'll handle it manually
+          isRatingSort = true;
+          break;
+        default:
+          orderBy = [{ featured: "desc" }, { id: "asc" }];
+      }
+    }
+
+    // Fetch products - if rating sort, get all (no pagination yet), otherwise get paginated
+    const products = await prisma.product.findMany({
+      where,
+      take: isRatingSort ? undefined : limit + 1,
+      skip: (!isRatingSort && cursor) ? 1 : 0,
+      cursor: (!isRatingSort && cursor) ? { id: cursor } : undefined,
+      orderBy: isRatingSort ? undefined : orderBy,
+      select: {
+        id: true,
+        name: true,
+        price: true,
+        images: true,
+        model: true,
+        featured: true,
+        isActive: true,
+        stock: true,
+        brand: true,
+        weight: true,
+        dimensions: true,
+        createdAt: true,
+        updatedAt: true,
+        description: true,
+        tags: true,
+        sku: true,
+        supplierId: true,
+        supplier: {
+          select: {
+            addresses: {
+              where:{
+                isDefault:true
+              },
+              select: {
+                lat:true,
+                lng:true
+              }
+            }
+          }
+        },
+        category: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            image: true,
+            isActive: true,
+            createdAt: true,
+            parent: true
+          }
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            createdAt: true,
+            sku: true,
+            color: true,
+            size: true,
+            price: true,
+            salePrice: true,
+            stock: true,
+            images: true,
+            model: true,
+            reviews: {
+              select: {
+                productId:true,
+                rating:true,
+                images:true,
+                userId: true,
+                variantId:true
+             }
+           }
+        }
+      },
+    },
+    });
+
+    // Handle Highest Rated sorting
+    if (isRatingSort) {
+      // Calculate average rating for each product
+      const productsWithRatings = products.map(product => {
+        // Collect all reviews from variants
+        let totalRating = 0;
+        let reviewCount = 0;
+        
+        product.variants.forEach(variant => {
+          variant.reviews.forEach(review => {
+            totalRating += review.rating;
+            reviewCount++;
+          });
+        });
+        
+        const averageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
+        
+        return {
+          ...product,
+          averageRating
+        };
+      });
+      
+      // Sort by average rating
+      productsWithRatings.sort((a, b) => b.averageRating - a.averageRating);
+      
+      // Apply pagination manually
+      let startIndex = 0;
+      if (cursor) {
+        const cursorIndex = productsWithRatings.findIndex(p => p.id === cursor);
+        startIndex = cursorIndex + 1;
+      }
+      
+      const paginatedProducts = productsWithRatings.slice(startIndex, startIndex + limit + 1);
+      const hasMore = paginatedProducts.length > limit;
+      const items = hasMore ? paginatedProducts.slice(0, -1) : paginatedProducts;
+      const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : null;
+      
+      // Remove averageRating from response
+      const cleanItems = items.map(({ averageRating, ...item }) => item);
+      
+      return {
+        items: cleanItems,
+        nextCursor,
+        hasMore,
+      };
+    } else {
+      // Normal pagination for other sorts
+      const hasMore = products.length > limit;
+      const items = hasMore ? products.slice(0, -1) : products;
+      const nextCursor = hasMore ? products[products.length - 1].id : null;
+      
+      return {
+        items,
+        nextCursor,
+        hasMore,
+      };
+    }
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    throw new Error("Failed to fetch products");
+  }
+},
     product: async (_: any, { id }: { id: string }) => {
       const products = await prisma.product.findMany({
           where: {
