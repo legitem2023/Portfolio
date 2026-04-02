@@ -170,7 +170,7 @@ export const typeDefs = gql`
     supportTickets: [SupportTicket]
     notifications: [Notification]
     ticketResponses: [TicketResponse]
-    
+    rating: Int
     # Social media fields
     posts: [Post]
     followers: [User]
