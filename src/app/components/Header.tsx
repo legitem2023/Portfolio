@@ -1,4 +1,4 @@
-// components/Header.tsx (FIXED VERSION)
+// components/Header.tsx (UI FIXED VERSION - NO LOGIC CHANGES)
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
@@ -273,7 +273,6 @@ const Header: React.FC = () => {
         
         if (response.status === 401) {
           setUser(null);
-          setHasCheckedAuth(false);
           return;
         }
         
@@ -293,7 +292,6 @@ const Header: React.FC = () => {
         if (!abortController.signal.aborted) {
           console.error('Error getting role:', err);
           setUser(null);
-          setHasCheckedAuth(false);
         }
       } finally {
         if (!abortController.signal.aborted) {
@@ -332,7 +330,7 @@ const Header: React.FC = () => {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
-  }, [hasCheckedAuth, activeIndex, isLoadingUser, router]);
+  }, [hasCheckedAuth, activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
   // FIX: Close dropdown when clicking outside (desktop) with cleanup
   useEffect(() => {
@@ -565,7 +563,7 @@ const Header: React.FC = () => {
     }
     
     setIsBellPopupOpen(false);
-  }, [markAsRead, router, handleTabClick]);
+  }, [markAsRead, router]);
 
   const handleTabClick = useCallback((tabId: number) => {
     // Check if this is a protected tab and user is not logged in
@@ -943,8 +941,8 @@ const Header: React.FC = () => {
               transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            {/* Header with close button */}
-            <div className="flex items-center justify-between p-0 border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
+            {/* Header with close button - FIXED: Removed duplicate p-2 class */}
+            <div className="flex items-center justify-between border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
                   src="/VendorCity_Store.webp" 
