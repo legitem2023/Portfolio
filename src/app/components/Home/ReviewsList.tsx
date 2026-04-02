@@ -64,7 +64,7 @@ const RatingStars = ({ rating, size = 16 }:any) => {
 };
 
 // Individual Review Component
-const ReviewCard = ({ review }) => {
+const ReviewCard = ({ review }:any) => {
   const [showFullComment, setShowFullComment] = useState(false);
   const maxCommentLength = 200;
 
