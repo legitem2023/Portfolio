@@ -688,6 +688,7 @@ export const GETCATEGORY = gql`
       image
       isActive
       createdAt
+      variantCount
     }
   }
 `;
