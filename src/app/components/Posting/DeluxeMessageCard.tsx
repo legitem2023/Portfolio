@@ -175,9 +175,24 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
         
         {/* Message Content */}
         <div className="p-0">    
-          <div onClick={navigate} className="mb-3 p-2" style={background ? { background: background, color: 'white',minHeight:'100px',justifyContent:'center',display:'flex',alignItem:'center' } : {}}>
-            {content}
-          </div>
+          <div
+  onClick={navigate}
+  className="mb-3 p-2"
+  style={
+    background
+      ? {
+          background: background,
+          color: 'white',
+          minHeight: '100px',
+          justifyContent: 'center',
+          display: 'flex',
+          alignItems: 'center', // fixed typo here
+        }
+      : {}
+  }
+>
+  {content}
+</div>
           
           {/* Post Images */}
           {images && images.length > 0 && (
