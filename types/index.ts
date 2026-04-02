@@ -335,6 +335,7 @@ export interface category {
   image: string;
   isActive: boolean;
   createdAt: string;
+  variantCount: number;
   items: string;
   productCount: number;
   status: 'Active' | 'Inactive';
