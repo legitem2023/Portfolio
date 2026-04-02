@@ -222,7 +222,7 @@ export const typeDefs = gql`
     updatedAt: DateTime
     variants: [ProductVariant]
     orders: [OrderItem]
-    reviews: [Review]
+    
     wishlist: [WishlistItem]
     cart: [CartItem]
   }
@@ -242,6 +242,7 @@ export const typeDefs = gql`
     stock: Int
     images: [String]
     model: String
+    reviews: [Review]
   }
 
   type Category {
