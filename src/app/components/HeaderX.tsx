@@ -904,7 +904,7 @@ const Header: React.FC = () => {
                       }}
                     >
                       <MessageSquareQuote className="mr-2 text-gray-400 w-4 h-4" />
-                       <span className="flex-1 transition-all duration-300">Suggestion</span
+                       <span className="flex-1 transition-all duration-300">Suggestion</span>
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
                     </div>
