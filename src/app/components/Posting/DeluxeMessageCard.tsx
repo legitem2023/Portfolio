@@ -175,9 +175,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
 
   const handleSendMessage = () => {
     const userId = user?.id || id;
-    // Redirect to messages with this user
-    //window.location.href = `/messages/${userId}`;
-    router.push(`/Messaging?id=${userId}`
+    router.push(`/Messaging?id=${userId}`);
     setDropdownOpen(false);
   };
 
@@ -185,8 +183,6 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
     setDropdownOpen(!dropdownOpen);
   };
 
-  console.log("bg->",background);
-  
   return (
     <>
       <div className={`max-w-2xl mx-auto shadow-lg overflow-hidden mb-0 ${className}`}
