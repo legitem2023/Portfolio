@@ -66,6 +66,27 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
     };
   }, []);
 
+  // Calculate average rating from variants
+  const calculateAverageRating = useCallback((variants: Product['variants']): number => {
+    if (!variants || variants.length === 0) return 0;
+    
+    const variantsWithRating = variants.filter(variant => variant.rating !== undefined && variant.rating !== null);
+    
+    if (variantsWithRating.length === 0) return 0;
+    
+    const totalRating = variantsWithRating.reduce((sum, variant) => sum + (variant.rating || 0), 0);
+    const averageRating = totalRating / variantsWithRating.length;
+    
+    return Math.round(averageRating * 10) / 10; // Round to 1 decimal place
+  }, []);
+
+  // Calculate total review count from variants
+  const calculateTotalReviews = useCallback((variants: Product['variants']): number => {
+    if (!variants || variants.length === 0) return 0;
+    
+    return variants.reduce((total, variant) => total + (variant.reviewCount || 0), 0);
+  }, []);
+
   // Get unique variant identifiers (using color, sku, or size)
   const getUniqueVariantIdentifiers = useCallback((variants: Product['variants']) => {
     if (!variants || variants.length === 0) return [];
@@ -135,8 +156,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         isNew: product.isNew,
         isFeatured: product.isFeatured,
         originalPrice: product.originalPrice,
-        rating: product.rating,
-        reviewCount: product.reviewCount,
+        rating: selectedVariantToUse?.rating || product.rating,
+        reviewCount: selectedVariantToUse?.reviewCount || product.reviewCount,
         image: selectedVariantToUse?.images?.[0] || product.image,
         colors: product.colors,
         description: product.description,
@@ -190,6 +211,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
           const variantIdentifiers = getUniqueVariantIdentifiers(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedVariantId[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
+          
+          // Calculate dynamic ratings from variants
+          const averageRating = calculateAverageRating(product.variants || []);
+          const totalReviews = calculateTotalReviews(product.variants || []);
+          
+          // Use variant rating if available, otherwise use product rating, otherwise use calculated average
+          const displayRating = currentVariant?.rating || product.rating || averageRating;
+          const displayReviewCount = currentVariant?.reviewCount || product.reviewCount || totalReviews;
           
           return (
             <div 
@@ -310,19 +339,49 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                   </button>
                 </div>
                 
+                {/* Dynamic Rating Stars */}
                 <div className="flex items-center mb-1 sm:mb-2">
                   <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${star <= Math.round(product.rating || 4) ? 'text-amber-400' : 'text-gray-300'}`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                    <span className="text-[10px] xs:text-xs text-gray-500 ml-0.5 xs:ml-1">{product.reviewCount || 0}</span>
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const starValue = displayRating;
+                      const isFullStar = star <= Math.floor(starValue);
+                      const isHalfStar = star === Math.ceil(starValue) && starValue % 1 !== 0;
+                      
+                      return (
+                        <svg
+                          key={star}
+                          className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${
+                            isFullStar ? 'text-amber-400' : isHalfStar ? 'text-amber-400' : 'text-gray-300'
+                          }`}
+                          fill={isHalfStar ? "url(#half-star-gradient)" : "currentColor"}
+                          viewBox="0 0 20 20"
+                        >
+                          {isHalfStar ? (
+                            <>
+                              <defs>
+                                <linearGradient id="half-star-gradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                                  <stop offset="50%" stopColor="currentColor" />
+                                  <stop offset="50%" stopColor="#D1D5DB" />
+                                </linearGradient>
+                              </defs>
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </>
+                          ) : (
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          )}
+                        </svg>
+                      );
+                    })}
+                    {displayReviewCount > 0 && (
+                      <span className="text-[10px] xs:text-xs text-gray-500 ml-0.5 xs:ml-1">
+                        ({displayReviewCount})
+                      </span>
+                    )}
+                    {displayReviewCount === 0 && displayRating > 0 && (
+                      <span className="text-[10px] xs:text-xs text-gray-500 ml-0.5 xs:ml-1">
+                        ({displayRating.toFixed(1)})
+                      </span>
+                    )}
                   </div>
                 </div>
                 
@@ -396,6 +455,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                     {currentVariant.sku && (
                       <div className="text-[8px] xs:text-[10px] text-gray-400">
                         SKU: {currentVariant.sku}
+                      </div>
+                    )}
+                    {currentVariant.rating && (
+                      <div className="text-[8px] xs:text-[10px] text-gray-400">
+                        Rating: {currentVariant.rating.toFixed(1)} ⭐
                       </div>
                     )}
                   </div>
