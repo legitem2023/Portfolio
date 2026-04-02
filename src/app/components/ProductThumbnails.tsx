@@ -68,6 +68,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
 
   // Get all variants for a product with their images
   const getAllVariantsWithImages = useCallback((product: Product) => {
+    if (!product.variants || product.variants.length === 0) return [];
+    
     return product.variants.flatMap(variant => {
       const images = variant.images || [];
       
@@ -75,14 +77,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
         return images.map((image: string, index: number) => ({
           image,
           variant: variant,
-          key: `${variant.sku}-${index}`
+          key: `${variant.sku || variant.color || index}-${index}`
         }));
       } else if (variant.color) {
         // If no images but has color, show placeholder with color indicator
         return [{
           image: '/NoImage.webp',
           variant: variant,
-          key: `${variant.sku}-noimage`
+          key: `${variant.sku || variant.color}-noimage`
         }];
       }
       return [];
@@ -106,16 +108,19 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
 
   const handleAddToCart = useCallback((product: Product, variant?: Product['variants'][0]) => {
     try {
-      const selectedVariantToUse = variant || product.variants[0];
+      const selectedVariantToUse = variant || (product.variants && product.variants[0]);
+      
+      // Calculate price - use variant price if available, otherwise use product price
+      const finalPrice = selectedVariantToUse?.price || product.price;
       
       const cartItem = {
         id: product.id,
         name: product.name,
-        price: selectedVariantToUse?.price || product.price,
+        price: finalPrice,
         onSale: product.onSale,
         isNew: product.isNew,
         isFeatured: product.isFeatured,
-        originalPrice: selectedVariantToUse?.originalPrice || product.originalPrice,
+        originalPrice: product.originalPrice, // Use product's original price
         rating: product.rating,
         reviewCount: product.reviewCount,
         image: selectedVariantToUse?.images?.[0] || product.image,
@@ -140,6 +145,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   }, []);
 
   const getUniqueColors = useCallback((variants: Product['variants']) => {
+    if (!variants || variants.length === 0) return [];
     const colors = variants.map(variant => variant.color).filter((color): color is string => Boolean(color));
     return Array.from(new Set(colors));
   }, []);
@@ -152,11 +158,13 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   }, []);
 
   const getCurrentVariant = useCallback((product: Product, selectedColorValue?: string) => {
-    if (selectedColorValue && product.variants) {
+    if (!product.variants || product.variants.length === 0) return null;
+    
+    if (selectedColorValue) {
       const foundVariant = product.variants.find(v => v.color === selectedColorValue);
       return foundVariant || product.variants[0];
     }
-    return product.variants?.[0] || null;
+    return product.variants[0];
   }, []);
 
   if (userloading) return null;
@@ -229,7 +237,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                               width={400}
                               onClick={() => variant && handleQuickView(product, variant)}
                               src={image || '/NoImage.webp'}
-                              alt={`${product.name}${variant.color ? ` - ${variant.color}` : ''}`}
+                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
                               quality={25}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -248,8 +256,13 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                     <Image
                       height={400}
                       width={400}
-                      onClick={() => handleQuickView(product, product.variants?.[0] || null as any)} 
-                      src={'/NoImage.webp'}
+                      onClick={() => {
+                        const defaultVariant = product.variants?.[0];
+                        if (defaultVariant) {
+                          handleQuickView(product, defaultVariant);
+                        }
+                      }} 
+                      src={product.image || '/NoImage.webp'}
                       alt={product.name}
                       quality={25}
                       loading="lazy"
@@ -304,10 +317,9 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
                     <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
                       {formatPesoPrice(currentVariant?.price || product.price)}
                     </span>
-                    {(currentVariant?.originalPrice || product.originalPrice) && 
-                     (currentVariant?.originalPrice || product.originalPrice) > (currentVariant?.price || product.price) && (
+                    {product.originalPrice && product.originalPrice > (currentVariant?.price || product.price) && (
                       <span className="text-[10px] xs:text-xs text-gray-500 line-through">
-                        {formatPesoPrice(currentVariant?.originalPrice || product.originalPrice || 0)}
+                        {formatPesoPrice(product.originalPrice)}
                       </span>
                     )}
                   </div>
