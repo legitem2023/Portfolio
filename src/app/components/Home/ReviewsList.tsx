@@ -541,7 +541,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, l
   const meta: MetaData | undefined = data?.getReviews?.meta;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto p-0">
       {/*  <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Customer Reviews</h1>
         {meta && (
