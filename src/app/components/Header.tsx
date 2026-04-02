@@ -20,7 +20,8 @@ import {
   Info,
   Clock,
   Menu,
-  Heart
+  Heart,
+  MessageSquareQuote
 } from 'lucide-react';
 import FBXViewer from './FBXViewer';
 // Import queries and mutations
@@ -898,12 +899,14 @@ const Header: React.FC = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        handleTabClick(10);
+                        //handleTabClick(10);
+                        router.push('/Suggestion');
                       }}
                     >
-                      <Heart className="mr-2 text-gray-400 w-4 h-4" />
-                      <span className="transition-all duration-200">Wishlist</span>
+                      <MessageSquareQuote className="mr-2 text-gray-400 w-4 h-4" />
+                       <span className="flex-1 transition-all duration-300">Suggestion</span
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
                     </div>
                     <div className="border-t border-gray-100 my-1 transition-all duration-300"></div>
                     <LogoutButton/>
@@ -1024,11 +1027,12 @@ const Header: React.FC = () => {
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
-                      handleTabClick(10);
+                      router.push('/Suggestion');
+                      //handleTabClick(10);
                     }}
                   >
-                    <Heart className="mr-3 text-gray-400 w-5 h-5" />
-                    <span className="flex-1 transition-all duration-300">Wishlist</span>
+                    <MessageSquareQuote className="mr-3 text-gray-400 w-5 h-5" />
+                    <span className="flex-1 transition-all duration-300">Suggestion</span>
                     <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
                   
