@@ -18,6 +18,7 @@ export interface category {
   createdAt: string;
   items: string;
   productCount: number;
+  variantCount: number;
   status: 'Active' | 'Inactive';
   parentId?: number;
 }
