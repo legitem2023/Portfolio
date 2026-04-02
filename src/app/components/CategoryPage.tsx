@@ -15,6 +15,7 @@ interface GraphQLCategory {
   image: string;
   isActive: boolean;
   createdAt: string;
+  variantCount: number;
 }
 
 interface CategoriesResponse {
@@ -50,6 +51,7 @@ const CategoryPage: React.FC = () => {
       createdAt: cat.createdAt,
       items: '0 items',
       productCount: 0,
+      variantCount: cat.variantCount,
       status: cat.isActive ? "Active" as const : "Inactive" as const,
       parentId: undefined,
     }));
