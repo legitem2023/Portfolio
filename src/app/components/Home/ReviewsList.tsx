@@ -45,7 +45,7 @@ export const GET_REVIEWS = gql`
 `;
 
 // Rating Stars Component
-const RatingStars = ({ rating, size = 16 }) => {
+const RatingStars = ({ rating, size = 16 }:any) => {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
