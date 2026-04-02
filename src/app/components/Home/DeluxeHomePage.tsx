@@ -11,6 +11,7 @@ import FeaturedProducts from './FeaturedProducts';
 import VisitorCounter from '../VisitorCounter';
 import ProductThumbnails from '../ProductThumbnails';
 import ProductThumbnailsShimmer from '../ProductThumbnailsShimmer';
+import ReviewsList from './ReviewsList';
 const DeluxeHomePage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categories, setCategories] = useState<category[]>([]);
@@ -216,6 +217,7 @@ const products = productData?.products?.items || [];
                 </div>
         )}
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
+       <ReviewsList/>
         {/* 
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
