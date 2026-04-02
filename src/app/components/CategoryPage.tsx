@@ -101,7 +101,7 @@ const CategoryPage: React.FC = () => {
       <div className="p-1.5">
         <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
         <div className="flex justify-between items-center mt-0.5">
-          <span className="text-xs text-gray-500">{category.productCount} items</span>
+          <span className="text-xs text-gray-500">{category.variantCount} items</span>
           <span className="text-xs text-blue-600 font-medium">→</span>
         </div>
       </div>
