@@ -102,7 +102,7 @@ const CategoryPage: React.FC = () => {
           />
         </div>
         <div className="absolute top-1 right-1">
-          <div className={`w-2 h-2 rounded-full ${category.isActive ? 'bg-green-500' : 'bg-red-500'}`} />
+          <div className={`w-2 h-2 rounded-full ${category.variantCount > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
         </div>
       </div>
       
