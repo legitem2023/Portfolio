@@ -3136,6 +3136,7 @@ products: async (
             },
             reviews: {
               select: {
+                productId:true,
                 rating:true,
                 images:true,
                 userId: true,
