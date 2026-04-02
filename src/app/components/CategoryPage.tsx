@@ -6,6 +6,7 @@ import SwiperComponent, { category } from './SwiperComponent';
 import { useDispatch } from 'react-redux';
 import { setCategoryFilter } from '../../../Redux/searchSlice';
 import { GETCATEGORY } from './graphql/query';
+import { showToast } from '../../../utils/toastify';
 import Image from 'next/image';
 
 interface GraphQLCategory {
