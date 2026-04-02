@@ -217,7 +217,10 @@ const products = productData?.products?.items || [];
                 </div>
         )}
         {/* Optional: Add testimonials section if your HeroCarousel doesn't handle it */}
-       <ReviewsList/>
+        <div className="text-left m-2">
+          <h2 className="text-1xl font-bold text-gray-500">Testimonial&qoute;s</h2>
+        </div>
+        <ReviewsList/>
         {/* 
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
