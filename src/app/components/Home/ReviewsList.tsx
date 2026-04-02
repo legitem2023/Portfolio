@@ -542,7 +542,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, l
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="mb-6">
+      {/*  <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Customer Reviews</h1>
         {meta && (
           <p className="text-gray-600 mt-1">
@@ -555,7 +555,7 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, l
         filters={filters}
         onFilterChange={setFilters}
         onApplyFilters={handleFilterChange}
-      />
+      />*/}
 
       {loading ? (
         <div className="space-y-4">
