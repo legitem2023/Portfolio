@@ -19,9 +19,9 @@ export default function SuggestionBox() {
   const [recentSuggestions, setRecentSuggestions] = useState<Suggestion[]>([]);
 
   const categories = [
-    { value: 'general', label: 'General Feedback', emoji: '💬' },
-    { value: 'feature', label: 'Feature Request', emoji: '✨' },
-    { value: 'bug', label: 'Bug Report', emoji: '🐛' },
+    { value: 'general', label: 'General', emoji: '💬' },
+    { value: 'feature', label: 'Feature', emoji: '✨' },
+    { value: 'bug', label: 'Bug', emoji: '🐛' },
     { value: 'improvement', label: 'Improvement', emoji: '⚡' },
     { value: 'other', label: 'Other', emoji: '📝' },
   ];
@@ -34,7 +34,6 @@ export default function SuggestionBox() {
     setIsSubmitting(true);
     setSubmitStatus('idle');
     
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
@@ -65,46 +64,44 @@ export default function SuggestionBox() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8 md:py-10">
-      {/* Header - Professional & clean */}
-      <div className="mb-8 md:mb-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-8 w-1 bg-indigo-500 rounded-full"></div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 tracking-tight">
-            Suggestion Box
-          </h1>
+    <div className="w-full">
+      {/* Header - Clean & Professional */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="h-6 w-1 bg-indigo-500 rounded"></div>
+          <h2 className="text-xl font-semibold text-gray-900">Suggestion Box</h2>
         </div>
-        <p className="text-gray-500 text-sm sm:text-base ml-4">
-          Share your ideas to help us build better products.
+        <p className="text-sm text-gray-500 ml-3">
+          Share your feedback to help us improve
         </p>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
-        {/* Suggestion Form - Main column */}
-        <div className="lg:col-span-2">
-          <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-            <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-gray-100 bg-gray-50/40">
-              <h2 className="text-base font-medium text-gray-900 flex items-center gap-2">
-                <span>✍️</span> Submit new suggestion
-              </h2>
+      {/* Two column layout - stacks on mobile */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        
+        {/* Form Section - Full width on mobile */}
+        <div className="flex-1 min-w-0">
+          <div className="bg-white border border-gray-200 rounded shadow-sm">
+            <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <h3 className="text-sm font-medium text-gray-900">Submit new suggestion</h3>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-5">
-              {/* Category Selection - Horizontal scroll on mobile, grid on larger */}
+            <form onSubmit={handleSubmit} className="p-4 space-y-4">
+              {/* Category Buttons - Horizontal scroll on mobile, grid on desktop */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Category
                 </label>
-                <div className="flex flex-nowrap sm:grid sm:grid-cols-3 gap-2 overflow-x-auto pb-2 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0">
+                <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
                     <button
                       key={cat.value}
                       type="button"
                       onClick={() => setCategory(cat.value)}
-                      className={`flex-shrink-0 px-3 py-1.5 rounded text-sm font-medium transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap ${
+                      className={`px-3 py-1.5 rounded text-sm font-medium transition-colors flex items-center gap-1 ${
                         category === cat.value
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
                       <span>{cat.emoji}</span>
@@ -114,7 +111,7 @@ export default function SuggestionBox() {
                 </div>
               </div>
 
-              {/* Suggestion Text */}
+              {/* Text Area */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Your suggestion <span className="text-gray-400">*</span>
@@ -122,30 +119,28 @@ export default function SuggestionBox() {
                 <textarea
                   value={suggestion}
                   onChange={(e) => setSuggestion(e.target.value)}
-                  placeholder="What's on your mind? Be specific and constructive..."
-                  rows={5}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none transition text-gray-900 placeholder-gray-400 resize-none text-sm"
+                  placeholder="What's on your mind? Be specific..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none text-sm"
                   required
                 />
                 <div className="flex justify-end mt-1">
-                  <span className="text-xs text-gray-400">{suggestion.length} characters</span>
+                  <span className="text-xs text-gray-400">{suggestion.length} chars</span>
                 </div>
               </div>
 
               {/* Anonymous Toggle */}
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-500 text-sm">🕊️ Submit anonymously</span>
-                </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-sm text-gray-700">Submit anonymously</span>
                 <button
                   type="button"
                   onClick={() => setIsAnonymous(!isAnonymous)}
-                  className={`relative inline-flex h-5 w-9 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${
+                  className={`relative inline-flex h-5 w-9 rounded-full transition-colors ${
                     isAnonymous ? 'bg-indigo-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
                       isAnonymous ? 'translate-x-4' : 'translate-x-0.5'
                     } mt-0.5`}
                   />
@@ -156,7 +151,7 @@ export default function SuggestionBox() {
               <button
                 type="submit"
                 disabled={isSubmitting || !suggestion.trim()}
-                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded shadow-sm transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 text-sm"
+                className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {isSubmitting ? (
                   <span className="flex items-center justify-center gap-2">
@@ -173,79 +168,82 @@ export default function SuggestionBox() {
 
               {/* Status Messages */}
               {submitStatus === 'success' && (
-                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-green-700 text-sm">
-                  ✓ Thank you! Your suggestion has been received.
+                <div className="p-2 bg-green-50 border border-green-200 rounded text-green-700 text-sm text-center">
+                  ✓ Thank you! Suggestion received.
                 </div>
               )}
               {submitStatus === 'error' && (
-                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-                  ⚠️ Submission failed. Please try again.
+                <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm text-center">
+                  ⚠️ Failed. Please try again.
                 </div>
               )}
             </form>
           </div>
         </div>
 
-        {/* Sidebar - Stats & Recent */}
-        <div className="space-y-6">
-          {/* Stats Card */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/40">
-              <h3 className="text-sm font-medium text-gray-900">Community impact</h3>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-2xl font-semibold text-indigo-600">127</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Total suggestions</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-semibold text-indigo-600">34</div>
-                  <div className="text-xs text-gray-500 mt-0.5">Implemented</div>
+        {/* Sidebar - Full width on mobile, below form */}
+        <div className="lg:w-80 flex-shrink-0">
+          <div className="space-y-4">
+            
+            {/* Stats Card */}
+            <div className="bg-white border border-gray-200 rounded shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-sm font-medium text-gray-900">Community impact</h3>
+              </div>
+              <div className="p-4">
+                <div className="flex justify-around">
+                  <div className="text-center">
+                    <div className="text-2xl font-semibold text-indigo-600">127</div>
+                    <div className="text-xs text-gray-500 mt-1">Suggestions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-semibold text-indigo-600">34</div>
+                    <div className="text-xs text-gray-500 mt-1">Implemented</div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Recent Suggestions */}
-          <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
-            <div className="px-5 py-3 border-b border-gray-100 bg-gray-50/40">
-              <h3 className="text-sm font-medium text-gray-900">Recent activity</h3>
-            </div>
-            <div className="p-5">
-              {recentSuggestions.length > 0 ? (
-                <div className="space-y-3">
-                  {recentSuggestions.map((item) => (
-                    <div key={item.id} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm">{getCategoryEmoji(item.category)}</span>
-                        <span className="text-xs text-gray-400">
-                          {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+            {/* Recent Suggestions */}
+            <div className="bg-white border border-gray-200 rounded shadow-sm">
+              <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-sm font-medium text-gray-900">Recent suggestions</h3>
+              </div>
+              <div className="p-4">
+                {recentSuggestions.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentSuggestions.map((item) => (
+                      <div key={item.id} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm">{getCategoryEmoji(item.category)}</span>
+                          <span className="text-xs text-gray-400">
+                            {item.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-700 line-clamp-2">{item.text}</p>
                       </div>
-                      <p className="text-sm text-gray-700 line-clamp-2">{item.text}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-gray-400">
-                  <span className="text-2xl block mb-2">📭</span>
-                  <p className="text-sm">No suggestions yet</p>
-                  <p className="text-xs mt-1">Be the first to share an idea</p>
-                </div>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="text-3xl mb-2">📭</div>
+                    <p className="text-sm text-gray-400">No suggestions yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Be the first to share</p>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Tip Card - Professional tone */}
-          <div className="bg-indigo-50/40 border border-indigo-100 rounded-lg p-4">
-            <div className="flex gap-3">
-              <span className="text-indigo-500 text-base">💡</span>
-              <div>
-                <p className="text-sm font-medium text-indigo-900">Guidelines</p>
-                <p className="text-xs text-indigo-700 mt-1">
-                  Clear, actionable suggestions are reviewed within 2 business days.
-                </p>
+            {/* Tip Card */}
+            <div className="bg-indigo-50 border border-indigo-100 rounded p-3">
+              <div className="flex gap-2">
+                <span className="text-indigo-500">💡</span>
+                <div>
+                  <p className="text-xs font-medium text-indigo-900">Pro tip</p>
+                  <p className="text-xs text-indigo-700 mt-0.5">
+                    Specific, actionable suggestions get reviewed faster
+                  </p>
+                </div>
               </div>
             </div>
           </div>
