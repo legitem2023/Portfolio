@@ -6153,6 +6153,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       
       return {
         productId,
+        supplierId,
         quantity: item.quantity,
         price: item.price,
         individualShipping: item.individualShipping_input || 0, // Add this field
@@ -6166,7 +6167,6 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       data: {
         userId,
         addressId,
-        supplierId,
         computedShipping: computedShipping_input,
         computedDistance: computedDistance_input,
         orderNumber: orderNumber,
