@@ -29,7 +29,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
   // Define which roles can access each nav item
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'users', label: 'Users', icon: Users, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'users', label: 'Users', icon: Users, roles: ['ADMINISTRATOR'] },
     { id: 'products', label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 'categories', label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 'orders', label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
