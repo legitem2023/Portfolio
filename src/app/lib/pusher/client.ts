@@ -5,8 +5,11 @@ let pusherClient: Pusher | null = null;
 
 export const getPusherClient = () => {
   if (!pusherClient && typeof window !== 'undefined') {
-    pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    pusherClient = new Pusher({
+      appId: "2137516",
+      key: "89df54e492d888d001ed",
+      secret: "a684061715e3e3710b74",      
+      cluster: "ap1",
     });
   }
   return pusherClient;
