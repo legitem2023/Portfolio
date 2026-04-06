@@ -1219,8 +1219,8 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     {
       variables: {
         filter:{
-          status:filter.status,
-          supplierId:filter.supplierId
+          status:filter?.status,
+          supplierId:filter?.supplierId
         },
         pagination: {
           page: currentPage,
