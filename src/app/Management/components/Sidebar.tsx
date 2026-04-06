@@ -13,7 +13,7 @@ import {
   Truck,
   BanknoteArrowUp
 } from 'lucide-react';
-import { useAuth } from './hooks/useAuth'; // Import the useAuth hook
+import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
 
 interface SidebarProps {
   activeTab: string;
