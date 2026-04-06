@@ -1227,7 +1227,7 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
       fetchPolicy: 'network-only',
     }
   );
-
+  console.log(filter);
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
