@@ -1,15 +1,16 @@
-// src/app/lib/pusher/client.ts
+// lib/pusher/client.ts - ✅ Client only
+import PusherClient from 'pusher';
 
-import Pusher from 'pusher';
-
-let pusherClient: Pusher | null = null;
+let pusherClient: PusherClient | null = null;
 
 export const getPusherClient = () => {
   if (!pusherClient && typeof window !== 'undefined') {
-    pusherClient = new Pusher({
-      key: "89df54e492d888d001ed",
-      cluster: "ap1"
-    });
+    pusherClient = new PusherClient(
+      process.env.NEXT_PUBLIC_PUSHER_KEY!,  // Only the public key
+      {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+      }
+    );
   }
   return pusherClient;
 }
