@@ -8,11 +8,11 @@ const WEBSITE_EARNINGS_RATE = 0.06;
 
 // GraphQL Query
 const ORDER_LIST_QUERY = gql`
-  query OrderList(
+  query SalesOrder(
     $filter: OrderFilterInput
     $pagination: OrderPaginationInput
   ) {
-    orderlist(filter: $filter, pagination: $pagination) {
+    salesorder(filter: $filter, pagination: $pagination) {
       orders {
         id
         orderNumber
@@ -180,7 +180,7 @@ interface Pagination {
 }
 
 interface OrderListData {
-  orderlist: {
+  salesorder: {
     orders: Order[];
     pagination: Pagination;
   };
@@ -1250,8 +1250,8 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     );
   }
 
-  const orders = data?.orderlist.orders || [];
-  const pagination = data?.orderlist.pagination;
+  const orders = data?.salesorder.orders || [];
+  const pagination = data?.salesorder.pagination;
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: 'summary', label: 'Summary', icon: '📊' },
