@@ -6167,6 +6167,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       data: {
         userId,
         addressId,
+        supplierId,
         computedShipping: computedShipping_input,
         computedDistance: computedDistance_input,
         orderNumber: orderNumber,
