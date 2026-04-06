@@ -996,6 +996,7 @@ type ReviewResult {
     neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
+    salesorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     ordered_products(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     riderPayments(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     apiBills(filters: ApiBillFilters,pagination: PaginationInput,sort: SortInput): ApiBillList 
