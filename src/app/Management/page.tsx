@@ -23,6 +23,7 @@ export default function ManagementDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const filter:any = {
+        status: 'DELIVERED', 
         supplierId: user?.userId
       }
   // Move all useState hooks to the top, before any conditional returns
