@@ -1564,10 +1564,6 @@ salesorder: async(parent: any, args: any) => {
     itemWhere.supplierId = filter.supplierId  
   }
 
-  if (filter) {
-    itemWhere.remitted = false
-  }
-
   try {
     // Get orders count
     const totalCount = await prisma.order.count({ where });
