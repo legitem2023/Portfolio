@@ -1,5 +1,5 @@
 // lib/pusher/client.ts
-import Pusher from 'pusher-js';
+import Pusher from 'pusher';
 
 let pusherClient: Pusher | null = null;
 
