@@ -189,9 +189,7 @@ interface OrderListData {
 interface OrderListVariables {
   filter?: {
     status?: string;
-    startDate?: string;
-    endDate?: string;
-    searchTerm?: string;
+    supplierId?: string;
   };
   pagination?: {
     page: number;
