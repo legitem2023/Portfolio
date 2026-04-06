@@ -1557,13 +1557,17 @@ salesorder: async(parent: any, args: any) => {
   if(filter && filter.status) {
       itemWhere.status = filter.status 
   }
-
-    
+ 
   // Add supplierId filter through OrderItem relation
   if (filter && filter.supplierId) {
     itemWhere.supplierId = filter.supplierId  
   }
 
+  if (filter) {
+    itemWhere.remitted = true
+  }
+
+  
   try {
     // Get orders count
     const totalCount = await prisma.order.count({ where });
