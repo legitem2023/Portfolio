@@ -32,6 +32,40 @@ import {
   startOfYear, endOfYear, format, subMonths, subYears 
 } from 'date-fns';
 
+interface LocationInput {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  altitude?: number;
+  speed?: number;
+  heading?: number;
+  timestamp: string;
+}
+
+interface TrackLocationArgs {
+  userId: string;
+  trackingId?: string;
+  location: LocationInput;
+}
+
+interface LocationResponse {
+  success: boolean;
+  message?: string;
+  trackingId?: string;
+  location?: LocationInput;
+}
+
+// In-memory storage
+const locationStore: Array<{
+  userId: string;
+  trackingId: string;
+  location: LocationInput;
+  createdAt: Date;
+}> = [];
+
+
+
+
 // Utility function for authentication
 const getUserId = (context: any, required = true): string => {
   const userId = context.user?.id;
@@ -4290,6 +4324,101 @@ salesList: async (
   },
 
   Mutation: {
+   trackLocation:async (_:any,args:any) => {
+    try {
+      const { userId, trackingId, location } = args;
+
+      // Validate required fields
+      if (!userId) {
+        return {
+          success: false,
+          message: 'User ID is required',
+        };
+      }
+
+      if (!location) {
+        return {
+          success: false,
+          message: 'Location is required',
+        };
+      }
+
+      if (typeof location.latitude !== 'number') {
+        return {
+          success: false,
+          message: 'Valid latitude is required',
+        };
+      }
+
+      if (typeof location.longitude !== 'number') {
+        return {
+          success: false,
+          message: 'Valid longitude is required',
+        };
+      }
+
+      // Validate coordinate ranges
+      if (location.latitude < -90 || location.latitude > 90) {
+        return {
+          success: false,
+          message: 'Latitude must be between -90 and 90',
+        };
+      }
+
+      if (location.longitude < -180 || location.longitude > 180) {
+        return {
+          success: false,
+          message: 'Longitude must be between -180 and 180',
+        };
+      }
+
+      // Validate accuracy if provided
+      if (location.accuracy !== undefined && location.accuracy < 0) {
+        return {
+          success: false,
+          message: 'Accuracy must be a positive number',
+        };
+      }
+
+      // Validate speed if provided
+      if (location.speed !== undefined && location.speed < 0) {
+        return {
+          success: false,
+          message: 'Speed must be a positive number',
+        };
+      }
+
+      // Generate tracking ID if not provided
+      const finalTrackingId = trackingId || uuidv4();
+
+      // Ensure timestamp exists
+      const finalLocation = {
+        ...location,
+        timestamp: location.timestamp || new Date().toISOString(),
+      };
+
+      // Store location
+      locationStore.push({
+        userId,
+        trackingId: finalTrackingId,
+        location: finalLocation,
+        createdAt: new Date(),
+      });
+
+      // Return success response
+      return {
+        success: true,
+        message: 'Location tracked successfully',
+        trackingId: finalTrackingId,
+        location: finalLocation,
+      };
+    }
+    catch (error) {
+    throw new Error('Failed to create review');
+    }
+
+  },
+ 
     createReview: async (_: any, { data }: { data: any }) => {
   try {
     const { images, ...reviewData } = data;
