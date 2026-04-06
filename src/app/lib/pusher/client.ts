@@ -7,7 +7,7 @@ let pusherClient: Pusher | null = null;
 export const getPusherClient = () => {
   if (!pusherClient && typeof window !== 'undefined') {
     pusherClient = new Pusher({
-      appKey: "89df54e492d888d001ed",
+      key: "89df54e492d888d001ed",
       cluster: "ap1"
     });
   }
