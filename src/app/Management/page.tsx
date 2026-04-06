@@ -22,7 +22,7 @@ import { useAuth } from './hooks/useAuth';
 export default function ManagementDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const filterParam:any filter: {
+  const filter:any = {
         supplierId: user?.userId
       },
   // Move all useState hooks to the top, before any conditional returns
@@ -160,7 +160,7 @@ export default function ManagementDashboard() {
           />
         );
       case 'sales':
-        return <SalesList filter={filterParam} pageSize={20}/>;
+        return <SalesList filter={filter} pageSize={20}/>;
       case 'bills':
         return <ApiBillsTab />;
       case 'vehicle':
