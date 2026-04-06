@@ -24,7 +24,7 @@ export default function ManagementDashboard() {
   const { user, loading: authLoading } = useAuth();
   const filter:any = {
         supplierId: user?.userId
-      },
+      }
   // Move all useState hooks to the top, before any conditional returns
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
