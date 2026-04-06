@@ -270,10 +270,19 @@ const getStatusColor = (status: string): string => {
   }
 };
 
-// Calculate order financials
+// Calculate order financials - FIXED for orders with no items
 const calculateOrderFinancials = (order: Order) => {
-  const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const totalShipping = order.items.reduce((sum, item) => sum + (item.individualShipping || 0), 0);
+  // Check if items exist and have length
+  const hasItems = order.items && order.items.length > 0;
+  
+  const subtotal = hasItems 
+    ? order.items.reduce((sum, item) => sum + item.quantity * item.price, 0)
+    : 0;
+    
+  const totalShipping = hasItems
+    ? order.items.reduce((sum, item) => sum + (item.individualShipping || 0), 0)
+    : 0;
+    
   const vatAmount = subtotal * VAT_RATE;
   const grandTotal = subtotal + vatAmount + totalShipping;
   const websiteEarnings = subtotal * WEBSITE_EARNINGS_RATE;
@@ -317,6 +326,9 @@ const SummaryTab: React.FC<{
   
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
+      // Skip orders with no items
+      if (!order.items || order.items.length === 0) return false;
+      
       const orderDate = new Date(order.createdAt);
       
       switch (period) {
@@ -482,73 +494,84 @@ const SummaryTab: React.FC<{
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Total Orders</p>
-          <p className="text-2xl font-bold text-blue-700">{summary.orderCount}</p>
-          <p className="text-xs text-gray-500 mt-1">{summary.itemCount} items sold</p>
+      {filteredOrders.length === 0 ? (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <p className="text-gray-500 mb-2">📊 No data available</p>
+          <p className="text-sm text-gray-400">No orders with items found for this period</p>
         </div>
-        
-        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Total Revenue</p>
-          <p className="text-2xl font-bold text-green-700 truncate">{formatCurrency(summary.grandTotal)}</p>
-          <p className="text-xs text-gray-500 mt-1">Avg {formatCurrency(summary.averageOrderValue)}</p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Website Earnings</p>
-          <p className="text-2xl font-bold text-purple-700 truncate">{formatCurrency(summary.websiteEarnings)}</p>
-          <p className="text-xs text-gray-500 mt-1">{Math.round(WEBSITE_EARNINGS_RATE * 100)}% commission</p>
-        </div>
-        
-        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Vendors Payout</p>
-          <p className="text-2xl font-bold text-orange-700 truncate">{formatCurrency(summary.vendorsIncome)}</p>
-          <p className="text-xs text-gray-500 mt-1">After commission</p>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Total Orders</p>
+              <p className="text-2xl font-bold text-blue-700">{summary.orderCount}</p>
+              <p className="text-xs text-gray-500 mt-1">{summary.itemCount} items sold</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Total Revenue</p>
+              <p className="text-2xl font-bold text-green-700 truncate">{formatCurrency(summary.grandTotal)}</p>
+              <p className="text-xs text-gray-500 mt-1">Avg {formatCurrency(summary.averageOrderValue)}</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Website Earnings</p>
+              <p className="text-2xl font-bold text-purple-700 truncate">{formatCurrency(summary.websiteEarnings)}</p>
+              <p className="text-xs text-gray-500 mt-1">{Math.round(WEBSITE_EARNINGS_RATE * 100)}% commission</p>
+            </div>
+            
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Vendors Payout</p>
+              <p className="text-2xl font-bold text-orange-700 truncate">{formatCurrency(summary.vendorsIncome)}</p>
+              <p className="text-xs text-gray-500 mt-1">After commission</p>
+            </div>
+          </div>
 
-      {/* Detailed Breakdown */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Financial Breakdown</p>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div>
-            <p className="text-xs text-gray-500">Subtotal</p>
-            <p className="text-sm font-semibold">{formatCurrency(summary.subtotal)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">VAT ({Math.round(VAT_RATE * 100)}%)</p>
-            <p className="text-sm font-semibold text-orange-600">{formatCurrency(summary.vatAmount)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Shipping</p>
-            <p className="text-sm font-semibold">{formatCurrency(summary.totalShipping)}</p>
-          </div>
-        </div>
-        
-        {summary.grandTotal > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex justify-between text-xs text-gray-600 mb-1">
-              <span>Commission Rate</span>
-              <span>{Math.round((summary.websiteEarnings / summary.grandTotal) * 100)}% of revenue</span>
+          {/* Detailed Breakdown */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Financial Breakdown</p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <p className="text-xs text-gray-500">Subtotal</p>
+                <p className="text-sm font-semibold">{formatCurrency(summary.subtotal)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">VAT ({Math.round(VAT_RATE * 100)}%)</p>
+                <p className="text-sm font-semibold text-orange-600">{formatCurrency(summary.vatAmount)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Shipping</p>
+                <p className="text-sm font-semibold">{formatCurrency(summary.totalShipping)}</p>
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-600 rounded-full h-2 transition-all duration-300"
-                style={{ width: `${(summary.websiteEarnings / summary.grandTotal) * 100}%` }}
-              />
-            </div>
+            
+            {summary.grandTotal > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex justify-between text-xs text-gray-600 mb-1">
+                  <span>Commission Rate</span>
+                  <span>{Math.round((summary.websiteEarnings / summary.grandTotal) * 100)}% of revenue</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 rounded-full h-2 transition-all duration-300"
+                    style={{ width: `${(summary.websiteEarnings / summary.grandTotal) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Mobile View Details Button */}
-      <button
-        onClick={() => setShowBottomSheet(true)}
-        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors lg:hidden"
-      >
-        View Full Details
-      </button>
+      {filteredOrders.length > 0 && (
+        <button
+          onClick={() => setShowBottomSheet(true)}
+          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-blue-700 transition-colors lg:hidden"
+        >
+          View Full Details
+        </button>
+      )}
 
       {/* Bottom Sheet for Mobile */}
       {showBottomSheet && (
@@ -618,6 +641,9 @@ const ChartTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
     last30Days.setDate(now.getDate() - 30);
     
     orders.forEach(order => {
+      // Skip orders with no items
+      if (!order.items || order.items.length === 0) return;
+      
       const orderDate = new Date(order.createdAt);
       if (orderDate < last30Days && chartType !== 'monthly') return;
       
@@ -671,7 +697,7 @@ const ChartTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
       {chartData.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
           <p className="text-lg mb-2">📊 No data available</p>
-          <p className="text-sm">Try selecting a different time period</p>
+          <p className="text-sm">No orders with items found for this period</p>
         </div>
       ) : (
         <>
@@ -735,6 +761,9 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
   
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
+      // Skip orders with no items
+      if (!order.items || order.items.length === 0) return false;
+      
       const orderDate = order.createdAt.split('T')[0];
       return orderDate >= dateRange.start && orderDate <= dateRange.end;
     });
@@ -1000,7 +1029,8 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
     
     const filterByDateRange = (start: Date, end: Date) => (order: Order) => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= start && orderDate <= end;
+      // Only include orders with items
+      return orderDate >= start && orderDate <= end && order.items && order.items.length > 0;
     };
     
     const currentOrders = orders.filter(filterByDateRange(currentPeriod.start, currentPeriod.end));
@@ -1099,39 +1129,45 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
       </div>
       
       {/* Performance Changes */}
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-        <p className="text-sm font-semibold text-gray-900 mb-3">Performance Changes</p>
-        <div className="space-y-3">
-          {[
-            { label: 'Total Orders', value: comparisons.changes.orders, icon: '📦', color: 'blue' },
-            { label: 'Total Revenue', value: comparisons.changes.revenue, icon: '💰', color: 'green' },
-            { label: 'Avg Order Value', value: comparisons.changes.avgOrderValue, icon: '📊', color: 'purple' },
-            { label: 'Commission', value: comparisons.changes.commission, icon: '💸', color: 'orange' },
-            { label: 'Vendors Payout', value: comparisons.changes.vendorsIncome, icon: '🏪', color: 'red' },
-          ].map(item => (
-            <div key={item.label} className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-sm text-gray-700">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-sm font-bold ${item.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {item.value >= 0 ? '↑' : '↓'} {Math.abs(item.value).toFixed(1)}%
-                </span>
-                <div className="w-16 h-1.5 rounded-full overflow-hidden bg-gray-200">
-                  <div
-                    className={`h-full rounded-full transition-all ${item.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                    style={{ width: `${Math.min(Math.abs(item.value), 100)}%` }}
-                  />
+      {comparisons.current.stats.orders > 0 || comparisons.previous.stats.orders > 0 ? (
+        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+          <p className="text-sm font-semibold text-gray-900 mb-3">Performance Changes</p>
+          <div className="space-y-3">
+            {[
+              { label: 'Total Orders', value: comparisons.changes.orders, icon: '📦', color: 'blue' },
+              { label: 'Total Revenue', value: comparisons.changes.revenue, icon: '💰', color: 'green' },
+              { label: 'Avg Order Value', value: comparisons.changes.avgOrderValue, icon: '📊', color: 'purple' },
+              { label: 'Commission', value: comparisons.changes.commission, icon: '💸', color: 'orange' },
+              { label: 'Vendors Payout', value: comparisons.changes.vendorsIncome, icon: '🏪', color: 'red' },
+            ].map(item => (
+              <div key={item.label} className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="text-sm text-gray-700">{item.label}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-bold ${item.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {item.value >= 0 ? '↑' : '↓'} {Math.abs(item.value).toFixed(1)}%
+                  </span>
+                  <div className="w-16 h-1.5 rounded-full overflow-hidden bg-gray-200">
+                    <div
+                      className={`h-full rounded-full transition-all ${item.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                      style={{ width: `${Math.min(Math.abs(item.value), 100)}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <p className="text-gray-500">No data available for comparison</p>
+        </div>
+      )}
       
       {/* Insight Message */}
-      {comparisons.changes.revenue !== 0 && (
+      {comparisons.changes.revenue !== 0 && comparisons.current.stats.orders > 0 && (
         <div className={`rounded-lg p-3 ${
           comparisons.changes.revenue > 0 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
         }`}>
@@ -1149,7 +1185,14 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
 // Order Card Component
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   const [expanded, setExpanded] = useState(false);
-  const financials = calculateOrderFinancials(order);
+  
+  // Check if order has no items
+  const hasNoItems = !order.items || order.items.length === 0;
+  
+  // Only calculate financials if there are items
+  const financials = hasNoItems 
+    ? { subtotal: 0, vatAmount: 0, totalShipping: 0, grandTotal: 0, websiteEarnings: 0, vendorsIncome: 0 }
+    : calculateOrderFinancials(order);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1162,12 +1205,17 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
               <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+              {hasNoItems && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  No Items
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-600 mt-1">{order.user.firstName} {order.user.lastName}</p>
           </div>
           <div className="text-right">
             <p className="font-bold text-green-600">{formatCurrency(financials.grandTotal)}</p>
-            <p className="text-xs text-gray-500">{order.items.length} items</p>
+            <p className="text-xs text-gray-500">{order.items?.length || 0} items</p>
           </div>
         </div>
         <div className="flex justify-center mt-1">
@@ -1179,19 +1227,27 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
       
       {expanded && (
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-            <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
-            <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
-            <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
-            <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
-          </div>
-          {order.items.slice(0, 3).map(item => (
-            <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
-              {item.quantity}x {item.product.name}
+          {hasNoItems ? (
+            <div className="text-center py-4 text-gray-500">
+              <p className="text-sm">No items found for this order</p>
             </div>
-          ))}
-          {order.items.length > 3 && (
-            <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
+                <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
+                <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
+                <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
+              </div>
+              {order.items.slice(0, 3).map(item => (
+                <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
+                  {item.quantity}x {item.product.name}
+                </div>
+              ))}
+              {order.items.length > 3 && (
+                <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -1228,7 +1284,7 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
       fetchPolicy: 'network-only',
     }
   );
-  console.log(filter);
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -1253,6 +1309,9 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
 
   const orders = data?.salesorder.orders || [];
   const pagination = data?.salesorder.pagination;
+  
+  // Count orders with no items for informational purposes
+  const ordersWithNoItems = orders.filter(order => !order.items || order.items.length === 0).length;
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: 'summary', label: 'Summary', icon: '📊' },
@@ -1270,6 +1329,11 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Earnings Reports</h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               {pagination?.total || 0} total orders • Page {currentPage} of {pagination?.totalPages || 1}
+              {ordersWithNoItems > 0 && (
+                <span className="ml-2 text-amber-600">
+                  • {ordersWithNoItems} order{ordersWithNoItems !== 1 ? 's' : ''} with no items
+                </span>
+              )}
             </p>
             <div className="flex gap-3 text-xs text-gray-400 mt-1">
               <span>VAT: {Math.round(VAT_RATE * 100)}%</span>
