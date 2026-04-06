@@ -270,19 +270,10 @@ const getStatusColor = (status: string): string => {
   }
 };
 
-// Calculate order financials - FIXED for orders with no items
+// Calculate order financials - assumes items exist
 const calculateOrderFinancials = (order: Order) => {
-  // Check if items exist and have length
-  const hasItems = order.items && order.items.length > 0;
-  
-  const subtotal = hasItems 
-    ? order.items.reduce((sum, item) => sum + item.quantity * item.price, 0)
-    : 0;
-    
-  const totalShipping = hasItems
-    ? order.items.reduce((sum, item) => sum + (item.individualShipping || 0), 0)
-    : 0;
-    
+  const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const totalShipping = order.items.reduce((sum, item) => sum + (item.individualShipping || 0), 0);
   const vatAmount = subtotal * VAT_RATE;
   const grandTotal = subtotal + vatAmount + totalShipping;
   const websiteEarnings = subtotal * WEBSITE_EARNINGS_RATE;
@@ -326,9 +317,6 @@ const SummaryTab: React.FC<{
   
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      // Skip orders with no items
-      if (!order.items || order.items.length === 0) return false;
-      
       const orderDate = new Date(order.createdAt);
       
       switch (period) {
@@ -641,9 +629,6 @@ const ChartTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
     last30Days.setDate(now.getDate() - 30);
     
     orders.forEach(order => {
-      // Skip orders with no items
-      if (!order.items || order.items.length === 0) return;
-      
       const orderDate = new Date(order.createdAt);
       if (orderDate < last30Days && chartType !== 'monthly') return;
       
@@ -761,9 +746,6 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
   
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
-      // Skip orders with no items
-      if (!order.items || order.items.length === 0) return false;
-      
       const orderDate = order.createdAt.split('T')[0];
       return orderDate >= dateRange.start && orderDate <= dateRange.end;
     });
@@ -950,23 +932,29 @@ const ExportTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
       </div>
       
       {/* Export Summary */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3">
-        <p className="text-xs text-gray-600 mb-2">Export Summary</p>
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-xs text-gray-500">Orders</p>
-            <p className="text-lg font-bold text-gray-900">{summary.orders}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Items</p>
-            <p className="text-lg font-bold text-gray-900">{summary.items}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Revenue</p>
-            <p className="text-lg font-bold text-green-600 truncate">{formatCurrency(summary.revenue)}</p>
+      {filteredOrders.length > 0 ? (
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3">
+          <p className="text-xs text-gray-600 mb-2">Export Summary</p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <p className="text-xs text-gray-500">Orders</p>
+              <p className="text-lg font-bold text-gray-900">{summary.orders}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Items</p>
+              <p className="text-lg font-bold text-gray-900">{summary.items}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Revenue</p>
+              <p className="text-lg font-bold text-green-600 truncate">{formatCurrency(summary.revenue)}</p>
+            </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="bg-gray-50 rounded-lg p-6 text-center">
+          <p className="text-gray-500">No orders with items found in this date range</p>
+        </div>
+      )}
       
       {/* Export Button */}
       <button
@@ -1029,8 +1017,7 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
     
     const filterByDateRange = (start: Date, end: Date) => (order: Order) => {
       const orderDate = new Date(order.createdAt);
-      // Only include orders with items
-      return orderDate >= start && orderDate <= end && order.items && order.items.length > 0;
+      return orderDate >= start && orderDate <= end;
     };
     
     const currentOrders = orders.filter(filterByDateRange(currentPeriod.start, currentPeriod.end));
@@ -1111,88 +1098,86 @@ const CompareTab: React.FC<{ orders: Order[] }> = ({ orders }) => {
       </div>
       
       {/* Comparison Cards */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-blue-50 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Current Period</p>
-          <p className="text-xs text-gray-500 mb-2">{comparisons.current.label}</p>
-          <p className="text-lg font-bold text-blue-700 truncate">{formatCurrency(comparisons.current.stats.revenue)}</p>
-          <p className="text-xs text-gray-500 mt-1">{comparisons.current.stats.orders} orders</p>
-          <p className="text-xs text-gray-500">{comparisons.current.stats.items} items</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="text-xs text-gray-600 mb-1">Previous Period</p>
-          <p className="text-xs text-gray-500 mb-2">{comparisons.previous.label}</p>
-          <p className="text-lg font-bold text-gray-700 truncate">{formatCurrency(comparisons.previous.stats.revenue)}</p>
-          <p className="text-xs text-gray-500 mt-1">{comparisons.previous.stats.orders} orders</p>
-          <p className="text-xs text-gray-500">{comparisons.previous.stats.items} items</p>
-        </div>
-      </div>
-      
-      {/* Performance Changes */}
-      {comparisons.current.stats.orders > 0 || comparisons.previous.stats.orders > 0 ? (
-        <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-          <p className="text-sm font-semibold text-gray-900 mb-3">Performance Changes</p>
-          <div className="space-y-3">
-            {[
-              { label: 'Total Orders', value: comparisons.changes.orders, icon: '📦', color: 'blue' },
-              { label: 'Total Revenue', value: comparisons.changes.revenue, icon: '💰', color: 'green' },
-              { label: 'Avg Order Value', value: comparisons.changes.avgOrderValue, icon: '📊', color: 'purple' },
-              { label: 'Commission', value: comparisons.changes.commission, icon: '💸', color: 'orange' },
-              { label: 'Vendors Payout', value: comparisons.changes.vendorsIncome, icon: '🏪', color: 'red' },
-            ].map(item => (
-              <div key={item.label} className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{item.icon}</span>
-                  <span className="text-sm text-gray-700">{item.label}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${item.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {item.value >= 0 ? '↑' : '↓'} {Math.abs(item.value).toFixed(1)}%
-                  </span>
-                  <div className="w-16 h-1.5 rounded-full overflow-hidden bg-gray-200">
-                    <div
-                      className={`h-full rounded-full transition-all ${item.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ width: `${Math.min(Math.abs(item.value), 100)}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {comparisons.current.stats.orders === 0 && comparisons.previous.stats.orders === 0 ? (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <p className="text-gray-500 mb-2">📊 No data available</p>
+          <p className="text-sm text-gray-400">No orders with items found for comparison</p>
         </div>
       ) : (
-        <div className="bg-gray-50 rounded-lg p-8 text-center">
-          <p className="text-gray-500">No data available for comparison</p>
-        </div>
-      )}
-      
-      {/* Insight Message */}
-      {comparisons.changes.revenue !== 0 && comparisons.current.stats.orders > 0 && (
-        <div className={`rounded-lg p-3 ${
-          comparisons.changes.revenue > 0 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-        }`}>
-          <p className="text-xs font-medium">
-            {comparisons.changes.revenue > 0
-              ? `🎉 Great! Revenue increased by ${comparisons.changes.revenue.toFixed(1)}% compared to previous ${compareType === 'week' ? 'week' : 'month'}.`
-              : `📉 Revenue decreased by ${Math.abs(comparisons.changes.revenue).toFixed(1)}% compared to previous ${compareType === 'week' ? 'week' : 'month'}.`}
-          </p>
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-blue-50 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Current Period</p>
+              <p className="text-xs text-gray-500 mb-2">{comparisons.current.label}</p>
+              <p className="text-lg font-bold text-blue-700 truncate">{formatCurrency(comparisons.current.stats.revenue)}</p>
+              <p className="text-xs text-gray-500 mt-1">{comparisons.current.stats.orders} orders</p>
+              <p className="text-xs text-gray-500">{comparisons.current.stats.items} items</p>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-600 mb-1">Previous Period</p>
+              <p className="text-xs text-gray-500 mb-2">{comparisons.previous.label}</p>
+              <p className="text-lg font-bold text-gray-700 truncate">{formatCurrency(comparisons.previous.stats.revenue)}</p>
+              <p className="text-xs text-gray-500 mt-1">{comparisons.previous.stats.orders} orders</p>
+              <p className="text-xs text-gray-500">{comparisons.previous.stats.items} items</p>
+            </div>
+          </div>
+          
+          {/* Performance Changes */}
+          {(comparisons.current.stats.orders > 0 || comparisons.previous.stats.orders > 0) && (
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+              <p className="text-sm font-semibold text-gray-900 mb-3">Performance Changes</p>
+              <div className="space-y-3">
+                {[
+                  { label: 'Total Orders', value: comparisons.changes.orders, icon: '📦', color: 'blue' },
+                  { label: 'Total Revenue', value: comparisons.changes.revenue, icon: '💰', color: 'green' },
+                  { label: 'Avg Order Value', value: comparisons.changes.avgOrderValue, icon: '📊', color: 'purple' },
+                  { label: 'Commission', value: comparisons.changes.commission, icon: '💸', color: 'orange' },
+                  { label: 'Vendors Payout', value: comparisons.changes.vendorsIncome, icon: '🏪', color: 'red' },
+                ].map(item => (
+                  <div key={item.label} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{item.icon}</span>
+                      <span className="text-sm text-gray-700">{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${item.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {item.value >= 0 ? '↑' : '↓'} {Math.abs(item.value).toFixed(1)}%
+                      </span>
+                      <div className="w-16 h-1.5 rounded-full overflow-hidden bg-gray-200">
+                        <div
+                          className={`h-full rounded-full transition-all ${item.value >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
+                          style={{ width: `${Math.min(Math.abs(item.value), 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Insight Message */}
+          {comparisons.changes.revenue !== 0 && comparisons.current.stats.orders > 0 && (
+            <div className={`rounded-lg p-3 ${
+              comparisons.changes.revenue > 0 ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+            }`}>
+              <p className="text-xs font-medium">
+                {comparisons.changes.revenue > 0
+                  ? `🎉 Great! Revenue increased by ${comparisons.changes.revenue.toFixed(1)}% compared to previous ${compareType === 'week' ? 'week' : 'month'}.`
+                  : `📉 Revenue decreased by ${Math.abs(comparisons.changes.revenue).toFixed(1)}% compared to previous ${compareType === 'week' ? 'week' : 'month'}.`}
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
 };
 
-// Order Card Component
+// Order Card Component - Only rendered for orders with items
 const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
   const [expanded, setExpanded] = useState(false);
-  
-  // Check if order has no items
-  const hasNoItems = !order.items || order.items.length === 0;
-  
-  // Only calculate financials if there are items
-  const financials = hasNoItems 
-    ? { subtotal: 0, vatAmount: 0, totalShipping: 0, grandTotal: 0, websiteEarnings: 0, vendorsIncome: 0 }
-    : calculateOrderFinancials(order);
+  const financials = calculateOrderFinancials(order);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -1205,17 +1190,12 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-gray-900">#{order.orderNumber}</span>
               <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
-              {hasNoItems && (
-                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                  No Items
-                </span>
-              )}
             </div>
             <p className="text-sm text-gray-600 mt-1">{order.user.firstName} {order.user.lastName}</p>
           </div>
           <div className="text-right">
             <p className="font-bold text-green-600">{formatCurrency(financials.grandTotal)}</p>
-            <p className="text-xs text-gray-500">{order.items?.length || 0} items</p>
+            <p className="text-xs text-gray-500">{order.items.length} items</p>
           </div>
         </div>
         <div className="flex justify-center mt-1">
@@ -1227,27 +1207,19 @@ const OrderCard: React.FC<{ order: Order }> = ({ order }) => {
       
       {expanded && (
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
-          {hasNoItems ? (
-            <div className="text-center py-4 text-gray-500">
-              <p className="text-sm">No items found for this order</p>
+          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+            <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
+            <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
+            <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
+            <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
+          </div>
+          {order.items.slice(0, 3).map(item => (
+            <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
+              {item.quantity}x {item.product.name}
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                <div><span className="text-gray-500">Subtotal:</span> {formatCurrency(financials.subtotal)}</div>
-                <div><span className="text-gray-500">VAT:</span> {formatCurrency(financials.vatAmount)}</div>
-                <div><span className="text-gray-500">Shipping:</span> {formatCurrency(financials.totalShipping)}</div>
-                <div><span className="text-gray-500">Commission:</span> {formatCurrency(financials.websiteEarnings)}</div>
-              </div>
-              {order.items.slice(0, 3).map(item => (
-                <div key={item.id} className="text-xs text-gray-600 py-1 border-t border-gray-200">
-                  {item.quantity}x {item.product.name}
-                </div>
-              ))}
-              {order.items.length > 3 && (
-                <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
-              )}
-            </>
+          ))}
+          {order.items.length > 3 && (
+            <p className="text-xs text-gray-500 mt-1">+{order.items.length - 3} more items</p>
           )}
         </div>
       )}
@@ -1307,11 +1279,15 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     );
   }
 
-  const orders = data?.salesorder.orders || [];
+  const allOrders = data?.salesorder.orders || [];
+  
+  // CRITICAL: Filter out orders with no items or empty items array
+  // These orders will be completely excluded from ALL displays and calculations
+  const orders = allOrders.filter(order => order.items && order.items.length > 0);
   const pagination = data?.salesorder.pagination;
   
-  // Count orders with no items for informational purposes
-  const ordersWithNoItems = orders.filter(order => !order.items || order.items.length === 0).length;
+  // Count how many orders were filtered out
+  const filteredOutCount = allOrders.length - orders.length;
 
   const tabs: { id: TabType; label: string; icon: string }[] = [
     { id: 'summary', label: 'Summary', icon: '📊' },
@@ -1328,10 +1304,10 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Earnings Reports</h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              {pagination?.total || 0} total orders • Page {currentPage} of {pagination?.totalPages || 1}
-              {ordersWithNoItems > 0 && (
-                <span className="ml-2 text-amber-600">
-                  • {ordersWithNoItems} order{ordersWithNoItems !== 1 ? 's' : ''} with no items
+              {pagination?.total || 0} total orders • {orders.length} orders with items • Page {currentPage} of {pagination?.totalPages || 1}
+              {filteredOutCount > 0 && (
+                <span className="ml-2 text-amber-600 font-medium">
+                  • {filteredOutCount} order{filteredOutCount !== 1 ? 's' : ''} hidden (no items)
                 </span>
               )}
             </p>
@@ -1373,7 +1349,7 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content - Only receives orders with items */}
         <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
           {activeTab === 'summary' && (
             <SummaryTab
@@ -1389,13 +1365,23 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
           {activeTab === 'compare' && <CompareTab orders={orders} />}
         </div>
 
-        {/* Orders List (Collapsible) */}
+        {/* Orders List - Only shows orders with items */}
         {showOrders && (
           <div className="space-y-3">
-            <h2 className="text-lg font-semibold text-gray-900 px-1">Recent Orders</h2>
+            <h2 className="text-lg font-semibold text-gray-900 px-1">
+              Recent Orders 
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                ({orders.length} orders with items)
+              </span>
+            </h2>
             {orders.length === 0 ? (
               <div className="bg-white rounded-xl p-8 text-center">
-                <p className="text-gray-500">No orders found</p>
+                <p className="text-gray-500 mb-2">No orders with items found</p>
+                {filteredOutCount > 0 && (
+                  <p className="text-sm text-gray-400">
+                    {filteredOutCount} order{filteredOutCount !== 1 ? 's were' : ' was'} filtered out because they have no items
+                  </p>
+                )}
               </div>
             ) : (
               orders.map((order) => (
