@@ -1218,7 +1218,10 @@ const SalesList: React.FC<SalesListProps> = ({ filter, pageSize = 10 }) => {
     ORDER_LIST_QUERY,
     {
       variables: {
-        filter,
+        filter:{
+          status:filter.status,
+          supplierId:filter.supplierId
+        },
         pagination: {
           page: currentPage,
           pageSize,
