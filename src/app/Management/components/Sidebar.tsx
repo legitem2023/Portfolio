@@ -13,27 +13,37 @@ import {
   Truck,
   BanknoteArrowUp
 } from 'lucide-react';
+import { useAuth } from './hooks/useAuth'; // Import the useAuth hook
 
 interface SidebarProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tabId: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClose }: SidebarProps) {
+  // Get user and loading state from useAuth hook
+  const { user, loading: authLoading } = useAuth();
+  
+  // Define which roles can access each nav item
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'categories', label: 'Categories', icon: FolderOpen },
-    { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'remit', label: 'Remittance',icon: BanknoteArrowUp },
-    { id: 'sales', label: 'Sales', icon: DollarSign },
-    { id: 'bills', label: 'Bills', icon: FileText },
-    { id: 'support', label: 'Support Tickets', icon: HeadphonesIcon },
-    { id: 'vehicle', label: 'Vehicle', icon: Truck }
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'users', label: 'Users', icon: Users, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'products', label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'categories', label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 'orders', label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'remit', label: 'Remittance', icon: BanknoteArrowUp, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'sales', label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'bills', label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 'support', label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 'vehicle', label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] } // Admin only
   ];
+
+  // Filter nav items based on user role
+  const filteredNavItems = navItems.filter(item => 
+    item.roles.includes(user?.role || 'MANAGER') // Default to MANAGER if no role
+  );
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);
@@ -41,6 +51,11 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
       onClose();
     }
   };
+
+  // Show loading state or nothing while auth is loading
+  if (authLoading) {
+    return null; // Or return a loading skeleton
+  }
 
   return (
     <>
@@ -76,7 +91,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
 
           <div className="flex-grow flex flex-col">
             <nav className="flex-1 px-2 py-4 space-y-1">
-              {navItems.map((item) => {
+              {filteredNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <button
