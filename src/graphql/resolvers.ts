@@ -4314,7 +4314,7 @@ salesList: async (
   },
 
   Mutation: {
-   trackLocation:async (_:any,args:any) => {
+ /* trackLocation:async (_:any,args:any) => {
     try {
       const { userId, trackingId, location } = args;
 
@@ -4406,8 +4406,7 @@ salesList: async (
     catch (error) {
     throw new Error('Failed to create review');
     }
-
-  },
+  },*/
  
     createReview: async (_: any, { data }: { data: any }) => {
   try {
