@@ -59,7 +59,7 @@ export default function RiderDashboard() {
   const isMobile = windowSize.width < 1024;
 
   // Refs for tracking optimization
-  const watchIdRef = useRef(null);
+  const watchIdRef = useRef<number | null>(null);
   const lastSendTimeRef = useRef(0);
 
   // Location tracking mutation
@@ -77,7 +77,7 @@ export default function RiderDashboard() {
         pageSize: 10
       }
     },
-    pollInterval: 30000 // Increased from 10s to 30s to reduce server load
+    pollInterval: 30000
   });
   
   // Function to send location with rate limiting
@@ -366,4 +366,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-        }
+            }
