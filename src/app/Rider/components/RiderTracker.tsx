@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, Circle as LeafletCircle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -422,10 +422,10 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
           fontSize: '14px'
         }}>
           <strong>Current Location:</strong><br />
-          Latitude: {location?.latitude.toFixed(6)}<br />
-          Longitude: {location?.longitude.toFixed(6)}<br />
-          {location?.accuracy && <span>Accuracy: ±{location?.accuracy.toFixed(2)}m<br /></span>}
-          {location?.speed !== undefined && <span>Speed: {(location?.speed * 3.6).toFixed(2)} km/h<br /></span>}
+          Latitude: {location.latitude.toFixed(6)}<br />
+          Longitude: {location.longitude.toFixed(6)}<br />
+          {location.accuracy && <span>Accuracy: ±{location.accuracy.toFixed(2)}m<br /></span>}
+          {location.speed !== undefined && <span>Speed: {(location.speed * 3.6).toFixed(2)} km/h<br /></span>}
           Timestamp: {new Date(location.timestamp || '').toLocaleString()}<br />
           {locationHistory.length > 0 && <span>History Points: {locationHistory.length}</span>}
         </div>
@@ -454,7 +454,7 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
                   Lat: {location?.latitude.toFixed(6)}<br />
                   Lng: {location?.longitude.toFixed(6)}<br />
                   {location?.speed !== undefined && (
-                    <>Speed: {(location?.speed * 3.6).toFixed(2)} km/h<br />
+                    <>Speed: {(location.speed * 3.6).toFixed(2)} km/h<br />
                   </>)}
                   Time: {new Date(location?.timestamp || '').toLocaleTimeString()}
                 </div>
@@ -463,7 +463,7 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
             
             {/* Accuracy circle */}
             {showAccuracy && location.accuracy && (
-              <Circle
+              <LeafletCircle
                 center={currentPosition}
                 radius={location.accuracy}
                 pathOptions={{
@@ -542,28 +542,6 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
       </div>
     </div>
   );
-};
-
-// Circle component for accuracy visualization
-const Circle: React.FC<{
-  center: [number, number];
-  radius: number;
-  pathOptions?: L.PathOptions;
-}> = ({ center, radius, pathOptions }) => {
-  const map = useMap();
-  
-  useEffect(() => {
-    const circle = L.circle(center, {
-      radius: radius,
-      ...pathOptions
-    }).addTo(map);
-    
-    return () => {
-      map.removeLayer(circle);
-    };
-  }, [map, center, radius, pathOptions]);
-  
-  return null;
 };
 
 export default RiderTracker;
