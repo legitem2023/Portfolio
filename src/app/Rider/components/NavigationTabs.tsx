@@ -35,12 +35,6 @@ const TABS_WITH_ICONS: TabType[] = [
     desktopLabel: "Active Deliveries" 
   },
   { 
-    id: "map", 
-    label: "Map", 
-    icon: <Map />,
-    desktopLabel: "Map View" 
-  },
-  { 
     id: "history", 
     label: "History", 
     icon: <Clock />,
@@ -80,10 +74,9 @@ export default function NavigationTabs({
       const keyToTab: { [key: string]: string } = {
         '1': 'newDeliveries',
         '2': 'deliveries',
-        '3': 'map',
-        '4': 'history',
-        '5': 'message',
-        '6': 'user'
+        '3': 'history',
+        '4': 'message',
+        '5': 'user'
       };
       
       if (keyToTab[event.key]) {
