@@ -422,10 +422,10 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
           fontSize: '14px'
         }}>
           <strong>Current Location:</strong><br />
-          Latitude: {location.latitude.toFixed(6)}<br />
-          Longitude: {location.longitude.toFixed(6)}<br />
-          {location.accuracy && <span>Accuracy: ±{location.accuracy.toFixed(2)}m<br /></span>}
-          {location.speed !== undefined && <span>Speed: {(location.speed * 3.6).toFixed(2)} km/h<br /></span>}
+          Latitude: {location?.latitude.toFixed(6)}<br />
+          Longitude: {location?.longitude.toFixed(6)}<br />
+          {location?.accuracy && <span>Accuracy: ±{location?.accuracy.toFixed(2)}m<br /></span>}
+          {location?.speed !== undefined && <span>Speed: {(location?.speed * 3.6).toFixed(2)} km/h<br /></span>}
           Timestamp: {new Date(location.timestamp || '').toLocaleString()}<br />
           {locationHistory.length > 0 && <span>History Points: {locationHistory.length}</span>}
         </div>
@@ -451,12 +451,12 @@ const RiderTracker: React.FC<RiderTrackerProps> = ({
               <Popup>
                 <div>
                   <strong>Current Location</strong><br />
-                  Lat: {location.latitude.toFixed(6)}<br />
-                  Lng: {location.longitude.toFixed(6)}<br />
-                  {location.speed !== undefined && (
-                    <>Speed: {(location.speed * 3.6).toFixed(2)} km/h<br />
+                  Lat: {location?.latitude.toFixed(6)}<br />
+                  Lng: {location?.longitude.toFixed(6)}<br />
+                  {location?.speed !== undefined && (
+                    <>Speed: {(location?.speed * 3.6).toFixed(2)} km/h<br />
                   </>)}
-                  Time: {new Date(location.timestamp || '').toLocaleTimeString()}
+                  Time: {new Date(location?.timestamp || '').toLocaleTimeString()}
                 </div>
               </Popup>
             </Marker>
