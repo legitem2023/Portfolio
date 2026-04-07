@@ -9,7 +9,7 @@ import { NotificationType } from '../../utils/notificationService'; // Import th
 import { emailMutations } from '../../lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import { LogoutResponse, Context } from './Types/graphql.js';
-import { pusherServer } from 'lib/pusher/server';
+import { pusherServer } from '../app/lib/pusher/server';
 
 const prisma = new PrismaClient();
 
