@@ -1,11 +1,11 @@
 "use client";
-import { 
-  Package, 
-  MapPin, 
-  Building, 
-  User, 
-  Shield, 
-  Clock, 
+import {
+  Package,
+  MapPin,
+  Building,
+  User,
+  Shield,
+  Clock,
   Navigation,
   Grab,
   CheckCircle,
@@ -525,6 +525,25 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   };
 
+  const handleNavigate = () => {
+    const pickupLat = delivery.pickupAddress?.lat;
+    const pickupLng = delivery.pickupAddress?.lng;
+    const dropoffLat = delivery.dropoffAddress?.lat;
+    const dropoffLng = delivery.dropoffAddress?.lng;
+
+    if (!pickupLat || !pickupLng) {
+      setMessage({ type: 'error', text: 'Pickup location coordinates are missing.' });
+      return;
+    }
+
+    if (!dropoffLat || !dropoffLng) {
+      setMessage({ type: 'error', text: 'Dropoff location coordinates are missing.' });
+      return;
+    }
+
+    const mapsUrl = `https://www.google.com/maps/dir/${pickupLat},${pickupLng}/${dropoffLat},${dropoffLng}`;
+    window.open(mapsUrl, '_blank');
+  };
 
 const isHasproof = useMemo(() => {
   if (!delivery?.proofOfDelivery) return false;
@@ -704,13 +723,22 @@ const isHasproof = useMemo(() => {
                   <MapPin size={16} className="text-blue-500" />
                   <span className="font-semibold text-xs">Pickup From</span>
                 </div>
-                <button
-                  onClick={() => setShowMap(true)}
-                  className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 bg-blue-100 px-2 py-1.5 rounded-full transition-colors"
-                >
-                  <Navigation size={12} />
-                  <span>Route</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleNavigate}
+                    className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded-full flex items-center gap-2 shadow-md transition-all duration-200 transform hover:scale-105"
+                  >
+                    <Navigation size={14} />
+                    <span>Navigate</span>
+                  </button>
+                  <button
+                    onClick={() => setShowMap(true)}
+                    className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 bg-blue-100 px-2 py-1.5 rounded-full transition-colors"
+                  >
+                    <Navigation size={12} />
+                    <span>Route</span>
+                  </button>
+                </div>
               </div>
               <p className="text-gray-700 text-xs break-words">{delivery.pickup}</p>
               {delivery.supplierName && (  
@@ -1199,25 +1227,25 @@ const isHasproof = useMemo(() => {
       )}
 
       {/* Map Modal */}
-{showMap && (
-  <DeliveryMap
-    pickupAddress={delivery.pickup}
-    dropoffAddress={delivery.dropoff}
-    pickupLocation={delivery.pickupAddress?.lat && delivery.pickupAddress?.lng ? {
-      lat: delivery.pickupAddress.lat,
-      lng: delivery.pickupAddress.lng
-    } : undefined}
-    dropoffLocation={delivery.dropoffAddress?.lat && delivery.dropoffAddress?.lng ? {
-      lat: delivery.dropoffAddress.lat,
-      lng: delivery.dropoffAddress.lng
-    } : undefined}
-    status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
-    isMobile={isMobile}
-    onClose={() => setShowMap(false)}
-    restaurant={delivery.restaurant}
-    customer={delivery.customer}
-  />
-)}
+      {showMap && (
+        <DeliveryMap
+          pickupAddress={delivery.pickup}
+          dropoffAddress={delivery.dropoff}
+          pickupLocation={delivery.pickupAddress?.lat && delivery.pickupAddress?.lng ? {
+            lat: delivery.pickupAddress.lat,
+            lng: delivery.pickupAddress.lng
+          } : null}
+          dropoffLocation={delivery.dropoffAddress?.lat && delivery.dropoffAddress?.lng ? {
+            lat: delivery.dropoffAddress.lat,
+            lng: delivery.dropoffAddress.lng
+          } : null}
+          status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
+          isMobile={isMobile}
+          onClose={() => setShowMap(false)}
+          restaurant={delivery.restaurant}
+          customer={delivery.customer}
+        />
+      )}
     </>
   );
-}
+  }
