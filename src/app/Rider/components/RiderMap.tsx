@@ -1,4 +1,4 @@
-// components/RiderMap.tsx
+//components/RiderMap.tsx
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
