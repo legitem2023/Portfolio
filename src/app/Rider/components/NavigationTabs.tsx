@@ -1,5 +1,5 @@
 "use client";
-import React from "react"; // Add this import
+import React, { useEffect } from "react";
 import { 
   Navigation, 
   Package, 
@@ -10,7 +10,6 @@ import {
   MessageCircle,
   User
 } from "lucide-react";
-
 
 import { TabType } from '../lib/types';
 
@@ -36,22 +35,28 @@ const TABS_WITH_ICONS: TabType[] = [
     desktopLabel: "Active Deliveries" 
   },
   { 
+    id: "map", 
+    label: "Map", 
+    icon: <Map />,
+    desktopLabel: "Map View" 
+  },
+  { 
     id: "history", 
     label: "History", 
     icon: <Clock />,
-    desktopLabel: "History" 
-  },
-  { 
-    id: "user", 
-    label: "Profile", 
-    icon: <User/>,
-    desktopLabel: "User" 
+    desktopLabel: "Payment History" 
   },
   { 
     id: "message", 
     label: "Messages", 
     icon: <MessageCircle />,
     desktopLabel: "Messages" 
+  },
+  { 
+    id: "user", 
+    label: "Profile", 
+    icon: <User/>,
+    desktopLabel: "User Profile" 
   }
 ];
 
@@ -61,6 +66,38 @@ export default function NavigationTabs({
   isMobile, 
   newDeliveriesCount 
 }: NavigationTabsProps) {
+  
+  // Optional: Add keyboard navigation for better UX
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Only handle if no input/textarea is focused
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+      
+      // Number keys 1-6 for tab navigation
+      const keyToTab: { [key: string]: string } = {
+        '1': 'newDeliveries',
+        '2': 'deliveries',
+        '3': 'map',
+        '4': 'history',
+        '5': 'message',
+        '6': 'user'
+      };
+      
+      if (keyToTab[event.key]) {
+        event.preventDefault();
+        setActiveTab(keyToTab[event.key]);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [setActiveTab]);
+
   if (isMobile) {
     return (
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
@@ -73,19 +110,26 @@ export default function NavigationTabs({
                 flex flex-col items-center justify-center p-1 rounded-lg transition-all w-14
                 ${activeTab === tab.id
                   ? "text-emerald-600 bg-emerald-50"
-                  : "text-lime-600"
+                  : "text-lime-600 hover:text-emerald-700 hover:bg-emerald-50"
                 }
               `}
+              aria-label={tab.desktopLabel || tab.label}
+              title={tab.desktopLabel || tab.label}
             >
               <div className="relative">
-                {React.cloneElement(tab.icon as React.ReactElement, { size: 20 })}
+                {React.cloneElement(tab.icon as React.ReactElement, { 
+                  size: 20,
+                  className: activeTab === tab.id ? "text-emerald-600" : "text-lime-600"
+                })}
                 {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
-                    {newDeliveriesCount}
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center animate-pulse">
+                    {newDeliveriesCount > 9 ? '9+' : newDeliveriesCount}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium mt-0.5">{tab.label}</span>
+              <span className={`text-xs font-medium mt-0.5 ${activeTab === tab.id ? "text-emerald-600" : "text-lime-600"}`}>
+                {tab.label}
+              </span>
             </button>
           ))}
         </div>
@@ -97,11 +141,14 @@ export default function NavigationTabs({
     <div className="max-w-7xl mx-auto px-6 py-4">
       <div className="bg-white rounded-lg shadow">
         <div className="border-b border-gray-200">
-          <nav className="flex">
+          <nav className="flex" role="tablist" aria-label="Navigation Tabs">
             {TABS_WITH_ICONS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`${tab.id}-panel`}
                 className={`
                   flex-1 px-4 py-3 border-b-2 font-medium text-sm lg:text-base flex items-center justify-center gap-2 transition-all
                   ${activeTab === tab.id
@@ -110,11 +157,14 @@ export default function NavigationTabs({
                   }
                 `}
               >
-                {React.cloneElement(tab.icon as React.ReactElement, { size: 24 })}
+                {React.cloneElement(tab.icon as React.ReactElement, { 
+                  size: 20,
+                  className: activeTab === tab.id ? "text-lime-600" : "text-emerald-600"
+                })}
                 <span>{tab.desktopLabel}</span>
                 {tab.hasNotification && newDeliveriesCount > 0 && activeTab !== tab.id && (
-                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {newDeliveriesCount}
+                  <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                    {newDeliveriesCount > 99 ? '99+' : newDeliveriesCount}
                   </span>
                 )}
               </button>
