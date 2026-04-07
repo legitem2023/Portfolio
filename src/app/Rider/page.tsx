@@ -33,6 +33,16 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
   )
 });
 
+const LOCATION_TRACKING_MUTATION = gql`
+  mutation LocationTracking($input: LocationInput!) {
+    locationTracking(input: $input) {
+      userID
+      latitude
+      longitude
+    }
+  }
+`;
+
 export default function RiderDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
