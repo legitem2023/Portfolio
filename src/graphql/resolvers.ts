@@ -9,7 +9,7 @@ import { NotificationType } from '../../utils/notificationService'; // Import th
 import { emailMutations } from '../../lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import { LogoutResponse, Context } from './Types/graphql.js';
-
+import { pusherServer } from 'lib/pusher/server';
 
 const prisma = new PrismaClient();
 
@@ -4312,7 +4312,8 @@ salesList: async (
   },
 
   Mutation: {
-    locationTracking: async (_: any, args: any) => {
+
+  locationTracking: async (_: any, args: any) => {
   try {
     const { userID, latitude, longitude } = args.input;
 
@@ -4324,7 +4325,7 @@ salesList: async (
     const now = new Date();
     const shouldUpdate =
       !user?.lastUpdatedAt ||
-      (now.getTime() - new Date(user?.lastUpdatedAt).getTime()) >= 60_000; // 1 min
+      (now.getTime() - new Date(user?.lastUpdatedAt).getTime()) >= 60000; // 1 min
 
     if (shouldUpdate) {
       // Determine status based on rules
@@ -4337,7 +4338,7 @@ salesList: async (
         newStatus = "busy";
       } else {
         const idleTime = now.getTime() - new Date(user?.lastUpdatedAt || now).getTime();
-        if (idleTime >= 15 * 60_000) { // 15 min
+        if (idleTime >= 15 * 60000) { // 15 min
           newStatus = "inactive";
         } else {
           newStatus = "available";
@@ -4353,6 +4354,24 @@ salesList: async (
           lastUpdatedAt: now,
           status: newStatus,
         },
+      });
+
+      // 🚀 PUSHER: Broadcast location update to relevant channels
+      await pusherServer.trigger(`user-${userID}`, 'location-updated', {
+        userID,
+        latitude,
+        longitude,
+        status: newStatus,
+        timestamp: now.toISOString()
+      });
+
+      // 🚀 PUSHER: If you want to broadcast to all admins/dispatchers
+      await pusherServer.trigger('admin-locations', 'user-location-update', {
+        userID,
+        latitude,
+        longitude,
+        status: newStatus,
+        lastUpdated: now.toISOString()
       });
 
       console.log(`Updated ${userID}: ${latitude}, ${longitude}, status=${newStatus}`);
