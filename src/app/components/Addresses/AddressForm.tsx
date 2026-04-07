@@ -401,14 +401,12 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // FIXED: Removed the automatic trigger that was causing double execution
   const handleGetCurrentLocation = async () => {
     if (!hasReadNote) {
       setShowNotePrompt(true);
       return;
     }
 
-    // Prevent double execution
     if (isGeocoding || isFetchingIp) {
       return;
     }
@@ -449,11 +447,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // FIXED: Removed setTimeout that was causing double execution
   const handleAcknowledgeNote = () => {
     setHasReadNote(true);
     setShowNotePrompt(false);
-    // Direct call without setTimeout to prevent double execution
     handleGetCurrentLocation();
   };
 
@@ -493,442 +489,465 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const getLocationStepMessage = () => {
     switch(locationStep) {
       case 'fetching-ip':
-        return '🔍 Detecting IP address...';
+        return 'Detecting IP address...';
       case 'getting-location':
-        return '📍 Getting current location...';
+        return 'Getting current location...';
       case 'reverse-geocoding':
-        return '🏠 Converting to address...';
+        return 'Converting to address...';
       case 'complete':
-        return '✅ Location detected!';
+        return 'Location detected successfully!';
       default:
         return '';
     }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 bg-white rounded-lg shadow-md">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Add New Address</h2>
-        {onCancel && (
-          <button
-            onClick={onCancel}
-            className="lg:hidden p-2 text-gray-500 hover:text-gray-700"
-            aria-label="Close"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm sm:text-base">
-          Error: {error.message}
-        </div>
-      )}
-
-      {locationError && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm sm:text-base">
-          {locationError}
-        </div>
-      )}
-
-      {showNotePrompt && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
-            <div className="mb-4">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto bg-blue-100 rounded-full">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 text-lg font-medium text-gray-900 text-center">
-                Important Information Required
-              </h3>
-            </div>
-            
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <p className="text-sm text-blue-800 font-medium mb-2">📍 Before using Auto-fill:</p>
-                <ul className="text-sm text-blue-700 space-y-2">
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span>GPS location will be used for precise coordinates</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="mr-2">•</span>
-                    <span className="font-semibold">For buildings/units:</span> You may need to manually complete the street address
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <p className="text-xs text-yellow-800">
-                  ⚠️ By proceeding, you acknowledge that auto-filled addresses may need manual completion for specific buildings, units, or apartments.
-                </p>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowNotePrompt(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400 transition-colors text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAcknowledgeNote}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors text-sm"
-                >
-                  I Understand, Proceed
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="mb-4 sm:mb-6 border-2 border-blue-300 rounded-lg overflow-hidden">
-        <div className="bg-blue-600 text-white px-4 py-2 flex items-center">
-          <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span className="font-semibold text-sm sm:text-base">REQUIRED: Please Read Before Using Auto-fill</span>
-        </div>
-        
-        <div className="p-4 bg-blue-50">
-          <div className="space-y-3 text-sm text-blue-800">
-            <p className="font-medium">📍 Auto-fill Location Process:</p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="flex items-start">
-                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">1</span>
-                <div>
-                  <p className="font-semibold">IP Detection</p>
-                  <p className="text-xs text-blue-600">Verify your general region</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">2</span>
-                <div>
-                  <p className="font-semibold">GPS Location</p>
-                  <p className="text-xs text-blue-600">Get precise coordinates</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start">
-                <span className="flex-shrink-0 w-5 h-5 bg-blue-200 rounded-full flex items-center justify-center text-xs font-bold text-blue-800 mr-2">3</span>
-                <div>
-                  <p className="font-semibold">Auto-fill</p>
-                  <p className="text-xs text-blue-600">Complete address fields</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-3 p-3 bg-yellow-100 rounded-lg border border-yellow-300">
-              <p className="text-xs sm:text-sm text-yellow-800">
-                <span className="font-bold">⚠️ IMPORTANT:</span> For addresses in buildings, apartments, or complexes, 
-                the auto-fill may not capture unit numbers, floor numbers, or specific building details. 
-                <span className="font-semibold block mt-1">You must manually review and complete the street address if needed.</span>
-              </p>
-            </div>
-
-            <div className="mt-2 flex items-center text-xs text-blue-600">
-              <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>Your IP address is only used for verification and is not stored</span>
-            </div>
-
-            {hasReadNote && (
-              <div className="mt-2 p-2 bg-green-100 rounded-lg flex items-center">
-                <svg className="h-4 w-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-xs text-green-700">You have acknowledged the requirements</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {isGeocoding && (
-        <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg animate-pulse">
-          <div className="flex items-center">
-            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 sm:mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span className="text-sm sm:text-base text-blue-700 font-medium truncate">{getLocationStepMessage()}</span>
-          </div>
-        </div>
-      )}
-
-      {addressNeedsManualCompletion && (
-        <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
-          <div className="flex">
-            <svg className="h-5 w-5 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <p className="font-semibold text-sm">Address可能需要手动完成 / Address May Need Manual Completion</p>
-              <p className="text-xs mt-1">
-                The detected address might be missing building/unit details. Please review and complete the street address below.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {formData.lat && formData.lng && (
-        <div className="mb-4 p-2 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded flex items-center justify-between">
-          <span className="text-xs sm:text-sm truncate mr-2">
-            <span className="hidden xs:inline">📍</span> {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
-          </span>
-          <button
-            type="button"
-            onClick={() => setFormData(prev => ({ ...prev, lat: null, lng: null }))}
-            className="flex-shrink-0 text-green-700 hover:text-green-900 font-bold p-1"
-            title="Clear location"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={handleGeocodeFromAddress}
-            disabled={isGeocoding || !isAddressComplete}
-            className="w-full sm:flex-1 bg-green-600 text-white py-3 sm:py-2 px-3 sm:px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
-          >
-            <span className="flex items-center justify-center">
-              <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 sm:px-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-white/10 rounded-xl">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="truncate">Get Location from Address</span>
-            </span>
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleGetCurrentLocation}
-            disabled={isGeocoding || isFetchingIp}
-            className={`w-full sm:flex-1 text-white py-3 sm:py-2 px-3 sm:px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base ${
-              !hasReadNote 
-                ? 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500 animate-pulse' 
-                : 'bg-purple-600 hover:bg-purple-700 focus:ring-purple-500'
-            }`}
-          >
-            {isGeocoding || isFetchingIp ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span className="truncate">{isFetchingIp ? 'Detecting IP...' : 'Getting Location...'}</span>
-              </span>
-            ) : (
-              <span className="flex items-center justify-center">
-                <svg className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span className="truncate">
-                  {!hasReadNote ? '⚠️ Read Note First' : 'Auto-fill Current Location'}
-                </span>
-              </span>
-            )}
-          </button>
-        </div>
-
-        <div className="text-xs text-gray-500 text-center px-2">
-          {!hasReadNote ? (
-            <p className="text-orange-600 font-medium">
-              ⚠️ Please read the required note above before using Auto-fill
-            </p>
-          ) : (
-            <p>Click Auto-fill to detect location. {addressNeedsManualCompletion && 'Complete missing details if needed.'}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="type" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Address Type
-          </label>
-          <select
-            id="type"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-          >
-            <option value="HOME">Home</option>
-            <option value="WORK">Work</option>
-            <option value="BILLING">Billing</option>
-            <option value="SHIPPING">Shipping</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="receiver" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Receiver Name
-          </label>
-          <input
-            type="text"
-            id="receiver"
-            name="receiver"
-            value={formData.receiver}
-            onChange={handleChange}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter receiver name"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Phone Number
-          </label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="+63 912 345 6789"
-            required
-          />
-          <p className="mt-1 text-xs text-gray-500">Include country code</p>
-        </div>
-
-        <div className={addressNeedsManualCompletion ? 'p-2 border-2 border-yellow-400 rounded-lg bg-yellow-50' : ''}>
-          <label htmlFor="street" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Street Address {addressNeedsManualCompletion && <span className="text-yellow-600">(Please complete manually)</span>}
-          </label>
-          <input
-            type="text"
-            id="street"
-            name="street"
-            value={formData.street}
-            onChange={handleChange}
-            className={`w-full px-3 py-2 text-sm sm:text-base border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              addressNeedsManualCompletion ? 'border-yellow-400 bg-white' : 'border-gray-300'
-            }`}
-            placeholder={addressNeedsManualCompletion ? "e.g., Unit 123, Building Name, Street..." : "123 Main St"}
-            required
-          />
-          {addressNeedsManualCompletion && (
-            <p className="mt-1 text-xs text-yellow-600">
-              ⚠️ Please add apartment/unit number, building name, or specific details
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-          <div>
-            <label htmlFor="city" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              City
-            </label>
-            <input
-              type="text"
-              id="city"
-              name="city"
-              value={formData.city}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="City"
-              required
-            />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">Add New Address</h2>
+              <p className="text-blue-100 text-sm mt-1">Enter your delivery details below</p>
+            </div>
           </div>
-
-          <div>
-            <label htmlFor="state" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              State
-            </label>
-            <input
-              type="text"
-              id="state"
-              name="state"
-              value={formData.state}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="State"
-              required
-            />
-          </div>
-
-          <div className="sm:col-span-2 lg:col-span-1">
-            <label htmlFor="zipCode" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-              ZIP Code
-            </label>
-            <input
-              type="text"
-              id="zipCode"
-              name="zipCode"
-              value={formData.zipCode}
-              onChange={handleChange}
-              className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="12345"
-              required
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="country" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-            Country
-          </label>
-          <input
-            type="text"
-            id="country"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Country"
-            required
-          />
-        </div>
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isDefault"
-            name="isDefault"
-            checked={formData.isDefault}
-            onChange={handleChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="isDefault" className="ml-2 block text-xs sm:text-sm text-gray-700">
-            Set as default address
-          </label>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-2 sm:pt-4">
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full sm:flex-1 bg-blue-600 text-white py-3 sm:py-2 px-3 sm:px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm sm:text-base"
-          >
-            {loading ? 'Adding...' : 'Add Address'}
-          </button>
-          
           {onCancel && (
             <button
-              type="button"
               onClick={onCancel}
-              className="w-full sm:flex-1 bg-gray-300 text-gray-700 py-3 sm:py-2 px-3 sm:px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors text-sm sm:text-base"
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+              aria-label="Close"
             >
-              Cancel
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           )}
         </div>
-      </form>
+      </div>
+
+      {/* Content */}
+      <div className="px-6 py-6 sm:px-8 sm:py-8">
+        {/* Error Messages */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-red-700 text-sm">Error: {error.message}</span>
+            </div>
+          </div>
+        )}
+
+        {locationError && (
+          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-red-700 text-sm">{locationError}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Info Banner */}
+        <div className="mb-6 bg-blue-50 rounded-xl overflow-hidden border border-blue-200">
+          <div className="bg-blue-100 px-4 py-3 border-b border-blue-200">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-semibold text-blue-900 text-sm">Location Auto-fill Guide</span>
+            </div>
+          </div>
+          
+          <div className="p-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-700 font-bold text-xs">1</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">IP Detection</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Verify your region</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-700 font-bold text-xs">2</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">GPS Location</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Get precise coordinates</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start">
+                <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
+                  <span className="text-blue-700 font-bold text-xs">3</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-800 text-sm">Auto-fill Form</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Complete address fields</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div className="text-xs text-yellow-800">
+                  <p className="font-semibold mb-1">Important Note:</p>
+                  <p>For buildings, apartments, or complexes, you may need to manually add unit numbers or specific details after auto-fill.</p>
+                </div>
+              </div>
+            </div>
+
+            {hasReadNote && (
+              <div className="mt-3 p-2 bg-green-50 rounded-lg flex items-center">
+                <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs text-green-700">Requirements acknowledged</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {isGeocoding && (
+          <div className="mb-6 p-4 bg-blue-50 rounded-xl">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-3"></div>
+              <span className="text-blue-700 text-sm font-medium">{getLocationStepMessage()}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Address Warning */}
+        {addressNeedsManualCompletion && (
+          <div className="mb-6 p-4 bg-yellow-50 rounded-xl border-l-4 border-yellow-500">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-yellow-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <p className="font-semibold text-yellow-800 text-sm">Manual Completion Required</p>
+                <p className="text-xs text-yellow-700 mt-1">Please review and complete the street address with building/unit details.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Coordinates Display */}
+        {formData.lat && formData.lng && (
+          <div className="mb-6 p-3 bg-green-50 rounded-lg flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-4 h-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span className="text-xs text-green-700 font-mono">
+                {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, lat: null, lng: null }))}
+              className="text-green-600 hover:text-green-800 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={handleGeocodeFromAddress}
+              disabled={isGeocoding || !isAddressComplete}
+              className="flex items-center justify-center px-4 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              Get Location from Address
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleGetCurrentLocation}
+              disabled={isGeocoding || isFetchingIp}
+              className={`flex items-center justify-center px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium ${
+                !hasReadNote 
+                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 focus:ring-orange-500 animate-pulse' 
+                  : 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 focus:ring-purple-500'
+              }`}
+            >
+              {isGeocoding || isFetchingIp ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <span>{isFetchingIp ? 'Detecting IP...' : 'Getting Location...'}</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span>{!hasReadNote ? 'Read Guide First' : 'Auto-fill Location'}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          <div className="text-center">
+            {!hasReadNote ? (
+              <p className="text-xs text-orange-600 font-medium">
+                ⚠️ Please read the location guide above before using Auto-fill
+              </p>
+            ) : (
+              <p className="text-xs text-gray-500">
+                Click Auto-fill to detect your location automatically
+              </p>
+            )}
+          </div>
+
+          {/* Form Fields */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Address Type
+            </label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              required
+            >
+              <option value="HOME">🏠 Home</option>
+              <option value="WORK">💼 Work</option>
+              <option value="BILLING">💰 Billing</option>
+              <option value="SHIPPING">📦 Shipping</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Receiver Name
+              </label>
+              <input
+                type="text"
+                name="receiver"
+                value={formData.receiver}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Full name"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="+63 912 345 6789"
+                required
+              />
+            </div>
+          </div>
+
+          <div className={addressNeedsManualCompletion ? 'relative' : ''}>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Street Address
+              {addressNeedsManualCompletion && (
+                <span className="ml-2 text-xs text-yellow-600 font-normal">(Please complete)</span>
+              )}
+            </label>
+            <input
+              type="text"
+              name="street"
+              value={formData.street}
+              onChange={handleChange}
+              className={`w-full px-4 py-2.5 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                addressNeedsManualCompletion ? 'border-yellow-400 bg-yellow-50' : 'border-gray-300'
+              }`}
+              placeholder={addressNeedsManualCompletion ? "e.g., Unit 123, Building Name, Street..." : "House number and street name"}
+              required
+            />
+            {addressNeedsManualCompletion && (
+              <p className="mt-1 text-xs text-yellow-600">
+                Please add apartment/unit number or building details
+              </p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                City
+              </label>
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="City"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                State/Province
+              </label>
+              <input
+                type="text"
+                name="state"
+                value={formData.state}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="State"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                ZIP Code
+              </label>
+              <input
+                type="text"
+                name="zipCode"
+                value={formData.zipCode}
+                onChange={handleChange}
+                className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="ZIP code"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Country
+            </label>
+            <input
+              type="text"
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              placeholder="Country"
+              required
+            />
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="isDefault"
+              name="isDefault"
+              checked={formData.isDefault}
+              onChange={handleChange}
+              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+            <label htmlFor="isDefault" className="ml-2 text-sm text-gray-700">
+              Set as default address
+            </label>
+          </div>
+
+          {/* Submit Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium"
+            >
+              {loading ? 'Adding Address...' : 'Add Address'}
+            </button>
+            
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 bg-gray-100 text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 font-medium"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* Modal */}
+      {showNotePrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowNotePrompt(false)}>
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center">
+              <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Important Information</h3>
+              <p className="text-gray-600 text-sm mb-6">Before using Auto-fill location, please review the following:</p>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="bg-blue-50 p-4 rounded-xl">
+                <p className="text-sm font-semibold text-blue-900 mb-2">📍 Location Process:</p>
+                <ul className="text-sm text-blue-800 space-y-2">
+                  <li className="flex items-start">• GPS location for precise coordinates</li>
+                  <li className="flex items-start">• Automatic address detection</li>
+                </ul>
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200">
+                <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Important Note:</p>
+                <p className="text-sm text-yellow-800">
+                  For buildings, apartments, or complexes, you may need to manually add unit numbers or specific details after auto-fill.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowNotePrompt(false)}
+                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAcknowledgeNote}
+                className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 transition-colors font-medium"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-                        }
+          }
