@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Head from "next/head";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { ACCEPT_BY_RIDER, ORDER_LIST_QUERY, OrderListResponse } from './lib/types';
 import { mapOrdersToDeliveriesBySupplier } from './lib/utils';
@@ -18,6 +18,8 @@ import { useAuth } from './hooks/useAuth';
 import RiderPaymentHistory from './components/RiderPaymentHistory';
 import PMTab from './components/PMTab';
 import UserProfileTab from './components/UserProfileTab';
+import { gql } from '@apollo/client';
+
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
   ssr: false,
@@ -55,6 +57,8 @@ export default function RiderDashboard() {
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
 
+  // Location tracking mutation
+  const [locationTracking] = useMutation(LOCATION_TRACKING_MUTATION);
   
   // GraphQL query for orders
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
@@ -71,6 +75,78 @@ export default function RiderDashboard() {
     pollInterval: 10000
   });
   
+  // Function to get current location and send to server
+  const sendCurrentLocation = async () => {
+    if (!user?.userId || !isOnline) return;
+
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported by this browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        try {
+          await locationTracking({
+            variables: {
+              input: {
+                userID: user.userId,
+                latitude: latitude,
+                longitude: longitude
+              }
+            }
+          });
+          console.log("Location sent successfully:", { latitude, longitude });
+        } catch (error) {
+          console.error("Error sending location:", error);
+        }
+      },
+      (error) => {
+        console.error("Error getting current location:", error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Start location tracking when online and user is available
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (isOnline && user?.userId) {
+      // Send location immediately
+      sendCurrentLocation();
+      
+      // Then send every 30 seconds
+      intervalId = setInterval(sendCurrentLocation, 30000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isOnline, user?.userId]);
+
+  // Also track location when tab becomes visible again
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isOnline && user?.userId) {
+        sendCurrentLocation();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isOnline, user?.userId]);
+
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
@@ -218,4 +294,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-}
+        }
