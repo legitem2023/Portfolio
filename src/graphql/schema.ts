@@ -1153,25 +1153,10 @@ type CreateVehicleTypeResponse {
 }
 
 # schema.graphql
-type LocationInput {
-  latitude: Float
-  longitude: Float
-  accuracy: Float
-  altitude: Float
-  speed: Float
-  heading: Float
-  timestamp: String
-}
 
-type LocationResponse {
-  success: Boolean
-  message: String
-  trackingId: String
-  location: LocationInput
-}
+
 
 type Mutation {
-  trackLocation(userId: ID, trackingId: String,location: LocationInput): LocationResponse
   createReview(data: CreateReviewInput): ReviewResult
   updateReview(id: String, data: UpdateReviewInput!): Result
   deleteReview(id: String): Result
