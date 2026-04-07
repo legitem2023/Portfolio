@@ -316,21 +316,6 @@ export default function RiderDashboard() {
                  onAcceptDelivery={handleAcceptDelivery}
                  onRejectDelivery={handleRejectDelivery}
                 />;
-      case "map":
-        return <MapTab 
-          isMobile={isMobile} 
-          deliveries={newDeliveries.map(d => ({
-            id: d.id,
-            orderId: d.orderId,
-            restaurant: d.restaurant,
-            customer: d.customer,
-            pickup: d.pickup,
-            dropoff: d.dropoff,
-            pickupAddress: d.pickupAddress,
-            dropoffAddress: d.dropoffAddress,
-            status: 'PENDING'
-          }))}
-        />;
       case "history":
         return <RiderPaymentHistory
           riderId={user?.userId}
