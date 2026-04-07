@@ -8,10 +8,7 @@ import { createNotification } from '../../utils/notificationService';
 import { NotificationType } from '../../utils/notificationService'; // Import the enum
 import { emailMutations } from '../../lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
-import {
-  LogoutResponse,
-  Context
-} from './Types/graphql.js';
+import { LogoutResponse, Context } from './Types/graphql.js';
 
 
 const prisma = new PrismaClient();
@@ -22,6 +19,7 @@ import {
   startOfYear, endOfYear, format, subMonths, subYears 
 } from 'date-fns';
 
+/*
 interface LocationInput {
   latitude: number;
   longitude: number;
@@ -52,7 +50,7 @@ const locationStore: Array<{
   location: LocationInput;
   createdAt: Date;
 }> = [];
-
+*/
 
 
 
