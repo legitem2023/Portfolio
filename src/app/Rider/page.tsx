@@ -81,7 +81,7 @@ export default function RiderDashboard() {
   });
   
   // Function to send location with rate limiting
-  const sendCurrentLocation = async (position) => {
+  const sendCurrentLocation = async (position: GeolocationPosition) => {
     if (!user?.userId) {
       console.log("❌ No user ID available, skipping location tracking");
       return;
@@ -144,7 +144,7 @@ export default function RiderDashboard() {
       // Use watchPosition for continuous tracking
       watchIdRef.current = navigator.geolocation.watchPosition(
         sendCurrentLocation,
-        (error) => {
+        (error: GeolocationPositionError) => {
           console.error("❌ Error getting current location:", {
             code: error.code,
             message: error.message,
@@ -195,7 +195,7 @@ export default function RiderDashboard() {
         if (isOnline && user?.userId && navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             sendCurrentLocation,
-            (error) => console.error("Error getting location:", error),
+            (error: GeolocationPositionError) => console.error("Error getting location:", error),
             { enableHighAccuracy: true, timeout: 5000 }
           );
         }
@@ -366,4 +366,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-}
+        }
