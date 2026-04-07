@@ -59,7 +59,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [locationStep, setLocationStep] = useState<'idle' | 'fetching-ip' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // New state for note acknowledgment
   const [hasReadNote, setHasReadNote] = useState(false);
   const [showNotePrompt, setShowNotePrompt] = useState(false);
   const [addressNeedsManualCompletion, setAddressNeedsManualCompletion] = useState(false);
@@ -67,12 +66,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // ============ IP ADDRESS FETCHING ============
   const fetchIpAddress = async (): Promise<string | null> => {
     setIsFetchingIp(true);
     setLocationStep('fetching-ip');
     try {
-      // Using multiple IP services for redundancy
       const services = [
         'https://api.ipify.org?format=json',
         'https://api.myip.com',
@@ -84,7 +81,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           const response = await fetch(service);
           const data = await response.json();
           
-          // Handle different response formats
           if (data.ip) {
             setIpAddress(data.ip);
             return data.ip;
@@ -107,7 +103,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // ============ GOOGLE MAPS API METHODS ============
   const geocodeWithGoogle = async (address: string): Promise<GeocodeResult | null> => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
@@ -159,7 +154,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         let state = '';
         let zipCode = '';
         let country = '';
-        let subpremise = ''; // For apartment/unit numbers
+        let subpremise = '';
         let premise = '';
 
         addressComponents.forEach((component: any) => {
@@ -172,10 +167,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             route = component.long_name;
           }
           if (types.includes('subpremise')) {
-            subpremise = component.long_name; // Apartment/unit/suite number
+            subpremise = component.long_name;
           }
           if (types.includes('premise')) {
-            premise = component.long_name; // Building name
+            premise = component.long_name;
           }
           if (types.includes('locality')) {
             city = component.long_name;
@@ -191,7 +186,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           }
         });
 
-        // Construct street address with proper formatting
         if (streetNumber && route) {
           street = `${streetNumber} ${route}`;
         } else if (route) {
@@ -200,11 +194,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           street = premise;
         }
 
-        // Check if address might be missing specific details
         const hasDetailedAddress = streetNumber && route;
         const hasBuildingInfo = subpremise || premise;
         
-        // If we have a building but no street number/route, mark for manual completion
         if (!hasDetailedAddress && hasBuildingInfo) {
           setAddressNeedsManualCompletion(true);
         }
@@ -226,7 +218,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // ============ OPENSTREETMAP (NOMINATIM) API METHODS ============
   const geocodeWithOSM = async (address: string): Promise<GeocodeResult | null> => {
     try {
       const response = await fetch(
@@ -270,7 +261,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       if (data && data.address) {
         const address = data.address;
         
-        // Construct street address
         let street = '';
         let hasHouseNumber = false;
         
@@ -288,7 +278,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           street = address.building;
         }
 
-        // Check if address might be missing specific details
         if (!hasHouseNumber && (address.building || address.apartments)) {
           setAddressNeedsManualCompletion(true);
         }
@@ -310,7 +299,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // ============ WRAPPER METHODS WITH FALLBACK ============
   const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number; api: string } | null> => {
     const googleResult = await geocodeWithGoogle(address);
     if (googleResult) {
@@ -343,7 +331,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     return null;
   };
 
-  // Get current device location
   const getCurrentLocation = async (): Promise<{ lat: number; lng: number } | null> => {
     setLocationStep('getting-location');
     
@@ -414,10 +401,15 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
+  // FIXED: Removed the automatic trigger that was causing double execution
   const handleGetCurrentLocation = async () => {
-    // Check if user has read the note
     if (!hasReadNote) {
       setShowNotePrompt(true);
+      return;
+    }
+
+    // Prevent double execution
+    if (isGeocoding || isFetchingIp) {
       return;
     }
 
@@ -427,25 +419,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     setAddressNeedsManualCompletion(false);
     
     try {
-      // Step 1: Fetch IP address (required for location verification)
       const ip = await fetchIpAddress();
       
       if (!ip) {
-        // If IP fetch fails, still try to get location but show warning
         setLocationError('Warning: Could not verify IP address. Location accuracy may be affected.');
       }
 
-      // Step 2: Get current coordinates
       const location = await getCurrentLocation();
       if (location) {
-        // Set coordinates immediately
         setFormData(prev => ({
           ...prev,
           lat: location.lat,
           lng: location.lng
         }));
 
-        // Step 3: Get address from coordinates
         const result = await reverseGeocode(location.lat, location.lng);
         if (result) {
           setFormData(prev => ({
@@ -462,13 +449,12 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
+  // FIXED: Removed setTimeout that was causing double execution
   const handleAcknowledgeNote = () => {
     setHasReadNote(true);
     setShowNotePrompt(false);
-    // Automatically trigger location fetch after acknowledgment
-    setTimeout(() => {
-      handleGetCurrentLocation();
-    }, 100);
+    // Direct call without setTimeout to prevent double execution
+    handleGetCurrentLocation();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -504,7 +490,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   const isAddressComplete = formData.street && formData.city && formData.state && formData.zipCode && formData.country;
 
-  // Get step message based on current location step
   const getLocationStepMessage = () => {
     switch(locationStep) {
       case 'fetching-ip':
@@ -522,7 +507,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
   return (
     <div className="w-full max-w-2xl mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 bg-white rounded-lg shadow-md">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Add New Address</h2>
         {onCancel && (
@@ -538,7 +522,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         )}
       </div>
 
-      {/* Error Messages */}
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm sm:text-base">
           Error: {error.message}
@@ -551,7 +534,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* Note Acknowledgement Modal/Prompt */}
       {showNotePrompt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
@@ -614,7 +596,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* Required Note Section - Always visible */}
       <div className="mb-4 sm:mb-6 border-2 border-blue-300 rounded-lg overflow-hidden">
         <div className="bg-blue-600 text-white px-4 py-2 flex items-center">
           <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -668,7 +649,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
               <span>Your IP address is only used for verification and is not stored</span>
             </div>
 
-            {/* Acknowledgment indicator */}
             {hasReadNote && (
               <div className="mt-2 p-2 bg-green-100 rounded-lg flex items-center">
                 <svg className="h-4 w-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -681,7 +661,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       </div>
 
-      {/* Location Status Indicator */}
       {isGeocoding && (
         <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg animate-pulse">
           <div className="flex items-center">
@@ -694,7 +673,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* Manual Completion Warning */}
       {addressNeedsManualCompletion && (
         <div className="mb-4 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
           <div className="flex">
@@ -711,7 +689,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         </div>
       )}
 
-      {/* Display coordinates if available */}
       {formData.lat && formData.lng && (
         <div className="mb-4 p-2 sm:p-3 bg-green-100 border border-green-400 text-green-700 rounded flex items-center justify-between">
           <span className="text-xs sm:text-sm truncate mr-2">
@@ -729,7 +706,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        {/* Address Type */}
         <div>
           <label htmlFor="type" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Address Type
@@ -749,7 +725,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </select>
         </div>
 
-        {/* Receiver Field */}
         <div>
           <label htmlFor="receiver" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Receiver Name
@@ -766,7 +741,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           />
         </div>
 
-        {/* Phone Field */}
         <div>
           <label htmlFor="phone" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Phone Number
@@ -784,7 +758,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <p className="mt-1 text-xs text-gray-500">Include country code</p>
         </div>
 
-        {/* Street Address - Highlighted when needs manual completion */}
         <div className={addressNeedsManualCompletion ? 'p-2 border-2 border-yellow-400 rounded-lg bg-yellow-50' : ''}>
           <label htmlFor="street" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Street Address {addressNeedsManualCompletion && <span className="text-yellow-600">(Please complete manually)</span>}
@@ -808,7 +781,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           )}
         </div>
 
-        {/* City, State, Zip Code */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <div>
             <label htmlFor="city" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
@@ -859,7 +831,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </div>
         </div>
 
-        {/* Country */}
         <div>
           <label htmlFor="country" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Country
@@ -876,7 +847,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           />
         </div>
 
-        {/* Location Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
           <button
             type="button"
@@ -924,7 +894,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </button>
         </div>
 
-        {/* Help Text */}
         <div className="text-xs text-gray-500 text-center px-2">
           {!hasReadNote ? (
             <p className="text-orange-600 font-medium">
@@ -935,7 +904,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           )}
         </div>
 
-        {/* Default Address Checkbox */}
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -950,7 +918,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </label>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 pt-2 sm:pt-4">
           <button
             type="submit"
@@ -973,4 +940,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </form>
     </div>
   );
-}
+                        }
