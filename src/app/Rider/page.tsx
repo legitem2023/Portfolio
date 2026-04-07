@@ -35,20 +35,8 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
   )
 });
 
-// Define the LocationInput type
+// ONLY the mutation - no type definitions here!
 const LOCATION_TRACKING_MUTATION = gql`
-  input LocationInput {
-    userID: String!
-    latitude: Float!
-    longitude: Float!
-  }
-
-  type LocationResponse {
-    userID: String!
-    latitude: Float!
-    longitude: Float!
-  }
-
   mutation LocationTracking($input: LocationInput!) {
     locationTracking(input: $input) {
       userID
@@ -370,4 +358,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-}
+      }
