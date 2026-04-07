@@ -46,17 +46,48 @@ const LOCATION_TRACKING_MUTATION = gql`
   }
 `;
 
+// Define valid tabs for validation
+const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", "user"];
+
 export default function RiderDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   
-  // State to manage active tab
-  const [activeTab, setActiveTab] = useState("newDeliveries");
+  // State to manage active tab with persistence from localStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    // Check if we're in browser environment
+    if (typeof window !== 'undefined') {
+      try {
+        const storedTab = localStorage.getItem('riderActiveTab');
+        // Validate that the stored tab is one of the valid tabs
+        if (storedTab && VALID_TABS.includes(storedTab)) {
+          console.log(`📑 Restored tab from localStorage: ${storedTab}`);
+          return storedTab;
+        }
+      } catch (error) {
+        console.error("Error reading from localStorage:", error);
+      }
+    }
+    return "newDeliveries";
+  });
+  
   const [isOnline, setIsOnline] = useState(true);
   
   // Get window size
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('riderActiveTab', activeTab);
+        console.log(`💾 Saved tab to localStorage: ${activeTab}`);
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
+    }
+  }, [activeTab]);
 
   // Refs for tracking optimization
   const watchIdRef = useRef<number | null>(null);
@@ -223,6 +254,10 @@ export default function RiderDashboard() {
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
+      // Clear stored tab when redirecting to login
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('riderActiveTab');
+      }
       router.push('/Login');
     }
     if (user?.role === 'USER') {
@@ -256,6 +291,12 @@ export default function RiderDashboard() {
     if (delivery) {
       alert(`Rejected delivery piece from ${delivery.restaurant}\nOrder: ${delivery.orderId}\nFrom: ${delivery.restaurant}\nCustomer address: ${delivery.dropoff}`);
     }
+  };
+
+  // Handle tab change with persistence
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // The useEffect will handle saving to localStorage
   };
 
   // Render active tab content
@@ -325,7 +366,7 @@ export default function RiderDashboard() {
       {!isMobile && (
         <NavigationTabs
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           isMobile={isMobile}
           newDeliveriesCount={newDeliveriesCount}
         />
@@ -359,11 +400,11 @@ export default function RiderDashboard() {
       {isMobile && (
         <NavigationTabs
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           isMobile={isMobile}
           newDeliveriesCount={newDeliveriesCount}
         />
       )}
     </div>
   );
-            }
+      }
