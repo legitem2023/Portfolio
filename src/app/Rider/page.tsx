@@ -35,7 +35,20 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
   )
 });
 
+// Define the LocationInput type
 const LOCATION_TRACKING_MUTATION = gql`
+  input LocationInput {
+    userID: String!
+    latitude: Float!
+    longitude: Float!
+  }
+
+  type LocationResponse {
+    userID: String!
+    latitude: Float!
+    longitude: Float!
+  }
+
   mutation LocationTracking($input: LocationInput!) {
     locationTracking(input: $input) {
       userID
@@ -128,10 +141,8 @@ export default function RiderDashboard() {
         console.error("❌ Error getting current location:", {
           code: error.code,
           message: error.message,
-          // 1: PERMISSION_DENIED, 2: POSITION_UNAVAILABLE, 3: TIMEOUT
         });
         
-        // Handle specific error cases
         switch(error.code) {
           case 1:
             console.log("⚠️ User denied geolocation permission");
@@ -167,7 +178,7 @@ export default function RiderDashboard() {
       intervalId = setInterval(() => {
         console.log("⏰ 15-second interval triggered - sending location...");
         sendCurrentLocation();
-      }, 15000); // Changed to 15 seconds
+      }, 15000);
       
       console.log("⏲️ Location tracking interval set to 15 seconds");
     } else {
@@ -218,10 +229,10 @@ export default function RiderDashboard() {
     if (!authLoading && !user) {
       router.push('/Login');
     }
-    if (user?.role==='USER') {
+    if (user?.role === 'USER') {
       router.push('/');
     }
-    if (user?.role==='MANAGER') {
+    if (user?.role === 'MANAGER') {
       router.push('/Management');
     }
   }, [authLoading, user, router]);
@@ -287,7 +298,6 @@ export default function RiderDashboard() {
         return <RiderPaymentHistory
           riderId={user?.userId}
           showSummary={true}
-           // Admin can process payouts manually
         />;
       case "message":
         return <PMTab UserId={user?.userId} />;
@@ -360,4 +370,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-      }
+}
