@@ -5,7 +5,7 @@ import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { QrCode, Star } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
-
+import { pusherClient } from'../../lib/pusher/client';
 // Define types based on your schema - product is an ARRAY
 interface Order {
   id: string;
@@ -260,6 +260,9 @@ export default function OrderTracking({ userId }: { userId: string }) {
     skip: !userId
   });
 
+const data = pusherClient.subscribe(`user-${userId}`);
+console.log(data);
+  
   const handleStatusChange = (status: string) => {
     refetch({
       filter: {
