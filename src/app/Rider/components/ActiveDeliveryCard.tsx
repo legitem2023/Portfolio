@@ -1199,17 +1199,25 @@ const isHasproof = useMemo(() => {
       )}
 
       {/* Map Modal */}
-      {showMap && (
-        <DeliveryMap
-          pickupAddress={delivery.pickup}
-          dropoffAddress={delivery.dropoff}
-          status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
-          isMobile={isMobile}
-          onClose={() => setShowMap(false)}
-          restaurant={delivery.restaurant}
-          customer={delivery.customer}
-        />
-      )}
+{showMap && (
+  <DeliveryMap
+    pickupAddress={delivery.pickup}
+    dropoffAddress={delivery.dropoff}
+    pickupLocation={delivery.pickupAddress?.lat && delivery.pickupAddress?.lng ? {
+      lat: delivery.pickupAddress.lat,
+      lng: delivery.pickupAddress.lng
+    } : undefined}
+    dropoffLocation={delivery.dropoffAddress?.lat && delivery.dropoffAddress?.lng ? {
+      lat: delivery.dropoffAddress.lat,
+      lng: delivery.dropoffAddress.lng
+    } : undefined}
+    status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
+    isMobile={isMobile}
+    onClose={() => setShowMap(false)}
+    restaurant={delivery.restaurant}
+    customer={delivery.customer}
+  />
+)}
     </>
   );
 }
