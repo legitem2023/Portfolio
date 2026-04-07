@@ -259,18 +259,32 @@ export default function OrderTracking({ userId }: { userId: string }) {
     },
     skip: !userId
   });
-/*
-const channel = pusherClient.subscribe(`user-${userId}`);
 
-channel.bind('pusher:subscription_succeeded', () => {
-    console.log('Subscription successful!');
-});
-
-// Bind to your custom events
-channel.bind('new-message', (data) => {
-    console.log('Received:', data);
-});
-  */
+ useEffect(() => {
+    const pusher = getPusherClient();
+    
+    if (pusher) {
+      // Subscribe to a channel
+      const channel = pusher.subscribe(`user-${userId}`);
+      
+      // Listen for events
+      channel.bind('new-order', (data: any) => {
+        console.log('New order received:', data);
+        //setOrders(prev => [...prev, data]);
+      });
+      
+      channel.bind('order-updated', (data: any) => {
+        console.log('Order updated:', data);
+      });
+      
+      // Cleanup on unmount
+      return () => {
+        channel.unbind_all();
+        pusher.unsubscribe('orders-channel');
+      };
+    }
+  }, []);
+  
   const handleStatusChange = (status: string) => {
     refetch({
       filter: {
