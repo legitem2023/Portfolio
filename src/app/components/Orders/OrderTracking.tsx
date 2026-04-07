@@ -260,8 +260,16 @@ export default function OrderTracking({ userId }: { userId: string }) {
     skip: !userId
   });
 
-const data = pusherClient.subscribe(`user-${userId}`);
-console.log(data);
+const channel = pusherClient.subscribe(`user-${userId}`);
+
+channel.bind('pusher:subscription_succeeded', () => {
+    console.log('Subscription successful!');
+});
+
+// Bind to your custom events
+channel.bind('new-message', (data) => {
+    console.log('Received:', data);
+});
   
   const handleStatusChange = (status: string) => {
     refetch({
