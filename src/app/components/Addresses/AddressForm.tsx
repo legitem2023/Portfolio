@@ -570,7 +570,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           
           <div className="p-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              <div className="flex items-start">
+              {/*<div className="flex items-start">
                 <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
                   <span className="text-blue-700 font-bold text-xs">1</span>
                 </div>
@@ -578,11 +578,11 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
                   <p className="font-semibold text-gray-800 text-sm">IP Detection</p>
                   <p className="text-xs text-gray-600 mt-0.5">Verify your region</p>
                 </div>
-              </div>
+              </div>*/}
               
               <div className="flex items-start">
                 <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-blue-700 font-bold text-xs">2</span>
+                  <span className="text-blue-700 font-bold text-xs">1</span>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">GPS Location</p>
@@ -592,7 +592,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
               
               <div className="flex items-start">
                 <div className="flex-shrink-0 w-7 h-7 bg-blue-200 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-blue-700 font-bold text-xs">3</span>
+                  <span className="text-blue-700 font-bold text-xs">2</span>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-800 text-sm">Auto-fill Form</p>
