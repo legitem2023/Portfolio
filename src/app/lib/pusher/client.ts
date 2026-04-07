@@ -1,5 +1,5 @@
 // src/app/lib/pusher/client.ts
-import PusherClient from 'pusher-js';
+/*import PusherClient from 'pusher-js';
 
 let pusherClient: PusherClient | null = null;
 
@@ -14,4 +14,4 @@ export const getPusherClient = () => {
     );
   }
   return pusherClient;
-}
+}*/
