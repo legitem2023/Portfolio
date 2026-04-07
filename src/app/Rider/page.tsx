@@ -37,7 +37,7 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
 
 // ONLY the mutation - no type definitions here!
 const LOCATION_TRACKING_MUTATION = gql`
-  mutation LocationTracking($input: LocationInput!) {
+  mutation LocationTracking($input: LocationTrackingInput) {
     locationTracking(input: $input) {
       userID
       latitude
