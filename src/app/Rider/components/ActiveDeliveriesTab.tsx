@@ -121,7 +121,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           }`}
         >
           <Package size={isMobile ? 16 : 18} />
-          <span>To Pick Up</span>
+          
           {activeTab === "PROCESSING" && deliveries.length > 0 && (
             <span className="bg-white text-orange-500 px-2 py-0.5 rounded-full text-xs font-bold">
               {deliveries.length}
@@ -138,7 +138,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           }`}
         >
           <Truck size={isMobile ? 16 : 18} />
-          <span>On Delivery</span>
+          
           {activeTab === "SHIPPED" && deliveries.length > 0 && (
             <span className="bg-white text-blue-500 px-2 py-0.5 rounded-full text-xs font-bold">
               {deliveries.length}
@@ -155,7 +155,7 @@ export default function ActiveDeliveriesTab({ isMobile }: ActiveDeliveriesTabPro
           }`}
         >
           <CheckCircle size={isMobile ? 16 : 18} />
-          <span>Completed</span>
+          
           {activeTab === "DELIVERED" && deliveries.length > 0 && (
             <span className="bg-white text-green-500 px-2 py-0.5 rounded-full text-xs font-bold">
               {deliveries.length}
