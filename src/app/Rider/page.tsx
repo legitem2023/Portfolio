@@ -77,19 +77,36 @@ export default function RiderDashboard() {
   
   // Function to get current location and send to server
   const sendCurrentLocation = async () => {
-    if (!user?.userId || !isOnline) return;
-
-    if (!navigator.geolocation) {
-      console.error("Geolocation is not supported by this browser");
+    if (!user?.userId) {
+      console.log("❌ No user ID available, skipping location tracking");
+      return;
+    }
+    
+    if (!isOnline) {
+      console.log("📍 Tracking paused (offline mode)");
       return;
     }
 
+    if (!navigator.geolocation) {
+      console.error("❌ Geolocation is not supported by this browser");
+      return;
+    }
+
+    console.log("🔍 Attempting to get current location...");
+    
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude, accuracy } = position.coords;
+        console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
         
         try {
-          await locationTracking({
+          console.log("📤 Sending location to server...", {
+            userID: user.userId,
+            latitude,
+            longitude
+          });
+          
+          const result = await locationTracking({
             variables: {
               input: {
                 userID: user.userId,
@@ -98,17 +115,38 @@ export default function RiderDashboard() {
               }
             }
           });
-          console.log("Location sent successfully:", { latitude, longitude });
+          
+          console.log("✅ Location sent successfully!", {
+            response: result.data?.locationTracking,
+            timestamp: new Date().toISOString()
+          });
         } catch (error) {
-          console.error("Error sending location:", error);
+          console.error("❌ Error sending location:", error);
         }
       },
       (error) => {
-        console.error("Error getting current location:", error);
+        console.error("❌ Error getting current location:", {
+          code: error.code,
+          message: error.message,
+          // 1: PERMISSION_DENIED, 2: POSITION_UNAVAILABLE, 3: TIMEOUT
+        });
+        
+        // Handle specific error cases
+        switch(error.code) {
+          case 1:
+            console.log("⚠️ User denied geolocation permission");
+            break;
+          case 2:
+            console.log("⚠️ Position unavailable (check GPS)");
+            break;
+          case 3:
+            console.log("⚠️ Location request timed out");
+            break;
+        }
       },
       {
         enableHighAccuracy: true,
-        timeout: 5000,
+        timeout: 10000,
         maximumAge: 0
       }
     );
@@ -119,15 +157,26 @@ export default function RiderDashboard() {
     let intervalId: NodeJS.Timeout;
 
     if (isOnline && user?.userId) {
+      console.log("🟢 Starting location tracking - Online mode active");
+      console.log(`👤 User ID: ${user.userId}`);
+      
       // Send location immediately
       sendCurrentLocation();
       
-      // Then send every 30 seconds
-      intervalId = setInterval(sendCurrentLocation, 30000);
+      // Then send every 15 seconds
+      intervalId = setInterval(() => {
+        console.log("⏰ 15-second interval triggered - sending location...");
+        sendCurrentLocation();
+      }, 15000); // Changed to 15 seconds
+      
+      console.log("⏲️ Location tracking interval set to 15 seconds");
+    } else {
+      console.log("🔴 Location tracking stopped - Offline mode or no user");
     }
 
     return () => {
       if (intervalId) {
+        console.log("🛑 Cleaning up location tracking interval");
         clearInterval(intervalId);
       }
     };
@@ -136,8 +185,13 @@ export default function RiderDashboard() {
   // Also track location when tab becomes visible again
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isOnline && user?.userId) {
-        sendCurrentLocation();
+      if (document.visibilityState === 'visible') {
+        console.log("👁️ Tab became visible - sending location update");
+        if (isOnline && user?.userId) {
+          sendCurrentLocation();
+        }
+      } else {
+        console.log("👻 Tab hidden - continuing background tracking");
       }
     };
 
@@ -146,6 +200,18 @@ export default function RiderDashboard() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isOnline, user?.userId]);
+
+  // Log when online status changes
+  useEffect(() => {
+    console.log(`🔄 Online status changed to: ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+  }, [isOnline]);
+
+  // Log when user is loaded
+  useEffect(() => {
+    if (user) {
+      console.log(`👤 User loaded: ${user.userId} (${user.role})`);
+    }
+  }, [user]);
 
   // Redirect to login if no user
   useEffect(() => {
@@ -294,4 +360,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-        }
+      }
