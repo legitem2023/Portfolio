@@ -19,16 +19,18 @@ const loadLeaflet = () => import('leaflet').then(mod => {
 interface DeliveryMapProps {
   pickupAddress: string;
   dropoffAddress: string;
+  pickupLocation?: { lat: number; lng: number }; // Added
+  dropoffLocation?: { lat: number; lng: number }; // Added
   currentLocation?: { lat: number; lng: number };
   status: 'PROCESSING' | 'SHIPPED' | 'DELIVERED';
   isMobile: boolean;
   onClose: () => void;
   restaurant?: string;
   customer?: string;
-  googleMapsApiKey?: string; // Optional Google Maps API key
+  googleMapsApiKey?: string;
 }
 
-// Cache for geocoding results
+// Cache for geocoding results (only used as fallback)
 const geocodeCache = new Map<string, { lat: number; lng: number }>();
 
 // Google Maps script loader
@@ -53,6 +55,8 @@ const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
 export default function DeliveryMap({ 
   pickupAddress, 
   dropoffAddress, 
+  pickupLocation: initialPickupLocation,
+  dropoffLocation: initialDropoffLocation,
   currentLocation: initialLocation,
   status,
   isMobile,
@@ -92,7 +96,6 @@ export default function DeliveryMap({
           return loadLeaflet();
         });
     } else {
-      // No API key, use Leaflet
       setMapType('leaflet');
       loadLeaflet().catch(err => {
         setError('Failed to load map library');
@@ -107,7 +110,6 @@ export default function DeliveryMap({
       setLocations(prev => ({ ...prev, current: initialLocation }));
       setLoading(false);
     } else {
-      // Try to get user's current location
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -122,27 +124,36 @@ export default function DeliveryMap({
           },
           (err) => {
             console.warn('Geolocation error:', err);
-            // Default to a reasonable location if geolocation fails
             setLocations(prev => ({ 
               ...prev, 
-              current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
+              current: { lat: 14.5995, lng: 120.9842 }
             }));
             setLoading(false);
           }
         );
       } else {
-        // Default location if geolocation not supported
         setLocations(prev => ({ 
           ...prev, 
-          current: { lat: 14.5995, lng: 120.9842 } // Manila as fallback
+          current: { lat: 14.5995, lng: 120.9842 }
         }));
         setLoading(false);
       }
     }
   }, [initialLocation]);
 
-  // Geocode addresses (for Leaflet fallback)
+  // Use provided coordinates or geocode addresses (only as fallback)
   useEffect(() => {
+    // If coordinates are provided directly, use them immediately
+    if (initialPickupLocation && initialDropoffLocation) {
+      setLocations(prev => ({
+        ...prev,
+        pickup: initialPickupLocation,
+        dropoff: initialDropoffLocation
+      }));
+      return;
+    }
+
+    // Otherwise, fall back to geocoding (only if map is ready)
     if (mapType !== 'leaflet' || !locations.current) return;
 
     const geocodeWithLeaflet = async () => {
@@ -150,7 +161,6 @@ export default function DeliveryMap({
         setLoading(true);
 
         const geocodeAddress = async (address: string) => {
-          // Check cache first
           if (geocodeCache.has(address)) {
             return geocodeCache.get(address)!;
           }
@@ -177,8 +187,8 @@ export default function DeliveryMap({
         };
 
         const [pickupLoc, dropoffLoc] = await Promise.all([
-          geocodeAddress(pickupAddress),
-          geocodeAddress(dropoffAddress)
+          initialPickupLocation || (pickupAddress ? geocodeAddress(pickupAddress) : Promise.reject('No pickup address')),
+          initialDropoffLocation || (dropoffAddress ? geocodeAddress(dropoffAddress) : Promise.reject('No dropoff address'))
         ]);
 
         setLocations(prev => ({
@@ -195,11 +205,21 @@ export default function DeliveryMap({
     };
 
     geocodeWithLeaflet();
-  }, [mapType, pickupAddress, dropoffAddress, locations.current]);
+  }, [mapType, pickupAddress, dropoffAddress, locations.current, initialPickupLocation, initialDropoffLocation]);
 
-  // Geocode with Google Maps
+  // Geocode with Google Maps (fallback if no coordinates)
   useEffect(() => {
     if (mapType !== 'google' || !googleMapsLoaded || !window.google || !locations.current) return;
+
+    // If coordinates are provided directly, use them
+    if (initialPickupLocation && initialDropoffLocation) {
+      setLocations(prev => ({
+        ...prev,
+        pickup: initialPickupLocation,
+        dropoff: initialDropoffLocation
+      }));
+      return;
+    }
 
     const geocodeWithGoogle = async () => {
       try {
@@ -229,8 +249,8 @@ export default function DeliveryMap({
         };
 
         const [pickupLoc, dropoffLoc] = await Promise.all([
-          geocodeAddress(pickupAddress),
-          geocodeAddress(dropoffAddress)
+          initialPickupLocation || (pickupAddress ? geocodeAddress(pickupAddress) : Promise.reject('No pickup address')),
+          initialDropoffLocation || (dropoffAddress ? geocodeAddress(dropoffAddress) : Promise.reject('No dropoff address'))
         ]);
 
         setLocations(prev => ({
@@ -247,7 +267,7 @@ export default function DeliveryMap({
     };
 
     geocodeWithGoogle();
-  }, [mapType, googleMapsLoaded, pickupAddress, dropoffAddress, locations.current]);
+  }, [mapType, googleMapsLoaded, pickupAddress, dropoffAddress, locations.current, initialPickupLocation, initialDropoffLocation]);
 
   // Initialize Google Map
   useEffect(() => {
@@ -322,7 +342,6 @@ export default function DeliveryMap({
       `
     });
     
-    // Find and open info window for destination marker
     const destinationMarker = new window.google.maps.Marker({
       position: { lat: targetLocation.lat, lng: targetLocation.lng },
       map: map,
@@ -346,11 +365,11 @@ export default function DeliveryMap({
       });
     }
 
-    // Draw route using DirectionsService
+    // Draw route
     const directionsService = new window.google.maps.DirectionsService();
     const directionsRenderer = new window.google.maps.DirectionsRenderer({
       map: map,
-      suppressMarkers: true, // We'll use our own markers
+      suppressMarkers: true,
       polylineOptions: {
         strokeColor: markerColor,
         strokeWeight: 4,
@@ -371,7 +390,7 @@ export default function DeliveryMap({
       }
     );
 
-    // Fit bounds to show all points
+    // Fit bounds
     const bounds = new window.google.maps.LatLngBounds();
     bounds.extend({ lat: locations.current.lat, lng: locations.current.lng });
     bounds.extend({ lat: targetLocation.lat, lng: targetLocation.lng });
