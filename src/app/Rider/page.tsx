@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import { useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
@@ -58,6 +58,10 @@ export default function RiderDashboard() {
   const windowSize = useWindowSize();
   const isMobile = windowSize.width < 1024;
 
+  // Refs for tracking optimization
+  const watchIdRef = useRef(null);
+  const lastSendTimeRef = useRef(0);
+
   // Location tracking mutation
   const [locationTracking] = useMutation(LOCATION_TRACKING_MUTATION);
   
@@ -73,11 +77,11 @@ export default function RiderDashboard() {
         pageSize: 10
       }
     },
-    pollInterval: 10000
+    pollInterval: 30000 // Increased from 10s to 30s to reduce server load
   });
   
-  // Function to get current location and send to server
-  const sendCurrentLocation = async () => {
+  // Function to send location with rate limiting
+  const sendCurrentLocation = async (position) => {
     if (!user?.userId) {
       console.log("❌ No user ID available, skipping location tracking");
       return;
@@ -88,95 +92,97 @@ export default function RiderDashboard() {
       return;
     }
 
-    if (!navigator.geolocation) {
-      console.error("❌ Geolocation is not supported by this browser");
+    // Rate limiting: Minimum 5 seconds between sends
+    const now = Date.now();
+    if (now - lastSendTimeRef.current < 5000) {
+      console.log("⏸️ Rate limited - skipping location send");
       return;
     }
 
-    console.log("🔍 Attempting to get current location...");
+    const { latitude, longitude, accuracy } = position.coords;
+    console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
     
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
-        
-        try {
-          console.log("📤 Sending location to server...", {
+    try {
+      console.log("📤 Sending location to server...", {
+        userID: user.userId,
+        latitude,
+        longitude
+      });
+      
+      const result = await locationTracking({
+        variables: {
+          input: {
             userID: user.userId,
-            latitude,
-            longitude
-          });
-          
-          const result = await locationTracking({
-            variables: {
-              input: {
-                userID: user.userId,
-                latitude: latitude,
-                longitude: longitude
-              }
-            }
-          });
-          
-          console.log("✅ Location sent successfully!", {
-            response: result.data?.locationTracking,
-            timestamp: new Date().toISOString()
-          });
-        } catch (error) {
-          console.error("❌ Error sending location:", error);
+            latitude: latitude,
+            longitude: longitude
+          }
         }
-      },
-      (error) => {
-        console.error("❌ Error getting current location:", {
-          code: error.code,
-          message: error.message,
-        });
-        
-        switch(error.code) {
-          case 1:
-            console.log("⚠️ User denied geolocation permission");
-            break;
-          case 2:
-            console.log("⚠️ Position unavailable (check GPS)");
-            break;
-          case 3:
-            console.log("⚠️ Location request timed out");
-            break;
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
+      });
+      
+      console.log("✅ Location sent successfully!", {
+        response: result.data?.locationTracking,
+        timestamp: new Date().toISOString()
+      });
+      
+      lastSendTimeRef.current = now;
+    } catch (error) {
+      console.error("❌ Error sending location:", error);
+    }
   };
 
-  // Start location tracking when online and user is available
+  // Start location tracking using watchPosition instead of setInterval
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+    // Clean up previous watch if exists
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
 
-    if (isOnline && user?.userId) {
+    if (isOnline && user?.userId && navigator.geolocation) {
       console.log("🟢 Starting location tracking - Online mode active");
       console.log(`👤 User ID: ${user.userId}`);
       
-      // Send location immediately
-      sendCurrentLocation();
+      // Use watchPosition for continuous tracking
+      watchIdRef.current = navigator.geolocation.watchPosition(
+        sendCurrentLocation,
+        (error) => {
+          console.error("❌ Error getting current location:", {
+            code: error.code,
+            message: error.message,
+          });
+          
+          switch(error.code) {
+            case 1:
+              console.log("⚠️ User denied geolocation permission");
+              break;
+            case 2:
+              console.log("⚠️ Position unavailable (check GPS)");
+              break;
+            case 3:
+              console.log("⚠️ Location request timed out");
+              break;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
       
-      // Then send every 15 seconds
-      intervalId = setInterval(() => {
-        console.log("⏰ 15-second interval triggered - sending location...");
-        sendCurrentLocation();
-      }, 15000);
-      
-      console.log("⏲️ Location tracking interval set to 15 seconds");
+      console.log("📍 Location watch started");
     } else {
-      console.log("🔴 Location tracking stopped - Offline mode or no user");
+      if (watchIdRef.current !== null) {
+        console.log("🔴 Location tracking stopped - Offline mode or no user");
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
+      }
     }
 
     return () => {
-      if (intervalId) {
-        console.log("🛑 Cleaning up location tracking interval");
-        clearInterval(intervalId);
+      if (watchIdRef.current !== null) {
+        console.log("🛑 Cleaning up location tracking");
+        navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
     };
   }, [isOnline, user?.userId]);
@@ -185,12 +191,14 @@ export default function RiderDashboard() {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log("👁️ Tab became visible - sending location update");
-        if (isOnline && user?.userId) {
-          sendCurrentLocation();
+        console.log("👁️ Tab became visible - checking location");
+        if (isOnline && user?.userId && navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            sendCurrentLocation,
+            (error) => console.error("Error getting location:", error),
+            { enableHighAccuracy: true, timeout: 5000 }
+          );
         }
-      } else {
-        console.log("👻 Tab hidden - continuing background tracking");
       }
     };
 
@@ -358,4 +366,4 @@ export default function RiderDashboard() {
       )}
     </div>
   );
-      }
+}
