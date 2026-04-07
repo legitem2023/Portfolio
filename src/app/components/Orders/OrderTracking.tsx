@@ -259,7 +259,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
     },
     skip: !userId
   });
-
+/*
 const channel = pusherClient.subscribe(`user-${userId}`);
 
 channel.bind('pusher:subscription_succeeded', () => {
@@ -270,7 +270,7 @@ channel.bind('pusher:subscription_succeeded', () => {
 channel.bind('new-message', (data) => {
     console.log('Received:', data);
 });
-  
+  */
   const handleStatusChange = (status: string) => {
     refetch({
       filter: {
