@@ -2,7 +2,7 @@
 
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { QrCode, Star } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { getPusherClient } from '../../lib/pusher/client';
