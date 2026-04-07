@@ -81,6 +81,11 @@ model User {
   updatedAt       DateTime?        @updatedAt
   role            Role?            @default(USER)
 
+  currentLatitude  Float?
+  currentLongitude Float?
+  lastUpdatedAt    DateTime?
+  status           String?
+
   // Relationships
   addresses       Address[]
   products        Product[]
