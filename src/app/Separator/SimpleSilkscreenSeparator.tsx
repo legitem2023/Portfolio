@@ -15,9 +15,6 @@ const SimpleSilkscreenSeparator: React.FC = () => {
   const [mergedImage, setMergedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({});
-  const [colorDistanceThreshold, setColorDistanceThreshold] = useState<number>(30);
-  const [loadingStage, setLoadingStage] = useState<string>('');
-  const [loadingProgress, setLoadingProgress] = useState<number>(0);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,46 +26,13 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     }).join('').toUpperCase();
   };
 
-  // Calculate color distance (Euclidean)
-  const colorDistance = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number => {
-    return Math.sqrt(
-      Math.pow(r1 - r2, 2) +
-      Math.pow(g1 - g2, 2) +
-      Math.pow(b1 - b2, 2)
-    );
-  };
-
-  // Find closest existing color group
-  const findClosestColorGroup = (
-    r: number, 
-    g: number, 
-    b: number, 
-    groups: Array<{ r: number; g: number; b: number; count: number; colors: Array<{ r: number; g: number; b: number }> }>,
-    threshold: number
-  ): number | null => {
-    let minDistance = Infinity;
-    let closestIndex = null;
-    
-    for (let i = 0; i < groups.length; i++) {
-      const group = groups[i];
-      const dist = colorDistance(r, g, b, group.r, group.g, group.b);
-      
-      if (dist < minDistance && dist <= threshold) {
-        minDistance = dist;
-        closestIndex = i;
-      }
-    }
-    
-    return closestIndex;
-  };
-
-  // Extract and group similar colors
-  const extractAndGroupColors = (imageData: ImageData, threshold: number, onProgress?: (progress: number) => void): Map<string, { r: number; g: number; b: number; count: number; hex: string }> => {
+  // Extract unique colors from image with better tolerance
+  const extractColors = (imageData: ImageData): Map<string, { r: number; g: number; b: number; count: number; hex: string }> => {
     const pixels = imageData.data;
-    const colorGroups: Array<{ r: number; g: number; b: number; count: number; colors: Array<{ r: number; g: number; b: number }> }> = [];
+    const colorMap = new Map<string, { r: number; g: number; b: number; count: number; hex: string }>();
     
-    const totalPixels = pixels.length / 4;
-    let processedPixels = 0;
+    // Use a smaller quantization step for more accurate colors
+    const quantize = (value: number): number => Math.round(value / 16) * 16;
     
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i];
@@ -76,225 +40,227 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       const b = pixels[i + 2];
       const a = pixels[i + 3];
       
-      if (a < 128) {
-        processedPixels++;
-        if (onProgress && processedPixels % 1000 === 0) {
-          onProgress((processedPixels / totalPixels) * 30);
-        }
-        continue;
-      }
+      if (a < 128) continue; // Skip transparent/semi-transparent pixels
       
-      // Find if this color belongs to an existing group
-      const closestGroupIndex = findClosestColorGroup(r, g, b, colorGroups, threshold);
+      // Skip white and very light colors (optional - comment out if you want white included)
+      // if (r > 250 && g > 250 && b > 250) continue;
       
-      if (closestGroupIndex !== null) {
-        // Add to existing group and update average
-        const group = colorGroups[closestGroupIndex];
-        group.colors.push({ r, g, b });
-        group.count++;
-        
-        // Recalculate average color for the group (do this every 100 pixels for performance)
-        if (group.colors.length % 100 === 0) {
-          let sumR = 0, sumG = 0, sumB = 0;
-          for (const color of group.colors) {
-            sumR += color.r;
-            sumG += color.g;
-            sumB += color.b;
-          }
-          group.r = sumR / group.colors.length;
-          group.g = sumG / group.colors.length;
-          group.b = sumB / group.colors.length;
-        }
+      const qR = quantize(r);
+      const qG = quantize(g);
+      const qB = quantize(b);
+      
+      const key = `${qR},${qG},${qB}`;
+      
+      if (colorMap.has(key)) {
+        colorMap.get(key)!.count++;
       } else {
-        // Create new group
-        colorGroups.push({
-          r, g, b,
+        colorMap.set(key, { 
+          r: qR, 
+          g: qG, 
+          b: qB, 
           count: 1,
-          colors: [{ r, g, b }]
+          hex: rgbToHex(qR, qG, qB)
         });
       }
-      
-      processedPixels++;
-      if (onProgress && processedPixels % 1000 === 0) {
-        onProgress((processedPixels / totalPixels) * 30);
-      }
-    }
-    
-    // Final average calculation for all groups
-    for (const group of colorGroups) {
-      let sumR = 0, sumG = 0, sumB = 0;
-      for (const color of group.colors) {
-        sumR += color.r;
-        sumG += color.g;
-        sumB += color.b;
-      }
-      group.r = sumR / group.colors.length;
-      group.g = sumG / group.colors.length;
-      group.b = sumB / group.colors.length;
-    }
-    
-    // Convert to Map format
-    const colorMap = new Map<string, { r: number; g: number; b: number; count: number; hex: string }>();
-    
-    for (const group of colorGroups) {
-      const key = `${Math.round(group.r)},${Math.round(group.g)},${Math.round(group.b)}`;
-      colorMap.set(key, {
-        r: Math.round(group.r),
-        g: Math.round(group.g),
-        b: Math.round(group.b),
-        count: group.count,
-        hex: rgbToHex(Math.round(group.r), Math.round(group.g), Math.round(group.b))
-      });
     }
     
     return colorMap;
   };
 
   // Process image and create separations
-  const processImage = async (file: File) => {
+  const processImage = (file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
-      img.onload = async () => {
+      img.onload = () => {
         setIsProcessing(true);
-        setLoadingProgress(0);
         
-        try {
-          setLoadingStage('Loading image...');
-          setLoadingProgress(5);
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+        
+        // Limit max size for performance
+        const maxSize = 1200;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const colorMap = extractColors(imageData);
+        
+        console.log('Found colors:', colorMap.size);
+        
+        // Filter out colors with very few pixels (noise)
+        const minPixels = (width * height) * 0.001; // 0.1% of image
+        let filteredColors = Array.from(colorMap.entries())
+          .filter(([_, data]) => data.count >= minPixels)
+          .sort((a, b) => b[1].count - a[1].count);
+        
+        console.log('Initial colors after filtering:', filteredColors.length);
+        
+        // Smart color merging - keep maximum 8 colors
+        const MAX_COLORS = 8;
+        
+        if (filteredColors.length > MAX_COLORS) {
+          // Calculate color similarity (Euclidean distance)
+          const colorDistance = (c1: { r: number; g: number; b: number }, c2: { r: number; g: number; b: number }) => {
+            return Math.sqrt(
+              Math.pow(c1.r - c2.r, 2) +
+              Math.pow(c1.g - c2.g, 2) +
+              Math.pow(c1.b - c2.b, 2)
+            );
+          };
           
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+          // Merge two colors by weighted average (by pixel count)
+          const mergeColors = (
+            c1: { r: number; g: number; b: number; count: number },
+            c2: { r: number; g: number; b: number; count: number }
+          ) => {
+            const totalCount = c1.count + c2.count;
+            return {
+              r: (c1.r * c1.count + c2.r * c2.count) / totalCount,
+              g: (c1.g * c1.count + c2.g * c2.count) / totalCount,
+              b: (c1.b * c1.count + c2.b * c2.count) / totalCount,
+              count: totalCount,
+              hex: ''
+            };
+          };
           
-          // Limit max size for performance
-          const maxSize = 1200;
-          let width = img.width;
-          let height = img.height;
+          // Convert to mutable array
+          let colorsToMerge = filteredColors.map(([key, data]) => ({
+            key,
+            r: data.r,
+            g: data.g,
+            b: data.b,
+            count: data.count,
+            hex: data.hex
+          }));
           
-          if (width > maxSize || height > maxSize) {
-            const ratio = Math.min(maxSize / width, maxSize / height);
-            width = Math.floor(width * ratio);
-            height = Math.floor(height * ratio);
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          
-          setLoadingStage('Reading image data...');
-          setLoadingProgress(10);
-          
-          const imageData = ctx.getImageData(0, 0, width, height);
-          
-          setLoadingStage('Analyzing colors...');
-          setLoadingProgress(15);
-          
-          // Extract and group similar colors with progress callback
-          const colorMap = await new Promise<Map<string, { r: number; g: number; b: number; count: number; hex: string }>>((resolve) => {
-            const result = extractAndGroupColors(imageData, colorDistanceThreshold, (progress) => {
-              setLoadingProgress(15 + (progress * 0.3));
-            });
-            resolve(result);
-          });
-          
-          setLoadingStage(`Found ${colorMap.size} color groups...`);
-          setLoadingProgress(50);
-          
-          // Filter out colors with very few pixels (noise)
-          const minPixels = (width * height) * 0.002; // 0.2% of image
-          const filteredColors = Array.from(colorMap.entries())
-            .filter(([_, data]) => data.count >= minPixels)
-            .sort((a, b) => b[1].count - a[1].count);
-          
-          setLoadingStage(`Creating ${filteredColors.length} color separations...`);
-          setLoadingProgress(60);
-          
-          const layers: ColorLayer[] = [];
-          const visibility: Record<string, boolean> = {};
-          
-          // Create separation for each color group with progress
-          for (let index = 0; index < filteredColors.length; index++) {
-            const [key, colorData] = filteredColors[index];
-            const { r, g, b, hex } = colorData;
+          // Keep merging closest colors until we have MAX_COLORS or less
+          while (colorsToMerge.length > MAX_COLORS) {
+            let closestPair: { i: number; j: number; distance: number } | null = null;
             
-            setLoadingStage(`Creating layer ${index + 1} of ${filteredColors.length}...`);
-            setLoadingProgress(60 + (index / filteredColors.length) * 30);
-            
-            // Create layer canvas
-            const layerCanvas = document.createElement('canvas');
-            layerCanvas.width = width;
-            layerCanvas.height = height;
-            const layerCtx = layerCanvas.getContext('2d')!;
-            
-            const layerImageData = layerCtx.createImageData(width, height);
-            const pixels = imageData.data;
-            const layerPixels = layerImageData.data;
-            
-            // Use adaptive tolerance based on color distance threshold
-            const tolerance = colorDistanceThreshold;
-            
-            // Extract pixels belonging to this color group
-            for (let i = 0; i < pixels.length; i += 4) {
-              const pR = pixels[i];
-              const pG = pixels[i + 1];
-              const pB = pixels[i + 2];
-              const pA = pixels[i + 3];
-              
-              if (pA < 128) {
-                layerPixels[i + 3] = 0;
-                continue;
-              }
-              
-              // Calculate color distance from group center
-              const dist = colorDistance(pR, pG, pB, r, g, b);
-              
-              if (dist <= tolerance) {
-                // Use the original color or group color? Using group color for consistency
-                layerPixels[i] = r;
-                layerPixels[i + 1] = g;
-                layerPixels[i + 2] = b;
-                layerPixels[i + 3] = 255;
-              } else {
-                layerPixels[i + 3] = 0;
+            // Find the two most similar colors
+            for (let i = 0; i < colorsToMerge.length; i++) {
+              for (let j = i + 1; j < colorsToMerge.length; j++) {
+                const distance = colorDistance(colorsToMerge[i], colorsToMerge[j]);
+                if (!closestPair || distance < closestPair.distance) {
+                  closestPair = { i, j, distance };
+                }
               }
             }
             
-            layerCtx.putImageData(layerImageData, 0, 0);
-            
-            const layerId = `layer-${index}`;
-            layers.push({
-              id: layerId,
-              hex: hex,
-              imageData: layerCanvas.toDataURL('image/png'),
-              pixelCount: colorData.count
-            });
-            
-            visibility[layerId] = true;
+            if (closestPair) {
+              const { i, j } = closestPair;
+              const merged = mergeColors(colorsToMerge[i], colorsToMerge[j]);
+              merged.hex = rgbToHex(merged.r, merged.g, merged.b);
+              
+              // Replace the first color with merged version, remove the second
+              colorsToMerge[i] = {
+                ...merged,
+                key: `merged-${colorsToMerge[i].key}-${colorsToMerge[j].key}`
+              };
+              colorsToMerge.splice(j, 1);
+            } else {
+              break;
+            }
           }
           
-          setLoadingStage('Merging layers for preview...');
-          setLoadingProgress(95);
+          // Convert back to filteredColors format
+          filteredColors = colorsToMerge.map(color => [
+            color.key,
+            {
+              r: Math.round(color.r),
+              g: Math.round(color.g),
+              b: Math.round(color.b),
+              count: color.count,
+              hex: color.hex
+            }
+          ]) as [string, any][];
           
-          setColorLayers(layers);
-          setVisibleLayers(visibility);
-          setOriginalImage(canvas.toDataURL('image/png'));
-          
-          // Create merged preview
-          await mergeLayers(layers, visibility, width, height);
-          
-          setLoadingStage('Complete!');
-          setLoadingProgress(100);
-          
-          // Short delay to show 100%
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-        } catch (error) {
-          console.error('Error processing image:', error);
-          setLoadingStage('Error processing image');
-        } finally {
-          setIsProcessing(false);
-          setLoadingProgress(0);
+          console.log(`Merged to ${filteredColors.length} colors (max ${MAX_COLORS})`);
         }
+        
+        console.log('Final colors:', filteredColors.length);
+        
+        const layers: ColorLayer[] = [];
+        const visibility: Record<string, boolean> = {};
+        
+        // Create separation for each color
+        filteredColors.forEach(([key, colorData], index) => {
+          const { r, g, b, hex } = colorData;
+          
+          // Create layer canvas
+          const layerCanvas = document.createElement('canvas');
+          layerCanvas.width = width;
+          layerCanvas.height = height;
+          const layerCtx = layerCanvas.getContext('2d')!;
+          
+          const layerImageData = layerCtx.createImageData(width, height);
+          const pixels = imageData.data;
+          const layerPixels = layerImageData.data;
+          
+          // Calculate color distance tolerance dynamically
+          const tolerance = 35;
+          
+          // Extract only this color
+          for (let i = 0; i < pixels.length; i += 4) {
+            const pR = pixels[i];
+            const pG = pixels[i + 1];
+            const pB = pixels[i + 2];
+            const pA = pixels[i + 3];
+            
+            if (pA < 128) {
+              layerPixels[i + 3] = 0;
+              continue;
+            }
+            
+            // Calculate color distance
+            const dist = Math.sqrt(
+              Math.pow(pR - r, 2) + 
+              Math.pow(pG - g, 2) + 
+              Math.pow(pB - b, 2)
+            );
+            
+            if (dist < tolerance) {
+              layerPixels[i] = r;
+              layerPixels[i + 1] = g;
+              layerPixels[i + 2] = b;
+              layerPixels[i + 3] = 255;
+            } else {
+              layerPixels[i + 3] = 0;
+            }
+          }
+          
+          layerCtx.putImageData(layerImageData, 0, 0);
+          
+          const layerId = `layer-${index}`;
+          layers.push({
+            id: layerId,
+            hex: hex,
+            imageData: layerCanvas.toDataURL('image/png'),
+            pixelCount: colorData.count
+          });
+          
+          visibility[layerId] = true;
+        });
+        
+        setColorLayers(layers);
+        setVisibleLayers(visibility);
+        setOriginalImage(canvas.toDataURL('image/png'));
+        
+        // Create merged preview
+        mergeLayers(layers, visibility, width, height);
+        
+        setIsProcessing(false);
       };
       img.src = e.target?.result as string;
     };
@@ -302,41 +268,37 @@ const SimpleSilkscreenSeparator: React.FC = () => {
   };
 
   // Merge visible layers into one image
-  const mergeLayers = (layers: ColorLayer[], visibility: Record<string, boolean>, width: number, height: number): Promise<void> => {
-    return new Promise((resolve) => {
-      const mergeCanvas = document.createElement('canvas');
-      mergeCanvas.width = width;
-      mergeCanvas.height = height;
-      const mergeCtx = mergeCanvas.getContext('2d')!;
-      
-      // White background
-      mergeCtx.fillStyle = '#FFFFFF';
-      mergeCtx.fillRect(0, 0, width, height);
-      
-      // Load and draw all visible layers
-      let loadedCount = 0;
-      const visibleLayerCount = layers.filter(l => visibility[l.id]).length;
-      
-      if (visibleLayerCount === 0) {
-        setMergedImage(mergeCanvas.toDataURL('image/png'));
-        resolve();
-        return;
+  const mergeLayers = (layers: ColorLayer[], visibility: Record<string, boolean>, width: number, height: number) => {
+    const mergeCanvas = document.createElement('canvas');
+    mergeCanvas.width = width;
+    mergeCanvas.height = height;
+    const mergeCtx = mergeCanvas.getContext('2d')!;
+    
+    // White background
+    mergeCtx.fillStyle = '#FFFFFF';
+    mergeCtx.fillRect(0, 0, width, height);
+    
+    // Load and draw all visible layers
+    let loadedCount = 0;
+    const visibleLayerCount = layers.filter(l => visibility[l.id]).length;
+    
+    if (visibleLayerCount === 0) {
+      setMergedImage(mergeCanvas.toDataURL('image/png'));
+      return;
+    }
+    
+    layers.forEach(layer => {
+      if (visibility[layer.id]) {
+        const img = new Image();
+        img.onload = () => {
+          mergeCtx.drawImage(img, 0, 0);
+          loadedCount++;
+          if (loadedCount === visibleLayerCount) {
+            setMergedImage(mergeCanvas.toDataURL('image/png'));
+          }
+        };
+        img.src = layer.imageData;
       }
-      
-      layers.forEach(layer => {
-        if (visibility[layer.id]) {
-          const img = new Image();
-          img.onload = () => {
-            mergeCtx.drawImage(img, 0, 0);
-            loadedCount++;
-            if (loadedCount === visibleLayerCount) {
-              setMergedImage(mergeCanvas.toDataURL('image/png'));
-              resolve();
-            }
-          };
-          img.src = layer.imageData;
-        }
-      });
     });
   };
 
@@ -405,26 +367,17 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     setOriginalImage(null);
     setColorLayers([]);
     setMergedImage(null);
-    setLoadingStage('');
-    setLoadingProgress(0);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const updateThreshold = (newThreshold: number) => {
-    setColorDistanceThreshold(newThreshold);
-    if (fileInputRef.current?.files?.[0]) {
-      processImage(fileInputRef.current.files[0]);
-    }
   };
 
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Smart Color Distinction</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Automatic Color Separation</h1>
       <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
-        Automatically detects and distinguishes similar colors in your image
+        Upload an image and colors will be automatically detected and separated (max 8 colors)
       </p>
       
-      {!originalImage && !isProcessing && (
+      {!originalImage && (
         <div
           onClick={() => fileInputRef.current?.click()}
           style={{
@@ -455,55 +408,23 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>🖼️</div>
           <p style={{ fontSize: '18px', color: '#666' }}>Click to upload your image</p>
           <p style={{ fontSize: '14px', color: '#999', marginTop: '10px' }}>
-            PNG, JPG, GIF supported
+            PNG, JPG, GIF supported (max 8 colors)
           </p>
         </div>
       )}
 
       {isProcessing && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '60px 40px',
-          backgroundColor: '#f9f9f9',
-          borderRadius: '20px',
-          border: '2px solid #e0e0e0'
-        }}>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ 
             display: 'inline-block',
-            width: '60px',
-            height: '60px',
+            width: '40px',
+            height: '40px',
             border: '4px solid #f3f3f3',
             borderTop: '4px solid #0066cc',
             borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '20px'
+            animation: 'spin 1s linear infinite'
           }} />
-          
-          <h3 style={{ marginBottom: '10px', color: '#333' }}>{loadingStage || 'Processing...'}</h3>
-          
-          <div style={{ 
-            maxWidth: '400px', 
-            margin: '20px auto',
-            backgroundColor: '#e0e0e0',
-            borderRadius: '10px',
-            overflow: 'hidden'
-          }}>
-            <div style={{ 
-              width: `${loadingProgress}%`, 
-              height: '8px', 
-              backgroundColor: '#0066cc',
-              transition: 'width 0.3s ease'
-            }} />
-          </div>
-          
-          <p style={{ fontSize: '14px', color: '#666' }}>
-            {Math.round(loadingProgress)}% complete
-          </p>
-          
-          <p style={{ fontSize: '12px', color: '#999', marginTop: '20px' }}>
-            Please wait while we analyze your image...
-          </p>
-          
+          <p style={{ marginTop: '20px', color: '#666' }}>Detecting colors and creating separations...</p>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       )}
@@ -511,32 +432,11 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       {originalImage && !isProcessing && (
         <div>
           {/* Controls */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <button onClick={reset} style={buttonStyle('#666')}>← New Image</button>
             <button onClick={downloadAll} style={buttonStyle('#28a745')}>⬇ Download All ({colorLayers.length})</button>
             <button onClick={downloadMerged} style={buttonStyle('#0066cc')}>⬇ Download Merged</button>
-            
             <div style={{ flex: 1 }} />
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <label style={{ fontSize: '14px', color: '#666' }}>
-                Color Sensitivity: 
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="80"
-                value={colorDistanceThreshold}
-                onChange={(e) => updateThreshold(Number(e.target.value))}
-                style={{ width: '150px' }}
-              />
-              <span style={{ fontSize: '12px', color: '#999', minWidth: '60px' }}>
-                {colorDistanceThreshold === 10 ? 'Strict' : 
-                 colorDistanceThreshold <= 30 ? 'Normal' : 
-                 colorDistanceThreshold <= 50 ? 'Loose' : 'Very Loose'}
-              </span>
-            </div>
-            
             <button onClick={() => toggleAll(true)} style={buttonStyle('#888', 'small')}>Show All</button>
             <button onClick={() => toggleAll(false)} style={buttonStyle('#888', 'small')}>Hide All</button>
           </div>
@@ -578,9 +478,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
               padding: '20px'
             }}>
               <h3 style={{ marginTop: 0, marginBottom: '15px' }}>
-                🖼️ Distinguished Colors 
+                🖼️ Merged Separations 
                 <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginLeft: '10px' }}>
-                  ({Object.values(visibleLayers).filter(v => v).length} / {colorLayers.length} layers)
+                  ({Object.values(visibleLayers).filter(v => v).length} layers)
                 </span>
               </h3>
               <div style={{
@@ -617,9 +517,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
             padding: '20px',
             marginBottom: '30px'
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>🎨 Distinguished Color Groups ({colorLayers.length})</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>🎨 Detected Colors ({colorLayers.length})</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-              Similar colors are grouped together. Adjust the sensitivity slider to merge or separate colors.
+              Click on any color to toggle visibility in the merged result
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {colorLayers.map(layer => (
@@ -659,7 +559,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
                     color: '#888',
                     marginLeft: '4px'
                   }}>
-                    ({Math.round(layer.pixelCount / 1000).toLocaleString()}K px)
+                    ({Math.round(layer.pixelCount / (originalImage ? 1 : 1)).toLocaleString()})
                   </span>
                   <span style={{ marginLeft: '4px' }}>
                     {visibleLayers[layer.id] ? '👁️' : '👁️‍🗨️'}
