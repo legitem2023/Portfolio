@@ -102,11 +102,17 @@ const ColorSeparator: React.FC = () => {
             
             const colorDiff = Math.abs(r - colorInfo.r) + Math.abs(g - colorInfo.g) + Math.abs(b - colorInfo.b);
             
-            if (colorDiff < tolerance) {
+            /*if (colorDiff < tolerance) {
               layerData.data[i] = colorInfo.r;
               layerData.data[i + 1] = colorInfo.g;
               layerData.data[i + 2] = colorInfo.b;
               layerData.data[i + 3] = 255;
+            }*/
+            if (colorDiff < tolerance) {
+             layerData.data[i] = 0;     // Red = 0
+             layerData.data[i + 1] = 0; // Green = 0
+             layerData.data[i + 2] = 0; // Blue = 0
+             layerData.data[i + 3] = 255;
             }
           }
           
