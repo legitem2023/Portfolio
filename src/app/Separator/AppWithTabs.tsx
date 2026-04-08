@@ -56,7 +56,7 @@ const AppWithTabs: React.FC = () => {
   const OtherComponent = () => (
     <div className="p-6 bg-gray-50 rounded-lg">
       <h2 className="text-xl font-semibold mb-4">Your Other Component</h2>
-      <p className="text-gray-600">This is where you'll add your second component.</p>
+      <p className="text-gray-600">This is where youll add your second component.</p>
       <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
         <p className="text-blue-800">✨ Add your component logic here</p>
       </div>
