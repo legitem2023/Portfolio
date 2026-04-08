@@ -591,33 +591,38 @@ const SmartColorReducer: React.FC = () => {
     
     setProgress(`Found ${components.length} regions, generating SVG...`);
     
-    // Group components by color
+    // Group components by color - Fixed iteration issue
     const colorGroups = new Map<string, Array<Array<[number, number]>>>();
     
     for (const component of components) {
       const colorKey = `${component.color.r},${component.color.g},${component.color.b}`;
-      if (!colorGroups.has(colorKey)) {
-        colorGroups.set(colorKey, []);
+      const existing = colorGroups.get(colorKey);
+      if (existing) {
+        existing.push(component.pixels);
+      } else {
+        colorGroups.set(colorKey, [component.pixels]);
       }
-      colorGroups.get(colorKey)!.push(component.pixels);
     }
     
-    // Generate SVG
+    // Generate SVG - Fixed iteration issue
     let svgPaths = '';
+    const colorGroupEntries = Array.from(colorGroups.entries());
     
-    for (const [colorKey, regions] of colorGroups.entries()) {
+    for (let idx = 0; idx < colorGroupEntries.length; idx++) {
+      const [colorKey, regions] = colorGroupEntries[idx];
       const [r, g, b] = colorKey.split(',').map(Number);
       const fillColor = `rgb(${r}, ${g}, ${b})`;
       
-      for (const region of regions) {
+      for (let j = 0; j < regions.length; j++) {
+        const region = regions[j];
         let contour = extractContour(region, width, height);
         if (contour.length < 3) continue;
         
         contour = smoothContour(contour, 1);
         
         let pathData = `M ${contour[0][0]} ${contour[0][1]}`;
-        for (let i = 1; i < contour.length; i++) {
-          pathData += ` L ${contour[i][0]} ${contour[i][1]}`;
+        for (let k = 1; k < contour.length; k++) {
+          pathData += ` L ${contour[k][0]} ${contour[k][1]}`;
         }
         pathData += ' Z';
         
