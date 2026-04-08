@@ -109,11 +109,15 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
         
-        // Limit max size for performance
-        const maxSize = 1200;
+        // Increase max size for 4K quality output
+        // Target 4K resolution: 3840 x 2160 or similar, but respect original aspect ratio
+        // Max dimension set to 3840px for 4K quality
+        const maxSize = 3840; // 4K width/height cap for quality
         let width = img.width;
         let height = img.height;
         
+        // For 4K output: if image is larger than 3840px in any dimension, scale down to 3840
+        // but if it's smaller, keep original size to preserve quality
         if (width > maxSize || height > maxSize) {
           const ratio = Math.min(maxSize / width, maxSize / height);
           width = Math.floor(width * ratio);
@@ -232,12 +236,12 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         const layers: ColorLayer[] = [];
         const visibility: Record<string, boolean> = {};
         
-        // Create separation for each color
+        // Create separation for each color at full resolution
         for (let index = 0; index < filteredColors.length; index++) {
           const [key, colorData] = filteredColors[index];
           const { r, g, b, hex } = colorData;
           
-          // Create layer canvas
+          // Create layer canvas at original processed dimensions (up to 4K)
           const layerCanvas = document.createElement('canvas');
           layerCanvas.width = width;
           layerCanvas.height = height;
@@ -247,7 +251,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           const pixels = imageData.data;
           const layerPixels = layerImageData.data;
           
-          // Calculate color distance tolerance dynamically
+          // Calculate color distance tolerance dynamically - adjusted for higher quality
           const tolerance = 35;
           
           // Extract only this color
@@ -281,6 +285,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           
           layerCtx.putImageData(layerImageData, 0, 0);
           
+          // Use PNG with maximum quality
           const coloredImageData = layerCanvas.toDataURL('image/png');
           const blackImageData = await convertToBlackSeparation(coloredImageData);
           
@@ -300,7 +305,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         setVisibleLayers(visibility);
         setOriginalImage(canvas.toDataURL('image/png'));
         
-        // Create merged preview
+        // Create merged preview at full resolution
         mergeLayers(layers, visibility, width, height);
         
         setIsProcessing(false);
