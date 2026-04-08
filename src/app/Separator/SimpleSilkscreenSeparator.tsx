@@ -15,6 +15,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
   const [mergedImage, setMergedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Record<string, boolean>>({});
+  const [colorDistanceThreshold, setColorDistanceThreshold] = useState<number>(30);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -26,13 +27,43 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     }).join('').toUpperCase();
   };
 
-  // Extract unique colors from image with better tolerance
-  const extractColors = (imageData: ImageData): Map<string, { r: number; g: number; b: number; count: number; hex: string }> => {
-    const pixels = imageData.data;
-    const colorMap = new Map<string, { r: number; g: number; b: number; count: number; hex: string }>();
+  // Calculate color distance (Euclidean)
+  const colorDistance = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): number => {
+    return Math.sqrt(
+      Math.pow(r1 - r2, 2) +
+      Math.pow(g1 - g2, 2) +
+      Math.pow(b1 - b2, 2)
+    );
+  };
+
+  // Find closest existing color group
+  const findClosestColorGroup = (
+    r: number, 
+    g: number, 
+    b: number, 
+    groups: Array<{ r: number; g: number; b: number; count: number; colors: Array<{ r: number; g: number; b: number }> }>,
+    threshold: number
+  ): number | null => {
+    let minDistance = Infinity;
+    let closestIndex = null;
     
-    // Use a smaller quantization step for more accurate colors
-    const quantize = (value: number): number => Math.round(value / 16) * 16;
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i];
+      const dist = colorDistance(r, g, b, group.r, group.g, group.b);
+      
+      if (dist < minDistance && dist <= threshold) {
+        minDistance = dist;
+        closestIndex = i;
+      }
+    }
+    
+    return closestIndex;
+  };
+
+  // Extract and group similar colors
+  const extractAndGroupColors = (imageData: ImageData, threshold: number): Map<string, { r: number; g: number; b: number; count: number; hex: string }> => {
+    const pixels = imageData.data;
+    const colorGroups: Array<{ r: number; g: number; b: number; count: number; colors: Array<{ r: number; g: number; b: number }> }> = [];
     
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i];
@@ -40,28 +71,49 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       const b = pixels[i + 2];
       const a = pixels[i + 3];
       
-      if (a < 128) continue; // Skip transparent/semi-transparent pixels
+      if (a < 128) continue; // Skip transparent pixels
       
-      // Skip white and very light colors (optional - comment out if you want white included)
-      // if (r > 250 && g > 250 && b > 250) continue;
+      // Find if this color belongs to an existing group
+      const closestGroupIndex = findClosestColorGroup(r, g, b, colorGroups, threshold);
       
-      const qR = quantize(r);
-      const qG = quantize(g);
-      const qB = quantize(b);
-      
-      const key = `${qR},${qG},${qB}`;
-      
-      if (colorMap.has(key)) {
-        colorMap.get(key)!.count++;
+      if (closestGroupIndex !== null) {
+        // Add to existing group and update average
+        const group = colorGroups[closestGroupIndex];
+        group.colors.push({ r, g, b });
+        group.count++;
+        
+        // Recalculate average color for the group
+        let sumR = 0, sumG = 0, sumB = 0;
+        for (const color of group.colors) {
+          sumR += color.r;
+          sumG += color.g;
+          sumB += color.b;
+        }
+        group.r = sumR / group.colors.length;
+        group.g = sumG / group.colors.length;
+        group.b = sumB / group.colors.length;
       } else {
-        colorMap.set(key, { 
-          r: qR, 
-          g: qG, 
-          b: qB, 
+        // Create new group
+        colorGroups.push({
+          r, g, b,
           count: 1,
-          hex: rgbToHex(qR, qG, qB)
+          colors: [{ r, g, b }]
         });
       }
+    }
+    
+    // Convert to Map format
+    const colorMap = new Map<string, { r: number; g: number; b: number; count: number; hex: string }>();
+    
+    for (const group of colorGroups) {
+      const key = `${Math.round(group.r)},${Math.round(group.g)},${Math.round(group.b)}`;
+      colorMap.set(key, {
+        r: Math.round(group.r),
+        g: Math.round(group.g),
+        b: Math.round(group.b),
+        count: group.count,
+        hex: rgbToHex(Math.round(group.r), Math.round(group.g), Math.round(group.b))
+      });
     }
     
     return colorMap;
@@ -94,107 +146,24 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         ctx.drawImage(img, 0, 0, width, height);
         
         const imageData = ctx.getImageData(0, 0, width, height);
-        const colorMap = extractColors(imageData);
         
-        console.log('Found colors:', colorMap.size);
+        // Extract and group similar colors
+        const colorMap = extractAndGroupColors(imageData, colorDistanceThreshold);
+        
+        console.log('Distinct color groups found:', colorMap.size);
         
         // Filter out colors with very few pixels (noise)
-        const minPixels = (width * height) * 0.001; // 0.1% of image
-        let filteredColors = Array.from(colorMap.entries())
+        const minPixels = (width * height) * 0.002; // 0.2% of image
+        const filteredColors = Array.from(colorMap.entries())
           .filter(([_, data]) => data.count >= minPixels)
           .sort((a, b) => b[1].count - a[1].count);
         
-        console.log('Initial colors after filtering:', filteredColors.length);
-        
-        // Smart color merging - keep maximum 8 colors
-        const MAX_COLORS = 8;
-        
-        if (filteredColors.length > MAX_COLORS) {
-          // Calculate color similarity (Euclidean distance)
-          const colorDistance = (c1: { r: number; g: number; b: number }, c2: { r: number; g: number; b: number }) => {
-            return Math.sqrt(
-              Math.pow(c1.r - c2.r, 2) +
-              Math.pow(c1.g - c2.g, 2) +
-              Math.pow(c1.b - c2.b, 2)
-            );
-          };
-          
-          // Merge two colors by weighted average (by pixel count)
-          const mergeColors = (
-            c1: { r: number; g: number; b: number; count: number },
-            c2: { r: number; g: number; b: number; count: number }
-          ) => {
-            const totalCount = c1.count + c2.count;
-            return {
-              r: (c1.r * c1.count + c2.r * c2.count) / totalCount,
-              g: (c1.g * c1.count + c2.g * c2.count) / totalCount,
-              b: (c1.b * c1.count + c2.b * c2.count) / totalCount,
-              count: totalCount,
-              hex: ''
-            };
-          };
-          
-          // Convert to mutable array
-          let colorsToMerge = filteredColors.map(([key, data]) => ({
-            key,
-            r: data.r,
-            g: data.g,
-            b: data.b,
-            count: data.count,
-            hex: data.hex
-          }));
-          
-          // Keep merging closest colors until we have MAX_COLORS or less
-          while (colorsToMerge.length > MAX_COLORS) {
-            let closestPair: { i: number; j: number; distance: number } | null = null;
-            
-            // Find the two most similar colors
-            for (let i = 0; i < colorsToMerge.length; i++) {
-              for (let j = i + 1; j < colorsToMerge.length; j++) {
-                const distance = colorDistance(colorsToMerge[i], colorsToMerge[j]);
-                if (!closestPair || distance < closestPair.distance) {
-                  closestPair = { i, j, distance };
-                }
-              }
-            }
-            
-            if (closestPair) {
-              const { i, j } = closestPair;
-              const merged = mergeColors(colorsToMerge[i], colorsToMerge[j]);
-              merged.hex = rgbToHex(merged.r, merged.g, merged.b);
-              
-              // Replace the first color with merged version, remove the second
-              colorsToMerge[i] = {
-                ...merged,
-                key: `merged-${colorsToMerge[i].key}-${colorsToMerge[j].key}`
-              };
-              colorsToMerge.splice(j, 1);
-            } else {
-              break;
-            }
-          }
-          
-          // Convert back to filteredColors format
-          filteredColors = colorsToMerge.map(color => [
-            color.key,
-            {
-              r: Math.round(color.r),
-              g: Math.round(color.g),
-              b: Math.round(color.b),
-              count: color.count,
-              hex: color.hex
-            }
-          ]) as [string, any][];
-          
-          console.log(`Merged to ${filteredColors.length} colors (max ${MAX_COLORS})`);
-        }
-        
-        console.log('Final colors:', filteredColors.length);
+        console.log('Colors after noise removal:', filteredColors.length);
         
         const layers: ColorLayer[] = [];
         const visibility: Record<string, boolean> = {};
         
-        // Create separation for each color
+        // Create separation for each color group
         filteredColors.forEach(([key, colorData], index) => {
           const { r, g, b, hex } = colorData;
           
@@ -208,10 +177,10 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           const pixels = imageData.data;
           const layerPixels = layerImageData.data;
           
-          // Calculate color distance tolerance dynamically
-          const tolerance = 35;
+          // Use adaptive tolerance based on color distance threshold
+          const tolerance = colorDistanceThreshold;
           
-          // Extract only this color
+          // Extract pixels belonging to this color group
           for (let i = 0; i < pixels.length; i += 4) {
             const pR = pixels[i];
             const pG = pixels[i + 1];
@@ -223,14 +192,11 @@ const SimpleSilkscreenSeparator: React.FC = () => {
               continue;
             }
             
-            // Calculate color distance
-            const dist = Math.sqrt(
-              Math.pow(pR - r, 2) + 
-              Math.pow(pG - g, 2) + 
-              Math.pow(pB - b, 2)
-            );
+            // Calculate color distance from group center
+            const dist = colorDistance(pR, pG, pB, r, g, b);
             
-            if (dist < tolerance) {
+            if (dist <= tolerance) {
+              // Use the original color or group color? Using group color for consistency
               layerPixels[i] = r;
               layerPixels[i + 1] = g;
               layerPixels[i + 2] = b;
@@ -370,11 +336,18 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const updateThreshold = (newThreshold: number) => {
+    setColorDistanceThreshold(newThreshold);
+    if (fileInputRef.current?.files?.[0]) {
+      processImage(fileInputRef.current.files[0]);
+    }
+  };
+
   return (
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Automatic Color Separation</h1>
+      <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Smart Color Distinction</h1>
       <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
-        Upload an image and colors will be automatically detected and separated (max 8 colors)
+        Automatically detects and distinguishes similar colors in your image
       </p>
       
       {!originalImage && (
@@ -406,9 +379,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
             style={{ display: 'none' }}
           />
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>🖼️</div>
-          <p style={{ fontSize: '18px', color: '#666' }}>Click to upload your image</p>
+          <p style={{ fontSize: '18px, color: #666' }}>Click to upload your image</p>
           <p style={{ fontSize: '14px', color: '#999', marginTop: '10px' }}>
-            PNG, JPG, GIF supported (max 8 colors)
+            PNG, JPG, GIF supported
           </p>
         </div>
       )}
@@ -424,7 +397,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />
-          <p style={{ marginTop: '20px', color: '#666' }}>Detecting colors and creating separations...</p>
+          <p style={{ marginTop: '20px', color: '#666' }}>Analyzing and distinguishing colors...</p>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         </div>
       )}
@@ -432,11 +405,32 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       {originalImage && !isProcessing && (
         <div>
           {/* Controls */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <button onClick={reset} style={buttonStyle('#666')}>← New Image</button>
             <button onClick={downloadAll} style={buttonStyle('#28a745')}>⬇ Download All ({colorLayers.length})</button>
             <button onClick={downloadMerged} style={buttonStyle('#0066cc')}>⬇ Download Merged</button>
+            
             <div style={{ flex: 1 }} />
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <label style={{ fontSize: '14px', color: '#666' }}>
+                Color Sensitivity: 
+              </label>
+              <input
+                type="range"
+                min="10"
+                max="80"
+                value={colorDistanceThreshold}
+                onChange={(e) => updateThreshold(Number(e.target.value))}
+                style={{ width: '150px' }}
+              />
+              <span style={{ fontSize: '12px', color: '#999', minWidth: '60px' }}>
+                {colorDistanceThreshold === 10 ? 'Strict' : 
+                 colorDistanceThreshold <= 30 ? 'Normal' : 
+                 colorDistanceThreshold <= 50 ? 'Loose' : 'Very Loose'}
+              </span>
+            </div>
+            
             <button onClick={() => toggleAll(true)} style={buttonStyle('#888', 'small')}>Show All</button>
             <button onClick={() => toggleAll(false)} style={buttonStyle('#888', 'small')}>Hide All</button>
           </div>
@@ -478,9 +472,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
               padding: '20px'
             }}>
               <h3 style={{ marginTop: 0, marginBottom: '15px' }}>
-                🖼️ Merged Separations 
+                🖼️ Distinguished Colors 
                 <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#666', marginLeft: '10px' }}>
-                  ({Object.values(visibleLayers).filter(v => v).length} layers)
+                  ({Object.values(visibleLayers).filter(v => v).length} / {colorLayers.length} layers)
                 </span>
               </h3>
               <div style={{
@@ -517,9 +511,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
             padding: '20px',
             marginBottom: '30px'
           }}>
-            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>🎨 Detected Colors ({colorLayers.length})</h3>
+            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>🎨 Distinguished Color Groups ({colorLayers.length})</h3>
             <p style={{ fontSize: '14px', color: '#666', marginBottom: '15px' }}>
-              Click on any color to toggle visibility in the merged result
+              Similar colors are grouped together. Adjust the sensitivity slider to merge or separate colors.
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
               {colorLayers.map(layer => (
@@ -559,7 +553,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
                     color: '#888',
                     marginLeft: '4px'
                   }}>
-                    ({Math.round(layer.pixelCount / (originalImage ? 1 : 1)).toLocaleString()})
+                    ({Math.round(layer.pixelCount / 1000).toLocaleString()}K px)
                   </span>
                   <span style={{ marginLeft: '4px' }}>
                     {visibleLayers[layer.id] ? '👁️' : '👁️‍🗨️'}
