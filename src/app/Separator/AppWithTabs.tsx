@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import VectorizeBlurredImage from './VectorizeBlurredImage';
 import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
 import SilkScreenColorSeparatorCMYK from './SilkScreenColorSeparatorCMYK';
+
 interface Tab {
   id: string;
   label: string;
@@ -22,22 +23,25 @@ const Tabs: React.FC<TabsProps> = ({ tabs, defaultActiveTab }) => {
     <div className="max-w-6xl mx-auto">
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
-        <nav className="flex space-x-8" aria-label="Tabs">
+        <nav className="flex justify-center space-x-12" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm
-                transition-colors duration-200
+                flex items-center justify-center py-3 px-6 border-b-2 font-medium text-sm
+                transition-all duration-200 ease-in-out
                 ${activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }
               `}
             >
-              {tab.icon && <span className="text-lg">{tab.icon}</span>}
-              {tab.label}
+              {tab.icon && (
+                <span className={`text-2xl transition-transform duration-200 ${activeTab === tab.id ? 'scale-110' : 'scale-100'}`}>
+                  {tab.icon}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -57,7 +61,7 @@ const AppWithTabs: React.FC = () => {
   const OtherComponent = () => (
     <div className="p-6 bg-gray-50 rounded-lg">
       <h2 className="text-xl font-semibold mb-4">Your Other Component</h2>
-      <p className="text-gray-600">This is where youll add your second component.</p>
+      <p className="text-gray-600">This is where you'll add your second component.</p>
       <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
         <p className="text-blue-800">✨ Add your component logic here</p>
       </div>
@@ -80,9 +84,9 @@ const AppWithTabs: React.FC = () => {
     {
       id: 'CMYK',
       label: 'CMYK',
-      icon: '🔧',
+      icon: '🎨',
       component: <SilkScreenColorSeparatorCMYK/>
-  }
+    }
   ];
 
   return <Tabs tabs={tabs} defaultActiveTab="vectorizer" />;
