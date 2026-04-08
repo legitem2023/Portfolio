@@ -6,6 +6,7 @@ interface ColorLayer {
   id: string;
   hex: string;
   imageData: string;
+  blackImageData: string; // Black version for download
   pixelCount: number;
 }
 
@@ -42,9 +43,6 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       
       if (a < 128) continue; // Skip transparent/semi-transparent pixels
       
-      // Skip white and very light colors (optional - comment out if you want white included)
-      // if (r > 250 && g > 250 && b > 250) continue;
-      
       const qR = quantize(r);
       const qG = quantize(g);
       const qB = quantize(b);
@@ -67,12 +65,43 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     return colorMap;
   };
 
-  // Process image and create separations
-  const processImage = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
+  // Convert colored separation to black (for film output)
+  const convertToBlackSeparation = (coloredImageData: string): Promise<string> => {
+    return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d')!;
+        
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+        
+        // Convert all non-transparent pixels to black
+        for (let i = 0; i < pixels.length; i += 4) {
+          if (pixels[i + 3] > 0) {
+            pixels[i] = 0;       // R
+            pixels[i + 1] = 0;   // G
+            pixels[i + 2] = 0;   // B
+            // Alpha stays the same
+          }
+        }
+        
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = coloredImageData;
+    });
+  };
+
+  // Process image and create separations
+  const processImage = async (file: File) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const img = new Image();
+      img.onload = async () => {
         setIsProcessing(true);
         
         const canvas = document.createElement('canvas');
@@ -195,7 +224,8 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         const visibility: Record<string, boolean> = {};
         
         // Create separation for each color
-        filteredColors.forEach(([key, colorData], index) => {
+        for (let index = 0; index < filteredColors.length; index++) {
+          const [key, colorData] = filteredColors[index];
           const { r, g, b, hex } = colorData;
           
           // Create layer canvas
@@ -242,16 +272,20 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           
           layerCtx.putImageData(layerImageData, 0, 0);
           
+          const coloredImageData = layerCanvas.toDataURL('image/png');
+          const blackImageData = await convertToBlackSeparation(coloredImageData);
+          
           const layerId = `layer-${index}`;
           layers.push({
             id: layerId,
             hex: hex,
-            imageData: layerCanvas.toDataURL('image/png'),
+            imageData: coloredImageData,
+            blackImageData: blackImageData,
             pixelCount: colorData.count
           });
           
           visibility[layerId] = true;
-        });
+        }
         
         setColorLayers(layers);
         setVisibleLayers(visibility);
@@ -336,16 +370,24 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     }
   };
 
-  // Download all layers
+  // Download all layers as black separations
   const downloadAll = () => {
     colorLayers.forEach((layer, index) => {
       setTimeout(() => {
         const link = document.createElement('a');
-        link.download = `separation_${layer.hex.replace('#', '')}.png`;
-        link.href = layer.imageData;
+        link.download = `separation_${layer.hex.replace('#', '')}_black.png`;
+        link.href = layer.blackImageData;
         link.click();
       }, index * 200);
     });
+  };
+
+  // Download single layer as black separation
+  const downloadLayer = (layer: ColorLayer) => {
+    const link = document.createElement('a');
+    link.download = `plate_${layer.hex.replace('#', '')}_black.png`;
+    link.href = layer.blackImageData;
+    link.click();
   };
 
   // Download merged result
@@ -375,6 +417,9 @@ const SimpleSilkscreenSeparator: React.FC = () => {
       <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Automatic Color Separation</h1>
       <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
         Upload an image and colors will be automatically detected and separated (max 8 colors)
+      </p>
+      <p style={{ textAlign: 'center', color: '#0066cc', marginBottom: '30px', fontSize: '14px' }}>
+        ⚫ Downloads are black separations ready for screen printing films
       </p>
       
       {!originalImage && (
@@ -434,7 +479,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           {/* Controls */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <button onClick={reset} style={buttonStyle('#666')}>← New Image</button>
-            <button onClick={downloadAll} style={buttonStyle('#28a745')}>⬇ Download All ({colorLayers.length})</button>
+            <button onClick={downloadAll} style={buttonStyle('#000000')}>⬇ Download All Black ({colorLayers.length})</button>
             <button onClick={downloadMerged} style={buttonStyle('#0066cc')}>⬇ Download Merged</button>
             <div style={{ flex: 1 }} />
             <button onClick={() => toggleAll(true)} style={buttonStyle('#888', 'small')}>Show All</button>
@@ -570,7 +615,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           </div>
 
           {/* Individual separations grid */}
-          <h3 style={{ marginBottom: '20px' }}>📋 Individual Color Plates</h3>
+          <h3 style={{ marginBottom: '20px' }}>📋 Individual Color Plates (Download = Black Film)</h3>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
@@ -626,26 +671,20 @@ const SimpleSilkscreenSeparator: React.FC = () => {
                 </div>
                 
                 <button
-                  onClick={() => {
-                    const link = document.createElement('a');
-                    link.download = `plate_${layer.hex.replace('#', '')}.png`;
-                    link.href = layer.imageData;
-                    link.click();
-                  }}
+                  onClick={() => downloadLayer(layer)}
                   style={{
                     width: '100%',
                     padding: '8px',
-                    backgroundColor: layer.hex,
+                    backgroundColor: '#000000',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '6px',
                     cursor: 'pointer',
                     fontSize: '12px',
-                    fontWeight: '500',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                    fontWeight: '500'
                   }}
                 >
-                  Download
+                  ⚫ Download Black Film
                 </button>
               </div>
             ))}
