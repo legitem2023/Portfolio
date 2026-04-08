@@ -1,155 +1,261 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+
+interface ColorLayer {
+  color: string;
+  hex: string;
+  rgb: string;
+  image: string;
+  percentage: number;
+  pixelCount: number;
+}
 
 const ColorSeparator: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [dominantColors, setDominantColors] = useState<Array<{ color: string; hex: string; rgb: string; image: string; percentage: number }>>([]);
+  const [colorLayers, setColorLayers] = useState<ColorLayer[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [numColors, setNumColors] = useState(5);
+  const [progress, setProgress] = useState(0);
+  const [totalColorsFound, setTotalColorsFound] = useState(0);
+  const [filterThreshold, setFilterThreshold] = useState(0.01); // Minimum percentage to show
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const getDominantColors = (pixels: Uint8ClampedArray, width: number, height: number, colorCount: number) => {
-    const colorMap = new Map<string, { r: number; g: number; b: number; count: number; pixels: number[] }>();
-    
-    // Sample pixels (sample every 4th pixel for performance)
-    for (let i = 0; i < pixels.length; i += 16) {
-      const r = pixels[i];
-      const g = pixels[i + 1];
-      const b = pixels[i + 2];
-      
-      // Quantize colors to reduce variations
-      const quantizedR = Math.round(r / 15) * 15;
-      const quantizedG = Math.round(g / 15) * 15;
-      const quantizedB = Math.round(b / 15) * 15;
-      const colorKey = `${quantizedR},${quantizedG},${quantizedB}`;
-      
-      if (!colorMap.has(colorKey)) {
-        colorMap.set(colorKey, {
-          r: quantizedR,
-          g: quantizedG,
-          b: quantizedB,
-          count: 0,
-          pixels: []
-        });
-      }
-      const colorData = colorMap.get(colorKey)!;
-      colorData.count++;
-      colorData.pixels.push(i);
-    }
-    
-    // Convert to array and sort by count
-    const sortedColors = Array.from(colorMap.values())
-      .sort((a, b) => b.count - a.count)
-      .slice(0, colorCount);
-    
-    return sortedColors;
+  // Color quantization - reduce to exact color values for true separation
+  const quantizeColor = (r: number, g: number, b: number, precision: number = 1): string => {
+    // Use precision 1 for exact colors (no quantization)
+    // This ensures we capture every single distinct color
+    const qR = Math.round(r / precision) * precision;
+    const qG = Math.round(g / precision) * precision;
+    const qB = Math.round(b / precision) * precision;
+    return `${qR},${qG},${qB}`;
   };
 
-  const rgbToHex = (r: number, g: number, b: number) => {
+  const rgbToHex = (r: number, g: number, b: number): string => {
     return '#' + [r, g, b].map(x => {
-      const hex = x.toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
+      const hex = Math.round(x).toString(16).padStart(2, '0');
+      return hex;
     }).join('');
   };
 
-  const processImage = (file: File) => {
+  const rgbToHsl = (r: number, g: number, b: number): { h: number; s: number; l: number } => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+    
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0, s, l = (max + min) / 2;
+
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+  };
+
+  const getColorNameFromRgb = (r: number, g: number, b: number): string => {
+    const hsl = rgbToHsl(r, g, b);
+    
+    // Handle grayscale
+    if (hsl.s < 10) {
+      if (hsl.l < 15) return 'Black';
+      if (hsl.l > 85) return 'White';
+      if (hsl.l < 35) return 'Dark Gray';
+      if (hsl.l > 65) return 'Light Gray';
+      return 'Gray';
+    }
+
+    // Handle colors based on hue
+    const h = hsl.h;
+    
+    if (h < 15) return 'Red';
+    if (h < 35) return 'Orange-Red';
+    if (h < 45) return 'Orange';
+    if (h < 55) return 'Orange-Yellow';
+    if (h < 70) return 'Yellow';
+    if (h < 90) return 'Yellow-Green';
+    if (h < 150) return 'Green';
+    if (h < 180) return 'Teal';
+    if (h < 210) return 'Cyan';
+    if (h < 240) return 'Blue';
+    if (h < 270) return 'Indigo';
+    if (h < 300) return 'Purple';
+    if (h < 330) return 'Magenta';
+    if (h < 345) return 'Pink';
+    return 'Red';
+  };
+
+  const processImage = async (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const img = new Image();
-      img.onload = () => {
+      img.onload = async () => {
         setIsProcessing(true);
+        setProgress(0);
         
         const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
+        const maxDimension = 1200; // Limit size for performance while maintaining detail
+        
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         
         if (!ctx) return;
         
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const imageData = ctx.getImageData(0, 0, width, height);
         const pixels = imageData.data;
         
-        // Get dominant colors
-        const dominantColorData = getDominantColors(pixels, img.width, img.height, numColors);
+        // Step 1: Find all unique colors
+        setProgress(10);
+        const colorMap = new Map<string, { 
+          r: number; 
+          g: number; 
+          b: number; 
+          count: number;
+          positions: number[];
+        }>();
         
-        // Create a separate layer for each dominant color
-        const layers = dominantColorData.map(colorInfo => {
+        const totalPixels = pixels.length / 4;
+        
+        // Process every pixel to find all exact colors
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const a = pixels[i + 3];
+          
+          // Skip fully transparent pixels
+          if (a === 0) continue;
+          
+          // Use exact color values (no quantization) for true separation
+          const colorKey = `${r},${g},${b}`;
+          
+          if (!colorMap.has(colorKey)) {
+            colorMap.set(colorKey, {
+              r,
+              g,
+              b,
+              count: 0,
+              positions: []
+            });
+          }
+          
+          const colorData = colorMap.get(colorKey)!;
+          colorData.count++;
+          colorData.positions.push(i);
+          
+          // Update progress during counting
+          if (i % 10000 === 0) {
+            setProgress(10 + Math.floor((i / pixels.length) * 30));
+            await new Promise(resolve => setTimeout(resolve, 0)); // Allow UI updates
+          }
+        }
+        
+        setTotalColorsFound(colorMap.size);
+        setProgress(40);
+        
+        // Convert to array and sort by frequency
+        const sortedColors = Array.from(colorMap.values())
+          .sort((a, b) => b.count - a.count);
+        
+        // Filter colors that meet the threshold
+        const significantColors = sortedColors.filter(
+          color => (color.count / totalPixels) * 100 >= filterThreshold
+        );
+        
+        setProgress(50);
+        
+        // Step 2: Create separate layer for each color
+        const layers: ColorLayer[] = [];
+        const totalColors = significantColors.length;
+        
+        for (let idx = 0; idx < significantColors.length; idx++) {
+          const colorInfo = significantColors[idx];
+          
+          // Update progress
+          setProgress(50 + Math.floor((idx / totalColors) * 45));
+          
+          // Create canvas for this color layer
           const layerCanvas = document.createElement('canvas');
-          layerCanvas.width = img.width;
-          layerCanvas.height = img.height;
+          layerCanvas.width = width;
+          layerCanvas.height = height;
           const layerCtx = layerCanvas.getContext('2d');
           
-          if (!layerCtx) return null;
+          if (!layerCtx) continue;
           
-          const layerData = layerCtx.createImageData(img.width, img.height);
+          const layerData = layerCtx.createImageData(width, height);
           
-          // Start with transparent
+          // Initialize with transparency
           for (let i = 0; i < layerData.data.length; i += 4) {
-            layerData.data[i] = 0;
-            layerData.data[i + 1] = 0;
-            layerData.data[i + 2] = 0;
             layerData.data[i + 3] = 0;
           }
           
-          // Find all pixels that match this color (with tolerance)
-          const tolerance = 40;
-          for (let i = 0; i < pixels.length; i += 4) {
-            const r = pixels[i];
-            const g = pixels[i + 1];
-            const b = pixels[i + 2];
-            
-            const colorDiff = Math.abs(r - colorInfo.r) + Math.abs(g - colorInfo.g) + Math.abs(b - colorInfo.b);
-            
-            /*if (colorDiff < tolerance) {
-              layerData.data[i] = colorInfo.r;
-              layerData.data[i + 1] = colorInfo.g;
-              layerData.data[i + 2] = colorInfo.b;
-              layerData.data[i + 3] = 255;
-            }*/
-            if (colorDiff < tolerance) {
-             layerData.data[i] = 0;     // Red = 0
-             layerData.data[i + 1] = 0; // Green = 0
-             layerData.data[i + 2] = 0; // Blue = 0
-             layerData.data[i + 3] = 255;
-            }
+          // Fill pixels that match this exact color
+          for (const position of colorInfo.positions) {
+            layerData.data[position] = colorInfo.r;
+            layerData.data[position + 1] = colorInfo.g;
+            layerData.data[position + 2] = colorInfo.b;
+            layerData.data[position + 3] = 255;
           }
           
           layerCtx.putImageData(layerData, 0, 0);
           
           const hexColor = rgbToHex(colorInfo.r, colorInfo.g, colorInfo.b);
-          const percentage = (colorInfo.count / (pixels.length / 4)) * 100;
+          const percentage = (colorInfo.count / totalPixels) * 100;
+          const colorName = getColorNameFromRgb(colorInfo.r, colorInfo.g, colorInfo.b);
           
-          return {
-            color: getColorName(colorInfo.r, colorInfo.g, colorInfo.b),
+          // Add variation to name if needed
+          let finalName = colorName;
+          const sameNameCount = layers.filter(l => l.color.startsWith(colorName)).length;
+          if (sameNameCount > 0) {
+            finalName = `${colorName} ${sameNameCount + 1}`;
+          }
+          
+          layers.push({
+            color: finalName,
             hex: hexColor,
             rgb: `${colorInfo.r}, ${colorInfo.g}, ${colorInfo.b}`,
-            image: layerCanvas.toDataURL(),
-            percentage: percentage
-          };
-        }).filter(layer => layer !== null);
+            image: layerCanvas.toDataURL('image/png'),
+            percentage,
+            pixelCount: colorInfo.count
+          });
+          
+          // Allow UI to update periodically
+          if (idx % 10 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+          }
+        }
         
-        setOriginalImage(canvas.toDataURL());
-        setDominantColors(layers);
+        setOriginalImage(canvas.toDataURL('image/png'));
+        setColorLayers(layers);
+        setProgress(100);
         setIsProcessing(false);
       };
+      
       img.src = e.target?.result as string;
     };
+    
     reader.readAsDataURL(file);
-  };
-
-  const getColorName = (r: number, g: number, b: number): string => {
-    if (r > 200 && g < 100 && b < 100) return 'Red';
-    if (r > 200 && g > 100 && g < 200 && b < 100) return 'Orange';
-    if (r > 200 && g > 200 && b < 100) return 'Yellow';
-    if (r < 100 && g > 200 && b < 100) return 'Green';
-    if (r < 100 && g < 150 && b > 200) return 'Blue';
-    if (r > 150 && g < 150 && b > 200) return 'Purple';
-    if (r > 200 && g > 150 && b > 150) return 'Pink';
-    if (r < 80 && g < 80 && b < 80) return 'Black';
-    if (r > 200 && g > 200 && b > 200) return 'White';
-    return 'Color';
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,14 +279,23 @@ const ColorSeparator: React.FC = () => {
 
   const downloadLayer = (colorName: string, image: string) => {
     const link = document.createElement('a');
-    link.download = `${colorName.toLowerCase()}_layer.png`;
+    link.download = `${colorName.toLowerCase().replace(/\s+/g, '_')}_layer.png`;
     link.href = image;
     link.click();
   };
 
+  const downloadAllLayers = async () => {
+    for (const layer of colorLayers) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      downloadLayer(layer.color, layer.image);
+    }
+  };
+
   const resetImage = () => {
     setOriginalImage(null);
-    setDominantColors([]);
+    setColorLayers([]);
+    setProgress(0);
+    setTotalColorsFound(0);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -189,24 +304,26 @@ const ColorSeparator: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dominant Color Separator</h1>
-        <p className="text-gray-600">Extracts and separates the main colors from your image</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Exact Color Separator</h1>
+        <p className="text-gray-600">Separates every distinct color in your image down to the smallest detail</p>
       </div>
 
       {!originalImage && (
         <div>
           <div className="mb-4 flex justify-center gap-4 items-center">
-            <label className="text-gray-700">Number of colors to extract:</label>
+            <label className="text-gray-700">Minimum color percentage to show:</label>
             <select 
-              value={numColors} 
-              onChange={(e) => setNumColors(Number(e.target.value))}
+              value={filterThreshold} 
+              onChange={(e) => setFilterThreshold(Number(e.target.value))}
               className="px-3 py-2 border rounded-lg"
             >
-              <option value={3}>3 Colors</option>
-              <option value={4}>4 Colors</option>
-              <option value={5}>5 Colors</option>
-              <option value={6}>6 Colors</option>
-              <option value={8}>8 Colors</option>
+              <option value={0}>Show all colors (no filter)</option>
+              <option value={0.001}>0.001% minimum</option>
+              <option value={0.01}>0.01% minimum</option>
+              <option value={0.05}>0.05% minimum</option>
+              <option value={0.1}>0.1% minimum</option>
+              <option value={0.5}>0.5% minimum</option>
+              <option value={1}>1% minimum</option>
             </select>
           </div>
           
@@ -225,27 +342,92 @@ const ColorSeparator: React.FC = () => {
             />
             <div className="text-4xl mb-4">🎨</div>
             <p className="text-gray-600 mb-2">Click or drag & drop an image here</p>
-            <p className="text-sm text-gray-400">The {numColors} most dominant colors will be extracted</p>
+            <p className="text-sm text-gray-400">Every distinct color will be separated into individual layers</p>
           </div>
         </div>
       )}
 
       {isProcessing && (
         <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600 mt-2">Analyzing dominant colors...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mb-4"></div>
+          <div className="w-full max-w-md mx-auto bg-gray-200 rounded-full h-2.5 mb-4">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <p className="text-gray-600">
+            {progress < 40 && "Analyzing pixels..."}
+            {progress >= 40 && progress < 50 && `Found ${totalColorsFound.toLocaleString()} unique colors...`}
+            {progress >= 50 && progress < 95 && "Creating color layers..."}
+            {progress >= 95 && "Finalizing..."}
+          </p>
+          <p className="text-sm text-gray-500 mt-2">{progress}% complete</p>
         </div>
       )}
 
       {originalImage && !isProcessing && (
         <div>
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-wrap justify-between gap-3 mb-4">
             <button
               onClick={resetImage}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Upload New Image
             </button>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={downloadAllLayers}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={colorLayers.length === 0}
+              >
+                Download All Layers
+              </button>
+              
+              <select 
+                value={filterThreshold} 
+                onChange={(e) => {
+                  setFilterThreshold(Number(e.target.value));
+                  if (fileInputRef.current?.files?.[0]) {
+                    processImage(fileInputRef.current.files[0]);
+                  }
+                }}
+                className="px-3 py-2 border rounded-lg"
+              >
+                <option value={0}>Show all</option>
+                <option value={0.001}>≥0.001%</option>
+                <option value={0.01}>≥0.01%</option>
+                <option value={0.05}>≥0.05%</option>
+                <option value={0.1}>≥0.1%</option>
+                <option value={0.5}>≥0.5%</option>
+                <option value={1}>≥1%</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <p className="text-2xl font-bold text-blue-600">{totalColorsFound.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Total Unique Colors</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-600">{colorLayers.length.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Color Layers Created</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-600">{colorLayers.filter(l => l.percentage >= 1).length}</p>
+                <p className="text-sm text-gray-600">Colors ≥1%</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-orange-600">
+                  {colorLayers.length > 0 ? colorLayers[0].percentage.toFixed(2) : '0'}%
+                </p>
+                <p className="text-sm text-gray-600">Most Dominant Color</p>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -255,23 +437,26 @@ const ColorSeparator: React.FC = () => {
               <img src={originalImage} alt="Original" className="w-full rounded-lg shadow-sm" />
             </div>
 
-            {/* Dominant Colors Palette */}
+            {/* Color Palette */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Dominant Colors</h3>
-              <div className="space-y-3">
-                {dominantColors.map((color, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 border rounded-lg">
+              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">
+                Color Palette ({colorLayers.length} colors)
+              </h3>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {colorLayers.map((color, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 border rounded-lg hover:bg-gray-50">
                     <div 
-                      className="w-12 h-12 rounded-lg shadow-sm" 
+                      className="w-10 h-10 rounded-lg shadow-sm flex-shrink-0 border" 
                       style={{ backgroundColor: color.hex }}
                     ></div>
-                    <div className="flex-1">
-                      <p className="font-semibold">{color.color}</p>
-                      <p className="text-xs text-gray-500">{color.hex} • {color.percentage.toFixed(1)}%</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{color.color}</p>
+                      <p className="text-xs text-gray-500">{color.hex} • RGB({color.rgb})</p>
+                      <p className="text-xs text-gray-400">{color.percentage.toFixed(3)}% • {color.pixelCount.toLocaleString()} pixels</p>
                     </div>
                     <button
                       onClick={() => downloadLayer(color.color, color.image)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 flex-shrink-0"
                     >
                       Download
                     </button>
@@ -282,34 +467,53 @@ const ColorSeparator: React.FC = () => {
           </div>
 
           {/* Separated Color Layers */}
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">Separated Color Layers</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dominantColors.map((color, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div 
-                    className="w-6 h-6 rounded-full" 
-                    style={{ backgroundColor: color.hex }}
-                  ></div>
-                  <h3 className="text-lg font-semibold">{color.color} Layer</h3>
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Separated Color Layers ({colorLayers.length} layers)
+          </h3>
+          
+          {colorLayers.length === 0 ? (
+            <div className="text-center py-8 bg-white rounded-lg">
+              <p className="text-gray-500">No colors found above the threshold. Try lowering the minimum percentage.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {colorLayers.map((color, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-md p-3 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div 
+                      className="w-5 h-5 rounded-full border flex-shrink-0" 
+                      style={{ backgroundColor: color.hex }}
+                    ></div>
+                    <h3 className="text-sm font-semibold truncate">{color.color}</h3>
+                    <span className="text-xs text-gray-500 ml-auto">{color.percentage.toFixed(2)}%</span>
+                  </div>
+                  
+                  <div className="relative group mb-2">
+                    <img 
+                      src={color.image} 
+                      alt={`${color.color} layer`} 
+                      className="w-full rounded border bg-gray-100"
+                      style={{ minHeight: '100px' }}
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded"></div>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-600">RGB: {color.rgb}</p>
+                    <p className="text-xs text-gray-600">HEX: {color.hex}</p>
+                    <p className="text-xs text-gray-600">{color.pixelCount.toLocaleString()} pixels</p>
+                    
+                    <button
+                      onClick={() => downloadLayer(color.color, color.image)}
+                      className="w-full px-3 py-1.5 bg-black text-white text-xs rounded hover:bg-gray-800 transition-colors mt-2"
+                    >
+                      Download Layer
+                    </button>
+                  </div>
                 </div>
-                <img 
-                  src={color.image} 
-                  alt={`${color.color} layer`} 
-                  className="w-full rounded-lg shadow-sm border mb-3"
-                />
-                <p className="text-xs text-gray-500 mb-2 text-center">
-                  Shows only the {color.color} areas from the image
-                </p>
-                <button
-                  onClick={() => downloadLayer(color.color, color.image)}
-                  className="w-full px-3 py-2 bg-black text-white text-sm rounded hover:bg-gray-800 transition-colors"
-                >
-                  Download {color.color} Layer
-                </button>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
