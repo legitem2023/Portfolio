@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import VectorizeBlurredImage from './VectorizeBlurredImage';
 import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
+import SilkScreenColorSeparatorCMYK from './SilkScreenColorSeparatorCMYK';
 interface Tab {
   id: string;
   label: string;
@@ -75,7 +76,13 @@ const AppWithTabs: React.FC = () => {
       label: 'Separate Colors',
       icon: '🔧',
       component: <SimpleSilkscreenSeparator />
-    }
+    },
+    {
+      id: 'CMYK',
+      label: 'CMYK',
+      icon: '🔧',
+      component: <SilkScreenColorSeparatorCMYK/>
+  }
   ];
 
   return <Tabs tabs={tabs} defaultActiveTab="vectorizer" />;
