@@ -481,4 +481,106 @@ const SimpleSilkscreenSeparator: React.FC = () => {
                   </span>
                 </button>
               ))}
-            </div
+            </div>
+          </div>
+
+          {/* Individual separations grid */}
+          <h3 style={{ marginBottom: '20px' }}>📋 Individual Color Plates</h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: '15px'
+          }}>
+            {colorLayers.map(layer => (
+              <div key={layer.id} style={{
+                backgroundColor: '#fff',
+                borderRadius: '12px',
+                padding: '12px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                border: '1px solid #eee'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  marginBottom: '10px' 
+                }}>
+                  <span style={{
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '4px',
+                    backgroundColor: layer.hex,
+                    border: '2px solid #ddd'
+                  }} />
+                  <span style={{ 
+                    fontWeight: '600', 
+                    fontSize: '13px',
+                    fontFamily: 'monospace'
+                  }}>
+                    {layer.hex}
+                  </span>
+                </div>
+                
+                <div style={{
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: '8px',
+                  padding: '6px',
+                  marginBottom: '10px',
+                  backgroundImage: `linear-gradient(45deg, #ccc 25%, transparent 25%),
+                    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, #ccc 75%),
+                    linear-gradient(-45deg, transparent 75%, #ccc 75%)`,
+                  backgroundSize: '10px 10px',
+                  backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px'
+                }}>
+                  <img 
+                    src={layer.imageData} 
+                    alt={layer.hex}
+                    style={{ width: '100%', height: 'auto', display: 'block' }}
+                  />
+                </div>
+                
+                <button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.download = `plate_${layer.hex.replace('#', '')}.png`;
+                    link.href = layer.imageData;
+                    link.click();
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    backgroundColor: layer.hex,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  Download
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const buttonStyle = (bgColor: string, size: 'normal' | 'small' = 'normal'): React.CSSProperties => ({
+  padding: size === 'small' ? '8px 16px' : '12px 24px',
+  backgroundColor: bgColor,
+  color: '#fff',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  fontSize: '14px',
+  fontWeight: '500',
+  transition: 'all 0.2s'
+});
+
+export default SimpleSilkscreenSeparator;
