@@ -46,9 +46,11 @@ const SilkScreenSeparator: React.FC = () => {
   const [previewMode, setPreviewMode] = useState<'composite' | 'separations' | 'underbase'>('separations');
   const [selectedLayer, setSelectedLayer] = useState<string | null>(null);
   const [showRegistration, setShowRegistration] = useState(true);
+  const [layerVisibility, setLayerVisibility] = useState<Record<string, boolean>>({});
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const compositeCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [settings, setSettings] = useState<SeparationSettings>({
     colorCount: 6,
@@ -63,6 +65,141 @@ const SilkScreenSeparator: React.FC = () => {
     whiteUnderbase: true,
     minimumDot: 3
   });
+
+  // Initialize layer visibility when layers change
+  useEffect(() => {
+    const visibility: Record<string, boolean> = {};
+    colorLayers.forEach(layer => {
+      visibility[layer.id] = true;
+    });
+    setLayerVisibility(visibility);
+  }, [colorLayers]);
+
+  // Update composite preview when layers or visibility changes
+  useEffect(() => {
+    if (colorLayers.length > 0 && compositeCanvasRef.current) {
+      renderCompositePreview();
+    }
+  }, [colorLayers, layerVisibility, showRegistration]);
+
+  const renderCompositePreview = async () => {
+    const canvas = compositeCanvasRef.current;
+    if (!canvas || colorLayers.length === 0) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Set canvas size based on first layer
+    const firstLayer = colorLayers[0];
+    const img = new Image();
+    img.src = firstLayer.image;
+    
+    await new Promise((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Clear canvas with transparent background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw checkerboard for transparency
+        const checkerSize = 8;
+        for (let y = 0; y < canvas.height; y += checkerSize) {
+          for (let x = 0; x < canvas.width; x += checkerSize) {
+            ctx.fillStyle = (Math.floor(x / checkerSize) + Math.floor(y / checkerSize)) % 2 === 0 ? '#E5E5E5' : '#FFFFFF';
+            ctx.fillRect(x, y, checkerSize, checkerSize);
+          }
+        }
+        
+        resolve(null);
+      };
+    });
+
+    // Draw all visible layers
+    for (const layer of colorLayers) {
+      if (layerVisibility[layer.id]) {
+        const layerImg = new Image();
+        layerImg.src = layer.image;
+        await new Promise((resolve) => {
+          layerImg.onload = () => {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.drawImage(layerImg, 0, 0);
+            resolve(null);
+          };
+        });
+      }
+    }
+
+    // Draw registration marks if enabled
+    if (showRegistration) {
+      drawRegistrationMarks(ctx, canvas.width, canvas.height);
+    }
+  };
+
+  const drawRegistrationMarks = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
+    ctx.save();
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1.5;
+    
+    const markSize = 20;
+    const offset = 10;
+    
+    // Top-left
+    ctx.beginPath();
+    ctx.moveTo(offset, offset);
+    ctx.lineTo(offset + markSize, offset);
+    ctx.moveTo(offset, offset);
+    ctx.lineTo(offset, offset + markSize);
+    ctx.stroke();
+    
+    // Top-right
+    ctx.beginPath();
+    ctx.moveTo(width - offset, offset);
+    ctx.lineTo(width - offset - markSize, offset);
+    ctx.moveTo(width - offset, offset);
+    ctx.lineTo(width - offset, offset + markSize);
+    ctx.stroke();
+    
+    // Bottom-left
+    ctx.beginPath();
+    ctx.moveTo(offset, height - offset);
+    ctx.lineTo(offset + markSize, height - offset);
+    ctx.moveTo(offset, height - offset);
+    ctx.lineTo(offset, height - offset - markSize);
+    ctx.stroke();
+    
+    // Bottom-right
+    ctx.beginPath();
+    ctx.moveTo(width - offset, height - offset);
+    ctx.lineTo(width - offset - markSize, height - offset);
+    ctx.moveTo(width - offset, height - offset);
+    ctx.lineTo(width - offset, height - offset - markSize);
+    ctx.stroke();
+    
+    // Center marks
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - markSize / 2, 5);
+    ctx.lineTo(width / 2 + markSize / 2, 5);
+    ctx.moveTo(width / 2, 5);
+    ctx.lineTo(width / 2, 5 + markSize / 2);
+    ctx.stroke();
+    
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - markSize / 2, height - 5);
+    ctx.lineTo(width / 2 + markSize / 2, height - 5);
+    ctx.moveTo(width / 2, height - 5);
+    ctx.lineTo(width / 2, height - 5 - markSize / 2);
+    ctx.stroke();
+    
+    ctx.restore();
+  };
+
+  const toggleLayerVisibility = (layerId: string) => {
+    setLayerVisibility(prev => ({
+      ...prev,
+      [layerId]: !prev[layerId]
+    }));
+  };
 
   // CMYK conversion
   const rgbToCmyk = (r: number, g: number, b: number): string => {
@@ -84,8 +221,7 @@ const SilkScreenSeparator: React.FC = () => {
 
   // Color quantization for spot color separation
   const quantizeForSilkscreen = (r: number, g: number, b: number): string => {
-    // More aggressive quantization for silkscreen to group similar colors
-    const step = 32; // 8 levels per channel
+    const step = 32;
     const qR = Math.round(r / step) * step;
     const qG = Math.round(g / step) * step;
     const qB = Math.round(b / step) * step;
@@ -116,23 +252,21 @@ const SilkScreenSeparator: React.FC = () => {
     const cosAngle = Math.cos(angleRad);
     const sinAngle = Math.sin(angleRad);
     
-    const cellSize = 25.4 / frequency; // mm per cell at 300 DPI approximation
-    const pixelsPerCell = Math.max(4, Math.floor(cellSize * 11.8)); // 300 DPI = 11.8 px/mm
+    const cellSize = 25.4 / frequency;
+    const pixelsPerCell = Math.max(4, Math.floor(cellSize * 11.8));
     
     for (let y = 0; y < height; y += pixelsPerCell) {
       for (let x = 0; x < width; x += pixelsPerCell) {
-        // Calculate rotated coordinates
         const rx = x * cosAngle + y * sinAngle;
         const ry = -x * sinAngle + y * cosAngle;
         
-        // Calculate dot size based on average intensity in cell
         let totalIntensity = 0;
         let count = 0;
         
         for (let dy = 0; dy < pixelsPerCell && y + dy < height; dy++) {
           for (let dx = 0; dx < pixelsPerCell && x + dx < width; dx++) {
             const idx = ((y + dy) * width + (x + dx)) * 4;
-            const intensity = colorData[idx]; // Use red channel as intensity
+            const intensity = colorData[idx];
             totalIntensity += intensity;
             count++;
           }
@@ -141,7 +275,6 @@ const SilkScreenSeparator: React.FC = () => {
         const avgIntensity = totalIntensity / count;
         const dotSize = (255 - avgIntensity) / 255 * pixelsPerCell * 0.8;
         
-        // Draw halftone dot
         const cellCenterX = x + pixelsPerCell / 2;
         const cellCenterY = y + pixelsPerCell / 2;
         
@@ -221,7 +354,6 @@ const SilkScreenSeparator: React.FC = () => {
         const idx = (y * width + x) * 4;
         
         if (isChoke && layerData[idx + 3] > 0) {
-          // Choke: shrink the color
           let hasTransparentNeighbor = false;
           
           for (let dy = -trapSize; dy <= trapSize && !hasTransparentNeighbor; dy++) {
@@ -238,7 +370,6 @@ const SilkScreenSeparator: React.FC = () => {
             result[idx + 3] = 0;
           }
         } else if (!isChoke && layerData[idx + 3] === 0) {
-          // Spread: expand the color
           let hasColorNeighbor = false;
           
           for (let dy = -trapSize; dy <= trapSize && !hasColorNeighbor; dy++) {
@@ -290,7 +421,6 @@ const SilkScreenSeparator: React.FC = () => {
         setProcessingStep('Analyzing colors...');
         setProgress(10);
         
-        // Find dominant colors
         const colorMap = new Map<string, { 
           r: number; 
           g: number; 
@@ -329,12 +459,10 @@ const SilkScreenSeparator: React.FC = () => {
         setProcessingStep('Creating spot color separations...');
         setProgress(30);
         
-        // Sort and select top colors
         const sortedColors = Array.from(colorMap.values())
           .sort((a, b) => b.count - a.count)
           .slice(0, settings.colorCount);
         
-        // Create underbase layer first if enabled
         let underbaseLayer: ImageData | null = null;
         
         if (settings.whiteUnderbase) {
@@ -365,7 +493,6 @@ const SilkScreenSeparator: React.FC = () => {
         setProcessingStep('Generating color plates...');
         setProgress(50);
         
-        // Create color layers
         const layers: ColorLayer[] = [];
         const totalColors = sortedColors.length;
         
@@ -383,12 +510,10 @@ const SilkScreenSeparator: React.FC = () => {
           
           const layerData = layerCtx.createImageData(width, height);
           
-          // Initialize with transparency
           for (let i = 0; i < layerData.data.length; i += 4) {
             layerData.data[i + 3] = 0;
           }
           
-          // Fill matching pixels
           for (const position of colorInfo.positions) {
             layerData.data[position] = colorInfo.r;
             layerData.data[position + 1] = colorInfo.g;
@@ -396,7 +521,6 @@ const SilkScreenSeparator: React.FC = () => {
             layerData.data[position + 3] = 255;
           }
           
-          // Apply trapping if underbase exists
           if (underbaseLayer && idx > 0) {
             const trappedData = applyTrapping(
               layerData.data,
@@ -412,7 +536,6 @@ const SilkScreenSeparator: React.FC = () => {
             }
           }
           
-          // Apply halftone if enabled
           if (settings.halftoneEnabled) {
             const halftoneAngle = settings.halftoneAngles[idx % settings.halftoneAngles.length];
             const halftoneData = applyHalftone(
@@ -458,7 +581,6 @@ const SilkScreenSeparator: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 0));
         }
         
-        // Add underbase as separate layer if enabled
         if (settings.whiteUnderbase && underbaseLayer) {
           const underbaseCanvas = document.createElement('canvas');
           underbaseCanvas.width = width;
@@ -505,7 +627,6 @@ const SilkScreenSeparator: React.FC = () => {
   };
 
   const getColorName = (r: number, g: number, b: number): string => {
-    // Simple color naming for silkscreen plates
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     
@@ -547,8 +668,16 @@ const SilkScreenSeparator: React.FC = () => {
     }
   };
 
+  const downloadCompositePreview = () => {
+    if (compositeCanvasRef.current) {
+      const link = document.createElement('a');
+      link.download = 'silkscreen_composite_preview.png';
+      link.href = compositeCanvasRef.current.toDataURL('image/png');
+      link.click();
+    }
+  };
+
   const generatePrintSheet = () => {
-    // Create a print sheet with all separations and registration marks
     const canvas = document.createElement('canvas');
     const padding = 50;
     const cols = 3;
@@ -562,15 +691,12 @@ const SilkScreenSeparator: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    // White background
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw registration marks
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     
-    // Corner registration marks
     const regSize = 20;
     ctx.beginPath();
     ctx.moveTo(padding, padding);
@@ -579,14 +705,12 @@ const SilkScreenSeparator: React.FC = () => {
     ctx.lineTo(padding, padding + regSize);
     ctx.stroke();
     
-    // Draw each separation
     colorLayers.forEach((layer, index) => {
       const col = index % cols;
       const row = Math.floor(index / cols);
       const x = padding + col * (cellWidth + padding);
       const y = padding + row * (cellHeight + padding);
       
-      // Load and draw the layer image
       const img = new Image();
       img.src = layer.image;
       
@@ -597,7 +721,6 @@ const SilkScreenSeparator: React.FC = () => {
         const drawX = x + (cellWidth - drawWidth) / 2;
         const drawY = y + 30;
         
-        // Draw checkerboard for transparency
         const checkerSize = 8;
         ctx.fillStyle = '#CCCCCC';
         ctx.fillRect(drawX, drawY, drawWidth, drawHeight);
@@ -613,13 +736,11 @@ const SilkScreenSeparator: React.FC = () => {
         
         ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
         
-        // Draw color swatch
         ctx.fillStyle = layer.hex;
         ctx.fillRect(x, y, 30, 30);
         ctx.strokeStyle = '#000000';
         ctx.strokeRect(x, y, 30, 30);
         
-        // Draw text info
         ctx.fillStyle = '#000000';
         ctx.font = '12px Arial';
         ctx.fillText(layer.name, x + 40, y + 20);
@@ -629,7 +750,6 @@ const SilkScreenSeparator: React.FC = () => {
       };
     });
     
-    // Download the print sheet
     setTimeout(() => {
       const link = document.createElement('a');
       link.download = 'silkscreen_print_sheet.png';
@@ -656,7 +776,6 @@ const SilkScreenSeparator: React.FC = () => {
 
       {!originalImage && (
         <div>
-          {/* Settings Panel */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-semibold mb-4">Separation Settings</h2>
             
@@ -766,7 +885,6 @@ const SilkScreenSeparator: React.FC = () => {
             </div>
           </div>
           
-          {/* Upload Area */}
           <div
             className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
             onClick={() => fileInputRef.current?.click()}
@@ -801,7 +919,6 @@ const SilkScreenSeparator: React.FC = () => {
 
       {originalImage && !isProcessing && (
         <div>
-          {/* Controls */}
           <div className="flex flex-wrap justify-between gap-3 mb-4">
             <div className="flex gap-2">
               <button
@@ -848,7 +965,6 @@ const SilkScreenSeparator: React.FC = () => {
             </div>
           </div>
           
-          {/* Print Info */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
               <div>
@@ -876,9 +992,78 @@ const SilkScreenSeparator: React.FC = () => {
             </div>
           </div>
           
-          {/* Color Plates Grid */}
+          {/* ALL PLATES MERGED OVERVIEW - NEW SECTION AT BOTTOM */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold text-gray-800">
+                🎨 All Plates Merged Overview
+              </h3>
+              <button
+                onClick={downloadCompositePreview}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                Download Composite Preview
+              </button>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4">
+              This shows how all color separations will look when printed together.
+              Use the eye icons below to toggle individual layers on/off.
+            </p>
+            
+            {/* Composite Canvas */}
+            <div className="bg-gray-100 rounded-lg p-4 mb-4 flex justify-center">
+              <canvas 
+                ref={compositeCanvasRef}
+                className="max-w-full h-auto border border-gray-300 rounded shadow-inner"
+                style={{ maxHeight: '400px' }}
+              />
+            </div>
+            
+            {/* Layer Toggle Controls */}
+            <div className="flex flex-wrap gap-2">
+              {colorLayers.map((layer) => (
+                <button
+                  key={layer.id}
+                  onClick={() => toggleLayerVisibility(layer.id)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                    layerVisibility[layer.id] 
+                      ? 'bg-gray-800 text-white' 
+                      : 'bg-gray-200 text-gray-600 line-through'
+                  }`}
+                  style={{
+                    borderLeft: layerVisibility[layer.id] ? `4px solid ${layer.hex}` : '4px solid transparent'
+                  }}
+                >
+                  <div 
+                    className="w-4 h-4 rounded-full border border-gray-400"
+                    style={{ backgroundColor: layer.hex }}
+                  ></div>
+                  <span>{layer.name}</span>
+                  <span className="ml-1">
+                    {layerVisibility[layer.id] ? '👁️' : '👁️‍🗨️'}
+                  </span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Print Order Summary */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-700">
+                <strong>Print Order:</strong>{' '}
+                {colorLayers
+                  .filter(l => layerVisibility[l.id])
+                  .map(l => l.name)
+                  .join(' → ')}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                {colorLayers.filter(l => layerVisibility[l.id]).length} of {colorLayers.length} layers visible
+              </p>
+            </div>
+          </div>
+          
           <h3 className="text-xl font-semibold text-gray-800 mb-4">
-            Screen Printing Plates ({colorLayers.length} separations)
+            Individual Screen Printing Plates ({colorLayers.length} separations)
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -890,7 +1075,6 @@ const SilkScreenSeparator: React.FC = () => {
                 }`}
                 onClick={() => setSelectedLayer(layer.id)}
               >
-                {/* Plate Header */}
                 <div className="flex items-center gap-2 mb-3">
                   <div 
                     className="w-8 h-8 rounded border-2 border-gray-300"
@@ -909,10 +1093,8 @@ const SilkScreenSeparator: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Plate Preview */}
                 <div className="relative bg-gray-200 rounded-lg overflow-hidden mb-3" 
                      style={{ minHeight: '150px' }}>
-                  {/* Checkerboard background */}
                   <div className="absolute inset-0 opacity-20" style={{
                     backgroundImage: `linear-gradient(45deg, #808080 25%, transparent 25%),
                                     linear-gradient(-45deg, #808080 25%, transparent 25%),
@@ -930,7 +1112,6 @@ const SilkScreenSeparator: React.FC = () => {
                   
                   {showRegistration && (
                     <>
-                      {/* Registration marks */}
                       <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-black"></div>
                       <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-black"></div>
                       <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-black"></div>
@@ -939,7 +1120,6 @@ const SilkScreenSeparator: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Plate Info */}
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Coverage:</span>
@@ -975,7 +1155,6 @@ const SilkScreenSeparator: React.FC = () => {
                   )}
                 </div>
                 
-                {/* Actions */}
                 <div className="flex gap-2 mt-3">
                   <button
                     onClick={(e) => {
@@ -990,18 +1169,20 @@ const SilkScreenSeparator: React.FC = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Toggle layer visibility in composite view
+                      toggleLayerVisibility(layer.id);
                     }}
-                    className="px-3 py-1.5 border text-xs rounded hover:bg-gray-50"
+                    className={`px-3 py-1.5 border text-xs rounded hover:bg-gray-50 ${
+                      layerVisibility[layer.id] ? 'bg-gray-100' : ''
+                    }`}
+                    title={layerVisibility[layer.id] ? 'Hide layer' : 'Show layer'}
                   >
-                    👁️
+                    {layerVisibility[layer.id] ? '👁️' : '👁️‍🗨️'}
                   </button>
                 </div>
               </div>
             ))}
           </div>
           
-          {/* Print Instructions */}
           <div className="mt-8 bg-white rounded-lg shadow-md p-6">
             <h3 className="text-lg font-semibold mb-3">Print Instructions</h3>
             <div className="space-y-2 text-sm text-gray-700">
