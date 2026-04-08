@@ -6,8 +6,7 @@ import AppWithTabs from './AppWithTabs';
 function App() {
   return (
     <div className="App">
-      <TabContainer />
-      {/* or <AppWithTabs /> */}
+      <AppWithTabs />
     </div>
   );
 }
