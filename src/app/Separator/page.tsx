@@ -1,24 +1,38 @@
+"use client";
+
 import React, { useState, useRef } from 'react';
+
+interface ChannelSettings {
+  threshold: number;
+  inverted: boolean;
+}
 
 const ColorSeparator: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [channels, setChannels] = useState<{ red: string | null; green: string | null; blue: string | null; gray: string | null }>({
+  const [settings, setSettings] = useState<Record<string, ChannelSettings>>({
+    red: { threshold: 128, inverted: false },
+    green: { threshold: 128, inverted: false },
+    blue: { threshold: 128, inverted: false },
+    grayscale: { threshold: 128, inverted: false },
+  });
+  const [channels, setChannels] = useState<Record<string, string | null>>({
     red: null,
     green: null,
     blue: null,
-    gray: null,
+    grayscale: null,
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [originalFile, setOriginalFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processImage = (file: File) => {
+    setOriginalFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         setIsProcessing(true);
         
-        // Create canvas for original and channels
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
         canvas.height = img.height;
@@ -26,86 +40,95 @@ const ColorSeparator: React.FC = () => {
         
         if (!ctx) return;
         
-        // Draw original image
         ctx.drawImage(img, 0, 0);
-        const originalData = ctx.getImageData(0, 0, img.width, img.height);
-        const imageData = originalData.data;
+        const imageData = ctx.getImageData(0, 0, img.width, img.height);
+        const pixels = imageData.data;
         
-        // Create canvases for each channel
-        const redCanvas = document.createElement('canvas');
-        const greenCanvas = document.createElement('canvas');
-        const blueCanvas = document.createElement('canvas');
-        const grayCanvas = document.createElement('canvas');
+        // Process each channel
+        const channelTypes = ['red', 'green', 'blue', 'grayscale'];
+        const results: Record<string, string> = {};
         
-        redCanvas.width = greenCanvas.width = blueCanvas.width = grayCanvas.width = img.width;
-        redCanvas.height = greenCanvas.height = blueCanvas.height = grayCanvas.height = img.height;
-        
-        const redCtx = redCanvas.getContext('2d');
-        const greenCtx = greenCanvas.getContext('2d');
-        const blueCtx = blueCanvas.getContext('2d');
-        const grayCtx = grayCanvas.getContext('2d');
-        
-        if (!redCtx || !greenCtx || !blueCtx || !grayCtx) return;
-        
-        // Create ImageData for each channel
-        const redImageData = redCtx.createImageData(img.width, img.height);
-        const greenImageData = greenCtx.createImageData(img.width, img.height);
-        const blueImageData = blueCtx.createImageData(img.width, img.height);
-        const grayImageData = grayCtx.createImageData(img.width, img.height);
-        
-        // Process each pixel
-        for (let i = 0; i < imageData.length; i += 4) {
-          const r = imageData[i];
-          const g = imageData[i + 1];
-          const b = imageData[i + 2];
-          const a = imageData[i + 3];
+        channelTypes.forEach(channel => {
+          const channelCanvas = document.createElement('canvas');
+          channelCanvas.width = img.width;
+          channelCanvas.height = img.height;
+          const channelCtx = channelCanvas.getContext('2d');
           
-          // Red channel: keep red, zero out green and blue
-          redImageData.data[i] = r;
-          redImageData.data[i + 1] = 0;
-          redImageData.data[i + 2] = 0;
-          redImageData.data[i + 3] = a;
+          if (!channelCtx) return;
           
-          // Green channel: keep green, zero out red and blue
-          greenImageData.data[i] = 0;
-          greenImageData.data[i + 1] = g;
-          greenImageData.data[i + 2] = 0;
-          greenImageData.data[i + 3] = a;
+          const channelData = channelCtx.createImageData(img.width, img.height);
+          const channelSettings = settings[channel];
           
-          // Blue channel: keep blue, zero out red and green
-          blueImageData.data[i] = 0;
-          blueImageData.data[i + 1] = 0;
-          blueImageData.data[i + 2] = b;
-          blueImageData.data[i + 3] = a;
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+            const a = pixels[i + 3];
+            
+            let value: number;
+            
+            switch(channel) {
+              case 'red':
+                value = r;
+                break;
+              case 'green':
+                value = g;
+                break;
+              case 'blue':
+                value = b;
+                break;
+              case 'grayscale':
+                value = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+                break;
+              default:
+                value = 0;
+            }
+            
+            // Apply threshold - creates pure black/white for silk screen
+            let finalValue = value >= channelSettings.threshold ? 255 : 0;
+            
+            // Apply inversion if needed
+            if (channelSettings.inverted) {
+              finalValue = finalValue === 255 ? 0 : 255;
+            }
+            
+            channelData.data[i] = finalValue;
+            channelData.data[i + 1] = finalValue;
+            channelData.data[i + 2] = finalValue;
+            channelData.data[i + 3] = a;
+          }
           
-          // Grayscale: using luminance formula 0.299*R + 0.587*G + 0.114*B
-          const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-          grayImageData.data[i] = gray;
-          grayImageData.data[i + 1] = gray;
-          grayImageData.data[i + 2] = gray;
-          grayImageData.data[i + 3] = a;
-        }
-        
-        // Put the processed data onto canvases
-        redCtx.putImageData(redImageData, 0, 0);
-        greenCtx.putImageData(greenImageData, 0, 0);
-        blueCtx.putImageData(blueImageData, 0, 0);
-        grayCtx.putImageData(grayImageData, 0, 0);
-        
-        // Convert to data URLs
-        setOriginalImage(canvas.toDataURL());
-        setChannels({
-          red: redCanvas.toDataURL(),
-          green: greenCanvas.toDataURL(),
-          blue: blueCanvas.toDataURL(),
-          gray: grayCanvas.toDataURL(),
+          channelCtx.putImageData(channelData, 0, 0);
+          results[channel] = channelCanvas.toDataURL();
         });
         
+        setOriginalImage(canvas.toDataURL());
+        setChannels(results);
         setIsProcessing(false);
       };
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
+  };
+
+  const updateThreshold = (channel: string, threshold: number) => {
+    setSettings(prev => ({
+      ...prev,
+      [channel]: { ...prev[channel], threshold }
+    }));
+  };
+
+  const updateInverted = (channel: string, inverted: boolean) => {
+    setSettings(prev => ({
+      ...prev,
+      [channel]: { ...prev[channel], inverted }
+    }));
+  };
+
+  const reapplySettings = () => {
+    if (originalFile) {
+      processImage(originalFile);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,19 +150,28 @@ const ColorSeparator: React.FC = () => {
     }
   };
 
+  const downloadChannel = (channel: string, dataUrl: string | null) => {
+    if (!dataUrl) return;
+    const link = document.createElement('a');
+    link.download = `${channel}_screen_print.png`;
+    link.href = dataUrl;
+    link.click();
+  };
+
   const resetImage = () => {
     setOriginalImage(null);
-    setChannels({ red: null, green: null, blue: null, gray: null });
+    setChannels({ red: null, green: null, blue: null, grayscale: null });
+    setOriginalFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-gray-50 min-h-screen">
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Image Color Channel Separator</h1>
-        <p className="text-gray-600">Upload an image to see its Red, Green, Blue, and Grayscale channels</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Silk Screen Color Separator</h1>
+        <p className="text-gray-600">Upload an image to create black & white separation stencils for screen printing</p>
       </div>
 
       {/* Upload Area */}
@@ -157,9 +189,9 @@ const ColorSeparator: React.FC = () => {
             accept="image/*"
             className="hidden"
           />
-          <div className="text-4xl mb-4">📷</div>
+          <div className="text-4xl mb-4">🎨</div>
           <p className="text-gray-600 mb-2">Click or drag & drop an image here</p>
-          <p className="text-sm text-gray-400">Supports JPG, PNG, GIF, etc.</p>
+          <p className="text-sm text-gray-400">For best results, use high contrast images</p>
         </div>
       )}
 
@@ -167,23 +199,29 @@ const ColorSeparator: React.FC = () => {
       {isProcessing && (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600 mt-2">Processing image...</p>
+          <p className="text-gray-600 mt-2">Creating separations...</p>
         </div>
       )}
 
       {/* Results */}
       {originalImage && !isProcessing && (
         <div>
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-between mb-4">
             <button
               onClick={resetImage}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Upload New Image
             </button>
+            <button
+              onClick={reapplySettings}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Apply Settings
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
             {/* Original Image */}
             <div className="bg-white rounded-lg shadow-md p-4">
               <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Original</h3>
@@ -192,32 +230,162 @@ const ColorSeparator: React.FC = () => {
 
             {/* Red Channel */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-red-600">Red Channel</h3>
-              {channels.red && <img src={channels.red} alt="Red Channel" className="w-full rounded-lg shadow-sm" />}
+              <h3 className="text-lg font-semibold text-center mb-3 text-red-600">Red Stencil</h3>
+              {channels.red && (
+                <>
+                  <img src={channels.red} alt="Red Channel" className="w-full rounded-lg shadow-sm mb-3" />
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.red.threshold}</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="255"
+                        value={settings.red.threshold}
+                        onChange={(e) => updateThreshold('red', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={settings.red.inverted}
+                        onChange={(e) => updateInverted('red', e.target.checked)}
+                      />
+                      Invert (positive/negative)
+                    </label>
+                    <button
+                      onClick={() => downloadChannel('red', channels.red)}
+                      className="w-full mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Green Channel */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-green-600">Green Channel</h3>
-              {channels.green && <img src={channels.green} alt="Green Channel" className="w-full rounded-lg shadow-sm" />}
+              <h3 className="text-lg font-semibold text-center mb-3 text-green-600">Green Stencil</h3>
+              {channels.green && (
+                <>
+                  <img src={channels.green} alt="Green Channel" className="w-full rounded-lg shadow-sm mb-3" />
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.green.threshold}</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="255"
+                        value={settings.green.threshold}
+                        onChange={(e) => updateThreshold('green', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={settings.green.inverted}
+                        onChange={(e) => updateInverted('green', e.target.checked)}
+                      />
+                      Invert (positive/negative)
+                    </label>
+                    <button
+                      onClick={() => downloadChannel('green', channels.green)}
+                      className="w-full mt-2 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Blue Channel */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-blue-600">Blue Channel</h3>
-              {channels.blue && <img src={channels.blue} alt="Blue Channel" className="w-full rounded-lg shadow-sm" />}
+              <h3 className="text-lg font-semibold text-center mb-3 text-blue-600">Blue Stencil</h3>
+              {channels.blue && (
+                <>
+                  <img src={channels.blue} alt="Blue Channel" className="w-full rounded-lg shadow-sm mb-3" />
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.blue.threshold}</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="255"
+                        value={settings.blue.threshold}
+                        onChange={(e) => updateThreshold('blue', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={settings.blue.inverted}
+                        onChange={(e) => updateInverted('blue', e.target.checked)}
+                      />
+                      Invert (positive/negative)
+                    </label>
+                    <button
+                      onClick={() => downloadChannel('blue', channels.blue)}
+                      className="w-full mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
 
-            {/* Grayscale */}
+            {/* Grayscale / Key Channel */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Grayscale</h3>
-              {channels.gray && <img src={channels.gray} alt="Grayscale" className="w-full rounded-lg shadow-sm" />}
+              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Black Stencil</h3>
+              {channels.grayscale && (
+                <>
+                  <img src={channels.grayscale} alt="Grayscale" className="w-full rounded-lg shadow-sm mb-3" />
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.grayscale.threshold}</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="255"
+                        value={settings.grayscale.threshold}
+                        onChange={(e) => updateThreshold('grayscale', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-600">
+                      <input
+                        type="checkbox"
+                        checked={settings.grayscale.inverted}
+                        onChange={(e) => updateInverted('grayscale', e.target.checked)}
+                      />
+                      Invert (positive/negative)
+                    </label>
+                    <button
+                      onClick={() => downloadChannel('black', channels.grayscale)}
+                      className="w-full mt-2 px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-800 transition-colors"
+                    >
+                      Download
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 text-sm text-gray-500 text-center">
-            <p>Red, Green, and Blue channels show only their respective color information.</p>
-            <p>Grayscale uses the luminance formula: 0.299×R + 0.587×G + 0.114×B</p>
+          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold text-blue-800 mb-2">Silk Screen Tips:</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• <strong>Threshold:</strong> Adjust to control how much of each color gets printed (lower = more ink, higher = less ink)</li>
+              <li>• <strong>Invert:</strong> Switch between positive and negative stencils</li>
+              <li>• Download each channel as a separate PNG for screen burning</li>
+              <li>• For multi-color prints, use Red, Green, and Blue channels as separate screens</li>
+              <li>• Use Black stencil for dark areas or as a key layer</li>
+            </ul>
           </div>
         </div>
       )}
