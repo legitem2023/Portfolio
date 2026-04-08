@@ -1,3 +1,4 @@
+'use client'
 import React, { useState } from 'react';
 import VectorizeBlurredImage from './VectorizeBlurredImage';
 import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
