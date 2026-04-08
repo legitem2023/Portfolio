@@ -100,11 +100,96 @@ const SimpleSilkscreenSeparator: React.FC = () => {
         
         // Filter out colors with very few pixels (noise)
         const minPixels = (width * height) * 0.001; // 0.1% of image
-        const filteredColors = Array.from(colorMap.entries())
+        let filteredColors = Array.from(colorMap.entries())
           .filter(([_, data]) => data.count >= minPixels)
           .sort((a, b) => b[1].count - a[1].count);
         
-        console.log('Filtered colors:', filteredColors.length);
+        console.log('Initial colors after filtering:', filteredColors.length);
+        
+        // Smart color merging - keep maximum 8 colors
+        const MAX_COLORS = 8;
+        
+        if (filteredColors.length > MAX_COLORS) {
+          // Calculate color similarity (Euclidean distance)
+          const colorDistance = (c1: { r: number; g: number; b: number }, c2: { r: number; g: number; b: number }) => {
+            return Math.sqrt(
+              Math.pow(c1.r - c2.r, 2) +
+              Math.pow(c1.g - c2.g, 2) +
+              Math.pow(c1.b - c2.b, 2)
+            );
+          };
+          
+          // Merge two colors by weighted average (by pixel count)
+          const mergeColors = (
+            c1: { r: number; g: number; b: number; count: number },
+            c2: { r: number; g: number; b: number; count: number }
+          ) => {
+            const totalCount = c1.count + c2.count;
+            return {
+              r: (c1.r * c1.count + c2.r * c2.count) / totalCount,
+              g: (c1.g * c1.count + c2.g * c2.count) / totalCount,
+              b: (c1.b * c1.count + c2.b * c2.count) / totalCount,
+              count: totalCount,
+              hex: ''
+            };
+          };
+          
+          // Convert to mutable array
+          let colorsToMerge = filteredColors.map(([key, data]) => ({
+            key,
+            r: data.r,
+            g: data.g,
+            b: data.b,
+            count: data.count,
+            hex: data.hex
+          }));
+          
+          // Keep merging closest colors until we have MAX_COLORS or less
+          while (colorsToMerge.length > MAX_COLORS) {
+            let closestPair: { i: number; j: number; distance: number } | null = null;
+            
+            // Find the two most similar colors
+            for (let i = 0; i < colorsToMerge.length; i++) {
+              for (let j = i + 1; j < colorsToMerge.length; j++) {
+                const distance = colorDistance(colorsToMerge[i], colorsToMerge[j]);
+                if (!closestPair || distance < closestPair.distance) {
+                  closestPair = { i, j, distance };
+                }
+              }
+            }
+            
+            if (closestPair) {
+              const { i, j } = closestPair;
+              const merged = mergeColors(colorsToMerge[i], colorsToMerge[j]);
+              merged.hex = rgbToHex(merged.r, merged.g, merged.b);
+              
+              // Replace the first color with merged version, remove the second
+              colorsToMerge[i] = {
+                ...merged,
+                key: `merged-${colorsToMerge[i].key}-${colorsToMerge[j].key}`
+              };
+              colorsToMerge.splice(j, 1);
+            } else {
+              break;
+            }
+          }
+          
+          // Convert back to filteredColors format
+          filteredColors = colorsToMerge.map(color => [
+            color.key,
+            {
+              r: Math.round(color.r),
+              g: Math.round(color.g),
+              b: Math.round(color.b),
+              count: color.count,
+              hex: color.hex
+            }
+          ]) as [string, any][];
+          
+          console.log(`Merged to ${filteredColors.length} colors (max ${MAX_COLORS})`);
+        }
+        
+        console.log('Final colors:', filteredColors.length);
         
         const layers: ColorLayer[] = [];
         const visibility: Record<string, boolean> = {};
@@ -289,7 +374,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
     <div style={{ padding: '20px', maxWidth: '1400px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 Automatic Color Separation</h1>
       <p style={{ textAlign: 'center', color: '#666', marginBottom: '30px' }}>
-        Upload an image and colors will be automatically detected and separated
+        Upload an image and colors will be automatically detected and separated (max 8 colors)
       </p>
       
       {!originalImage && (
@@ -323,7 +408,7 @@ const SimpleSilkscreenSeparator: React.FC = () => {
           <div style={{ fontSize: '48px', marginBottom: '20px' }}>🖼️</div>
           <p style={{ fontSize: '18px', color: '#666' }}>Click to upload your image</p>
           <p style={{ fontSize: '14px', color: '#999', marginTop: '10px' }}>
-            PNG, JPG, GIF supported
+            PNG, JPG, GIF supported (max 8 colors)
           </p>
         </div>
       )}
