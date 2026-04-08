@@ -35,7 +35,7 @@ interface ColorCluster {
   percentage: number;
 }
 
-export default function SilkScreenColorSeparator() {
+export default function SilkScreenColorSeparatorCMYK() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [cmykLayers, setCmykLayers] = useState<ColorLayer[]>([]);
   const [dominantLayers, setDominantLayers] = useState<ColorLayer[]>([]);
