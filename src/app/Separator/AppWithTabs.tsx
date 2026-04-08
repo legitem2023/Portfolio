@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import VectorizeBlurredImage from './VectorizeBlurredImage';
-
+import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
 interface Tab {
   id: string;
   label: string;
@@ -71,9 +71,9 @@ const AppWithTabs: React.FC = () => {
     },
     {
       id: 'other',
-      label: 'Other Tool',
+      label: 'Separate Colors',
       icon: '🔧',
-      component: <OtherComponent />
+      component: <SimpleSilkscreenSeparator />
     }
   ];
 
