@@ -2,31 +2,29 @@
 
 import React, { useState, useRef } from 'react';
 
-interface ChannelSettings {
-  threshold: number;
-  inverted: boolean;
-}
-
 const ColorSeparator: React.FC = () => {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
-  const [settings, setSettings] = useState<Record<string, ChannelSettings>>({
-    red: { threshold: 128, inverted: false },
-    green: { threshold: 128, inverted: false },
-    blue: { threshold: 128, inverted: false },
-    grayscale: { threshold: 128, inverted: false },
-  });
-  const [channels, setChannels] = useState<Record<string, string | null>>({
-    red: null,
-    green: null,
-    blue: null,
-    grayscale: null,
-  });
+  const [colorLayers, setColorLayers] = useState<Array<{ color: string; image: string; count: number }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [originalFile, setOriginalFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const getColorName = (r: number, g: number, b: number): string => {
+    // Find dominant color
+    if (r > 200 && g < 100 && b < 100) return 'Red';
+    if (r > 200 && g > 100 && g < 200 && b < 100) return 'Orange';
+    if (r > 200 && g > 200 && b < 100) return 'Yellow';
+    if (r < 100 && g > 200 && b < 100) return 'Green';
+    if (r < 100 && g < 150 && b > 200) return 'Blue';
+    if (r > 150 && g < 150 && b > 200) return 'Purple';
+    if (r > 200 && g > 150 && b > 150) return 'Pink';
+    if (r < 100 && g < 100 && b < 100) return 'Black';
+    if (r > 200 && g > 200 && b > 200) return 'White';
+    if (r > 150 && g > 150 && b < 100) return 'Gold';
+    if (r > 100 && g > 100 && b > 100) return 'Gray';
+    return 'Other';
+  };
+
   const processImage = (file: File) => {
-    setOriginalFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
@@ -44,91 +42,74 @@ const ColorSeparator: React.FC = () => {
         const imageData = ctx.getImageData(0, 0, img.width, img.height);
         const pixels = imageData.data;
         
-        // Process each channel
-        const channelTypes = ['red', 'green', 'blue', 'grayscale'];
-        const results: Record<string, string> = {};
+        // Group pixels by color
+        const colorMap = new Map<string, { r: number; g: number; b: number; count: number; pixels: number[] }>();
         
-        channelTypes.forEach(channel => {
-          const channelCanvas = document.createElement('canvas');
-          channelCanvas.width = img.width;
-          channelCanvas.height = img.height;
-          const channelCtx = channelCanvas.getContext('2d');
+        for (let i = 0; i < pixels.length; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const colorKey = `${Math.round(r/20) * 20},${Math.round(g/20) * 20},${Math.round(b/20) * 20}`;
           
-          if (!channelCtx) return;
+          if (!colorMap.has(colorKey)) {
+            colorMap.set(colorKey, {
+              r: Math.round(r/20) * 20,
+              g: Math.round(g/20) * 20,
+              b: Math.round(b/20) * 20,
+              count: 0,
+              pixels: []
+            });
+          }
+          const colorData = colorMap.get(colorKey)!;
+          colorData.count++;
+          colorData.pixels.push(i);
+        }
+        
+        // Sort colors by count and take top 8
+        const sortedColors = Array.from(colorMap.values()).sort((a, b) => b.count - a.count).slice(0, 8);
+        
+        // Create a layer for each dominant color
+        const layers = sortedColors.map(colorInfo => {
+          const layerCanvas = document.createElement('canvas');
+          layerCanvas.width = img.width;
+          layerCanvas.height = img.height;
+          const layerCtx = layerCanvas.getContext('2d');
           
-          const channelData = channelCtx.createImageData(img.width, img.height);
-          const channelSettings = settings[channel];
+          if (!layerCtx) return null;
           
-          for (let i = 0; i < pixels.length; i += 4) {
-            const r = pixels[i];
-            const g = pixels[i + 1];
-            const b = pixels[i + 2];
-            const a = pixels[i + 3];
-            
-            let value: number;
-            
-            switch(channel) {
-              case 'red':
-                value = r;
-                break;
-              case 'green':
-                value = g;
-                break;
-              case 'blue':
-                value = b;
-                break;
-              case 'grayscale':
-                value = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-                break;
-              default:
-                value = 0;
-            }
-            
-            // Apply threshold - creates pure black/white for silk screen
-            let finalValue = value >= channelSettings.threshold ? 255 : 0;
-            
-            // Apply inversion if needed
-            if (channelSettings.inverted) {
-              finalValue = finalValue === 255 ? 0 : 255;
-            }
-            
-            channelData.data[i] = finalValue;
-            channelData.data[i + 1] = finalValue;
-            channelData.data[i + 2] = finalValue;
-            channelData.data[i + 3] = a;
+          const layerData = layerCtx.createImageData(img.width, img.height);
+          
+          // Fill with transparent
+          for (let i = 0; i < layerData.data.length; i += 4) {
+            layerData.data[i + 3] = 0;
           }
           
-          channelCtx.putImageData(channelData, 0, 0);
-          results[channel] = channelCanvas.toDataURL();
-        });
+          // Add pixels of this color
+          colorInfo.pixels.forEach(pixelIndex => {
+            layerData.data[pixelIndex] = colorInfo.r;
+            layerData.data[pixelIndex + 1] = colorInfo.g;
+            layerData.data[pixelIndex + 2] = colorInfo.b;
+            layerData.data[pixelIndex + 3] = 255;
+          });
+          
+          layerCtx.putImageData(layerData, 0, 0);
+          
+          const colorName = getColorName(colorInfo.r, colorInfo.g, colorInfo.b);
+          
+          return {
+            color: colorName,
+            image: layerCanvas.toDataURL(),
+            count: colorInfo.count
+          };
+        }).filter(layer => layer !== null) as Array<{ color: string; image: string; count: number }>;
         
         setOriginalImage(canvas.toDataURL());
-        setChannels(results);
+        setColorLayers(layers);
         setIsProcessing(false);
       };
       img.src = e.target?.result as string;
     };
     reader.readAsDataURL(file);
-  };
-
-  const updateThreshold = (channel: string, threshold: number) => {
-    setSettings(prev => ({
-      ...prev,
-      [channel]: { ...prev[channel], threshold }
-    }));
-  };
-
-  const updateInverted = (channel: string, inverted: boolean) => {
-    setSettings(prev => ({
-      ...prev,
-      [channel]: { ...prev[channel], inverted }
-    }));
-  };
-
-  const reapplySettings = () => {
-    if (originalFile) {
-      processImage(originalFile);
-    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,18 +131,16 @@ const ColorSeparator: React.FC = () => {
     }
   };
 
-  const downloadChannel = (channel: string, dataUrl: string | null) => {
-    if (!dataUrl) return;
+  const downloadLayer = (color: string, image: string) => {
     const link = document.createElement('a');
-    link.download = `${channel}_screen_print.png`;
-    link.href = dataUrl;
+    link.download = `${color.toLowerCase()}_layer.png`;
+    link.href = image;
     link.click();
   };
 
   const resetImage = () => {
     setOriginalImage(null);
-    setChannels({ red: null, green: null, blue: null, grayscale: null });
-    setOriginalFile(null);
+    setColorLayers([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -170,11 +149,10 @@ const ColorSeparator: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Silk Screen Color Separator</h1>
-        <p className="text-gray-600">Upload an image to create black & white separation stencils for screen printing</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Color Separator</h1>
+        <p className="text-gray-600">Upload an image to separate it into individual colors</p>
       </div>
 
-      {/* Upload Area */}
       {!originalImage && (
         <div
           onDragOver={handleDragOver}
@@ -191,206 +169,76 @@ const ColorSeparator: React.FC = () => {
           />
           <div className="text-4xl mb-4">🎨</div>
           <p className="text-gray-600 mb-2">Click or drag & drop an image here</p>
-          <p className="text-sm text-gray-400">For best results, use high contrast images</p>
+          <p className="text-sm text-gray-400">JPG, PNG, GIF supported</p>
         </div>
       )}
 
-      {/* Processing Indicator */}
       {isProcessing && (
         <div className="text-center py-8">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600 mt-2">Creating separations...</p>
+          <p className="text-gray-600 mt-2">Separating colors...</p>
         </div>
       )}
 
-      {/* Results */}
       {originalImage && !isProcessing && (
         <div>
-          <div className="flex justify-between mb-4">
+          <div className="flex justify-end mb-4">
             <button
               onClick={resetImage}
               className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Upload New Image
             </button>
-            <button
-              onClick={reapplySettings}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Apply Settings
-            </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Original Image */}
             <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Original</h3>
+              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Original Image</h3>
               <img src={originalImage} alt="Original" className="w-full rounded-lg shadow-sm" />
             </div>
 
-            {/* Red Channel */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-red-600">Red Stencil</h3>
-              {channels.red && (
-                <>
-                  <img src={channels.red} alt="Red Channel" className="w-full rounded-lg shadow-sm mb-3" />
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.red.threshold}</label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="255"
-                        value={settings.red.threshold}
-                        onChange={(e) => updateThreshold('red', parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={settings.red.inverted}
-                        onChange={(e) => updateInverted('red', e.target.checked)}
-                      />
-                      Invert (positive/negative)
-                    </label>
-                    <button
-                      onClick={() => downloadChannel('red', channels.red)}
-                      className="w-full mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
-                    >
-                      Download
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Green Channel */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-green-600">Green Stencil</h3>
-              {channels.green && (
-                <>
-                  <img src={channels.green} alt="Green Channel" className="w-full rounded-lg shadow-sm mb-3" />
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.green.threshold}</label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="255"
-                        value={settings.green.threshold}
-                        onChange={(e) => updateThreshold('green', parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={settings.green.inverted}
-                        onChange={(e) => updateInverted('green', e.target.checked)}
-                      />
-                      Invert (positive/negative)
-                    </label>
-                    <button
-                      onClick={() => downloadChannel('green', channels.green)}
-                      className="w-full mt-2 px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-                    >
-                      Download
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Blue Channel */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-blue-600">Blue Stencil</h3>
-              {channels.blue && (
-                <>
-                  <img src={channels.blue} alt="Blue Channel" className="w-full rounded-lg shadow-sm mb-3" />
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.blue.threshold}</label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="255"
-                        value={settings.blue.threshold}
-                        onChange={(e) => updateThreshold('blue', parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={settings.blue.inverted}
-                        onChange={(e) => updateInverted('blue', e.target.checked)}
-                      />
-                      Invert (positive/negative)
-                    </label>
-                    <button
-                      onClick={() => downloadChannel('blue', channels.blue)}
-                      className="w-full mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                    >
-                      Download
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Grayscale / Key Channel */}
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h3 className="text-lg font-semibold text-center mb-3 text-gray-700">Black Stencil</h3>
-              {channels.grayscale && (
-                <>
-                  <img src={channels.grayscale} alt="Grayscale" className="w-full rounded-lg shadow-sm mb-3" />
-                  <div className="space-y-2">
-                    <div>
-                      <label className="text-sm text-gray-600 block mb-1">Threshold: {settings.grayscale.threshold}</label>
-                      <input
-                        type="range"
-                        min="0"
-                        max="255"
-                        value={settings.grayscale.threshold}
-                        onChange={(e) => updateThreshold('grayscale', parseInt(e.target.value))}
-                        className="w-full"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm text-gray-600">
-                      <input
-                        type="checkbox"
-                        checked={settings.grayscale.inverted}
-                        onChange={(e) => updateInverted('grayscale', e.target.checked)}
-                      />
-                      Invert (positive/negative)
-                    </label>
-                    <button
-                      onClick={() => downloadChannel('black', channels.grayscale)}
-                      className="w-full mt-2 px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-800 transition-colors"
-                    >
-                      Download
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            {/* Color Layers */}
+            {colorLayers.map((layer, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-md p-4">
+                <h3 className="text-lg font-semibold text-center mb-3" style={{ color: `rgb(${getColorRGB(layer.color)})` }}>
+                  {layer.color} Layer
+                </h3>
+                <img src={layer.image} alt={`${layer.color} layer`} className="w-full rounded-lg shadow-sm mb-3" />
+                <button
+                  onClick={() => downloadLayer(layer.color, layer.image)}
+                  className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                >
+                  Download {layer.color} Layer
+                </button>
+              </div>
+            ))}
           </div>
 
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">Silk Screen Tips:</h4>
-            <ul className="text-sm text-blue-700 space-y-1">
-              <li>• <strong>Threshold:</strong> Adjust to control how much of each color gets printed (lower = more ink, higher = less ink)</li>
-              <li>• <strong>Invert:</strong> Switch between positive and negative stencils</li>
-              <li>• Download each channel as a separate PNG for screen burning</li>
-              <li>• For multi-color prints, use Red, Green, and Blue channels as separate screens</li>
-              <li>• Use Black stencil for dark areas or as a key layer</li>
-            </ul>
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <p>Each color is separated into its own layer. Download individual layers for editing or printing.</p>
           </div>
         </div>
       )}
     </div>
   );
 };
+
+function getColorRGB(colorName: string): string {
+  const colors: Record<string, string> = {
+    'Red': '255, 0, 0',
+    'Orange': '255, 165, 0',
+    'Yellow': '255, 255, 0',
+    'Green': '0, 128, 0',
+    'Blue': '0, 0, 255',
+    'Purple': '128, 0, 128',
+    'Pink': '255, 192, 203',
+    'Black': '0, 0, 0',
+    'White': '255, 255, 255',
+    'Gold': '255, 215, 0',
+    'Gray': '128, 128, 128'
+  };
+  return colors[colorName] || '0, 0, 0';
+}
 
 export default ColorSeparator;
