@@ -2,24 +2,32 @@
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-// Define NotificationType manually based on your schema
+// Define NotificationType - UPDATED to match frontend types
 export enum NotificationType {
-  ORDER_UPDATE = 'ORDER_UPDATE',
+  ORDER_CREATED = 'ORDER_CREATED',
+  ORDER_UPDATED = 'ORDER_UPDATED',
+  ORDER_DELIVERED = 'ORDER_DELIVERED',
+  PAYMENT_RECEIVED = 'PAYMENT_RECEIVED',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
   PAYMENT_CONFIRMATION = 'PAYMENT_CONFIRMATION',
   SHIPMENT = 'SHIPMENT',
-  PROMOTIONAL = 'PROMOTIONAL',
+  ACCOUNT_VERIFIED = 'ACCOUNT_VERIFIED',
+  PASSWORD_CHANGED = 'PASSWORD_CHANGED',
+  NEW_MESSAGE = 'NEW_MESSAGE',
   SUPPORT = 'SUPPORT',
-  SOCIAL = 'SOCIAL'
+  PROMOTIONAL = 'PROMOTIONAL',
+  SOCIAL = 'SOCIAL',
+  SYSTEM_ALERT = 'SYSTEM_ALERT'
 }
 
-// Types based on your actual Notification schema - NO metadata
+// Types based on your actual Notification schema
 export interface NotificationInput {
-  userId: string; // From relation to User
+  userId: string;
   type: NotificationType;
   title: string;
   message: string;
-  isRead?: boolean; // Boolean field
-  link?: string; // String field (not nullable in schema)
+  isRead?: boolean;
+  link?: string | null;
 }
 
 export interface CreateNotificationOptions {
@@ -33,8 +41,8 @@ export interface NotificationWithUser {
   type: NotificationType;
   title: string;
   message: string;
-  isRead: boolean; // Boolean, not string
-  link: string | null; // In DB it might allow null
+  isRead: boolean;
+  link: string | null;
   createdAt: Date;
   user?: {
     id: string;
@@ -44,7 +52,7 @@ export interface NotificationWithUser {
   };
 }
 
-// New return-based result types
+// Return-based result types
 export interface ServiceResult<T = any> {
   success: boolean;
   data?: T;
@@ -60,13 +68,141 @@ export interface ValidationResult {
   errors: string[];
 }
 
-// Old interface for backward compatibility (if needed)
-export interface NotificationResult {
-  success: boolean;
-  notification?: any;
-  error?: string;
-  data?: NotificationInput;
-}
+// Helper functions for creating specific notification types
+export const createOrderNotification = async (
+  userId: string,
+  orderId: string,
+  status: 'CREATED' | 'UPDATED' | 'DELIVERED'
+): Promise<ServiceResult<NotificationWithUser>> => {
+  let type: NotificationType;
+  let title: string;
+  let message: string;
+  let link: string;
+
+  switch (status) {
+    case 'CREATED':
+      type = NotificationType.ORDER_CREATED;
+      title = 'Order Created';
+      message = `Your order #${orderId} has been successfully created.`;
+      break;
+    case 'UPDATED':
+      type = NotificationType.ORDER_UPDATED;
+      title = 'Order Updated';
+      message = `Your order #${orderId} has been updated.`;
+      break;
+    case 'DELIVERED':
+      type = NotificationType.ORDER_DELIVERED;
+      title = 'Order Delivered';
+      message = `Your order #${orderId} has been delivered. Thank you for shopping with us!`;
+      break;
+    default:
+      type = NotificationType.ORDER_UPDATED;
+      title = 'Order Update';
+      message = `Your order #${orderId} has been updated.`;
+  }
+
+  link = `/Orders/${orderId}`;
+
+  return createNotification({
+    userId,
+    type,
+    title,
+    message,
+    link
+  });
+};
+
+export const createPaymentNotification = async (
+  userId: string,
+  paymentId: string,
+  amount: number,
+  status: 'RECEIVED' | 'FAILED'
+): Promise<ServiceResult<NotificationWithUser>> => {
+  const type = status === 'RECEIVED' 
+    ? NotificationType.PAYMENT_RECEIVED 
+    : NotificationType.PAYMENT_FAILED;
+  
+  const title = status === 'RECEIVED' ? 'Payment Received' : 'Payment Failed';
+  const message = status === 'RECEIVED'
+    ? `Payment of $${amount} has been successfully received.`
+    : `Payment of $${amount} failed. Please check your payment method and try again.`;
+  
+  const link = `/Payments/${paymentId}`;
+
+  return createNotification({
+    userId,
+    type,
+    title,
+    message,
+    link
+  });
+};
+
+export const createMessageNotification = async (
+  userId: string,
+  senderName: string,
+  messagePreview: string
+): Promise<ServiceResult<NotificationWithUser>> => {
+  return createNotification({
+    userId,
+    type: NotificationType.NEW_MESSAGE,
+    title: `New message from ${senderName}`,
+    message: messagePreview.length > 100 ? messagePreview.substring(0, 100) + '...' : messagePreview,
+    link: '/Messaging'
+  });
+};
+
+export const createAccountNotification = async (
+  userId: string,
+  type: 'VERIFIED' | 'PASSWORD_CHANGED'
+): Promise<ServiceResult<NotificationWithUser>> => {
+  const notificationType = type === 'VERIFIED' 
+    ? NotificationType.ACCOUNT_VERIFIED 
+    : NotificationType.PASSWORD_CHANGED;
+  
+  const title = type === 'VERIFIED' ? 'Account Verified' : 'Password Changed';
+  const message = type === 'VERIFIED'
+    ? 'Your account has been successfully verified! You now have full access to all features.'
+    : 'Your password has been successfully changed. If this wasn\'t you, please contact support immediately.';
+
+  return createNotification({
+    userId,
+    type: notificationType,
+    title,
+    message,
+    link: '/Profile'
+  });
+};
+
+export const createSystemAlert = async (
+  userId: string,
+  alertTitle: string,
+  alertMessage: string,
+  link?: string
+): Promise<ServiceResult<NotificationWithUser>> => {
+  return createNotification({
+    userId,
+    type: NotificationType.SYSTEM_ALERT,
+    title: alertTitle,
+    message: alertMessage,
+    link: link || '/Support'
+  });
+};
+
+export const createPromotionalNotification = async (
+  userId: string,
+  offerTitle: string,
+  offerDescription: string,
+  link?: string
+): Promise<ServiceResult<NotificationWithUser>> => {
+  return createNotification({
+    userId,
+    type: NotificationType.PROMOTIONAL,
+    title: offerTitle,
+    message: offerDescription,
+    link: link || '/Promotions'
+  });
+};
 
 /**
  * Create a notification with validation - return-based error handling
@@ -135,7 +271,7 @@ export const createNotification = async (
       }
     }
 
-    // 3. Create notification - NO metadata
+    // 3. Create notification
     const notification = await prisma.notification.create({
       data: {
         userId,
@@ -165,7 +301,6 @@ export const createNotification = async (
   } catch (error: any) {
     console.error('Notification creation error:', error);
     
-    // Handle Prisma specific errors
     let errorCode = 'DATABASE_ERROR';
     let errorMessage = error.message;
     
@@ -188,7 +323,7 @@ export const createNotification = async (
 };
 
 /**
- * Helper: Create multiple notifications at once - updated for return-based approach
+ * Create multiple notifications at once
  */
 export const createMultipleNotifications = async (
   notificationsArray: NotificationInput[],
@@ -205,7 +340,7 @@ export const createMultipleNotifications = async (
 };
 
 /**
- * Helper: Validate notification data
+ * Validate notification data
  */
 export const validateNotificationData = (data: NotificationInput): ValidationResult => {
   const errors: string[] = [];
@@ -215,7 +350,6 @@ export const validateNotificationData = (data: NotificationInput): ValidationRes
   if (!data.title) errors.push('title is required');
   if (!data.message) errors.push('message is required');
   
-  // Validate type is valid
   if (data.type && !Object.values(NotificationType).includes(data.type as NotificationType)) {
     errors.push(`Invalid notification type. Must be one of: ${Object.values(NotificationType).join(', ')}`);
   }
@@ -235,7 +369,7 @@ export const validateNotificationData = (data: NotificationInput): ValidationRes
 };
 
 /**
- * Create notification with pre-validation - updated for return-based approach
+ * Create notification with pre-validation
  */
 export const createValidatedNotification = async (
   notificationData: NotificationInput
@@ -257,7 +391,7 @@ export const createValidatedNotification = async (
 };
 
 /**
- * Helper: Mark notification as read - updated for return-based approach
+ * Mark notification as read
  */
 export const markAsRead = async (notificationId: string): Promise<ServiceResult<NotificationWithUser>> => {
   try {
@@ -303,22 +437,21 @@ export const markAsRead = async (notificationId: string): Promise<ServiceResult<
 };
 
 /**
- * Additional helper functions that maintain the return-based pattern
- */
-
-/**
  * Get notifications for a user
  */
 export const getUserNotifications = async (
   userId: string,
-  options: { unreadOnly?: boolean; limit?: number } = {}
+  options: { unreadOnly?: boolean; limit?: number; types?: NotificationType[] } = {}
 ): Promise<ServiceResult<NotificationWithUser[]>> => {
-  const { unreadOnly = false, limit = 50 } = options;
+  const { unreadOnly = false, limit = 50, types } = options;
   
   try {
     const whereClause: any = { userId };
     if (unreadOnly) {
       whereClause.isRead = false;
+    }
+    if (types && types.length > 0) {
+      whereClause.type = { in: types };
     }
     
     const notifications = await prisma.notification.findMany({
@@ -356,6 +489,65 @@ export const getUserNotifications = async (
 };
 
 /**
+ * Get unread count for a user
+ */
+export const getUnreadCount = async (userId: string): Promise<ServiceResult<number>> => {
+  try {
+    const count = await prisma.notification.count({
+      where: {
+        userId,
+        isRead: false
+      }
+    });
+    
+    return {
+      success: true,
+      data: count
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: `Failed to get unread count: ${error.message}`,
+        details: { userId }
+      }
+    };
+  }
+};
+
+/**
+ * Mark all notifications as read for a user
+ */
+export const markAllAsRead = async (userId: string): Promise<ServiceResult<{ count: number }>> => {
+  try {
+    const result = await prisma.notification.updateMany({
+      where: {
+        userId,
+        isRead: false
+      },
+      data: {
+        isRead: true
+      }
+    });
+    
+    return {
+      success: true,
+      data: { count: result.count }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: `Failed to mark all as read: ${error.message}`,
+        details: { userId }
+      }
+    };
+  }
+};
+
+/**
  * Delete a notification
  */
 export const deleteNotification = async (notificationId: string): Promise<ServiceResult<{ deleted: boolean }>> => {
@@ -375,7 +567,7 @@ export const deleteNotification = async (notificationId: string): Promise<Servic
     let errorMessage = error.message;
     
     if (error.code === 'P2025') {
-      errorCode = 'NOTIFICATION_NOT_FOUND';
+      errorCode = 'NOTIFICATION_FOUND';
       errorMessage = 'Notification not found';
     }
     
@@ -391,8 +583,32 @@ export const deleteNotification = async (notificationId: string): Promise<Servic
 };
 
 /**
- * Compatibility function for backward compatibility (if you need to maintain the old throwing interface)
- * This can be used temporarily while migrating existing code
+ * Delete all notifications for a user
+ */
+export const deleteAllUserNotifications = async (userId: string): Promise<ServiceResult<{ count: number }>> => {
+  try {
+    const result = await prisma.notification.deleteMany({
+      where: { userId }
+    });
+    
+    return {
+      success: true,
+      data: { count: result.count }
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: {
+        code: 'DATABASE_ERROR',
+        message: `Failed to delete notifications: ${error.message}`,
+        details: { userId }
+      }
+    };
+  }
+};
+
+/**
+ * Compatibility function for backward compatibility (throws errors)
  */
 export const createNotificationLegacy = async (
   notificationData: NotificationInput,
@@ -408,14 +624,14 @@ export const createNotificationLegacy = async (
 };
 
 /**
- * Helper to check if a result is successful (type guard)
+ * Type guard to check if a result is successful
  */
 export const isSuccess = <T>(result: ServiceResult<T>): result is ServiceResult<T> & { success: true; data: T } => {
   return result.success === true && result.data !== undefined;
 };
 
 /**
- * Helper to check if a result is an error (type guard)
+ * Type guard to check if a result is an error
  */
 export const isError = <T>(result: ServiceResult<T>): result is ServiceResult<T> & { success: false; error: { code: string; message: string } } => {
   return result.success === false && result.error !== undefined;
