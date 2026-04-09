@@ -12,7 +12,7 @@ export default function DualModeImageProcessor() {
   const [targetColors, setTargetColors] = useState(5);
   const [dithering, setDithering] = useState(false);
   const [tolerance, setTolerance] = useState(30);
-  const [exportScale, setExportScale] = useState(1); // 1x, 2x, 4x, etc.
+  const [exportScale, setExportScale] = useState(1);
   const [customWidth, setCustomWidth] = useState<number>(3840);
   const [customHeight, setCustomHeight] = useState<number>(2160);
   const [useCustomResolution, setUseCustomResolution] = useState(false);
@@ -88,7 +88,6 @@ export default function DualModeImageProcessor() {
     ];
   };
 
-  // Scale image with nearest neighbor (pixel-perfect, no blur)
   const scaleImage = (imageData: ImageData, scaleFactor: number): ImageData => {
     const { width, height, data } = imageData;
     const newWidth = Math.floor(width * scaleFactor);
@@ -112,7 +111,6 @@ export default function DualModeImageProcessor() {
     return new ImageData(newData, newWidth, newHeight);
   };
 
-  // Scale to exact custom resolution
   const scaleToExactResolution = (imageData: ImageData, targetWidth: number, targetHeight: number): ImageData => {
     const { width, height, data } = imageData;
     const newData = new Uint8ClampedArray(targetWidth * targetHeight * 4);
@@ -137,7 +135,6 @@ export default function DualModeImageProcessor() {
     return new ImageData(newData, targetWidth, targetHeight);
   };
 
-  // MODE 1: Reduce colors
   const processReduceColors = (imageData: ImageData): ImageData => {
     const { width, height, data } = imageData;
     const newData = new Uint8ClampedArray(data);
@@ -155,9 +152,10 @@ export default function DualModeImageProcessor() {
       colorMap.set(key, (colorMap.get(key) || 0) + 1);
     }
     
-    // Build color array for median cut
+    // Build color array for median cut - FIXED: using Array.from()
     const colorArray: number[][] = [];
-    for (const [color, count] of colorMap.entries()) {
+    const colorEntries = Array.from(colorMap.entries());
+    for (const [color, count] of colorEntries) {
       const [r, g, b] = color.split(',').map(Number);
       const weight = Math.min(Math.floor(count / 100), 100);
       for (let i = 0; i < weight; i++) {
@@ -184,15 +182,30 @@ export default function DualModeImageProcessor() {
       newData[i + 2] = closest[2];
     }
     
+    // Optional dithering (simplified)
+    if (dithering) {
+      for (let i = 0; i < newData.length; i += 4) {
+        const r = newData[i];
+        const g = newData[i + 1];
+        const b = newData[i + 2];
+        if (r === 0 && g === 0 && b === 0) continue;
+        // Simple error diffusion
+        if (i + 4 < newData.length) {
+          newData[i + 4] = Math.min(255, newData[i + 4] + (r % 16));
+          newData[i + 5] = Math.min(255, newData[i + 5] + (g % 16));
+          newData[i + 6] = Math.min(255, newData[i + 6] + (b % 16));
+        }
+      }
+    }
+    
     return new ImageData(newData, width, height);
   };
 
-  // MODE 2: Clean edges only
   const processCleanEdges = (imageData: ImageData): ImageData => {
     const { width, height, data } = imageData;
     const newData = new Uint8ClampedArray(data);
     
-    // Detect main colors (appear in at least 0.5% of pixels)
+    // Detect main colors
     const colorCounts = new Map<string, number>();
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
@@ -207,7 +220,10 @@ export default function DualModeImageProcessor() {
     
     const totalPixels = data.length / 4;
     const minPixelCount = totalPixels * 0.005;
-    const mainColors = Array.from(colorCounts.entries())
+    
+    // FIXED: using Array.from() here too
+    const colorEntries = Array.from(colorCounts.entries());
+    const mainColors = colorEntries
       .filter(([, count]) => count > minPixelCount)
       .map(([color]) => color.split(',').map(Number));
     
@@ -215,7 +231,7 @@ export default function DualModeImageProcessor() {
     
     // Helper to get neighbor colors
     const getNeighbors = (x: number, y: number) => {
-      const neighbors = [];
+      const neighbors: Array<{r: number, g: number, b: number}> = [];
       for (let dy = -1; dy <= 1; dy++) {
         for (let dx = -1; dx <= 1; dx++) {
           if (dx === 0 && dy === 0) continue;
@@ -252,14 +268,15 @@ export default function DualModeImageProcessor() {
         
         // Find most common neighbor color
         const neighborCounts = new Map<string, number>();
-        neighbors.forEach(neighbor => {
+        for (const neighbor of neighbors) {
           const key = `${neighbor.r},${neighbor.g},${neighbor.b}`;
           neighborCounts.set(key, (neighborCounts.get(key) || 0) + 1);
-        });
+        }
         
-        const mostCommonNeighbor = Array.from(neighborCounts.entries())
-          .sort((a, b) => b[1] - a[1])[0];
+        const neighborEntries = Array.from(neighborCounts.entries());
+        if (neighborEntries.length === 0) continue;
         
+        const mostCommonNeighbor = neighborEntries.sort((a, b) => b[1] - a[1])[0];
         if (!mostCommonNeighbor) continue;
         
         const [commonR, commonG, commonB] = mostCommonNeighbor[0].split(',').map(Number);
@@ -340,8 +357,8 @@ export default function DualModeImageProcessor() {
   const getResolutionLabel = () => {
     if (useCustomResolution) return `${customWidth}x${customHeight}`;
     if (exportScale === 1) return 'Original';
-    if (exportScale === 2) return '2x (e.g., 1080p → 4K)';
-    if (exportScale === 4) return '4x (Ultra HD)';
+    if (exportScale === 2) return '2x';
+    if (exportScale === 4) return '4x';
     return `${exportScale}x`;
   };
 
@@ -562,7 +579,7 @@ export default function DualModeImageProcessor() {
             </h3>
             <img src={processedImage} alt="Processed" className="border rounded max-w-full" />
             <p className="text-xs text-green-600 mt-1">
-              ✓ Ready for 4K export
+              ✓ Ready for export
             </p>
           </div>
         )}
@@ -591,13 +608,13 @@ export default function DualModeImageProcessor() {
 
       {/* Info Box */}
       <div className="mt-8 p-4 bg-yellow-50 rounded text-sm">
-        <h3 className="font-semibold mb-2">📺 4K Export Features:</h3>
+        <h3 className="font-semibold mb-2">📺 Features:</h3>
         <ul className="list-disc list-inside space-y-1">
+          <li><strong>Two modes:</strong> Reduce colors (posterize) or Clean edges only</li>
           <li><strong>Scale factors:</strong> 1x, 2x, 3x, 4x, 8x</li>
           <li><strong>Presets:</strong> 1080p, 4K (3840x2160), 8K</li>
           <li><strong>Custom:</strong> Any resolution you want</li>
           <li><strong>Scaling:</strong> Nearest-neighbor (pixel-perfect, no anti-aliasing)</li>
-          <li><strong>File size:</strong> 4K PNG exports can be large (50-200MB)</li>
         </ul>
       </div>
     </div>
