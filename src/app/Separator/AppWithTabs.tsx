@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import ColorTransitionCleaner from './ColorTransitionCleaner';
+import DualModeImageProcessor from './DualModeImageProcessor';
 import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
 import SilkScreenColorSeparatorCMYK from './SilkScreenColorSeparatorCMYK';
 
@@ -73,7 +73,7 @@ const AppWithTabs: React.FC = () => {
       id: 'vectorizer',
       label: 'Image Vectorizer',
       icon: '🎨',
-      component: <ColorTransitionCleaner pixelThreshold={30}/>
+      component: <DualModeImageProcessor/>
     },
     {
       id: 'other',
