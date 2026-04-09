@@ -67,6 +67,24 @@ export const typeDefs = gql`
     SOCIAL
   }
 
+enum NotificationType {
+  ORDER_CREATED
+  ORDER_UPDATED
+  ORDER_DELIVERED
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
+  PAYMENT_CONFIRMATION
+  SHIPMENT
+  ACCOUNT_VERIFIED
+  PASSWORD_CHANGED
+  NEW_MESSAGE
+  SUPPORT
+  PROMOTIONAL
+  SOCIAL
+  SYSTEM_ALERT
+}
+
+
   # ================= API Bill Enums =================
   enum BillStatus {
     PENDING
