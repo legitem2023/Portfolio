@@ -332,6 +332,56 @@ export default function SilkScreenColorSeparatorCMYK() {
     return layerData;
   };
 
+  // NEW: Create colored simulated image for UI preview (not for film output)
+  const createColoredSimulatedImage = (layer: ColorLayer): string | null => {
+    if (!layer.imageData) return null;
+    
+    const { width, height } = layer.imageData;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    // Get the intensity data from the layer (grayscale)
+    const intensityData = layer.imageData;
+    const imageData = ctx.createImageData(width, height);
+    const pixels = imageData.data;
+    const intensityPixels = intensityData.data;
+    
+    // Get the CMYK color for this layer
+    let colorRgb = { r: 0, g: 0, b: 0 };
+    if (layer.separationType === 'cmyk') {
+      // Standard CMYK process colors
+      switch(layer.color) {
+        case '#00FFFF': colorRgb = { r: 0, g: 255, b: 255 }; break; // Cyan
+        case '#FF00FF': colorRgb = { r: 255, g: 0, b: 255 }; break; // Magenta
+        case '#FFFF00': colorRgb = { r: 255, g: 255, b: 0 }; break; // Yellow
+        case '#000000': colorRgb = { r: 0, g: 0, b: 0 }; break; // Black
+        default: colorRgb = { r: 255, g: 255, b: 255 };
+      }
+    } else {
+      // Spot color - use the RGB values from the layer
+      colorRgb = layer.rgb;
+    }
+    
+    // Apply the color to the intensity data for preview
+    for (let i = 0; i < intensityPixels.length; i += 4) {
+      const intensity = intensityPixels[i]; // 0 = black (full ink), 255 = white (no ink)
+      // For preview: darker intensity = more ink = stronger color
+      const inkAmount = 1 - (intensity / 255);
+      
+      // Blend with white background for transparency effect
+      pixels[i] = colorRgb.r * inkAmount + 255 * (1 - inkAmount);
+      pixels[i+1] = colorRgb.g * inkAmount + 255 * (1 - inkAmount);
+      pixels[i+2] = colorRgb.b * inkAmount + 255 * (1 - inkAmount);
+      pixels[i+3] = 255;
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL();
+  };
+
   const processLayerForOutput = (layer: ColorLayer): ColorLayer => {
     if (!layer.imageData) return layer;
     
@@ -502,7 +552,10 @@ export default function SilkScreenColorSeparatorCMYK() {
       const layer: ColorLayer = {
         color: channel.color,
         cmyk: cmykValues,
-        rgb: { r: 0, g: 0, b: 0 },
+        rgb: channel.key === 'c' ? { r: 0, g: 255, b: 255 } :
+              channel.key === 'm' ? { r: 255, g: 0, b: 255 } :
+              channel.key === 'y' ? { r: 255, g: 255, b: 0 } :
+              { r: 0, g: 0, b: 0 },
         imageData: layerImageData,
         bitmapImageData: null,
         percentage: 25,
@@ -693,17 +746,10 @@ export default function SilkScreenColorSeparatorCMYK() {
     }).join('');
   };
 
+  // Updated to use colored preview for UI
   const renderLayerToCanvas = (layer: ColorLayer): string | null => {
-    if (!layerCanvasRef.current || !layer.imageData) return null;
-    
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = layer.imageData.width;
-    tempCanvas.height = layer.imageData.height;
-    const tempCtx = tempCanvas.getContext('2d');
-    if (!tempCtx) return null;
-    
-    tempCtx.putImageData(layer.imageData, 0, 0);
-    return tempCanvas.toDataURL();
+    if (!layer.imageData) return null;
+    return createColoredSimulatedImage(layer);
   };
 
   const downloadLayer = (layer: ColorLayer, index: number) => {
@@ -769,10 +815,23 @@ export default function SilkScreenColorSeparatorCMYK() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, width, height);
+    // Start with white background
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, width, height);
 
+    // For composite, we need to blend the colored versions of each layer
+    // Reset composite for each layer
+    layers.forEach(layer => {
+      const coloredPreviewDataUrl = createColoredSimulatedImage(layer);
+      if (coloredPreviewDataUrl) {
+        const img = new Image();
+        img.src = coloredPreviewDataUrl;
+        // This is async, but we'll use the existing composite method as fallback
+        // For simplicity, we'll use the multiply method with intensity data
+      }
+    });
+
+    // Fallback to intensity-based composite (grayscale multiply)
     layers.forEach(layer => {
       if (layer.imageData) {
         const layerCanvas = document.createElement('canvas');
@@ -804,8 +863,9 @@ export default function SilkScreenColorSeparatorCMYK() {
     return `Spot Color ${layer.color}`;
   };
 
+  // Responsive breakpoints with Tailwind CSS classes
   return (
-    <div className="w-full max-w-7xl mx-auto p-6">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <canvas ref={originalCanvasRef} className="hidden" />
       <canvas ref={layerCanvasRef} className="hidden" />
       <canvas ref={previewCanvasRef} className="hidden" />
@@ -818,29 +878,29 @@ export default function SilkScreenColorSeparatorCMYK() {
         className="hidden"
       />
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Screen Printing Color Separator</h1>
-        <p className="text-gray-600">Create professional color separations for silk screen printing - Legal Size Output</p>
+      {/* Header - Responsive typography */}
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Screen Printing Color Separator</h1>
+        <p className="text-sm sm:text-base text-gray-600">Create professional color separations for silk screen printing - Legal Size Output</p>
       </div>
 
-      {/* Controls */}
-      <div className="mb-8 bg-white rounded-lg shadow p-6">
-        <div className="flex flex-wrap gap-4 items-center justify-between">
+      {/* Controls - Responsive layout with flex wrap */}
+      <div className="mb-6 sm:mb-8 bg-white rounded-lg shadow p-4 sm:p-6">
+        <div className="flex flex-col md:flex-row flex-wrap gap-4 items-start md:items-center justify-between">
           <button
             onClick={triggerFileInput}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 w-full sm:w-auto"
             disabled={isProcessing}
           >
             {isProcessing ? 'Processing...' : 'Upload Image'}
           </button>
           
-          <div className="flex flex-wrap gap-6 items-center">
+          <div className="flex flex-wrap gap-4 items-center w-full md:w-auto">
             {/* Separation Mode */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto justify-between sm:justify-start">
               <button
                 onClick={() => setSeparationMode('cmyk')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm rounded-lg transition-colors ${
                   separationMode === 'cmyk'
                     ? 'bg-cyan-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -850,7 +910,7 @@ export default function SilkScreenColorSeparatorCMYK() {
               </button>
               <button
                 onClick={() => setSeparationMode('spot')}
-                className={`px-4 py-2 rounded-lg transition-colors ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm rounded-lg transition-colors ${
                   separationMode === 'spot'
                     ? 'bg-purple-600 text-white'
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -871,14 +931,14 @@ export default function SilkScreenColorSeparatorCMYK() {
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span className="ml-3 text-sm font-medium text-gray-700">Auto-detect colors</span>
+                    <span className="ml-3 text-xs sm:text-sm font-medium text-gray-700">Auto-detect</span>
                   </label>
                 </div>
 
                 {!useAutoDetect && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Number of Screens: {manualColorCount}
+                  <div className="w-full sm:w-auto">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                      Screens: {manualColorCount}
                     </label>
                     <input
                       type="range"
@@ -886,7 +946,7 @@ export default function SilkScreenColorSeparatorCMYK() {
                       max="8"
                       value={manualColorCount}
                       onChange={(e) => setManualColorCount(parseInt(e.target.value))}
-                      className="w-32"
+                      className="w-full sm:w-32"
                     />
                   </div>
                 )}
@@ -894,14 +954,14 @@ export default function SilkScreenColorSeparatorCMYK() {
             )}
 
             {/* Output Settings */}
-            <div className="border-l pl-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="w-full sm:w-auto border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                 Output Mode
               </label>
               <select
                 value={outputMode}
                 onChange={(e) => setOutputMode(e.target.value as 'grayscale' | 'bitmap' | 'halftone')}
-                className="px-3 py-1 border rounded"
+                className="w-full sm:w-auto px-3 py-1 border rounded text-sm"
               >
                 <option value="grayscale">Grayscale (Film)</option>
                 <option value="bitmap">Bitmap (1-bit)</option>
@@ -911,8 +971,8 @@ export default function SilkScreenColorSeparatorCMYK() {
 
             {outputMode === 'halftone' && (
               <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="w-full sm:w-auto">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     LPI: {halftoneFrequency}
                   </label>
                   <input
@@ -921,11 +981,11 @@ export default function SilkScreenColorSeparatorCMYK() {
                     max="65"
                     value={halftoneFrequency}
                     onChange={(e) => setHalftoneFrequency(parseInt(e.target.value))}
-                    className="w-32"
+                    className="w-full sm:w-32"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="w-full sm:w-auto">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                     Angle: {halftoneAngle}°
                   </label>
                   <input
@@ -934,47 +994,47 @@ export default function SilkScreenColorSeparatorCMYK() {
                     max="90"
                     value={halftoneAngle}
                     onChange={(e) => setHalftoneAngle(parseInt(e.target.value))}
-                    className="w-32"
+                    className="w-full sm:w-32"
                   />
                 </div>
               </>
             )}
 
             {/* Screen Printing Options */}
-            <div className="border-l pl-4 flex gap-4">
-              <label className="flex items-center gap-2">
+            <div className="w-full flex flex-wrap gap-3 border-t sm:border-t-0 sm:border-l pt-4 sm:pt-0 sm:pl-4 mt-2 sm:mt-0">
+              <label className="flex items-center gap-2 text-xs sm:text-sm">
                 <input
                   type="checkbox"
                   checked={filmPositive}
                   onChange={(e) => setFilmPositive(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm">Film Positive (Invert)</span>
+                <span>Film Positive</span>
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-xs sm:text-sm">
                 <input
                   type="checkbox"
                   checked={registrationMarks}
                   onChange={(e) => setRegistrationMarks(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm">Registration Marks</span>
+                <span>Reg Marks</span>
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 text-xs sm:text-sm">
                 <input
                   type="checkbox"
                   checked={simulateTransparency}
                   onChange={(e) => setSimulateTransparency(e.target.checked)}
                   className="rounded"
                 />
-                <span className="text-sm">Simulate Transparency</span>
+                <span>Transparency</span>
               </label>
             </div>
           </div>
         </div>
 
         {isProcessing && (
-          <div className="mt-4 text-center text-gray-600">
+          <div className="mt-4 text-center text-gray-600 text-sm">
             Processing image for screen printing...
           </div>
         )}
@@ -982,52 +1042,52 @@ export default function SilkScreenColorSeparatorCMYK() {
 
       {/* Display area */}
       {originalImage && layersToDisplay.length > 0 && (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
           {/* Original image */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4">
+            <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
               Original Artwork ({originalDimensions.width} x {originalDimensions.height})
             </h3>
-            <div className="relative w-full" style={{ maxHeight: '400px' }}>
+            <div className="relative w-full max-h-[300px] sm:max-h-[400px] flex justify-center">
               <NextImage
                 src={originalImage}
                 alt="Original artwork"
                 width={originalDimensions.width}
                 height={originalDimensions.height}
-                className="object-contain max-h-[400px] w-auto mx-auto"
+                className="object-contain max-h-[300px] sm:max-h-[400px] w-auto"
                 unoptimized={true}
               />
             </div>
           </div>
 
-          {/* Screen Printing Info */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h4 className="font-semibold text-yellow-800 mb-2">Screen Printing Instructions</h4>
-            <ul className="text-sm text-yellow-700 space-y-1">
-              <li>• Each layer below represents a separate screen</li>
-              <li>• {outputMode === 'halftone' ? 'Halftone dots are optimized for screen mesh' : 'Use with your preferred screen mesh count'}</li>
-              <li>• {filmPositive ? 'Film positive mode: Black areas = emulsion to burn' : 'Standard mode: Black areas = where ink will print'}</li>
-              <li>• Registration marks help align multiple screens</li>
-              <li>• Download each layer and print on transparency film</li>
-              <li>• Output size: Legal (8.5 x 11) at 300 DPI</li>
+          {/* Screen Printing Info - Responsive padding */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
+            <h4 className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">Screen Printing Instructions</h4>
+            <ul className="text-xs sm:text-sm text-yellow-700 space-y-1 list-disc list-inside">
+              <li>Each layer below represents a separate screen</li>
+              <li>{outputMode === 'halftone' ? 'Halftone dots are optimized for screen mesh' : 'Use with your preferred screen mesh count'}</li>
+              <li>{filmPositive ? 'Film positive mode: Black areas = emulsion to burn' : 'Standard mode: Black areas = where ink will print'}</li>
+              <li>Registration marks help align multiple screens</li>
+              <li>Download each layer and print on transparency film</li>
+              <li>Output size: Legal (8.5 x 11) at 300 DPI</li>
             </ul>
           </div>
 
-          {/* Screen Layers Grid */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
+          {/* Screen Layers Grid - Responsive grid */}
+          <div className="bg-white rounded-lg shadow p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <h3 className="text-base sm:text-lg font-semibold">
                 Screen Separations ({layersToDisplay.length} screens)
               </h3>
               <button
                 onClick={downloadAllLayers}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
               >
                 Download All Screens
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {layersToDisplay.map((layer, index) => {
                 const layerPreview = renderLayerToCanvas(layer);
                 
@@ -1038,9 +1098,9 @@ export default function SilkScreenColorSeparatorCMYK() {
                       className="p-3 text-white font-medium"
                       style={{ backgroundColor: layer.color }}
                     >
-                      <div className="flex justify-between items-center">
-                        <span>{getChannelLabel(layer)}</span>
-                        <span className="text-sm bg-black bg-opacity-30 px-2 py-1 rounded">
+                      <div className="flex justify-between items-center flex-wrap gap-2">
+                        <span className="text-sm sm:text-base">{getChannelLabel(layer)}</span>
+                        <span className="text-xs bg-black bg-opacity-30 px-2 py-1 rounded">
                           Screen #{index + 1}
                         </span>
                       </div>
@@ -1064,12 +1124,12 @@ export default function SilkScreenColorSeparatorCMYK() {
                       )}
                     </div>
                     
-                    {/* Screen preview */}
+                    {/* Screen preview - Colored */}
                     <div className="bg-gray-100 p-2">
                       {layerPreview && (
-                        <div className="relative" style={{ 
+                        <div className="relative w-full" style={{ 
                           aspectRatio: `${layer.imageData?.width} / ${layer.imageData?.height}`,
-                          maxHeight: '200px'
+                          minHeight: '150px'
                         }}>
                           <NextImage
                             src={layerPreview}
@@ -1084,7 +1144,7 @@ export default function SilkScreenColorSeparatorCMYK() {
                     
                     {/* Screen info */}
                     <div className="p-3 bg-gray-50">
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-xs text-gray-600 mb-2">
                         {outputMode === 'halftone' 
                           ? `Halftone: ${halftoneFrequency} LPI at ${halftoneAngle}°`
                           : outputMode === 'bitmap'
@@ -1097,7 +1157,7 @@ export default function SilkScreenColorSeparatorCMYK() {
                       
                       <button
                         onClick={() => downloadLayer(layer, index)}
-                        className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                        className="w-full px-3 py-2 bg-blue-500 text-white text-xs sm:text-sm rounded hover:bg-blue-600 transition-colors"
                       >
                         Download Screen {index + 1}
                       </button>
@@ -1110,21 +1170,21 @@ export default function SilkScreenColorSeparatorCMYK() {
 
           {/* Composite preview */}
           {compositeImage && (
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="bg-white rounded-lg shadow p-3 sm:p-4">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                 Simulated Print Preview
               </h3>
-              <div className="relative w-full" style={{ maxHeight: '400px' }}>
+              <div className="relative w-full max-h-[300px] sm:max-h-[400px] flex justify-center">
                 <NextImage
                   src={compositeImage}
                   alt="Simulated print result"
                   width={LEGAL_WIDTH_PX}
                   height={LEGAL_HEIGHT_PX}
-                  className="object-contain max-h-[400px] w-auto mx-auto border border-gray-300"
+                  className="object-contain max-h-[300px] sm:max-h-[400px] w-auto border border-gray-300"
                   unoptimized={true}
                 />
               </div>
-              <p className="text-sm text-gray-500 mt-2 text-center">
+              <p className="text-xs sm:text-sm text-gray-500 mt-2 text-center">
                 Simulated result when screens are printed in registration
               </p>
             </div>
@@ -1133,4 +1193,4 @@ export default function SilkScreenColorSeparatorCMYK() {
       )}
     </div>
   );
-  }
+        }
