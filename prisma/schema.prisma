@@ -695,14 +695,41 @@ enum TicketPriority {
   URGENT
 }
 
+
+
+
 enum NotificationType {
-  ORDER_UPDATE
+  // Order related
+  ORDER_CREATED
+  ORDER_UPDATED
+  ORDER_DELIVERED
+  
+  // Payment related
+  PAYMENT_RECEIVED
+  PAYMENT_FAILED
   PAYMENT_CONFIRMATION
+  
+  // Shipping related
   SHIPMENT
-  PROMOTIONAL
+  
+  // Account related
+  ACCOUNT_VERIFIED
+  PASSWORD_CHANGED
+  
+  // Communication
+  NEW_MESSAGE
   SUPPORT
+  
+  // Marketing
+  PROMOTIONAL
+  
+  // Community
   SOCIAL
+  
+  // System
+  SYSTEM_ALERT
 }
+
 
 // NEW Enums for Social Features
 enum PrivacySetting {
