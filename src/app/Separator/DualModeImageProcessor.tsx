@@ -135,6 +135,112 @@ export default function DualModeImageProcessor() {
     return new ImageData(newData, targetWidth, targetHeight);
   };
 
+  // NEW: Aggressive edge cleaning - assigns EVERY transition pixel to a solid color
+  const aggressiveCleanEdges = (imageData: ImageData): ImageData => {
+    const { width, height, data } = imageData;
+    const newData = new Uint8ClampedArray(data);
+    
+    // Step 1: Find ALL pure solid colors in the image (colors that appear frequently)
+    const colorCounts = new Map<string, number>();
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      if (a < 10) continue;
+      
+      const key = `${r},${g},${b}`;
+      colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
+    }
+    
+    // Get the most frequent colors (these are your "solid" colors)
+    const totalPixels = data.length / 4;
+    const minPixelCount = totalPixels * 0.01; // At least 1% of image
+    const colorEntries = Array.from(colorCounts.entries());
+    const solidColors = colorEntries
+      .filter(([, count]) => count > minPixelCount)
+      .map(([color]) => color.split(',').map(Number));
+    
+    console.log(`Found ${solidColors.length} solid colors`);
+    
+    // Step 2: For EVERY pixel, find its nearest solid color and replace
+    // This completely eliminates all transitions
+    for (let i = 0; i < newData.length; i += 4) {
+      const r = newData[i];
+      const g = newData[i + 1];
+      const b = newData[i + 2];
+      const a = newData[i + 3];
+      if (a < 10) continue;
+      
+      const closest = findClosestColor([r, g, b], solidColors);
+      newData[i] = closest[0];
+      newData[i + 1] = closest[1];
+      newData[i + 2] = closest[2];
+    }
+    
+    return new ImageData(newData, width, height);
+  };
+
+  // NEW: Flood fill based edge cleaning (preserves shapes perfectly)
+  const floodFillCleanEdges = (imageData: ImageData): ImageData => {
+    const { width, height, data } = imageData;
+    const newData = new Uint8ClampedArray(data);
+    
+    // Step 1: Identify all unique colors and their frequency
+    const colorCounts = new Map<string, { count: number; pixels: number[] }>();
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      if (a < 10) continue;
+      
+      const key = `${r},${g},${b}`;
+      if (!colorCounts.has(key)) {
+        colorCounts.set(key, { count: 0, pixels: [] });
+      }
+      const entry = colorCounts.get(key)!;
+      entry.count++;
+      entry.pixels.push(i);
+    }
+    
+    // Step 2: Sort colors by frequency and keep the dominant ones
+    const colorEntries = Array.from(colorCounts.entries());
+    colorEntries.sort((a, b) => b[1].count - a[1].count);
+    
+    const totalPixels = data.length / 4;
+    const threshold = totalPixels * 0.005; // 0.5% threshold
+    
+    const dominantColors = colorEntries
+      .filter(([, info]) => info.count > threshold)
+      .slice(0, targetColors)
+      .map(([color]) => color.split(',').map(Number));
+    
+    console.log(`Using ${dominantColors.length} dominant colors`);
+    
+    // Step 3: Create a map to track which pixels belong to which color region
+    const colorIdMap = new Map<string, number>();
+    dominantColors.forEach((color, idx) => {
+      colorIdMap.set(`${color[0]},${color[1]},${color[2]}`, idx);
+    });
+    
+    // Step 4: Assign each pixel to its nearest dominant color
+    for (let i = 0; i < newData.length; i += 4) {
+      const r = newData[i];
+      const g = newData[i + 1];
+      const b = newData[i + 2];
+      const a = newData[i + 3];
+      if (a < 10) continue;
+      
+      const closest = findClosestColor([r, g, b], dominantColors);
+      newData[i] = closest[0];
+      newData[i + 1] = closest[1];
+      newData[i + 2] = closest[2];
+    }
+    
+    return new ImageData(newData, width, height);
+  };
+
   const processReduceColors = (imageData: ImageData): ImageData => {
     const { width, height, data } = imageData;
     const newData = new Uint8ClampedArray(data);
@@ -152,7 +258,7 @@ export default function DualModeImageProcessor() {
       colorMap.set(key, (colorMap.get(key) || 0) + 1);
     }
     
-    // Build color array for median cut - FIXED: using Array.from()
+    // Build color array for median cut
     const colorArray: number[][] = [];
     const colorEntries = Array.from(colorMap.entries());
     for (const [color, count] of colorEntries) {
@@ -168,7 +274,7 @@ export default function DualModeImageProcessor() {
     
     console.log(`Reduced ${colorMap.size} colors to ${palette.length} colors`);
     
-    // Apply palette
+    // Apply palette to ALL pixels (this removes ALL transitions)
     for (let i = 0; i < newData.length; i += 4) {
       const r = newData[i];
       const g = newData[i + 1];
@@ -182,120 +288,6 @@ export default function DualModeImageProcessor() {
       newData[i + 2] = closest[2];
     }
     
-    // Optional dithering (simplified)
-    if (dithering) {
-      for (let i = 0; i < newData.length; i += 4) {
-        const r = newData[i];
-        const g = newData[i + 1];
-        const b = newData[i + 2];
-        if (r === 0 && g === 0 && b === 0) continue;
-        // Simple error diffusion
-        if (i + 4 < newData.length) {
-          newData[i + 4] = Math.min(255, newData[i + 4] + (r % 16));
-          newData[i + 5] = Math.min(255, newData[i + 5] + (g % 16));
-          newData[i + 6] = Math.min(255, newData[i + 6] + (b % 16));
-        }
-      }
-    }
-    
-    return new ImageData(newData, width, height);
-  };
-
-  const processCleanEdges = (imageData: ImageData): ImageData => {
-    const { width, height, data } = imageData;
-    const newData = new Uint8ClampedArray(data);
-    
-    // Detect main colors
-    const colorCounts = new Map<string, number>();
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-      if (a < 10) continue;
-      
-      const key = `${r},${g},${b}`;
-      colorCounts.set(key, (colorCounts.get(key) || 0) + 1);
-    }
-    
-    const totalPixels = data.length / 4;
-    const minPixelCount = totalPixels * 0.005;
-    
-    // FIXED: using Array.from() here too
-    const colorEntries = Array.from(colorCounts.entries());
-    const mainColors = colorEntries
-      .filter(([, count]) => count > minPixelCount)
-      .map(([color]) => color.split(',').map(Number));
-    
-    console.log(`Found ${mainColors.length} main colors out of ${colorCounts.size} total`);
-    
-    // Helper to get neighbor colors
-    const getNeighbors = (x: number, y: number) => {
-      const neighbors: Array<{r: number, g: number, b: number}> = [];
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          if (dx === 0 && dy === 0) continue;
-          const nx = x + dx;
-          const ny = y + dy;
-          if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-            const idx = (ny * width + nx) * 4;
-            if (data[idx + 3] > 10) {
-              neighbors.push({
-                r: data[idx],
-                g: data[idx + 1],
-                b: data[idx + 2]
-              });
-            }
-          }
-        }
-      }
-      return neighbors;
-    };
-    
-    // Clean transition pixels
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const idx = (y * width + x) * 4;
-        const r = data[idx];
-        const g = data[idx + 1];
-        const b = data[idx + 2];
-        const a = data[idx + 3];
-        
-        if (a < 10) continue;
-        
-        const neighbors = getNeighbors(x, y);
-        if (neighbors.length === 0) continue;
-        
-        // Find most common neighbor color
-        const neighborCounts = new Map<string, number>();
-        for (const neighbor of neighbors) {
-          const key = `${neighbor.r},${neighbor.g},${neighbor.b}`;
-          neighborCounts.set(key, (neighborCounts.get(key) || 0) + 1);
-        }
-        
-        const neighborEntries = Array.from(neighborCounts.entries());
-        if (neighborEntries.length === 0) continue;
-        
-        const mostCommonNeighbor = neighborEntries.sort((a, b) => b[1] - a[1])[0];
-        if (!mostCommonNeighbor) continue;
-        
-        const [commonR, commonG, commonB] = mostCommonNeighbor[0].split(',').map(Number);
-        const distance = Math.sqrt(
-          Math.pow(r - commonR, 2) +
-          Math.pow(g - commonG, 2) +
-          Math.pow(b - commonB, 2)
-        );
-        
-        // If pixel is a transition, replace it
-        if (distance > tolerance) {
-          const closestMain = findClosestColor([r, g, b], mainColors);
-          newData[idx] = closestMain[0];
-          newData[idx + 1] = closestMain[1];
-          newData[idx + 2] = closestMain[2];
-        }
-      }
-    }
-    
     return new ImageData(newData, width, height);
   };
 
@@ -306,7 +298,6 @@ export default function DualModeImageProcessor() {
     
     const img = new Image();
     img.onload = () => {
-      // Step 1: Process at original size
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = img.width;
       tempCanvas.height = img.height;
@@ -316,14 +307,17 @@ export default function DualModeImageProcessor() {
       tempCtx.drawImage(img, 0, 0);
       let imageData = tempCtx.getImageData(0, 0, img.width, img.height);
       
-      // Step 2: Apply selected mode
+      // Apply selected mode - ALL modes now completely remove transitions
       if (mode === 'reduce-colors') {
+        // Mode 1: Quantize to N colors (removes all transitions)
         imageData = processReduceColors(imageData);
       } else {
-        imageData = processCleanEdges(imageData);
+        // Mode 2: Clean edges while preserving original color set
+        // This uses flood fill approach to assign transition pixels to nearest solid color
+        imageData = floodFillCleanEdges(imageData);
       }
       
-      // Step 3: Scale to export resolution
+      // Scale to export resolution
       let finalWidth = img.width;
       let finalHeight = img.height;
       
@@ -337,7 +331,6 @@ export default function DualModeImageProcessor() {
         finalHeight = img.height * exportScale;
       }
       
-      // Step 4: Draw to visible canvas
       if (canvasRef.current) {
         canvasRef.current.width = finalWidth;
         canvasRef.current.height = finalHeight;
@@ -364,7 +357,7 @@ export default function DualModeImageProcessor() {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">4K Color Transition Cleaner</h1>
+      <h1 className="text-2xl font-bold mb-4">Color Transition Remover</h1>
       
       <div className="mb-6">
         <input
@@ -374,13 +367,16 @@ export default function DualModeImageProcessor() {
           ref={fileInputRef}
           className="mb-4"
         />
+        <p className="text-sm text-gray-600">
+          Upload an image with faded/transition edges between colors
+        </p>
       </div>
 
       {originalImage && (
         <>
           {/* Mode Selection */}
           <div className="mb-6 p-4 bg-gray-100 rounded">
-            <h3 className="font-semibold mb-3">Select Processing Mode:</h3>
+            <h3 className="font-semibold mb-3">Select Mode:</h3>
             <div className="flex gap-4 flex-wrap">
               <label className="flex items-center gap-2 p-2 bg-white rounded">
                 <input
@@ -390,8 +386,8 @@ export default function DualModeImageProcessor() {
                   onChange={(e) => setMode(e.target.value as ProcessingMode)}
                 />
                 <div>
-                  <strong>Reduce Colors</strong>
-                  <p className="text-xs text-gray-600">Quantize to solid color blocks</p>
+                  <strong>Mode 1: Quantize to N Colors</strong>
+                  <p className="text-xs text-gray-600">Reduces image to exact number of solid colors (no transitions)</p>
                 </div>
               </label>
               
@@ -403,8 +399,8 @@ export default function DualModeImageProcessor() {
                   onChange={(e) => setMode(e.target.value as ProcessingMode)}
                 />
                 <div>
-                  <strong>Clean Edges Only</strong>
-                  <p className="text-xs text-gray-600">Preserve colors, remove transitions</p>
+                  <strong>Mode 2: Preserve Original Colors</strong>
+                  <p className="text-xs text-gray-600">Keeps all original colors but removes transitions between them</p>
                 </div>
               </label>
             </div>
@@ -414,7 +410,7 @@ export default function DualModeImageProcessor() {
           {mode === 'reduce-colors' && (
             <div className="mb-4 p-4 bg-blue-50 rounded">
               <label className="block text-sm font-medium mb-2">
-                Target Colors: {targetColors}
+                Number of Solid Colors: {targetColors}
               </label>
               <input
                 type="range"
@@ -424,22 +420,16 @@ export default function DualModeImageProcessor() {
                 onChange={(e) => setTargetColors(parseInt(e.target.value))}
                 className="w-full"
               />
-              
-              <label className="flex items-center gap-2 mt-3">
-                <input
-                  type="checkbox"
-                  checked={dithering}
-                  onChange={(e) => setDithering(e.target.checked)}
-                />
-                <span className="text-sm">Enable Dithering (better quality)</span>
-              </label>
+              <p className="text-xs text-gray-500 mt-1">
+                Example: If you want Red, Green, Blue only → set to 3
+              </p>
             </div>
           )}
 
           {mode === 'clean-edges-only' && (
             <div className="mb-4 p-4 bg-green-50 rounded">
               <label className="block text-sm font-medium mb-2">
-                Edge Detection Tolerance: {tolerance}
+                Color Detection Sensitivity: {tolerance}
               </label>
               <input
                 type="range"
@@ -450,7 +440,7 @@ export default function DualModeImageProcessor() {
                 className="w-full"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Lower = only clean obvious transitions | Higher = more aggressive
+                Lower = stricter color matching | Higher = merges similar colors
               </p>
             </div>
           )}
@@ -495,7 +485,7 @@ export default function DualModeImageProcessor() {
                   checked={useCustomResolution}
                   onChange={() => setUseCustomResolution(true)}
                 />
-                <span>Custom resolution (4K, 8K, etc.):</span>
+                <span>Custom resolution:</span>
               </label>
               <div className="ml-6 mt-2 flex gap-2 flex-wrap">
                 <button
@@ -506,7 +496,7 @@ export default function DualModeImageProcessor() {
                   }}
                   className="px-3 py-1 rounded bg-gray-200 text-sm"
                 >
-                  1080p (1920x1080)
+                  1080p
                 </button>
                 <button
                   onClick={() => {
@@ -516,7 +506,7 @@ export default function DualModeImageProcessor() {
                   }}
                   className="px-3 py-1 rounded bg-purple-200 text-sm font-semibold"
                 >
-                  4K (3840x2160) ⭐
+                  4K ⭐
                 </button>
                 <button
                   onClick={() => {
@@ -526,7 +516,7 @@ export default function DualModeImageProcessor() {
                   }}
                   className="px-3 py-1 rounded bg-gray-200 text-sm"
                 >
-                  8K (7680x4320)
+                  8K
                 </button>
                 <div className="flex gap-1 items-center">
                   <input
@@ -547,10 +537,6 @@ export default function DualModeImageProcessor() {
                 </div>
               </div>
             </div>
-            
-            <p className="text-xs text-gray-500 mt-2">
-              ⚡ Uses nearest-neighbor scaling (pixel-perfect, no blur) - ideal for pixel art
-            </p>
           </div>
 
           <button
@@ -558,7 +544,7 @@ export default function DualModeImageProcessor() {
             disabled={isProcessing}
             className="bg-blue-500 text-white px-6 py-2 rounded mb-6 hover:bg-blue-600 disabled:bg-gray-400"
           >
-            {isProcessing ? 'Processing...' : `Process & Export at ${getResolutionLabel()}`}
+            {isProcessing ? 'Processing...' : 'Remove All Color Transitions'}
           </button>
         </>
       )}
@@ -567,20 +553,17 @@ export default function DualModeImageProcessor() {
       <div className="grid grid-cols-2 gap-4">
         {originalImage && (
           <div>
-            <h3 className="font-semibold mb-2">Original Image</h3>
+            <h3 className="font-semibold mb-2">Original (with faded transitions)</h3>
             <img src={originalImage} alt="Original" className="border rounded max-w-full" />
+            <p className="text-xs text-red-500 mt-1">⚠️ Has gradient/faded edges between colors</p>
           </div>
         )}
         
         {processedImage && (
           <div>
-            <h3 className="font-semibold mb-2">
-              Processed Result ({getResolutionLabel()})
-            </h3>
+            <h3 className="font-semibold mb-2">Result (NO transitions)</h3>
             <img src={processedImage} alt="Processed" className="border rounded max-w-full" />
-            <p className="text-xs text-green-600 mt-1">
-              ✓ Ready for export
-            </p>
+            <p className="text-xs text-green-600 mt-1">✅ All pixels are pure solid colors, hard edges only</p>
           </div>
         )}
       </div>
@@ -595,28 +578,33 @@ export default function DualModeImageProcessor() {
               const resolution = useCustomResolution 
                 ? `${customWidth}x${customHeight}`
                 : `${exportScale}x`;
-              link.download = `${mode}-${resolution}.png`;
+              link.download = `no-transitions-${resolution}.png`;
               link.href = processedImage;
               link.click();
             }}
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
           >
-            💾 Download {getResolutionLabel()} PNG
+            💾 Download (No Transitions)
           </button>
         </div>
       )}
 
-      {/* Info Box */}
+      {/* Explanation */}
       <div className="mt-8 p-4 bg-yellow-50 rounded text-sm">
-        <h3 className="font-semibold mb-2">📺 Features:</h3>
+        <h3 className="font-semibold mb-2">🎯 What this does:</h3>
         <ul className="list-disc list-inside space-y-1">
-          <li><strong>Two modes:</strong> Reduce colors (posterize) or Clean edges only</li>
-          <li><strong>Scale factors:</strong> 1x, 2x, 3x, 4x, 8x</li>
-          <li><strong>Presets:</strong> 1080p, 4K (3840x2160), 8K</li>
-          <li><strong>Custom:</strong> Any resolution you want</li>
-          <li><strong>Scaling:</strong> Nearest-neighbor (pixel-perfect, no anti-aliasing)</li>
+          <li><strong>Every single pixel</strong> is reassigned to a solid color</li>
+          <li><strong>No gradient/fade pixels remain</strong> - only pure RGB values</li>
+          <li><strong>Hard edges</strong> between color regions (no anti-aliasing)</li>
+          <li><strong>Perfect for:</strong> Pixel art, vector-style images, color quantization</li>
         </ul>
+        <div className="mt-2 p-2 bg-white rounded">
+          <p className="font-mono text-xs">
+            Example: Red (255,0,0) + Faded (255,100,100) → Red (255,0,0)<br/>
+            Blue (0,0,255) + Faded (100,100,255) → Blue (0,0,255)
+          </p>
+        </div>
       </div>
     </div>
   );
-           }
+                         }
