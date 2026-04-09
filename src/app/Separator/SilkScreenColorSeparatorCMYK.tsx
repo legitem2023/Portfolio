@@ -1009,7 +1009,7 @@ export default function SilkScreenColorSeparatorCMYK() {
               <li>• {filmPositive ? 'Film positive mode: Black areas = emulsion to burn' : 'Standard mode: Black areas = where ink will print'}</li>
               <li>• Registration marks help align multiple screens</li>
               <li>• Download each layer and print on transparency film</li>
-              <li>• Output size: Legal (8.5" x 11") at 300 DPI</li>
+              <li>• Output size: Legal (8.5 x 11) at 300 DPI</li>
             </ul>
           </div>
 
@@ -1092,7 +1092,7 @@ export default function SilkScreenColorSeparatorCMYK() {
                           : 'Grayscale film output'}
                       </p>
                       <p className="text-xs text-gray-500 mb-2">
-                        Legal size: 8.5" x 11" @ 300 DPI
+                        Legal size: 8.5 x 11 @ 300 DPI
                       </p>
                       
                       <button
