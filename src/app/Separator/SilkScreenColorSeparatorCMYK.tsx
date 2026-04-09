@@ -9,7 +9,7 @@ interface ColorLayer {
   cmyk: { c: number; m: number; y: number; k: number };
   rgb: { r: number; g: number; b: number };
   imageData: ImageData | null;
-  bitmapImageData: ImageData | null; // For halftone/bitmap conversion
+  bitmapImageData: ImageData | null;
   percentage: number;
   pixelCount: number;
   isDominant: boolean;
@@ -53,15 +53,14 @@ export default function SilkScreenColorSeparatorCMYK() {
   const [compositeImage, setCompositeImage] = useState<string | null>(null);
   const [separationMode, setSeparationMode] = useState<'cmyk' | 'spot' | 'simulated'>('cmyk');
   const [outputMode, setOutputMode] = useState<'grayscale' | 'bitmap' | 'halftone'>('halftone');
-  const [halftoneFrequency, setHalftoneFrequency] = useState(45); // LPI - optimized for legal paper
-  const [halftoneAngle, setHalftoneAngle] = useState(45); // Degrees
+  const [halftoneFrequency, setHalftoneFrequency] = useState(45);
+  const [halftoneAngle, setHalftoneAngle] = useState(45);
   const [simulateTransparency, setSimulateTransparency] = useState(true);
   const [registrationMarks, setRegistrationMarks] = useState(true);
-  const [filmPositive, setFilmPositive] = useState(false); // Invert for film output
+  const [filmPositive, setFilmPositive] = useState(false);
   
-  // Legal size bond paper dimensions in pixels at 300 DPI
-  const LEGAL_WIDTH_PX = 2550;   // 8.5" x 300 = 2550
-  const LEGAL_HEIGHT_PX = 3300;  // 11" x 300 = 3300
+  const LEGAL_WIDTH_PX = 2550;
+  const LEGAL_HEIGHT_PX = 3300;
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,7 +90,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     };
   };
 
-  // Create a legal-sized canvas with proper margins
   const createLegalSizeCanvas = (imageData: ImageData): HTMLCanvasElement => {
     const canvas = document.createElement('canvas');
     canvas.width = LEGAL_WIDTH_PX;
@@ -99,24 +97,20 @@ export default function SilkScreenColorSeparatorCMYK() {
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
     
-    // Fill with white background
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, LEGAL_WIDTH_PX, LEGAL_HEIGHT_PX);
     
-    // Calculate margins to center the image (assuming 0.5 inch margins = 150px)
     const marginX = 150;
     const marginY = 150;
     const maxWidth = LEGAL_WIDTH_PX - (marginX * 2);
     const maxHeight = LEGAL_HEIGHT_PX - (marginY * 2);
     
-    // Calculate scale to fit within margins while maintaining aspect ratio
     const scale = Math.min(maxWidth / imageData.width, maxHeight / imageData.height);
     const scaledWidth = imageData.width * scale;
     const scaledHeight = imageData.height * scale;
     const offsetX = marginX + (maxWidth - scaledWidth) / 2;
     const offsetY = marginY + (maxHeight - scaledHeight) / 2;
     
-    // Draw the image data onto the legal canvas
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = imageData.width;
     tempCanvas.height = imageData.height;
@@ -129,7 +123,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     return canvas;
   };
 
-  // Advanced halftone pattern with improved quality
   const applyHalftone = (imageData: ImageData, frequency: number, angle: number, shape: 'dot' | 'line' | 'square' = 'dot'): ImageData => {
     const width = imageData.width;
     const height = imageData.height;
@@ -138,23 +131,16 @@ export default function SilkScreenColorSeparatorCMYK() {
     const resultPixels = resultData.data;
     
     const angleRad = angle * Math.PI / 180;
-    // Higher frequency = finer dots
     const period = width / frequency;
-    
-    // Pre-calculate spot shapes for performance
-    const spotSize = Math.max(2, Math.floor(period * 0.8));
     
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = (y * width + x) * 4;
-        // Get intensity (0-255, 0=black, 255=white)
         const intensity = sourcePixels[idx];
         
-        // Rotate coordinates for halftone screen angle
         const xRot = x * Math.cos(angleRad) - y * Math.sin(angleRad);
         const yRot = x * Math.sin(angleRad) + y * Math.cos(angleRad);
         
-        // Calculate halftone spot position (0 to 1)
         let spotX = (xRot % period) / period;
         let spotY = (yRot % period) / period;
         if (spotX < 0) spotX += 1;
@@ -164,7 +150,6 @@ export default function SilkScreenColorSeparatorCMYK() {
         
         switch(shape) {
           case 'dot': {
-            // Circular dot with smooth edges
             const centerX = 0.5;
             const centerY = 0.5;
             const dx = spotX - centerX;
@@ -174,29 +159,24 @@ export default function SilkScreenColorSeparatorCMYK() {
             break;
           }
           case 'square': {
-            // Square dot for special effects
             spotValue = Math.min(spotX, spotY) * 2;
             if (spotValue > 1) spotValue = 2 - spotValue;
             break;
           }
           case 'line': {
-            // Line screen for certain artistic effects
             spotValue = Math.sin(spotX * Math.PI * 2) * 0.5 + 0.5;
             break;
           }
         }
         
-        // Map intensity to dot size (255 = white = no dot, 0 = black = full dot)
         const dotThreshold = (255 - intensity) / 255;
         
-        // Anti-aliased halftone for smoother results
         let value;
         if (spotValue < dotThreshold - 0.1) {
           value = 0;
         } else if (spotValue > dotThreshold + 0.1) {
           value = 255;
         } else {
-          // Smooth transition at dot edges
           const t = (spotValue - (dotThreshold - 0.1)) / 0.2;
           value = Math.round(255 * t);
         }
@@ -211,7 +191,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     return resultData;
   };
 
-  // Convert to bitmap (pure black and white) with error diffusion for better quality
   const convertToBitmap = (imageData: ImageData, threshold: number = 128): ImageData => {
     const width = imageData.width;
     const height = imageData.height;
@@ -219,7 +198,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     const resultData = new ImageData(width, height);
     const resultPixels = resultData.data;
     
-    // Simple threshold for now (could be enhanced with Floyd-Steinberg dithering)
     for (let i = 0; i < sourcePixels.length; i += 4) {
       const intensity = sourcePixels[i];
       const value = intensity > threshold ? 255 : 0;
@@ -233,7 +211,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     return resultData;
   };
 
-  // Add registration marks at corners and center for legal paper
   const addRegistrationMarks = (imageData: ImageData): ImageData => {
     const width = imageData.width;
     const height = imageData.height;
@@ -241,31 +218,26 @@ export default function SilkScreenColorSeparatorCMYK() {
     const resultPixels = resultData.data;
     const sourcePixels = imageData.data;
     
-    // Copy original pixels
     for (let i = 0; i < sourcePixels.length; i++) {
       resultPixels[i] = sourcePixels[i];
     }
     
-    // Registration mark size (proportional to legal paper size)
     const markSize = Math.min(width, height) * 0.015;
     const margin = Math.min(width, height) * 0.03;
     
     const addMark = (x: number, y: number) => {
-      // Draw crosshair
       for (let i = -Math.floor(markSize); i <= Math.floor(markSize); i++) {
         for (let j = -Math.floor(markSize); j <= Math.floor(markSize); j++) {
           const px = Math.floor(x + i);
           const py = Math.floor(y + j);
           if (px >= 0 && px < width && py >= 0 && py < height) {
             const idx = (py * width + px) * 4;
-            // Draw only the cross lines (horizontal and vertical)
             if (Math.abs(i) <= 2 || Math.abs(j) <= 2) {
               resultPixels[idx] = 0;
               resultPixels[idx + 1] = 0;
               resultPixels[idx + 2] = 0;
               resultPixels[idx + 3] = 255;
             }
-            // Draw outer circle for better registration
             const distance = Math.sqrt(i*i + j*j);
             if (Math.abs(distance - markSize) <= 2) {
               resultPixels[idx] = 0;
@@ -278,13 +250,10 @@ export default function SilkScreenColorSeparatorCMYK() {
       }
     };
     
-    // Add marks at four corners
     addMark(margin, margin);
     addMark(width - margin, margin);
     addMark(margin, height - margin);
     addMark(width - margin, height - margin);
-    
-    // Add center mark for alignment
     addMark(width / 2, height / 2);
     
     return resultData;
@@ -314,11 +283,8 @@ export default function SilkScreenColorSeparatorCMYK() {
         case 'k': channelValue = cmyk.k; break;
       }
       
-      // Convert channel value to grayscale intensity
-      // Higher CMYK percentage = darker on film
       let intensity = Math.round(255 * (1 - channelValue / 100));
       
-      // Apply film positive inversion if needed
       if (filmPositive) {
         intensity = 255 - intensity;
       }
@@ -332,8 +298,8 @@ export default function SilkScreenColorSeparatorCMYK() {
     return layerData;
   };
 
-  // NEW: Create colored simulated image for UI preview (not for film output)
-  const createColoredSimulatedImage = (layer: ColorLayer): string | null => {
+  // Creates a COLORED preview image for UI display only (not for download)
+  const createColoredPreviewImage = (layer: ColorLayer): string | null => {
     if (!layer.imageData) return null;
     
     const { width, height } = layer.imageData;
@@ -343,16 +309,15 @@ export default function SilkScreenColorSeparatorCMYK() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     
-    // Get the intensity data from the layer (grayscale)
     const intensityData = layer.imageData;
     const imageData = ctx.createImageData(width, height);
     const pixels = imageData.data;
     const intensityPixels = intensityData.data;
     
-    // Get the CMYK color for this layer
+    // Get the RGB color for this layer
     let colorRgb = { r: 0, g: 0, b: 0 };
     if (layer.separationType === 'cmyk') {
-      // Standard CMYK process colors
+      // Standard CMYK process colors for preview
       switch(layer.color) {
         case '#00FFFF': colorRgb = { r: 0, g: 255, b: 255 }; break; // Cyan
         case '#FF00FF': colorRgb = { r: 255, g: 0, b: 255 }; break; // Magenta
@@ -367,8 +332,7 @@ export default function SilkScreenColorSeparatorCMYK() {
     
     // Apply the color to the intensity data for preview
     for (let i = 0; i < intensityPixels.length; i += 4) {
-      const intensity = intensityPixels[i]; // 0 = black (full ink), 255 = white (no ink)
-      // For preview: darker intensity = more ink = stronger color
+      const intensity = intensityPixels[i];
       const inkAmount = 1 - (intensity / 255);
       
       // Blend with white background for transparency effect
@@ -387,14 +351,12 @@ export default function SilkScreenColorSeparatorCMYK() {
     
     let processedImageData = layer.imageData;
     
-    // Convert to legal size first
     const legalCanvas = createLegalSizeCanvas(processedImageData);
     const legalCtx = legalCanvas.getContext('2d');
     if (legalCtx) {
       processedImageData = legalCtx.getImageData(0, 0, LEGAL_WIDTH_PX, LEGAL_HEIGHT_PX);
     }
     
-    // Apply output mode transformations
     if (outputMode === 'bitmap') {
       processedImageData = convertToBitmap(processedImageData, 128);
     } else if (outputMode === 'halftone') {
@@ -403,10 +365,8 @@ export default function SilkScreenColorSeparatorCMYK() {
         : halftoneAngle;
       processedImageData = applyHalftone(processedImageData, halftoneFrequency, angle, 'dot');
     } else if (outputMode === 'grayscale') {
-      // Ensure proper contrast for film output
       const pixels = processedImageData.data;
       for (let i = 0; i < pixels.length; i += 4) {
-        // Enhance contrast for better film output
         let v = pixels[i];
         v = Math.min(255, Math.max(0, (v - 20) * 1.2));
         pixels[i] = v;
@@ -415,7 +375,6 @@ export default function SilkScreenColorSeparatorCMYK() {
       }
     }
     
-    // Add registration marks
     if (registrationMarks) {
       processedImageData = addRegistrationMarks(processedImageData);
     }
@@ -428,12 +387,11 @@ export default function SilkScreenColorSeparatorCMYK() {
   };
 
   const getHalftoneAngleForChannel = (color: string): number => {
-    // Standard screen printing angles for CMYK
     switch(color) {
-      case '#00FFFF': return 75; // Cyan
-      case '#FF00FF': return 15; // Magenta  
-      case '#FFFF00': return 0;  // Yellow
-      case '#000000': return 45; // Black
+      case '#00FFFF': return 75;
+      case '#FF00FF': return 15;  
+      case '#FFFF00': return 0;
+      case '#000000': return 45;
       default: return 45;
     }
   };
@@ -464,13 +422,10 @@ export default function SilkScreenColorSeparatorCMYK() {
         Math.pow(b - targetB, 2)
       );
       
-      // Calculate intensity based on color similarity
       let intensity = 0;
       if (colorDist <= threshold) {
-        // Full intensity for exact matches
         intensity = 255;
       } else if (simulateTransparency && colorDist <= threshold * 2) {
-        // Partial intensity for similar colors (creates transparency effect)
         intensity = Math.max(0, 255 * (1 - (colorDist - threshold) / threshold));
       }
       
@@ -565,7 +520,6 @@ export default function SilkScreenColorSeparatorCMYK() {
         separationType: 'cmyk'
       };
       
-      // Apply output processing
       return processLayerForOutput(layer);
     });
 
@@ -578,7 +532,6 @@ export default function SilkScreenColorSeparatorCMYK() {
   const extractSpotColors = (imageData: ImageData) => {
     const pixels = imageData.data;
     
-    // Collect all colors
     const colorMap = new Map<string, { count: number; r: number; g: number; b: number }>();
     
     for (let i = 0; i < pixels.length; i += 4) {
@@ -624,7 +577,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     
     setAllColors(mergedColors);
     
-    // Get optimal number of spot colors
     let optimalColorCount: number;
     if (useAutoDetect) {
       optimalColorCount = detectOptimalColorCount(mergedColors);
@@ -633,7 +585,6 @@ export default function SilkScreenColorSeparatorCMYK() {
       optimalColorCount = manualColorCount;
     }
     
-    // Create layers for spot colors
     const layers: ColorLayer[] = mergedColors.slice(0, optimalColorCount).map((color, index) => {
       let layerImageData = createSpotColorLayer(imageData, color.r, color.g, color.b, similarityThreshold);
       const cmyk = rgbToCmyk(color.r, color.g, color.b);
@@ -660,26 +611,23 @@ export default function SilkScreenColorSeparatorCMYK() {
   };
 
   const generateSimulatedProcess = (imageData: ImageData) => {
-    // Simplified simulated process (similar to spot colors but with blending)
     extractSpotColors(imageData);
   };
 
   const detectOptimalColorCount = (colors: ColorCluster[]): number => {
     if (colors.length <= 2) return colors.length;
     
-    // For screen printing, limit to reasonable number of screens
     let cumulativePercentage = 0;
-    let optimalK = 4; // Start with 4 colors
+    let optimalK = 4;
     
     for (let i = 0; i < colors.length; i++) {
       cumulativePercentage += colors[i].percentage;
-      if (cumulativePercentage >= 0.85) { // 85% coverage
+      if (cumulativePercentage >= 0.85) {
         optimalK = Math.max(2, i + 1);
         break;
       }
     }
     
-    // Screen printing practical limits
     return Math.min(optimalK, 8);
   };
 
@@ -746,10 +694,18 @@ export default function SilkScreenColorSeparatorCMYK() {
     }).join('');
   };
 
-  // Updated to use colored preview for UI
-  const renderLayerToCanvas = (layer: ColorLayer): string | null => {
+  // This returns the BLACK film image for download/preview
+  const renderBlackFilmPreview = (layer: ColorLayer): string | null => {
     if (!layer.imageData) return null;
-    return createColoredSimulatedImage(layer);
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = layer.imageData.width;
+    canvas.height = layer.imageData.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    
+    ctx.putImageData(layer.imageData, 0, 0);
+    return canvas.toDataURL();
   };
 
   const downloadLayer = (layer: ColorLayer, index: number) => {
@@ -802,6 +758,7 @@ export default function SilkScreenColorSeparatorCMYK() {
   const layersToDisplay = separationMode === 'cmyk' ? cmykLayers :
                          (showAllColors ? allColorLayers : dominantLayers);
 
+  // Generate composite preview with COLORS for simulation
   const generateComposite = useCallback((layers: ColorLayer[]) => {
     if (!layers.length || !layers[0].imageData) {
       setCompositeImage(null);
@@ -819,29 +776,60 @@ export default function SilkScreenColorSeparatorCMYK() {
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, width, height);
 
-    // For composite, we need to blend the colored versions of each layer
-    // Reset composite for each layer
+    // For composite, blend the colored versions of each layer
     layers.forEach(layer => {
-      const coloredPreviewDataUrl = createColoredSimulatedImage(layer);
+      const coloredPreviewDataUrl = createColoredPreviewImage(layer);
       if (coloredPreviewDataUrl) {
         const img = new Image();
         img.src = coloredPreviewDataUrl;
-        // This is async, but we'll use the existing composite method as fallback
-        // For simplicity, we'll use the multiply method with intensity data
+        // Draw synchronously - we need to wait for image load
+        // For simplicity, we'll use an async approach
       }
     });
 
-    // Fallback to intensity-based composite (grayscale multiply)
+    // Alternative: Blend using multiply with intensity data
     layers.forEach(layer => {
       if (layer.imageData) {
-        const layerCanvas = document.createElement('canvas');
-        layerCanvas.width = width;
-        layerCanvas.height = height;
-        const layerCtx = layerCanvas.getContext('2d');
-        if (layerCtx) {
-          layerCtx.putImageData(layer.imageData, 0, 0);
+        // Create a colored version of this layer
+        const coloredCanvas = document.createElement('canvas');
+        coloredCanvas.width = width;
+        coloredCanvas.height = height;
+        const coloredCtx = coloredCanvas.getContext('2d');
+        if (coloredCtx) {
+          const intensityData = layer.imageData;
+          const coloredImageData = coloredCtx.createImageData(width, height);
+          const coloredPixels = coloredImageData.data;
+          const intensityPixels = intensityData.data;
+          
+          let colorRgb = { r: 0, g: 0, b: 0 };
+          if (layer.separationType === 'cmyk') {
+            switch(layer.color) {
+              case '#00FFFF': colorRgb = { r: 0, g: 255, b: 255 }; break;
+              case '#FF00FF': colorRgb = { r: 255, g: 0, b: 255 }; break;
+              case '#FFFF00': colorRgb = { r: 255, g: 255, b: 0 }; break;
+              case '#000000': colorRgb = { r: 0, g: 0, b: 0 }; break;
+              default: colorRgb = { r: 255, g: 255, b: 255 };
+            }
+          } else {
+            colorRgb = layer.rgb;
+          }
+          
+          for (let i = 0; i < intensityPixels.length; i += 4) {
+            const intensity = intensityPixels[i];
+            const inkAmount = 1 - (intensity / 255);
+            
+            coloredPixels[i] = colorRgb.r * inkAmount + 255 * (1 - inkAmount);
+            coloredPixels[i+1] = colorRgb.g * inkAmount + 255 * (1 - inkAmount);
+            coloredPixels[i+2] = colorRgb.b * inkAmount + 255 * (1 - inkAmount);
+            coloredPixels[i+3] = 255;
+          }
+          
+          coloredCtx.putImageData(coloredImageData, 0, 0);
+          
+          // Blend using multiply for transparency simulation
           ctx.globalCompositeOperation = 'multiply';
-          ctx.drawImage(layerCanvas, 0, 0);
+          ctx.drawImage(coloredCanvas, 0, 0);
+          ctx.globalCompositeOperation = 'source-over';
         }
       }
     });
@@ -863,7 +851,6 @@ export default function SilkScreenColorSeparatorCMYK() {
     return `Spot Color ${layer.color}`;
   };
 
-  // Responsive breakpoints with Tailwind CSS classes
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
       <canvas ref={originalCanvasRef} className="hidden" />
@@ -878,13 +865,13 @@ export default function SilkScreenColorSeparatorCMYK() {
         className="hidden"
       />
 
-      {/* Header - Responsive typography */}
+      {/* Header */}
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-bold mb-2">Screen Printing Color Separator</h1>
         <p className="text-sm sm:text-base text-gray-600">Create professional color separations for silk screen printing - Legal Size Output</p>
       </div>
 
-      {/* Controls - Responsive layout with flex wrap */}
+      {/* Controls */}
       <div className="mb-6 sm:mb-8 bg-white rounded-lg shadow p-4 sm:p-6">
         <div className="flex flex-col md:flex-row flex-wrap gap-4 items-start md:items-center justify-between">
           <button
@@ -1060,7 +1047,7 @@ export default function SilkScreenColorSeparatorCMYK() {
             </div>
           </div>
 
-          {/* Screen Printing Info - Responsive padding */}
+          {/* Screen Printing Info */}
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
             <h4 className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">Screen Printing Instructions</h4>
             <ul className="text-xs sm:text-sm text-yellow-700 space-y-1 list-disc list-inside">
@@ -1073,7 +1060,7 @@ export default function SilkScreenColorSeparatorCMYK() {
             </ul>
           </div>
 
-          {/* Screen Layers Grid - Responsive grid */}
+          {/* Screen Layers Grid - Showing BLACK film images */}
           <div className="bg-white rounded-lg shadow p-3 sm:p-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
               <h3 className="text-base sm:text-lg font-semibold">
@@ -1089,7 +1076,7 @@ export default function SilkScreenColorSeparatorCMYK() {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {layersToDisplay.map((layer, index) => {
-                const layerPreview = renderLayerToCanvas(layer);
+                const blackPreview = renderBlackFilmPreview(layer);
                 
                 return (
                   <div key={layer.index} className="border rounded-lg overflow-hidden">
@@ -1124,16 +1111,16 @@ export default function SilkScreenColorSeparatorCMYK() {
                       )}
                     </div>
                     
-                    {/* Screen preview - Colored */}
+                    {/* Screen preview - BLACK for film output */}
                     <div className="bg-gray-100 p-2">
-                      {layerPreview && (
+                      {blackPreview && (
                         <div className="relative w-full" style={{ 
                           aspectRatio: `${layer.imageData?.width} / ${layer.imageData?.height}`,
                           minHeight: '150px'
                         }}>
                           <NextImage
-                            src={layerPreview}
-                            alt={`Screen ${index + 1}`}
+                            src={blackPreview}
+                            alt={`Screen ${index + 1} - Film Output`}
                             fill
                             className="object-contain border"
                             unoptimized={true}
@@ -1168,11 +1155,11 @@ export default function SilkScreenColorSeparatorCMYK() {
             </div>
           </div>
 
-          {/* Composite preview */}
+          {/* Composite preview - COLORED simulation */}
           {compositeImage && (
             <div className="bg-white rounded-lg shadow p-3 sm:p-4">
               <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                Simulated Print Preview
+                Simulated Print Preview (Colored)
               </h3>
               <div className="relative w-full max-h-[300px] sm:max-h-[400px] flex justify-center">
                 <NextImage
@@ -1185,7 +1172,7 @@ export default function SilkScreenColorSeparatorCMYK() {
                 />
               </div>
               <p className="text-xs sm:text-sm text-gray-500 mt-2 text-center">
-                Simulated result when screens are printed in registration
+                Simulated result when screens are printed in registration (shows actual ink colors)
               </p>
             </div>
           )}
