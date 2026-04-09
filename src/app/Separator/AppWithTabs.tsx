@@ -1,6 +1,6 @@
 'use client'
 import React, { useState } from 'react';
-import VectorizeBlurredImage from './VectorizeBlurredImage';
+import ColorTransitionCleaner from './ColorTransitionCleaner';
 import SimpleSilkscreenSeparator from './SimpleSilkscreenSeparator';
 import SilkScreenColorSeparatorCMYK from './SilkScreenColorSeparatorCMYK';
 
@@ -73,7 +73,7 @@ const AppWithTabs: React.FC = () => {
       id: 'vectorizer',
       label: 'Image Vectorizer',
       icon: '🎨',
-      component: <VectorizeBlurredImage />
+      component: <ColorTransitionCleaner pixelThreshold={30}/>
     },
     {
       id: 'other',
