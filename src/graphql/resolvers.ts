@@ -5166,6 +5166,7 @@ updateVehicleType:async (_parent: any,args:any) => {
     }
      await prisma.notification.create({
         data: { 
+          type: NotificationType.ORDER_DELIVERED,
           userId: supplierId,
           title: title,
           message: message
@@ -5175,6 +5176,7 @@ updateVehicleType:async (_parent: any,args:any) => {
       // Create delivery record
     await prisma.notification.create({
         data: { 
+          type: NotificationType.ORDER_DELIVERED,
           userId: userId,
           title: title,
           message: message
@@ -5250,8 +5252,9 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
 
      await prisma.notification.create({
         data: { 
+          type: NotificationType.ORDER_UPDATED,
           userId: supplierId,
-          title: 'RIDER_ACCEPTED',
+          title: 'Rider Accepted',
           message: 'Rider accepted the order'
         }
       });
@@ -5259,9 +5262,10 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
       // Create delivery record
     await prisma.notification.create({
         data: { 
+          type: NotificationType.ORDER_UPDATED,
           userId: userId,
-          title: 'RIDER_ACCEPTED',
-          message: 'Rider accepted the order'
+          title: 'Rider Accepted',
+          message: 'Rider accepted your order'
         }
       });
       return {
@@ -5873,10 +5877,10 @@ upload3DModel: async (_: any, args: any) => {
 
    const notificationResult = await createNotification({
           userId:recipientId,
-          type: NotificationType.SOCIAL,
+          type: NotificationType.NEW_MESSAGE,
           title: "Message Received",
           message: body,
-          link: `https://portfolio-xi-eight-92.vercel.app/Messaging?id=${recipientId}`,
+          link: senderId,
           isRead: false
         });
       return result;
@@ -6612,7 +6616,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         // Create notification for the order (your existing code)
        const notificationResult = await createNotification({
           userId: userId,
-          type: NotificationType.ORDER_UPDATE,
+          type: NotificationType.ORDER_CREATED,
           title: "Order Created Successfully",
           message: `Your order #${response.orderNumber} has been created and is being processed.`,
           link: `/orders/${response.id}`,
