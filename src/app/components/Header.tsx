@@ -542,11 +542,11 @@ const Header: React.FC = () => {
     }
     
     if (notification.link) {
-      router.push(notification.link);
+      router.push(`/Messaging?id=${notification.link}`);
     } else {
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
-          router.push('/Messaging');
+          router.push(`/Messaging?id=${notification.link}`);
           break;
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
