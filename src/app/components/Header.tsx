@@ -549,13 +549,13 @@ const Header: React.FC = () => {
           router.push(`/Messaging?id=${notification.link}`);
           break;
         case NotificationType.ORDER_CREATED:
-        case NotificationType.ORDER_UPDATED:
-        case NotificationType.ORDER_DELIVERED:
           handleTabClick(10);
           break;
-        case NotificationType.PAYMENT_RECEIVED:
-        case NotificationType.PAYMENT_FAILED:
-          router.push('/Payments');
+        case NotificationType.ORDER_UPDATED:
+          handleTabClick(10);
+          break;
+        case NotificationType.ORDER_DELIVERED:
+          handleTabClick(10);
           break;
         default:
           break;
