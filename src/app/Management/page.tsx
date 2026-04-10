@@ -177,9 +177,11 @@ export default function ManagementDashboard() {
       case 7:
         return <ApiBillsTab />;
       case 8:
+        return <></>
+      case 9:
         return <VehicleTypeManager/>
       default:
-        return <SalesDashboard />;
+        return <></>;
     }
   };
   // Now we can have conditional returns after all hooks are called
