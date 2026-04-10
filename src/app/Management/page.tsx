@@ -18,6 +18,8 @@ import VehicleTypeManager from './components/VehicleTypeManager';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import { useAuth } from './hooks/useAuth';
+import { useDispatch } from "react-redux";
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 export default function ManagementDashboard() {
   const router = useRouter();
