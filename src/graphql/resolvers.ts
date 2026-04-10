@@ -6600,7 +6600,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         }));
         
         // Create notification for the user
-        const notificationResult = await createNotification({
+     /*   const notificationResult = await createNotification({
           userId: userId,
           type: NotificationType.ORDER_CREATED,
           title: "Order Created Successfully",
@@ -6620,7 +6620,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
               details: notificationResult.error?.details
             }
           };
-        }
+        }*/
 
         return {
           success: true,
