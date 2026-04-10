@@ -6635,7 +6635,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           isRead: false
         });
         
-        if (!notificationResult.success) {
+        if (!notificationResult) {
           return {
             success: false,
             statusText: 'Order created but notification failed',
