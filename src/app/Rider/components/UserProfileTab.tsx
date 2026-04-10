@@ -284,8 +284,8 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
             </div>
           </div>
 
-          {/* Default Address */}
-          {defaultAddress && (
+          
+          {/*defaultAddress && (
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
               <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
@@ -308,7 +308,7 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
             </div>
           )}
 
-          {/* Other Addresses */}
+          
           {otherAddresses.length > 0 && (
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
               <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
@@ -335,7 +335,7 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                 ))}
               </div>
             </div>
-          )}
+          )*/}
         </div>
 
         {/* If no addresses at all */}
