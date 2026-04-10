@@ -19,7 +19,7 @@ import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
 interface SidebarProps {
   activeTab: number;
-  setActiveTab: (tabId: string) => void;
+  setActiveTab: (tabId: number) => void;
   isOpen?: boolean;
   onClose?: () => void;
 }
