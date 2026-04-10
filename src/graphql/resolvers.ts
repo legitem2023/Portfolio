@@ -6978,7 +6978,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         });
         
         // Send order confirmation email using your email service
-      /*
+      
         if (user && user.email) {
           try {
             const emailResult = await emailMutations.sendNotificationEmail({
@@ -6997,7 +6997,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
             // Don't throw - just log the error and continue
           }
         }
-        */
+        
         // ===== END EMAIL INTEGRATION =====
         
         // Create notification for the order (your existing code)
