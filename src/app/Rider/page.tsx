@@ -299,12 +299,14 @@ const contents = [
 
 const maxLen = Math.min(Math.max(...contents.map(c => c.length)), 28); // Cap at 28 chars
 
-const formatRow = (icon:any, value:any) => {
-  const truncated = truncate(value, maxLen - 3);
+const formatRow = (icon: any, value: any) => {
+  // Convert to string and handle null/undefined
+  const stringValue = value === null || value === undefined ? '' : String(value);
+  const truncated = truncate(stringValue, maxLen - 3);
   const padded = truncated.padEnd(maxLen - 3);
   return `${icon} ${padded}`;
 };
-
+      
 const border = '─'.repeat(maxLen + 2);
 
 showToast(
