@@ -282,17 +282,44 @@ export default function RiderDashboard() {
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-      showToast(`
-📦 ACCEPTED DELIVERY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🏪 Restaurant:  ${delivery.restaurant}
-🆔 Order ID:    ${delivery.orderId}
-💰 Payout:      $${delivery.payout}
-📋 Items:       ${delivery.items}
-📍 From:        ${delivery.pickup}
-🎯 To:          ${delivery.dropoff}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-`, 'success');
+const truncate = (str, maxLen) => {
+  if (!str) return '';
+  return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
+};
+
+// Get max content length
+const contents = [
+  `🏪 ${delivery.restaurant}`,
+  `🆔 ${delivery.orderId}`,
+  `💰 $${delivery.payout}`,
+  `📦 ${delivery.items}`,
+  `📍 ${delivery.pickup}`,
+  `🎯 ${delivery.dropoff}`
+];
+
+const maxLen = Math.min(Math.max(...contents.map(c => c.length)), 28); // Cap at 28 chars
+
+const formatRow = (icon, value) => {
+  const truncated = truncate(value, maxLen - 3);
+  const padded = truncated.padEnd(maxLen - 3);
+  return `${icon} ${padded}`;
+};
+
+const border = '─'.repeat(maxLen + 2);
+
+showToast(
+  `┌${border}┐\n` +
+  `│ ✅ DELIVERY ACCEPTED${' '.repeat(maxLen - 18)} │\n` +
+  `├${border}┤\n` +
+  `│ ${formatRow('🏪', delivery.restaurant)} │\n` +
+  `│ ${formatRow('🆔', delivery.orderId)} │\n` +
+  `│ ${formatRow('💰 $', delivery.payout)} │\n` +
+  `│ ${formatRow('📦', delivery.items)} │\n` +
+  `│ ${formatRow('📍', delivery.pickup)} │\n` +
+  `│ ${formatRow('🎯', delivery.dropoff)} │\n` +
+  `└${border}┘`,
+  'success'
+);
     }
   };
 
