@@ -10,6 +10,8 @@ import { signIn, getSession } from 'next-auth/react'; // Changed: use getSession
 import Header from '../components/Header';
 import { useAuth } from '../components/hooks/useAuth';
 import { decryptToken } from '../../../utils/decryptToken';
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 // Your user interface from decrypted token
 interface UserData {
@@ -31,6 +33,7 @@ interface FormData {
 export default function LuxuryLogin() {
   const { user } = useAuth();
   const router = useRouter();
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -174,16 +177,20 @@ export default function LuxuryLogin() {
     // Redirect based on user role
     switch(role) {
       case 'ADMINISTRATOR':
+        dispatch(setActiveIndex(0))
         router.push('/Management');
         break;
       case 'MANAGER':
+        dispatch(setActiveIndex(0))
         router.push('/Management');
         break;
       case 'RIDER':
+        dispatch(setActiveIndex(0))
         router.push('/Rider');
         break;
       case 'USER':
       default:
+        dispatch(setActiveIndex(1))
         router.push('/');
         break;
     }
