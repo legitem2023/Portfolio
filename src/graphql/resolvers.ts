@@ -6616,7 +6616,24 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         // ===== END EMAIL INTEGRATION =====
         
         // Create notification for the order (your existing code)
-       const notificationResult = await createNotification({
+    const notifications = items.map((item: any) => {
+      const supplierId = item.supplierId;
+      let productId = item.productId;
+      const notifResult = await createNotification({
+          userId: supplierId,
+          type: NotificationType.ORDER_CREATED,
+          title: "Order Created Successfully",
+          message: `Order #${response.orderNumber} has been created for item ${productId}`,
+          link: ``,
+          isRead: false
+        });
+      if(notifResult.success){
+          return "success";
+        }
+      });
+    
+             
+        const notificationResult = await createNotification({
           userId: userId,
           type: NotificationType.ORDER_CREATED,
           title: "Order Created Successfully",
