@@ -539,29 +539,23 @@ const Header: React.FC = () => {
   const handleNotificationClick = useCallback(async (notification: Notification) => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
-    }
-    console.log(notification.type);
-    // if (notification.link) {
-    //  router.push(`/Messaging?id=${notification.link}`);
-    //} else {
+    }  
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
           router.push(`/Messaging?id=${notification.link}`);
           break;
         case NotificationType.ORDER_CREATED:
-          handleTabClick(10);
+          dispatch(setActiveIndex(10));
           break;
         case NotificationType.ORDER_UPDATED:
-          handleTabClick(10);
+          dispatch(setActiveIndex(10));
           break;
         case NotificationType.ORDER_DELIVERED:
-          handleTabClick(10);
+          dispatch(setActiveIndex(10));
           break;
         default:
           break;
-      }
-    //}
-    
+      }    
     setIsBellPopupOpen(false);
   }, [markAsRead, router]);
 
