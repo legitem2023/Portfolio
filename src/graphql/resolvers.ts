@@ -6615,7 +6615,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
             type: NotificationType.ORDER_CREATED,
             title: "New Order Received",
             message: message,
-            link: `/supplier/orders/${response.id}`,
+            link: `${response.id}`,
             isRead: false
           });
         });
@@ -6626,6 +6626,27 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         );
         
         // User notification is intentionally removed to prevent 504
+        const notificationResult = createNotification({
+          userId: userId,
+          type: NotificationType.ORDER_CREATED,
+          title: "Order Created Successfully",
+          message: `Your order #${response.orderNumber} has been created and is being processed.`,
+          link: `${response.id}`,
+          isRead: false
+        });
+        
+        if (!notificationResult.success) {
+          return {
+            success: false,
+            statusText: 'Order created but notification failed',
+            order: response,
+            error: {
+              code: 'NOTIFICATION_FAILED',
+              message: notificationResult.error?.message,
+              details: notificationResult.error?.details
+            }
+          };
+        }
         // You can add it back later when you fix the timeout issue
         
         return {
