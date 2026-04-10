@@ -10,12 +10,11 @@ import {
   Heart,
   Users,
   Briefcase,
-  Globe,
   Camera,
   MoreHorizontal,
 } from 'lucide-react';
 
-// GraphQL Query
+// GraphQL Query - Fixed to only use fields that exist in your schema
 export const GET_USER_PROFILE = gql`
   query GetUser($id: ID) {
     user(id: $id) {
@@ -25,12 +24,10 @@ export const GET_USER_PROFILE = gql`
       avatar
       phone
       email
-      bio
-      website
       followerCount
       followingCount
       isFollowing
-      joinDate
+      createdAt
       addresses {
         id
         type
@@ -41,6 +38,7 @@ export const GET_USER_PROFILE = gql`
         zipCode
         country
         isDefault
+        createdAt
       }
     }
   }
@@ -61,6 +59,7 @@ interface Address {
   zipCode: string;
   country: string;
   isDefault: boolean;
+  createdAt: string;
 }
 
 interface UserData {
@@ -70,12 +69,10 @@ interface UserData {
   avatar: string;
   phone: string;
   email: string;
-  bio: string;
-  website: string;
   followerCount: number;
   followingCount: number;
   isFollowing: boolean;
-  joinDate: string;
+  createdAt: string;
   addresses: Address[];
 }
 
@@ -134,35 +131,37 @@ const ErrorState = ({ message }: { message: string }) => (
 );
 
 // Detail Item Component
-const DetailItem = ({ icon: Icon, label, value, link }: { 
+const DetailItem = ({ icon: Icon, label, value, isLink = false }: { 
   icon: any; 
   label: string; 
-  value: string; 
-  link?: boolean;
-}) => (
-  <div className="flex items-start gap-3 py-2">
-    <div className="flex-shrink-0 mt-0.5">
-      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
+  value?: string | null; 
+  isLink?: boolean;
+}) => {
+  if (!value) return null;
+  
+  return (
+    <div className="flex items-start gap-3 py-2">
+      <div className="flex-shrink-0 mt-0.5">
+        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+        {isLink ? (
+          <a 
+            href={value.startsWith('http') ? value : `https://${value}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm sm:text-base text-lime-600 hover:text-lime-700 hover:underline break-all"
+          >
+            {value}
+          </a>
+        ) : (
+          <p className="text-sm sm:text-base text-gray-900 break-words">{value}</p>
+        )}
+      </div>
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-      {link && value ? (
-        <a 
-          href={value.startsWith('http') ? value : `https://${value}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sm sm:text-base text-lime-600 hover:text-lime-700 hover:underline break-all"
-        >
-          {value}
-        </a>
-      ) : (
-        <p className="text-sm sm:text-base text-gray-900 break-words">
-          {value || <span className="text-gray-400 italic">Not provided</span>}
-        </p>
-      )}
-    </div>
-  </div>
-);
+  );
+};
 
 // Main Component
 const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
@@ -178,6 +177,10 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
   const user: UserData = data.user;
   const fullName = `${user.firstName} ${user.lastName}`;
   const initials = `${user.firstName?.[0]}${user.lastName?.[0]}`;
+
+  // Get default address
+  const defaultAddress = user.addresses.find(addr => addr.isDefault);
+  const otherAddresses = user.addresses.filter(addr => !addr.isDefault);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -217,10 +220,10 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">{fullName}</h1>
-                  {user.joinDate && (
+                  {user.createdAt && (
                     <div className="flex items-center gap-1 mt-1 justify-center sm:justify-start text-xs sm:text-sm text-gray-500">
                       <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                      <span>Joined {formatDate(user.joinDate)}</span>
+                      <span>Joined {formatDate(user.createdAt)}</span>
                     </div>
                   )}
                 </div>
@@ -250,13 +253,6 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                   <span className="text-gray-500 text-xs sm:text-sm">following</span>
                 </div>
               </div>
-
-              {/* Bio */}
-              {user.bio && (
-                <p className="mt-3 sm:mt-4 text-gray-700 text-sm sm:text-base break-words">
-                  {user.bio}
-                </p>
-              )}
             </div>
           </div>
         </div>
@@ -270,35 +266,64 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               <span>Contact Information</span>
             </h3>
             <div className="space-y-2">
-              <DetailItem icon={Mail} label="Email" value={user.email} link />
+              <DetailItem icon={Mail} label="Email" value={user.email} isLink />
               <DetailItem icon={Phone} label="Phone" value={user.phone} />
-              {user.website && <DetailItem icon={Globe} label="Website" value={user.website} link />}
             </div>
           </div>
 
-          {/* Addresses */}
-          {user.addresses.length > 0 && (
+          {/* Additional Info */}
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
+            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+              <span>Account Information</span>
+            </h3>
+            <div className="space-y-2">
+              <DetailItem icon={Briefcase} label="Account Type" value="Customer" />
+              <DetailItem icon={Calendar} label="Member Since" value={user.createdAt ? formatDate(user.createdAt) : undefined} />
+              <DetailItem icon={User} label="User ID" value={user.id} />
+            </div>
+          </div>
+
+          {/* Default Address */}
+          {defaultAddress && (
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
               <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
                 <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
-                <span>Addresses</span>
+                <span>Default Address</span>
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-lime-100 flex items-center justify-center flex-shrink-0 text-sm">
+                    {defaultAddress.type === 'home' ? '🏠' : defaultAddress.type === 'work' ? '💼' : '📍'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 font-medium">{defaultAddress.receiver}</p>
+                    <p className="text-xs sm:text-sm text-gray-500 break-words">
+                      {defaultAddress.street}, {defaultAddress.city}, {defaultAddress.state} {defaultAddress.zipCode}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500">{defaultAddress.country}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Other Addresses */}
+          {otherAddresses.length > 0 && (
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
+              <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+                <span>Other Addresses ({otherAddresses.length})</span>
               </h3>
               <div className="space-y-3">
-                {user.addresses.map(address => (
+                {otherAddresses.map(address => (
                   <div key={address.id} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-lime-100 flex items-center justify-center flex-shrink-0 text-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-sm">
                         {address.type === 'home' ? '🏠' : address.type === 'work' ? '💼' : '📍'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <p className="font-medium text-gray-900 text-sm capitalize">{address.type}</p>
-                          {address.isDefault && (
-                            <span className="text-xs bg-lime-100 text-lime-700 px-2 py-0.5 rounded-full">
-                              Default
-                            </span>
-                          )}
-                        </div>
+                        <p className="text-xs text-gray-500 capitalize mb-1">{address.type}</p>
                         <p className="text-sm text-gray-900 font-medium">{address.receiver}</p>
                         <p className="text-xs sm:text-sm text-gray-500 break-words">
                           {address.street}, {address.city}, {address.state} {address.zipCode}
@@ -311,19 +336,15 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               </div>
             </div>
           )}
-
-          {/* Additional Info Placeholder */}
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
-            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
-              <span>Additional Information</span>
-            </h3>
-            <div className="space-y-2">
-              <DetailItem icon={Briefcase} label="Role" value="Customer" />
-              <DetailItem icon={Calendar} label="Member Since" value={formatDate(user.joinDate)} />
-            </div>
-          </div>
         </div>
+
+        {/* If no addresses at all */}
+        {user.addresses.length === 0 && (
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 text-center">
+            <MapPin className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-gray-400" />
+            <p className="text-gray-500 text-sm sm:text-base">No addresses added yet</p>
+          </div>
+        )}
       </div>
     </div>
   );
