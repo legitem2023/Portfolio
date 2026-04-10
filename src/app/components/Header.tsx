@@ -540,7 +540,7 @@ const Header: React.FC = () => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
     }
-    
+    console.log(notification.type);
     if (notification.link) {
       router.push(`/Messaging?id=${notification.link}`);
     } else {
