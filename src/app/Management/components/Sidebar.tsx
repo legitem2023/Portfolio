@@ -18,7 +18,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
 interface SidebarProps {
-  activeTab: string;
+  activeTab: number;
   setActiveTab: (tabId: string) => void;
   isOpen?: boolean;
   onClose?: () => void;
@@ -48,7 +48,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
   );
 
   const handleTabClick = (tabId:number) => {   
-    dispatch(setActiveIndex(tabId))
+    setActiveTab(tabId);
     if (onClose) {
       onClose();
     }
