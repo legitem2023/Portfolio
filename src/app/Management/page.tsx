@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/navigation';
 import { GETCATEGORY, MANAGEMENTPRODUCTS } from '../components/graphql/query';
@@ -35,6 +35,13 @@ export default function ManagementDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<category[]>([]);
+  const handleTabClick = useCallback((tabId: number) => {
+    
+      setTimeout(() => {
+        dispatch(setActiveIndex(tabId));
+      }, 100);
+    
+  }, [dispatch]);
 
   // Move useQuery hooks to the top as well
   const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
@@ -194,7 +201,7 @@ export default function ManagementDashboard() {
       <TopNav onMenuClick={()=> setSidebarOpen(true)} user={user} />
       <Sidebar 
         activeTab={activeTab} 
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabClick}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
