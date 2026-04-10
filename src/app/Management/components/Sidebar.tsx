@@ -14,6 +14,8 @@ import {
   BanknoteArrowUp
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
+import { useDispatch, useSelector } from 'react-redux';
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 
 interface SidebarProps {
   activeTab: string;
@@ -25,19 +27,19 @@ interface SidebarProps {
 export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClose }: SidebarProps) {
   // Get user and loading state from useAuth hook
   const { user, loading: authLoading } = useAuth();
-  
+  const dispatch = useDispatch();
   // Define which roles can access each nav item
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'users', label: 'Users', icon: Users, roles: ['ADMINISTRATOR'] },
-    { id: 'products', label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'categories', label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
-    { id: 'orders', label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'remit', label: 'Remittance', icon: BanknoteArrowUp, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'sales', label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'bills', label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
-    { id: 'support', label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 'vehicle', label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] } // Admin only
+    { id: 0, label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 1, label: 'Users', icon: Users, roles: ['ADMINISTRATOR'] },
+    { id: 2, label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 3, label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 4, label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 5, label: 'Remittance', icon: BanknoteArrowUp, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 6, label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] } // Admin only
   ];
 
   // Filter nav items based on user role
@@ -45,8 +47,8 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     item.roles.includes(user?.role || 'MANAGER') // Default to MANAGER if no role
   );
 
-  const handleTabClick = (tabId: string) => {
-    setActiveTab(tabId);
+  const handleTabClick = (tabId:number) => {   
+    dispatch(setActiveIndex(tabId))
     if (onClose) {
       onClose();
     }
