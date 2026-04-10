@@ -541,9 +541,9 @@ const Header: React.FC = () => {
       await markAsRead(notification.id);
     }
     console.log(notification.type);
-    if (notification.link) {
-      router.push(`/Messaging?id=${notification.link}`);
-    } else {
+    // if (notification.link) {
+    //  router.push(`/Messaging?id=${notification.link}`);
+    //} else {
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
           router.push(`/Messaging?id=${notification.link}`);
@@ -560,7 +560,7 @@ const Header: React.FC = () => {
         default:
           break;
       }
-    }
+    //}
     
     setIsBellPopupOpen(false);
   }, [markAsRead, router]);
