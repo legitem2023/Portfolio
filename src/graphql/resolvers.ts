@@ -6626,7 +6626,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         );
         
         // Fire user notification (don't await - fire and forget)
-        createNotification({
+        await createNotification({
           userId: userId,
           type: NotificationType.ORDER_CREATED,
           title: "Order Created Successfully",
