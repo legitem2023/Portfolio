@@ -423,12 +423,9 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       await markAsRead(notification.id);
     }
     
-    if (notification.link) {
-      router.push(notification.link);
-    } else {
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
-          router.push('/Messaging');
+          router.push(`/Messaging?id=${notification.link}`);
           break;
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
@@ -442,8 +439,8 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
         default:
           break;
       }
-    }
-    
+  
+
     setIsBellPopupOpen(false);
   };
 
