@@ -6639,12 +6639,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           return {
             success: false,
             statusText: 'Order created but notification failed',
-            order: response,
-            error: {
-              code: 'NOTIFICATION_FAILED',
-              message: notificationResult.error?.message,
-              details: notificationResult.error?.details
-            }
+            order: response
           };
         }
         // You can add it back later when you fix the timeout issue
