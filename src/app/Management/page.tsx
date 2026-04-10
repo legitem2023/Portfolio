@@ -18,7 +18,7 @@ import VehicleTypeManager from './components/VehicleTypeManager';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import { useAuth } from './hooks/useAuth';
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 export default function ManagementDashboard() {
@@ -29,6 +29,7 @@ export default function ManagementDashboard() {
         supplierId: user?.userId
       }
   // Move all useState hooks to the top, before any conditional returns
+  const activeIndex = useSelector((state: any) => state.activeIndex.value);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,10 +123,10 @@ export default function ManagementDashboard() {
 
   const renderContent = () => {
     
-    switch (activeTab) {
-      case 'dashboard':
+    switch (activeIndex) {
+      case 0:
         return <SalesDashboard />;
-      case 'products':
+      case 1:
         return (
           <ProductsTab
             // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
@@ -138,7 +139,7 @@ export default function ManagementDashboard() {
             handleProductSubmit={handleProductSubmit}
           />
         );
-      case 'categories':
+      case 2:
         return (
           <CategoriesTab
             categories={categories}
@@ -147,26 +148,26 @@ export default function ManagementDashboard() {
             handleCategorySubmit={handleCategorySubmit}
           />
         );
-      case 'users':
+      case 3:
         return <UsersTab />;
-      case 'remit':
+      case 4:
         return (
           <RemittancePage
             initialSupplierId={user?.userId}
           />
         );
-      case 'orders':
+      case 5:
         return (
           <OrderListComponent
             initialSupplierId={user?.userId}
             initialStatus="PENDING"
           />
         );
-      case 'sales':
+      case 6:
         return <SalesList filter={filter} pageSize={20}/>;
-      case 'bills':
+      case 7:
         return <ApiBillsTab />;
-      case 'vehicle':
+      case 8:
         return <VehicleTypeManager/>
       default:
         return <SalesDashboard />;
