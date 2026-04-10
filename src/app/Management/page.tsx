@@ -23,6 +23,7 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 export default function ManagementDashboard() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { user, loading: authLoading } = useAuth();
   const filter:any = {
         status: 'DELIVERED', 
