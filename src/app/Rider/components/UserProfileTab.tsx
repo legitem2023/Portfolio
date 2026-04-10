@@ -4,29 +4,15 @@ import { gql } from '@apollo/client';
 import {
   User,
   MapPin,
-  Briefcase,
+  Phone,
+  Mail,
   Calendar,
   Heart,
-  MessageCircle,
-  Share2,
-  MoreHorizontal,
-  ChevronRight,
-  Phone,
   Users,
-  ShoppingBag,
-  Star,
-  Package,
-  Check,
+  Briefcase,
+  Globe,
   Camera,
-  Plus,
-  Grid,
-  Bookmark,
-  Settings,
-  Link2,
-  Instagram,
-  Twitter,
-  Menu,
-  X,
+  MoreHorizontal,
 } from 'lucide-react';
 
 // GraphQL Query
@@ -38,60 +24,13 @@ export const GET_USER_PROFILE = gql`
       lastName
       avatar
       phone
+      email
+      bio
+      website
       followerCount
       followingCount
       isFollowing
-      wishlist {
-        product {
-          variants {
-            name
-            createdAt
-            sku
-            color
-            size
-            price
-            salePrice
-            stock
-            images
-            model
-          }
-        }
-      }
-      products {
-        id
-        name
-        description
-        price
-        salePrice
-        supplierId
-        sku
-        stock
-        images
-        model
-        category {
-          id
-        }
-        variants {
-          name
-          createdAt
-          sku
-          color
-          size
-          price
-          salePrice
-          stock
-          images
-          model
-        }
-        brand
-        weight
-        dimensions
-        isActive
-        featured
-        tags
-        createdAt
-        updatedAt
-      }
+      joinDate
       addresses {
         id
         type
@@ -101,41 +40,7 @@ export const GET_USER_PROFILE = gql`
         state
         zipCode
         country
-        lat
-        lng
         isDefault
-        createdAt
-      }
-      posts {
-        id
-        content
-        createdAt
-        privacy
-        isLikedByMe
-        likeCount
-        commentCount
-        user {
-          id
-          firstName
-          lastName
-          avatar
-        }
-        taggedUsers {
-          id
-          firstName
-          lastName
-        }
-        comments {
-          id
-          content
-          createdAt
-          user {
-            id
-            firstName
-            lastName
-            avatar
-          }
-        }
       }
     }
   }
@@ -144,42 +49,6 @@ export const GET_USER_PROFILE = gql`
 // Types
 interface UserProfileProps {
   userId: string;
-}
-
-interface Variant {
-  name: string;
-  createdAt: string;
-  sku: string;
-  color: string;
-  size: string;
-  price: number;
-  salePrice: number;
-  stock: number;
-  images: string[];
-  model: string;
-}
-
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  salePrice: number;
-  supplierId: string;
-  sku: string;
-  stock: number;
-  images: string[];
-  model: string;
-  category: { id: string };
-  variants: Variant[];
-  brand: string;
-  weight: string;
-  dimensions: string;
-  isActive: boolean;
-  featured: boolean;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface Address {
@@ -191,44 +60,7 @@ interface Address {
   state: string;
   zipCode: string;
   country: string;
-  lat: number;
-  lng: number;
   isDefault: boolean;
-  createdAt: string;
-}
-
-interface Comment {
-  id: string;
-  content: string;
-  createdAt: string;
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    avatar: string;
-  };
-}
-
-interface Post {
-  id: string;
-  content: string;
-  createdAt: string;
-  privacy: string;
-  isLikedByMe: boolean;
-  likeCount: number;
-  commentCount: number;
-  user: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    avatar: string;
-  };
-  taggedUsers: Array<{
-    id: string;
-    firstName: string;
-    lastName: string;
-  }>;
-  comments: Comment[];
 }
 
 interface UserData {
@@ -237,27 +69,24 @@ interface UserData {
   lastName: string;
   avatar: string;
   phone: string;
+  email: string;
+  bio: string;
+  website: string;
   followerCount: number;
   followingCount: number;
   isFollowing: boolean;
-  wishlist: Array<{ product: Product }>;
-  products: Product[];
+  joinDate: string;
   addresses: Address[];
-  posts: Post[];
 }
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
-  if (diffDays === 1) return 'Yesterday';
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
-  return `${Math.floor(diffDays / 365)} years ago`;
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long',
+    day: 'numeric'
+  });
 };
 
 // Loading Skeleton Component
@@ -266,7 +95,7 @@ const LoadingSkeleton = () => (
     {/* Cover Photo Skeleton */}
     <div className="h-48 sm:h-64 md:h-80 bg-gradient-to-r from-gray-200 to-gray-300 animate-pulse" />
     
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8">
       {/* Profile Header Skeleton */}
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
@@ -275,7 +104,7 @@ const LoadingSkeleton = () => (
           </div>
           <div className="flex-1 space-y-3 sm:space-y-4 text-center sm:text-left">
             <div className="h-6 sm:h-8 w-32 sm:w-48 bg-gray-200 animate-pulse rounded mx-auto sm:mx-0" />
-            <div className="h-3 sm:h-4 w-24 sm:w-32 bg-gray-200 animate-pulse rounded mx-auto sm:mx-0" />
+            <div className="h-3 sm:h-4 w-48 sm:w-64 bg-gray-200 animate-pulse rounded mx-auto sm:mx-0" />
             <div className="flex gap-3 sm:gap-4 justify-center sm:justify-start">
               <div className="h-8 sm:h-10 w-20 sm:w-24 bg-gray-200 animate-pulse rounded-full" />
               <div className="h-8 sm:h-10 w-20 sm:w-24 bg-gray-200 animate-pulse rounded-full" />
@@ -285,14 +114,9 @@ const LoadingSkeleton = () => (
       </div>
 
       {/* Content Skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 h-40 sm:h-48 animate-pulse" />
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 h-48 sm:h-64 animate-pulse" />
-        </div>
-        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 h-64 sm:h-96 animate-pulse" />
-        </div>
+      <div className="space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 h-64 animate-pulse" />
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-6 h-48 animate-pulse" />
       </div>
     </div>
   </div>
@@ -309,191 +133,36 @@ const ErrorState = ({ message }: { message: string }) => (
   </div>
 );
 
-// Post Component
-const PostCard = ({ post }: { post: Post }) => {
-  const [isLiked, setIsLiked] = React.useState(post.isLikedByMe);
-  const [likeCount, setLikeCount] = React.useState(post.likeCount);
-  const [showComments, setShowComments] = React.useState(false);
-  const [commentText, setCommentText] = React.useState('');
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
-  };
-
-  const handleComment = () => {
-    if (commentText.trim()) {
-      // Handle comment submission
-      setCommentText('');
-    }
-  };
-
-  return (
-    <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      {/* Post Header */}
-      <div className="p-3 sm:p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-            <img
-              src={post.user.avatar || 'https://via.placeholder.com/40'}
-              alt={`${post.user.firstName} ${post.user.lastName}`}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
-            />
-            <div className="min-w-0 flex-1">
-              <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                {post.user.firstName} {post.user.lastName}
-              </h4>
-              <p className="text-xs text-gray-500">{formatDate(post.createdAt)}</p>
-            </div>
-          </div>
-          <button className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition flex-shrink-0">
-            <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-          </button>
-        </div>
-      </div>
-
-      {/* Post Content */}
-      <div className="p-3 sm:p-4">
-        <p className="text-sm sm:text-base text-gray-800 whitespace-pre-wrap break-words">{post.content}</p>
-        
-        {/* Tagged Users */}
-        {post.taggedUsers.length > 0 && (
-          <div className="mt-2 sm:mt-3 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-lime-600 flex-wrap">
-            <Users className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span>with {post.taggedUsers.map(u => `${u.firstName} ${u.lastName}`).join(', ')}</span>
-          </div>
-        )}
-      </div>
-
-      {/* Post Stats */}
-      <div className="px-3 sm:px-4 py-2 border-t border-gray-100">
-        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
-          <div className="flex items-center gap-1">
-            <Heart className="w-3 h-3 sm:w-4 sm:h-4 fill-current text-red-500" />
-            <span>{likeCount}</span>
-          </div>
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="hover:text-lime-600 transition"
-          >
-            {post.commentCount} Comments
-          </button>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex border-t border-gray-100">
-        <button
-          onClick={handleLike}
-          className={`flex-1 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 transition text-xs sm:text-sm ${
-            isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-          }`}
+// Detail Item Component
+const DetailItem = ({ icon: Icon, label, value, link }: { 
+  icon: any; 
+  label: string; 
+  value: string; 
+  link?: boolean;
+}) => (
+  <div className="flex items-start gap-3 py-2">
+    <div className="flex-shrink-0 mt-0.5">
+      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
+      {link && value ? (
+        <a 
+          href={value.startsWith('http') ? value : `https://${value}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm sm:text-base text-lime-600 hover:text-lime-700 hover:underline break-all"
         >
-          <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isLiked ? 'fill-current' : ''}`} />
-          <span className="font-medium">Like</span>
-        </button>
-        <button
-          onClick={() => setShowComments(!showComments)}
-          className="flex-1 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-gray-500 hover:text-lime-600 transition text-xs sm:text-sm"
-        >
-          <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="font-medium">Comment</span>
-        </button>
-        <button className="flex-1 py-2 sm:py-3 flex items-center justify-center gap-1 sm:gap-2 text-gray-500 hover:text-lime-600 transition text-xs sm:text-sm">
-          <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="font-medium hidden sm:inline">Share</span>
-        </button>
-      </div>
-
-      {/* Comments Section */}
-      {showComments && (
-        <div className="border-t border-gray-100 p-3 sm:p-4 space-y-3">
-          {post.comments.map(comment => (
-            <div key={comment.id} className="flex gap-2 sm:gap-3">
-              <img
-                src={comment.user.avatar || 'https://via.placeholder.com/32'}
-                alt=""
-                className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1 bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3 min-w-0">
-                <div className="flex items-center gap-1 sm:gap-2 mb-1 flex-wrap">
-                  <span className="font-semibold text-xs sm:text-sm">
-                    {comment.user.firstName} {comment.user.lastName}
-                  </span>
-                  <span className="text-xs text-gray-500">{formatDate(comment.createdAt)}</span>
-                </div>
-                <p className="text-xs sm:text-sm text-gray-700 break-words">{comment.content}</p>
-              </div>
-            </div>
-          ))}
-          <div className="flex gap-2 sm:gap-3 mt-3">
-            <img
-              src="https://via.placeholder.com/32"
-              alt=""
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full object-cover flex-shrink-0"
-            />
-            <div className="flex-1 flex gap-2">
-              <input
-                type="text"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 bg-gray-50 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-lime-500"
-                onKeyPress={(e) => e.key === 'Enter' && handleComment()}
-              />
-              <button
-                onClick={handleComment}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-lime-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-lime-600 transition whitespace-nowrap"
-              >
-                Post
-              </button>
-            </div>
-          </div>
-        </div>
+          {value}
+        </a>
+      ) : (
+        <p className="text-sm sm:text-base text-gray-900 break-words">
+          {value || <span className="text-gray-400 italic">Not provided</span>}
+        </p>
       )}
     </div>
-  );
-};
-
-// Product Card Component
-const ProductCard = ({ product }: { product: Product }) => {
-  const displayPrice = product.salePrice || product.price;
-  const originalPrice = product.salePrice ? product.price : null;
-
-  return (
-    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden group h-full flex flex-col">
-      <div className="relative aspect-square overflow-hidden flex-shrink-0">
-        <img
-          src={product.images?.[0] || 'https://via.placeholder.com/300'}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        {product.salePrice && (
-          <span className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full">
-            SALE
-          </span>
-        )}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="text-white font-bold text-xs sm:text-sm">Out of Stock</span>
-          </div>
-        )}
-      </div>
-      <div className="p-2 sm:p-3 flex-1 flex flex-col">
-        <h4 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1 line-clamp-2">{product.name}</h4>
-        <div className="flex items-center gap-1 sm:gap-2 flex-wrap mt-auto">
-          <span className="text-lime-600 font-bold text-sm sm:text-base">${displayPrice}</span>
-          {originalPrice && (
-            <span className="text-gray-400 text-xs sm:text-sm line-through">${originalPrice}</span>
-          )}
-        </div>
-        {product.stock > 0 && product.stock < 10 && (
-          <span className="text-xs text-orange-600 mt-1">Only {product.stock} left</span>
-        )}
-      </div>
-    </div>
-  );
-};
+  </div>
+);
 
 // Main Component
 const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
@@ -501,8 +170,6 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
     variables: { id: userId },
     skip: !userId,
   });
-
-  const [activeTab, setActiveTab] = React.useState<'posts' | 'products' | 'wishlist'>('posts');
 
   if (loading) return <LoadingSkeleton />;
   if (error) return <ErrorState message={error.message} />;
@@ -515,15 +182,15 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Cover Photo */}
-      <div className="relative h-40 sm:h-56 md:h-64 lg:h-80 bg-gradient-to-r from-lime-400 to-emerald-500 w-full">
+      <div className="relative h-40 sm:h-56 md:h-64 bg-gradient-to-r from-lime-400 to-emerald-500 w-full">
         <div className="absolute inset-0 bg-black/20" />
-        <button className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 md:px-4 md:py-2 rounded-full text-xs sm:text-sm font-medium text-gray-700 hover:bg-white transition flex items-center gap-1 sm:gap-2 z-10">
+        <button className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/90 backdrop-blur-sm px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium text-gray-700 hover:bg-white transition flex items-center gap-1 sm:gap-2 z-10">
           <Camera className="w-3 h-3 sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">Edit Cover Photo</span>
+          <span className="hidden sm:inline">Edit Cover</span>
         </button>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8 sm:pb-12">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 -mt-12 sm:-mt-16 md:-mt-20 pb-8 sm:pb-12">
         {/* Profile Header */}
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6 mb-4 sm:mb-5 md:mb-6">
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 md:gap-6">
@@ -550,11 +217,11 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                 <div>
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 break-words">{fullName}</h1>
-                  {user.phone && (
-                    <p className="text-gray-500 flex items-center gap-1 mt-1 justify-center sm:justify-start text-sm">
-                      <Phone className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="break-words">{user.phone}</span>
-                    </p>
+                  {user.joinDate && (
+                    <div className="flex items-center gap-1 mt-1 justify-center sm:justify-start text-xs sm:text-sm text-gray-500">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span>Joined {formatDate(user.joinDate)}</span>
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-2 sm:gap-3 justify-center sm:justify-end">
@@ -584,161 +251,76 @@ const UserProfileTab: React.FC<UserProfileProps> = ({ userId }) => {
                 </div>
               </div>
 
-              {/* Bio Placeholder */}
-              <p className="mt-3 sm:mt-4 text-gray-700 text-sm sm:text-base break-words">
-                🌟 Digital creator | 🛍️ Shop my products below | 📍 Living life in green
-              </p>
+              {/* Bio */}
+              {user.bio && (
+                <p className="mt-3 sm:mt-4 text-gray-700 text-sm sm:text-base break-words">
+                  {user.bio}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-          {/* Left Sidebar */}
-          <div className="lg:col-span-1 space-y-4 sm:space-y-5 md:space-y-6">
-            {/* Address Card */}
-            {user.addresses.length > 0 && (
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
-                    <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
-                    <span>Address</span>
-                  </h3>
-                  <button className="text-lime-600 text-xs sm:text-sm hover:text-lime-700 whitespace-nowrap">Add New</button>
-                </div>
-                <div className="space-y-3">
-                  {user.addresses.map(address => (
-                    <div key={address.id} className="flex items-start gap-2 sm:gap-3">
+        {/* Personal Details Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+          {/* Contact Information */}
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
+            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+              <span>Contact Information</span>
+            </h3>
+            <div className="space-y-2">
+              <DetailItem icon={Mail} label="Email" value={user.email} link />
+              <DetailItem icon={Phone} label="Phone" value={user.phone} />
+              {user.website && <DetailItem icon={Globe} label="Website" value={user.website} link />}
+            </div>
+          </div>
+
+          {/* Addresses */}
+          {user.addresses.length > 0 && (
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
+              <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+                <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+                <span>Addresses</span>
+              </h3>
+              <div className="space-y-3">
+                {user.addresses.map(address => (
+                  <div key={address.id} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
+                    <div className="flex items-start gap-2 sm:gap-3">
                       <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-lime-100 flex items-center justify-center flex-shrink-0 text-sm">
                         {address.type === 'home' ? '🏠' : address.type === 'work' ? '💼' : '📍'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 text-sm break-words">{address.receiver}</p>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <p className="font-medium text-gray-900 text-sm capitalize">{address.type}</p>
+                          {address.isDefault && (
+                            <span className="text-xs bg-lime-100 text-lime-700 px-2 py-0.5 rounded-full">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-900 font-medium">{address.receiver}</p>
                         <p className="text-xs sm:text-sm text-gray-500 break-words">
                           {address.street}, {address.city}, {address.state} {address.zipCode}
                         </p>
-                        {address.isDefault && (
-                          <span className="inline-block mt-1 text-xs bg-lime-100 text-lime-700 px-2 py-0.5 rounded-full">
-                            Default
-                          </span>
-                        )}
+                        <p className="text-xs sm:text-sm text-gray-500">{address.country}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Social Links Placeholder */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
-              <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
-                <Link2 className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
-                <span>Social Links</span>
-              </h3>
-              <div className="space-y-2 sm:space-y-3">
-                <button className="w-full flex items-center gap-2 sm:gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
-                  <Instagram className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 flex-shrink-0" />
-                  <span className="text-gray-700 text-sm sm:text-base flex-1 text-left">Instagram</span>
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-                </button>
-                <button className="w-full flex items-center gap-2 sm:gap-3 p-2 hover:bg-gray-50 rounded-lg transition">
-                  <Twitter className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 flex-shrink-0" />
-                  <span className="text-gray-700 text-sm sm:text-base flex-1 text-left">Twitter</span>
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Content */}
-          <div className="lg:col-span-2 space-y-4 sm:space-y-5 md:space-y-6">
-            {/* Tabs */}
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm overflow-hidden">
-              <div className="flex border-b border-gray-200 overflow-x-auto scrollbar-hide">
-                {(['posts', 'products', 'wishlist'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`flex-1 py-3 sm:py-4 font-semibold capitalize transition relative text-sm sm:text-base whitespace-nowrap px-2 sm:px-4 ${
-                      activeTab === tab
-                        ? 'text-lime-600'
-                        : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    {tab}
-                    {activeTab === tab && (
-                      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-lime-500" />
-                    )}
-                  </button>
+                  </div>
                 ))}
               </div>
+            </div>
+          )}
 
-              {/* Tab Content */}
-              <div className="p-3 sm:p-4 md:p-5">
-                {activeTab === 'posts' && (
-                  <div className="space-y-3 sm:space-y-4">
-                    {/* Create Post */}
-                    <div className="bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 flex items-center gap-2 sm:gap-3">
-                      <img
-                        src={user.avatar || 'https://via.placeholder.com/40'}
-                        alt=""
-                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover flex-shrink-0"
-                      />
-                      <input
-                        type="text"
-                        placeholder="What's on your mind?"
-                        className="flex-1 bg-white rounded-full px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-lime-500 min-w-0"
-                      />
-                      <button className="p-1.5 sm:p-2 hover:bg-gray-200 rounded-full transition flex-shrink-0">
-                        <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                      </button>
-                    </div>
-
-                    {/* Posts */}
-                    <div className="space-y-3 sm:space-y-4">
-                      {user.posts.map(post => (
-                        <PostCard key={post.id} post={post} />
-                      ))}
-                    </div>
-                    {user.posts.length === 0 && (
-                      <div className="text-center py-8 sm:py-12 text-gray-500">
-                        <p className="text-sm sm:text-base">No posts yet</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === 'products' && (
-                  <div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                      {user.products.map(product => (
-                        <ProductCard key={product.id} product={product} />
-                      ))}
-                    </div>
-                    {user.products.length === 0 && (
-                      <div className="text-center py-8 sm:py-12 text-gray-500">
-                        <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50" />
-                        <p className="text-sm sm:text-base">No products listed</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === 'wishlist' && (
-                  <div>
-                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                      {user.wishlist.map((item, index) => (
-                        <ProductCard key={index} product={item.product} />
-                      ))}
-                    </div>
-                    {user.wishlist.length === 0 && (
-                      <div className="text-center py-8 sm:py-12 text-gray-500">
-                        <Heart className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 opacity-50" />
-                        <p className="text-sm sm:text-base">Your wishlist is empty</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+          {/* Additional Info Placeholder */}
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-5 md:p-6">
+            <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-lime-500 flex-shrink-0" />
+              <span>Additional Information</span>
+            </h3>
+            <div className="space-y-2">
+              <DetailItem icon={Briefcase} label="Role" value="Customer" />
+              <DetailItem icon={Calendar} label="Member Since" value={formatDate(user.joinDate)} />
             </div>
           </div>
         </div>
