@@ -19,6 +19,7 @@ import RiderPaymentHistory from './components/RiderPaymentHistory';
 import PMTab from './components/PMTab';
 import UserProfileTab from './components/UserProfileTab';
 import { gql } from '@apollo/client';
+import { showToast } from '../../../utils/toastify';
 
 // Dynamically import MapTab to avoid SSR
 const MapTab = dynamic(() => import('./components/MapTab'), {
@@ -281,7 +282,8 @@ export default function RiderDashboard() {
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-      alert(`Accepted delivery piece from ${delivery.restaurant}\nOrder: ${delivery.orderId}\nPayout: ${delivery.payout}\nItems: ${delivery.items}\nFrom: ${delivery.pickup}\nTo: ${delivery.dropoff}`);
+      showToast(`Accepted delivery piece from ${delivery.restaurant}\nOrder: ${delivery.orderId}\nPayout: ${delivery.payout}\nItems: ${delivery.items}\nFrom: ${delivery.pickup}\nTo: ${delivery.dropoff}`,'success')
+     // alert(`Accepted delivery piece from ${delivery.restaurant}\nOrder: ${delivery.orderId}\nPayout: ${delivery.payout}\nItems: ${delivery.items}\nFrom: ${delivery.pickup}\nTo: ${delivery.dropoff}`);
     }
   };
 
