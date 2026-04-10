@@ -282,7 +282,7 @@ export default function RiderDashboard() {
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-const truncate = (str, maxLen) => {
+const truncate = (str:any, maxLen:number) => {
   if (!str) return '';
   return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
 };
