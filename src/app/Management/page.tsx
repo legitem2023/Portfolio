@@ -30,7 +30,7 @@ export default function ManagementDashboard() {
         supplierId: user?.userId
       }
   // Move all useState hooks to the top, before any conditional returns
-  const activeIndex = useSelector((state: any) => state.activeIndex.value);
+  const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -201,7 +201,7 @@ export default function ManagementDashboard() {
 
       <TopNav onMenuClick={()=> setSidebarOpen(true)} user={user} />
       <Sidebar 
-        activeTab={activeTab} 
+        activeTab={activeIndex} 
         setActiveTab={handleTabClick}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
