@@ -283,17 +283,16 @@ export default function RiderDashboard() {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
       showToast(`
-┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ ✅ DELIVERY ACCEPTED              ┃
-┣━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┫
-┃ Restaurant     ┃ ${delivery.restaurant.padEnd(14)} ┃
-┃ Order ID       ┃ ${delivery.orderId.padEnd(14)} ┃
-┃ Payout         ┃ $${delivery.payout.padEnd(14)} ┃
-┃ Items          ┃ ${delivery.items.padEnd(14)} ┃
-┃ From           ┃ ${delivery.pickup.padEnd(14)} ┃
-┃ To             ┃ ${delivery.dropoff.padEnd(14)} ┃
-┗━━━━━━━━━━━━━━━━┻━━━━━━━━━━━━━━━━━┛
-`, 'success');    
+📦 ACCEPTED DELIVERY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏪 Restaurant:  ${delivery.restaurant}
+🆔 Order ID:    ${delivery.orderId}
+💰 Payout:      $${delivery.payout}
+📋 Items:       ${delivery.items}
+📍 From:        ${delivery.pickup}
+🎯 To:          ${delivery.dropoff}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`, 'success');
     }
   };
 
