@@ -430,11 +430,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
         case NotificationType.ORDER_DELIVERED:
-          router.push('/orders');
+          dispatch(setActiveIndex(4));
           break;
         case NotificationType.PAYMENT_RECEIVED:
         case NotificationType.PAYMENT_FAILED:
-          router.push('/payments');
+          //router.push('/payments');
           break;
         default:
           break;
