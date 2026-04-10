@@ -6587,41 +6587,47 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           });
         }));
         
-        // Create notifications for each supplier
-        await Promise.all(items.map(async (item: any) => {
-          await createNotification({
-            userId: item.supplierId,
+        // Group items by supplierId
+        const itemsBySupplier = items.reduce((acc: any, item: any) => {
+          if (!acc[item.supplierId]) {
+            acc[item.supplierId] = [];
+          }
+          acc[item.supplierId].push(item);
+          return acc;
+        }, {});
+        
+        // Create ONE notification per supplier with all their items
+        const notificationPromises = Object.entries(itemsBySupplier).map(async ([supplierId, supplierItems]: [string, any]) => {
+          // Build a message listing all items for this supplier
+          const itemList = supplierItems.map((item: any) => 
+            `${item.quantity}x ${item.productId}` // You can replace with product name if available
+          ).join(', ');
+          
+          const itemCount = supplierItems.length;
+          const totalQuantity = supplierItems.reduce((sum: number, item: any) => sum + item.quantity, 0);
+          
+          const message = itemCount === 1 
+            ? `Order #${response.orderNumber}: ${totalQuantity} item(s) (${itemList})`
+            : `Order #${response.orderNumber}: ${totalQuantity} item(s) from ${itemCount} product(s) (${itemList})`;
+          
+          return createNotification({
+            userId: supplierId,
             type: NotificationType.ORDER_CREATED,
-            title: "Order Created Successfully",
-            message: `Order #${response.orderNumber} has been created for item ${item.productId}`,
-            link: ``,
+            title: "New Order Received",
+            message: message,
+            link: `/supplier/orders/${response.id}`,
             isRead: false
           });
-        }));
-        
-        // Create notification for the user
-     /*   const notificationResult = await createNotification({
-          userId: userId,
-          type: NotificationType.ORDER_CREATED,
-          title: "Order Created Successfully",
-          message: `Your order #${response.orderNumber} has been created and is being processed.`,
-          link: `/orders/${response.id}`,
-          isRead: false
         });
         
-        if (!notificationResult.success) {
-          return {
-            success: false,
-            statusText: 'Order created but notification failed',
-            order: response,
-            error: {
-              code: 'NOTIFICATION_FAILED',
-              message: notificationResult.error?.message,
-              details: notificationResult.error?.details
-            }
-          };
-        }*/
-
+        // Fire all supplier notifications in parallel (don't await to avoid timeout)
+        Promise.all(notificationPromises).catch(err => 
+          console.error('Supplier notifications failed:', err)
+        );
+        
+        // User notification is intentionally removed to prevent 504
+        // You can add it back later when you fix the timeout issue
+        
         return {
           success: true,
           statusText: 'Order Successful!',
@@ -6651,6 +6657,138 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     throw error;
   }
 },
+    /*
+    createOrder: async (_: any, { userId, addressId, computedShipping_input, computedDistance_input, items }: any) => {
+  try {
+    // Validate and convert productIds to proper ObjectID format
+    const validItems = items.map((item: any) => {
+      let productId = item.productId;
+      
+      // If it's a numeric string, pad it to 24 hex characters
+      if (/^\d+$/.test(productId)) {
+        productId = productId.padStart(24, '0');
+      }
+      
+      // If it's already a hex string but wrong length, handle it
+      if (productId.length !== 24) {
+        throw new Error(`Invalid productId length: ${productId}. Must be 24 characters for MongoDB ObjectID.`);
+      }
+      
+      return {
+        productId,
+        supplierId: item.supplierId,
+        quantity: item.quantity,
+        price: item.price,
+        individualShipping: item.individualShipping_input || 0,
+        individualDistance: item.individualDistance_input || 0,
+        status: "PENDING",
+      };
+    });
+    
+    const orderNumber = await generateOrderNumber(items[0].supplierId);
+    const response = await prisma.order.create({
+      data: {
+        userId,
+        addressId,
+        computedShipping: computedShipping_input,
+        computedDistance: computedDistance_input,
+        orderNumber: orderNumber,
+        status: "PENDING",
+        total: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        subtotal: items.reduce(
+          (sum: number, item: any) => sum + item.price * item.quantity,
+          0
+        ),
+        items: {
+          create: validItems,
+        },
+      },
+      include: { items: true },
+    });
+    
+    if (response) {
+      try {
+        // Update stock for all items
+        await Promise.all(items.map(async (item: any) => {
+          await prisma.productVariant.update({
+            where: {
+              id: item.productId,
+            },
+            data: {
+              stock: {
+                decrement: item.quantity
+              }
+            }
+          });
+        }));
+        
+        // Create notifications for each supplier
+        await Promise.all(items.map(async (item: any) => {
+          await createNotification({
+            userId: item.supplierId,
+            type: NotificationType.ORDER_CREATED,
+            title: "Order Created Successfully",
+            message: `Order #${response.orderNumber} has been created for item ${item.productId}`,
+            link: ``,
+            isRead: false
+          });
+        }));
+        
+        // Create notification for the user
+     /  const notificationResult = await createNotification({
+          userId: userId,
+          type: NotificationType.ORDER_CREATED,
+          title: "Order Created Successfully",
+          message: `Your order #${response.orderNumber} has been created and is being processed.`,
+          link: `/orders/${response.id}`,
+          isRead: false
+        });
+        
+        if (!notificationResult.success) {
+          return {
+            success: false,
+            statusText: 'Order created but notification failed',
+            order: response,
+            error: {
+              code: 'NOTIFICATION_FAILED',
+              message: notificationResult.error?.message,
+              details: notificationResult.error?.details
+            }
+          };
+        }
+
+        return {
+          success: true,
+          statusText: 'Order Successful!',
+          order: response
+        };
+      } catch (error: any) {
+        console.error('Failed to create order notification:', error);
+        return {
+          success: true,
+          statusText: 'Order Successful but notification failed',
+          order: response
+        };
+      }
+    }
+    
+    // Return something if response is falsy
+    return {
+      success: false,
+      statusText: 'Order creation failed',
+      error: {
+        code: 'ORDER_CREATION_FAILED',
+        message: 'Failed to create order'
+      }
+    };
+    
+  } catch (error: any) {
+    throw error;
+  }
+},*/
 /*    createOrder: async (_: any, { userId, addressId, computedShipping_input, computedDistance_input, items }: any) => {
   try {
     // Validate and convert productIds to proper ObjectID format
