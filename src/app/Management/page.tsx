@@ -135,6 +135,8 @@ export default function ManagementDashboard() {
       case 0:
         return <SalesDashboard />;
       case 1:
+        return <UsersTab />;
+      case 2:
         return (
           <ProductsTab
             // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
@@ -147,7 +149,7 @@ export default function ManagementDashboard() {
             handleProductSubmit={handleProductSubmit}
           />
         );
-      case 2:
+      case 3:
         return (
           <CategoriesTab
             categories={categories}
@@ -156,19 +158,18 @@ export default function ManagementDashboard() {
             handleCategorySubmit={handleCategorySubmit}
           />
         );
-      case 3:
-        return <UsersTab />;
       case 4:
-        return (
-          <RemittancePage
-            initialSupplierId={user?.userId}
-          />
-        );
-      case 5:
         return (
           <OrderListComponent
             initialSupplierId={user?.userId}
             initialStatus="PENDING"
+          />
+        );
+        
+      case 5:
+        return (
+          <RemittancePage
+            initialSupplierId={user?.userId}
           />
         );
       case 6:
