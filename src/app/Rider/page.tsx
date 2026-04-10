@@ -299,7 +299,7 @@ const contents = [
 
 const maxLen = Math.min(Math.max(...contents.map(c => c.length)), 28); // Cap at 28 chars
 
-const formatRow = (icon:any, value:number) => {
+const formatRow = (icon:any, value:any) => {
   const truncated = truncate(value, maxLen - 3);
   const padded = truncated.padEnd(maxLen - 3);
   return `${icon} ${padded}`;
