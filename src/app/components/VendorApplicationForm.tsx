@@ -3,11 +3,12 @@
 
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { useMutation } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import Header from './Header';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
+import { GETCATEGORY } from '../graphql/query'; // Import your existing query
 
 // Dynamically import Leaflet with no SSR
 const LocationPicker = dynamic(
@@ -15,7 +16,7 @@ const LocationPicker = dynamic(
   { ssr: false, loading: () => <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse flex items-center justify-center">Loading map...</div> }
 );
 
-// GraphQL Mutation
+// GraphQL Mutation for Vendor Signup
 const VENDOR_SIGNUP = gql`
   mutation VendorSignup($input: VendorSignupInput!) {
     vendorSignup(input: $input) {
@@ -37,6 +38,16 @@ const VENDOR_SIGNUP = gql`
     }
   }
 `;
+
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  isActive: boolean;
+  createdAt: string;
+  variantCount: number;
+}
 
 interface SignupFormData {
   // Account Information
@@ -94,8 +105,9 @@ export default function VendorSignupForm() {
   const [submitError, setSubmitError] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
-  // GraphQL Mutation hook
+  // GraphQL hooks
   const [vendorSignup, { loading: isSubmitting }] = useMutation(VENDOR_SIGNUP);
+  const { loading: categoriesLoading, error: categoriesError, data: categoriesData } = useQuery(GETCATEGORY);
 
   useEffect(() => {
     setIsMounted(true);
@@ -220,6 +232,9 @@ export default function VendorSignupForm() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Filter active categories
+  const activeCategories = categoriesData?.categories?.filter((cat: Category) => cat.isActive) || [];
 
   if (!isMounted) {
     return (
@@ -430,15 +445,31 @@ export default function VendorSignupForm() {
                       <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
                         Product Category <span className="text-[#b279d6]">*</span>
                       </label>
-                      <input
-                        type="text"
-                        name="productCategory"
-                        value={formData.productCategory}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-white/60 focus:bg-white focus:ring-2 focus:ring-[#b38fd9] focus:border-transparent outline-none transition-all"
-                        placeholder="e.g., Jewelry, Home Decor, Bakery"
-                      />
+                      {categoriesLoading ? (
+                        <div className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-gray-50 text-[#6b5b7c]">
+                          <i className="fas fa-spinner fa-spin mr-2"></i>
+                          Loading categories...
+                        </div>
+                      ) : categoriesError ? (
+                        <div className="w-full px-4 py-3 rounded-xl border border-red-300 bg-red-50 text-red-600">
+                          Error loading categories
+                        </div>
+                      ) : (
+                        <select
+                          name="productCategory"
+                          value={formData.productCategory}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-white/60 focus:bg-white focus:ring-2 focus:ring-[#b38fd9] focus:border-transparent outline-none transition-all"
+                        >
+                          <option value="">Select category</option>
+                          {activeCategories.map((category: Category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
 
@@ -554,6 +585,9 @@ export default function VendorSignupForm() {
                     <p><strong>Phone:</strong> {formData.phone}</p>
                     <p><strong>Business:</strong> {formData.businessName}</p>
                     <p><strong>Business Type:</strong> {formData.businessType}</p>
+                    <p><strong>Product Category:</strong> {
+                      activeCategories.find(c => c.id === formData.productCategory)?.name || formData.productCategory
+                    }</p>
                     {formData.website && <p><strong>Website:</strong> {formData.website}</p>}
                     <p><strong>Location:</strong> {formData.businessAddress || 'Not set'}</p>
                     <p><strong>Tax ID:</strong> {formData.taxId}</p>
@@ -652,4 +686,4 @@ export default function VendorSignupForm() {
       `}</style>
     </>
   );
-}
+              }
