@@ -8,7 +8,7 @@ import { gql } from '@apollo/client';
 import Header from './Header';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
-import { GETCATEGORY } from '../graphql/query'; // Import your existing query
+import { GETCATEGORY } from './graphql/query'; // Import your existing query
 
 // Dynamically import Leaflet with no SSR
 const LocationPicker = dynamic(
