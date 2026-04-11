@@ -586,7 +586,7 @@ export default function VendorSignupForm() {
                     <p><strong>Business:</strong> {formData.businessName}</p>
                     <p><strong>Business Type:</strong> {formData.businessType}</p>
                     <p><strong>Product Category:</strong> {
-                      activeCategories.find(c => c.id === formData.productCategory)?.name || formData.productCategory
+                      activeCategories.find((c:any) => c.id === formData.productCategory)?.name || formData.productCategory
                     }</p>
                     {formData.website && <p><strong>Website:</strong> {formData.website}</p>}
                     <p><strong>Location:</strong> {formData.businessAddress || 'Not set'}</p>
