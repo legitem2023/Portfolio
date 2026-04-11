@@ -4357,13 +4357,13 @@ salesList: async (
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+      const passwordHash = await encryptPassword(password, 10);
 
         // Create new user with vendor application
         const user = await prisma.user.create({
           data: {
             email,
-            password: hashedPassword,
+            password: passwordHash,
             firstName,
             lastName,
             phone,
