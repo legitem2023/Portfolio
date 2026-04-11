@@ -164,39 +164,54 @@ enum NotificationType {
   }
 
   # ================= Models =================
-  type User {
-    id: ID
-    email: String
-    password: String
-    firstName: String
-    lastName: String
-    avatar: String
-    phone: String
-    emailVerified: Boolean
-    createdAt: DateTime
-    updatedAt: DateTime
-    role: Role
-    addresses: [Address]
-    orders: [Order]
-    reviews: [Review]
-    wishlist: [WishlistItem]
-    cart: [CartItem]
-    products: [Product]
-    payments: [Payment]
-    messagesSent: [Message]
-    messagesReceived: [Message]
-    supportTickets: [SupportTicket]
-    notifications: [Notification]
-    ticketResponses: [TicketResponse]
-    rating: Int
-    # Social media fields
-    posts: [Post]
-    followers: [User]
-    following: [User]
-    followerCount: Int
-    followingCount: Int
-    isFollowing: Boolean
-  }
+type User {
+  id: ID
+  email: String
+  password: String
+  firstName: String
+  lastName: String
+  avatar: String
+  phone: String
+  emailVerified: Boolean
+  createdAt: DateTime
+  updatedAt: DateTime
+  role: Role
+  addresses: [Address]
+  orders: [Order]
+  reviews: [Review]
+  wishlist: [WishlistItem]
+  cart: [CartItem]
+  products: [Product]
+  payments: [Payment]
+  messagesSent: [Message]
+  messagesReceived: [Message]
+  supportTickets: [SupportTicket]
+  notifications: [Notification]
+  ticketResponses: [TicketResponse]
+  rating: Int
+  # Social media fields
+  posts: [Post]
+  followers: [User]
+  following: [User]
+  followerCount: Int
+  followingCount: Int
+  isFollowing: Boolean
+  
+  # NEW VENDOR FIELDS
+  businessName: String
+  businessType: String
+  productCategory: String
+  businessDescription: String
+  website: String
+  businessAddress: String
+  addressInstruction: String
+  currentLatitude: Float
+  currentLongitude: Float
+  taxId: String
+  isVendor: Boolean
+  vendorApplicationStatus: String
+  vendorApprovedAt: DateTime
+}
 
   type Address {
     id: ID
