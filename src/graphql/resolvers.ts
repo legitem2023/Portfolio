@@ -4406,7 +4406,7 @@ salesList: async (
         role: user?.role,
         image: user?.avatar,
         addresses: user?.businessAddress
-      })
+      }).setProtectedHeader({ alg: 'dir', enc: 'A256GCM' }).setIssuedAt().encrypt(secret);
         
 
         // Remove password from response
