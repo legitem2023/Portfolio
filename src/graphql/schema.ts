@@ -1299,7 +1299,38 @@ type Mutation {
     addApiBillTag(id: ID, tag: String): ApiBill
     removeApiBillTag(id: ID, tag: String): ApiBill
   }
+  
+input VendorSignupInput {
+  # Account Information
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  
+  # Business Information
+  businessName: String!
+  phone: String!
+  businessType: String!
+  productCategory: String!
+  businessDescription: String!
+  website: String
+  
+  # Location Information
+  businessAddress: String!
+  addressInstruction: String
+  currentLatitude: Float
+  currentLongitude: Float
+  
+  # Tax Information
+  taxId: String!
+}
 
+type VendorSignupResponse {
+  success: Boolean!
+  message: String!
+  user: User!
+  token: String
+}
   type ModelUploadResponse {
     success: Boolean
     message: String
