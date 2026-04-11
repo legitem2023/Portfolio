@@ -4405,7 +4405,7 @@ salesList: async (
         name: user?.firstName,
         role: user?.role,
         image: user?.avatar,
-        addresses: user?.addresses
+        addresses: user?.businessAddress
       })
         
 
