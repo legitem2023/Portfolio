@@ -1,19 +1,19 @@
+// src/app/components/VendorSignupForm.tsx
+'use client';
+
 import React from 'react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import Header from './Header';
 import Head from 'next/head';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import dynamic from 'next/dynamic';
 
-// Fix Leaflet default icon issue
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+// Dynamically import Leaflet with no SSR
+const LocationPicker = dynamic(
+  () => import('./LocationPicker'),
+  { ssr: false, loading: () => <div className="h-[300px] bg-gray-100 rounded-xl animate-pulse flex items-center justify-center">Loading map...</div> }
+);
 
 // GraphQL Mutation
 const VENDOR_SIGNUP = gql`
@@ -29,18 +29,8 @@ const VENDOR_SIGNUP = gql`
         lastName
         phone
         role
-        isVendor
-        vendorApplicationStatus
-        businessName
-        businessType
-        productCategory
-        businessDescription
-        website
-        businessAddress
-        addressInstruction
-        currentLatitude
-        currentLongitude
-        taxId
+        avatar
+        emailVerified
         createdAt
         updatedAt
       }
@@ -48,15 +38,6 @@ const VENDOR_SIGNUP = gql`
   }
 `;
 
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  isActive: boolean;
-  variantCount: number;
-}
-
-// Complete Signup + Vendor Application Data
 interface SignupFormData {
   // Account Information
   email: string;
@@ -64,10 +45,10 @@ interface SignupFormData {
   confirmPassword: string;
   firstName: string;
   lastName: string;
+  phone: string;
   
   // Business Information
   businessName: string;
-  phone: string;
   businessType: string;
   productCategory: string;
   businessDescription: string;
@@ -86,102 +67,6 @@ interface SignupFormData {
   agreeTerms: boolean;
 }
 
-// Location Picker Component
-const LocationPicker: React.FC<{
-  onLocationSelect: (lat: number, lng: number, address: string) => void;
-}> = ({ onLocationSelect }) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const [map, setMap] = useState<L.Map | null>(null);
-  const [marker, setMarker] = useState<L.Marker | null>(null);
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-
-  React.useEffect(() => {
-    if (mapRef.current && !map) {
-      const initialMap = L.map(mapRef.current).setView([40.7128, -74.0060], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
-      }).addTo(initialMap);
-      
-      initialMap.on('click', async (e) => {
-        const { lat, lng } = e.latlng;
-        await reverseGeocode(lat, lng);
-      });
-      
-      setMap(initialMap);
-    }
-  }, [map]);
-
-  const reverseGeocode = async (lat: number, lng: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
-      );
-      const data = await response.json();
-      const address = data.display_name || `${lat}, ${lng}`;
-      
-      if (marker) {
-        marker.setLatLng([lat, lng]);
-      } else if (map) {
-        const newMarker = L.marker([lat, lng]).addTo(map);
-        setMarker(newMarker);
-      }
-      
-      onLocationSelect(lat, lng, address);
-    } catch (error) {
-      console.error('Error reverse geocoding:', error);
-      onLocationSelect(lat, lng, `${lat}, ${lng}`);
-    }
-  };
-
-  const getCurrentLocation = () => {
-    setIsLoadingLocation(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          if (map) {
-            map.setView([latitude, longitude], 15);
-          }
-          await reverseGeocode(latitude, longitude);
-          setIsLoadingLocation(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          alert('Unable to get your location. Please click on the map to select your address.');
-          setIsLoadingLocation(false);
-        }
-      );
-    } else {
-      alert('Geolocation is not supported by your browser');
-      setIsLoadingLocation(false);
-    }
-  };
-
-  return (
-    <div className="space-y-3">
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={getCurrentLocation}
-          disabled={isLoadingLocation}
-          className="px-4 py-2 bg-gradient-to-r from-[#b79ad4] to-[#d0b0e8] text-white rounded-xl hover:shadow-lg transition-all disabled:opacity-50 text-sm"
-        >
-          <i className={`fas ${isLoadingLocation ? 'fa-spinner fa-spin' : 'fa-location-dot'} mr-2`}></i>
-          Use Current Location
-        </button>
-        <p className="text-xs text-[#6b5b7c] self-center">
-          Or click on map to select location
-        </p>
-      </div>
-      <div 
-        ref={mapRef} 
-        style={{ height: '300px', width: '100%' }}
-        className="rounded-xl border border-[#d9c0e8] overflow-hidden"
-      />
-    </div>
-  );
-};
-
 export default function VendorSignupForm() {
   const [formData, setFormData] = useState<SignupFormData>({
     email: '',
@@ -189,8 +74,8 @@ export default function VendorSignupForm() {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    businessName: '',
     phone: '',
+    businessName: '',
     businessType: '',
     productCategory: '',
     businessDescription: '',
@@ -207,9 +92,14 @@ export default function VendorSignupForm() {
   const totalSteps = 4;
   const [passwordError, setPasswordError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [isMounted, setIsMounted] = useState(false);
 
   // GraphQL Mutation hook
   const [vendorSignup, { loading: isSubmitting }] = useMutation(VENDOR_SIGNUP);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -218,12 +108,10 @@ export default function VendorSignupForm() {
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }));
     
-    // Clear password error when typing
     if (name === 'password' || name === 'confirmPassword') {
       setPasswordError('');
     }
     
-    // Clear submit error when user makes changes
     if (submitError) {
       setSubmitError('');
     }
@@ -261,43 +149,33 @@ export default function VendorSignupForm() {
       const { data } = await vendorSignup({
         variables: {
           input: {
-            // Account info
             email: formData.email,
             password: formData.password,
             firstName: formData.firstName,
             lastName: formData.lastName,
-            
-            // Business info
-            businessName: formData.businessName,
             phone: formData.phone,
+            businessName: formData.businessName,
             businessType: formData.businessType,
             productCategory: formData.productCategory,
             businessDescription: formData.businessDescription,
             website: formData.website || null,
-            
-            // Location info
             businessAddress: formData.businessAddress,
             addressInstruction: formData.addressInstruction || null,
             currentLatitude: formData.currentLatitude,
             currentLongitude: formData.currentLongitude,
-            
-            // Tax info
             taxId: formData.taxId,
           }
         }
       });
       
       if (data.vendorSignup.success) {
-        // Store token if needed
         if (data.vendorSignup.token) {
           localStorage.setItem('token', data.vendorSignup.token);
           localStorage.setItem('user', JSON.stringify(data.vendorSignup.user));
         }
         
-        // Show success message and redirect
         alert(data.vendorSignup.message);
         
-        // Redirect to login or dashboard
         setTimeout(() => {
           window.location.href = '/login?registered=true';
         }, 2000);
@@ -312,9 +190,8 @@ export default function VendorSignupForm() {
   };
 
   const nextStep = () => {
-    // Validate current step before proceeding
     if (currentStep === 1) {
-      if (!formData.email || !formData.password || !formData.confirmPassword || !formData.firstName || !formData.lastName) {
+      if (!formData.email || !formData.password || !formData.confirmPassword || !formData.firstName || !formData.lastName || !formData.phone) {
         alert('Please fill in all account information fields');
         return;
       }
@@ -322,7 +199,7 @@ export default function VendorSignupForm() {
     }
     
     if (currentStep === 2) {
-      if (!formData.businessName || !formData.phone || !formData.businessType || !formData.productCategory || !formData.businessDescription) {
+      if (!formData.businessName || !formData.businessType || !formData.productCategory || !formData.businessDescription) {
         alert('Please fill in all business information fields');
         return;
       }
@@ -343,6 +220,27 @@ export default function VendorSignupForm() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="bg-white/80 backdrop-blur-sm shadow-2xl border border-white/40 overflow-hidden rounded-2xl">
+            <div className="bg-gradient-to-r from-[#b79ad4] to-[#dac0f0] px-8 py-6">
+              <div className="flex items-center gap-3">
+                <i className="fas fa-store text-white text-3xl"></i>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">Vendor Registration</h1>
+                  <p className="text-[#f8f0ff] text-sm mt-1 opacity-90">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -368,7 +266,6 @@ export default function VendorSignupForm() {
                   Step {currentStep} of {totalSteps}
                 </div>
               </div>
-              {/* Progress Bar */}
               <div className="mt-4 bg-white/20 rounded-full h-2">
                 <div 
                   className="bg-white rounded-full h-2 transition-all duration-300"
@@ -431,6 +328,21 @@ export default function VendorSignupForm() {
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
+                      Phone Number <span className="text-[#b279d6]">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-white/60 focus:bg-white focus:ring-2 focus:ring-[#b38fd9] focus:border-transparent outline-none transition-all"
+                      placeholder="(555) 123-4567"
+                    />
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
@@ -489,21 +401,6 @@ export default function VendorSignupForm() {
                       required
                       className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-white/60 focus:bg-white focus:ring-2 focus:ring-[#b38fd9] focus:border-transparent outline-none transition-all"
                       placeholder="e.g., Lavender Dreams Boutique"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
-                      Phone Number <span className="text-[#b279d6]">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-white/60 focus:bg-white focus:ring-2 focus:ring-[#b38fd9] focus:border-transparent outline-none transition-all"
-                      placeholder="(555) 123-4567"
                     />
                   </div>
 
@@ -654,9 +551,9 @@ export default function VendorSignupForm() {
                     <h3 className="font-semibold text-[#4a3f5c]">Account Summary</h3>
                     <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
                     <p><strong>Email:</strong> {formData.email}</p>
+                    <p><strong>Phone:</strong> {formData.phone}</p>
                     <p><strong>Business:</strong> {formData.businessName}</p>
                     <p><strong>Business Type:</strong> {formData.businessType}</p>
-                    <p><strong>Phone:</strong> {formData.phone}</p>
                     {formData.website && <p><strong>Website:</strong> {formData.website}</p>}
                     <p><strong>Location:</strong> {formData.businessAddress || 'Not set'}</p>
                     <p><strong>Tax ID:</strong> {formData.taxId}</p>
@@ -731,7 +628,7 @@ export default function VendorSignupForm() {
               </div>
               
               <p className="text-center text-xs text-[#6b5b7c]">
-                Already have an account? <a href="/login" className="text-[#9b6fc7] hover:underline">Sign in</a>
+                Already have an account? <a href="/Login" className="text-[#9b6fc7] hover:underline">Sign in</a>
               </p>
             </form>
           </div>
