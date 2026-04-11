@@ -80,13 +80,36 @@ model User {
   createdAt       DateTime?        @default(now())
   updatedAt       DateTime?        @updatedAt
   role            Role?            @default(USER)
+  status          String?
 
   currentLatitude  Float?
   currentLongitude Float?
   lastUpdatedAt    DateTime?
-  status           String?
 
-  // Relationships
+  // ===== NEW FIELDS FOR VENDOR APPLICATION =====
+  
+  // Business Information
+  businessName        String?   // Business name
+  businessType        String?   // retail, handmade, food, service, art, other
+  productCategory     String?   // Category ID from your categories
+  businessDescription String?   // Business description
+  website             String?   // Website or social media
+  
+  // Address Details (separate from current location)
+  businessAddress     String?   // Full address from map
+  addressInstruction  String?   // Building, floor, apartment details
+  
+  // Tax Information
+  taxId               String?   // EIN or SSN for tax purposes
+  
+  // Vendor specific
+  isVendor            Boolean?  @default(false)
+  vendorApprovedAt    DateTime?
+  vendorApplicationStatus String? @default("PENDING") // PENDING, APPROVED, REJECTED
+  
+  // ===== END NEW FIELDS =====
+
+  // Relationships (existing)
   addresses       Address[]
   products        Product[]
   orders          Order[]
@@ -99,9 +122,8 @@ model User {
   supportTickets  SupportTicket[]
   notifications   Notification[]
   ticketResponses TicketResponse[]
-  supplier        OrderItem[] @relation("SupplierOrderItems")  // matches supplier relation in OrderItem
-  rider           OrderItem[] @relation("RiderOrderItems")     // matches rider relation in OrderItem
-  // Social features (NEW) - Using explicit relations for MongoDB
+  supplier        OrderItem[] @relation("SupplierOrderItems")
+  rider           OrderItem[] @relation("RiderOrderItems")
   posts           Post[]
   comments        Comment[]
   likes           Like[]
@@ -110,7 +132,6 @@ model User {
   taggedPosts     PostTaggedUser[]
   blacklistedTokens  BlacklistedToken[]
   
-  // Indexes
   @@index([createdAt])
   @@map("users")
 }
