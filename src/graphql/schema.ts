@@ -1298,9 +1298,10 @@ type Mutation {
     # Tag Management
     addApiBillTag(id: ID, tag: String): ApiBill
     removeApiBillTag(id: ID, tag: String): ApiBill
+    vendorSignup(input: VendorSignupInput!): VendorSignupResponse!
   }
   
-input VendorSignupInput {
+ input VendorSignupInput {
   # Account Information
   email: String!
   password: String!
