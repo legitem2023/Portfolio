@@ -9,6 +9,16 @@ interface LocationData {
   timestamp: string;
 }
 
+interface PusherConnectionState {
+  previous: string;
+  current: string;
+}
+
+interface PusherError {
+  message?: string;
+  error?: unknown;
+}
+
 export const useRealtimeLocation = (userId?: string) => {
   const [locations, setLocations] = useState<Map<string, LocationData>>(new Map());
   const [pusher, setPusher] = useState<Pusher | null>(null);
@@ -25,15 +35,24 @@ export const useRealtimeLocation = (userId?: string) => {
       hasAuthEndpoint: !!process.env.NEXT_PUBLIC_PUSHER_AUTH_ENDPOINT
     });
 
-    const pusherClient = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
-      cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+    // Check if Pusher key is available
+    const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
+    const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
+    
+    if (!pusherKey || !pusherCluster) {
+      console.error('❌ Pusher configuration missing! Please check your environment variables.');
+      return;
+    }
+
+    const pusherClient = new Pusher(pusherKey, {
+      cluster: pusherCluster,
       authEndpoint: '/api/pusher/auth',
     });
 
     setPusher(pusherClient);
 
     // Monitor connection state
-    pusherClient.connection.bind('state_change', (states: any) => {
+    pusherClient.connection.bind('state_change', (states: PusherConnectionState) => {
       console.log(`📡 Pusher connection state changed: ${states.previous} -> ${states.current}`);
       setConnectionStatus(states.current);
     });
@@ -43,7 +62,7 @@ export const useRealtimeLocation = (userId?: string) => {
       console.log('📡 Connection ID:', pusherClient.connection.socket_id);
     });
 
-    pusherClient.connection.bind('error', (error: any) => {
+    pusherClient.connection.bind('error', (error: PusherError) => {
       console.error('❌ Pusher connection error:', error);
     });
 
@@ -58,7 +77,7 @@ export const useRealtimeLocation = (userId?: string) => {
       console.log('👂 Listening for event: user-location-update');
     });
 
-    adminChannel.bind('pusher:subscription_error', (error: any) => {
+    adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
       console.error('❌ Failed to subscribe to admin-locations channel:', error);
     });
 
@@ -82,7 +101,7 @@ export const useRealtimeLocation = (userId?: string) => {
     });
 
     // Listen for ANY event on admin channel (for debugging)
-    adminChannel.bind_global((eventName, data) => {
+    adminChannel.bind_global((eventName: string, data: unknown) => {
       console.log(`🌍 Global event on admin-locations: "${eventName}"`, data);
     });
 
@@ -97,7 +116,7 @@ export const useRealtimeLocation = (userId?: string) => {
         console.log(`👂 Listening for event: location-updated`);
       });
 
-      userChannel.bind('pusher:subscription_error', (error: any) => {
+      userChannel.bind('pusher:subscription_error', (error: PusherError) => {
         console.error(`❌ Failed to subscribe to user-${userId} channel:`, error);
       });
 
@@ -119,7 +138,7 @@ export const useRealtimeLocation = (userId?: string) => {
       });
 
       // Listen for ANY event on user channel
-      userChannel.bind_global((eventName, data) => {
+      userChannel.bind_global((eventName: string, data: unknown) => {
         console.log(`🌍 Global event on user-${userId}: "${eventName}"`, data);
       });
 
@@ -143,13 +162,13 @@ export const useRealtimeLocation = (userId?: string) => {
     };
   }, [userId]);
 
-  const getLocation = useCallback((userId: string) => {
+  const getLocation = useCallback((userId: string): LocationData | undefined => {
     const location = locations.get(userId);
     console.log(`🔍 Getting location for ${userId}:`, location);
     return location;
   }, [locations]);
 
-  const getAllLocations = useCallback(() => {
+  const getAllLocations = useCallback((): LocationData[] => {
     const allLocations = Array.from(locations.values());
     console.log(`📊 Getting all locations (${allLocations.length}):`, allLocations);
     return allLocations;
