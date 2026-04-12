@@ -1045,7 +1045,7 @@ type ReviewResult {
     myMessages(page: Int, limit: Int, isRead: Boolean): MessageConnection
   
     # Get conversation between two users
-    conversation(userId: ID, page: Int, limit: Int): MessageConnection
+    conversation(currentUser: ID,userId: ID, page: Int, limit: Int): MessageConnection
   
     # Get unread message count
     unreadMessageCount: Int
