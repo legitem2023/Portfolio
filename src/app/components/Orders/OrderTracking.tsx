@@ -261,8 +261,15 @@ export default function OrderTracking({ userId }: { userId: string }) {
     skip: !userId
   });
 const { locations, getLocation } = useRealtimeLocation(userId);
- console.log(locations,"<---mapa",userId);
-/* useEffect(() => {
+
+// ✅ This will log whenever locations actually update
+useEffect(() => {
+  console.log(locations, "<---mapa", userId);
+  console.log("Total locations:", locations.size);
+  console.log("All riders:", Array.from(locations.values()));
+}, [locations, userId]);
+  
+  /* useEffect(() => {
     const pusher = getPusherClient();
     
     if (pusher) {
