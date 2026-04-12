@@ -312,7 +312,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
    // skip: !userId,
     pollInterval: 30000,
   });
-
+console.log("Threads",UserId);
   const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS);
 
   const { data: conversationData, loading: conversationLoading, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
@@ -323,9 +323,10 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
     },
   //  skip: !selectedUser?.id || !userId
   });
+console.log("Selected",selectedUser?.id);
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
-  //  skip: !userId,
+    skip: !userId,
     pollInterval: 30000,
   });
 
