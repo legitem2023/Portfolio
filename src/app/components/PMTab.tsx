@@ -309,7 +309,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   // GraphQL Queries
   const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
-   // skip: !userId,
+    skip: !UserId,
     pollInterval: 30000,
   });
 console.log("Threads",UserId);
@@ -321,12 +321,11 @@ console.log("Threads",UserId);
       page: 1,
       limit: 50
     },
-  //  skip: !selectedUser?.id || !userId
+   skip: !selectedUser?.id || !UserId
   });
-console.log("Selected",selectedUser?.id);
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
-    skip: !userId,
+    skip: !UserId,
     pollInterval: 30000,
   });
 
