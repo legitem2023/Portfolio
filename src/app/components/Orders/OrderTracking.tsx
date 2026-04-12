@@ -267,7 +267,7 @@ useEffect(() => {
   console.log(locations, "<---mapa", userId);
   console.log("Total locations:", locations.size);
   console.log("All riders:", Array.from(locations.values()));
-}, [locations, userId]);
+});
   
   /* useEffect(() => {
     const pusher = getPusherClient();
