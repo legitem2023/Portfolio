@@ -2316,15 +2316,9 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
   const conversations: any = await prisma.message.findMany({
     where: {
       OR: [
-          {
-            senderId: userId,
-            recipientId: userId
-          },
-          {
-            senderId: userId,
-            recipientId: userId
-          }
-        ]
+            { senderId: userId },
+            { recipientId: userId }
+         ]
     },
     select: {
       id: true,
