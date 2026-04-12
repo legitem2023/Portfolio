@@ -261,7 +261,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
     skip: !userId
   });
 const { locations, getLocation } = useRealtimeLocation(userId);
- console.log(locations,"<---mapa");
+ console.log(locations,"<---mapa",userId);
 /* useEffect(() => {
     const pusher = getPusherClient();
     
