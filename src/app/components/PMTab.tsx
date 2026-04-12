@@ -322,7 +322,7 @@ console.log("Threads",UserId);
       page: 1,
       limit: 50
     },
-   skip: !selectedUser?.id || !UserId
+   skip: !selectedUser?.id || !UserId,
     pollInterval: 10000,
   });
 
