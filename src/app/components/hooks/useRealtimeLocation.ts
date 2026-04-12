@@ -101,7 +101,7 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
     let userChannel: any = null;
     
     if (userId) {
-      const userChannelName = `user-${userId}`;
+      const userChannelName = `private-user-${userId}`;
       console.log(`Subscribing to ${userChannelName}...`);
       userChannel = pusherClient.subscribe(userChannelName);
       
