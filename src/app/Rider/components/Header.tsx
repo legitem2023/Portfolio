@@ -52,6 +52,7 @@ export default function Header({
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   // Get user ID from auth
@@ -103,9 +104,15 @@ export default function Header({
   // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      // Check if click is on bell popup or its children
+      if (popupRef.current && popupRef.current.contains(event.target as Node)) {
+        return; // Don't close if clicking inside popup
+      }
+      
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
+      
       if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
         setIsBellPopupOpen(false);
       }
@@ -352,7 +359,7 @@ export default function Header({
 
   // Notification Bell Popup Component
   const NotificationBellPopup = () => (
-    <>
+    <div ref={popupRef}>
       {/* Backdrop for mobile */}
       <div 
         className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
@@ -403,14 +410,20 @@ export default function Header({
               <>
                 {unreadCount > 0 && (
                   <button
-                    onClick={markAllAsRead}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      markAllAsRead();
+                    }}
                     className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
-                  onClick={() => setIsBellPopupOpen(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsBellPopupOpen(false);
+                  }}
                   className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
                 >
                   <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -432,7 +445,10 @@ export default function Header({
               <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mb-4" />
               <p className="text-sm sm:text-base text-gray-600">Failed to load notifications</p>
               <button
-                onClick={() => refetchNotifications()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refetchNotifications();
+                }}
                 className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
               >
                 Retry
@@ -447,7 +463,10 @@ export default function Header({
                     p-3 sm:p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
                     ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
                   `}
-                  onClick={() => handleNotificationClick(notification)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNotificationClick(notification);
+                  }}
                 >
                   <div className="flex items-start space-x-2 sm:space-x-3">
                     <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
@@ -529,7 +548,7 @@ export default function Header({
             <div className="flex flex-col items-center justify-center p-8 text-center">
               <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
               <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
-              <p className="text-xs sm:text-sm text-gray-400 mt-1">Youre all caught up!</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">You're all caught up!</p>
             </div>
           )}
         </div>
@@ -537,7 +556,8 @@ export default function Header({
         {/* Footer */}
         <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
           <button
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               setIsBellPopupOpen(false);
               router.push('/Notifications');
             }}
@@ -547,7 +567,7 @@ export default function Header({
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 
   // Mobile View - Deluxe Style
