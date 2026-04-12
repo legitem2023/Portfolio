@@ -309,13 +309,11 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   // GraphQL Queries
   const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
-    skip: !userId,
+   // skip: !userId,
     pollInterval: 30000,
   });
 
-  const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS, {
-    skip: !userId
-  });
+  const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS);
 
   const { data: conversationData, loading: conversationLoading, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
@@ -323,11 +321,11 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
       page: 1,
       limit: 50
     },
-    skip: !selectedUser?.id || !userId
+  //  skip: !selectedUser?.id || !userId
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
-    skip: !userId,
+  //  skip: !userId,
     pollInterval: 30000,
   });
 
