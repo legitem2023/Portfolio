@@ -2157,6 +2157,8 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
         ]
       };
 
+      throw new Error("cur",currentUserId,"user",userId);
+
       const [messages, totalCount]: any = await Promise.all([
         prisma.message.findMany({
           where,
