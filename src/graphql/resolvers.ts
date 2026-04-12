@@ -2147,12 +2147,12 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       const where: any = {
         OR: [
           {
-            senderId: currentUserId,
+            senderId: userId,
             recipientId: userId
           },
           {
             senderId: userId,
-            recipientId: currentUserId
+            recipientId: userId
           }
         ]
       };
