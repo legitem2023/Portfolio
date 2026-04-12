@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Pusher from 'pusher';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../../lib/auth';
+import { getToken } from 'next-auth/jwt';
+import { cookies } from 'next/headers';
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
@@ -13,29 +13,41 @@ const pusher = new Pusher({
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    // Get the NextAuth token
+    const token = await getToken({ 
+      req, 
+      secret: process.env.NEXTAUTH_SECRET 
+    });
     
-    if (!session?.serverToken) {
+    if (!token || !token.serverToken) {
+      console.error('No valid session token found');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await req.json();
     const { socket_id, channel_name } = body;
     
-    // Get user ID from the channel name or session
-    // Since it's a private-user-{userId} channel, extract userId from channel name
+    // Extract userId from channel name (private-user-{userId})
     const userId = channel_name.replace('private-user-', '');
     
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid channel' }, { status: 400 });
+    }
+    
+    console.log(`Authorizing channel ${channel_name} for user ${userId}`);
+    
+    // Authorize the private channel
     const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
       user_id: userId,
       user_info: {
-        name: session.user?.email || userId,
+        name: token.email || userId,
+        provider: token.provider || 'unknown'
       }
     });
     
     return NextResponse.json(authResponse);
   } catch (error) {
     console.error('Pusher auth error:', error);
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
