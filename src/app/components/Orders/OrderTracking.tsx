@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { QrCode, Star } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { getPusherClient } from '../../lib/pusher/client';
+import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
 // Define types based on your schema - product is an ARRAY
 interface Order {
   id: string;
