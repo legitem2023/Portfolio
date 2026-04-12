@@ -2141,18 +2141,17 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       };
     },
 
-    conversation: async (_: any, { userId, page = 1, limit = 20 }: any, { currentUserId }: any): Promise<any> => {
-      const skip = (page - 1) * limit;
-      
+    conversation: async (_: any, { currentUser, userId, page = 1, limit = 20 }: any): Promise<any> => {
+      const skip = (page - 1) * limit;  
       const where: any = {
         OR: [
           {
-            senderId: userId,
+            senderId: currentUser,
             recipientId: userId
           },
           {
             senderId: userId,
-            recipientId: userId
+            recipientId: currentUser
           }
         ]
       };
