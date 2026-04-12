@@ -260,8 +260,9 @@ export default function OrderTracking({ userId }: { userId: string }) {
     },
     skip: !userId
   });
-
- useEffect(() => {
+const { locations, getLocation } = useRealtimeLocation(userId);
+ console.log(locations);
+/* useEffect(() => {
     const pusher = getPusherClient();
     
     if (pusher) {
@@ -284,7 +285,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
         pusher.unsubscribe('orders-channel');
       };
     }
-  }, []);
+  }, []);*/
   
   const handleStatusChange = (status: string) => {
     refetch({
