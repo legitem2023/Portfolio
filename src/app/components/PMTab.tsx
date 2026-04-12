@@ -310,7 +310,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
     skip: !UserId,
-    pollInterval: 30000,
+    pollInterval: 10000,
   });
 console.log("Threads",UserId);
   const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS);
@@ -323,11 +323,12 @@ console.log("Threads",UserId);
       limit: 50
     },
    skip: !selectedUser?.id || !UserId
+    pollInterval: 10000,
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
     skip: !UserId,
-    pollInterval: 30000,
+    pollInterval: 10000,
   });
 
   const [sendMessageMutation] = useMutation(SEND_MESSAGE);
