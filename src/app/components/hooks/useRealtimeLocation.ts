@@ -35,7 +35,7 @@ export const useRealtimeLocation = (userId?: string) => {
     // If specific user, also subscribe to their private channel
     if (userId) {
       const userChannel = pusherClient.subscribe(`user-${userId}`);
-      
+     console.log(userChannel,"channel");
       userChannel.bind('location-updated', (data: LocationData) => {
         setLocations(prev => {
           const newMap = new Map(prev);
