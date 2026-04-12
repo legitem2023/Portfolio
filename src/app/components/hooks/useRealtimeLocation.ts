@@ -51,23 +51,35 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
     });
 
     pusherClient.connection.bind('state_change', (states: PusherConnectionState) => {
+      console.log(`Pusher state: ${states.current}`);
       setConnectionStatus(states.current);
     });
 
+    pusherClient.connection.bind('connected', () => {
+      console.log('✅ Pusher connected successfully!');
+    });
+
     pusherClient.connection.bind('error', (error: PusherError) => {
+      console.error('Pusher error:', error);
       setLastError(error.message || 'Unknown connection error');
     });
 
-    // Subscribe to admin channel for all location updates
+    // Subscribe to admin channel
     const adminChannel = pusherClient.subscribe('admin-locations');
     
-    adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
-      console.error('Failed to subscribe to admin-locations channel:', error);
-      setLastError(`Failed to subscribe to admin channel: ${error.message || 'Unknown error'}`);
+    adminChannel.bind('pusher:subscription_succeeded', () => {
+      console.log('✅ Subscribed to admin-locations channel');
     });
 
-    // Handle location updates from admin channel
+    adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
+      console.error('Failed to subscribe to admin-locations:', error);
+      setLastError(`Failed to subscribe: ${error.message || 'Unknown error'}`);
+    });
+
+    // Handle location updates
     adminChannel.bind('user-location-update', (data: any) => {
+      console.log('📍 Received location update:', data);
+      
       const locationData: LocationData = {
         userID: data.userID,
         latitude: data.latitude,
@@ -80,24 +92,31 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
       setLocations(prev => {
         const newMap = new Map(prev);
         newMap.set(data.userID, locationData);
+        console.log(`📍 Locations updated: ${newMap.size} total riders`);
         return newMap;
       });
     });
 
-    // Subscribe to user-specific channel if userId provided
+    // Subscribe to user channel if userId provided
     let userChannel: any = null;
     
     if (userId) {
       const userChannelName = `user-${userId}`;
+      console.log(`Subscribing to ${userChannelName}...`);
       userChannel = pusherClient.subscribe(userChannelName);
       
-      userChannel.bind('pusher:subscription_error', (error: PusherError) => {
-        console.error(`Failed to subscribe to ${userChannelName}:`, error);
-        setLastError(`Failed to subscribe to user channel: ${error.message || 'Unknown error'}`);
+      userChannel.bind('pusher:subscription_succeeded', () => {
+        console.log(`✅ Subscribed to ${userChannelName}`);
       });
 
-      // Handle location updates from user channel
+      userChannel.bind('pusher:subscription_error', (error: PusherError) => {
+        console.error(`Failed to subscribe to ${userChannelName}:`, error);
+        setLastError(`Failed to subscribe: ${error.message || 'Unknown error'}`);
+      });
+
       userChannel.bind('location-updated', (data: any) => {
+        console.log(`📍 Received personal location update:`, data);
+        
         const locationData: LocationData = {
           userID: data.userID,
           latitude: data.latitude,
@@ -115,18 +134,21 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
       });
     }
 
-    // Cleanup
+    // Debug: Log all events on admin channel
+    adminChannel.bind_global((eventName: string, data: unknown) => {
+      if (eventName !== 'pusher:subscription_succeeded' && eventName !== 'pusher:subscription_count') {
+        console.log(`Admin channel event: "${eventName}"`, data);
+      }
+    });
+
     return () => {
       if (userChannel) {
         userChannel.unbind_all();
         userChannel.unsubscribe();
       }
       
-      if (adminChannel) {
-        adminChannel.unbind_all();
-        adminChannel.unsubscribe();
-      }
-      
+      adminChannel.unbind_all();
+      adminChannel.unsubscribe();
       pusherClient.disconnect();
     };
   }, [userId]);
