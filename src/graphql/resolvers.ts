@@ -4474,7 +4474,7 @@ salesList: async (
       });
 
       // 🚀 PUSHER: Broadcast location update to relevant channels
-      await pusherServer.trigger(`private-user-${userID}`, 'location-updated', {
+      await pusherServer.trigger(`user-${userID}`, 'location-updated', {
         userID,
         latitude,
         longitude,
