@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Pusher from 'pusher';
-import { decryptToken } from '../../../../../utils/decryptToken';
-import { cookies } from 'next/headers';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../..../../lib/auth';
 
 const pusher = new Pusher({
   appId: process.env.PUSHER_APP_ID!,
@@ -13,45 +13,29 @@ const pusher = new Pusher({
 
 export async function POST(req: NextRequest) {
   try {
-    // Get the token from cookies
-    const cookieStore = cookies();
-    const token = cookieStore.get('auth_token')?.value || cookieStore.get('token')?.value;
+    const session = await getServerSession(authOptions);
     
-    if (!token) {
-      console.error('No auth token found in cookies');
-      return NextResponse.json({ error: 'Unauthorized - No token' }, { status: 401 });
-    }
-    
-    const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-    const payload = await decryptToken(token, secret.toString());
-    
-    if (!payload || !payload.userId) {
-      console.error('Invalid token payload');
-      return NextResponse.json({ error: 'Unauthorized - Invalid token' }, { status: 401 });
+    if (!session?.serverToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await req.json();
     const { socket_id, channel_name } = body;
     
-    console.log(`Authorizing channel: ${channel_name} for user: ${payload.userId}`);
+    // Get user ID from the channel name or session
+    // Since it's a private-user-{userId} channel, extract userId from channel name
+    const userId = channel_name.replace('private-user-', '');
     
-    // Only authorize private channels
-    if (!channel_name.startsWith('private-')) {
-      return NextResponse.json({ error: 'Invalid channel' }, { status: 400 });
-    }
-    
-    // Authorize private channel access
     const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
-      user_id: payload.userId,
+      user_id: userId,
       user_info: {
-        name: payload.name || payload.userId,
-        role: payload.role || 'rider'
+        name: session.user?.email || userId,
       }
     });
     
     return NextResponse.json(authResponse);
   } catch (error) {
     console.error('Pusher auth error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 }
