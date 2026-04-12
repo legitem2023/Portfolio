@@ -67,8 +67,8 @@ const GET_MY_MESSAGES = gql`
 `;
 
 const GET_CONVERSATION = gql`
-  query GetConversation($userId: ID!, $page: Int, $limit: Int) {
-    conversation(userId: $userId, page: $page, limit: $limit) {
+  query GetConversation(currentUser:ID, $userId: ID!, $page: Int, $limit: Int) {
+    conversation(currentUser:$currentUser,userId: $userId, page: $page, limit: $limit) {
       messages {
         id
         subject
@@ -313,6 +313,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
   const { data: conversationData, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
+      currentUser:UserId,
       userId: selectedUser?.id,
       page: 1,
       limit: 50
