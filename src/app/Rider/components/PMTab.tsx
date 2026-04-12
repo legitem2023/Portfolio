@@ -67,7 +67,7 @@ const GET_MY_MESSAGES = gql`
 `;
 
 const GET_CONVERSATION = gql`
-  query GetConversation(currentUser:ID, $userId: ID!, $page: Int, $limit: Int) {
+  query GetConversation($currentUser:ID, $userId: ID!, $page: Int, $limit: Int) {
     conversation(currentUser:$currentUser,userId: $userId, page: $page, limit: $limit) {
       messages {
         id
