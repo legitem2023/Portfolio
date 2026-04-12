@@ -2146,6 +2146,10 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       
       const where: any = {
         OR: [
+          { senderId: userId },
+          { recipientId: userId }
+        ],
+        /*OR: [
           {
             senderId: currentUserId,
             recipientId: userId
@@ -2154,7 +2158,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
             senderId: userId,
             recipientId: currentUserId
           }
-        ]
+        ]*/
       };
 
       const [messages, totalCount]: any = await Promise.all([
