@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Pusher from 'pusher-js';
 
 interface LocationData {
@@ -7,6 +7,7 @@ interface LocationData {
   longitude: number;
   status: 'available' | 'busy' | 'inactive' | 'offline';
   timestamp: string;
+  lastUpdated?: string;
 }
 
 interface PusherConnectionState {
@@ -19,20 +20,31 @@ interface PusherError {
   error?: unknown;
 }
 
-export const useRealtimeLocation = (userId?: string) => {
+interface UseRealtimeLocationReturn {
+  locations: Map<string, LocationData>;
+  getLocation: (userId: string) => LocationData | undefined;
+  getAllLocations: () => LocationData[];
+  connectionStatus: string;
+  lastError: string | null;
+}
+
+export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn => {
   const [locations, setLocations] = useState<Map<string, LocationData>>(new Map());
   const [pusher, setPusher] = useState<Pusher | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
+  const [lastError, setLastError] = useState<string | null>(null);
+  const eventCountRef = useRef<number>(0);
 
   useEffect(() => {
     console.log('🔵 useRealtimeLocation hook initialized with userId:', userId);
     
-    // Log environment variables (without exposing full keys)
+    // Log environment variables
     console.log('📋 Pusher Config:', {
       hasKey: !!process.env.NEXT_PUBLIC_PUSHER_KEY,
       keyPrefix: process.env.NEXT_PUBLIC_PUSHER_KEY?.substring(0, 8),
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-      hasAuthEndpoint: !!process.env.NEXT_PUBLIC_PUSHER_AUTH_ENDPOINT
+      hasAuthEndpoint: !!process.env.NEXT_PUBLIC_PUSHER_AUTH_ENDPOINT,
+      nodeEnv: process.env.NODE_ENV
     });
 
     // Check if Pusher key is available
@@ -40,13 +52,17 @@ export const useRealtimeLocation = (userId?: string) => {
     const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
     
     if (!pusherKey || !pusherCluster) {
-      console.error('❌ Pusher configuration missing! Please check your environment variables.');
+      const errorMsg = '❌ Pusher configuration missing! Please check your environment variables.';
+      console.error(errorMsg);
+      setLastError(errorMsg);
       return;
     }
 
     const pusherClient = new Pusher(pusherKey, {
       cluster: pusherCluster,
       authEndpoint: '/api/pusher/auth',
+      enableStats: true,
+      forceTLS: true,
     });
 
     setPusher(pusherClient);
@@ -60,17 +76,18 @@ export const useRealtimeLocation = (userId?: string) => {
     pusherClient.connection.bind('connected', () => {
       console.log('✅ Pusher connected successfully!');
       console.log('📡 Connection ID:', pusherClient.connection.socket_id);
+      setLastError(null);
     });
 
     pusherClient.connection.bind('error', (error: PusherError) => {
       console.error('❌ Pusher connection error:', error);
+      setLastError(error.message || 'Unknown connection error');
     });
 
     // Subscribe to admin channel for all location updates
     console.log('📡 Subscribing to admin-locations channel...');
     const adminChannel = pusherClient.subscribe('admin-locations');
     
-    // Log admin channel subscription status
     adminChannel.bind('pusher:subscription_succeeded', () => {
       console.log('✅ Successfully subscribed to admin-locations channel');
       console.log('📊 Channel name:', adminChannel.name);
@@ -79,92 +96,137 @@ export const useRealtimeLocation = (userId?: string) => {
 
     adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
       console.error('❌ Failed to subscribe to admin-locations channel:', error);
+      setLastError(`Failed to subscribe to admin channel: ${error.message || 'Unknown error'}`);
     });
 
-    // Bind to the location update event
-    adminChannel.bind('user-location-update', (data: LocationData) => {
-      console.log('📍📍📍 ADMIN LOCATION UPDATE RECEIVED! 📍📍📍');
+    // Bind to the location update event from admin channel
+    // Your backend sends: user-location-update with data containing lastUpdated field
+    adminChannel.bind('user-location-update', (data: any) => {
+      eventCountRef.current++;
+      console.log(`📍📍📍 ADMIN LOCATION UPDATE #${eventCountRef.current} RECEIVED! 📍📍📍`);
       console.log('📦 Full data received:', data);
-      console.log('👤 User ID:', data.userID);
-      console.log('📍 Coordinates:', data.latitude, data.longitude);
-      console.log('💚 Status:', data.status);
-      console.log('⏰ Timestamp:', data.timestamp);
+      
+      // Transform the data to match LocationData interface
+      const locationData: LocationData = {
+        userID: data.userID,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        status: data.status || 'available',
+        timestamp: data.lastUpdated || data.timestamp || new Date().toISOString(),
+        lastUpdated: data.lastUpdated
+      };
+      
+      console.log('👤 User ID:', locationData.userID);
+      console.log('📍 Coordinates:', locationData.latitude, locationData.longitude);
+      console.log('💚 Status:', locationData.status);
+      console.log('⏰ Timestamp:', locationData.timestamp);
       
       setLocations(prev => {
         console.log('🔄 Updating locations map, current size:', prev.size);
         const newMap = new Map(prev);
-        newMap.set(data.userID, data);
+        newMap.set(data.userID, locationData);
         console.log('📊 New map size:', newMap.size);
         console.log('🗺️ All locations:', Array.from(newMap.values()));
         return newMap;
       });
     });
 
-    // Listen for ANY event on admin channel (for debugging)
+    // Log all events for debugging
     adminChannel.bind_global((eventName: string, data: unknown) => {
-      console.log(`🌍 Global event on admin-locations: "${eventName}"`, data);
+      if (eventName !== 'pusher:subscription_succeeded' && eventName !== 'pusher:subscription_count') {
+        console.log(`🌍 Admin channel event: "${eventName}"`, data);
+      }
     });
 
-    // If specific user, also subscribe to their private channel
+    // Subscribe to user-specific channel if userId provided
+    // Your backend uses: user-${userID} (not private- prefix)
+    let userChannel: any = null;
+    
     if (userId) {
-      console.log(`📡 Subscribing to user-${userId} channel...`);
-      const userChannel = pusherClient.subscribe(`user-${userId}`);
-      console.log(userChannel, "channel object");
+      const userChannelName = `user-${userId}`;
+      console.log(`📡 Subscribing to ${userChannelName}...`);
+      userChannel = pusherClient.subscribe(userChannelName);
       
       userChannel.bind('pusher:subscription_succeeded', () => {
-        console.log(`✅ Successfully subscribed to user-${userId} channel`);
+        console.log(`✅ Successfully subscribed to ${userChannelName}`);
         console.log(`👂 Listening for event: location-updated`);
       });
 
       userChannel.bind('pusher:subscription_error', (error: PusherError) => {
-        console.error(`❌ Failed to subscribe to user-${userId} channel:`, error);
+        console.error(`❌ Failed to subscribe to ${userChannelName}:`, error);
+        setLastError(`Failed to subscribe to user channel: ${error.message || 'Unknown error'}`);
       });
 
-      userChannel.bind('location-updated', (data: LocationData) => {
-        console.log(`🎯🎯🎯 USER LOCATION UPDATE RECEIVED for ${userId}! 🎯🎯🎯`);
+      // Bind to location-updated event from user channel
+      userChannel.bind('location-updated', (data: any) => {
+        eventCountRef.current++;
+        console.log(`🎯🎯🎯 USER LOCATION UPDATE #${eventCountRef.current} for ${userId}! 🎯🎯🎯`);
         console.log('📦 Full data received:', data);
-        console.log('👤 User ID:', data.userID);
-        console.log('📍 Coordinates:', data.latitude, data.longitude);
-        console.log('💚 Status:', data.status);
-        console.log('⏰ Timestamp:', data.timestamp);
+        
+        // Transform the data to match LocationData interface
+        const locationData: LocationData = {
+          userID: data.userID,
+          latitude: data.latitude,
+          longitude: data.longitude,
+          status: data.status || 'available',
+          timestamp: data.timestamp || new Date().toISOString(),
+          lastUpdated: data.lastUpdated
+        };
+        
+        console.log('📍 Location data:', locationData);
         
         setLocations(prev => {
           console.log('🔄 Updating locations map, current size:', prev.size);
           const newMap = new Map(prev);
-          newMap.set(data.userID, data);
+          newMap.set(data.userID, locationData);
           console.log('📊 New map size:', newMap.size);
           return newMap;
         });
       });
 
-      // Listen for ANY event on user channel
+      // Log all events on user channel
       userChannel.bind_global((eventName: string, data: unknown) => {
-        console.log(`🌍 Global event on user-${userId}: "${eventName}"`, data);
+        if (eventName !== 'pusher:subscription_succeeded' && eventName !== 'pusher:subscription_count') {
+          console.log(`🌍 User channel event: "${eventName}"`, data);
+        }
       });
-
-      return () => {
-        console.log(`🧹 Cleaning up user-${userId} channel...`);
-        userChannel.unbind_all();
-        userChannel.unsubscribe();
-        adminChannel.unbind_all();
-        adminChannel.unsubscribe();
-        pusherClient.disconnect();
-        console.log('✅ Cleanup complete');
-      };
     }
 
+    // Periodic status check
+    const interval = setInterval(() => {
+      if (connectionStatus === 'connected') {
+        console.log('📊 Status check:', {
+          connectionStatus,
+          locationsCount: locations.size,
+          eventsReceived: eventCountRef.current,
+        });
+      }
+    }, 30000);
+
+    // Cleanup
     return () => {
-      console.log('🧹 Cleaning up admin-locations channel...');
+      clearInterval(interval);
+      console.log('🧹 Cleaning up...');
+      console.log(`📊 Final stats - Events received: ${eventCountRef.current}`);
+      
+      if (userChannel) {
+        console.log(`Cleaning up user channel...`);
+        userChannel.unbind_all();
+        userChannel.unsubscribe();
+      }
+      
       adminChannel.unbind_all();
       adminChannel.unsubscribe();
       pusherClient.disconnect();
       console.log('✅ Cleanup complete');
     };
-  }, [userId]);
+  }, [userId]); // Remove locations from dependencies to avoid re-subscriptions
 
-  const getLocation = useCallback((userId: string): LocationData | undefined => {
-    const location = locations.get(userId);
-    console.log(`🔍 Getting location for ${userId}:`, location);
+  const getLocation = useCallback((userIdToGet: string): LocationData | undefined => {
+    const location = locations.get(userIdToGet);
+    if (location) {
+      console.log(`🔍 Getting location for ${userIdToGet}:`, location);
+    }
     return location;
   }, [locations]);
 
@@ -174,20 +236,21 @@ export const useRealtimeLocation = (userId?: string) => {
     return allLocations;
   }, [locations]);
 
-  // Log whenever locations change
+  // Log when locations change
   useEffect(() => {
-    console.log(`📍 Locations state updated! Total locations: ${locations.size}`);
     if (locations.size > 0) {
-      console.log('Current locations:', Array.from(locations.entries()));
+      console.log(`📍 Locations updated! Total: ${locations.size}`);
+      locations.forEach((location, userId) => {
+        console.log(`  - ${userId}: (${location.latitude}, ${location.longitude}) [${location.status}]`);
+      });
     }
   }, [locations]);
 
-  console.log('🔄 useRealtimeLocation returning with:', {
-    locationsSize: locations.size,
+  return { 
+    locations, 
+    getLocation, 
+    getAllLocations, 
     connectionStatus,
-    hasGetLocation: !!getLocation,
-    hasGetAllLocations: !!getAllLocations
-  });
-
-  return { locations, getLocation, getAllLocations, connectionStatus };
+    lastError
+  };
 };
