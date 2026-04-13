@@ -51,16 +51,16 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
     });
 
     pusherClient.connection.bind('state_change', (states: PusherConnectionState) => {
-      console.log(`Pusher state: ${states.current}`);
+    //  console.log(`Pusher state: ${states.current}`);
       setConnectionStatus(states.current);
     });
 
     pusherClient.connection.bind('connected', () => {
-      console.log('✅ Pusher connected successfully!');
+   //   console.log('✅ Pusher connected successfully!');
     });
 
     pusherClient.connection.bind('error', (error: PusherError) => {
-      console.error('Pusher error:', error);
+  //    console.error('Pusher error:', error);
       setLastError(error.message || 'Unknown connection error');
     });
 
@@ -68,17 +68,17 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
     const adminChannel = pusherClient.subscribe('admin-locations');
     
     adminChannel.bind('pusher:subscription_succeeded', () => {
-      console.log('✅ Subscribed to admin-locations channel');
+  //    console.log('✅ Subscribed to admin-locations channel');
     });
 
     adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
-      console.error('Failed to subscribe to admin-locations:', error);
+   //   console.error('Failed to subscribe to admin-locations:', error);
       setLastError(`Failed to subscribe: ${error.message || 'Unknown error'}`);
     });
 
     // Handle location updates
     adminChannel.bind('user-location-update', (data: any) => {
-      console.log('📍 Received location update:', data);
+   //   console.log('📍 Received location update:', data);
       
       const locationData: LocationData = {
         userID: data.userID,
@@ -92,7 +92,7 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
       setLocations(prev => {
         const newMap = new Map(prev);
         newMap.set(data.userID, locationData);
-        console.log(`📍 Locations updated: ${newMap.size} total riders`);
+      //  console.log(`📍 Locations updated: ${newMap.size} total riders`);
         return newMap;
       });
     });
