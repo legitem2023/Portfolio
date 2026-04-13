@@ -260,7 +260,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
     },
     skip: !userId
   });
-const { locations, getLocation, getCurrentUserLocation } = useRealtimeLocation(userId);
+const { locations, getCurrentUserLocation } = useRealtimeLocation(userId);
 
 // ✅ This will log whenever locations actually update
 useEffect(() => {
