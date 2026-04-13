@@ -585,7 +585,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder }: {
     lng: parseFloat(group.address.lng),
     address: `${group.address.street}, ${group.address.city}, ${group.address.state} ${group.address.zipCode}, ${group.address.country}`
   } : null;
-  console.log(riderId,isShipped,deliveryAddress);
+  console.log(group.items);
 
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
