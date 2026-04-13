@@ -32,84 +32,138 @@ const DELETE_ADDRESS = gql`
   }
 `;
 
-// Professional Address Card Component
+// Professional Address Card Component with Dropdown Menu
 const AddressCard: React.FC<{
   address: Address;
   onMakeDefault: (id: any) => void;
   onDelete: (id: string) => void;
   isDefault: boolean;
   isDeleting?: boolean;
-}> = ({ address, onMakeDefault, onDelete, isDefault, isDeleting }) => (
-  <div className={`
-    relative rounded-xl transition-all duration-200 ease-in-out
-    ${isDefault 
-      ? 'border-2 border-blue-500 bg-gradient-to-br from-blue-50/50 to-white shadow-md' 
-      : 'border border-gray-200 bg-white hover:shadow-lg hover:border-gray-300'
-    }
-    ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
-  `}>
-    {/* Status Badge - Top Left Corner */}
-    <div className="absolute -top-2 -left-2 flex gap-1">
-      {isDefault && (
-        <span className="px-2.5 py-0.5 bg-blue-500 text-white text-xs font-semibold rounded-full shadow-sm">
-          Default
+}> = ({ address, onMakeDefault, onDelete, isDefault, isDeleting }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMenuOpen && !(event.target as Element).closest('.menu-container')) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
+
+  return (
+    <div className={`
+      relative rounded-xl transition-all duration-200 ease-in-out
+      ${isDefault 
+        ? 'border-2 border-blue-500 bg-gradient-to-br from-blue-50/50 to-white shadow-md' 
+        : 'border border-gray-200 bg-white hover:shadow-lg hover:border-gray-300'
+      }
+      ${isDeleting ? 'opacity-50 pointer-events-none' : ''}
+    `}>
+      {/* Status Badge - Top Left Corner */}
+      <div className="absolute -top-2 -left-2 flex gap-1">
+        {isDefault && (
+          <span className="px-2.5 py-0.5 bg-blue-500 text-white text-xs font-semibold rounded-full shadow-sm">
+            Default
+          </span>
+        )}
+        <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full capitalize shadow-sm">
+          {address.type}
         </span>
-      )}
-      <span className="px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-full capitalize shadow-sm">
-        {address.type}
-      </span>
-    </div>
-
-    {/* Delete Button - Top Right Corner */}
-    <button
-      onClick={() => onDelete(address.id)}
-      disabled={isDeleting}
-      className="absolute -top-2 -right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-      title="Delete address"
-    >
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-
-    {/* Card Content - Reduced padding */}
-    <div className="p-4 pt-5">
-      {/* Address Details */}
-      <div className="space-y-1.5 mb-3">
-        <p className="font-semibold text-gray-800 text-sm leading-relaxed">
-          {address.street}
-        </p>
-        <p className="text-gray-600 text-sm">
-          {address.city}, {address.state} {address.zipCode}
-        </p>
-        <p className="text-gray-600 text-sm">{address.country}</p>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-gray-100 my-3"></div>
+      {/* Three Dots Menu Button - Top Right Corner */}
+      <div className="absolute -top-2 -right-2 menu-container">
+        <button
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          disabled={isDeleting}
+          className="p-1.5 bg-white border border-gray-200 hover:border-gray-300 text-gray-500 hover:text-gray-700 rounded-full shadow-sm transition-all duration-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-gray-300"
+          title="More options"
+        >
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+          </svg>
+        </button>
 
-      {/* Footer with Date and Action */}
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs text-gray-400">
-          Added {new Date(address.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          })}
-        </p>
-        
-        {!isDefault && (
-          <button
-            onClick={() => onMakeDefault(address.id)}
-            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 hover:shadow-md active:scale-95 whitespace-nowrap"
-          >
-            Set as Default
-          </button>
+        {/* Dropdown Menu */}
+        {isMenuOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
+            {/* Edit Option */}
+            <button
+              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors duration-150"
+              onClick={() => {
+                // Handle edit action - you can implement this later
+                setIsMenuOpen(false);
+              }}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit Address
+            </button>
+
+            {/* Divider */}
+            <div className="border-t border-gray-100 my-1"></div>
+
+            {/* Delete Option */}
+            <button
+              onClick={() => {
+                onDelete(address.id);
+                setIsMenuOpen(false);
+              }}
+              disabled={isDeleting}
+              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors duration-150"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete Address
+            </button>
+          </div>
         )}
       </div>
+
+      {/* Card Content - Reduced padding */}
+      <div className="p-4 pt-5">
+        {/* Address Details */}
+        <div className="space-y-1.5 mb-3">
+          <p className="font-semibold text-gray-800 text-sm leading-relaxed">
+            {address.street}
+          </p>
+          <p className="text-gray-600 text-sm">
+            {address.city}, {address.state} {address.zipCode}
+          </p>
+          <p className="text-gray-600 text-sm">{address.country}</p>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-gray-100 my-3"></div>
+
+        {/* Footer with Date and Action */}
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs text-gray-400">
+            Added {new Date(address.createdAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </p>
+          
+          {!isDefault && (
+            <button
+              onClick={() => onMakeDefault(address.id)}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 hover:shadow-md active:scale-95 whitespace-nowrap"
+            >
+              Set as Default
+            </button>
+          )}
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Confirmation Modal Component
 const ConfirmDeleteModal: React.FC<{
