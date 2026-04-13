@@ -23,6 +23,19 @@ interface FormData {
   lng: number | null;
 }
 
+interface GeocodeResult {
+  lat: number;
+  lng: number;
+}
+
+interface ReverseGeocodeResult {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
@@ -41,19 +54,125 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
-  const [locationAttempted, setLocationAttempted] = useState(false);
-  const [locationRequired, setLocationRequired] = useState(true);
   
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // Professional geocoding functions (keep your existing implementations)
-  const geocodeWithGoogle = async (address: string) => { /* your existing code */ };
-  const geocodeWithOSM = async (address: string) => { /* your existing code */ };
-  const reverseGeocodeWithGoogle = async (lat: number, lng: number) => { /* your existing code */ };
-  const reverseGeocodeWithOSM = async (lat: number, lng: number) => { /* your existing code */ };
+  // COMPLETE geocoding functions
+  const reverseGeocodeWithGoogle = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    
+    if (!apiKey) {
+      return null;
+    }
 
-  // Professional location getter with promise and retry logic
-  const getCurrentLocation = (retryCount = 0): Promise<{ lat: number; lng: number }> => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+      );
+      const data = await response.json();
+
+      if (data.status === 'OK' && data.results.length > 0) {
+        const result = data.results[0];
+        const addressComponents = result.address_components;
+        
+        let street = '';
+        let streetNumber = '';
+        let route = '';
+        let city = '';
+        let state = '';
+        let zipCode = '';
+        let country = '';
+
+        addressComponents.forEach((component: any) => {
+          const types = component.types;
+          
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          }
+          if (types.includes('route')) {
+            route = component.long_name;
+          }
+          if (types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          }
+          if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+          if (types.includes('country')) {
+            country = component.long_name;
+          }
+        });
+
+        if (streetNumber && route) {
+          street = `${streetNumber} ${route}`;
+        } else if (route) {
+          street = route;
+        }
+
+        return {
+          street: street || result.formatted_address.split(',')[0],
+          city,
+          state,
+          zipCode,
+          country
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Google reverse geocoding error:', error);
+      return null;
+    }
+  };
+
+  const reverseGeocodeWithOSM = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'en',
+            'User-Agent': 'VendorCity/1.0'
+          }
+        }
+      );
+      const data = await response.json();
+
+      if (data && data.address) {
+        const address = data.address;
+        
+        let street = '';
+        
+        if (address.road) {
+          street = address.road;
+          if (address.house_number) {
+            street = `${address.house_number} ${street}`;
+          }
+        } else if (address.pedestrian) {
+          street = address.pedestrian;
+        } else if (address.footway) {
+          street = address.footway;
+        }
+
+        return {
+          street: street || data.display_name.split(',')[0],
+          city: address.city || address.town || address.village || address.municipality || '',
+          state: address.state || '',
+          zipCode: address.postcode || '',
+          country: address.country || ''
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('OSM reverse geocoding error:', error);
+      return null;
+    }
+  };
+
+  // MAIN FUNCTION: Get current location (REQUIRED)
+  const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation is not supported by your browser'));
@@ -77,13 +196,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
               errorMessage = 'Location unavailable. Please check your GPS or WiFi.';
               break;
             case error.TIMEOUT:
-              if (retryCount < 2) {
-                // Retry up to 2 times on timeout
-                setTimeout(() => {
-                  getCurrentLocation(retryCount + 1).then(resolve).catch(reject);
-                }, 1000);
-                return;
-              }
               errorMessage = 'Location request timed out. Please try again.';
               break;
             default:
@@ -100,20 +212,24 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     });
   };
 
-  // Professional reverse geocoding
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // Reverse geocode to get address from coordinates
+  const reverseGeocode = async (lat: number, lng: number): Promise<ReverseGeocodeResult> => {
     setLocationStep('reverse-geocoding');
     
     const googleResult = await reverseGeocodeWithGoogle(lat, lng);
-    if (googleResult) return googleResult;
+    if (googleResult) {
+      return googleResult;
+    }
 
     const osmResult = await reverseGeocodeWithOSM(lat, lng);
-    if (osmResult) return osmResult;
+    if (osmResult) {
+      return osmResult;
+    }
 
     throw new Error('Could not get address from coordinates');
   };
 
-  // MAIN FUNCTION: Force user to get current location
+  // MAIN FUNCTION: Handle getting current location (REQUIRED)
   const handleGetCurrentLocation = async () => {
     setIsGeocoding(true);
     setLocationError(null);
@@ -133,24 +249,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       // Get address from coordinates
       const address = await reverseGeocode(location.lat, location.lng);
       
-      if (address) {
-        setFormData(prev => ({
-          ...prev,
-          street: address.street,
-          city: address.city,
-          state: address.state,
-          zipCode: address.zipCode,
-          country: address.country
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        street: address.street,
+        city: address.city,
+        state: address.state,
+        zipCode: address.zipCode,
+        country: address.country
+      }));
       
       setLocationStep('complete');
-      setLocationAttempted(true);
       
     } catch (err) {
       console.error('Location error:', err);
       setLocationError(err instanceof Error ? err.message : 'Failed to get location');
-      setLocationAttempted(false);
     } finally {
       setIsGeocoding(false);
     }
@@ -164,7 +276,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       return false;
     }
 
-    // Other validations
     if (!formData.receiver.trim()) {
       setLocationError('Please enter receiver name');
       return false;
@@ -206,10 +317,8 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clear previous errors
     setLocationError(null);
     
-    // Validate including location requirement
     if (!validateForm()) {
       return;
     }
@@ -242,17 +351,14 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       setFormData(prev => ({ ...prev, [name]: value }));
     }
     
-    // Clear location error when user starts typing
     if (locationError && locationError.includes('CURRENT LOCATION')) {
       setLocationError(null);
     }
   };
 
-  const isAddressComplete = formData.street && formData.city && formData.state && formData.zipCode && formData.country;
-
   return (
     <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-      {/* Header with location requirement badge */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 sm:px-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -263,7 +369,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">Add New Address</h2>
-              <p className="text-blue-100 text-sm mt-1">All fields marked with * are required</p>
+              <p className="text-blue-100 text-sm mt-1">Location verification required for delivery</p>
             </div>
           </div>
           {onCancel && (
@@ -280,97 +386,94 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
 
       <div className="px-6 py-6 sm:px-8 sm:py-8">
-        {/* PROFESSIONAL LOCATION REQUIRED SECTION */}
-        <div className="mb-8">
-          {/* Location Required Banner - Always visible until location is obtained */}
-          {(!formData.lat || !formData.lng) && (
-            <div className="mb-4 p-4 bg-red-50 border-2 border-red-400 rounded-xl">
-              <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="ml-3 flex-1">
-                  <h3 className="text-sm font-bold text-red-800">Location Required</h3>
-                  <p className="text-sm text-red-700 mt-1">
-                    You must provide your current location to add an address. This helps ensure accurate delivery.
-                  </p>
-                  <p className="text-xs text-red-600 mt-2 font-mono">
-                    ⚠️ Address cannot be saved without location coordinates
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Location Success Message */}
-          {formData.lat && formData.lng && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-sm text-green-700">
-                    ✓ Location obtained successfully
-                  </span>
-                </div>
-                <div className="text-xs text-green-600 font-mono">
-                  {formData.lat.toFixed(6)}°, {formData.lng.toFixed(6)}°
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Professional Location Button */}
-          <button
-            type="button"
-            onClick={handleGetCurrentLocation}
-            disabled={isGeocoding}
-            className={`
-              w-full py-4 px-6 rounded-xl font-semibold text-white shadow-lg transition-all duration-200
-              ${!formData.lat || !formData.lng 
-                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 animate-pulse' 
-                : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-              }
-              ${isGeocoding ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}
-              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-            `}
-          >
-            {isGeocoding ? (
-              <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                <span>
-                  {locationStep === 'getting-location' && 'Getting your location...'}
-                  {locationStep === 'reverse-geocoding' && 'Converting to address...'}
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        {/* Location Required Banner */}
+        {(!formData.lat || !formData.lng) && (
+          <div className="mb-4 p-4 bg-red-50 border-2 border-red-400 rounded-xl">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                <span>
-                  {!formData.lat || !formData.lng 
-                    ? '🔴 GET MY CURRENT LOCATION (REQUIRED)' 
-                    : '✅ UPDATE MY LOCATION'}
-                </span>
               </div>
-            )}
-          </button>
+              <div className="ml-3 flex-1">
+                <h3 className="text-sm font-bold text-red-800">Location Required</h3>
+                <p className="text-sm text-red-700 mt-1">
+                  You must provide your current location to add an address.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-          {locationError && !locationError.includes('CURRENT LOCATION') && (
-            <div className="mt-3 p-3 bg-red-50 border-l-4 border-red-500 rounded">
-              <p className="text-sm text-red-700">{locationError}</p>
+        {/* Location Success */}
+        {formData.lat && formData.lng && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-sm text-green-700">✓ Location verified</span>
+              </div>
+              <div className="text-xs text-green-600">
+                {formData.lat.toFixed(6)}°, {formData.lng.toFixed(6)}°
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Location Button */}
+        <button
+          type="button"
+          onClick={handleGetCurrentLocation}
+          disabled={isGeocoding}
+          className={`
+            w-full py-4 px-6 rounded-xl font-semibold text-white shadow-lg transition-all duration-200 mb-6
+            ${!formData.lat || !formData.lng 
+              ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 animate-pulse' 
+              : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+            }
+            ${isGeocoding ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+          `}
+        >
+          {isGeocoding ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+              <span>
+                {locationStep === 'getting-location' && 'Getting your location...'}
+                {locationStep === 'reverse-geocoding' && 'Converting to address...'}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              </svg>
+              <span>
+                {!formData.lat || !formData.lng 
+                  ? '🔴 GET MY CURRENT LOCATION (REQUIRED)' 
+                  : '✅ UPDATE MY LOCATION'}
+              </span>
             </div>
           )}
-        </div>
+        </button>
 
-        {/* Address Form - Disabled until location is obtained */}
+        {locationError && (
+          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+            <p className="text-sm text-red-700">{locationError}</p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 rounded">
+            <p className="text-sm text-red-700">Error: {error.message}</p>
+          </div>
+        )}
+
+        {/* Form - Disabled until location is obtained */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className={(!formData.lat || !formData.lng) ? 'opacity-50 pointer-events-none' : ''}>
-            {/* Form Fields - Your existing form fields here */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Address Type *
@@ -544,11 +647,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             )}
           </div>
 
-          {/* Final warning if trying to submit without location */}
           {(!formData.lat || !formData.lng) && (
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800">
-                🔴 You must click <strong>"GET MY CURRENT LOCATION"</strong> before you can save this address
+                🔴 You must click <strong>"GET MY CURRENT LOCATION"</strong> before saving this address
               </p>
             </div>
           )}
@@ -556,4 +658,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-}
+  }
