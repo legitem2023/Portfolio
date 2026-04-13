@@ -56,6 +56,7 @@ interface Order {
     id: string;
     orderId: string;
     supplierId: string;
+    riderId: string;
     quantity: number;
     price: number;
     status: string;
