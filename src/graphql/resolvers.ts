@@ -7596,6 +7596,23 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     throw error;
   }
 },*/
+    deleteAddress: async (_:any, args:any) => {
+      try {
+        const { id } = args;
+        const result = await prisma.address.delete({
+          where:{
+            id
+          }
+        })
+        if(result) {
+          return {
+            statusText:"Successful deleted"
+          }
+        }
+      } catch (error: any) {
+       throw error
+      }
+    },
     respondToTicket: async (_: any, { ticketId, userId, message }: any) => {
       return prisma.ticketResponse.create({
         data: { ticketId, userId, message },
