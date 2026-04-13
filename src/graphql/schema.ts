@@ -1280,7 +1280,8 @@ type Mutation {
     createVariant(input: ProductVariantInput): Result
     updateVariant(id: String, input: ProductVariantInput): Result
     createAddress(input: AddressInputs): Result
-    
+
+    deleteAddress(id: ID): Result
     # Social media mutations
     createPost(input: CreatePostInput): Post
     updatePost(id: ID, input: UpdatePostInput): Post
