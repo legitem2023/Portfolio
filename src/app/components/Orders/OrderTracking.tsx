@@ -735,7 +735,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder }: {
           )}
 
           <div className="flex gap-2 pt-2">
-            {riderId && deliveryAddress ? (
+            {riderId ? (
               <button
                 onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress)}
                 className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
