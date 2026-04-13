@@ -260,38 +260,15 @@ export default function OrderTracking({ userId }: { userId: string }) {
     },
     skip: !userId
   });
-const { locations, getLocation } = useRealtimeLocation(userId);
+const { locations, getLocation, getCurrentUserLocation } = useRealtimeLocation(userId);
 
 // ✅ This will log whenever locations actually update
 useEffect(() => {
-  console.log("All riders:", Array.from(locations.values()));
+  console.log("Current Rider:", getCurrentUserLocation());
 });
   
-  /* useEffect(() => {
-    const pusher = getPusherClient();
-    
-    if (pusher) {
-      // Subscribe to a channel
-      const channel = pusher.subscribe(`user-${userId}`);
-      
-      // Listen for events
-      channel.bind('new-order', (data: any) => {
-        console.log('New order received:', data);
-        //setOrders(prev => [...prev, data]);
-      });
-      
-      channel.bind('order-updated', (data: any) => {
-        console.log('Order updated:', data);
-      });
-      
-      // Cleanup on unmount
-      return () => {
-        channel.unbind_all();
-        pusher.unsubscribe('orders-channel');
-      };
-    }
-  }, []);*/
-  
+
+
   const handleStatusChange = (status: string) => {
     refetch({
       filter: {
