@@ -76,7 +76,8 @@ model User {
   lastName        String?
   avatar          String?
   phone           String?
-  riderCode       String?
+  plateNo         String?
+  license         String?
   emailVerified   Boolean?         @default(false)
   createdAt       DateTime?        @default(now())
   updatedAt       DateTime?        @updatedAt
