@@ -10,65 +10,41 @@ interface LocationData {
   lastUpdated?: string;
 }
 
-interface PusherConnectionState {
-  previous: string;
-  current: string;
-}
-
-interface PusherError {
-  message?: string;
-  error?: unknown;
-}
-
 interface UseRealtimeLocationReturn {
   locations: Map<string, LocationData>;
   getLocation: (userId: string) => LocationData | undefined;
   getAllLocations: () => LocationData[];
+  getCurrentUserLocation: () => LocationData | undefined;
+  getOtherRidersLocations: () => LocationData[];
   connectionStatus: string;
-  lastError: string | null;
 }
 
 export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn => {
   const [locations, setLocations] = useState<Map<string, LocationData>>(new Map());
   const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
-  const [lastError, setLastError] = useState<string | null>(null);
 
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
     const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
     
     if (!pusherKey || !pusherCluster) {
-      const errorMsg = 'Pusher configuration missing!';
-      console.error(errorMsg);
-      setLastError(errorMsg);
+      console.error('Pusher configuration missing!');
       return;
     }
 
     const pusherClient = new Pusher(pusherKey, {
       cluster: pusherCluster,
-      authEndpoint: '/api/pusher/auth',
       forceTLS: true,
     });
 
-    pusherClient.connection.bind('state_change', (states: PusherConnectionState) => {
+    pusherClient.connection.bind('state_change', (states: any) => {
       setConnectionStatus(states.current);
     });
 
-
-    pusherClient.connection.bind('error', (error: PusherError) => {
-      setLastError(error.message || 'Unknown connection error');
-    });
-
-    // Subscribe to admin channel
     const adminChannel = pusherClient.subscribe('admin-locations');
     
-    adminChannel.bind('pusher:subscription_error', (error: PusherError) => {
-      setLastError(`Failed to subscribe: ${error.message || 'Unknown error'}`);
-    });
-
-    // Handle location updates
     adminChannel.bind('user-location-update', (data: any) => {
-    const locationData: LocationData = {
+      const locationData: LocationData = {
         userID: data.userID,
         latitude: data.latitude,
         longitude: data.longitude,
@@ -84,51 +60,12 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
       });
     });
 
-    // Subscribe to user channel if userId provided
-    let userChannel: any = null;
-    
-    if (userId) {
-      const userChannelName = `private-user-${userId}`;
-     // console.log(`Subscribing to ${userChannelName}...`);
-      userChannel = pusherClient.subscribe(userChannelName);
-      
-      userChannel.bind('location-updated', (data: any) => {
-        
-        const locationData: LocationData = {
-          userID: data.userID,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          status: data.status || 'available',
-          timestamp: data.timestamp || new Date().toISOString(),
-          lastUpdated: data.lastUpdated
-        };
-        
-        setLocations(prev => {
-          const newMap = new Map(prev);
-          newMap.set(data.userID, locationData);
-          return newMap;
-        });
-      });
-    }
-
-    // Debug: Log all events on admin channel
-    adminChannel.bind_global((eventName: string, data: unknown) => {
-      if (eventName !== 'pusher:subscription_succeeded' && eventName !== 'pusher:subscription_count') {
-        console.log(`Admin channel event: "${eventName}"`, data);
-      }
-    });
-
     return () => {
-      if (userChannel) {
-        userChannel.unbind_all();
-        userChannel.unsubscribe();
-      }
-      
       adminChannel.unbind_all();
       adminChannel.unsubscribe();
       pusherClient.disconnect();
     };
-  }, [userId]);
+  }, []);
 
   const getLocation = useCallback((userIdToGet: string): LocationData | undefined => {
     return locations.get(userIdToGet);
@@ -138,11 +75,22 @@ export const useRealtimeLocation = (userId?: string): UseRealtimeLocationReturn 
     return Array.from(locations.values());
   }, [locations]);
 
+  const getCurrentUserLocation = useCallback((): LocationData | undefined => {
+    if (!userId) return undefined;
+    return locations.get(userId);
+  }, [locations, userId]);
+
+  const getOtherRidersLocations = useCallback((): LocationData[] => {
+    if (!userId) return getAllLocations();
+    return Array.from(locations.values()).filter(loc => loc.userID !== userId);
+  }, [locations, userId, getAllLocations]);
+
   return { 
     locations, 
     getLocation, 
     getAllLocations, 
-    connectionStatus,
-    lastError
+    getCurrentUserLocation,
+    getOtherRidersLocations,
+    connectionStatus
   };
 };
