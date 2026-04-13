@@ -264,8 +264,6 @@ const { locations, getLocation } = useRealtimeLocation(userId);
 
 // ✅ This will log whenever locations actually update
 useEffect(() => {
-  console.log(locations, "<---mapa", userId);
-  console.log("Total locations:", locations.size);
   console.log("All riders:", Array.from(locations.values()));
 });
   
