@@ -579,13 +579,14 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder }: {
   const riderId = group.items.find(item => item.riderId)?.riderId;
   const isDelivered = displayStatus === 'DELIVERED';
   const isShipped = displayStatus === 'SHIPPED';
-  
-  const deliveryAddress = group.address ? {
+
+    const deliveryAddress = group.address ? {
     lat: parseFloat(group.address.lat),
     lng: parseFloat(group.address.lng),
     address: `${group.address.street}, ${group.address.city}, ${group.address.state} ${group.address.zipCode}, ${group.address.country}`
   } : null;
-  
+  console.log(riderId,isShipped,deliveryAddress);
+
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black bg-opacity-50" />
@@ -735,7 +736,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder }: {
           )}
 
           <div className="flex gap-2 pt-2">
-            {riderId ? (
+            {riderId && isShipped && deliveryAddress ? (
               <button
                 onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress)}
                 className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
