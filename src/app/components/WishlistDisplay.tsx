@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 const WishlistDisplay = ({ wishlistItems }: any) => {
   const [selectedVariants, setSelectedVariants] = useState<Record<string, any>>({});
-
+console.log(wishlistItems);
   if (!wishlistItems || wishlistItems.length === 0) {
     return (
       <div className="text-center p-12 bg-white rounded-xl border border-gray-200">
