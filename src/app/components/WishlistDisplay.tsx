@@ -6,7 +6,7 @@ import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-const formatPesoPrice = (price) => {
+const formatPesoPrice = (price:any) => {
   return `₱${price.toLocaleString('en-PH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
