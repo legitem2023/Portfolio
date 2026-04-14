@@ -1,4 +1,4 @@
-// components/WishlistDisplay.jsx
+// components/WishlistDisplay.tsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -6,25 +6,25 @@ import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-const formatPesoPrice = (price:any) => {
+const formatPesoPrice = (price: any): string => {
   return `₱${price.toLocaleString('en-PH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })}`;
 };
 
-const WishlistDisplay = ({ wishlistItems }:any) => {
-  const [selectedVariants, setSelectedVariants] = useState({});
-  const [selectedColor, setSelectedColor] = useState({});
-  const swiperInstancesRef = useRef(new Map());
+const WishlistDisplay = ({ wishlistItems }: any) => {
+  const [selectedVariants, setSelectedVariants] = useState<any>({});
+  const [selectedColor, setSelectedColor] = useState<any>({});
+  const swiperInstancesRef = useRef<Map<string, any>>(new Map());
 
   // Handle case when data is passed directly as array
-  const items = Array.isArray(wishlistItems) ? wishlistItems : [];
+  const items: any = Array.isArray(wishlistItems) ? wishlistItems : [];
 
   // Cleanup all Swipers on unmount
   useEffect(() => {
     return () => {
-      swiperInstancesRef.current.forEach((swiper) => {
+      swiperInstancesRef.current.forEach((swiper: any) => {
         if (swiper) swiper.destroy(true, true);
       });
       swiperInstancesRef.current.clear();
@@ -39,57 +39,57 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
     );
   }
 
-  const handleVariantSelect = (productId, variant) => {
-    setSelectedVariants(prev => ({
+  const handleVariantSelect = (productId: any, variant: any) => {
+    setSelectedVariants((prev: any) => ({
       ...prev,
       [productId]: variant
     }));
   };
 
-  const getSelectedVariant = (productId) => {
+  const getSelectedVariant = (productId: any) => {
     return selectedVariants[productId];
   };
 
-  const getUniqueColors = useCallback((variants) => {
+  const getUniqueColors = useCallback((variants: any[]) => {
     if (!variants || variants.length === 0) return [];
-    const colors = variants.map(variant => variant.color).filter(color => Boolean(color));
+    const colors = variants.map((variant: any) => variant.color).filter((color: any) => Boolean(color));
     return Array.from(new Set(colors));
   }, []);
 
-  const handleColorSelect = useCallback((productId, color) => {
-    setSelectedColor(prev => ({
+  const handleColorSelect = useCallback((productId: any, color: any) => {
+    setSelectedColor((prev: any) => ({
       ...prev,
       [productId]: color
     }));
     // Also select the variant when color is clicked
-    const product = items.find(item => item.product.id === productId)?.product;
+    const product = items.find((item: any) => item.product.id === productId)?.product;
     if (product) {
-      const variant = product.variants?.find((v) => v.color === color);
+      const variant = product.variants?.find((v: any) => v.color === color);
       if (variant) {
         handleVariantSelect(productId, variant);
       }
     }
   }, [items]);
 
-  const getCurrentVariant = useCallback((product, selectedColorValue) => {
+  const getCurrentVariant = useCallback((product: any, selectedColorValue?: any) => {
     if (!product.variants || product.variants.length === 0) return null;
     
     if (selectedColorValue) {
-      const foundVariant = product.variants.find((v) => v.color === selectedColorValue);
+      const foundVariant = product.variants.find((v: any) => v.color === selectedColorValue);
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
   }, []);
 
   // Get all variants with images for swiper
-  const getAllVariantsWithImages = useCallback((product) => {
+  const getAllVariantsWithImages = useCallback((product: any) => {
     if (!product.variants || product.variants.length === 0) return [];
     
-    return product.variants.flatMap((variant) => {
+    return product.variants.flatMap((variant: any) => {
       const images = variant.images || [];
       
       if (images.length > 0) {
-        return images.map((image, index) => ({
+        return images.map((image: string, index: number) => ({
           image,
           variant: variant,
           key: `${variant.sku || variant.color || index}-${index}`
@@ -106,22 +106,22 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
   }, []);
 
   // Calculate average rating from variant reviews
-  const calculateAverageRating = useCallback((variant) => {
+  const calculateAverageRating = useCallback((variant: any): number => {
     if (!variant?.reviews || variant.reviews.length === 0) return 0;
     
-    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const totalRating = variant.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
     const averageRating = totalRating / variant.reviews.length;
     
     return Math.round(averageRating * 10) / 10;
   }, []);
 
   // Calculate total review count for a variant
-  const calculateTotalReviews = useCallback((variant) => {
+  const calculateTotalReviews = useCallback((variant: any): number => {
     if (!variant?.reviews) return 0;
     return variant.reviews.length;
   }, []);
 
-  const handleRemoveFromWishlist = (item) => {
+  const handleRemoveFromWishlist = (item: any) => {
     console.log('Remove from wishlist:', item);
     alert(`Removed ${item.product?.name} from wishlist`);
   };
@@ -133,7 +133,7 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
       </h2>
       
       <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {items.map((item) => {
+        {items.map((item: any) => {
           const product = item.product;
           if (!product) return null;
           
@@ -204,7 +204,7 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
                 <div className="aspect-square w-full">
                   {allVariantsWithImages.length > 0 ? (
                     <Swiper
-                      onSwiper={(swiper) => {
+                      onSwiper={(swiper: any) => {
                         swiperInstancesRef.current.set(product.id, swiper);
                       }}
                       spaceBetween={10}
@@ -212,14 +212,14 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
                       pagination={{
                         clickable: true,
                         dynamicBullets: true,
-                        renderBullet: (index, className) => {
+                        renderBullet: (index: number, className: string) => {
                           return `<span class="${className} !w-1.5 !h-1.5 !bg-white !opacity-70" data-index="${index}"></span>`;
                         }
                       }}
                       modules={[Pagination]}
                       className="h-full w-full"
                     >
-                      {allVariantsWithImages.map(({ image, variant, key }) => (
+                      {allVariantsWithImages.map(({ image, variant, key }: any) => (
                         <SwiperSlide key={key}>
                           <div className="relative w-full h-full">
                             <Image
@@ -283,7 +283,7 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
                 {/* Dynamic Rating Stars from Variant Reviews */}
                 <div className="flex items-center mb-1 sm:mb-2">
                   <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => {
+                    {[1, 2, 3, 4, 5].map((star: number) => {
                       const starValue = displayRating;
                       const isFullStar = star <= Math.floor(starValue);
                       
@@ -325,7 +325,7 @@ const WishlistDisplay = ({ wishlistItems }:any) => {
                     <div className="flex items-center space-x-1">
                       <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                       <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color, index) => (
+                        {uniqueColors.slice(0, 4).map((color: any, index: number) => (
                           <button
                             key={index}
                             onClick={() => handleColorSelect(product.id, color)}
