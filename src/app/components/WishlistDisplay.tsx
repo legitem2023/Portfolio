@@ -1,10 +1,72 @@
-// components/WishlistDisplay.jsx
+// components/WishlistDisplay.tsx
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+
+// Define types
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  userId: string;
+}
+
+interface Variant {
+  __typename: string;
+  id: string;
+  sku: string;
+  name: string;
+  price: number;
+  salePrice: number | null;
+  stock: number;
+  size: string | null;
+  color: string | null;
+  createdAt: string;
+  model: string | null;
+  images: string[];
+  reviews: Review[];
+}
+
+interface Product {
+  __typename: string;
+  id: string;
+  sku: string;
+  name: string;
+  description: string;
+  price: number;
+  salePrice: number | null;
+  stock: number;
+  isActive: boolean;
+  featured: boolean;
+  isNew?: boolean;
+  isFeatured?: boolean;
+  onSale?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  brand: string | null;
+  category: any;
+  images: string[];
+  variants: Variant[];
+}
+
+interface WishlistItem {
+  __typename: string;
+  product: Product;
+  variants?: Variant[];
+}
+
+interface WishlistDisplayProps {
+  wishlistItems: WishlistItem[];
+}
+
+interface ImageWithVariant {
+  image: string;
+  variant: Variant;
+  key: string;
+}
 
 const formatPesoPrice = (price: number): string => {
   return `₱${price.toLocaleString('en-PH', {
@@ -13,8 +75,8 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
-const WishlistDisplay = ({ wishlistItems }: any) => {
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, any>>({});
+const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, Variant>>({});
   const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
   const swiperInstancesRef = useRef<Map<string, any>>(new Map());
 
@@ -39,18 +101,18 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     );
   }
 
-  const handleVariantSelect = (productId: string, variant: any) => {
+  const handleVariantSelect = (productId: string, variant: Variant) => {
     setSelectedVariants(prev => ({
       ...prev,
       [productId]: variant
     }));
   };
 
-  const getSelectedVariant = (productId: string) => {
+  const getSelectedVariant = (productId: string): Variant | undefined => {
     return selectedVariants[productId];
   };
 
-  const getUniqueColors = useCallback((variants: any[]) => {
+  const getUniqueColors = useCallback((variants: Variant[]): string[] => {
     if (!variants || variants.length === 0) return [];
     const colors = variants.map(variant => variant.color).filter((color): color is string => Boolean(color));
     return Array.from(new Set(colors));
@@ -64,28 +126,28 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     // Also select the variant when color is clicked
     const product = items.find(item => item.product.id === productId)?.product;
     if (product) {
-      const variant = product.variants?.find((v: any) => v.color === color);
+      const variant = product.variants?.find((v: Variant) => v.color === color);
       if (variant) {
         handleVariantSelect(productId, variant);
       }
     }
   }, [items]);
 
-  const getCurrentVariant = useCallback((product: any, selectedColorValue?: string) => {
+  const getCurrentVariant = useCallback((product: Product, selectedColorValue?: string): Variant | null => {
     if (!product.variants || product.variants.length === 0) return null;
     
     if (selectedColorValue) {
-      const foundVariant = product.variants.find((v: any) => v.color === selectedColorValue);
+      const foundVariant = product.variants.find((v: Variant) => v.color === selectedColorValue);
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
   }, []);
 
   // Get all variants with images for swiper
-  const getAllVariantsWithImages = useCallback((product: any) => {
+  const getAllVariantsWithImages = useCallback((product: Product): ImageWithVariant[] => {
     if (!product.variants || product.variants.length === 0) return [];
     
-    return product.variants.flatMap((variant: any) => {
+    return product.variants.flatMap((variant: Variant) => {
       const images = variant.images || [];
       
       if (images.length > 0) {
@@ -106,22 +168,22 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
   }, []);
 
   // Calculate average rating from variant reviews
-  const calculateAverageRating = useCallback((variant: any): number => {
+  const calculateAverageRating = useCallback((variant: Variant): number => {
     if (!variant?.reviews || variant.reviews.length === 0) return 0;
     
-    const totalRating = variant.reviews.reduce((sum: number, review: any) => sum + (review.rating || 0), 0);
+    const totalRating = variant.reviews.reduce((sum: number, review: Review) => sum + (review.rating || 0), 0);
     const averageRating = totalRating / variant.reviews.length;
     
     return Math.round(averageRating * 10) / 10;
   }, []);
 
   // Calculate total review count for a variant
-  const calculateTotalReviews = useCallback((variant: any): number => {
+  const calculateTotalReviews = useCallback((variant: Variant): number => {
     if (!variant?.reviews) return 0;
     return variant.reviews.length;
   }, []);
 
-  const handleRemoveFromWishlist = (item: any) => {
+  const handleRemoveFromWishlist = (item: WishlistItem) => {
     console.log('Remove from wishlist:', item);
     alert(`Removed ${item.product?.name} from wishlist`);
   };
@@ -133,7 +195,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
       </h2>
       
       <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {items.map((item: any) => {
+        {items.map((item: WishlistItem) => {
           const product = item.product;
           if (!product) return null;
           
@@ -152,7 +214,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
             displayReviewCount = calculateTotalReviews(currentVariant);
           }
           
-          const hasSale = currentVariant?.salePrice && currentVariant?.salePrice < currentVariant?.price;
+          const hasSale = currentVariant?.salePrice && currentVariant?.salePrice < (currentVariant?.price || 0);
           const finalPrice = hasSale ? currentVariant?.salePrice : currentVariant?.price;
           const originalPrice = hasSale ? currentVariant?.price : null;
           
@@ -176,7 +238,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 {product.isNew && (
                   <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
                 )}
-                {currentVariant?.stock <= 0 && (
+                {currentVariant?.stock !== undefined && currentVariant.stock <= 0 && (
                   <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-gray-600 text-white rounded-md">OUT OF STOCK</span>
                 )}
               </div>
@@ -219,21 +281,21 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                       modules={[Pagination]}
                       className="h-full w-full"
                     >
-                      {allVariantsWithImages.map(({ image, variant, key }) => (
-                        <SwiperSlide key={key}>
+                      {allVariantsWithImages.map((imageItem: ImageWithVariant) => (
+                        <SwiperSlide key={imageItem.key}>
                           <div className="relative w-full h-full">
                             <Image
                               height={400}
                               width={400}
-                              src={image || '/NoImage.webp'}
-                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
+                              src={imageItem.image || '/NoImage.webp'}
+                              alt={`${product.name}${imageItem.variant?.color ? ` - ${imageItem.variant.color}` : ''}`}
                               quality={25}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {variant?.color && (
+                            {imageItem.variant?.color && (
                               <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
-                                {variant.color}
+                                {imageItem.variant.color}
                               </div>
                             )}
                           </div>
@@ -244,7 +306,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                     <Image
                       height={400}
                       width={400}
-                      src={product.image || '/NoImage.webp'}
+                      src={product.images?.[0] || '/NoImage.webp'}
                       alt={product.name}
                       quality={25}
                       loading="lazy"
@@ -274,7 +336,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                     onClick={() => handleRemoveFromWishlist(item)}
                     className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-1 hidden md:block"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 20 20" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -283,7 +345,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                 {/* Dynamic Rating Stars from Variant Reviews */}
                 <div className="flex items-center mb-1 sm:mb-2">
                   <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => {
+                    {[1, 2, 3, 4, 5].map((star: number) => {
                       const starValue = displayRating;
                       const isFullStar = star <= Math.floor(starValue);
                       
@@ -311,7 +373,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                     <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
                       {formatPesoPrice(finalPrice || product.price)}
                     </span>
-                    {originalPrice && originalPrice > finalPrice && (
+                    {originalPrice && originalPrice > (finalPrice || 0) && (
                       <span className="text-[10px] xs:text-xs text-gray-500 line-through">
                         {formatPesoPrice(originalPrice)}
                       </span>
@@ -325,7 +387,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
                     <div className="flex items-center space-x-1">
                       <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                       <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color, index) => (
+                        {uniqueColors.slice(0, 4).map((color: string, index: number) => (
                           <button
                             key={index}
                             onClick={() => handleColorSelect(product.id, color)}
