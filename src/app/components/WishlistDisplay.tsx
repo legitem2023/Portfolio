@@ -14,41 +14,36 @@ const formatPesoPrice = (price: any): string => {
 };
 
 const WishlistDisplay = ({ wishlistItems }: any) => {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURN
   const [selectedVariants, setSelectedVariants] = useState<any>({});
   const [selectedColor, setSelectedColor] = useState<any>({});
   const swiperInstancesRef = useRef<Map<string, any>>(new Map());
 
   // Handle case when data is passed directly as array
-  const items: any = Array.isArray(wishlistItems) ? wishlistItems : [];
+  const items = Array.isArray(wishlistItems) ? wishlistItems : [];
 
   // Cleanup all Swipers on unmount
   useEffect(() => {
+    const currentSwipers = swiperInstancesRef.current;
     return () => {
-      swiperInstancesRef.current.forEach((swiper: any) => {
+      currentSwipers.forEach((swiper: any) => {
         if (swiper) swiper.destroy(true, true);
       });
-      swiperInstancesRef.current.clear();
+      currentSwipers.clear();
     };
   }, []);
 
-  if (!items || items.length === 0) {
-    return (
-      <div className="text-center p-12 bg-white rounded-xl border border-gray-200">
-        <p className="text-lg text-gray-500">Your wishlist is empty</p>
-      </div>
-    );
-  }
-
-  const handleVariantSelect = (productId: any, variant: any) => {
+  // Define all callbacks BEFORE the conditional return
+  const handleVariantSelect = useCallback((productId: any, variant: any) => {
     setSelectedVariants((prev: any) => ({
       ...prev,
       [productId]: variant
     }));
-  };
+  }, []);
 
-  const getSelectedVariant = (productId: any) => {
+  const getSelectedVariant = useCallback((productId: any) => {
     return selectedVariants[productId];
-  };
+  }, [selectedVariants]);
 
   const getUniqueColors = useCallback((variants: any[]) => {
     if (!variants || variants.length === 0) return [];
@@ -69,7 +64,7 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
         handleVariantSelect(productId, variant);
       }
     }
-  }, [items]);
+  }, [items, handleVariantSelect]);
 
   const getCurrentVariant = useCallback((product: any, selectedColorValue?: any) => {
     if (!product.variants || product.variants.length === 0) return null;
@@ -121,11 +116,21 @@ const WishlistDisplay = ({ wishlistItems }: any) => {
     return variant.reviews.length;
   }, []);
 
-  const handleRemoveFromWishlist = (item: any) => {
+  const handleRemoveFromWishlist = useCallback((item: any) => {
     console.log('Remove from wishlist:', item);
     alert(`Removed ${item.product?.name} from wishlist`);
-  };
+  }, []);
 
+  // NOW the conditional return is safe (after all hooks)
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center p-12 bg-white rounded-xl border border-gray-200">
+        <p className="text-lg text-gray-500">Your wishlist is empty</p>
+      </div>
+    );
+  }
+
+  // Render the component
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8">
