@@ -13,7 +13,7 @@ const formatPesoPrice = (price:any) => {
   })}`;
 };
 
-const WishlistDisplay = ({ wishlistItems }) => {
+const WishlistDisplay = ({ wishlistItems }:any) => {
   const [selectedVariants, setSelectedVariants] = useState({});
   const [selectedColor, setSelectedColor] = useState({});
   const swiperInstancesRef = useRef(new Map());
