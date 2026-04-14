@@ -1,12 +1,12 @@
 // components/WishlistDisplay.tsx
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// Define types
+// Simplified types without __typename
 interface Review {
   id: string;
   rating: number;
@@ -15,7 +15,6 @@ interface Review {
 }
 
 interface Variant {
-  __typename: string;
   id: string;
   sku: string;
   name: string;
@@ -27,35 +26,35 @@ interface Variant {
   createdAt: string;
   model: string | null;
   images: string[];
-  reviews: Review[];
+  reviews?: Review[];
 }
 
 interface Product {
-  __typename: string;
   id: string;
   sku: string;
   name: string;
-  description: string;
+  description?: string;
   price: number;
   salePrice: number | null;
   stock: number;
-  isActive: boolean;
-  featured: boolean;
+  isActive?: boolean;
+  featured?: boolean;
   isNew?: boolean;
   isFeatured?: boolean;
   onSale?: boolean;
-  createdAt: string;
-  updatedAt: string;
-  brand: string | null;
-  category: any;
-  images: string[];
+  createdAt?: string;
+  brand?: string | null;
+  category?: any;
+  images?: string[];
   variants: Variant[];
 }
 
 interface WishlistItem {
-  __typename: string;
+  id?: string;
   product: Product;
   variants?: Variant[];
+  createdAt?: string;
+  userId?: string;
 }
 
 interface WishlistDisplayProps {
@@ -124,9 +123,9 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
       [productId]: color
     }));
     // Also select the variant when color is clicked
-    const product = items.find(item => item.product.id === productId)?.product;
-    if (product) {
-      const variant = product.variants?.find((v: Variant) => v.color === color);
+    const wishlistItem = items.find(item => item.product.id === productId);
+    if (wishlistItem) {
+      const variant = wishlistItem.product.variants?.find((v: Variant) => v.color === color);
       if (variant) {
         handleVariantSelect(productId, variant);
       }
@@ -186,6 +185,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
   const handleRemoveFromWishlist = (item: WishlistItem) => {
     console.log('Remove from wishlist:', item);
     alert(`Removed ${item.product?.name} from wishlist`);
+    // You can add your actual remove logic here
   };
 
   return (
