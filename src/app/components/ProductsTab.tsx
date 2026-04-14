@@ -191,7 +191,7 @@ const ProductsTab: React.FC = () => {
 
   // Show loading shimmer during initial load OR when filters are changing
   const showLoadingShimmer = loading && !isFetchingMore;
-
+  console.log(products);
   return (
     <>
       {/* Expanded Search Overlay */}
