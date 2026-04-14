@@ -1,4 +1,4 @@
-// components/WishlistDisplay.tsx
+// components/WishlistDisplay.jsx
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -6,78 +6,17 @@ import { Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-// Simplified types without __typename
-interface Review {
-  id: string;
-  rating: number;
-  comment: string;
-  userId: string;
-}
-
-interface Variant {
-  id: string;
-  sku: string;
-  name: string;
-  price: number;
-  salePrice: number | null;
-  stock: number;
-  size: string | null;
-  color: string | null;
-  createdAt: string;
-  model: string | null;
-  images: string[];
-  reviews?: Review[];
-}
-
-interface Product {
-  id: string;
-  sku: string;
-  name: string;
-  description?: string;
-  price: number;
-  salePrice: number | null;
-  stock: number;
-  isActive?: boolean;
-  featured?: boolean;
-  isNew?: boolean;
-  isFeatured?: boolean;
-  onSale?: boolean;
-  createdAt?: string;
-  brand?: string | null;
-  category?: any;
-  images?: string[];
-  variants: Variant[];
-}
-
-interface WishlistItem {
-  id?: string;
-  product: Product;
-  variants?: Variant[];
-  createdAt?: string;
-  userId?: string;
-}
-
-interface WishlistDisplayProps {
-  wishlistItems: WishlistItem[];
-}
-
-interface ImageWithVariant {
-  image: string;
-  variant: Variant;
-  key: string;
-}
-
-const formatPesoPrice = (price: number): string => {
+const formatPesoPrice = (price) => {
   return `₱${price.toLocaleString('en-PH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })}`;
 };
 
-const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, Variant>>({});
-  const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
-  const swiperInstancesRef = useRef<Map<string, any>>(new Map());
+const WishlistDisplay = ({ wishlistItems }) => {
+  const [selectedVariants, setSelectedVariants] = useState({});
+  const [selectedColor, setSelectedColor] = useState({});
+  const swiperInstancesRef = useRef(new Map());
 
   // Handle case when data is passed directly as array
   const items = Array.isArray(wishlistItems) ? wishlistItems : [];
@@ -100,57 +39,57 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
     );
   }
 
-  const handleVariantSelect = (productId: string, variant: Variant) => {
+  const handleVariantSelect = (productId, variant) => {
     setSelectedVariants(prev => ({
       ...prev,
       [productId]: variant
     }));
   };
 
-  const getSelectedVariant = (productId: string): Variant | undefined => {
+  const getSelectedVariant = (productId) => {
     return selectedVariants[productId];
   };
 
-  const getUniqueColors = useCallback((variants: Variant[]): string[] => {
+  const getUniqueColors = useCallback((variants) => {
     if (!variants || variants.length === 0) return [];
-    const colors = variants.map(variant => variant.color).filter((color): color is string => Boolean(color));
+    const colors = variants.map(variant => variant.color).filter(color => Boolean(color));
     return Array.from(new Set(colors));
   }, []);
 
-  const handleColorSelect = useCallback((productId: string, color: string) => {
+  const handleColorSelect = useCallback((productId, color) => {
     setSelectedColor(prev => ({
       ...prev,
       [productId]: color
     }));
     // Also select the variant when color is clicked
-    const wishlistItem = items.find(item => item.product.id === productId);
-    if (wishlistItem) {
-      const variant = wishlistItem.product.variants?.find((v: Variant) => v.color === color);
+    const product = items.find(item => item.product.id === productId)?.product;
+    if (product) {
+      const variant = product.variants?.find((v) => v.color === color);
       if (variant) {
         handleVariantSelect(productId, variant);
       }
     }
   }, [items]);
 
-  const getCurrentVariant = useCallback((product: Product, selectedColorValue?: string): Variant | null => {
+  const getCurrentVariant = useCallback((product, selectedColorValue) => {
     if (!product.variants || product.variants.length === 0) return null;
     
     if (selectedColorValue) {
-      const foundVariant = product.variants.find((v: Variant) => v.color === selectedColorValue);
+      const foundVariant = product.variants.find((v) => v.color === selectedColorValue);
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
   }, []);
 
   // Get all variants with images for swiper
-  const getAllVariantsWithImages = useCallback((product: Product): ImageWithVariant[] => {
+  const getAllVariantsWithImages = useCallback((product) => {
     if (!product.variants || product.variants.length === 0) return [];
     
-    return product.variants.flatMap((variant: Variant) => {
+    return product.variants.flatMap((variant) => {
       const images = variant.images || [];
       
       if (images.length > 0) {
-        return images.map((image: string, index: number) => ({
+        return images.map((image, index) => ({
           image,
           variant: variant,
           key: `${variant.sku || variant.color || index}-${index}`
@@ -167,25 +106,24 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
   }, []);
 
   // Calculate average rating from variant reviews
-  const calculateAverageRating = useCallback((variant: Variant): number => {
+  const calculateAverageRating = useCallback((variant) => {
     if (!variant?.reviews || variant.reviews.length === 0) return 0;
     
-    const totalRating = variant.reviews.reduce((sum: number, review: Review) => sum + (review.rating || 0), 0);
+    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
     const averageRating = totalRating / variant.reviews.length;
     
     return Math.round(averageRating * 10) / 10;
   }, []);
 
   // Calculate total review count for a variant
-  const calculateTotalReviews = useCallback((variant: Variant): number => {
+  const calculateTotalReviews = useCallback((variant) => {
     if (!variant?.reviews) return 0;
     return variant.reviews.length;
   }, []);
 
-  const handleRemoveFromWishlist = (item: WishlistItem) => {
+  const handleRemoveFromWishlist = (item) => {
     console.log('Remove from wishlist:', item);
     alert(`Removed ${item.product?.name} from wishlist`);
-    // You can add your actual remove logic here
   };
 
   return (
@@ -195,7 +133,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
       </h2>
       
       <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {items.map((item: WishlistItem) => {
+        {items.map((item) => {
           const product = item.product;
           if (!product) return null;
           
@@ -214,7 +152,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
             displayReviewCount = calculateTotalReviews(currentVariant);
           }
           
-          const hasSale = currentVariant?.salePrice && currentVariant?.salePrice < (currentVariant?.price || 0);
+          const hasSale = currentVariant?.salePrice && currentVariant?.salePrice < currentVariant?.price;
           const finalPrice = hasSale ? currentVariant?.salePrice : currentVariant?.price;
           const originalPrice = hasSale ? currentVariant?.price : null;
           
@@ -238,7 +176,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                 {product.isNew && (
                   <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-blue-600 text-white rounded-md">NEW</span>
                 )}
-                {currentVariant?.stock !== undefined && currentVariant.stock <= 0 && (
+                {currentVariant?.stock <= 0 && (
                   <span className="px-1.5 py-0.5 text-[10px] xs:text-xs font-bold bg-gray-600 text-white rounded-md">OUT OF STOCK</span>
                 )}
               </div>
@@ -281,21 +219,21 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                       modules={[Pagination]}
                       className="h-full w-full"
                     >
-                      {allVariantsWithImages.map((imageItem: ImageWithVariant) => (
-                        <SwiperSlide key={imageItem.key}>
+                      {allVariantsWithImages.map(({ image, variant, key }) => (
+                        <SwiperSlide key={key}>
                           <div className="relative w-full h-full">
                             <Image
                               height={400}
                               width={400}
-                              src={imageItem.image || '/NoImage.webp'}
-                              alt={`${product.name}${imageItem.variant?.color ? ` - ${imageItem.variant.color}` : ''}`}
+                              src={image || '/NoImage.webp'}
+                              alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
                               quality={25}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {imageItem.variant?.color && (
+                            {variant?.color && (
                               <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
-                                {imageItem.variant.color}
+                                {variant.color}
                               </div>
                             )}
                           </div>
@@ -306,7 +244,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                     <Image
                       height={400}
                       width={400}
-                      src={product.images?.[0] || '/NoImage.webp'}
+                      src={product.image || '/NoImage.webp'}
                       alt={product.name}
                       quality={25}
                       loading="lazy"
@@ -336,7 +274,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                     onClick={() => handleRemoveFromWishlist(item)}
                     className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0 ml-1 hidden md:block"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 xs:h-4 xs:w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -345,7 +283,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                 {/* Dynamic Rating Stars from Variant Reviews */}
                 <div className="flex items-center mb-1 sm:mb-2">
                   <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star: number) => {
+                    {[1, 2, 3, 4, 5].map((star) => {
                       const starValue = displayRating;
                       const isFullStar = star <= Math.floor(starValue);
                       
@@ -373,7 +311,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                     <span className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900">
                       {formatPesoPrice(finalPrice || product.price)}
                     </span>
-                    {originalPrice && originalPrice > (finalPrice || 0) && (
+                    {originalPrice && originalPrice > finalPrice && (
                       <span className="text-[10px] xs:text-xs text-gray-500 line-through">
                         {formatPesoPrice(originalPrice)}
                       </span>
@@ -387,7 +325,7 @@ const WishlistDisplay: React.FC<WishlistDisplayProps> = ({ wishlistItems }) => {
                     <div className="flex items-center space-x-1">
                       <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                       <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color: string, index: number) => (
+                        {uniqueColors.slice(0, 4).map((color, index) => (
                           <button
                             key={index}
                             onClick={() => handleColorSelect(product.id, color)}
