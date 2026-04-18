@@ -1,8 +1,8 @@
 // components/DeliveryMap.tsx
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Navigation, MapPin, Loader2, X, Minimize2, Maximize2 } from 'lucide-react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { Navigation, MapPin, Loader2, X, Minimize2, Maximize2, Play, Pause } from 'lucide-react';
 
 // Google Maps script loader
 const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
@@ -70,11 +70,16 @@ export default function DeliveryMap({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showRouteInfo, setShowRouteInfo] = useState(true);
   const [routeDrawn, setRouteDrawn] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigationStep, setNavigationStep] = useState<string>('');
+  const watchIdRef = useRef<number | null>(null);
 
-  // Determine destination based on status
-  const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
-  const destinationLabel = status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location';
-  const destinationName = status === 'PROCESSING' ? restaurant : customer;
+  // Memoized values to prevent re-renders
+  const destination = useMemo(() => status === 'PROCESSING' ? pickupAddress : dropoffAddress, [status, pickupAddress, dropoffAddress]);
+  const destinationLabel = useMemo(() => status === 'PROCESSING' ? 'Pickup Location' : 'Delivery Location', [status]);
+  const destinationName = useMemo(() => status === 'PROCESSING' ? restaurant : customer, [status, restaurant, customer]);
+  const routeColor = useMemo(() => status === 'PROCESSING' ? '#EF4444' : '#F59E0B', [status]);
+  const markerColor = useMemo(() => status === 'PROCESSING' ? '#3B82F6' : '#10B981', [status]);
 
   // Load Google Maps if API key is provided
   useEffect(() => {
@@ -94,29 +99,32 @@ export default function DeliveryMap({
       });
   }, [googleMapsApiKey]);
 
-  // Get current location
+  // Get current location with continuous updates
   useEffect(() => {
     if (initialLocation) {
       setLocations(prev => ({ ...prev, current: initialLocation }));
     } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocations(prev => ({ 
-            ...prev, 
-            current: { 
-              lat: position.coords.latitude, 
-              lng: position.coords.longitude 
-            } 
-          }));
-        },
-        (err) => {
-          console.warn('Geolocation error:', err);
-          setLocations(prev => ({ 
-            ...prev, 
-            current: { lat: 40.7128, lng: -74.0060 }
-          }));
-        }
-      );
+      const getLocation = () => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocations(prev => ({ 
+              ...prev, 
+              current: { 
+                lat: position.coords.latitude, 
+                lng: position.coords.longitude 
+              } 
+            }));
+          },
+          (err) => {
+            console.warn('Geolocation error:', err);
+            setLocations(prev => ({ 
+              ...prev, 
+              current: { lat: 40.7128, lng: -74.0060 }
+            }));
+          }
+        );
+      };
+      getLocation();
     } else {
       setLocations(prev => ({ 
         ...prev, 
@@ -124,6 +132,83 @@ export default function DeliveryMap({
       }));
     }
   }, [initialLocation]);
+
+  // Start continuous location tracking when navigating
+  const startLocationTracking = useCallback(() => {
+    if (!navigator.geolocation) return;
+    
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+    
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        setLocations(prev => ({
+          ...prev,
+          current: {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        }));
+        
+        // Update map center if navigating
+        if (isNavigating && mapInstanceRef.current) {
+          mapInstanceRef.current.setCenter({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        }
+      },
+      (err) => {
+        console.warn('Location tracking error:', err);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 30000,
+        timeout: 27000,
+      }
+    );
+  }, [isNavigating]);
+
+  // Stop location tracking
+  const stopLocationTracking = useCallback(() => {
+    if (watchIdRef.current) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+    }
+  }, []);
+
+  // Clean up tracking on unmount
+  useEffect(() => {
+    return () => {
+      stopLocationTracking();
+    };
+  }, [stopLocationTracking]);
+
+  // Start navigation
+  const startNavigation = useCallback(() => {
+    setIsNavigating(true);
+    startLocationTracking();
+    setNavigationStep('Navigation started. Follow the route on map.');
+    
+    // Re-center map and start following user
+    if (mapInstanceRef.current && locations.current) {
+      mapInstanceRef.current.setCenter(locations.current);
+      mapInstanceRef.current.setZoom(15);
+    }
+    
+    // Auto-hide route info after 3 seconds
+    setTimeout(() => {
+      setShowRouteInfo(false);
+    }, 3000);
+  }, [startLocationTracking, locations.current]);
+
+  // Stop navigation
+  const stopNavigation = useCallback(() => {
+    setIsNavigating(false);
+    stopLocationTracking();
+    setNavigationStep('');
+  }, [stopLocationTracking]);
 
   // Geocode addresses using Google Maps Geocoding API
   useEffect(() => {
@@ -198,6 +283,38 @@ export default function DeliveryMap({
     geocodeWithGoogle();
   }, [googleMapsLoaded, pickupAddress, dropoffAddress, initialPickupLocation, initialDropoffLocation, locations.current]);
 
+  // Update route when location changes (only if navigating)
+  useEffect(() => {
+    if (!isNavigating || !googleMapsLoaded || !mapInstanceRef.current || !locations.current || !locations.pickup || !locations.dropoff) {
+      return;
+    }
+
+    const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
+    if (!targetLocation) return;
+
+    // Update directions with new location
+    const directionsService = new window.google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: { lat: locations.current.lat, lng: locations.current.lng },
+        destination: { lat: targetLocation.lat, lng: targetLocation.lng },
+        travelMode: window.google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === 'OK' && result && directionsRendererRef.current) {
+          directionsRendererRef.current.setDirections(result);
+          
+          const route = result.routes[0];
+          if (route && route.legs[0]) {
+            setDistance(route.legs[0].distance?.text || '');
+            setDuration(route.legs[0].duration?.text || '');
+          }
+        }
+      }
+    );
+  }, [locations.current, isNavigating, googleMapsLoaded, locations.pickup, locations.dropoff, status]);
+
   // Initialize Google Map
   useEffect(() => {
     if (!googleMapsLoaded || !mapRef.current || !locations.current || !locations.pickup || !locations.dropoff || !geocodingComplete) {
@@ -209,12 +326,10 @@ export default function DeliveryMap({
 
     if (!targetLocation) return;
 
-    // Clear existing renderer
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setMap(null);
     }
 
-    // Create new map
     const map = new window.google.maps.Map(mapRef.current, {
       center: { lat: locations.current.lat, lng: locations.current.lng },
       zoom: 14,
@@ -250,7 +365,6 @@ export default function DeliveryMap({
     });
 
     // Destination marker
-    const markerColor = status === 'PROCESSING' ? '#3B82F6' : '#10B981';
     const destinationMarker = new window.google.maps.Marker({
       position: { lat: targetLocation.lat, lng: targetLocation.lng },
       map: map,
@@ -311,11 +425,8 @@ export default function DeliveryMap({
       });
     }
 
-    // Draw route with RED/ORANGE path based on status
+    // Draw route
     const directionsService = new window.google.maps.DirectionsService();
-    
-    // Use different colors for the route path
-    const routeColor = status === 'PROCESSING' ? '#EF4444' : '#F59E0B'; // Red for pickup, Orange for delivery
     
     const directionsRenderer = new window.google.maps.DirectionsRenderer({
       map: map,
@@ -357,7 +468,6 @@ export default function DeliveryMap({
           }
         } else {
           console.error('Directions request failed:', status);
-          // Fallback: Draw a straight line if directions fail
           if (locations.current && targetLocation) {
             const straightLine = new window.google.maps.Polyline({
               path: [
@@ -376,7 +486,6 @@ export default function DeliveryMap({
       }
     );
 
-    // Fit bounds to show all points
     const bounds = new window.google.maps.LatLngBounds();
     bounds.extend({ lat: locations.current.lat, lng: locations.current.lng });
     bounds.extend({ lat: targetLocation.lat, lng: targetLocation.lng });
@@ -385,7 +494,6 @@ export default function DeliveryMap({
     }
     map.fitBounds(bounds);
 
-    // Add padding after fit
     setTimeout(() => {
       const currentZoom = map.getZoom();
       if (currentZoom) {
@@ -401,10 +509,10 @@ export default function DeliveryMap({
         mapInstanceRef.current = null;
       }
     };
-  }, [googleMapsLoaded, locations, status, geocodingComplete, destinationLabel, destination, destinationName, pickupAddress, dropoffAddress, customer, restaurant]);
+  }, [googleMapsLoaded, locations, status, geocodingComplete, destinationLabel, destination, destinationName, pickupAddress, dropoffAddress, customer, restaurant, markerColor, routeColor]);
 
   // Handle fullscreen toggle
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     const container = document.getElementById('delivery-map-container');
     if (!container) return;
     
@@ -417,7 +525,7 @@ export default function DeliveryMap({
         document.exitFullscreen();
       }
     }
-  };
+  }, [isFullscreen]);
 
   // Listen for fullscreen change
   useEffect(() => {
@@ -428,6 +536,14 @@ export default function DeliveryMap({
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  // Memoized center on location handler
+  const handleCenterLocation = useCallback(() => {
+    if (mapInstanceRef.current && locations.current) {
+      mapInstanceRef.current.setCenter(locations.current);
+      mapInstanceRef.current.setZoom(15);
+    }
+  }, [locations.current]);
 
   return (
     <div 
@@ -454,7 +570,7 @@ export default function DeliveryMap({
                 {status === 'PROCESSING' ? '🚚 Route to Pickup' : '📦 Route to Delivery'}
               </h3>
               <p className="text-xs opacity-90">
-                {status === 'PROCESSING' ? 'Follow the red path to pickup location' : 'Follow the orange path to delivery location'}
+                {isNavigating ? 'Navigation active - Following your location' : (status === 'PROCESSING' ? 'Follow the red path to pickup location' : 'Follow the orange path to delivery location')}
               </p>
             </div>
           </div>
@@ -477,8 +593,18 @@ export default function DeliveryMap({
         </div>
       </div>
 
+      {/* Navigation Step Indicator */}
+      {navigationStep && (
+        <div className="absolute top-20 left-4 right-4 z-20 bg-green-500 text-white rounded-xl shadow-xl p-3 animate-pulse">
+          <div className="flex items-center gap-2">
+            <Navigation size={18} />
+            <p className="text-sm font-medium">{navigationStep}</p>
+          </div>
+        </div>
+      )}
+
       {/* Route Info Card */}
-      {showRouteInfo && distance && duration && (
+      {showRouteInfo && distance && duration && !isNavigating && (
         <div className="absolute top-20 left-4 right-4 z-20 bg-white rounded-xl shadow-xl p-4 max-w-md">
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-bold text-gray-800">Route Information</h4>
@@ -517,7 +643,7 @@ export default function DeliveryMap({
       )}
 
       {/* Show Route Info Button */}
-      {!showRouteInfo && distance && duration && (
+      {!showRouteInfo && distance && duration && !isNavigating && (
         <button
           onClick={() => setShowRouteInfo(true)}
           className="absolute top-20 left-4 z-20 bg-white rounded-lg shadow-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
@@ -564,35 +690,46 @@ export default function DeliveryMap({
             <p className="text-sm font-medium text-gray-800 truncate">
               {destinationName || destination}
             </p>
+            {duration && (
+              <p className="text-xs text-green-600 mt-0.5">{duration} away</p>
+            )}
           </div>
           
+          {/* Start/Stop Navigation Button */}
+          {!isNavigating ? (
+            <button
+              onClick={startNavigation}
+              className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-md"
+            >
+              <Play size={16} />
+              <span>Start Navigation</span>
+            </button>
+          ) : (
+            <button
+              onClick={stopNavigation}
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-md"
+            >
+              <Pause size={16} />
+              <span>Stop Navigation</span>
+            </button>
+          )}
+          
+          {/* Center Button */}
           <button
-            onClick={() => {
-              if (mapInstanceRef.current && locations.current) {
-                mapInstanceRef.current.setCenter(locations.current);
-                mapInstanceRef.current.setZoom(15);
-              }
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-md"
+            onClick={handleCenterLocation}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-md"
           >
             <Navigation size={16} />
             <span className="hidden sm:inline">Center</span>
           </button>
-          
-          <button
-            onClick={onClose}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-          >
-            Close
-          </button>
         </div>
       </div>
 
-      {/* Map Type Indicator */}
+      {/* Map Type & Navigation Status */}
       <div className="absolute bottom-20 right-4 z-20 bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm flex items-center gap-2">
-        <div className={`w-2 h-2 rounded-full ${routeDrawn ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></div>
-        {routeDrawn ? 'Route loaded' : 'Loading route...'}
+        <div className={`w-2 h-2 rounded-full ${routeDrawn ? 'bg-green-500' : 'bg-yellow-500'} ${isNavigating ? 'animate-pulse' : ''}`}></div>
+        {isNavigating ? 'Navigation Active' : (routeDrawn ? 'Route loaded' : 'Loading route...')}
       </div>
     </div>
   );
-            }
+          }
