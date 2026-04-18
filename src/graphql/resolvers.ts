@@ -2444,6 +2444,48 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
      ratings: user.reviews.map(review => review.rating)
    }));
  },
+    merchants: async () => {
+    const users = await prisma.user.findMany({
+    where:{
+      role:"MANAGER"
+    },
+      include: {
+      addresses: true,
+      products: true,
+      reviews: {
+        select: { rating: true }
+       }
+     }
+   });
+  
+   // Transform the data to include ratings array
+   return users.map(user => ({
+     ...user,
+     ratings: user.reviews.map(review => review.rating)
+   }));
+ },
+    riders: async () => {
+    const users = await prisma.user.findMany({
+    where:{
+      role:"RIDER"
+    },
+      include: {
+      addresses: true,
+      products: true,
+      reviews: {
+        select: { rating: true }
+       }
+     }
+   });
+  
+   // Transform the data to include ratings array
+   return users.map(user => ({
+     ...user,
+     ratings: user.reviews.map(review => review.rating)
+   }));
+ },
+
+
 
     
     user: async (_: any, { id }: { id: string }) => {
