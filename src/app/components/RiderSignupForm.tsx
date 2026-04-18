@@ -387,7 +387,7 @@ export default function RiderSignupForm() {
 
                   <div>
                     <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
-                      Driver's License Number <span className="text-[#b279d6]">*</span>
+                      Driver&apos;s License Number <span className="text-[#b279d6]">*</span>
                     </label>
                     <input
                       type="text"
