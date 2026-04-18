@@ -17,6 +17,11 @@ const GET_MERCHANTS = gql`
       password
       firstName
       lastName
+      businessName
+      businessType
+      productCategory
+      businessDescription
+      website: String
       addresses {
         type
         street
@@ -56,6 +61,10 @@ interface Merchant {
   firstName: string;
   lastName: string;
   addresses: Address[];
+  businessName: string;
+  businessType: string;
+  productCategory: string;
+  businessDescription : string;
   avatar: string;
   phone: string;
   emailVerified: boolean;
