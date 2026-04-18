@@ -173,7 +173,7 @@ export default function MerchantsPage() {
           }
           
           .shimmer {
-            animation: shimmer 2s infinite linear;
+            animation: shimmer 1.5s infinite linear;
             background: linear-gradient(
               to right,
               #f0f0f0 0%,
