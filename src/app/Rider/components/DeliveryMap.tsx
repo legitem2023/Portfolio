@@ -291,12 +291,13 @@ export default function DeliveryMap({
     }
     
     if (isMapInitialized.current) return;
-    isMapInitialized.current = true;
-
+    
     const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
     const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
 
     if (!targetLocation) return;
+    
+    isMapInitialized.current = true;
 
     const map = new window.google.maps.Map(mapRef.current, {
       center: { lat: locations.current.lat, lng: locations.current.lng },
@@ -405,10 +406,12 @@ export default function DeliveryMap({
       
       if (!mapRef.current) return;
       
-      isMapInitialized.current = true;
-
       const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
       const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
+
+      if (!targetLocation) return;
+      
+      isMapInitialized.current = true;
 
       const map = L.map(mapRef.current).setView([locations.current!.lat, locations.current!.lng], 14);
       
@@ -446,7 +449,7 @@ export default function DeliveryMap({
         ${destination}
       `).openPopup();
 
-      // Draw route (straight line for Leaflet, or use OSRM for actual routing)
+      // Draw route (straight line for Leaflet)
       const points: [number, number][] = [
         [locations.current!.lat, locations.current!.lng],
         [targetLocation.lat, targetLocation.lng]
@@ -462,7 +465,7 @@ export default function DeliveryMap({
       directionsRendererRef.current = routeLine;
 
       // Calculate approximate distance
-      const R = 6371; // Earth's radius in km
+      const R = 6371;
       const dLat = (targetLocation.lat - locations.current!.lat) * Math.PI / 180;
       const dLon = (targetLocation.lng - locations.current!.lng) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -472,7 +475,7 @@ export default function DeliveryMap({
       const distKm = R * c;
       
       setDistance(`${distKm.toFixed(1)} km`);
-      setDuration(`${Math.round(distKm * 2)} min`); // Rough estimate
+      setDuration(`${Math.round(distKm * 2)} min`);
 
       const bounds = L.latLngBounds(points);
       map.fitBounds(bounds, { padding: [50, 50] });
@@ -506,7 +509,7 @@ export default function DeliveryMap({
           }
         }));
         
-        if (isNavigating && mapInstanceRef.current) {
+        if (isNavigating && mapInstanceRef.current && locations.current) {
           if (mapType === 'google') {
             mapInstanceRef.current.setCenter({
               lat: position.coords.latitude,
@@ -526,7 +529,7 @@ export default function DeliveryMap({
         timeout: 27000,
       }
     );
-  }, [isNavigating, mapType]);
+  }, [isNavigating, mapType, locations.current]);
 
   const stopLocationTracking = useCallback(() => {
     if (watchIdRef.current) {
@@ -544,7 +547,7 @@ export default function DeliveryMap({
     const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
     if (!targetLocation) return;
 
-    if (mapType === 'google') {
+    if (mapType === 'google' && directionsRendererRef.current) {
       const directionsService = new window.google.maps.DirectionsService();
       directionsService.route(
         {
@@ -585,6 +588,7 @@ export default function DeliveryMap({
     }
   }, [locations.current, isNavigating, locations.pickup, locations.dropoff, status, mapType]);
 
+  // Clean up tracking on unmount
   useEffect(() => {
     return () => {
       stopLocationTracking();
@@ -636,6 +640,7 @@ export default function DeliveryMap({
     }
   }, [locations.current, mapType]);
 
+  // Fullscreen listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -810,4 +815,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-      }
+}
