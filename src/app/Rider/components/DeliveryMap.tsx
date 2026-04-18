@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Navigation, MapPin, Loader2, X } from 'lucide-react';
+import { Navigation, MapPin, Loader2, X, Minimize2, Maximize2 } from 'lucide-react';
 
 // Google Maps script loader
 const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
@@ -65,6 +65,11 @@ export default function DeliveryMap({
   }>({});
   const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
   const [geocodingComplete, setGeocodingComplete] = useState(false);
+  const [distance, setDistance] = useState<string>('');
+  const [duration, setDuration] = useState<string>('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showRouteInfo, setShowRouteInfo] = useState(true);
+  const [routeDrawn, setRouteDrawn] = useState(false);
 
   // Determine destination based on status
   const destination = status === 'PROCESSING' ? pickupAddress : dropoffAddress;
@@ -106,10 +111,9 @@ export default function DeliveryMap({
         },
         (err) => {
           console.warn('Geolocation error:', err);
-          // Default to a reasonable fallback location
           setLocations(prev => ({ 
             ...prev, 
-            current: { lat: 40.7128, lng: -74.0060 } // New York as default
+            current: { lat: 40.7128, lng: -74.0060 }
           }));
         }
       );
@@ -125,7 +129,6 @@ export default function DeliveryMap({
   useEffect(() => {
     if (!googleMapsLoaded || !window.google || !locations.current) return;
 
-    // If coordinates are provided directly, use them immediately
     if (initialPickupLocation && initialDropoffLocation) {
       setLocations(prev => ({
         ...prev,
@@ -206,7 +209,7 @@ export default function DeliveryMap({
 
     if (!targetLocation) return;
 
-    // Clear existing map if any
+    // Clear existing renderer
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setMap(null);
     }
@@ -230,17 +233,17 @@ export default function DeliveryMap({
       title: 'Your Location',
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 8,
+        scale: 10,
         fillColor: '#4285F4',
         fillOpacity: 1,
         strokeColor: '#FFFFFF',
         strokeWeight: 3,
       },
+      zIndex: 100,
     });
 
-    // Add label for current location
     const currentInfoWindow = new window.google.maps.InfoWindow({
-      content: '<div style="padding: 4px 8px;"><strong>Your Location</strong></div>'
+      content: '<div style="padding: 4px 8px;"><strong>📍 Your Location</strong></div>'
     });
     currentLocationMarker.addListener('click', () => {
       currentInfoWindow.open(map, currentLocationMarker);
@@ -254,15 +257,15 @@ export default function DeliveryMap({
       title: destinationLabel,
       icon: {
         path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 10,
+        scale: 12,
         fillColor: markerColor,
         fillOpacity: 1,
         strokeColor: '#FFFFFF',
         strokeWeight: 3,
       },
+      zIndex: 90,
     });
 
-    // Info window for destination
     const infoWindow = new window.google.maps.InfoWindow({
       content: `
         <div style="padding: 8px; max-width: 250px;">
@@ -277,7 +280,7 @@ export default function DeliveryMap({
     });
     infoWindow.open(map, destinationMarker);
 
-    // Other location marker (grayed out)
+    // Other location marker
     if (otherLocation) {
       const otherMarker = new window.google.maps.Marker({
         position: { lat: otherLocation.lat, lng: otherLocation.lng },
@@ -285,12 +288,13 @@ export default function DeliveryMap({
         title: status === 'PROCESSING' ? 'Dropoff Location' : 'Pickup Location',
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
-          scale: 8,
+          scale: 9,
           fillColor: '#9CA3AF',
           fillOpacity: 0.7,
           strokeColor: '#FFFFFF',
           strokeWeight: 2,
         },
+        zIndex: 80,
       });
 
       const otherInfoWindow = new window.google.maps.InfoWindow({
@@ -307,16 +311,30 @@ export default function DeliveryMap({
       });
     }
 
-    // Draw route
+    // Draw route with RED/BLUE path based on status
     const directionsService = new window.google.maps.DirectionsService();
+    
+    // Use different colors for the route path
+    const routeColor = status === 'PROCESSING' ? '#EF4444' : '#F59E0B'; // Red for pickup, Orange for delivery
+    
     const directionsRenderer = new window.google.maps.DirectionsRenderer({
       map: map,
       suppressMarkers: true,
       polylineOptions: {
-        strokeColor: markerColor,
-        strokeWeight: 4,
-        strokeOpacity: 0.8,
-      }
+        strokeColor: routeColor,
+        strokeWeight: 6,
+        strokeOpacity: 0.9,
+        icons: [{
+          icon: {
+            path: 'M 0,-1 0,1',
+            strokeOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 2,
+          },
+          offset: '0',
+          repeat: '20px'
+        }]
+      },
     });
     directionsRendererRef.current = directionsRenderer;
 
@@ -325,27 +343,40 @@ export default function DeliveryMap({
         origin: { lat: locations.current.lat, lng: locations.current.lng },
         destination: { lat: targetLocation.lat, lng: targetLocation.lng },
         travelMode: window.google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: false,
       },
       (result, status) => {
         if (status === 'OK' && result) {
           directionsRenderer.setDirections(result);
+          setRouteDrawn(true);
           
-          // Calculate and display distance/duration
           const route = result.routes[0];
           if (route && route.legs[0]) {
-            const distance = route.legs[0].distance?.text;
-            const duration = route.legs[0].duration?.text;
-            
-            // You could add this info to a sidebar or tooltip
-            console.log(`Distance: ${distance}, Duration: ${duration}`);
+            setDistance(route.legs[0].distance?.text || '');
+            setDuration(route.legs[0].duration?.text || '');
           }
         } else {
           console.error('Directions request failed:', status);
+          // Fallback: Draw a straight line if directions fail
+          if (status !== 'OK') {
+            const straightLine = new window.google.maps.Polyline({
+              path: [
+                { lat: locations.current.lat, lng: locations.current.lng },
+                { lat: targetLocation.lat, lng: targetLocation.lng }
+              ],
+              geodesic: true,
+              strokeColor: routeColor,
+              strokeOpacity: 0.8,
+              strokeWeight: 6,
+            });
+            straightLine.setMap(map);
+            setRouteDrawn(true);
+          }
         }
       }
     );
 
-    // Fit bounds to show all relevant points
+    // Fit bounds to show all points
     const bounds = new window.google.maps.LatLngBounds();
     bounds.extend({ lat: locations.current.lat, lng: locations.current.lng });
     bounds.extend({ lat: targetLocation.lat, lng: targetLocation.lng });
@@ -354,16 +385,13 @@ export default function DeliveryMap({
     }
     map.fitBounds(bounds);
 
-    // Add padding to bounds - FIXED: Check for undefined zoom
-    const listener = window.google.maps.event.addListener(map, 'bounds_changed', () => {
-      const currentBounds = map.getBounds();
+    // Add padding after fit
+    setTimeout(() => {
       const currentZoom = map.getZoom();
-      if (currentBounds && currentBounds.equals(bounds) && currentZoom !== undefined && currentZoom !== null) {
-        // Add some padding by zooming out slightly
+      if (currentZoom) {
         map.setZoom(currentZoom - 0.5);
-        window.google.maps.event.removeListener(listener);
       }
-    });
+    }, 100);
 
     return () => {
       if (directionsRendererRef.current) {
@@ -375,123 +403,196 @@ export default function DeliveryMap({
     };
   }, [googleMapsLoaded, locations, status, geocodingComplete, destinationLabel, destination, destinationName, pickupAddress, dropoffAddress, customer, restaurant]);
 
+  // Handle fullscreen toggle
+  const toggleFullscreen = () => {
+    const container = document.getElementById('delivery-map-container');
+    if (!container) return;
+    
+    if (!isFullscreen) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  // Listen for fullscreen change
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          <div className="flex items-center gap-2">
-            <Navigation size={isMobile ? 20 : 24} />
+    <div 
+      id="delivery-map-container"
+      className="fixed inset-0 bg-black z-50 flex flex-col"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Navigation size={24} />
             <div>
               <h3 className="font-bold text-lg">
-                {status === 'PROCESSING' ? 'Route to Pickup' : 'Route to Delivery'}
+                {status === 'PROCESSING' ? '🚚 Route to Pickup' : '📦 Route to Delivery'}
               </h3>
               <p className="text-xs opacity-90">
-                {status === 'PROCESSING' ? 'Head to pickup location' : 'Deliver to customer'}
+                {status === 'PROCESSING' ? 'Follow the red path to pickup location' : 'Follow the orange path to delivery location'}
               </p>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="text-white hover:bg-white/20 rounded-lg p-1 transition"
-            aria-label="Close"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* Map Container */}
-        <div className="flex-1 relative min-h-[400px]">
-          {(loading || !geocodingComplete) && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-              <div className="text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
-                <p className="text-gray-600">Loading map...</p>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
-              <div className="text-center text-red-600 p-4">
-                <p className="mb-2">{error}</p>
-                <button 
-                  onClick={onClose}
-                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded-lg"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          )}
-
-          <div ref={mapRef} className="w-full h-full min-h-[400px]" />
-        </div>
-
-        {/* Bottom Info */}
-        <div className="p-4 border-t bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-2">
-              <div className="bg-blue-100 p-2 rounded-lg flex-shrink-0">
-                <Navigation size={16} className="text-blue-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">Your Location</p>
-                <p className="text-sm font-medium">Current Position</p>
-                {locations.current && (
-                  <p className="text-xs text-gray-600 mt-1">
-                    {locations.current.lat.toFixed(4)}, {locations.current.lng.toFixed(4)}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-start gap-2">
-              <div className={`p-2 rounded-lg flex-shrink-0 ${
-                status === 'PROCESSING' ? 'bg-blue-100' : 'bg-green-100'
-              }`}>
-                <MapPin size={16} className={
-                  status === 'PROCESSING' ? 'text-blue-600' : 'text-green-600'
-                } />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-gray-500">{destinationLabel}</p>
-                <p className="text-sm font-medium">{destinationName}</p>
-                <p className="text-xs text-gray-600 mt-1">{destination}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Map Status Indicator */}
-          <div className="mt-3 text-xs text-gray-500 flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span>Using Google Maps API (in-app)</span>
-          </div>
-
-          {/* Action Buttons - NO EXTERNAL LINK */}
-          <div className="mt-4 flex gap-2 justify-end">
+          <div className="flex items-center gap-2">
             <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors"
+              onClick={toggleFullscreen}
+              className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition"
+              aria-label="Toggle fullscreen"
             >
-              Close
+              {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
             </button>
             <button
-              onClick={() => {
-                // Center on current location
-                if (mapInstanceRef.current && locations.current) {
-                  mapInstanceRef.current.setCenter(locations.current);
-                  mapInstanceRef.current.setZoom(15);
-                }
-              }}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-1 transition-colors"
+              onClick={onClose}
+              className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition"
+              aria-label="Close"
             >
-              <Navigation size={14} />
-              Center on My Location
+              <X size={20} />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Route Info Card */}
+      {showRouteInfo && distance && duration && (
+        <div className="absolute top-20 left-4 right-4 z-20 bg-white rounded-xl shadow-xl p-4 max-w-md">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-bold text-gray-800">Route Information</h4>
+            <button
+              onClick={() => setShowRouteInfo(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={16} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Distance</p>
+              <p className="text-lg font-bold text-blue-600">{distance}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Est. Time</p>
+              <p className="text-lg font-bold text-green-600">{duration}</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-xs text-gray-600">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <span>From: Your Location</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+              <div className={`w-3 h-3 ${status === 'PROCESSING' ? 'bg-red-500' : 'bg-orange-500'} rounded-full`}></div>
+              <span>To: {destinationLabel}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+              <div className="w-3 h-0.5 bg-red-500"></div>
+              <span>Route path (follow the colored line)</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show Route Info Button */}
+      {!showRouteInfo && distance && duration && (
+        <button
+          onClick={() => setShowRouteInfo(true)}
+          className="absolute top-20 left-4 z-20 bg-white rounded-lg shadow-lg p-2 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+        >
+          <MapPin size={16} />
+          Show Route Info
+        </button>
+      )}
+
+      {/* Loading State */}
+      {(loading || !geocodingComplete) && (
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-30">
+          <div className="text-center bg-white rounded-xl p-6">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
+            <p className="text-gray-600">Loading map...</p>
+            <p className="text-xs text-gray-400 mt-1">Getting your route</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-30">
+          <div className="text-center bg-white rounded-xl p-6 max-w-sm">
+            <p className="text-red-600 mb-3">{error}</p>
+            <button 
+              onClick={onClose}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Map Container */}
+      <div ref={mapRef} className="w-full h-full" style={{ flex: 1, minHeight: 0 }} />
+
+      {/* Bottom Action Bar */}
+      <div className="absolute bottom-0 left-0 right-0 z-20 bg-white/95 backdrop-blur-sm border-t border-gray-200 p-4 shadow-lg">
+        <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
+          <div className="flex-1">
+            <p className="text-xs text-gray-500">Destination</p>
+            <p className="text-sm font-medium text-gray-800 truncate">
+              {destinationName || destination}
+            </p>
+          </div>
+          
+          <button
+            onClick={() => {
+              if (mapInstanceRef.current && locations.current) {
+                mapInstanceRef.current.setCenter(locations.current);
+                mapInstanceRef.current.setZoom(15);
+              }
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-md"
+          >
+            <Navigation size={16} />
+            <span className="hidden sm:inline">Center</span>
+          </button>
+          
+          <button
+            onClick={onClose}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+
+      {/* Map Type Indicator */}
+      <div className="absolute bottom-20 right-4 z-20 bg-black/70 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${routeDrawn ? 'bg-green-500' : 'bg-yellow-500'} animate-pulse`}></div>
+        {routeDrawn ? 'Route loaded' : 'Loading route...'}
+      </div>
     </div>
   );
-                        }
+}
