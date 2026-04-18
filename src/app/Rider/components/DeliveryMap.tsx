@@ -311,7 +311,7 @@ export default function DeliveryMap({
       });
     }
 
-    // Draw route with RED/BLUE path based on status
+    // Draw route with RED/ORANGE path based on status
     const directionsService = new window.google.maps.DirectionsService();
     
     // Use different colors for the route path
@@ -358,7 +358,7 @@ export default function DeliveryMap({
         } else {
           console.error('Directions request failed:', status);
           // Fallback: Draw a straight line if directions fail
-          if (status !== 'OK') {
+          if (locations.current && targetLocation) {
             const straightLine = new window.google.maps.Polyline({
               path: [
                 { lat: locations.current.lat, lng: locations.current.lng },
@@ -595,4 +595,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-}
+            }
