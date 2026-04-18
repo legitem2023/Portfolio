@@ -78,14 +78,6 @@ interface Merchant {
 const ShimmerCard = () => (
   <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-purple-200">
     <div className="p-4 md:p-6">
-      <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
-        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl shimmer"></div>
-        <div className="flex-1">
-          <div className="h-6 bg-gray-200 rounded-lg shimmer mb-2 w-32"></div>
-          <div className="h-5 bg-gray-200 rounded-full shimmer w-20"></div>
-        </div>
-      </div>
-      
       <div className="space-y-2 mb-3 md:mb-4">
         <div className="h-4 bg-gray-200 rounded shimmer w-full"></div>
         <div className="h-4 bg-gray-200 rounded shimmer w-3/4"></div>
@@ -108,7 +100,7 @@ const ShimmerCard = () => (
 );
 
 export default function MerchantsPage() {
-  const { loading, error, data } = useQuery(GET_MERCHANTS);
+  const { loading, error, data } =Query(GET_MERCHANTS);
   const dispatch = useDispatch();
   const router = useRouter();
   
