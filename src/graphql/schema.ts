@@ -1057,6 +1057,8 @@ type ReviewResult {
     messageThreads(page: Int, limit: Int, userId:ID): MessageThreadConnection
   
     users: [User]
+    merchants: [User]
+    riders: [User]
     user(id: ID): User
     products(search: String, cursor: String, limit: Int, category: String, sortBy: String): ProductHaslimit
     product(id: String): Product
