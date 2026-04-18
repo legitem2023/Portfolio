@@ -64,7 +64,7 @@ interface Merchant {
   businessName: string;
   businessType: string;
   productCategory: string;
-  businessDescription : string;
+  businessDescription: string;
   avatar: string;
   phone: string;
   emailVerified: boolean;
@@ -73,65 +73,46 @@ interface Merchant {
   role: string;
 }
 
+// Shimmer Card Component
+const ShimmerCard = () => (
+  <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-purple-200">
+    <div className="p-4 md:p-6">
+      <div className="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
+        <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl shimmer"></div>
+        <div className="flex-1">
+          <div className="h-6 bg-gray-200 rounded-lg shimmer mb-2 w-32"></div>
+          <div className="h-5 bg-gray-200 rounded-full shimmer w-20"></div>
+        </div>
+      </div>
+      
+      <div className="space-y-2 mb-3 md:mb-4">
+        <div className="h-4 bg-gray-200 rounded shimmer w-full"></div>
+        <div className="h-4 bg-gray-200 rounded shimmer w-3/4"></div>
+      </div>
+      
+      <div className="space-y-1 mb-3 md:mb-4">
+        <div className="h-3 bg-gray-200 rounded shimmer w-1/2"></div>
+        <div className="h-3 bg-gray-200 rounded shimmer w-2/3"></div>
+      </div>
+      
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1 md:gap-2">
+          <div className="h-4 bg-gray-200 rounded shimmer w-24"></div>
+          <div className="h-3 bg-gray-200 rounded shimmer w-16"></div>
+        </div>
+        <div className="h-8 bg-gray-200 rounded-lg shimmer w-16"></div>
+      </div>
+    </div>
+  </div>
+);
+
 export default function MerchantsPage() {
   const { loading, error, data } = useQuery(GET_MERCHANTS);
   const dispatch = useDispatch();
   const router = useRouter();
   
-  // Static fallback data that matches GraphQL schema
-  const fallbackMerchants: Merchant[] = [
-    {
-      id: "1",
-      email: "contact@lavenderdreams.com",
-      password: "",
-      firstName: "Lavender",
-      lastName: "Dreams",
-      addresses: [{
-        type: "business",
-        street: "123 Fashion Ave",
-        city: "New York",
-        state: "NY",
-        zipCode: "10001",
-        country: "USA",
-        isDefault: true,
-        createdAt: "2023-01-15T00:00:00Z"
-      }],
-      avatar: "/api/placeholder/80/80",
-      phone: "+1-555-0101",
-      emailVerified: true,
-      createdAt: "2023-01-15T00:00:00Z",
-      updatedAt: "2024-01-10T00:00:00Z",
-      role: "merchant"
-    },
-    {
-      id: "2",
-      email: "hello@purplepetalcafe.com",
-      password: "",
-      firstName: "Purple",
-      lastName: "Petal",
-      addresses: [{
-        type: "business",
-        street: "456 Brew Street",
-        city: "Seattle",
-        state: "WA",
-        zipCode: "98101",
-        country: "USA",
-        isDefault: true,
-        createdAt: "2023-03-20T00:00:00Z"
-      }],
-      avatar: "/api/placeholder/80/80",
-      phone: "+1-555-0102",
-      emailVerified: true,
-      createdAt: "2023-03-20T00:00:00Z",
-      updatedAt: "2024-01-12T00:00:00Z",
-      role: "merchant"
-    }
-  ];
+  const merchants = data?.merchants || [];
 
-  // Use GraphQL data if available, otherwise use fallback
-  const merchants = data?.merchants || fallbackMerchants;
-
-  // Calculate display values from available data
   const getDisplayName = (merchant: Merchant) => {
     return `${merchant.firstName} ${merchant.lastName}`;
   };
@@ -142,19 +123,12 @@ export default function MerchantsPage() {
   };
 
   const getDisplayCategory = (merchant: Merchant) => {
-    // Map email domains or other fields to categories
-    const domain = merchant.email.split('@')[1];
-    if (domain.includes('fashion') || domain.includes('boutique')) return 'Fashion';
-    if (domain.includes('cafe') || domain.includes('coffee')) return 'Food & Drink';
-    if (domain.includes('florist') || domain.includes('flower')) return 'Flowers';
-    if (domain.includes('book') || domain.includes('read')) return 'Books';
-    if (domain.includes('art') || domain.includes('studio')) return 'Arts & Crafts';
-    if (domain.includes('market') || domain.includes('organic')) return 'Groceries';
+    if (merchant.productCategory) return merchant.productCategory;
+    if (merchant.businessType) return merchant.businessType;
     return 'General';
   };
 
   const getDisplayRating = (merchant: Merchant) => {
-    // Generate rating based on creation date and other factors
     const created = new Date(merchant.createdAt);
     const now = new Date();
     const monthsActive = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30);
@@ -162,7 +136,6 @@ export default function MerchantsPage() {
   };
 
   const getDisplayReviews = (merchant: Merchant) => {
-    // Generate review count based on activity
     const created = new Date(merchant.createdAt);
     const now = new Date();
     const monthsActive = (now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24 * 30);
@@ -170,27 +143,56 @@ export default function MerchantsPage() {
   };
 
   const getDisplayDescription = (merchant: Merchant) => {
-    const category = getDisplayCategory(merchant);
-    return `${merchant.firstName} ${merchant.lastName} - ${category} business serving the community since ${new Date(merchant.createdAt).getFullYear()}`;
+    if (merchant.businessDescription) {
+      return merchant.businessDescription;
+    }
+    return `${merchant.firstName} ${merchant.lastName} - Serving the community since ${new Date(merchant.createdAt).getFullYear()}`;
   };
 
   const getIsFeatured = (merchant: Merchant) => {
-    // Feature merchants based on verification status and activity
-    return merchant.emailVerified && merchant.addresses.length > 0;
+    return merchant.emailVerified && merchant.addresses && merchant.addresses.length > 0;
   };
-
-  // Calculate average rating from display ratings
-  const averageRating = merchants.length > 0 
-    ? (merchants.reduce((sum: number, merchant: Merchant) => sum + getDisplayRating(merchant), 0) / merchants.length).toFixed(1)
-    : "0.0";
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2 md:p-6 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-purple-900 font-semibold">Loading merchants...</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-6">
+            <div className="h-8 bg-gray-200 rounded-lg shimmer w-48 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded shimmer w-96"></div>
+          </div>
+          
+          <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            {[1, 2, 3, 4, 5, 6].map((index) => (
+              <ShimmerCard key={index} />
+            ))}
+          </div>
         </div>
+        
+        <style jsx>{`
+          @keyframes shimmer {
+            0% {
+              background-position: -1000px 0;
+            }
+            100% {
+              background-position: 1000px 0;
+            }
+          }
+          
+          .shimmer {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(
+              to right,
+              #f0f0f0 0%,
+              #e0e0e0 20%,
+              #f0f0f0 40%,
+              #f0f0f0 100%
+            );
+            background-size: 1000px 100%;
+            position: relative;
+            overflow: hidden;
+          }
+        `}</style>
       </div>
     );
   }
@@ -210,6 +212,7 @@ export default function MerchantsPage() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 p-2">
       <div className="max-w-7xl mx-auto">
         <CategoryPage/>
+        
         {/* Merchants Grid */}
         <div className="mt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
           {merchants.map((merchant: Merchant) => {
