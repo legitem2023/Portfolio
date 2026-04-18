@@ -11,7 +11,7 @@ import CategoryPage from './CategoryPage';
 // Define the GraphQL query for merchants
 const GET_MERCHANTS = gql`
   query GetUsers {
-    users {
+    merchants {
       id
       email
       password
@@ -120,7 +120,7 @@ export default function MerchantsPage() {
   ];
 
   // Use GraphQL data if available, otherwise use fallback
-  const merchants = data?.users || fallbackMerchants;
+  const merchants = data?.merchants || fallbackMerchants;
 
   // Calculate display values from available data
   const getDisplayName = (merchant: Merchant) => {
