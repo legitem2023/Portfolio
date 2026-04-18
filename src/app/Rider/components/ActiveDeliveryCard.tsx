@@ -1228,23 +1228,24 @@ const isHasproof = useMemo(() => {
 
       {/* Map Modal */}
       {showMap && (
-        <DeliveryMap
-          pickupAddress={delivery.pickup}
-          dropoffAddress={delivery.dropoff}
-          pickupLocation={delivery.pickupAddress?.lat && delivery.pickupAddress?.lng ? {
-            lat: delivery.pickupAddress.lat,
-            lng: delivery.pickupAddress.lng
-          } : null}
-          dropoffLocation={delivery.dropoffAddress?.lat && delivery.dropoffAddress?.lng ? {
-            lat: delivery.dropoffAddress.lat,
-            lng: delivery.dropoffAddress.lng
-          } : null}
-          status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
-          isMobile={isMobile}
-          onClose={() => setShowMap(false)}
-          restaurant={delivery.restaurant}
-          customer={delivery.customer}
-        />
+         <DeliveryMap
+    pickupAddress={delivery.pickup}
+    dropoffAddress={delivery.dropoff}
+    pickupLocation={delivery.pickupAddress?.lat && delivery.pickupAddress?.lng ? {
+      lat: delivery.pickupAddress.lat,
+      lng: delivery.pickupAddress.lng
+    } : null}
+    dropoffLocation={delivery.dropoffAddress?.lat && delivery.dropoffAddress?.lng ? {
+      lat: delivery.dropoffAddress.lat,
+      lng: delivery.dropoffAddress.lng
+    } : null}
+    status={currentStatus as 'PROCESSING' | 'SHIPPED' | 'DELIVERED'}
+    isMobile={isMobile}
+    onClose={() => setShowMap(false)}
+    restaurant={delivery.restaurant}
+    customer={delivery.customer}
+    googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} // ADD THIS LINE
+  />
       )}
     </>
   );
