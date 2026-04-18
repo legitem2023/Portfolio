@@ -207,9 +207,6 @@ export default function DeliveryMap({
     if (!targetLocation) return;
 
     // Clear existing map if any
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current = null;
-    }
     if (directionsRendererRef.current) {
       directionsRendererRef.current.setMap(null);
     }
@@ -223,6 +220,8 @@ export default function DeliveryMap({
       fullscreenControl: true,
       zoomControl: true,
     });
+
+    mapInstanceRef.current = map;
 
     // Current location marker
     const currentLocationMarker = new window.google.maps.Marker({
@@ -355,21 +354,23 @@ export default function DeliveryMap({
     }
     map.fitBounds(bounds);
 
-    // Add padding to bounds
+    // Add padding to bounds - FIXED: Check for undefined zoom
     const listener = window.google.maps.event.addListener(map, 'bounds_changed', () => {
       const currentBounds = map.getBounds();
-      if (currentBounds && currentBounds.equals(bounds)) {
+      const currentZoom = map.getZoom();
+      if (currentBounds && currentBounds.equals(bounds) && currentZoom !== undefined && currentZoom !== null) {
         // Add some padding by zooming out slightly
-        map.setZoom(map.getZoom() - 0.5);
+        map.setZoom(currentZoom - 0.5);
         window.google.maps.event.removeListener(listener);
       }
     });
 
-    mapInstanceRef.current = map;
-
     return () => {
       if (directionsRendererRef.current) {
         directionsRendererRef.current.setMap(null);
+      }
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current = null;
       }
     };
   }, [googleMapsLoaded, locations, status, geocodingComplete, destinationLabel, destination, destinationName, pickupAddress, dropoffAddress, customer, restaurant]);
@@ -477,7 +478,7 @@ export default function DeliveryMap({
             </button>
             <button
               onClick={() => {
-                // Option to center on current location
+                // Center on current location
                 if (mapInstanceRef.current && locations.current) {
                   mapInstanceRef.current.setCenter(locations.current);
                   mapInstanceRef.current.setZoom(15);
@@ -493,4 +494,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-}
+                        }
