@@ -36,7 +36,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
 
   // VAT rate from environment (default 0.12 if not set)
-  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
 
   // Calculate total payout as sum of individualShipping for all items
   const calculatePayout = () => {
