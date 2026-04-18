@@ -8,7 +8,7 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 import { useRouter } from "next/navigation";
 import CategoryPage from './CategoryPage';
 
-// Define the GraphQL query for merchants
+// Define the GraphQL query for merchants - FIXED
 const GET_MERCHANTS = gql`
   query GetUsers {
     merchants {
@@ -21,7 +21,7 @@ const GET_MERCHANTS = gql`
       businessType
       productCategory
       businessDescription
-      website: String
+      website
       addresses {
         type
         street
@@ -65,6 +65,7 @@ interface Merchant {
   businessType: string;
   productCategory: string;
   businessDescription: string;
+  website?: string;
   avatar: string;
   phone: string;
   emailVerified: boolean;
