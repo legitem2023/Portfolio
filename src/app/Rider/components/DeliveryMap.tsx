@@ -31,34 +31,41 @@ const loadGoogleMapsScript = (apiKey: string): Promise<void> => {
 
 // Leaflet CSS and JS loader
 let leafletLoaded = false;
-const loadLeaflet = (): Promise<typeof import('leaflet')> => {
-  return new Promise(async (resolve, reject) => {
-    if (leafletLoaded) {
+let leafletPromise: Promise<any> | null = null;
+
+const loadLeaflet = (): Promise<any> => {
+  if (leafletPromise) return leafletPromise;
+  
+  leafletPromise = new Promise(async (resolve, reject) => {
+    try {
+      // Load CSS
+      if (!document.querySelector('#leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
+      }
+      
+      // Load Leaflet JS
       const L = await import('leaflet');
+      
+      // Fix Leaflet icon issue
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+        iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+      });
+      
+      leafletLoaded = true;
       resolve(L);
-      return;
+    } catch (err) {
+      reject(err);
     }
-    
-    // Load CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    document.head.appendChild(link);
-    
-    // Load JS
-    const L = await import('leaflet');
-    
-    // Fix Leaflet icon issue
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-      iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-    });
-    
-    leafletLoaded = true;
-    resolve(L);
   });
+  
+  return leafletPromise;
 };
 
 // Cache for geocoding results
@@ -96,8 +103,10 @@ export default function DeliveryMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const directionsRendererRef = useRef<any>(null);
+  const routeLayerRef = useRef<any>(null);
   const watchIdRef = useRef<number | null>(null);
   const isMapInitialized = useRef(false);
+  const googleMapsFailed = useRef(false);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,32 +132,37 @@ export default function DeliveryMap({
   const routeColor = useMemo(() => status === 'PROCESSING' ? '#EF4444' : '#F59E0B', [status]);
   const markerColor = useMemo(() => status === 'PROCESSING' ? '#3B82F6' : '#10B981', [status]);
 
-  // Try to load Google Maps first, fallback to Leaflet
+  // Try to load Google Maps first, fallback to Leaflet on failure
   useEffect(() => {
     const initMap = async () => {
-      if (googleMapsApiKey && googleMapsApiKey.trim() !== '') {
+      // Pre-load Leaflet as backup
+      loadLeaflet().then(() => setLeafletReady(true)).catch(console.error);
+      
+      if (googleMapsApiKey && googleMapsApiKey.trim() !== '' && !googleMapsFailed.current) {
         try {
           await loadGoogleMapsScript(googleMapsApiKey);
-          setMapType('google');
-          return;
+          // Test if Google Maps is working by checking if it loaded correctly
+          if (window.google && window.google.maps) {
+            setMapType('google');
+            return;
+          } else {
+            throw new Error('Google Maps not available');
+          }
         } catch (err) {
           console.warn('Google Maps failed to load, falling back to Leaflet:', err);
+          googleMapsFailed.current = true;
+          setMapType('leaflet');
+          setError('Google Maps quota exceeded. Using OpenStreetMap instead.');
+          // Clear error after 5 seconds
+          setTimeout(() => setError(null), 5000);
         }
-      }
-      
-      // Fallback to Leaflet
-      try {
-        await loadLeaflet();
+      } else if (leafletReady) {
         setMapType('leaflet');
-        setLeafletReady(true);
-      } catch (err) {
-        setError('Failed to load maps. Please check your connection.');
-        console.error(err);
       }
     };
     
     initMap();
-  }, [googleMapsApiKey]);
+  }, [googleMapsApiKey, leafletReady]);
 
   // Get current location
   useEffect(() => {
@@ -179,7 +193,7 @@ export default function DeliveryMap({
     );
   }, [initialLocation]);
 
-  // Geocode addresses (works for both Google and Leaflet)
+  // Geocode addresses (supports both Google and Leaflet fallback)
   useEffect(() => {
     if (!mapType || !locations.current) return;
     
@@ -246,6 +260,7 @@ export default function DeliveryMap({
 
     const geocodeAll = async () => {
       try {
+        setLoading(true);
         const promises = [];
         if (!initialPickupLocation && pickupAddress && !locations.pickup) {
           promises.push(geocodeAddress(pickupAddress));
@@ -273,10 +288,10 @@ export default function DeliveryMap({
           dropoff: results[1] || prev.dropoff
         }));
         setGeocodingComplete(true);
-        setLoading(false);
       } catch (err) {
         setError('Failed to load locations. Please check the addresses.');
         console.error(err);
+      } finally {
         setLoading(false);
       }
     };
@@ -299,91 +314,98 @@ export default function DeliveryMap({
     
     isMapInitialized.current = true;
 
-    const map = new window.google.maps.Map(mapRef.current, {
-      center: { lat: locations.current.lat, lng: locations.current.lng },
-      zoom: 14,
-      mapTypeControl: true,
-      streetViewControl: true,
-      fullscreenControl: true,
-      zoomControl: true,
-    });
+    try {
+      const map = new window.google.maps.Map(mapRef.current, {
+        center: { lat: locations.current.lat, lng: locations.current.lng },
+        zoom: 14,
+        mapTypeControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+        zoomControl: true,
+      });
 
-    mapInstanceRef.current = map;
+      mapInstanceRef.current = map;
 
-    // Current location marker
-    new window.google.maps.Marker({
-      position: { lat: locations.current.lat, lng: locations.current.lng },
-      map: map,
-      title: 'Your Location',
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 10,
-        fillColor: '#4285F4',
-        fillOpacity: 1,
-        strokeColor: '#FFFFFF',
-        strokeWeight: 3,
-      },
-      zIndex: 100,
-    });
+      // Current location marker
+      new window.google.maps.Marker({
+        position: { lat: locations.current.lat, lng: locations.current.lng },
+        map: map,
+        title: 'Your Location',
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 10,
+          fillColor: '#4285F4',
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
+        },
+        zIndex: 100,
+      });
 
-    // Destination marker
-    const destinationMarker = new window.google.maps.Marker({
-      position: { lat: targetLocation.lat, lng: targetLocation.lng },
-      map: map,
-      title: destinationLabel,
-      icon: {
-        path: window.google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: markerColor,
-        fillOpacity: 1,
-        strokeColor: '#FFFFFF',
-        strokeWeight: 3,
-      },
-      zIndex: 90,
-    });
+      // Destination marker
+      const destinationMarker = new window.google.maps.Marker({
+        position: { lat: targetLocation.lat, lng: targetLocation.lng },
+        map: map,
+        title: destinationLabel,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 12,
+          fillColor: markerColor,
+          fillOpacity: 1,
+          strokeColor: '#FFFFFF',
+          strokeWeight: 3,
+        },
+        zIndex: 90,
+      });
 
-    const infoWindow = new window.google.maps.InfoWindow({
-      content: `<div style="padding: 8px;"><strong>${destinationLabel}</strong><br>${destinationName || ''}<br>${destination}</div>`
-    });
-    destinationMarker.addListener('click', () => infoWindow.open(map, destinationMarker));
-    infoWindow.open(map, destinationMarker);
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `<div style="padding: 8px;"><strong>${destinationLabel}</strong><br>${destinationName || ''}<br>${destination}</div>`
+      });
+      destinationMarker.addListener('click', () => infoWindow.open(map, destinationMarker));
+      infoWindow.open(map, destinationMarker);
 
-    // Draw route
-    const directionsService = new window.google.maps.DirectionsService();
-    const directionsRenderer = new window.google.maps.DirectionsRenderer({
-      map: map,
-      suppressMarkers: true,
-      polylineOptions: {
-        strokeColor: routeColor,
-        strokeWeight: 6,
-        strokeOpacity: 0.9,
-      },
-    });
-    directionsRendererRef.current = directionsRenderer;
+      // Draw route
+      const directionsService = new window.google.maps.DirectionsService();
+      const directionsRenderer = new window.google.maps.DirectionsRenderer({
+        map: map,
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: routeColor,
+          strokeWeight: 6,
+          strokeOpacity: 0.9,
+        },
+      });
+      directionsRendererRef.current = directionsRenderer;
 
-    directionsService.route(
-      {
-        origin: { lat: locations.current.lat, lng: locations.current.lng },
-        destination: { lat: targetLocation.lat, lng: targetLocation.lng },
-        travelMode: window.google.maps.TravelMode.DRIVING,
-      },
-      (result, status) => {
-        if (status === 'OK' && result) {
-          directionsRenderer.setDirections(result);
-          const route = result.routes[0];
-          if (route && route.legs[0]) {
-            setDistance(route.legs[0].distance?.text || '');
-            setDuration(route.legs[0].duration?.text || '');
+      directionsService.route(
+        {
+          origin: { lat: locations.current.lat, lng: locations.current.lng },
+          destination: { lat: targetLocation.lat, lng: targetLocation.lng },
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === 'OK' && result) {
+            directionsRenderer.setDirections(result);
+            const route = result.routes[0];
+            if (route && route.legs[0]) {
+              setDistance(route.legs[0].distance?.text || '');
+              setDuration(route.legs[0].duration?.text || '');
+            }
           }
         }
-      }
-    );
+      );
 
-    const bounds = new window.google.maps.LatLngBounds();
-    bounds.extend({ lat: locations.current.lat, lng: locations.current.lng });
-    bounds.extend({ lat: targetLocation.lat, lng: targetLocation.lng });
-    if (otherLocation) bounds.extend({ lat: otherLocation.lat, lng: otherLocation.lng });
-    map.fitBounds(bounds);
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend({ lat: locations.current.lat, lng: locations.current.lng });
+      bounds.extend({ lat: targetLocation.lat, lng: targetLocation.lng });
+      if (otherLocation) bounds.extend({ lat: otherLocation.lat, lng: otherLocation.lng });
+      map.fitBounds(bounds);
+    } catch (err) {
+      console.error('Google Maps initialization error:', err);
+      // Fall back to Leaflet
+      setMapType('leaflet');
+      isMapInitialized.current = false;
+    }
 
     return () => {
       if (directionsRendererRef.current) {
@@ -393,7 +415,7 @@ export default function DeliveryMap({
     };
   }, [mapType, locations.pickup, locations.dropoff, locations.current, geocodingComplete, status, destinationLabel, destination, destinationName, markerColor, routeColor]);
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map (Fallback)
   useEffect(() => {
     if (mapType !== 'leaflet' || !leafletReady || !mapRef.current || !locations.current || !locations.pickup || !locations.dropoff || !geocodingComplete) {
       return;
@@ -402,83 +424,96 @@ export default function DeliveryMap({
     if (isMapInitialized.current) return;
     
     const initLeafletMap = async () => {
-      const L = await loadLeaflet();
-      
-      if (!mapRef.current) return;
-      
-      const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
-      const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
+      try {
+        const L = await loadLeaflet();
+        
+        if (!mapRef.current) return;
+        
+        const targetLocation = status === 'PROCESSING' ? locations.pickup : locations.dropoff;
+        const otherLocation = status === 'PROCESSING' ? locations.dropoff : locations.pickup;
 
-      if (!targetLocation) return;
-      
-      isMapInitialized.current = true;
+        if (!targetLocation) return;
+        
+        isMapInitialized.current = true;
 
-      const map = L.map(mapRef.current).setView([locations.current!.lat, locations.current!.lng], 14);
-      
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; CartoDB',
-        subdomains: 'abcd',
-        maxZoom: 19,
-      }).addTo(map);
-      
-      mapInstanceRef.current = map;
+        // Clear any existing content in map container
+        mapRef.current.innerHTML = '';
+        
+        const map = L.map(mapRef.current).setView([locations.current!.lat, locations.current!.lng], 14);
+        
+        // Use OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          maxZoom: 19,
+        }).addTo(map);
+        
+        mapInstanceRef.current = map;
 
-      // Current location marker
-      L.marker([locations.current!.lat, locations.current!.lng], {
-        icon: L.divIcon({
-          className: 'custom-div-icon',
-          html: '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.3);"></div>',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11]
-        })
-      }).addTo(map).bindTooltip('Your Location');
+        // Current location marker
+        L.marker([locations.current!.lat, locations.current!.lng], {
+          icon: L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div style="background-color: #4285F4; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.3);"></div>',
+            iconSize: [22, 22],
+            iconAnchor: [11, 11]
+          })
+        }).addTo(map).bindTooltip('Your Location');
 
-      // Destination marker
-      const destMarker = L.marker([targetLocation.lat, targetLocation.lng], {
-        icon: L.divIcon({
-          className: 'custom-div-icon',
-          html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [26, 26],
-          iconAnchor: [13, 13]
-        })
-      }).addTo(map);
-      
-      destMarker.bindPopup(`
-        <strong>${destinationLabel}</strong><br>
-        ${destinationName || ''}<br>
-        ${destination}
-      `).openPopup();
+        // Destination marker
+        const destMarker = L.marker([targetLocation.lat, targetLocation.lng], {
+          icon: L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          })
+        }).addTo(map);
+        
+        destMarker.bindPopup(`
+          <strong>${destinationLabel}</strong><br>
+          ${destinationName || ''}<br>
+          ${destination}
+        `).openPopup();
 
-      // Draw route (straight line for Leaflet)
-      const points: [number, number][] = [
-        [locations.current!.lat, locations.current!.lng],
-        [targetLocation.lat, targetLocation.lng]
-      ];
-      
-      const routeLine = L.polyline(points, {
-        color: routeColor,
-        weight: 6,
-        opacity: 0.8,
-        dashArray: '10, 10'
-      }).addTo(map);
-      
-      directionsRendererRef.current = routeLine;
+        // Draw route
+        const points: [number, number][] = [
+          [locations.current!.lat, locations.current!.lng],
+          [targetLocation.lat, targetLocation.lng]
+        ];
+        
+        const routeLine = L.polyline(points, {
+          color: routeColor,
+          weight: 6,
+          opacity: 0.8,
+          dashArray: '10, 10'
+        }).addTo(map);
+        
+        routeLayerRef.current = routeLine;
 
-      // Calculate approximate distance
-      const R = 6371;
-      const dLat = (targetLocation.lat - locations.current!.lat) * Math.PI / 180;
-      const dLon = (targetLocation.lng - locations.current!.lng) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(locations.current!.lat * Math.PI / 180) * Math.cos(targetLocation.lat * Math.PI / 180) *
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      const distKm = R * c;
-      
-      setDistance(`${distKm.toFixed(1)} km`);
-      setDuration(`${Math.round(distKm * 2)} min`);
+        // Calculate distance
+        const R = 6371;
+        const dLat = (targetLocation.lat - locations.current!.lat) * Math.PI / 180;
+        const dLon = (targetLocation.lng - locations.current!.lng) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(locations.current!.lat * Math.PI / 180) * Math.cos(targetLocation.lat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distKm = R * c;
+        
+        setDistance(`${distKm.toFixed(1)} km`);
+        setDuration(`${Math.round(distKm * 2)} min`);
 
-      const bounds = L.latLngBounds(points);
-      map.fitBounds(bounds, { padding: [50, 50] });
+        const bounds = L.latLngBounds(points);
+        map.fitBounds(bounds, { padding: [50, 50] });
+        
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 100);
+        
+      } catch (err) {
+        console.error('Leaflet initialization error:', err);
+        setError('Failed to initialize map');
+      }
     };
 
     initLeafletMap();
@@ -486,6 +521,7 @@ export default function DeliveryMap({
     return () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
       }
       isMapInitialized.current = false;
     };
@@ -566,15 +602,13 @@ export default function DeliveryMap({
           }
         }
       );
-    } else if (mapType === 'leaflet' && directionsRendererRef.current) {
-      // Update Leaflet polyline
+    } else if (mapType === 'leaflet' && routeLayerRef.current) {
       const newPoints: [number, number][] = [
         [locations.current.lat, locations.current.lng],
         [targetLocation.lat, targetLocation.lng]
       ];
-      directionsRendererRef.current.setLatLngs(newPoints);
+      routeLayerRef.current.setLatLngs(newPoints);
       
-      // Update distance
       const R = 6371;
       const dLat = (targetLocation.lat - locations.current.lat) * Math.PI / 180;
       const dLon = (targetLocation.lng - locations.current.lng) * Math.PI / 180;
@@ -588,7 +622,6 @@ export default function DeliveryMap({
     }
   }, [locations.current, isNavigating, locations.pickup, locations.dropoff, status, mapType]);
 
-  // Clean up tracking on unmount
   useEffect(() => {
     return () => {
       stopLocationTracking();
@@ -640,7 +673,6 @@ export default function DeliveryMap({
     }
   }, [locations.current, mapType]);
 
-  // Fullscreen listener
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -815,4 +847,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-      }
+        }
