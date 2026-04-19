@@ -764,7 +764,7 @@ export default function Header({
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
-                <div className="text-right">
+                {/*<div className="text-right">
                   <p className="font-semibold text-gray-900 flex items-center gap-1 group-hover:text-lime-700 transition-colors">
                     {user?.name || 'Rider Name'}
                     <ChevronDown className={`w-4 h-4 transition-all duration-300 ${isDropdownOpen ? 'rotate-180 text-lime-600' : 'text-gray-400 group-hover:text-lime-600'}`} />
@@ -773,7 +773,7 @@ export default function Header({
                     <Shield className="w-3 h-3 text-lime-500" />
                     <p className="text-sm text-gray-500">VC-001</p>
                   </div>
-                </div>
+                </div>*/}
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-lime-400 to-lime-600 rounded-full blur-xl opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
                   <div className="relative w-12 h-12 bg-gradient-to-br from-lime-600 to-lime-700 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-xl ring-2 ring-white/50 group-hover:ring-lime-200 transition-all duration-300">
@@ -788,13 +788,13 @@ export default function Header({
                 <div className="absolute top-full right-0 mt-2 w-72 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-lime-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400 rounded-t-2xl"></div>
                   
-                  <div className="px-4 py-3 border-b border-lime-100">
+                  {/*  <div className="px-4 py-3 border-b border-lime-100">
                     <p className="text-sm font-semibold text-gray-900">{user?.name || 'Rider'}</p>
                     <div className="flex items-center gap-1 mt-1">
                       <Shield className="w-3 h-3 text-lime-500" />
                       <p className="text-xs text-gray-500">VC-001 • {user?.email || 'rider@example.com'}</p>
                     </div>
-                  </div>
+                  </div>*/}
 
                   <div className="px-4 py-3 border-b border-lime-100 bg-gradient-to-r from-lime-50/50 to-white">
                     <div className="grid grid-cols-2 gap-2">
