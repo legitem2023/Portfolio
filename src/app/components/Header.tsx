@@ -311,6 +311,29 @@ const Header: React.FC = () => {
     };
   }, []);
 
+// Add this after line ~215 (after the existing auth check useEffect)
+
+// Role-based redirect effect
+useEffect(() => {
+  // Don't redirect if we're still loading or no user
+  if (isLoading || !user) {
+    return;
+  }
+
+  // Get the user's role from the decrypted token
+  const userRole = user?.role; // Adjust this path based on your token structure
+  
+  // Current path to avoid redirect loops
+  const currentPath = pathname;
+  
+  // Role-based redirect logic
+  if (userRole === 'RIDER' && currentPath !== '/Rider') {
+    router.push('/Rider');
+  } else if (userRole === 'MANAGER' && currentPath !== '/Management') {
+    router.push('/Management');
+  }
+}, [user, isLoading, pathname, router]);
+  
   // Clear shown notifications when user changes
   useEffect(() => {
     if (userId) {
@@ -332,6 +355,10 @@ const Header: React.FC = () => {
     }
   }, [hasCheckedAuth, activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
+
+
+
+  
   // FIX: Close dropdown when clicking outside (desktop) with cleanup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
