@@ -9,6 +9,14 @@ export interface User {
   avatar: string;
   plateNo: string
   license: string
+  businessName: string
+  businessType: string
+  productCategory: string
+  businessDescription: string
+  website: string
+  businessAddress: string
+  addressInstruction: string
+  
   phone: string;
   emailVerified: boolean;
   createdAt: string;
