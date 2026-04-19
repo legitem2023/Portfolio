@@ -1,5 +1,92 @@
 import { gql } from "@apollo/client";
 
+// In your mutation.ts file - add these mutations
+
+export const UPDATE_USER_BUSINESS_NAME = gql`
+  mutation UpdateUserBusinessName($id: ID, $businessName: String) {
+    updateUserBusinessName(id: $id, businessName: $businessName) {
+      id
+      businessName
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_BUSINESS_TYPE = gql`
+  mutation UpdateUserBusinessType($id: ID, $businessType: String) {
+    updateUserBusinessType(id: $id, businessType: $businessType) {
+      id
+      businessType
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_PRODUCT_CATEGORY = gql`
+  mutation UpdateUserProductCategory($id: ID, $productCategory: String) {
+    updateUserProductCategory(id: $id, productCategory: $productCategory) {
+      id
+      productCategory
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_BUSINESS_DESCRIPTION = gql`
+  mutation UpdateUserBusinessDescription($id: ID, $businessDescription: String) {
+    updateUserBusinessDescription(id: $id, businessDescription: $businessDescription) {
+      id
+      businessDescription
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_WEBSITE = gql`
+  mutation UpdateUserWebsite($id: ID, $website: String) {
+    updateUserWebsite(id: $id, website: $website) {
+      id
+      website
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_BUSINESS_ADDRESS = gql`
+  mutation UpdateUserBusinessAddress($id: ID, $businessAddress: String) {
+    updateUserBusinessAddress(id: $id, businessAddress: $businessAddress) {
+      id
+      businessAddress
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+export const UPDATE_USER_ADDRESS_INSTRUCTION = gql`
+  mutation UpdateUserAddressInstruction($id: ID, $addressInstruction: String) {
+    updateUserAddressInstruction(id: $id, addressInstruction: $addressInstruction) {
+      id
+      addressInstruction
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
+
+
 export const UPDATE_RIDER_LICENSE = gql`
   mutation UpdateRiderLicense($id: ID, $license: String) {
     updateRiderLicense(id: $id, license: $license) {
