@@ -12,7 +12,7 @@ import ProfileTabs from '../../components/ProfileTabs';
 import ParticleBackground from '../../components/ParticleBackground';
 import { useState, useRef } from 'react';
 import TabContent from '../../components/TabContent';
-import { Pencil, Phone, Camera, X, Check } from 'lucide-react';
+import { Pencil, Phone, Camera, X, Check, Car, IdCard } from 'lucide-react';
 
 const UserProfile = ({ userId }: { userId: string }) => {
   const { data, loading, error, refetch } = useQuery(GET_USER_PROFILE, {
@@ -151,7 +151,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 aria-label="Upload avatar"
               >
                 {isUploading ? (
-                  <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-lime-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <Camera className="w-8 h-8 text-white" />
                 )}
@@ -189,13 +189,13 @@ const UserProfile = ({ userId }: { userId: string }) => {
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="Enter phone number"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
                       autoFocus
                     />
                     <div className="flex gap-2">
                       <button
                         onClick={handlePhoneUpdate}
-                        className="p-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
                         aria-label="Save phone number"
                       >
                         <Check className="w-4 h-4" />
@@ -229,6 +229,22 @@ const UserProfile = ({ userId }: { userId: string }) => {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Plate Number Section */}
+              <div className="flex items-center gap-2 mt-2 text-gray-700">
+                <Car className="w-5 h-5 text-gray-500" />
+                <span className="text-sm md:text-base">
+                  Plate Number: {user.plateNo || 'Not provided'}
+                </span>
+              </div>
+
+              {/* License Section */}
+              <div className="flex items-center gap-2 mt-2 text-gray-700">
+                <IdCard className="w-5 h-5 text-gray-500" />
+                <span className="text-sm md:text-base">
+                  License: {user.license || 'Not provided'}
+                </span>
               </div>
               
               <div className="flex gap-4 md:gap-6 mt-4 text-gray-700 text-sm md:text-base">
