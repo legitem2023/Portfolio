@@ -534,6 +534,13 @@ query GetUser($id: ID) {
       avatar
       plateNo
       license
+      businessName
+      businessType
+      productCategory
+      businessDescription
+      website
+      businessAddress
+      addressInstruction
       phone
       followerCount
       followingCount
