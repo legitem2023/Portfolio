@@ -3,7 +3,7 @@
 
 import { useQuery, useMutation } from '@apollo/client';
 import Image from 'next/image';
-import { GET_USER_PROFILE } from './graphql/query';
+import { GET_USER_PROFILE } from '../../components/graphql/query';
 import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR } from '../../components/graphql/mutation';
 import { User } from '../../../../types';
 import UserProfileShimmer from '../../components/UserProfileShimmer';
