@@ -17,7 +17,7 @@ import dynamic from 'next/dynamic';
 import { useAuth } from './hooks/useAuth';
 import RiderPaymentHistory from './components/RiderPaymentHistory';
 import PMTab from './components/PMTab';
-import UserProfileTab from './components/UserProfileTab';
+import UserProfile from './components/UserProfile';
 import { gql } from '@apollo/client';
 import { showToast } from '../../../utils/toastify';
 
@@ -364,7 +364,7 @@ showToast(
       case "message":
         return <PMTab UserId={user?.userId} />;
       case "user":
-        return <UserProfileTab userId={user?.userId}/>;
+        return <UserProfile userId={user?.userId}/>;
       default:
         return null;
     }
