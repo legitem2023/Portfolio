@@ -180,7 +180,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
             <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
               <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
-                  src={user.avatar || '/NoImage.webp'}
+                  src={user.avatar?user.avatar:'/NoImage_1.webp'}
                   alt={`${user.firstName}'s avatar`}
                   fill
                   className="object-cover"
