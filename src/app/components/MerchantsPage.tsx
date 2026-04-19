@@ -100,7 +100,7 @@ const ShimmerCard = () => (
 );
 
 export default function MerchantsPage() {
-  const { loading, error, data } =Query(GET_MERCHANTS);
+  const { loading, error, data } = useQuery(GET_MERCHANTS);
   const dispatch = useDispatch();
   const router = useRouter();
   
