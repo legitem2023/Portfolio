@@ -5227,7 +5227,7 @@ updateVehicleType:async (_parent: any,args:any) => {
         // Update user in database using Prisma
         const updatedUser = await prisma.user.update({
           where: { id },
-          data: { plateNo: phone.trim() },
+          data: { plateNo: plate.trim() },
           include: {
             posts: true,
             addresses: true
