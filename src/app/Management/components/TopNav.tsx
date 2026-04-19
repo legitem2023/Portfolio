@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
-import { LogOut, CreditCard, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle } from 'lucide-react';
+import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_NOTIFICATIONS } from '../../components/graphql/query';
 import { 
@@ -266,9 +266,10 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     };
   }, [isBellPopupOpen]);
 
-  const handlePayments = () => {
+  const handleProfile = () => {
     setIsDropdownOpen(false);
-    router.push('/payments');
+    dispatch(setActiveIndex(10));
+    
   };
 
   const handleLogout = async () => {
@@ -735,11 +736,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                   </div>
 
                   <button
-                    onClick={handlePayments}
+                    onClick={handleProfile}
                     className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
                   >
-                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
-                    <span className="font-medium">Billing & Payments</span>
+                    <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                    <span className="font-medium">Profile</span>
                   </button>
 
                   <button
