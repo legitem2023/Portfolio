@@ -626,7 +626,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Business Address - NEW */}
+              {/* Business Address - NEW
               <div className="flex items-start gap-2 mt-2 text-gray-700">
                 <Home className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
                 {isEditingBusinessAddress ? (
@@ -678,7 +678,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Address Instruction - NEW */}
+              
               <div className="flex items-start gap-2 mt-2 text-gray-700">
                 <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
                 {isEditingAddressInstruction ? (
@@ -729,7 +729,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                   </div>
                 )}
               </div>
-
+              */}
               {/* Phone Number - ORIGINAL - KEPT EXACTLY THE SAME */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Phone className="w-5 h-5 text-gray-500" />
