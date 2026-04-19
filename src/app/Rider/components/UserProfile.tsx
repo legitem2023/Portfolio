@@ -173,7 +173,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
         {/* Cover Photo */}
         <div className="h-36 relative overflow">
           <div className="absolute bottom-0 w-full h-1/2"></div>
-          <ParticleBackground />
+          
           
           {/* Profile Picture - Made Uploadable */}
           <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none group">
