@@ -5295,7 +5295,200 @@ updateVehicleType:async (_parent: any,args:any) => {
         throw new Error(`Failed to update phone number: ${error.message}`);
       }
     },
+    updateUserBusinessName: async (_: any, { id, businessName }: any) => {
+  try {
+    // Validate business name
+    if (!businessName || businessName.trim() === '') {
+      throw new Error('Business name is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { businessName: businessName.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserBusinessName:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update business name: ${error.message}`);
+  }
+},
+
+updateUserBusinessType: async (_: any, { id, businessType }: any) => {
+  try {
+    // Validate business type
+    if (!businessType || businessType.trim() === '') {
+      throw new Error('Business type is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { businessType: businessType.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserBusinessType:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update business type: ${error.message}`);
+  }
+},
+
+updateUserProductCategory: async (_: any, { id, productCategory }: any) => {
+  try {
+    // Validate product category
+    if (!productCategory || productCategory.trim() === '') {
+      throw new Error('Product category is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { productCategory: productCategory.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserProductCategory:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update product category: ${error.message}`);
+  }
+},
+
+updateUserBusinessDescription: async (_: any, { id, businessDescription }: any) => {
+  try {
+    // Validate business description
+    if (!businessDescription || businessDescription.trim() === '') {
+      throw new Error('Business description is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { businessDescription: businessDescription.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserBusinessDescription:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update business description: ${error.message}`);
+  }
+},
+
+updateUserWebsite: async (_: any, { id, website }: any) => {
+  try {
+    // Validate website URL format
+    if (!website || website.trim() === '') {
+      throw new Error('Website URL is required');
+    }
     
+    // Basic URL validation
+    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    if (!urlRegex.test(website.trim())) {
+      throw new Error('Please enter a valid website URL');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { website: website.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserWebsite:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update website: ${error.message}`);
+  }
+},
+
+updateUserBusinessAddress: async (_: any, { id, businessAddress }: any) => {
+  try {
+    // Validate business address
+    if (!businessAddress || businessAddress.trim() === '') {
+      throw new Error('Business address is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { businessAddress: businessAddress.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserBusinessAddress:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update business address: ${error.message}`);
+  }
+},
+
+updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) => {
+  try {
+    // Validate address instruction
+    if (!addressInstruction || addressInstruction.trim() === '') {
+      throw new Error('Address instruction is required');
+    }
+
+    // Update user in database using Prisma
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { addressInstruction: addressInstruction.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error('Error in updateUserAddressInstruction:', error);
+    if (error.code === 'P2025') {
+      throw new Error('User not found');
+    }
+    throw new Error(`Failed to update address instruction: ${error.message}`);
+  }
+},
     addToWishList: async (_:any, { userId, productId }:any) => {
   try {
     // Check if item already exists
