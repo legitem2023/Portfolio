@@ -5188,6 +5188,62 @@ updateVehicleType:async (_parent: any,args:any) => {
         statusText:'Success'
       };
     },
+
+//updateRiderPlate(id: ID, plate: String): User
+//updateRiderLicense(id: ID, license: String): User
+    updateRiderLicense: async (_:any, { id, license }:any) => {
+      try {
+        // Validate license number
+        if (!license || license.trim() === '') {
+          throw new Error('license number is required');
+        }
+
+        // Update user in database using Prisma
+        const updatedUser = await prisma.user.update({
+          where: { id },
+          data: { license: license.trim() },
+          include: {
+            posts: true,
+            addresses: true
+          }
+        });
+
+        return updatedUser;
+      } catch (error:any) {
+        console.error('Error in update license number:', error);
+        if (error.code === 'P2025') {
+          throw new Error('User not found');
+        }
+        throw new Error(`Failed to update license number: ${error.message}`);
+      }
+    },
+    updateRiderPlate: async (_:any, { id, plate }:any) => {
+      try {
+        // Validate phone number
+        if (!plate || plate.trim() === '') {
+          throw new Error('Plate number is required');
+        }
+
+        // Update user in database using Prisma
+        const updatedUser = await prisma.user.update({
+          where: { id },
+          data: { plateNo: phone.trim() },
+          include: {
+            posts: true,
+            addresses: true
+          }
+        });
+
+        return updatedUser;
+      } catch (error:any) {
+        console.error('Error in update plate number:', error);
+        if (error.code === 'P2025') {
+          throw new Error('User not found');
+        }
+        throw new Error(`Failed to update plate number: ${error.message}`);
+      }
+    },
+    
     updateUserPhone: async (_:any, { id, phone }:any) => {
       try {
         // Validate phone number
