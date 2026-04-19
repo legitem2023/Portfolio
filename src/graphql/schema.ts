@@ -1241,7 +1241,13 @@ type Mutation {
    
     updateRiderPlate(id: ID, plate: String): User
     updateRiderLicense(id: ID, license: String): User
-
+    updateUserBusinessName(id: ID, businessName: String): User
+    updateUserBusinessType(id: ID, businessType: String): User
+    updateUserProductCategory(id: ID, productCategory: String): User
+    updateUserBusinessDescription(id: ID, businessDescription: String): User
+    updateUserWebsite(id: ID, website: String): User
+    updateUserBusinessAddress(id: ID, businessAddress: String): User
+    updateUserAddressInstruction(id: ID, addressInstruction: String): User
     
     addToWishList(userId:ID,productId:ID):Result
     updateRole(userId:ID,Level:Role):Result
