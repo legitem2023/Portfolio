@@ -120,22 +120,22 @@ export default function RiderDashboard() {
     }
     
     if (!isOnline) {
-      console.log("📍 Tracking paused (offline mode)");
+   //   console.log("📍 Tracking paused (offline mode)");
       return;
     }
 
     // Rate limiting: Minimum 5 seconds between sends
     const now = Date.now();
     if (now - lastSendTimeRef.current < 5000) {
-      console.log("⏸️ Rate limited - skipping location send");
+   //   console.log("⏸️ Rate limited - skipping location send");
       return;
     }
 
     const { latitude, longitude, accuracy } = position.coords;
-    console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
+   // console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
     
     try {
-      console.log("📤 Sending location to server...", {
+   //   console.log("📤 Sending location to server...", {
         userID: user.userId,
         latitude,
         longitude
@@ -151,7 +151,7 @@ export default function RiderDashboard() {
         }
       });
       
-      console.log("✅ Location sent successfully!", {
+   //   console.log("✅ Location sent successfully!", {
         response: result.data?.locationTracking,
         timestamp: new Date().toISOString()
       });
@@ -170,8 +170,8 @@ export default function RiderDashboard() {
     }
 
     if (isOnline && user?.userId && navigator.geolocation) {
-      console.log("🟢 Starting location tracking - Online mode active");
-      console.log(`👤 User ID: ${user.userId}`);
+    //  console.log("🟢 Starting location tracking - Online mode active");
+    //  console.log(`👤 User ID: ${user.userId}`);
       
       // Use watchPosition for continuous tracking
       watchIdRef.current = navigator.geolocation.watchPosition(
@@ -201,7 +201,7 @@ export default function RiderDashboard() {
         }
       );
       
-      console.log("📍 Location watch started");
+    //  console.log("📍 Location watch started");
     } else {
       if (watchIdRef.current !== null) {
         console.log("🔴 Location tracking stopped - Offline mode or no user");
