@@ -729,12 +729,6 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               {/* Dropdown Menu */}
               {isDropdownOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100">
-                    <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{user?.name}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-500">Rider ID: VC-001</p>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-1 truncate">{user?.email}</p>
-                  </div>
-
                   <button
                     onClick={handleProfile}
                     className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
