@@ -300,23 +300,89 @@ const UserProfile = ({ userId }: { userId: string }) => {
     fileInputRef.current?.click();
   };
 
+  // Reusable component for info rows
+  const InfoRow = ({ icon: Icon, label, value, isEditing, onEdit, onSave, onCancel, editValue, setEditValue, placeholder, isTextarea = false, rows = 2 }: any) => (
+    <div className="flex items-start gap-2 md:gap-3 mt-2 md:mt-3 text-gray-700 w-full">
+      <div className="flex-shrink-0 mt-1">
+        <Icon className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
+      </div>
+      <div className="flex-1 min-w-0">
+        {isEditing ? (
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+            {isTextarea ? (
+              <textarea
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                placeholder={placeholder}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full"
+                rows={rows}
+                autoFocus
+              />
+            ) : (
+              <input
+                type="text"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                placeholder={placeholder}
+                className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full"
+                autoFocus
+              />
+            )}
+            <div className="flex gap-2 flex-shrink-0">
+              <button
+                onClick={onSave}
+                className="p-1.5 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
+                aria-label="Save"
+              >
+                <Check className="w-4 h-4" />
+              </button>
+              <button
+                onClick={onCancel}
+                className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                aria-label="Cancel"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between gap-2 w-full">
+            <div className="flex-1 min-w-0">
+              {label && <span className="text-xs md:text-sm text-gray-500">{label}</span>}
+              <p className="text-sm md:text-base break-words whitespace-pre-wrap">
+                {value || 'Not provided'}
+              </p>
+            </div>
+            <button
+              onClick={onEdit}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              aria-label="Edit"
+            >
+              <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-500" />
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen p-0">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-2xl mx-auto px-3 md:px-0">
         {/* Cover Photo */}
-        <div className="h-36 relative overflow bg-gradient-to-r from-gray-500 to-gray-800 bg-opacity-90 backdrop-blur-sm">
+        <div className="h-32 md:h-36 relative overflow bg-gradient-to-r from-gray-500 to-gray-800 bg-opacity-90 backdrop-blur-sm">
           <div className="absolute bottom-0 w-full h-1/2"></div>
           
           {/* Profile Picture - Made Uploadable */}
-          <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none group">
-            <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
+          <div className="absolute -bottom-10 md:-bottom-12 left-3 md:left-4 transform md:transform-none group">
+            <div className="relative w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32">
               <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
                   src={user.avatar?user.avatar:'/NoImage_2.webp'}
                   alt={`${user.firstName}'s avatar`}
                   fill
                   className="object-cover"
-                  sizes="(max-width: 768px) 96px, (max-width: 1024px) 128px, 160px"
+                  sizes="(max-width: 768px) 80px, (max-width: 1024px) 96px, 128px"
                 />
               </div>
               
@@ -328,9 +394,9 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 aria-label="Upload avatar"
               >
                 {isUploading ? (
-                  <div className="w-8 h-8 border-2 border-lime-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 md:w-6 md:h-6 border-2 border-lime-500 border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  <Camera className="w-8 h-8 text-white" />
+                  <Camera className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 )}
               </button>
               
@@ -346,442 +412,230 @@ const UserProfile = ({ userId }: { userId: string }) => {
         </div>
 
         {/* Profile Info */}
-        <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div className="w-full md:w-auto">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+        <div className="max-w-4xl mx-auto px-2 md:px-4 pt-14 md:pt-16 pb-4">
+          <div className="flex flex-col">
+            <div className="w-full">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 break-words">
                 {user.firstName} {user.lastName}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className="text-gray-600 mt-1 text-sm md:text-base">
                 @{user.firstName.toLowerCase()}{user.lastName.toLowerCase()}
               </p>
               
               {/* Business Name */}
-              <div className="flex items-center gap-2 mt-3 text-gray-700">
-                <Building2 className="w-5 h-5 text-gray-500" />
-                {isEditingBusinessName ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="text"
-                      value={businessName}
-                      onChange={(e) => setBusinessName(e.target.value)}
-                      placeholder="Enter business name"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleBusinessNameUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save business name"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingBusinessName(false);
-                          setBusinessName(user.businessName || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm md:text-base font-medium">
-                      {user.businessName || 'Business name not provided'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setBusinessName(user.businessName || '');
-                        setIsEditingBusinessName(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      aria-label="Edit business name"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={Building2}
+                value={user.businessName}
+                isEditing={isEditingBusinessName}
+                onEdit={() => {
+                  setBusinessName(user.businessName || '');
+                  setIsEditingBusinessName(true);
+                }}
+                onSave={handleBusinessNameUpdate}
+                onCancel={() => {
+                  setIsEditingBusinessName(false);
+                  setBusinessName(user.businessName || '');
+                }}
+                editValue={businessName}
+                setEditValue={setBusinessName}
+                placeholder="Enter business name"
+              />
 
               {/* Business Type */}
-              <div className="flex items-center gap-2 mt-2 text-gray-700">
-                <Briefcase className="w-5 h-5 text-gray-500" />
-                {isEditingBusinessType ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="text"
-                      value={businessType}
-                      onChange={(e) => setBusinessType(e.target.value)}
-                      placeholder="Enter business type (e.g., Retail, Wholesale, Service)"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleBusinessTypeUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save business type"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingBusinessType(false);
-                          setBusinessType(user.businessType || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm md:text-base">
-                      Business Type: {user.businessType || 'Not specified'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setBusinessType(user.businessType || '');
-                        setIsEditingBusinessType(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      aria-label="Edit business type"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={Briefcase}
+                label="Business Type"
+                value={user.businessType}
+                isEditing={isEditingBusinessType}
+                onEdit={() => {
+                  setBusinessType(user.businessType || '');
+                  setIsEditingBusinessType(true);
+                }}
+                onSave={handleBusinessTypeUpdate}
+                onCancel={() => {
+                  setIsEditingBusinessType(false);
+                  setBusinessType(user.businessType || '');
+                }}
+                editValue={businessType}
+                setEditValue={setBusinessType}
+                placeholder="Enter business type (e.g., Retail, Wholesale, Service)"
+              />
 
               {/* Product Category */}
-              <div className="flex items-center gap-2 mt-2 text-gray-700">
-                <Package className="w-5 h-5 text-gray-500" />
-                {isEditingProductCategory ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="text"
-                      value={productCategory}
-                      onChange={(e) => setProductCategory(e.target.value)}
-                      placeholder="Enter product category (e.g., Electronics, Clothing, Food)"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleProductCategoryUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save product category"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingProductCategory(false);
-                          setProductCategory(user.productCategory || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm md:text-base">
-                      Product Category: {user.productCategory || 'Not specified'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setProductCategory(user.productCategory || '');
-                        setIsEditingProductCategory(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      aria-label="Edit product category"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={Package}
+                label="Product Category"
+                value={user.productCategory}
+                isEditing={isEditingProductCategory}
+                onEdit={() => {
+                  setProductCategory(user.productCategory || '');
+                  setIsEditingProductCategory(true);
+                }}
+                onSave={handleProductCategoryUpdate}
+                onCancel={() => {
+                  setIsEditingProductCategory(false);
+                  setProductCategory(user.productCategory || '');
+                }}
+                editValue={productCategory}
+                setEditValue={setProductCategory}
+                placeholder="Enter product category (e.g., Electronics, Clothing, Food)"
+              />
 
               {/* Business Description */}
-              <div className="flex items-start gap-2 mt-2 text-gray-700">
-                <FileText className="w-5 h-5 text-gray-500 mt-1" />
-                {isEditingBusinessDescription ? (
-                  <div className="flex items-start gap-2 flex-wrap w-full">
-                    <textarea
-                      value={businessDescription}
-                      onChange={(e) => setBusinessDescription(e.target.value)}
-                      placeholder="Enter business description"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full min-w-[200px]"
-                      rows={3}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleBusinessDescriptionUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save business description"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingBusinessDescription(false);
-                          setBusinessDescription(user.businessDescription || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm md:text-base flex-1">
-                      {user.businessDescription || 'No business description provided'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setBusinessDescription(user.businessDescription || '');
-                        setIsEditingBusinessDescription(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Edit business description"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={FileText}
+                label="Business Description"
+                value={user.businessDescription}
+                isEditing={isEditingBusinessDescription}
+                onEdit={() => {
+                  setBusinessDescription(user.businessDescription || '');
+                  setIsEditingBusinessDescription(true);
+                }}
+                onSave={handleBusinessDescriptionUpdate}
+                onCancel={() => {
+                  setIsEditingBusinessDescription(false);
+                  setBusinessDescription(user.businessDescription || '');
+                }}
+                editValue={businessDescription}
+                setEditValue={setBusinessDescription}
+                placeholder="Enter business description"
+                isTextarea={true}
+                rows={3}
+              />
 
               {/* Website */}
-              <div className="flex items-center gap-2 mt-2 text-gray-700">
-                <Globe className="w-5 h-5 text-gray-500" />
-                {isEditingWebsite ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="url"
-                      value={website}
-                      onChange={(e) => setWebsite(e.target.value)}
-                      placeholder="Enter website URL"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleWebsiteUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save website"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
+              <div className="flex items-start gap-2 md:gap-3 mt-2 md:mt-3 text-gray-700 w-full">
+                <div className="flex-shrink-0 mt-1">
+                  <Globe className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  {isEditingWebsite ? (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+                      <input
+                        type="url"
+                        value={website}
+                        onChange={(e) => setWebsite(e.target.value)}
+                        placeholder="Enter website URL"
+                        className="flex-1 px-3 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full"
+                        autoFocus
+                      />
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={handleWebsiteUpdate}
+                          className="p-1.5 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
+                          aria-label="Save"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditingWebsite(false);
+                            setWebsite(user.website || '');
+                          }}
+                          className="p-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                          aria-label="Cancel"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs md:text-sm text-gray-500">Website</span>
+                        {user.website ? (
+                          <a 
+                            href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm md:text-base text-lime-600 hover:text-lime-700 hover:underline break-all block"
+                          >
+                            {user.website}
+                          </a>
+                        ) : (
+                          <p className="text-sm md:text-base break-words">Not provided</p>
+                        )}
+                      </div>
                       <button
                         onClick={() => {
-                          setIsEditingWebsite(false);
                           setWebsite(user.website || '');
+                          setIsEditingWebsite(true);
                         }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
+                        className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+                        aria-label="Edit"
                       >
-                        <X className="w-4 h-4" />
+                        <Pencil className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-500" />
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {user.website ? (
-                      <a 
-                        href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm md:text-base text-lime-600 hover:text-lime-700 hover:underline"
-                      >
-                        {user.website}
-                      </a>
-                    ) : (
-                      <span className="text-sm md:text-base">No website provided</span>
-                    )}
-                    <button
-                      onClick={() => {
-                        setWebsite(user.website || '');
-                        setIsEditingWebsite(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      aria-label="Edit website"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
 
               {/* Business Address */}
-              <div className="flex items-start gap-2 mt-2 text-gray-700">
-                <Home className="w-5 h-5 text-gray-500 mt-1" />
-                {isEditingBusinessAddress ? (
-                  <div className="flex items-start gap-2 flex-wrap w-full">
-                    <textarea
-                      value={businessAddress}
-                      onChange={(e) => setBusinessAddress(e.target.value)}
-                      placeholder="Enter business address"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full min-w-[200px]"
-                      rows={2}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleBusinessAddressUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save business address"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingBusinessAddress(false);
-                          setBusinessAddress(user.businessAddress || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm md:text-base flex-1">
-                      {user.businessAddress || 'Business address not provided'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setBusinessAddress(user.businessAddress || '');
-                        setIsEditingBusinessAddress(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Edit business address"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={Home}
+                label="Business Address"
+                value={user.businessAddress}
+                isEditing={isEditingBusinessAddress}
+                onEdit={() => {
+                  setBusinessAddress(user.businessAddress || '');
+                  setIsEditingBusinessAddress(true);
+                }}
+                onSave={handleBusinessAddressUpdate}
+                onCancel={() => {
+                  setIsEditingBusinessAddress(false);
+                  setBusinessAddress(user.businessAddress || '');
+                }}
+                editValue={businessAddress}
+                setEditValue={setBusinessAddress}
+                placeholder="Enter business address"
+                isTextarea={true}
+                rows={2}
+              />
 
               {/* Address Instruction */}
-              <div className="flex items-start gap-2 mt-2 text-gray-700">
-                <MapPin className="w-5 h-5 text-gray-500 mt-1" />
-                {isEditingAddressInstruction ? (
-                  <div className="flex items-start gap-2 flex-wrap w-full">
-                    <textarea
-                      value={addressInstruction}
-                      onChange={(e) => setAddressInstruction(e.target.value)}
-                      placeholder="Enter delivery instructions (e.g., gate code, landmark, special notes)"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm w-full min-w-[200px]"
-                      rows={2}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleAddressInstructionUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save address instructions"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingAddressInstruction(false);
-                          setAddressInstruction(user.addressInstruction || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm md:text-base flex-1">
-                      Delivery Instructions: {user.addressInstruction || 'Not provided'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setAddressInstruction(user.addressInstruction || '');
-                        setIsEditingAddressInstruction(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Edit address instructions"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={MapPin}
+                label="Delivery Instructions"
+                value={user.addressInstruction}
+                isEditing={isEditingAddressInstruction}
+                onEdit={() => {
+                  setAddressInstruction(user.addressInstruction || '');
+                  setIsEditingAddressInstruction(true);
+                }}
+                onSave={handleAddressInstructionUpdate}
+                onCancel={() => {
+                  setIsEditingAddressInstruction(false);
+                  setAddressInstruction(user.addressInstruction || '');
+                }}
+                editValue={addressInstruction}
+                setEditValue={setAddressInstruction}
+                placeholder="Enter delivery instructions (e.g., gate code, landmark, special notes)"
+                isTextarea={true}
+                rows={2}
+              />
 
               {/* Phone Number */}
-              <div className="flex items-center gap-2 mt-2 text-gray-700">
-                <Phone className="w-5 h-5 text-gray-500" />
-                {isEditingPhone ? (
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="Enter phone number"
-                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handlePhoneUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save phone number"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingPhone(false);
-                          setPhoneNumber(user.phone || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm md:text-base">
-                      {user.phone || 'No phone number added'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setPhoneNumber(user.phone || '');
-                        setIsEditingPhone(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                      aria-label="Edit phone number"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
+              <InfoRow
+                icon={Phone}
+                label="Phone Number"
+                value={user.phone}
+                isEditing={isEditingPhone}
+                onEdit={() => {
+                  setPhoneNumber(user.phone || '');
+                  setIsEditingPhone(true);
+                }}
+                onSave={handlePhoneUpdate}
+                onCancel={() => {
+                  setIsEditingPhone(false);
+                  setPhoneNumber(user.phone || '');
+                }}
+                editValue={phoneNumber}
+                setEditValue={setPhoneNumber}
+                placeholder="Enter phone number"
+              />
               
-              <div className="flex gap-4 md:gap-6 mt-4 text-gray-700 text-sm md:text-base">
+              <div className="flex gap-4 md:gap-6 mt-4 md:mt-6 text-gray-700 text-xs md:text-sm">
                 <span className="hover:underline cursor-pointer">
                   <strong>{user.posts?.length || 0}</strong> posts
                 </span>
@@ -793,13 +647,15 @@ const UserProfile = ({ userId }: { userId: string }) => {
           </div>
           
           {/* Tabs Navigation */}
-          <ProfileTabs 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            tabsConfig={[
-              { id: 'address', label: 'Addresses', icon: 'location' },
-            ]}
-          />
+          <div className="mt-4 md:mt-6">
+            <ProfileTabs 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              tabsConfig={[
+                { id: 'address', label: 'Addresses', icon: 'location' },
+              ]}
+            />
+          </div>
         </div>
 
         {/* Tab Content */}
