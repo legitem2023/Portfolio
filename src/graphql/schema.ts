@@ -1238,6 +1238,11 @@ type Mutation {
     uploadDeliveryProof(file:ProofOfDeliveryInput): Result
     updateUserPhone(id: ID, phone: String): User
     updateUserAvatar(id: ID, avatar: String): User
+   
+    updateRiderPlate(id: ID, plate: String): User
+    updateRiderLicense(id: ID, license: String): User
+
+    
     addToWishList(userId:ID,productId:ID):Result
     updateRole(userId:ID,Level:Role):Result
     updateOrderStatus(itemId:ID,riderId:ID,supplierId:ID,userId:ID,status:String,title:String,message:String): Result
