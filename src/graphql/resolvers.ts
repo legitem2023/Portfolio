@@ -5270,6 +5270,31 @@ updateVehicleType:async (_parent: any,args:any) => {
         throw new Error(`Failed to update phone number: ${error.message}`);
       }
     },
+    updateUserAvatar: async (_:any, { id, avatar }:any) => {
+      try {
+        // Validate phone number
+        
+
+        // Update user in database using Prisma
+        const updatedUser = await prisma.user.update({
+          where: { id },
+          data: { phone: phone.trim() },
+          include: {
+            posts: true,
+            addresses: true
+          }
+        });
+
+        return updatedUser;
+      } catch (error:any) {
+        console.error('Error in updateUserPhone:', error);
+        if (error.code === 'P2025') {
+          throw new Error('User not found');
+        }
+        throw new Error(`Failed to update phone number: ${error.message}`);
+      }
+    },
+    
     addToWishList: async (_:any, { userId, productId }:any) => {
   try {
     // Check if item already exists
