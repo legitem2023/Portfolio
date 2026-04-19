@@ -172,6 +172,8 @@ type User {
   lastName: String
   avatar: String
   phone: String
+  plateNo: String
+  license: String
   emailVerified: Boolean
   createdAt: DateTime
   updatedAt: DateTime
