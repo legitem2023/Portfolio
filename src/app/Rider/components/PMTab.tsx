@@ -476,7 +476,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         const payload = await decryptToken(token, secret.toString());
         setUserId(payload.userId);
         setName(payload.name);
-        setAvatar(payload.image || "/NoImage.webp");
+        setAvatar(payload.image?payload.image:"/NoImage_1.webp");
       } catch (err) {
         console.error('Error getting role:', err);
       }
@@ -727,7 +727,7 @@ const handleSendMessage = async () => {
   // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
- console.log("sidebar",shouldShowSidebar);
+ 
   return (
     <div>
     <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100">
