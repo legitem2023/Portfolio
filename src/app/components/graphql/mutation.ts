@@ -1,5 +1,41 @@
 import { gql } from "@apollo/client";
 
+export const UPDATE_RIDER_LICENSE = `
+  mutation UpdateRiderLicense($id: ID!, $license: String!) {
+    updateRiderLicense(id: $id, license: $license) {
+      id
+      license
+      posts {
+        id
+        title
+      }
+      addresses {
+        id
+        street
+        city
+      }
+    }
+  }
+`;
+
+export const UPDATE_RIDER_PLATE = `
+  mutation UpdateRiderPlate($id: ID!, $plate: String!) {
+    updateRiderPlate(id: $id, plate: $plate) {
+      id
+      plateNo
+      posts {
+        id
+        title
+      }
+      addresses {
+        id
+        street
+        city
+      }
+    }
+  }
+`;
+
 export const CREATE_REVIEW = gql`
   mutation CreateReview($data: CreateReviewInput) {
     createReview(data: $data) {
