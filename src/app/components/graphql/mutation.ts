@@ -4,16 +4,10 @@ export const UPDATE_RIDER_LICENSE = gql`
   mutation UpdateRiderLicense($id: ID, $license: String) {
     updateRiderLicense(id: $id, license: $license) {
       id
-      license
-      posts {
-        id
-        title
-      }
-      addresses {
-        id
-        street
-        city
-      }
+      phone
+      firstName
+      lastName
+      avatar
     }
   }
 `;
@@ -22,16 +16,10 @@ export const UPDATE_RIDER_PLATE = gql`
   mutation UpdateRiderPlate($id: ID, $plate: String) {
     updateRiderPlate(id: $id, plate: $plate) {
       id
-      plateNo
-      posts {
-        id
-        title
-      }
-      addresses {
-        id
-        street
-        city
-      }
+      phone
+      firstName
+      lastName
+      avatar
     }
   }
 `;
