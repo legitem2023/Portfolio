@@ -620,7 +620,7 @@ export default function Header({
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
-                <div className="text-right">
+                {/* <div className="text-right">
                   <p className="text-sm font-semibold text-gray-900 leading-tight group-hover:text-lime-700 transition-colors">
                     {user?.name || 'Rider'}
                   </p>
@@ -628,7 +628,7 @@ export default function Header({
                     <span className="bg-lime-100 px-1.5 py-0.5 rounded-full text-lime-700 font-medium">VC-001</span>
                     <ChevronDown className={`w-3 h-3 transition-all duration-300 ${isDropdownOpen ? 'rotate-180 text-lime-600' : 'text-gray-400'}`} />
                   </p>
-                </div>
+                </div>*/}
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-lime-400 to-lime-600 rounded-full blur-md opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
                   <div className="relative w-10 h-10 bg-gradient-to-br from-lime-600 to-lime-700 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg ring-2 ring-white/50 group-hover:ring-lime-200 transition-all duration-300">
