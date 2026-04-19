@@ -532,6 +532,8 @@ query GetUser($id: ID) {
       firstName
       lastName
       avatar
+      plateNo
+      license
       phone
       followerCount
       followingCount
