@@ -15,6 +15,7 @@ import ApiBillsTab from './components/ApiBillsTab';
 import LoadingShimmer from './components/LoadingShimmer';
 import SalesList from './components/SalesList';
 import VehicleTypeManager from './components/VehicleTypeManager';
+import UserProfile from './components/UserProfile';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import { useAuth } from './hooks/useAuth';
@@ -180,6 +181,10 @@ export default function ManagementDashboard() {
         return <></>
       case 9:
         return <VehicleTypeManager/>
+      case 10:
+        return <UserProfile userId={user?.userId}/>
+      case 11:
+        return <UserProfile userId={user?.userId}/>
       default:
         return <></>;
     }
