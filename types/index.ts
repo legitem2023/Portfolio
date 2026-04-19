@@ -7,6 +7,8 @@ export interface User {
   firstName: string;
   lastName: string;
   avatar: string;
+  plateNo: string
+  license: string
   phone: string;
   emailVerified: boolean;
   createdAt: string;
