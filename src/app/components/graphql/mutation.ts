@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const UPDATE_RIDER_LICENSE = gql`
-  mutation UpdateRiderLicense($id: ID!, $license: String!) {
+  mutation UpdateRiderLicense($id: ID, $license: String) {
     updateRiderLicense(id: $id, license: $license) {
       id
       license
@@ -19,7 +19,7 @@ export const UPDATE_RIDER_LICENSE = gql`
 `;
 
 export const UPDATE_RIDER_PLATE = gql`
-  mutation UpdateRiderPlate($id: ID!, $plate: String!) {
+  mutation UpdateRiderPlate($id: ID, $plate: String) {
     updateRiderPlate(id: $id, plate: $plate) {
       id
       plateNo
