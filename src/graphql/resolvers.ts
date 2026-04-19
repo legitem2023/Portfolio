@@ -5273,12 +5273,13 @@ updateVehicleType:async (_parent: any,args:any) => {
     updateUserAvatar: async (_:any, { id, avatar }:any) => {
       try {
         // Validate phone number
-        
+        const imageUUID = uuidv4();
+        const imageFile = await saveBase64Image(avatar, `avatar_image_${imageUUID}.webp`);
 
         // Update user in database using Prisma
         const updatedUser = await prisma.user.update({
           where: { id },
-          data: { phone: phone.trim() },
+          data: { avatar: imageFile.url },
           include: {
             posts: true,
             addresses: true
