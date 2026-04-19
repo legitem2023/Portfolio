@@ -4,7 +4,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from '../../components/graphql/query';
-import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR } from '../../components/graphql/mutation';
+import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR, UPDATE_RIDER_LICENSE, UPDATE_RIDER_PLATE } from '../../components/graphql/mutation';
 import { User } from '../../../../types';
 import UserProfileShimmer from '../../components/UserProfileShimmer';
 import UserProfileShimmerRed from '../../components/UserProfileShimmerRed';
@@ -21,10 +21,16 @@ const UserProfile = ({ userId }: { userId: string }) => {
 
   const [updateUserPhone] = useMutation(UPDATE_USER_PHONE);
   const [updateUserAvatar] = useMutation(UPDATE_USER_AVATAR);
+  const [updateRiderLicense] = useMutation(UPDATE_RIDER_LICENSE);
+  const [updateRiderPlate] = useMutation(UPDATE_RIDER_PLATE);
   
   const [activeTab, setActiveTab] = useState<string>('address');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [isEditingPlate, setIsEditingPlate] = useState(false);
+  const [isEditingLicense, setIsEditingLicense] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [plateNumber, setPlateNumber] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,13 +41,11 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const user: User = data?.user;
 
   const handlePhoneUpdate = async () => {
-    // Validate phone number (basic validation)
     if (!phoneNumber.trim()) {
       alert('Please enter a phone number');
       return;
     }
 
-    // Simple phone number validation (adjust as needed)
     const phoneRegex = /^[\d\s\+\-\(\)]{10,}$/;
     if (!phoneRegex.test(phoneNumber)) {
       alert('Please enter a valid phone number');
@@ -64,17 +68,59 @@ const UserProfile = ({ userId }: { userId: string }) => {
     }
   };
 
+  const handlePlateUpdate = async () => {
+    if (!plateNumber.trim()) {
+      alert('Please enter a plate number');
+      return;
+    }
+
+    try {
+      await updateRiderPlate({
+        variables: {
+          id: userId,
+          plate: plateNumber
+        }
+      });
+      setIsEditingPlate(false);
+      refetch();
+      alert('Plate number updated successfully!');
+    } catch (error) {
+      console.error('Error updating plate:', error);
+      alert('Failed to update plate number. Please try again.');
+    }
+  };
+
+  const handleLicenseUpdate = async () => {
+    if (!licenseNumber.trim()) {
+      alert('Please enter a license number');
+      return;
+    }
+
+    try {
+      await updateRiderLicense({
+        variables: {
+          id: userId,
+          license: licenseNumber
+        }
+      });
+      setIsEditingLicense(false);
+      refetch();
+      alert('License number updated successfully!');
+    } catch (error) {
+      console.error('Error updating license:', error);
+      alert('Failed to update license number. Please try again.');
+    }
+  };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       alert('Please upload an image file (JPEG, PNG, GIF, etc.)');
       return;
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('File size must be less than 5MB');
       return;
@@ -83,7 +129,6 @@ const UserProfile = ({ userId }: { userId: string }) => {
     setIsUploading(true);
     
     try {
-      // Convert to base64
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = async () => {
@@ -231,20 +276,108 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Plate Number Section */}
+              {/* Plate Number Section - Made Editable */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Car className="w-5 h-5 text-gray-500" />
-                <span className="text-sm md:text-base">
-                  Plate Number: {user.plateNo || 'Not provided'}
-                </span>
+                {isEditingPlate ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      value={plateNumber}
+                      onChange={(e) => setPlateNumber(e.target.value)}
+                      placeholder="Enter plate number"
+                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handlePlateUpdate}
+                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
+                        aria-label="Save plate number"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingPlate(false);
+                          setPlateNumber(user.plateNo || '');
+                        }}
+                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                        aria-label="Cancel editing"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm md:text-base">
+                      Plate Number: {user.plateNo || 'Not provided'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setPlateNumber(user.plateNo || '');
+                        setIsEditingPlate(true);
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      aria-label="Edit plate number"
+                    >
+                      <Pencil className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* License Section */}
+              {/* License Section - Made Editable */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <IdCard className="w-5 h-5 text-gray-500" />
-                <span className="text-sm md:text-base">
-                  License: {user.license || 'Not provided'}
-                </span>
+                {isEditingLicense ? (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <input
+                      type="text"
+                      value={licenseNumber}
+                      onChange={(e) => setLicenseNumber(e.target.value)}
+                      placeholder="Enter license number"
+                      className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleLicenseUpdate}
+                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
+                        aria-label="Save license number"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingLicense(false);
+                          setLicenseNumber(user.license || '');
+                        }}
+                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+                        aria-label="Cancel editing"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm md:text-base">
+                      License: {user.license || 'Not provided'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setLicenseNumber(user.license || '');
+                        setIsEditingLicense(true);
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      aria-label="Edit license number"
+                    >
+                      <Pencil className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                )}
               </div>
               
               <div className="flex gap-4 md:gap-6 mt-4 text-gray-700 text-sm md:text-base">
