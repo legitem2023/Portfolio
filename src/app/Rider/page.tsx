@@ -135,11 +135,7 @@ export default function RiderDashboard() {
    // console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
     
     try {
-   //   console.log("📤 Sending location to server...", {
-        userID: user.userId,
-        latitude,
-        longitude
-      });
+     
       
       const result = await locationTracking({
         variables: {
@@ -151,10 +147,7 @@ export default function RiderDashboard() {
         }
       });
       
-   //   console.log("✅ Location sent successfully!", {
-        response: result.data?.locationTracking,
-        timestamp: new Date().toISOString()
-      });
+     
       
       lastSendTimeRef.current = now;
     } catch (error) {
@@ -170,8 +163,6 @@ export default function RiderDashboard() {
     }
 
     if (isOnline && user?.userId && navigator.geolocation) {
-    //  console.log("🟢 Starting location tracking - Online mode active");
-    //  console.log(`👤 User ID: ${user.userId}`);
       
       // Use watchPosition for continuous tracking
       watchIdRef.current = navigator.geolocation.watchPosition(
