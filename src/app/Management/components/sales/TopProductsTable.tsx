@@ -25,7 +25,7 @@ const TopProductsTable: React.FC<TopProductsTableProps> = ({ data, loading }) =>
   }
 
   const products = data || [];
-
+  console.log(products);
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performing Products</h3>
