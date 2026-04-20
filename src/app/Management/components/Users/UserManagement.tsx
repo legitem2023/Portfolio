@@ -3,6 +3,8 @@
 import { gql, useQuery, useMutation } from '@apollo/client';
 import { useState } from 'react';
 import Image from 'next/image';
+import { useDispatch } from "react-redux";
+import { setSelectedUser } from '../../../../../Redux/selectedUserSlice';
 
 // Types
 type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
@@ -92,6 +94,7 @@ const UserManagement = () => {
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  const dispatch = useDispatch();
   const { loading, error, data } = useQuery<UsersData>(USERS);
   const [updateRole] = useMutation<UpdateRoleResponse, UpdateRoleVariables>(UPDATE_ROLE, {
     refetchQueries: [{ query: USERS }]
