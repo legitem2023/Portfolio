@@ -32,6 +32,8 @@ export default function ManagementDashboard() {
       }
   // Move all useState hooks to the top, before any conditional returns
   const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
+  const activeselectedIndex:number = useSelector((state: any) => state.selectedUser.value);
+  
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
