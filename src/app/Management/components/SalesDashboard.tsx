@@ -131,7 +131,6 @@ const SalesDashboard: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Sales Analytics</h1>
             <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Monitor your business performance and growth
-              {user?.businessName && <span className="text-gray-500"> - {user.businessName}</span>}
             </p>
           </div>
           <div className="w-full sm:w-auto">
