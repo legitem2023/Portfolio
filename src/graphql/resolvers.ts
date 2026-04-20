@@ -1953,28 +1953,10 @@ topProducts: async (
     // Build where clause for orders
     const orderWhereClause = buildWhereClause(filters, dateRange);
     
-    // If supplierId is provided, filter orders that have items from that supplier
-    if (filters?.supplierId) {
-      orderWhereClause.items = {
-        some: {
-          supplierId: filters.supplierId
-        }
-      };
-    }
-
-    // Build where clause for orderItems
-    const orderItemsWhere: any = {
-      order: orderWhereClause
-    };
     
-    // If supplierId is provided, filter items by supplier
-    if (filters?.supplierId) {
-      orderItemsWhere.supplierId = filters.supplierId;
-    }
-
     // Get orderItems with product included
     const orderItems = await prisma.orderItem.findMany({
-      where: orderItemsWhere,
+      where: orderWhereClause,
       include: {
         product: {
           select: {
