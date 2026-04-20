@@ -1085,25 +1085,23 @@ type ReviewResult {
       timeframe: Timeframe
       groupBy: GroupBy
       filters: SalesFilters
-      userId: ID
     ): SalesDataResponse
     
     salesMetrics(
       timeframe: Timeframe
       filters: SalesFilters
-      userId: ID
     ): SalesMetrics
     
     topProducts(
       timeframe: Timeframe
       limit: Int
-      userId: ID
+      filters: SalesFilters
     ): [ProductSales]
     
     salesTrend(
       timeframe: Timeframe
       groupBy: TrendGroupBy
-      userId: ID
+      filters: SalesFilters
     ): [SalesTrendPoint]
     
     # Sales List queries
