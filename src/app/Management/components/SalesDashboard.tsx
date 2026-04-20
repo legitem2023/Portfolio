@@ -17,12 +17,12 @@ const SalesDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   //if (authLoading) return '..Loading';
   const { data: metricsData, loading: metricsLoading, error: metricsError } = useQuery(SALES_METRICS_QUERY, {
-    variables: { timeframe, filters, userId:user?.userId },
+    variables: { timeframe, filters },
     fetchPolicy: 'cache-and-network',
   });
 
   const { data: salesData, loading: salesLoading, error: salesError } = useQuery(SALES_DATA_QUERY, {
-    variables: { timeframe, groupBy, filters, userId:user?.userId },
+    variables: { timeframe, groupBy, filters },
     fetchPolicy: 'cache-and-network',
   });
 
