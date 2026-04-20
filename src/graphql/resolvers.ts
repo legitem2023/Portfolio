@@ -623,20 +623,53 @@ async function getOrderStatusBreakdown(filters: SalesFilters, dateRange: DateRan
     };
   }
   
-  const statusCounts = await prisma.order.groupBy({
-    by: ['status'],
+  // First, get all orders that match the criteria
+  const orders = await prisma.order.findMany({
     where: orderWhereClause,
-    _count: {
-      id: true
+    select: {
+      id: true,
+      status: true,
+      items: {
+        where: filters?.supplierId ? {
+          supplierId: filters.supplierId
+        } : undefined,
+        select: {
+          id: true
+        }
+      }
     }
   });
-
+  
+  // Filter orders to only those that have items (when supplier filter is applied)
+  let filteredOrders = orders;
+  if (filters?.supplierId) {
+    filteredOrders = orders.filter(order => order.items.length > 0);
+  }
+  
+  // Count statuses from filtered orders
+  const statusCountMap = new Map();
+  filteredOrders.forEach(order => {
+    const count = statusCountMap.get(order.status) || 0;
+    statusCountMap.set(order.status, count + 1);
+  });
+  
+  // Convert to array format
+  const statusCounts = Array.from(statusCountMap.entries()).map(([status, count]) => ({
+    status,
+    _count: { id: count }
+  }));
+  
   const total = statusCounts.reduce((sum: number, item: any) => sum + item._count.id, 0);
-
+  
+  // If no orders found, return empty array
+  if (total === 0) {
+    return [];
+  }
+  
   return statusCounts.map((item: any) => ({
     status: item.status,
     count: item._count.id,
-    percentage: total > 0 ? (item._count.id / total) * 100 : 0
+    percentage: (item._count.id / total) * 100
   }));
 }
 
