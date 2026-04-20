@@ -18,6 +18,7 @@ export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | '
 export interface SalesFilters {
   status?: OrderStatus;
   userId?: string;
+  supplierId?: string;
   dateRange?: {
     start: string;
     end: string;
