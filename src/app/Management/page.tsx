@@ -183,9 +183,9 @@ export default function ManagementDashboard() {
         return <></>
       case 9:
         return <VehicleTypeManager/>
-      case 10:
-        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
       case 11:
+        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
+      case 10:
         return <UserProfile userId={user?.userId?user?.userId:''}/>
       default:
         return <></>;
