@@ -421,55 +421,34 @@ async function getGroupedSalesData(
   groupBy: string, 
   dateRange: DateRange
 ) {
-  // Build where clause for OrderItem directly
-  const itemWhereClause = buildWhereClause(filters, dateRange);
+  const { supplierId, ...orderFilters } = filters || {};
+  
+  // Build order where clause
+  let orderWhereClause = buildWhereClause(orderFilters, dateRange);
+  
+  // Filter orders by supplier if needed
+  if (supplierId) {
+    orderWhereClause = {
+      ...orderWhereClause,
+      items: {
+        some: { supplierId: supplierId }
+      }
+    };
+  }
   
   const orders = await prisma.order.findMany({
+    where: orderWhereClause,
     include: {
       items: {
-        where: itemWhereClause, // Filter items directly
-        select: {
-          id: true,
-          orderId: true,
-          productId: true,
-          supplierId: true,
-          riderId: true,
-          trackingNumber: true,
-          quantity: true,
-          price: true,
-          variantInfo: true,
-          individualShipping: true,
-          individualDistance: true,
-          status: true,
-          rejectedBy: true,
-          // Don't include full relations unless needed
-          // supplier: true,  // Remove - heavy
-          // order: true,     // Remove - circular reference
-          // product: true,   // Remove unless you need product details
-          // rider: true,     // Remove - heavy
-          recipientName: true,
-          recipientPhone: true,
-          pickupAddress: true,
-          pickupLatitude: true,
-          pickupLongitude: true,
-          dropoffAddress: true,
-          dropoffLatitude: true,
-          dropoffLongitude: true,
-          estimatedDeliveryTime: true,
-          eta: true,
-          actualDeliveryTime: true,
-          ata: true,
-          remitted: true,
-          finished: true
-        }
+        where: supplierId ? { supplierId: supplierId } : undefined
       }
     },
     orderBy: {
       createdAt: 'asc'
     }
   });
-
-  // Remove manual supplier filtering - it's now handled in itemWhereClause
+  
+  // Group data based on groupBy parameter
   const groupedData = groupOrdersByTimeframe(orders, groupBy, dateRange);
   return groupedData;
 }
