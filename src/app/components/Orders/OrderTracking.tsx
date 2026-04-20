@@ -551,7 +551,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder }: {
   onWriteReview: (productId: string, productName: string) => void;
   onTrackOrder: (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }) => void;
 }) {
-  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
   
   const shipping = group.items.reduce((total, item) => {
     const shippingAmount = typeof item.individualShipping === 'number' 
