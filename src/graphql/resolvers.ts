@@ -571,65 +571,29 @@ async function getBasicMetrics(filters: SalesFilters, dateRange: DateRange) {
 }
 
 async function getOrderStatusBreakdown(filters: SalesFilters, dateRange: DateRange) {
-  // Build the base where clause for orders
-  const orderWhereClause = buildWhereClause(filters, dateRange);
+  // Build the where clause for order items (includes all filtering)
+  const orderItemWhereClause = buildWhereClause(filters, dateRange);
   
-  // If supplierId is provided, filter orders that have items from that supplier
-  if (filters?.supplierId) {
-    orderWhereClause.items = {
-      some: {
-        supplierId: filters.supplierId
-      }
-    };
-  }
-  
-  // First, get all orders that match the criteria
-  const orders = await prisma.order.findMany({
-    where: orderWhereClause,
-    select: {
-      id: true,
-      status: true,
-      items: {
-        where: filters?.supplierId ? {
-          supplierId: filters.supplierId
-        } : undefined,
-        select: {
-          id: true
-        }
-      }
+  // Group by status to get counts directly from database
+  const statusCounts = await prisma.orderItem.groupBy({
+    by: ['status'],
+    where: orderItemWhereClause,
+    _count: {
+      status: true
     }
   });
   
-  // Filter orders to only those that have items (when supplier filter is applied)
-  let filteredOrders = orders;
-  if (filters?.supplierId) {
-    filteredOrders = orders.filter(order => order.items.length > 0);
-  }
+  const total = statusCounts.reduce((sum, item) => sum + item._count.status, 0);
   
-  // Count statuses from filtered orders
-  const statusCountMap = new Map();
-  filteredOrders.forEach(order => {
-    const count = statusCountMap.get(order.status) || 0;
-    statusCountMap.set(order.status, count + 1);
-  });
-  
-  // Convert to array format
-  const statusCounts = Array.from(statusCountMap.entries()).map(([status, count]) => ({
-    status,
-    _count: { id: count }
-  }));
-  
-  const total = statusCounts.reduce((sum: number, item: any) => sum + item._count.id, 0);
-  
-  // If no orders found, return empty array
+  // If no items found, return empty array
   if (total === 0) {
     return [];
   }
   
-  return statusCounts.map((item: any) => ({
+  return statusCounts.map((item) => ({
     status: item.status,
-    count: item._count.id,
-    percentage: (item._count.id / total) * 100
+    count: item._count.status,
+    percentage: (item._count.status / total) * 100
   }));
 }
 
