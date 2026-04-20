@@ -79,6 +79,7 @@ interface SetDefaultAddressResponse {
 interface SalesFilters {
   status?: OrderStatus;
   userId?: string;
+  supplierId?:string;
   dateRange?: {
     start: Date;
     end: Date;
@@ -149,6 +150,10 @@ function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
 
   if (filters?.userId) {
     where.userId = filters.userId;
+  }
+  
+  if (filters?.supplierId) {
+    where.supplierId = filters.supplierId;
   }
 
   if (filters?.minAmount !== undefined) {
