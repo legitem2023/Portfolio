@@ -153,7 +153,7 @@ function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
   }
   
   if (filters?.supplierId) {
-    where.supplierId = filters.supplierId;
+    //where.supplierId = filters.supplierId;
   }
 
   if (filters?.minAmount !== undefined) {
