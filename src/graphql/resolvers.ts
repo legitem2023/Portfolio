@@ -415,54 +415,59 @@ function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
   return where;
 }
 
+
 async function getGroupedSalesData(
   filters: SalesFilters,
   groupBy: string, 
   dateRange: DateRange
 ) {
-  // Build the base where clause for orders
-  const orderWhereClause = buildWhereClause(filters, dateRange);
-  
-  // If supplierId is provided, we need to filter orders that have items from that supplier
-  
+  // Build where clause for OrderItem directly
+  const itemWhereClause = buildItemWhereClause(filters, dateRange);
   
   const orders = await prisma.order.findMany({
     include: {
-      items:{
-        where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {}, // All filtering happens here
-        select:{
-           id: true,
-           orderId: true,
-           productId: true,
-           supplierId: true,
-           riderId: true,
-           trackingNumber: true,
-           quantity: true,
-           price: true,
-           variantInfo: true,
-           individualShipping: true,
-           individualDistance: true,
-           status: true,
-           rejectedBy: true,
-           supplier: true,
-           order: true,
-           product: true,
-           rider: true,
-           recipientName: true,
-           recipientPhone: true,
-           pickupAddress: true,
-           pickupLatitude: true,
-           pickupLongitude: true,
-           dropoffAddress: true,
-           dropoffLatitude: true,
-           dropoffLongitude: true,
-           estimatedDeliveryTime: true,
-           eta: true,
-           actualDeliveryTime: true,
-           ata: true,
-           remitted: true,
-           finished: true
+      items: {
+        where: itemWhereClause, // Filter items directly
+        select: {
+          id: true,
+          orderId: true,
+          productId: true,
+          supplierId: true,
+          riderId: true,
+          trackingNumber: true,
+          quantity: true,
+          price: true,
+          variantInfo: true,
+          individualShipping: true,
+          individualDistance: true,
+          status: true,
+          rejectedBy: true,
+          // Don't include full relations unless needed
+          // supplier: true,  // Remove - heavy
+          // order: true,     // Remove - circular reference
+          // product: true,   // Remove unless you need product details
+          // rider: true,     // Remove - heavy
+          recipientName: true,
+          recipientPhone: true,
+          pickupAddress: true,
+          pickupLatitude: true,
+          pickupLongitude: true,
+          dropoffAddress: true,
+          dropoffLatitude: true,
+          dropoffLongitude: true,
+          estimatedDeliveryTime: true,
+          eta: true,
+          actualDeliveryTime: true,
+          ata: true,
+          remitted: true,
+          finished: true
         }
+      }
+    },
+    where: {
+      // Filter orders that have at least one matching item
+      items: {
+        some: itemWhereClause
       }
     },
     orderBy: {
@@ -470,17 +475,8 @@ async function getGroupedSalesData(
     }
   });
 
-  // Filter items by supplierId if provided
-  let processedOrders = orders;
-  if (filters?.supplierId) {
-    processedOrders = orders.map(order => ({
-      ...order,
-      items: order.items.filter(item => item.supplierId === filters.supplierId)
-    }));
-  }
-
-  // Group data based on groupBy parameter
-  const groupedData = groupOrdersByTimeframe(processedOrders, groupBy, dateRange);
+  // Remove manual supplier filtering - it's now handled in itemWhereClause
+  const groupedData = groupOrdersByTimeframe(orders, groupBy, dateRange);
   return groupedData;
 }
 
