@@ -519,14 +519,13 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
   const previousOrderWhereClause = buildWhereClause(filters, previousDateRange);
   
-  const previousItemsResult = await prisma.orderItem.aggregate({
-    where: {
-      order: previousOrderWhereClause
-    },
-    _sum: {
-      price: true
-    }
-  });
+const previousItemsResult = await prisma.orderItem.aggregate({
+  where: Object.keys(previousOrderWhereClause).length > 0 ? previousOrderWhereClause : {},
+  _sum: {
+    price: true
+  }
+});
+
   
   // Calculate metrics
   const totalOrders = distinctOrders.length;
