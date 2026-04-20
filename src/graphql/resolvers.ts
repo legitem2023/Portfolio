@@ -422,7 +422,7 @@ async function getGroupedSalesData(
   dateRange: DateRange
 ) {
   // Build where clause for OrderItem directly
-  const itemWhereClause = buildItemWhereClause(filters, dateRange);
+  const itemWhereClause = buildWhereClause(filters, dateRange);
   
   const orders = await prisma.order.findMany({
     include: {
