@@ -430,6 +430,39 @@ async function getGroupedSalesData(
     include: {
       items:{
         where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {}, // All filtering happens here
+        select:{
+           id: true,
+           orderId: true,
+           productId: true,
+           supplierId: true,
+           riderId: true,
+           trackingNumber: true,
+           quantity: true,
+           price: true,
+           variantInfo: true,
+           individualShipping: true,
+           individualDistance: true,
+           status: true,
+           rejectedBy: true,
+           supplier: true,
+           order: true,
+           product: true,
+           rider: true,
+           recipientName: true,
+           recipientPhone: true,
+           pickupAddress: true,
+           pickupLatitude: true,
+           pickupLongitude: true,
+           dropoffAddress: true,
+           dropoffLatitude: true,
+           dropoffLongitude: true,
+           estimatedDeliveryTime: true,
+           eta: true,
+           actualDeliveryTime: true,
+           ata: true,
+           remitted: true,
+           finished: true
+        }
       }
     },
     orderBy: {
