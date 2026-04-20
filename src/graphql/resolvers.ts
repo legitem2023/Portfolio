@@ -1902,7 +1902,7 @@ salesorder: async(parent: any, args: any) => {
       }
     },*/
 
-    topProducts: async (
+topProducts: async (
   _: any,
   { timeframe, limit = 10 }: 
   { timeframe: string; limit?: number }
@@ -1914,7 +1914,10 @@ salesorder: async(parent: any, args: any) => {
     const productSales = await prisma.orderItem.groupBy({
       by: ['productId'],
       where: {
-        order: whereClause
+        order: {
+          ...whereClause,
+          status: 'DELIVERED'
+        }
       },
       _sum: {
         quantity: true,
@@ -1931,37 +1934,41 @@ salesorder: async(parent: any, args: any) => {
       take: limit
     });
 
+    if (productSales.length === 0) {
+      return [];
+    }
+
     const totalRevenue = productSales.reduce((sum: number, item: any) => 
       sum + (item._sum.price || 0), 0
     );
 
-    // Get product names and SKUs in a single query
+    // Get products - make sure we're using the right ID field
     const productIds = productSales.map((item: any) => item.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
       select: { 
         id: true, 
         name: true,
-        sku: true  // Include SKU if you prefer that
+        sku: true
       }
     });
 
-    const productMap = products.reduce((map: any, product: any) => {
-      map[product.id] = {
-        name: product.name,
-        sku: product.sku
-      };
-      return map;
-    }, {});
+    // Create a Map for O(1) lookup
+    const productMap = new Map(
+      products.map(product => [product.id, { name: product.name, sku: product.sku }])
+    );
 
-    return productSales.map((item: any) => ({
-      productId: item.productId,
-      productName: productMap[item.productId]?.name,
-      productSku: productMap[item.productId]?.sku,  // Optional: include SKU
-      unitsSold: item._sum.quantity || 0,
-      revenue: item._sum.price || 0,
-      percentage: totalRevenue > 0 ? ((item._sum.price || 0) / totalRevenue) * 100 : 0
-    }));
+    return productSales.map((item: any) => {
+      const productInfo = productMap.get(item.productId);
+      return {
+        productId: item.productId,
+        productName: productInfo?.name, // Will be undefined if not found
+        productSku: productInfo?.sku,
+        unitsSold: item._sum.quantity || 0,
+        revenue: item._sum.price || 0,
+        percentage: totalRevenue > 0 ? ((item._sum.price || 0) / totalRevenue) * 100 : 0
+      };
+    });
   } catch (error) {
     console.error('Error in topProducts query:', error);
     throw new Error('Failed to fetch top products');
