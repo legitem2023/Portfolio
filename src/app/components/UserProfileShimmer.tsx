@@ -97,7 +97,6 @@ const UserProfileShimmer = () => {
             rgba(255, 255, 255, 0) 100%
           );
           animation: shimmer 1.5s infinite;
-          transform: translateX(-100%);
         }
       `}</style>
     </div>
