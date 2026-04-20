@@ -14,19 +14,20 @@ const SalesDashboard: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('LAST_30_DAYS');
   const [groupBy, setGroupBy] = useState<GroupBy>('DAILY');
   const [filters, setFilters] = useState<SalesFilters>({});
-
+  const { user, loading: authLoading } = useAuth();
+  //if (authLoading) return '..Loading';
   const { data: metricsData, loading: metricsLoading, error: metricsError } = useQuery(SALES_METRICS_QUERY, {
-    variables: { timeframe, filters },
+    variables: { timeframe, filters, userId:user?.userId },
     fetchPolicy: 'cache-and-network',
   });
 
   const { data: salesData, loading: salesLoading, error: salesError } = useQuery(SALES_DATA_QUERY, {
-    variables: { timeframe, groupBy, filters },
+    variables: { timeframe, groupBy, filters, userId:user?.userId },
     fetchPolicy: 'cache-and-network',
   });
 
   const { data: topProductsData, loading: topProductsLoading, error: topProductsError } = useQuery(TOP_PRODUCTS_QUERY, {
-    variables: { timeframe, limit: 10 },
+    variables: { timeframe, limit: 10, userId:user?.userId },
     fetchPolicy: 'cache-and-network',
   });
 
