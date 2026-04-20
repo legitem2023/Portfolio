@@ -41,7 +41,7 @@ export default function ParticleBackground() {
 
     // Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Deep blue winter night
+    scene.background = new THREE.Color(0xE6E6FA); // Deep blue winter night
     
     const camera = new THREE.PerspectiveCamera(75, containerSize.width / containerSize.height, 1, 1000);
     camera.position.z = 400;
