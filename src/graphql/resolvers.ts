@@ -1980,12 +1980,12 @@ topProducts: async (
 },
     salesTrend: async (
       _: any,
-      { timeframe, groupBy, userId }: 
-      { timeframe: string; groupBy: string; userId:any}
+      { timeframe, groupBy, filters = {} }: 
+      { timeframe: string; groupBy: string; filters?: SalesFilters}
     ) => {
       try {
         const dateRange = getDateRange(timeframe);
-        const whereClause = buildWhereClause({}, dateRange);
+        const whereClause = buildWhereClause(filters, dateRange);
         
         return await getSalesTrendData(whereClause, groupBy, dateRange);
       } catch (error) {
