@@ -419,6 +419,8 @@ model OrderItem {
   ata                  String?
   remitted             Boolean? @default(false)
   finished             Boolean? @default(false)
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
   @@index([supplierId])      // Vendor order dashboard
   @@index([riderId])         // Rider delivery dashboard  
   @@index([status])          // Order processing pipeline
