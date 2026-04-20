@@ -464,12 +464,6 @@ async function getGroupedSalesData(
         }
       }
     },
-    where: {
-      // Filter orders that have at least one matching item
-      items: {
-        some: itemWhereClause
-      }
-    },
     orderBy: {
       createdAt: 'asc'
     }
@@ -525,16 +519,48 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   const orderWhereClause = buildWhereClause(filters, dateRange);
   
   // If supplierId is provided, filter orders that have items from that supplier
-  if (filters?.supplierId) {
-    orderWhereClause.items = {
-      some: {
-        supplierId: filters.supplierId
-      }
-    };
-  }
+  
   
   const result = await prisma.order.aggregate({
-    where: orderWhereClause,
+    include: {
+      items: {
+        where: itemWhereClause, // Filter items directly
+        select: {
+          id: true,
+          orderId: true,
+          productId: true,
+          supplierId: true,
+          riderId: true,
+          trackingNumber: true,
+          quantity: true,
+          price: true,
+          variantInfo: true,
+          individualShipping: true,
+          individualDistance: true,
+          status: true,
+          rejectedBy: true,
+          // Don't include full relations unless needed
+          // supplier: true,  // Remove - heavy
+          // order: true,     // Remove - circular reference
+          // product: true,   // Remove unless you need product details
+          // rider: true,     // Remove - heavy
+          recipientName: true,
+          recipientPhone: true,
+          pickupAddress: true,
+          pickupLatitude: true,
+          pickupLongitude: true,
+          dropoffAddress: true,
+          dropoffLatitude: true,
+          dropoffLongitude: true,
+          estimatedDeliveryTime: true,
+          eta: true,
+          actualDeliveryTime: true,
+          ata: true,
+          remitted: true,
+          finished: true
+        }
+      }
+    },
     _sum: {
       total: true
     },
