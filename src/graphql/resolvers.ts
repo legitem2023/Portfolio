@@ -2149,6 +2149,180 @@ salesorder: async(parent: any, args: any) => {
     },
 
     // ================= Sales Analytics Queries =================
+  salesData: async (
+  _: any,
+  { timeframe, groupBy, filters = {} }: 
+  { timeframe: string; groupBy: string; filters?: SalesFilters }
+) => {
+  try {
+    const dateRange = getDateRange(timeframe, filters?.dateRange);
+    
+    const [orders, summary] = await Promise.all([
+      getGroupedSalesData(filters, groupBy, dateRange),
+      getSalesSummary(filters, dateRange)
+    ]);
+
+    return {
+      data: orders,
+      summary,
+      timeframe: {
+        start: dateRange.start,
+        end: dateRange.end,
+        label: timeframe
+      }
+    };
+  } catch (error) {
+    console.error('Error in salesData query:', error);
+    throw new Error('Failed to fetch sales data');
+  }
+},
+
+salesMetrics: async (
+  _: any,
+  { timeframe, filters = {} }: 
+  { timeframe: string; filters?: SalesFilters }
+) => {
+  try {
+    const dateRange = getDateRange(timeframe, filters?.dateRange);
+    const previousDateRange = getPreviousDateRange(timeframe, dateRange);
+
+    const [
+      currentMetrics,
+      previousMetrics,
+      statusBreakdown,
+      customerData
+    ] = await Promise.all([
+      getBasicMetrics(filters, dateRange),
+      getBasicMetrics({}, previousDateRange),
+      getOrderStatusBreakdown(filters, dateRange),
+      getCustomerMetrics(filters, dateRange)
+    ]);
+
+    return {
+      revenue: {
+        total: currentMetrics.totalRevenue,
+        average: currentMetrics.averageOrderValue,
+        growth: calculateGrowthRate(currentMetrics.totalRevenue, previousMetrics.totalRevenue),
+        target: null // You can implement target logic
+      },
+      orders: {
+        total: currentMetrics.totalOrders,
+        averageValue: currentMetrics.averageOrderValue,
+        growth: calculateGrowthRate(currentMetrics.totalOrders, previousMetrics.totalOrders),
+        statusBreakdown
+      },
+      customers: customerData
+    };
+  } catch (error) {
+    console.error('Error in salesMetrics query:', error);
+    throw new Error('Failed to fetch sales metrics');
+  }
+},
+
+topProducts: async (
+  _: any,
+  { timeframe, limit = 10, filters = {} }: 
+  { timeframe: string; limit?: number; filters?: SalesFilters }
+) => {
+  try {
+    const dateRange = getDateRange(timeframe, filters?.dateRange);
+    
+    // Build where clause for orders
+    const orderWhereClause = buildWhereClause(filters, dateRange);
+    
+    // If supplierId is provided, filter orders that have items from that supplier
+    if (filters?.supplierId) {
+      orderWhereClause.items = {
+        some: {
+          supplierId: filters.supplierId
+        }
+      };
+    }
+
+    // Build where clause for orderItems
+    const orderItemsWhere: any = {
+      order: orderWhereClause
+    };
+    
+    // If supplierId is provided, filter items by supplier
+    if (filters?.supplierId) {
+      orderItemsWhere.supplierId = filters.supplierId;
+    }
+
+    // Get orderItems with product included
+    const orderItems = await prisma.orderItem.findMany({
+      where: orderItemsWhere,
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            sku: true
+          }
+        }
+      }
+    });
+
+    if (orderItems.length === 0) {
+      return [];
+    }
+
+    // Aggregate by product
+    const productMap = new Map();
+
+    orderItems.forEach(item => {
+      const productId = item.productId;
+      const productName = item.product?.name;
+      const productSku = item.product?.sku;
+
+      if (!productMap.has(productId)) {
+        productMap.set(productId, {
+          productId: productId,
+          productName: productName,
+          productSku: productSku,
+          unitsSold: 0,
+          revenue: 0
+        });
+      }
+
+      const productData = productMap.get(productId);
+      productData.unitsSold += item.quantity || 0;
+      productData.revenue += (item.price || 0) * (item.quantity || 0);
+    });
+
+    // Convert to array, sort by revenue, and limit
+    const result = Array.from(productMap.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, limit);
+
+    const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
+
+    // Add percentage
+    return result.map(item => ({
+      ...item,
+      percentage: totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0
+    }));
+  } catch (error) {
+    console.error('Error in topProducts query:', error);
+    throw new Error('Failed to fetch top products');
+  }
+},
+
+salesTrend: async (
+  _: any,
+  { timeframe, groupBy, filters = {} }: 
+  { timeframe: string; groupBy: string; filters?: SalesFilters}
+) => {
+  try {
+    const dateRange = getDateRange(timeframe, filters?.dateRange);
+    
+    return await getSalesTrendData(filters, groupBy, dateRange);
+  } catch (error) {
+    console.error('Error in salesTrend query:', error);
+    throw new Error('Failed to fetch sales trend data');
+  }
+},
+    /*
     salesData: async (
       _: any,
       { timeframe, groupBy, filters = {} }: 
@@ -2307,7 +2481,8 @@ topProducts: async (
         console.error('Error in salesTrend query:', error);
         throw new Error('Failed to fetch sales trend data');
       }
-    },    
+    },  
+    */
 // In your GraphQL resolver file - update the notifications resolver
 notifications: async (_:any, { userId, filters }:any, context:any) => {
   try {
