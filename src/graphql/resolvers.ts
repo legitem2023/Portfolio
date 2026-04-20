@@ -484,12 +484,12 @@ function groupOrdersByTimeframe(orders: any[], groupBy: string, dateRange: DateR
 }
 
 async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
-  // Build the where clause for orders (includes all filtering)
-  const orderWhereClause = buildWhereClause(filters, dateRange);
+  // Build the where clause for order items (includes all filtering)
+  const orderItemWhereClause = buildWhereClause(filters, dateRange);
   
   // Get order items aggregation
   const itemsResult = await prisma.orderItem.aggregate({
-    where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {},
+    where: orderItemWhereClause,
     _sum: {
       quantity: true,
       price: true
@@ -498,7 +498,7 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   
   // Get distinct order count from filtered items
   const distinctOrders = await prisma.orderItem.findMany({
-    where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {},
+    where: orderItemWhereClause,
     select: {
       orderId: true
     },
@@ -507,15 +507,14 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   
   // Get previous period data for growth rate
   const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
-  const previousOrderWhereClause = buildWhereClause(filters, previousDateRange);
+  const previousOrderItemWhereClause = buildWhereClause(filters, previousDateRange);
   
-const previousItemsResult = await prisma.orderItem.aggregate({
-  where: Object.keys(previousOrderWhereClause).length > 0 ? previousOrderWhereClause : {},
-  _sum: {
-    price: true
-  }
-});
-
+  const previousItemsResult = await prisma.orderItem.aggregate({
+    where: previousOrderItemWhereClause,
+    _sum: {
+      price: true
+    }
+  });
   
   // Calculate metrics
   const totalOrders = distinctOrders.length;
