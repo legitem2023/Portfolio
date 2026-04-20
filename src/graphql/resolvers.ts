@@ -532,52 +532,41 @@ const previousItemsResult = await prisma.orderItem.aggregate({
 }
 
 async function getBasicMetrics(filters: SalesFilters, dateRange: DateRange) {
-  // Build the base where clause for orders
-  const orderWhereClause = buildWhereClause(filters, dateRange);
+  // Build the where clause for order items (includes all filtering)
+  const orderItemWhereClause = buildWhereClause(filters, dateRange);
   
-  // If supplierId is provided, filter orders that have items from that supplier
-  if (filters?.supplierId) {
-    orderWhereClause.items = {
-      some: {
-        supplierId: filters.supplierId
-      }
-    };
-  }
-  
-  const result = await prisma.order.aggregate({
-    where: orderWhereClause,
+  // Get all metrics from OrderItem
+  const itemsResult = await prisma.orderItem.aggregate({
+    where: orderItemWhereClause,
     _sum: {
-      total: true
+      quantity: true,
+      price: true  // Sum of item prices = total revenue
     },
     _count: {
-      id: true
+      id: true  // Count of items
     },
     _avg: {
-      total: true
+      price: true  // Average item price
     }
   });
-
-  // Get items sold - filter by supplierId if provided
-  const itemsWhereCondition: any = {};
   
-  if (filters?.supplierId) {
-    itemsWhereCondition.supplierId = filters.supplierId;
-    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
-  } else {
-    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
-  }
-  
-  const itemsResult = await prisma.orderItem.aggregate({
-    where: itemsWhereCondition,
-    _sum: {
-      quantity: true
-    }
+  // Get distinct order count from filtered items
+  const distinctOrders = await prisma.orderItem.findMany({
+    where: orderItemWhereClause,
+    select: {
+      orderId: true
+    },
+    distinct: ['orderId']
   });
+  
+  const totalOrders = distinctOrders.length;
+  const totalRevenue = itemsResult._sum.price || 0;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   return {
-    totalRevenue: result._sum.total || 0,
-    totalOrders: result._count.id,
-    averageOrderValue: result._avg.total || 0,
+    totalRevenue: totalRevenue,
+    totalOrders: totalOrders,
+    averageOrderValue: averageOrderValue,
     totalItemsSold: itemsResult._sum.quantity || 0
   };
 }
