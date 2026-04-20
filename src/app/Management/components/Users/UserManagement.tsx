@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useDispatch } from "react-redux";
 import { setSelectedUser } from '../../../../../Redux/selectedUserSlice';
+import { setActiveIndex } from '../../../../../Redux/activeIndexSlice';
 
 // Types
 type UserRole = 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
@@ -144,6 +145,8 @@ const UserManagement = () => {
   // New function to handle user selection
   const handleSelectUser = (userId: string) => {
     dispatch(setSelectedUser(userId));
+    dispatch(setActiveIndex(11));
+    
     console.log('Selected user ID:', userId); // For debugging
   };
 
