@@ -1778,8 +1778,8 @@ salesorder: async(parent: any, args: any) => {
     // ================= Sales Analytics Queries =================
     salesData: async (
       _: any,
-      { timeframe, groupBy, filters = {}, userId }: 
-      { timeframe: string; groupBy: string; filters?: SalesFilters; userId:any }
+      { timeframe, groupBy, filters = {} }: 
+      { timeframe: string; groupBy: string; filters?: SalesFilters }
     ) => {
       try {
         const dateRange = getDateRange(timeframe, filters?.dateRange);
@@ -1807,8 +1807,8 @@ salesorder: async(parent: any, args: any) => {
 
     salesMetrics: async (
       _: any,
-      { timeframe, filters = {},userId }: 
-      { timeframe: string; filters?: SalesFilters; userId:any }
+      { timeframe, filters = {} }: 
+      { timeframe: string; filters?: SalesFilters }
     ) => {
       try {
         const dateRange = getDateRange(timeframe, filters?.dateRange);
@@ -1909,12 +1909,12 @@ salesorder: async(parent: any, args: any) => {
 
 topProducts: async (
   _: any,
-  { timeframe, limit = 10, userId }: 
-  { timeframe: string; limit?: number; userId:any }
+  { timeframe, limit = 10, filters = {} }: 
+  { timeframe: string; limit?: number; filters?: SalesFilters }
 ) => {
   try {
     const dateRange = getDateRange(timeframe);
-    const whereClause = buildWhereClause({}, dateRange);
+    const whereClause = buildWhereClause(filters, dateRange);
 
     // Get orderItems with product included
     const orderItems = await prisma.orderItem.findMany({
