@@ -1975,8 +1975,8 @@ topProducts: async (
 },
     salesTrend: async (
       _: any,
-      { timeframe, groupBy,userId }: 
-      { timeframe: string; groupBy: string; userId }
+      { timeframe, groupBy, userId }: 
+      { timeframe: string; groupBy: string; userId:any}
     ) => {
       try {
         const dateRange = getDateRange(timeframe);
