@@ -494,96 +494,51 @@ function groupOrdersByTimeframe(orders: any[], groupBy: string, dateRange: DateR
 }
 
 async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
-  // Build the base where clause for orders
-  const orderWhereClause = {};//buildWhereClause(filters, dateRange);
+  // Build the where clause for orders (includes all filtering)
+  const orderWhereClause = buildWhereClause(filters, dateRange);
   
-  // For items aggregation, filter by supplierId if provided
-  const itemsWhereCondition: any = {};
-  
-  if (filters?.supplierId) {
-    // Get only items from the specified supplier
-    itemsWhereCondition.supplierId = filters.supplierId;
-    // Also ensure these items come from orders that match the other filters
-    itemsWhereCondition.order = orderWhereClause;
-  } else {
-    itemsWhereCondition.order = orderWhereClause;
-  }
-  
-  // Define itemWhereClause for the include section
-  const itemWhereClause: any = {};
-  if (filters?.supplierId) {
-    itemWhereClause.supplierId = filters.supplierId;
-  }
-  
-  const result = await prisma.order.aggregate({
-    where: orderWhereClause,
-    include: {
-      items: {
-        where: itemWhereClause, // Filter items directly
-        select: {
-          id: true,
-          orderId: true,
-          productId: true,
-          supplierId: true,
-          riderId: true,
-          trackingNumber: true,
-          quantity: true,
-          price: true,
-          variantInfo: true,
-          individualShipping: true,
-          individualDistance: true,
-          status: true,
-          rejectedBy: true,
-          recipientName: true,
-          recipientPhone: true,
-          pickupAddress: true,
-          pickupLatitude: true,
-          pickupLongitude: true,
-          dropoffAddress: true,
-          dropoffLatitude: true,
-          dropoffLongitude: true,
-          estimatedDeliveryTime: true,
-          eta: true,
-          actualDeliveryTime: true,
-          ata: true,
-          remitted: true,
-          finished: true
-        }
-      }
-    },
-    _sum: {
-      total: true
-    },
-    _count: {
-      id: true
-    },
-    _avg: {
-      total: true
-    }
-  });
-
+  // Get order items aggregation
   const itemsResult = await prisma.orderItem.aggregate({
-    where: itemsWhereCondition,
+    where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {},
     _sum: {
-      quantity: true
+      quantity: true,
+      price: true
     }
   });
-
+  
+  // Get distinct order count from filtered items
+  const distinctOrders = await prisma.orderItem.findMany({
+    where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {},
+    select: {
+      orderId: true
+    },
+    distinct: ['orderId']
+  });
+  
+  // Get previous period data for growth rate
   const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
-  const previousWhereClause = buildWhereClause(filters, previousDateRange);
-  const previousResult = await prisma.order.aggregate({
-    where: previousWhereClause,
+  const previousOrderWhereClause = buildWhereClause(filters, previousDateRange);
+  
+  const previousItemsResult = await prisma.orderItem.aggregate({
+    where: {
+      order: previousOrderWhereClause
+    },
     _sum: {
-      total: true
+      price: true
     }
   });
+  
+  // Calculate metrics
+  const totalOrders = distinctOrders.length;
+  const totalRevenue = itemsResult._sum.price || 0;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   return {
-    totalRevenue: result._sum.total || 0,
-    totalOrders: result._count.id,
-    averageOrderValue: result._avg.total || 0,
+    totalRevenue: totalRevenue,
+    totalOrders: totalOrders,
+    averageOrderValue: averageOrderValue,
     totalItemsSold: itemsResult._sum.quantity || 0,
-    growthRate: calculateGrowthRate(result._sum.total || 0, previousResult._sum.total || 0)
+    growthRate: calculateGrowthRate(totalRevenue, previousItemsResult._sum.price || 0)
   };
 }
 
