@@ -18,7 +18,7 @@ const UserProfileShimmer = () => {
       </div>
 
       {/* Profile Info Shimmer */}
-      <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4 bg-red-500">
+      <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4 bg-transparent">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div className="w-full md:w-auto">
             <div className="relative h-8 bg-gray-300 rounded-md overflow-hidden w-48 mb-2">
