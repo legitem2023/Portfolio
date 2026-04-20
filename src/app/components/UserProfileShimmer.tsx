@@ -3,9 +3,9 @@
 
 const UserProfileShimmer = () => {
   return (
-    <div className="bg-transparent min-h-screen max-w-2xl">
+    <div className="bg-gray-50 min-h-screen max-w-2xl">
       {/* Cover Photo Shimmer */}
-      <div className="h-36 bg-transparent relative overflow-hidden">
+      <div className="h-36 bg-gray-50 relative overflow-hidden">
         <div className="absolute inset-0 shimmer-effect"></div>
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-gray-300/20 to-transparent"></div>
         
