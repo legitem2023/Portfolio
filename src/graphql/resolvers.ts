@@ -1915,8 +1915,7 @@ topProducts: async (
       by: ['productId'],
       where: {
         order: {
-          ...whereClause,
-          status: 'DELIVERED'
+          ...whereClause
         }
       },
       _sum: {
