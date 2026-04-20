@@ -153,7 +153,12 @@ function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
   }
   
   if (filters?.supplierId) {
-    //where.supplierId = filters.supplierId;
+    // Filter orders that have at least one item with the specified supplierId
+    where.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
   }
 
   if (filters?.minAmount !== undefined) {
