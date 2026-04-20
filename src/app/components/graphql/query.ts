@@ -328,8 +328,8 @@ query SalesList(
 
 
 export const SALES_DATA_QUERY = gql`
-  query SalesData($timeframe: Timeframe!, $groupBy: GroupBy!, $filters: SalesFilters, $userId: ID) {
-    salesData(timeframe: $timeframe, groupBy: $groupBy, filters: $filters, userId: $userId) {
+  query SalesData($timeframe: Timeframe!, $groupBy: GroupBy!, $filters: SalesFilters) {
+    salesData(timeframe: $timeframe, groupBy: $groupBy, filters: $filters) {
       data {
         period
         date
@@ -355,8 +355,8 @@ export const SALES_DATA_QUERY = gql`
 `;
 
 export const SALES_METRICS_QUERY = gql`
-  query SalesMetrics($timeframe: Timeframe!, $filters: SalesFilters, $userId: ID) {
-    salesMetrics(timeframe: $timeframe, filters: $filters, userId: $userId) {
+  query SalesMetrics($timeframe: Timeframe!, $filters: SalesFilters) {
+    salesMetrics(timeframe: $timeframe, filters: $filters) {
       revenue {
         total
         average
@@ -384,8 +384,8 @@ export const SALES_METRICS_QUERY = gql`
 `;
 
 export const TOP_PRODUCTS_QUERY = gql`
-  query TopProducts($timeframe: Timeframe!, $limit: Int, $userId: ID) {
-    topProducts(timeframe: $timeframe, limit: $limit, userId: $userId) {
+  query TopProducts($timeframe: Timeframe!, $limit: Int, $filters: SalesFilters) {
+    topProducts(timeframe: $timeframe, limit: $limit, filters: $filters) {
       productId
       productName
       unitsSold
@@ -396,8 +396,8 @@ export const TOP_PRODUCTS_QUERY = gql`
 `;
 
 export const SALES_TREND_QUERY = gql`
-  query SalesTrend($timeframe: Timeframe!, $groupBy: TrendGroupBy!, $userId: ID) {
-    salesTrend(timeframe: $timeframe, groupBy: $groupBy, userId: $userId) {
+  query SalesTrend($timeframe: Timeframe!, $groupBy: TrendGroupBy!, $filters: SalesFilters) {
+    salesTrend(timeframe: $timeframe, groupBy: $groupBy, filters: $filters) {
       date
       period
       revenue
