@@ -421,19 +421,36 @@ async function getGroupedSalesData(
   groupBy: string, 
   dateRange: DateRange
 ) {
-  // Build where clause for order items (includes all filtering including date range)
+  // Build where clause for order items
   const orderItemWhereClause = buildWhereClause(filters, dateRange);
   
-  // Get all order items directly
+  // Get all order items
   const orderItems = await prisma.orderItem.findMany({
-    where: orderItemWhereClause,
-    orderBy: {
-      createdAt: 'asc'  // Use OrderItem's own createdAt field
-    }
+    where: orderItemWhereClause
   });
   
-  // Group data based on groupBy parameter using OrderItem's createdAt
-  const groupedData = groupOrdersByTimeframe(orderItems, groupBy, dateRange);
+  // Group items by orderId to reconstruct orders
+  const ordersMap = new Map();
+  
+  orderItems.forEach(item => {
+    if (!ordersMap.has(item.orderId)) {
+      ordersMap.set(item.orderId, {
+        id: item.orderId,
+        createdAt: item.createdAt, // Use OrderItem's createdAt if Order doesn't have it
+        status: item.status,
+        total: item.price, // Or aggregate prices
+        items: []
+      });
+    }
+    ordersMap.get(item.orderId).items.push(item);
+    // Accumulate total for the order
+    ordersMap.get(item.orderId).total += item.price || 0;
+  });
+  
+  const orders = Array.from(ordersMap.values());
+  
+  // Group data using existing function
+  const groupedData = groupOrdersByTimeframe(orders, groupBy, dateRange);
   return groupedData;
 }
 
