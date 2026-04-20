@@ -1773,8 +1773,8 @@ salesorder: async(parent: any, args: any) => {
     // ================= Sales Analytics Queries =================
     salesData: async (
       _: any,
-      { timeframe, groupBy, filters = {} }: 
-      { timeframe: string; groupBy: string; filters?: SalesFilters }
+      { timeframe, groupBy, filters = {}, userId }: 
+      { timeframe: string; groupBy: string; filters?: SalesFilters; userId:any }
     ) => {
       try {
         const dateRange = getDateRange(timeframe, filters?.dateRange);
@@ -1802,8 +1802,8 @@ salesorder: async(parent: any, args: any) => {
 
     salesMetrics: async (
       _: any,
-      { timeframe, filters = {} }: 
-      { timeframe: string; filters?: SalesFilters }
+      { timeframe, filters = {},userId }: 
+      { timeframe: string; filters?: SalesFilters; userId:any }
     ) => {
       try {
         const dateRange = getDateRange(timeframe, filters?.dateRange);
@@ -1904,8 +1904,8 @@ salesorder: async(parent: any, args: any) => {
 
 topProducts: async (
   _: any,
-  { timeframe, limit = 10 }: 
-  { timeframe: string; limit?: number }
+  { timeframe, limit = 10, userId }: 
+  { timeframe: string; limit?: number; userId:any }
 ) => {
   try {
     const dateRange = getDateRange(timeframe);
@@ -1975,8 +1975,8 @@ topProducts: async (
 },
     salesTrend: async (
       _: any,
-      { timeframe, groupBy }: 
-      { timeframe: string; groupBy: string }
+      { timeframe, groupBy,userId }: 
+      { timeframe: string; groupBy: string; userId }
     ) => {
       try {
         const dateRange = getDateRange(timeframe);
