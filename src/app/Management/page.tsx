@@ -32,7 +32,7 @@ export default function ManagementDashboard() {
       }
   // Move all useState hooks to the top, before any conditional returns
   const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
-  const activeselectedIndex:number = useSelector((state: any) => state.selectedUser.value);
+  const activeselectedUser:any = useSelector((state: any) => state.selectedUser.value);
   
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -184,7 +184,7 @@ export default function ManagementDashboard() {
       case 9:
         return <VehicleTypeManager/>
       case 10:
-        return <UserProfile userId={user?.userId?user?.userId:''}/>
+        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
       case 11:
         return <UserProfile userId={user?.userId?user?.userId:''}/>
       default:
