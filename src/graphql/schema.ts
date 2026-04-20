@@ -896,6 +896,7 @@ input GetReviewsInput {
   input SalesFilters {
     status: OrderStatus
     userId: String
+    supplierId: String
     dateRange: DateRangeInput
     minAmount: Float
     maxAmount: Float
