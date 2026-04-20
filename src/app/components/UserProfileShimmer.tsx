@@ -48,7 +48,7 @@ const UserProfileShimmer = () => {
         </div>
         
         {/* Tabs Navigation Shimmer */}
-        <div className="mt-6 border-t border-gray-300 flex overflow-x-auto scrollbar-hide">
+        <div className="mt-6 border-t border-transparent flex overflow-x-auto scrollbar-hide">
           <div className="flex space-x-4 md:space-x-8 min-w-max">
             {[1, 2, 3, 4].map((item) => (
               <div key={item} className="px-3 py-3 md:px-4 md:py-3 flex items-center">
