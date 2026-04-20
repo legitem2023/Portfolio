@@ -433,7 +433,7 @@ async function getGroupedSalesData(
   });
   
   // Group data based on groupBy parameter using OrderItem's createdAt
-  const groupedData = groupOrderItemsByTimeframe(orderItems, groupBy, dateRange);
+  const groupedData = groupOrdersByTimeframe(orderItems, groupBy, dateRange);
   return groupedData;
 }
 
