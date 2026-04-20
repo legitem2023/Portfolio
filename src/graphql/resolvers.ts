@@ -1844,7 +1844,7 @@ salesorder: async(parent: any, args: any) => {
       }
     },
 
-    topProducts: async (
+  /*  topProducts: async (
       _: any,
       { timeframe, limit = 10 }: 
       { timeframe: string; limit?: number }
@@ -1900,8 +1900,73 @@ salesorder: async(parent: any, args: any) => {
         console.error('Error in topProducts query:', error);
         throw new Error('Failed to fetch top products');
       }
-    },
+    },*/
 
+    topProducts: async (
+  _: any,
+  { timeframe, limit = 10 }: 
+  { timeframe: string; limit?: number }
+) => {
+  try {
+    const dateRange = getDateRange(timeframe);
+    const whereClause = buildWhereClause({}, dateRange);
+
+    const productSales = await prisma.orderItem.groupBy({
+      by: ['productId'],
+      where: {
+        order: whereClause
+      },
+      _sum: {
+        quantity: true,
+        price: true
+      },
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _sum: {
+          price: 'desc'
+        }
+      },
+      take: limit
+    });
+
+    const totalRevenue = productSales.reduce((sum: number, item: any) => 
+      sum + (item._sum.price || 0), 0
+    );
+
+    // Get product names and SKUs in a single query
+    const productIds = productSales.map((item: any) => item.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } },
+      select: { 
+        id: true, 
+        name: true,
+        sku: true  // Include SKU if you prefer that
+      }
+    });
+
+    const productMap = products.reduce((map: any, product: any) => {
+      map[product.id] = {
+        name: product.name,
+        sku: product.sku
+      };
+      return map;
+    }, {});
+
+    return productSales.map((item: any) => ({
+      productId: item.productId,
+      productName: productMap[item.productId]?.name || `Product ${item.productId}`,
+      productSku: productMap[item.productId]?.sku || null,  // Optional: include SKU
+      unitsSold: item._sum.quantity || 0,
+      revenue: item._sum.price || 0,
+      percentage: totalRevenue > 0 ? ((item._sum.price || 0) / totalRevenue) * 100 : 0
+    }));
+  } catch (error) {
+    console.error('Error in topProducts query:', error);
+    throw new Error('Failed to fetch top products');
+  }
+},
     salesTrend: async (
       _: any,
       { timeframe, groupBy }: 
