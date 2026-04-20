@@ -1956,8 +1956,8 @@ salesorder: async(parent: any, args: any) => {
 
     return productSales.map((item: any) => ({
       productId: item.productId,
-      productName: productMap[item.productId]?.name || `Product ${item.productId}`,
-      productSku: productMap[item.productId]?.sku || null,  // Optional: include SKU
+      productName: productMap[item.productId]?.name,
+      productSku: productMap[item.productId]?.sku,  // Optional: include SKU
       unitsSold: item._sum.quantity || 0,
       revenue: item._sum.price || 0,
       percentage: totalRevenue > 0 ? ((item._sum.price || 0) / totalRevenue) * 100 : 0
