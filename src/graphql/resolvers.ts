@@ -495,12 +495,28 @@ function groupOrdersByTimeframe(orders: any[], groupBy: string, dateRange: DateR
 
 async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   // Build the base where clause for orders
-  const orderWhereClause = buildWhereClause(filters, dateRange);
+  const orderWhereClause = {};//buildWhereClause(filters, dateRange);
   
-  // If supplierId is provided, filter orders that have items from that supplier
+  // For items aggregation, filter by supplierId if provided
+  const itemsWhereCondition: any = {};
   
+  if (filters?.supplierId) {
+    // Get only items from the specified supplier
+    itemsWhereCondition.supplierId = filters.supplierId;
+    // Also ensure these items come from orders that match the other filters
+    itemsWhereCondition.order = orderWhereClause;
+  } else {
+    itemsWhereCondition.order = orderWhereClause;
+  }
+  
+  // Define itemWhereClause for the include section
+  const itemWhereClause: any = {};
+  if (filters?.supplierId) {
+    itemWhereClause.supplierId = filters.supplierId;
+  }
   
   const result = await prisma.order.aggregate({
+    where: orderWhereClause,
     include: {
       items: {
         where: itemWhereClause, // Filter items directly
@@ -518,11 +534,6 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
           individualDistance: true,
           status: true,
           rejectedBy: true,
-          // Don't include full relations unless needed
-          // supplier: true,  // Remove - heavy
-          // order: true,     // Remove - circular reference
-          // product: true,   // Remove unless you need product details
-          // rider: true,     // Remove - heavy
           recipientName: true,
           recipientPhone: true,
           pickupAddress: true,
@@ -551,18 +562,6 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
     }
   });
 
-  // For items aggregation, always filter by supplierId if provided
-  const itemsWhereCondition: any = {};
-  
-  if (filters?.supplierId) {
-    // Get only items from the specified supplier
-    itemsWhereCondition.supplierId = filters.supplierId;
-    // Also ensure these items come from orders that match the other filters
-    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
-  } else {
-    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
-  }
-  
   const itemsResult = await prisma.orderItem.aggregate({
     where: itemsWhereCondition,
     _sum: {
@@ -571,7 +570,7 @@ async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
   });
 
   const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
-  const previousWhereClause = buildWhereClause({}, previousDateRange);
+  const previousWhereClause = buildWhereClause(filters, previousDateRange);
   const previousResult = await prisma.order.aggregate({
     where: previousWhereClause,
     _sum: {
