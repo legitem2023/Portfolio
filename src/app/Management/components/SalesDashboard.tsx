@@ -9,7 +9,7 @@ import RevenueChart from './sales/RevenueChart';
 import TopProductsTable from './sales/TopProductsTable';
 import OrderStatusChart from './sales/OrderStatusChart';
 import TimeframeSelector from './sales/TimeframeSelector';
-
+import { useAuth } from '../hooks/useAuth';
 const SalesDashboard: React.FC = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>('LAST_30_DAYS');
   const [groupBy, setGroupBy] = useState<GroupBy>('DAILY');
