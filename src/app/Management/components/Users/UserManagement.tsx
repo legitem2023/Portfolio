@@ -141,6 +141,12 @@ const UserManagement = () => {
     }
   };
 
+  // New function to handle user selection
+  const handleSelectUser = (userId: string) => {
+    dispatch(setSelectedUser(userId));
+    console.log('Selected user ID:', userId); // For debugging
+  };
+
   const getRoleCount = (role: TabType): number => {
     if (role === 'ALL') return users.length;
     return users.filter((u) => u.role === role).length;
@@ -297,8 +303,18 @@ const UserManagement = () => {
                     </div>
                   </div>
 
+                  {/* Select User Button - NEW */}
+                  <div className="mt-3 sm:mt-4">
+                    <button
+                      onClick={() => handleSelectUser(user.id)}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 text-xs sm:text-sm"
+                    >
+                      Select User
+                    </button>
+                  </div>
+
                   {/* Current Role Badge */}
-                  <div className="mt-2 sm:mt-3 md:mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1 sm:mb-2">
                       Current Role
                     </label>
