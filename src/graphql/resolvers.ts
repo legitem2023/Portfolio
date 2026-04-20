@@ -135,7 +135,7 @@ function getPreviousDateRange(timeframe: string, currentRange: DateRange): DateR
     end: new Date(currentRange.end.getTime() - duration)
   };
 }
-
+/*
 function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
   const where: any = {
     createdAt: {
@@ -380,6 +380,374 @@ async function getSalesTrendData(
       ((point.revenue - array[index - 1].revenue) / array[index - 1].revenue) * 100 : 0
   }));
 }
+*/
+function buildWhereClause(filters: SalesFilters, dateRange: DateRange): any {
+  const where: any = {
+    createdAt: {
+      gte: dateRange.start,
+      lte: dateRange.end
+    }
+  };
+
+  if (filters?.status) {
+    where.status = filters.status;
+  }
+
+  if (filters?.userId) {
+    where.userId = filters.userId;
+  }
+
+  if (filters?.minAmount !== undefined) {
+    where.total = { gte: filters.minAmount };
+  }
+
+  if (filters?.maxAmount !== undefined) {
+    where.total = { lte: filters.maxAmount };
+  }
+
+  if (filters?.minAmount !== undefined && filters?.maxAmount !== undefined) {
+    where.total = {
+      gte: filters.minAmount,
+      lte: filters.maxAmount
+    };
+  }
+
+  return where;
+}
+
+async function getGroupedSalesData(
+  filters: SalesFilters,
+  groupBy: string, 
+  dateRange: DateRange
+) {
+  // Build the base where clause for orders
+  const orderWhereClause = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, we need to filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    orderWhereClause.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const orders = await prisma.order.findMany({
+    where: orderWhereClause,
+    include: {
+      items: true
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  // Filter items by supplierId if provided
+  let processedOrders = orders;
+  if (filters?.supplierId) {
+    processedOrders = orders.map(order => ({
+      ...order,
+      items: order.items.filter(item => item.supplierId === filters.supplierId)
+    }));
+  }
+
+  // Group data based on groupBy parameter
+  const groupedData = groupOrdersByTimeframe(processedOrders, groupBy, dateRange);
+  return groupedData;
+}
+
+function groupOrdersByTimeframe(orders: any[], groupBy: string, dateRange: DateRange) {
+  const formatMap: any = {
+    DAILY: 'yyyy-MM-dd',
+    WEEKLY: 'yyyy-\'W\'II',
+    MONTHLY: 'yyyy-MM',
+    QUARTERLY: 'yyyy-Qq',
+    YEARLY: 'yyyy'
+  };
+
+  const formatString = formatMap[groupBy] || 'yyyy-MM-dd';
+  
+  const groups: { [key: string]: any } = {};
+  
+  orders.forEach((order: any) => {
+    const period = format(order.createdAt, formatString);
+    
+    if (!groups[period]) {
+      groups[period] = {
+        period,
+        date: order.createdAt,
+        revenue: 0,
+        orders: 0,
+        itemsSold: 0
+      };
+    }
+    
+    groups[period].revenue += order.total;
+    groups[period].orders += 1;
+    groups[period].itemsSold += order.items.reduce((sum: number, item: any) => 
+      sum + item.quantity, 0
+    );
+  });
+
+  // Calculate average order value
+  return Object.values(groups).map((group: any) => ({
+    ...group,
+    averageOrderValue: group.orders > 0 ? group.revenue / group.orders : 0
+  }));
+}
+
+async function getSalesSummary(filters: SalesFilters, dateRange: DateRange) {
+  // Build the base where clause for orders
+  const orderWhereClause = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    orderWhereClause.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const result = await prisma.order.aggregate({
+    where: orderWhereClause,
+    _sum: {
+      total: true
+    },
+    _count: {
+      id: true
+    },
+    _avg: {
+      total: true
+    }
+  });
+
+  // For items aggregation, always filter by supplierId if provided
+  const itemsWhereCondition: any = {};
+  
+  if (filters?.supplierId) {
+    // Get only items from the specified supplier
+    itemsWhereCondition.supplierId = filters.supplierId;
+    // Also ensure these items come from orders that match the other filters
+    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
+  } else {
+    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
+  }
+  
+  const itemsResult = await prisma.orderItem.aggregate({
+    where: itemsWhereCondition,
+    _sum: {
+      quantity: true
+    }
+  });
+
+  const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
+  const previousWhereClause = buildWhereClause({}, previousDateRange);
+  const previousResult = await prisma.order.aggregate({
+    where: previousWhereClause,
+    _sum: {
+      total: true
+    }
+  });
+
+  return {
+    totalRevenue: result._sum.total || 0,
+    totalOrders: result._count.id,
+    averageOrderValue: result._avg.total || 0,
+    totalItemsSold: itemsResult._sum.quantity || 0,
+    growthRate: calculateGrowthRate(result._sum.total || 0, previousResult._sum.total || 0)
+  };
+}
+
+async function getBasicMetrics(filters: SalesFilters, dateRange: DateRange) {
+  // Build the base where clause for orders
+  const orderWhereClause = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    orderWhereClause.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const result = await prisma.order.aggregate({
+    where: orderWhereClause,
+    _sum: {
+      total: true
+    },
+    _count: {
+      id: true
+    },
+    _avg: {
+      total: true
+    }
+  });
+
+  // Get items sold - filter by supplierId if provided
+  const itemsWhereCondition: any = {};
+  
+  if (filters?.supplierId) {
+    itemsWhereCondition.supplierId = filters.supplierId;
+    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
+  } else {
+    itemsWhereCondition.order = buildWhereClause(filters, dateRange);
+  }
+  
+  const itemsResult = await prisma.orderItem.aggregate({
+    where: itemsWhereCondition,
+    _sum: {
+      quantity: true
+    }
+  });
+
+  return {
+    totalRevenue: result._sum.total || 0,
+    totalOrders: result._count.id,
+    averageOrderValue: result._avg.total || 0,
+    totalItemsSold: itemsResult._sum.quantity || 0
+  };
+}
+
+async function getOrderStatusBreakdown(filters: SalesFilters, dateRange: DateRange) {
+  // Build the base where clause for orders
+  const orderWhereClause = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    orderWhereClause.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const statusCounts = await prisma.order.groupBy({
+    by: ['status'],
+    where: orderWhereClause,
+    _count: {
+      id: true
+    }
+  });
+
+  const total = statusCounts.reduce((sum: number, item: any) => sum + item._count.id, 0);
+
+  return statusCounts.map((item: any) => ({
+    status: item.status,
+    count: item._count.id,
+    percentage: total > 0 ? (item._count.id / total) * 100 : 0
+  }));
+}
+
+async function getCustomerMetrics(filters: SalesFilters, dateRange: DateRange) {
+  // Build the base where clause for orders
+  const currentWhere = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    currentWhere.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const previousDateRange = getPreviousDateRange('CUSTOM', dateRange);
+  const previousWhere = buildWhereClause({}, previousDateRange);
+  
+  const [currentCustomers, previousCustomers, totalRevenueResult] = await Promise.all([
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: currentWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.groupBy({
+      by: ['userId'],
+      where: previousWhere,
+      _count: {
+        id: true
+      }
+    }),
+    prisma.order.aggregate({
+      where: currentWhere,
+      _sum: {
+        total: true
+      }
+    })
+  ]);
+
+  // Calculate repeat customers (users with more than 1 order)
+  const repeatCustomers = currentCustomers.filter(customer => customer._count.id > 1);
+
+  return {
+    total: currentCustomers.length,
+    repeatCustomers: repeatCustomers.length,
+    newCustomers: currentCustomers.length - repeatCustomers.length,
+    averageSpend: currentCustomers.length > 0 ? 
+      (totalRevenueResult._sum.total || 0) / currentCustomers.length : 0
+  };
+}
+
+async function getSalesTrendData(
+  filters: SalesFilters,
+  groupBy: string, 
+  dateRange: DateRange
+) {
+  // Build the base where clause for orders
+  const orderWhereClause = buildWhereClause(filters, dateRange);
+  
+  // If supplierId is provided, filter orders that have items from that supplier
+  if (filters?.supplierId) {
+    orderWhereClause.items = {
+      some: {
+        supplierId: filters.supplierId
+      }
+    };
+  }
+  
+  const orders = await prisma.order.findMany({
+    where: orderWhereClause,
+    select: {
+      createdAt: true,
+      total: true
+    },
+    orderBy: {
+      createdAt: 'asc'
+    }
+  });
+
+  // For trend data, we just need to group the orders (items not needed for revenue trend)
+  const grouped = groupOrdersByTimeframe(orders as any, groupBy, dateRange);
+  
+  return grouped.map((point: any, index: number, array: any[]) => ({
+    date: point.date,
+    period: point.period,
+    revenue: point.revenue,
+    orders: point.orders,
+    trend: index > 0 ? 
+      ((point.revenue - array[index - 1].revenue) / array[index - 1].revenue) * 100 : 0
+  }));
+}
+
+// Example usage:
+// const filters = { 
+//   supplierId: 'supplier-123', 
+//   status: 'COMPLETED',
+//   userId: 'user-456',
+//   minAmount: 100,
+//   maxAmount: 1000
+// };
+// const dateRange = { start: new Date('2024-01-01'), end: new Date('2024-12-31') };
+// 
+// const groupedData = await getGroupedSalesData(filters, 'MONTHLY', dateRange);
+// const salesSummary = await getSalesSummary(filters, dateRange);
+// const basicMetrics = await getBasicMetrics(filters, dateRange);
+// const statusBreakdown = await getOrderStatusBreakdown(filters, dateRange);
+// const customerMetrics = await getCustomerMetrics(filters, dateRange);
+// const trendData = await getSalesTrendData(filters, 'MONTHLY', dateRange);
 
 function calculateGrowthRate(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
