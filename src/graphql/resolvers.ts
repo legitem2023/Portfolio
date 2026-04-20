@@ -1911,63 +1911,63 @@ topProducts: async (
     const dateRange = getDateRange(timeframe);
     const whereClause = buildWhereClause({}, dateRange);
 
-    const productSales = await prisma.orderItem.groupBy({
-      by: ['productId'],
+    // Get orderItems with product included
+    const orderItems = await prisma.orderItem.findMany({
       where: {
         order: {
           ...whereClause
         }
       },
-      _sum: {
-        quantity: true,
-        price: true
-      },
-      _count: {
-        id: true
-      },
-      orderBy: {
-        _sum: {
-          price: 'desc'
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            sku: true
+          }
         }
-      },
-      take: limit
-    });
-
-    if (productSales.length === 0) {
-      return [];
-    }
-
-    const totalRevenue = productSales.reduce((sum: number, item: any) => 
-      sum + (item._sum.price || 0), 0
-    );
-
-    // Get products - make sure we're using the right ID field
-    const productIds = productSales.map((item: any) => item.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } },
-      select: { 
-        id: true, 
-        name: true,
-        sku: true
       }
     });
 
-    // Create a Map for O(1) lookup
-    const productMap = new Map(
-      products.map(product => [product.id, { name: product.name, sku: product.sku }])
-    );
+    if (orderItems.length === 0) {
+      return [];
+    }
 
-    return productSales.map((item: any) => {
-      const productInfo = productMap.get(item.productId);
-      return {
-        productId: item.productId,
-        productName: productInfo?.name, // Will be undefined if not found
-        productSku: productInfo?.sku,
-        unitsSold: item._sum.quantity || 0,
-        revenue: item._sum.price || 0,
-        percentage: totalRevenue > 0 ? ((item._sum.price || 0) / totalRevenue) * 100 : 0
-      };
+    // Aggregate by product
+    const productMap = new Map();
+
+    orderItems.forEach(item => {
+      const productId = item.productId;
+      const productName = item.product?.name;
+      const productSku = item.product?.sku;
+
+      if (!productMap.has(productId)) {
+        productMap.set(productId, {
+          productId: productId,
+          productName: productName,
+          productSku: productSku,
+          unitsSold: 0,
+          revenue: 0
+        });
+      }
+
+      const productData = productMap.get(productId);
+      productData.unitsSold += item.quantity || 0;
+      productData.revenue += item.price || 0;
     });
+
+    // Convert to array, sort by revenue, and limit
+    const result = Array.from(productMap.values())
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, limit);
+
+    const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
+
+    // Add percentage
+    return result.map(item => ({
+      ...item,
+      percentage: totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0
+    }));
   } catch (error) {
     console.error('Error in topProducts query:', error);
     throw new Error('Failed to fetch top products');
