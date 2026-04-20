@@ -3,20 +3,21 @@
 
 const UserProfileShimmer = () => {
   return (
-    <div className="bg-gray-100 min-h-screen max-w-2xl">
+    <div className="bg-gray-50 min-h-screen max-w-2xl">
       {/* Cover Photo Shimmer */}
-      <div className="h-36 bg-gray-100 relative overflow-hidden">
+      <div className="h-36 bg-gray-50 relative overflow-visible"> {/* Changed from overflow-hidden to overflow-visible */}
         <div className="absolute inset-0 shimmer-effect"></div>
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-gray-300/20 to-transparent"></div>
         
         {/* Profile Picture Shimmer */}
         <div className="absolute -bottom-12 md:-bottom-16 left-4 md:left-8 transform md:transform-none bg-transparent">
-          <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full border-4 border-white shadow-lg bg-gray-300 overflow-hidden">
+          <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-300">
             <div className="absolute inset-0 shimmer-effect"></div>
           </div>
         </div>
       </div>
 
+      {/* Rest of the component remains exactly the same */}
       {/* Profile Info Shimmer */}
       <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4 bg-transparent">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -48,7 +49,7 @@ const UserProfileShimmer = () => {
         </div>
         
         {/* Tabs Navigation Shimmer */}
-        <div className="mt-6 border-t border-transparent flex overflow-x-auto scrollbar-hide">
+        <div className="mt-6 border-t border-gray-300 flex overflow-x-auto scrollbar-hide">
           <div className="flex space-x-4 md:space-x-8 min-w-max">
             {[1, 2, 3, 4].map((item) => (
               <div key={item} className="px-3 py-3 md:px-4 md:py-3 flex items-center">
@@ -77,10 +78,10 @@ const UserProfileShimmer = () => {
       <style jsx>{`
         @keyframes shimmer {
           0% {
-            transform: translateX(-100%) translateY(-100%);
+            transform: translateX(-100%);
           }
           100% {
-            transform: translateX(100%) translateY(100%);
+            transform: translateX(100%);
           }
         }
         
@@ -91,14 +92,13 @@ const UserProfileShimmer = () => {
           width: 100%;
           height: 100%;
           background: linear-gradient(
-            115deg,
-            transparent 0%,
-            transparent 40%,
-            rgba(255, 255, 255, 0.6) 50%,
-            transparent 60%,
-            transparent 100%
+            90deg,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%
           );
-          animation: shimmer 2s infinite;
+          animation: shimmer 1.5s infinite;
+          transform: translateX(-100%);
         }
       `}</style>
     </div>
