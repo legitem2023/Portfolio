@@ -424,18 +424,13 @@ async function getGroupedSalesData(
   const orderWhereClause = buildWhereClause(filters, dateRange);
   
   // If supplierId is provided, we need to filter orders that have items from that supplier
-  if (filters?.supplierId) {
-    orderWhereClause.items = {
-      some: {
-        supplierId: filters.supplierId
-      }
-    };
-  }
+  
   
   const orders = await prisma.order.findMany({
-    where: orderWhereClause,
     include: {
-      items: true
+      items:{
+        where: Object.keys(orderWhereClause).length > 0 ? orderWhereClause : {}, // All filtering happens here
+      }
     },
     orderBy: {
       createdAt: 'asc'
