@@ -23,7 +23,7 @@ const SalesDashboard: React.FC = () => {
     
     return {
       ...filters,
-      supplierId: user.userId // Add supplierId filter from the logged-in user
+      supplierId:user.userId // Add supplierId filter from the logged-in user
     };
   }, [filters, user?.userId]);
 
