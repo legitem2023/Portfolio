@@ -17,7 +17,7 @@ import { CartItem } from '../../../types'; // Import CartItem type
 import {
   Home,
   ShoppingBag,
-  Buildings,
+  Building,
   Target,
   Star,
   Store,
@@ -122,7 +122,7 @@ const DeluxeNavTabs: React.FC = () => {
     {
       id: 4,
       label: 'Merchants',
-      icon: <Buildings size={20} />,
+      icon: <Building size={20} />,
       content: <MerchantsPage/>,
     },
     {
