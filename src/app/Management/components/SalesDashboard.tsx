@@ -51,7 +51,7 @@ const SalesDashboard: React.FC = () => {
     fetchPolicy: 'cache-and-network',
     skip: shouldSkipQueries,
   });
-
+  console.log(effectiveFilters);
   const { 
     data: topProductsData, 
     loading: topProductsLoading, 
