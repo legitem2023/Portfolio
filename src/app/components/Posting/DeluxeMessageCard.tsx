@@ -207,9 +207,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           
           {/* Three Dots Dropdown Menu */}
           <div className="relative" ref={dropdownRef}>
-          {
-            //comparison
-            user.id !== activeUser?.userId  ?
+               
             <button 
               onClick={toggleDropdown}
               className="text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
@@ -217,10 +215,9 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
             >
               <MoreHorizontal className="h-5 w-5" />
             </button>
-          :<></>}
             
             {/* Dropdown Menu */}
-            {dropdownOpen && (
+            {dropdownOpen &&  user?.id !== activeUser?.userId? (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 overflow-hidden">
                 <div className="py-1">
                   {/* Messages Icon Option */}
@@ -242,6 +239,17 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                   </button>
                 </div>
               </div>
+            ):(
+             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 overflow-hidden">
+                <div className="py-1">
+                  <button
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex items-center gap-3"
+                  >        
+                    <span>x</span>
+                  </button>
+                </div>
+            </div>
+        
             )}
           </div>
         </div>
