@@ -22,7 +22,7 @@ import {
   Truck
 } from 'lucide-react';
 
-// Updated query - fixed to ensure product name is fetched
+// Updated query - removed description field that doesn't exist
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -65,7 +65,6 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
             name
             sku
             images
-            description
           }
           supplier {
             id
@@ -272,6 +271,29 @@ const FilterBar = ({
     { value: 'REFUNDED', label: 'Refunded', color: 'gray' },
   ];
 
+  // Helper function to get color classes
+  const getButtonClasses = (filter: typeof filters[0]) => {
+    if (activeFilter === filter.value) {
+      const colorMap: Record<string, string> = {
+        gray: 'bg-gray-600 text-white',
+        green: 'bg-green-600 text-white',
+        blue: 'bg-blue-600 text-white',
+        yellow: 'bg-yellow-600 text-white',
+        red: 'bg-red-600 text-white',
+      };
+      return colorMap[filter.color] || 'bg-gray-600 text-white';
+    }
+    
+    const colorMap: Record<string, string> = {
+      gray: 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200',
+      green: 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200',
+      blue: 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200',
+      yellow: 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200',
+      red: 'bg-red-50 text-red-700 hover:bg-red-100 border-red-200',
+    };
+    return colorMap[filter.color] || 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200';
+  };
+
   return (
     <div className="px-4 sm:px-6 pb-4 border-b border-gray-200">
       <div className="flex items-center gap-2 mb-3">
@@ -283,13 +305,7 @@ const FilterBar = ({
           <button
             key={filter.value}
             onClick={() => onFilterChange(filter.value)}
-            className={`
-              px-3 py-1.5 rounded-lg text-sm font-medium transition-all
-              ${activeFilter === filter.value
-                ? `bg-${filter.color}-600 text-white shadow-md`
-                : `bg-${filter.color}-50 text-${filter.color}-700 hover:bg-${filter.color}-100 border border-${filter.color}-200`
-              }
-            `}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all border ${getButtonClasses(filter)}`}
           >
             {filter.label}
             <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-white bg-opacity-30">
@@ -681,10 +697,12 @@ export default function RiderPaymentHistory({
   }
 
   if (error) {
+    console.error('GraphQL Error:', error);
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center py-12 text-red-600 px-4">
-          Error loading payments: {error.message}
+          <p className="font-semibold mb-2">Error loading payments:</p>
+          <p className="text-sm">{error.message}</p>
         </div>
       </div>
     );
@@ -798,7 +816,7 @@ export default function RiderPaymentHistory({
                           {getPaymentMethodIcon(payment.method)}
                           {payment.method}
                         </span>
-                       </td>
+                      </td>
                     </tr>
                   );
                 })}
@@ -857,4 +875,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-                       }
+        }
