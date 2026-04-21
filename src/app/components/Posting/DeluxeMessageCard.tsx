@@ -205,6 +205,9 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           
           {/* Three Dots Dropdown Menu */}
           <div className="relative" ref={dropdownRef}>
+          {
+            //comparison
+            user.id?
             <button 
               onClick={toggleDropdown}
               className="text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
@@ -212,6 +215,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
             >
               <MoreHorizontal className="h-5 w-5" />
             </button>
+          :<></>}
             
             {/* Dropdown Menu */}
             {dropdownOpen && (
