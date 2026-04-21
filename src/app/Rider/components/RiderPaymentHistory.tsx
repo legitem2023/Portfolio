@@ -14,10 +14,15 @@ import {
   Landmark,
   CircleDollarSign,
   Mail,
-  User
+  User,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Clock as PendingIcon,
+  Truck
 } from 'lucide-react';
 
-// Updated query - removed order status from being relied upon
+// Updated query - includes individualShipping for earnings
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -94,7 +99,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   }
 `;
 
-// Item status enum - exactly as provided
+// Item status enum
 enum ItemStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -102,6 +107,9 @@ enum ItemStatus {
   CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED'
 }
+
+// Filter status type
+type FilterStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
 
 // Types
 type Payment = {
@@ -115,13 +123,27 @@ type Payment = {
   customerEmail?: string;
   deliveredItemsTotal: number;
   pendingItemsTotal: number;
+  processingItemsTotal: number;
+  cancelledItemsTotal: number;
+  refundedItemsTotal: number;
+  items: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    status: string;
+    earnings: number;
+    individualShipping: number;
+  }>;
 };
 
 type PaymentSummary = {
   totalEarnings: number;
   todayEarnings: number;
   pendingPayments: number;
+  processingPayments: number;
   completedPayments: number;
+  cancelledPayments: number;
+  refundedPayments: number;
   deliveredOrders: number;
   totalOrders: number;
 };
@@ -131,6 +153,27 @@ interface RiderPaymentHistoryProps {
   showSummary?: boolean;
   className?: string;
 }
+
+// Status Badge Component
+const StatusBadge = ({ status }: { status: string }) => {
+  const statusConfig = {
+    DELIVERED: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+    PENDING: { color: 'bg-yellow-100 text-yellow-800', icon: PendingIcon },
+    PROCESSING: { color: 'bg-blue-100 text-blue-800', icon: Truck },
+    CANCELLED: { color: 'bg-red-100 text-red-800', icon: XCircle },
+    REFUNDED: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
+  };
+  
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.PENDING;
+  const Icon = config.icon;
+  
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <Icon className="w-3 h-3" />
+      {status}
+    </span>
+  );
+};
 
 // Summary Cards Component
 const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
@@ -157,7 +200,15 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
       bgColor: 'bg-yellow-50',
       textColor: 'text-yellow-700',
       borderColor: 'border-yellow-200',
-      icon: <Clock className="w-5 h-5 sm:w-6 sm:h-6" />,
+      icon: <PendingIcon className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      title: 'Processing Amount',
+      amount: summary.processingPayments,
+      bgColor: 'bg-blue-50',
+      textColor: 'text-blue-700',
+      borderColor: 'border-blue-200',
+      icon: <Truck className="w-5 h-5 sm:w-6 sm:h-6" />,
     },
     {
       title: 'Delivered Orders',
@@ -172,7 +223,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6">
       {cards.map((card, index) => (
         <div
           key={index}
@@ -196,60 +247,130 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   );
 };
 
+// Filter Bar Component
+const FilterBar = ({ 
+  activeFilter, 
+  onFilterChange, 
+  counts 
+}: { 
+  activeFilter: FilterStatus;
+  onFilterChange: (filter: FilterStatus) => void;
+  counts: Record<FilterStatus, number>;
+}) => {
+  const filters: { value: FilterStatus; label: string; color: string }[] = [
+    { value: 'ALL', label: 'All Items', color: 'gray' },
+    { value: 'DELIVERED', label: 'Delivered', color: 'green' },
+    { value: 'PROCESSING', label: 'Processing', color: 'blue' },
+    { value: 'PENDING', label: 'Pending', color: 'yellow' },
+    { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
+    { value: 'REFUNDED', label: 'Refunded', color: 'gray' },
+  ];
+
+  return (
+    <div className="px-4 sm:px-6 pb-4 border-b border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Filter className="w-4 h-4 text-gray-500" />
+        <span className="text-sm font-medium text-gray-700">Filter by Item Status:</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((filter) => (
+          <button
+            key={filter.value}
+            onClick={() => onFilterChange(filter.value)}
+            className={`
+              px-3 py-1.5 rounded-lg text-sm font-medium transition-all
+              ${activeFilter === filter.value
+                ? `bg-${filter.color}-600 text-white shadow-md`
+                : `bg-${filter.color}-50 text-${filter.color}-700 hover:bg-${filter.color}-100 border border-${filter.color}-200`
+              }
+            `}
+          >
+            {filter.label}
+            <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-white bg-opacity-30">
+              {counts[filter.value]}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Mobile Card View Component
-const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon }: any) => (
-  <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
-    <div className="flex justify-between items-start mb-3">
-      <div className="flex-1">
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <span className="text-sm font-semibold text-gray-900">
-            #{payment.orderNumber}
-          </span>
+const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
+  // Filter items based on status
+  const filteredItems = filterStatus === 'ALL' 
+    ? payment.items 
+    : payment.items.filter((item: any) => item.status === filterStatus);
+  
+  if (filteredItems.length === 0) return null;
+  
+  const filteredEarnings = filteredItems.reduce((sum: number, item: any) => sum + item.earnings, 0);
+  
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="text-sm font-semibold text-gray-900">
+              #{payment.orderNumber}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500">{formatDate(payment.createdAt)}</p>
         </div>
-        <p className="text-xs text-gray-500">{formatDate(payment.createdAt)}</p>
+        <div className="text-right">
+          <p className="text-lg font-bold text-gray-900">{formatCurrency(filteredEarnings)}</p>
+        </div>
       </div>
-      <div className="text-right">
-        <p className="text-lg font-bold text-gray-900">{formatCurrency(payment.amount)}</p>
+      
+      <div className="border-t border-gray-100 pt-3 space-y-2">
+        {/* Show filtered items */}
+        {filteredItems.map((item: any, idx: number) => (
+          <div key={idx} className="flex justify-between items-start py-1">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-gray-900">{item.name}</span>
+                <StatusBadge status={item.status} />
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Qty: {item.quantity} × ₱{item.individualShipping.toFixed(2)} shipping
+              </div>
+            </div>
+            <span className="text-sm font-semibold text-green-600">
+              {formatCurrency(item.earnings)}
+            </span>
+          </div>
+        ))}
+        
+        <div className="border-t border-gray-100 pt-2 mt-2">
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-gray-500">Customer:</span>
+            <span className="text-sm text-gray-900 text-right flex-1 ml-2 flex items-center justify-end gap-1">
+              <User className="w-3 h-3" />
+              {payment.customerName || 'N/A'}
+            </span>
+          </div>
+          {payment.customerEmail && (
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-xs text-gray-500">Email:</span>
+              <span className="text-xs text-gray-600 text-right flex-1 ml-2 break-words flex items-center justify-end gap-1">
+                <Mail className="w-3 h-3" />
+                {payment.customerEmail}
+              </span>
+            </div>
+          )}
+          <div className="flex justify-between items-center mt-1">
+            <span className="text-xs text-gray-500">Payment Method:</span>
+            <span className="text-sm text-gray-900 flex items-center gap-1">
+              {getPaymentMethodIcon(payment.method)}
+              <span>{payment.method}</span>
+            </span>
+          </div>
+        </div>
       </div>
     </div>
-    
-    <div className="border-t border-gray-100 pt-3 space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-500">Delivered:</span>
-        <span className="text-sm font-semibold text-green-600">{formatCurrency(payment.deliveredItemsTotal)}</span>
-      </div>
-      {payment.pendingItemsTotal > 0 && (
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-500">Pending:</span>
-          <span className="text-sm font-semibold text-yellow-600">{formatCurrency(payment.pendingItemsTotal)}</span>
-        </div>
-      )}
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-500">Customer:</span>
-        <span className="text-sm text-gray-900 text-right flex-1 ml-2 flex items-center justify-end gap-1">
-          <User className="w-3 h-3" />
-          {payment.customerName || 'N/A'}
-        </span>
-      </div>
-      {payment.customerEmail && (
-        <div className="flex justify-between items-center">
-          <span className="text-xs text-gray-500">Email:</span>
-          <span className="text-xs text-gray-600 text-right flex-1 ml-2 break-words flex items-center justify-end gap-1">
-            <Mail className="w-3 h-3" />
-            {payment.customerEmail}
-          </span>
-        </div>
-      )}
-      <div className="flex justify-between items-center">
-        <span className="text-xs text-gray-500">Payment Method:</span>
-        <span className="text-sm text-gray-900 flex items-center gap-1">
-          {getPaymentMethodIcon(payment.method)}
-          <span>{payment.method}</span>
-        </span>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
 // Main Component
 export default function RiderPaymentHistory({
@@ -258,11 +379,24 @@ export default function RiderPaymentHistory({
   className = '',
 }: RiderPaymentHistoryProps) {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [activeFilter, setActiveFilter] = useState<FilterStatus>('ALL');
+  const [filterCounts, setFilterCounts] = useState<Record<FilterStatus, number>>({
+    ALL: 0,
+    PENDING: 0,
+    PROCESSING: 0,
+    DELIVERED: 0,
+    CANCELLED: 0,
+    REFUNDED: 0,
+  });
   const [summary, setSummary] = useState<PaymentSummary>({
     totalEarnings: 0,
     todayEarnings: 0,
     pendingPayments: 0,
+    processingPayments: 0,
     completedPayments: 0,
+    cancelledPayments: 0,
+    refundedPayments: 0,
     deliveredOrders: 0,
     totalOrders: 0,
   });
@@ -296,7 +430,7 @@ export default function RiderPaymentHistory({
     fetchPolicy: 'network-only',
   });
 
-  // Process orders based ONLY on item statuses
+  // Process orders based on item statuses - earnings = sum of individualShipping
   useEffect(() => {
     if (data?.riderPayments?.orders) {
       const orders = data.riderPayments.orders;
@@ -305,29 +439,69 @@ export default function RiderPaymentHistory({
       let totalEarnings = 0;
       let todayEarnings = 0;
       let totalPendingAmount = 0;
+      let totalProcessingAmount = 0;
+      let totalCancelledAmount = 0;
+      let totalRefundedAmount = 0;
       let deliveredOrdersCount = 0;
       
       const uniqueOrders = new Set();
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      
+      // Initialize filter counts
+      const counts: Record<FilterStatus, number> = {
+        ALL: 0,
+        PENDING: 0,
+        PROCESSING: 0,
+        DELIVERED: 0,
+        CANCELLED: 0,
+        REFUNDED: 0,
+      };
 
       orders.forEach((order: any) => {
         uniqueOrders.add(order.id);
         
-        // Calculate item totals based on status
+        // Calculate item totals based on individualShipping
         let deliveredItemsTotal = 0;
         let pendingItemsTotal = 0;
+        let processingItemsTotal = 0;
+        let cancelledItemsTotal = 0;
+        let refundedItemsTotal = 0;
         let hasDeliveredItems = false;
+        
+        const orderItems = [];
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
-            const itemTotal = item.price * item.quantity;
+            // Earnings = individualShipping (not price)
+            const itemEarnings = item.individualShipping || 0;
             
+            // Track item for filtering
+            orderItems.push({
+              id: item.id,
+              name: item.product?.name || 'Unknown Product',
+              quantity: item.quantity,
+              status: item.status,
+              earnings: itemEarnings,
+              individualShipping: item.individualShipping,
+            });
+            
+            // Update counts for filtering
+            counts[item.status as FilterStatus]++;
+            counts.ALL++;
+            
+            // Calculate totals by status
             if (item.status === ItemStatus.DELIVERED) {
-              deliveredItemsTotal += itemTotal;
+              deliveredItemsTotal += itemEarnings;
               hasDeliveredItems = true;
-            } else if (item.status === ItemStatus.PENDING || item.status === ItemStatus.PROCESSING) {
-              pendingItemsTotal += itemTotal;
+            } else if (item.status === ItemStatus.PENDING) {
+              pendingItemsTotal += itemEarnings;
+            } else if (item.status === ItemStatus.PROCESSING) {
+              processingItemsTotal += itemEarnings;
+            } else if (item.status === ItemStatus.CANCELLED) {
+              cancelledItemsTotal += itemEarnings;
+            } else if (item.status === ItemStatus.REFUNDED) {
+              refundedItemsTotal += itemEarnings;
             }
           });
         }
@@ -352,9 +526,13 @@ export default function RiderPaymentHistory({
               customerEmail: order.user?.email,
               deliveredItemsTotal,
               pendingItemsTotal,
+              processingItemsTotal,
+              cancelledItemsTotal,
+              refundedItemsTotal,
+              items: orderItems,
             });
             
-            // Calculate earnings based ONLY on delivered items
+            // Calculate earnings based on delivered items
             if (deliveredItemsTotal > 0) {
               totalEarnings += deliveredItemsTotal;
               
@@ -364,38 +542,12 @@ export default function RiderPaymentHistory({
               }
             }
             
-            // Calculate pending amounts based ONLY on pending items
-            if (pendingItemsTotal > 0) {
-              totalPendingAmount += pendingItemsTotal;
-            }
-          });
-        } else if (order.total) {
-          extractedPayments.push({
-            id: order.id,
-            amount: order.total,
-            method: 'UNKNOWN',
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            createdAt: order.createdAt,
-            customerName: order.user ? 
-              `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
-            customerEmail: order.user?.email,
-            deliveredItemsTotal,
-            pendingItemsTotal,
-          });
-          
-          if (deliveredItemsTotal > 0) {
-            totalEarnings += deliveredItemsTotal;
-            
-            const orderDate = new Date(order.createdAt);
-            if (orderDate >= today) {
-              todayEarnings += deliveredItemsTotal;
-            }
-          }
-          
-          if (pendingItemsTotal > 0) {
+            // Calculate amounts by status
             totalPendingAmount += pendingItemsTotal;
-          }
+            totalProcessingAmount += processingItemsTotal;
+            totalCancelledAmount += cancelledItemsTotal;
+            totalRefundedAmount += refundedItemsTotal;
+          });
         }
       });
 
@@ -405,11 +557,16 @@ export default function RiderPaymentHistory({
       );
 
       setPayments(extractedPayments);
+      setFilterCounts(counts);
+      
       setSummary({
         totalEarnings,
         todayEarnings,
         pendingPayments: totalPendingAmount,
+        processingPayments: totalProcessingAmount,
         completedPayments: totalEarnings,
+        cancelledPayments: totalCancelledAmount,
+        refundedPayments: totalRefundedAmount,
         deliveredOrders: deliveredOrdersCount,
         totalOrders: uniqueOrders.size,
       });
@@ -424,6 +581,18 @@ export default function RiderPaymentHistory({
       }
     }
   }, [data]);
+
+  // Apply filter to payments
+  useEffect(() => {
+    if (activeFilter === 'ALL') {
+      setFilteredPayments(payments);
+    } else {
+      const filtered = payments.filter(payment => 
+        payment.items.some(item => item.status === activeFilter)
+      );
+      setFilteredPayments(filtered);
+    }
+  }, [activeFilter, payments]);
 
   const handlePageChange = (newPage: number) => {
     setPagination({ ...pagination, page: newPage });
@@ -493,17 +662,34 @@ export default function RiderPaymentHistory({
         {riderId && (
           <p className="text-xs sm:text-sm text-gray-500 mt-2">Rider ID: {riderId}</p>
         )}
-        <p className="text-xs text-gray-400 mt-1">Based on delivered items only</p>
+        <p className="text-xs text-gray-400 mt-1">
+          Earnings = Sum of individualShipping for delivered items
+        </p>
       </div>
 
       {/* Summary Cards */}
       {showSummary && <PaymentSummaryCards summary={summary} />}
 
+      {/* Filter Bar */}
+      <FilterBar 
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        counts={filterCounts}
+      />
+
       {/* Payments List */}
-      {payments.length === 0 ? (
+      {filteredPayments.length === 0 ? (
         <div className="text-center py-12 text-gray-500 px-4">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
-          <p className="mt-2 text-sm">No payment records found for this rider</p>
+          <p className="mt-2 text-sm">No payment records found for this filter</p>
+          {activeFilter !== 'ALL' && (
+            <button
+              onClick={() => setActiveFilter('ALL')}
+              className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-medium"
+            >
+              Clear Filter
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -515,59 +701,82 @@ export default function RiderPaymentHistory({
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Delivered</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pending</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Earnings</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {payments.map((payment) => (
-                  <tr key={payment.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(payment.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      #{payment.orderNumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <User className="w-3 h-3" />
-                        {payment.customerName || 'N/A'}
-                      </div>
-                      {payment.customerEmail && (
-                        <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                          <Mail className="w-3 h-3" />
-                          {payment.customerEmail}
+                {filteredPayments.map((payment) => {
+                  // Filter items based on active filter
+                  const displayItems = activeFilter === 'ALL' 
+                    ? payment.items 
+                    : payment.items.filter(item => item.status === activeFilter);
+                  
+                  const totalEarningsForDisplay = displayItems.reduce(
+                    (sum, item) => sum + item.earnings, 0
+                  );
+                  
+                  return (
+                    <tr key={payment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(payment.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{payment.orderNumber}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {payment.customerName || 'N/A'}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                      {formatCurrency(payment.deliveredItemsTotal)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-yellow-600">
-                      {payment.pendingItemsTotal > 0 ? formatCurrency(payment.pendingItemsTotal) : '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        {getPaymentMethodIcon(payment.method)}
-                        {payment.method}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                        {payment.customerEmail && (
+                          <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                            <Mail className="w-3 h-3" />
+                            {payment.customerEmail}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        <div className="space-y-2">
+                          {displayItems.map((item, idx) => (
+                            <div key={idx} className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{item.name}</span>
+                              <span className="text-xs">(x{item.quantity})</span>
+                              <StatusBadge status={item.status} />
+                              <span className="text-xs text-gray-400">
+                                ₱{item.individualShipping.toFixed(2)}/item
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                        {formatCurrency(totalEarningsForDisplay)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          {getPaymentMethodIcon(payment.method)}
+                          {payment.method}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
 
           {/* Mobile Card View */}
           <div className="md:hidden px-4 py-2">
-            {payments.map((payment) => (
+            {filteredPayments.map((payment) => (
               <MobilePaymentCard
                 key={payment.id}
                 payment={payment}
                 formatCurrency={formatCurrency}
                 formatDate={formatDate}
                 getPaymentMethodIcon={getPaymentMethodIcon}
+                filterStatus={activeFilter}
               />
             ))}
           </div>
@@ -609,4 +818,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-      }
+  }
