@@ -17,7 +17,7 @@ import {
   User
 } from 'lucide-react';
 
-// Updated query - using updatedAt for item timestamps
+// Updated query to match actual data structure
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -27,6 +27,8 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
       orders {
         id
         orderNumber
+        total
+        createdAt
         user {
           id
           firstName
@@ -64,15 +66,6 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
             lastName
             email
             phone
-            addresses {
-              street
-              city
-              state
-              zipCode
-              country
-              lat
-              lng
-            }
           }
         }
         payments {
@@ -102,7 +95,7 @@ enum ItemStatus {
   REFUNDED = 'REFUNDED'
 }
 
-// Types - based on items only
+// Types
 type ItemPayment = {
   id: string;
   itemId: string;
@@ -226,7 +219,7 @@ const MobilePaymentCard = ({ itemPayment, formatCurrency, formatDate, getPayment
         </p>
         {itemPayment.status === ItemStatus.DELIVERED && (
           <p className="text-xs text-gray-500">
-            Updated: {formatDate(itemPayment.updatedAt)}
+            Delivered: {formatDate(itemPayment.updatedAt)}
           </p>
         )}
       </div>
@@ -271,6 +264,18 @@ const MobilePaymentCard = ({ itemPayment, formatCurrency, formatDate, getPayment
     </div>
   </div>
 );
+
+// Helper function to safely extract data from arrays or objects
+const safeExtract = (data: any, field: string, defaultValue: any = 'Unknown') => {
+  if (!data) return defaultValue;
+  if (Array.isArray(data) && data.length > 0) {
+    return data[0][field] || defaultValue;
+  }
+  if (typeof data === 'object') {
+    return data[field] || defaultValue;
+  }
+  return defaultValue;
+};
 
 // Main Component
 export default function RiderPaymentHistory({
@@ -323,7 +328,7 @@ export default function RiderPaymentHistory({
   useEffect(() => {
     if (data?.riderPayments?.orders) {
       const orders = data.riderPayments.orders;
-      console.log(orders);
+      
       const extractedItemPayments: ItemPayment[] = [];
       let totalEarnings = 0;
       let todayEarnings = 0;
@@ -340,16 +345,16 @@ export default function RiderPaymentHistory({
       orders.forEach((order: any) => {
         uniqueOrders.add(order.id);
         
-        // Get the first payment method from order payments
+        // Get payment info
         const paymentMethod = order.payments?.[0]?.method || 'UNKNOWN';
         const paymentId = order.payments?.[0]?.id || order.id;
         
-        // Process each item individually - ALL calculations come from items
-        if (order.items && order.items.length > 0) {
+        // Process each item individually
+        if (order.items && Array.isArray(order.items) && order.items.length > 0) {
           order.items.forEach((item: any) => {
-            // Check if this item belongs to the rider (based on supplierId)
+            // Check if this item belongs to the rider
             if (riderId && item.supplierId !== riderId) {
-              return; // Skip items not belonging to this rider
+              return;
             }
             
             const itemTotal = item.price * item.quantity;
@@ -357,13 +362,20 @@ export default function RiderPaymentHistory({
             const itemCreatedAt = item.createdAt;
             const itemUpdatedAt = item.updatedAt;
             
+            // Safely extract product name (handles array or object)
+            const productName = safeExtract(item.product, 'name', 'Unknown Product');
+            
+            // Safely extract supplier name
+            const supplierName = safeExtract(item.supplier, 'firstName', '') + ' ' + safeExtract(item.supplier, 'lastName', '');
+            const finalSupplierName = supplierName.trim() || 'Unknown Supplier';
+            
             // Calculate earnings based on item status
             if (itemStatus === ItemStatus.DELIVERED) {
               totalEarnings += itemTotal;
               deliveredItemsCount++;
               uniqueDeliveredOrders.add(order.id);
               
-              // Check if item was updated (delivered) today - using updatedAt
+              // Check if item was delivered today (using updatedAt)
               if (itemUpdatedAt) {
                 const itemDate = new Date(itemUpdatedAt);
                 if (itemDate >= today) {
@@ -375,13 +387,13 @@ export default function RiderPaymentHistory({
               pendingItemsCount++;
             }
             
-            // Create an item-level payment record
+            // Create item-level payment record
             extractedItemPayments.push({
               id: `${item.id}_${paymentId}`,
               itemId: item.id,
               orderId: order.id,
               orderNumber: order.orderNumber,
-              productName: item.product?.name || 'Unknown Product',
+              productName: productName,
               quantity: item.quantity,
               price: item.price,
               totalAmount: itemTotal,
@@ -394,14 +406,13 @@ export default function RiderPaymentHistory({
                 `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
               customerEmail: order.user?.email,
               supplierId: item.supplierId,
-              supplierName: item.supplier ? 
-                `${item.supplier.firstName || ''} ${item.supplier.lastName || ''}`.trim() : 'Unknown Supplier',
+              supplierName: finalSupplierName,
             });
           });
         }
       });
 
-      // Sort items by creation date (newest first) - using item's createdAt
+      // Sort items by creation date (newest first)
       extractedItemPayments.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -478,10 +489,12 @@ export default function RiderPaymentHistory({
   }
 
   if (error) {
+    console.error('GraphQL Error:', error);
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center py-12 text-red-600 px-4">
-          Error loading payments: {error.message}
+          <p className="font-semibold">Error loading payments</p>
+          <p className="text-sm mt-2">{error.message}</p>
         </div>
       </div>
     );
@@ -534,7 +547,7 @@ export default function RiderPaymentHistory({
                       {formatDate(item.createdAt)}
                       {item.status === ItemStatus.DELIVERED && item.updatedAt && (
                         <div className="text-xs text-gray-400">
-                          Updated: {formatDate(item.updatedAt)}
+                          Delivered: {formatDate(item.updatedAt)}
                         </div>
                       )}
                     </td>
@@ -641,4 +654,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-                            }
+      }
