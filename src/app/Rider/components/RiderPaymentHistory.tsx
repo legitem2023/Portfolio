@@ -346,7 +346,7 @@ export default function RiderPaymentHistory({
             
             // Calculate today's earnings
             const orderDate = new Date(order.createdAt);
-            if (orderDate >= today && (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.COMPLETED)) {
+            if (orderDate >= today && (order.status === OrderStatus.DELIVERED)) {
               todayEarnings += payment.amount;
             }
             
