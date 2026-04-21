@@ -23,7 +23,7 @@ import {
   Ship
 } from 'lucide-react';
 
-// Updated query
+// Updated query - includes trackingNumber from items
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -134,6 +134,7 @@ type Payment = {
   method: string;
   orderId: string;
   orderNumber: string;
+  trackingNumber: string; // Added tracking number at payment level (from first item or combined)
   createdAt: string;
   customerName?: string;
   customerEmail?: string;
@@ -336,7 +337,7 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component
+// Mobile Card View Component - Updated to show tracking number from items
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
   // Filter items based on status
   const filteredItems = filterStatus === 'ALL' 
@@ -347,13 +348,24 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
   
   const filteredEarnings = filteredItems.reduce((sum: number, item: OrderItem) => sum + item.earnings, 0);
   
+  // Get unique tracking numbers from items (non-empty)
+  const trackingNumbers = [...new Set(
+    payment.items
+      .filter((item: OrderItem) => item.trackingNumber && item.trackingNumber.trim() !== '')
+      .map((item: OrderItem) => item.trackingNumber)
+  )];
+  
+  const displayTrackingNumber = trackingNumbers.length > 0 
+    ? trackingNumbers.join(', ') 
+    : 'No tracking number';
+  
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap mb-2">
             <span className="text-sm font-semibold text-gray-900">
-              #{payment.orderNumber}
+              Tracking #{displayTrackingNumber}
             </span>
           </div>
           <p className="text-xs text-gray-500">{formatDate(payment.createdAt)}</p>
@@ -376,6 +388,12 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
                 Qty: {item.quantity} × ₱{item.individualShipping.toFixed(2)} shipping
                 {item.price > 0 && <span className="ml-2">(Item price: ₱{item.price.toFixed(2)})</span>}
               </div>
+              {/* Show individual item tracking number if it exists and differs from order tracking */}
+              {item.trackingNumber && item.trackingNumber.trim() !== '' && trackingNumbers.length > 1 && (
+                <div className="text-xs text-gray-400 mt-1">
+                  Item Tracking: {item.trackingNumber}
+                </div>
+              )}
             </div>
             <span className="text-sm font-semibold text-green-600">
               {formatCurrency(item.earnings)}
@@ -516,18 +534,26 @@ export default function RiderPaymentHistory({
         let hasDeliveredItems = false;
         
         const orderItems: OrderItem[] = [];
+        let orderTrackingNumber = '';
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
             // Get product name - check multiple possible locations
-            let productName:any;
-            console.log("OI",item.product);
-            if (item.product) {
+            let productName: any;
+            if (item.product && item.product[0]) {
               productName = item.product[0].name;
             } else if (item.name) {
               productName = item.name;
             } else if (item.productName) {
               productName = item.productName;
+            } else {
+              productName = 'Unknown Product';
+            }
+            
+            // Get tracking number from item
+            const itemTrackingNumber = item.trackingNumber || '';
+            if (itemTrackingNumber && !orderTrackingNumber) {
+              orderTrackingNumber = itemTrackingNumber;
             }
             
             // Earnings = individualShipping (not price)
@@ -541,6 +567,7 @@ export default function RiderPaymentHistory({
               status: item.status,
               earnings: itemEarnings,
               individualShipping: item.individualShipping,
+              trackingNumber: itemTrackingNumber,
               price: item.price || 0,
             });
             
@@ -583,6 +610,7 @@ export default function RiderPaymentHistory({
               method: payment.method,
               orderId: order.id,
               orderNumber: order.orderNumber,
+              trackingNumber: orderTrackingNumber,
               createdAt: order.createdAt,
               customerName: order.user ? 
                 `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
@@ -604,6 +632,7 @@ export default function RiderPaymentHistory({
             method: 'UNKNOWN',
             orderId: order.id,
             orderNumber: order.orderNumber,
+            trackingNumber: orderTrackingNumber,
             createdAt: order.createdAt,
             customerName: order.user ? 
               `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
@@ -786,7 +815,7 @@ export default function RiderPaymentHistory({
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tracking #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Earnings</th>
@@ -804,13 +833,23 @@ export default function RiderPaymentHistory({
                     (sum, item) => sum + item.earnings, 0
                   );
                   
+                  // Get unique tracking numbers for display
+                  const trackingNumbers = [...new Set(
+                    payment.items
+                      .filter(item => item.trackingNumber && item.trackingNumber.trim() !== '')
+                      .map(item => item.trackingNumber)
+                  )];
+                  const displayTrackingNumber = trackingNumbers.length > 0 
+                    ? trackingNumbers.join(', ') 
+                    : 'N/A';
+                  
                   return (
                     <tr key={payment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatDate(payment.createdAt)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{payment.orderNumber}
+                        {displayTrackingNumber}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="flex items-center gap-1">
@@ -905,4 +944,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-        }
+    }
