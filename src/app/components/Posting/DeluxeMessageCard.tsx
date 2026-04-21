@@ -11,6 +11,7 @@ import CommentInput from './CommentInput';
 import { setActivePostId } from '../../../../Redux/activePostIdSlice';
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { useRouter, usePathname } from 'next/navigation';
+import { useAuth } from '../hooks/useAuth';
 
 // ... keep your existing interfaces ...
 interface User {
@@ -97,6 +98,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const router = useRouter();
+  const { user:activeUser,loading:activeUserloading } = useAuth()
   const {
     id,
     sender,
@@ -207,7 +209,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
           <div className="relative" ref={dropdownRef}>
           {
             //comparison
-            user.id?
+            user.id !== activeUser?.userId  ?
             <button 
               onClick={toggleDropdown}
               className="text-gray-500 hover:text-gray-700 focus:outline-none transition-colors duration-200"
