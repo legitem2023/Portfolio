@@ -295,7 +295,7 @@ export default function RiderPaymentHistory({
     fetchPolicy: 'network-only',
   });
 
-  // Process orders to extract payment data
+  // Process orders to extract payment data based on item statuses
   useEffect(() => {
     if (data?.riderPayments?.orders) {
       const orders = data.riderPayments.orders;
@@ -317,14 +317,42 @@ export default function RiderPaymentHistory({
       orders.forEach((order: any) => {
         uniqueOrders.add(order.id);
         
-        // Count delivered orders
-        if (order.status === OrderStatus.DELIVERED) {
+        // Check item statuses instead of order status
+        let hasDeliveredItems = false;
+        let hasPendingItems = false;
+        let orderTotalFromDelivered = 0;
+        
+        // Process items to determine actual status
+        if (order.items && order.items.length > 0) {
+          order.items.forEach((item: any) => {
+            // Item status determines if it's delivered or pending
+            if (item.status === 'DELIVERED') {
+              hasDeliveredItems = true;
+              orderTotalFromDelivered += (item.price * item.quantity);
+            } else if (item.status === 'PENDING' || item.status === 'PROCESSING') {
+              hasPendingItems = true;
+            }
+          });
+        }
+        
+        // Count delivered orders (orders with at least one delivered item)
+        if (hasDeliveredItems) {
           deliveredOrders++;
         }
 
-        // Process order payments
+        // Process order payments based on item statuses
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
+            // Determine order status based on items
+            let effectiveOrderStatus = order.status; // fallback to order status
+            if (hasDeliveredItems && !hasPendingItems) {
+              effectiveOrderStatus = OrderStatus.DELIVERED;
+            } else if (hasPendingItems && !hasDeliveredItems) {
+              effectiveOrderStatus = OrderStatus.PENDING;
+            } else if (hasDeliveredItems && hasPendingItems) {
+              effectiveOrderStatus = OrderStatus.PROCESSING; // Partially delivered
+            }
+            
             // Create payment object
             extractedPayments.push({
               id: payment.id,
@@ -332,56 +360,81 @@ export default function RiderPaymentHistory({
               method: payment.method,
               orderId: order.id,
               orderNumber: order.orderNumber,
-              orderStatus: order.status as OrderStatus,
+              orderStatus: effectiveOrderStatus,
               createdAt: order.createdAt,
               customerName: order.user ? 
                 `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
               customerEmail: order.user?.email,
             });
 
-            // Calculate total earnings (all completed/delivered orders)
-            if (order.status === OrderStatus.DELIVERED) {
-              totalEarnings += payment.amount;
+            // Calculate total earnings based on delivered items only
+            if (hasDeliveredItems) {
+              // Use item-based total instead of full order total if partially delivered
+              const earningsToAdd = hasPendingItems ? orderTotalFromDelivered : payment.amount;
+              totalEarnings += earningsToAdd;
             }
             
             // Calculate today's earnings
             const orderDate = new Date(order.createdAt);
-            if (orderDate >= today && (order.status === OrderStatus.DELIVERED)) {
-              todayEarnings += payment.amount;
+            if (orderDate >= today && hasDeliveredItems) {
+              const earningsToAdd = hasPendingItems ? orderTotalFromDelivered : payment.amount;
+              todayEarnings += earningsToAdd;
             }
             
-            // Calculate pending orders (PENDING or PROCESSING status)
-            if (order.status === OrderStatus.PENDING || order.status === OrderStatus.PROCESSING) {
+            // Calculate pending orders (based on items)
+            if (hasPendingItems && !hasDeliveredItems) {
               pendingOrderAmounts += payment.amount;
+            } else if (hasPendingItems && hasDeliveredItems) {
+              // Partially delivered - only count undelivered portion as pending
+              const undeliveredAmount = payment.amount - orderTotalFromDelivered;
+              if (undeliveredAmount > 0) {
+                pendingOrderAmounts += undeliveredAmount;
+              }
             }
           });
         } else if (order.total) {
-          // If no payments array but has total, use that
+          // If no payments array but has total, use that with item-based calculation
+          let effectiveOrderStatus = order.status;
+          if (hasDeliveredItems && !hasPendingItems) {
+            effectiveOrderStatus = OrderStatus.DELIVERED;
+          } else if (hasPendingItems && !hasDeliveredItems) {
+            effectiveOrderStatus = OrderStatus.PENDING;
+          } else if (hasDeliveredItems && hasPendingItems) {
+            effectiveOrderStatus = OrderStatus.PROCESSING;
+          }
+          
           extractedPayments.push({
             id: order.id,
             amount: order.total,
             method: 'UNKNOWN',
             orderId: order.id,
             orderNumber: order.orderNumber,
-            orderStatus: order.status as OrderStatus,
+            orderStatus: effectiveOrderStatus,
             createdAt: order.createdAt,
             customerName: order.user ? 
               `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
             customerEmail: order.user?.email,
           });
           
-          // Calculate based on order total
-          if (order.status === OrderStatus.DELIVERED) {
-            totalEarnings += order.total;
+          // Calculate based on delivered items
+          if (hasDeliveredItems) {
+            const earningsToAdd = hasPendingItems ? orderTotalFromDelivered : order.total;
+            totalEarnings += earningsToAdd;
             
             const orderDate = new Date(order.createdAt);
             if (orderDate >= today) {
-              todayEarnings += order.total;
+              todayEarnings += earningsToAdd;
             }
           }
           
-          if (order.status === OrderStatus.PENDING || order.status === OrderStatus.PROCESSING) {
+          // Calculate pending amounts based on undelivered items
+          if (hasPendingItems && !hasDeliveredItems) {
             pendingOrderAmounts += order.total;
+          } else if (hasPendingItems && hasDeliveredItems) {
+            const undeliveredAmount = order.total - orderTotalFromDelivered;
+            if (undeliveredAmount > 0) {
+              pendingOrderAmounts += undeliveredAmount;
+            }
           }
         }
       });
@@ -396,7 +449,7 @@ export default function RiderPaymentHistory({
         totalEarnings,
         todayEarnings,
         pendingPayments: pendingOrderAmounts,
-        completedPayments: totalEarnings, // For completed payments
+        completedPayments: totalEarnings,
         deliveredOrders,
         totalOrders: uniqueOrders.size,
       });
@@ -474,6 +527,14 @@ export default function RiderPaymentHistory({
     </div>
   );
 
+  if(error) return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="text-center py-12 text-red-600 px-4">
+        Error loading payments: {error.message}
+      </div>
+    </div>
+  );
+
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
       {/* Header - Responsive */}
@@ -506,11 +567,7 @@ export default function RiderPaymentHistory({
       {showSummary && <PaymentSummaryCards summary={summary} />}
 
       {/* Payments - Responsive Table/Card View */}
-      {error ? (
-        <div className="text-center py-12 text-red-600 px-4">
-          Error loading payments: {error.message}
-        </div>
-      ) : payments.length === 0 ? (
+      {payments.length === 0 ? (
         <div className="text-center py-12 text-gray-500 px-4">
           <svg
             className="mx-auto h-12 w-12 text-gray-400"
@@ -586,7 +643,7 @@ export default function RiderPaymentHistory({
                   </tr>
                 ))}
               </tbody>
-             </table>
+            </table>
           </div>
 
           {/* Mobile Card View - Visible only on mobile */}
