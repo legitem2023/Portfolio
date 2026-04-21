@@ -462,19 +462,23 @@ export default function RiderPaymentHistory({
     });
   };
   
-  if(loading) return (
-    <div className="flex justify-center items-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>
-  );
-
-  if(error) return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="text-center py-12 text-red-600 px-4">
-        Error loading payments: {error.message}
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="text-center py-12 text-red-600 px-4">
+          Error loading payments: {error.message}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
@@ -547,7 +551,7 @@ export default function RiderPaymentHistory({
                         {payment.method}
                       </span>
                     </td>
-                  </td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -603,4 +607,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-               }
+      }
