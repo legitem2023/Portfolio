@@ -112,6 +112,15 @@ enum ItemStatus {
 type FilterStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
 
 // Types
+type OrderItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  status: string;
+  earnings: number;
+  individualShipping: number;
+};
+
 type Payment = {
   id: string;
   amount: number;
@@ -126,14 +135,7 @@ type Payment = {
   processingItemsTotal: number;
   cancelledItemsTotal: number;
   refundedItemsTotal: number;
-  items: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    status: string;
-    earnings: number;
-    individualShipping: number;
-  }>;
+  items: OrderItem[];
 };
 
 type PaymentSummary = {
@@ -301,11 +303,11 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
   // Filter items based on status
   const filteredItems = filterStatus === 'ALL' 
     ? payment.items 
-    : payment.items.filter((item: any) => item.status === filterStatus);
+    : payment.items.filter((item: OrderItem) => item.status === filterStatus);
   
   if (filteredItems.length === 0) return null;
   
-  const filteredEarnings = filteredItems.reduce((sum: number, item: any) => sum + item.earnings, 0);
+  const filteredEarnings = filteredItems.reduce((sum: number, item: OrderItem) => sum + item.earnings, 0);
   
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
@@ -325,7 +327,7 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
       
       <div className="border-t border-gray-100 pt-3 space-y-2">
         {/* Show filtered items */}
-        {filteredItems.map((item: any, idx: number) => (
+        {filteredItems.map((item: OrderItem, idx: number) => (
           <div key={idx} className="flex justify-between items-start py-1">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -469,7 +471,8 @@ export default function RiderPaymentHistory({
         let refundedItemsTotal = 0;
         let hasDeliveredItems = false;
         
-        const orderItems = [];
+        // FIXED: Added explicit type declaration
+        const orderItems: OrderItem[] = [];
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
@@ -736,7 +739,7 @@ export default function RiderPaymentHistory({
                             {payment.customerEmail}
                           </div>
                         )}
-                      </td>
+                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="space-y-2">
                           {displayItems.map((item, idx) => (
@@ -750,16 +753,16 @@ export default function RiderPaymentHistory({
                             </div>
                           ))}
                         </div>
-                      </td>
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         {formatCurrency(totalEarningsForDisplay)}
-                      </td>
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           {getPaymentMethodIcon(payment.method)}
                           {payment.method}
                         </span>
-                      </td>
+                       </td>
                     </tr>
                   );
                 })}
@@ -818,4 +821,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-  }
+}
