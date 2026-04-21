@@ -1,7 +1,7 @@
 // components/DeluxeMessageCard.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { MoreHorizontal, MessageCircle, User, Globe, Lock } from 'lucide-react';
+import { MoreHorizontal, MessageCircle, User, Globe, Lock, Trash } from 'lucide-react';
 import UserAvatar from './UserAvatar';
 import EngagementModal from './EngagementModal';
 import PostImages from './PostImages';
@@ -217,10 +217,11 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
             </button>
             
             {/* Dropdown Menu */}
-            {dropdownOpen &&  user?.id !== activeUser?.userId? (
+            {dropdownOpen &&  (
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 overflow-hidden">
                 <div className="py-1">
-                  {/* Messages Icon Option */}
+                  {user?.id !== activeUser?.userId?(
+                <>
                   <button
                     onClick={handleSendMessage}
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex items-center gap-3"
@@ -237,18 +238,24 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
                     <User className="h-4 w-4" />
                     <span>View Profile</span>
                   </button>
-                </div>
-              </div>
-            ):(
-             <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200 overflow-hidden">
-                <div className="py-1">
+                 </>
+                  ):
+                (
                   <button
                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150 flex items-center gap-3"
-                  >        
-                    <span>x</span>
+                  >
+                    <Trash className="h-4 w-4" />
+                    <span>Delete</span>
                   </button>
+                )
+                  
+                  }
+
+                  
+                  
                 </div>
-            </div>
+              </div>
+            )
         
             )}
           </div>
