@@ -22,7 +22,7 @@ import {
   Truck
 } from 'lucide-react';
 
-// Updated query - includes individualShipping for earnings
+// Updated query - fixed to ensure product name is fetched
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -61,9 +61,11 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
           individualShipping
           individualDistance
           product {
+            id
             name
             sku
             images
+            description
           }
           supplier {
             id
@@ -71,6 +73,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
             lastName
             email
             phone
+            businessName
             addresses {
               street
               city
@@ -119,6 +122,7 @@ type OrderItem = {
   status: string;
   earnings: number;
   individualShipping: number;
+  price: number;
 };
 
 type Payment = {
@@ -331,11 +335,12 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
           <div key={idx} className="flex justify-between items-start py-1">
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-sm text-gray-900">{item.name}</span>
+                <span className="text-sm text-gray-900 font-medium">{item.name}</span>
                 <StatusBadge status={item.status} />
               </div>
               <div className="text-xs text-gray-500 mt-1">
                 Qty: {item.quantity} × ₱{item.individualShipping.toFixed(2)} shipping
+                {item.price > 0 && <span className="ml-2">(Item price: ₱{item.price.toFixed(2)})</span>}
               </div>
             </div>
             <span className="text-sm font-semibold text-green-600">
@@ -471,26 +476,39 @@ export default function RiderPaymentHistory({
         let refundedItemsTotal = 0;
         let hasDeliveredItems = false;
         
-        // FIXED: Added explicit type declaration
         const orderItems: OrderItem[] = [];
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
+            // Get product name - check multiple possible locations
+            let productName = 'Unknown Product';
+            if (item.product) {
+              productName = item.product.name || item.product.title || 'Unknown Product';
+            } else if (item.name) {
+              productName = item.name;
+            } else if (item.productName) {
+              productName = item.productName;
+            }
+            
             // Earnings = individualShipping (not price)
             const itemEarnings = item.individualShipping || 0;
             
             // Track item for filtering
             orderItems.push({
               id: item.id,
-              name: item.product?.name || 'Unknown Product',
+              name: productName,
               quantity: item.quantity,
               status: item.status,
               earnings: itemEarnings,
               individualShipping: item.individualShipping,
+              price: item.price || 0,
             });
             
             // Update counts for filtering
-            counts[item.status as FilterStatus]++;
+            const statusKey = item.status as FilterStatus;
+            if (counts.hasOwnProperty(statusKey)) {
+              counts[statusKey]++;
+            }
             counts.ALL++;
             
             // Calculate totals by status
@@ -514,7 +532,7 @@ export default function RiderPaymentHistory({
           deliveredOrdersCount++;
         }
         
-        // Process payments
+        // Process payments - create one payment entry per order
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
             extractedPayments.push({
@@ -534,23 +552,39 @@ export default function RiderPaymentHistory({
               refundedItemsTotal,
               items: orderItems,
             });
-            
-            // Calculate earnings based on delivered items
-            if (deliveredItemsTotal > 0) {
-              totalEarnings += deliveredItemsTotal;
-              
-              const orderDate = new Date(order.createdAt);
-              if (orderDate >= today) {
-                todayEarnings += deliveredItemsTotal;
-              }
-            }
-            
-            // Calculate amounts by status
-            totalPendingAmount += pendingItemsTotal;
-            totalProcessingAmount += processingItemsTotal;
-            totalCancelledAmount += cancelledItemsTotal;
-            totalRefundedAmount += refundedItemsTotal;
           });
+        } else {
+          // If no payments array, create a placeholder
+          extractedPayments.push({
+            id: order.id,
+            amount: order.total || 0,
+            method: 'UNKNOWN',
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            createdAt: order.createdAt,
+            customerName: order.user ? 
+              `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
+            customerEmail: order.user?.email,
+            deliveredItemsTotal,
+            pendingItemsTotal,
+            processingItemsTotal,
+            cancelledItemsTotal,
+            refundedItemsTotal,
+            items: orderItems,
+          });
+        }
+        
+        // Calculate totals for summary
+        totalEarnings += deliveredItemsTotal;
+        totalPendingAmount += pendingItemsTotal;
+        totalProcessingAmount += processingItemsTotal;
+        totalCancelledAmount += cancelledItemsTotal;
+        totalRefundedAmount += refundedItemsTotal;
+        
+        // Calculate today's earnings
+        const orderDate = new Date(order.createdAt);
+        if (orderDate >= today) {
+          todayEarnings += deliveredItemsTotal;
         }
       });
 
@@ -598,8 +632,10 @@ export default function RiderPaymentHistory({
   }, [activeFilter, payments]);
 
   const handlePageChange = (newPage: number) => {
-    setPagination({ ...pagination, page: newPage });
-    refetch();
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      setPagination({ ...pagination, page: newPage });
+      refetch();
+    }
   };
 
   const getPaymentMethodIcon = (method: string) => {
@@ -739,7 +775,7 @@ export default function RiderPaymentHistory({
                             {payment.customerEmail}
                           </div>
                         )}
-                       </td>
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
                         <div className="space-y-2">
                           {displayItems.map((item, idx) => (
@@ -753,10 +789,10 @@ export default function RiderPaymentHistory({
                             </div>
                           ))}
                         </div>
-                       </td>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         {formatCurrency(totalEarningsForDisplay)}
-                       </td>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           {getPaymentMethodIcon(payment.method)}
@@ -821,4 +857,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-}
+                       }
