@@ -514,13 +514,14 @@ export default function RiderPaymentHistory({
         let hasDeliveredItems = false;
         
         const orderItems: OrderItem[] = [];
-        console.log("OI",order.items);
+        
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
             // Get product name - check multiple possible locations
             let productName:any;
+            console.log("OI",item.product);
             if (item.product) {
-              productName = item.product.name;
+              productName = item.product[0].name;
             } else if (item.name) {
               productName = item.name;
             } else if (item.productName) {
