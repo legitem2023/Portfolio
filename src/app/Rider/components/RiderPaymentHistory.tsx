@@ -340,7 +340,7 @@ export default function RiderPaymentHistory({
             });
 
             // Calculate total earnings (all completed/delivered orders)
-            if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.COMPLETED) {
+            if (order.status === OrderStatus.DELIVERED) {
               totalEarnings += payment.amount;
             }
             
