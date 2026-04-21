@@ -323,7 +323,7 @@ export default function RiderPaymentHistory({
   useEffect(() => {
     if (data?.riderPayments?.orders) {
       const orders = data.riderPayments.orders;
-      
+      console.log(riderPayments?.orders);
       const extractedItemPayments: ItemPayment[] = [];
       let totalEarnings = 0;
       let todayEarnings = 0;
