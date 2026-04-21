@@ -188,6 +188,99 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+// Shimmer Component
+const Shimmer = ({ className = "" }: { className?: string }) => {
+  return (
+    <div className={`relative overflow-hidden bg-gray-100 rounded ${className}`}>
+      <div 
+        className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite]"
+        style={{
+          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+        }}
+      />
+    </div>
+  );
+};
+
+// Shimmer Summary Cards
+const ShimmerSummaryCards = () => {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6">
+      {[...Array(6)].map((_, index) => (
+        <div key={index} className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <Shimmer className="h-4 w-20 mb-2" />
+              <Shimmer className="h-7 w-24" />
+            </div>
+            <div className="ml-2">
+              <Shimmer className="h-6 w-6 rounded-full" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Shimmer Filter Bar
+const ShimmerFilterBar = () => {
+  return (
+    <div className="px-4 sm:px-6 pb-4 border-b border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Shimmer className="h-4 w-4 rounded" />
+        <Shimmer className="h-4 w-32" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {[...Array(7)].map((_, index) => (
+          <Shimmer key={index} className="h-9 w-24 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Shimmer Table Row
+const ShimmerTableRow = () => {
+  return (
+    <tr className="border-b border-gray-200">
+      <td className="px-6 py-4"><Shimmer className="h-5 w-28" /></td>
+      <td className="px-6 py-4"><Shimmer className="h-5 w-32" /></td>
+      <td className="px-6 py-4">
+        <Shimmer className="h-5 w-24 mb-1" />
+        <Shimmer className="h-4 w-32" />
+      </td>
+      <td className="px-6 py-4">
+        <div className="space-y-2">
+          <Shimmer className="h-6 w-48" />
+          <Shimmer className="h-6 w-40" />
+        </div>
+      </td>
+      <td className="px-6 py-4"><Shimmer className="h-5 w-20" /></td>
+      <td className="px-6 py-4"><Shimmer className="h-5 w-24" /></td>
+    </tr>
+  );
+};
+
+// Shimmer Mobile Card
+const ShimmerMobileCard = () => {
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <Shimmer className="h-5 w-40 mb-2" />
+          <Shimmer className="h-4 w-32" />
+        </div>
+        <Shimmer className="h-6 w-20" />
+      </div>
+      <div className="border-t border-gray-100 pt-3 space-y-2">
+        <Shimmer className="h-16 w-full" />
+        <Shimmer className="h-12 w-full" />
+      </div>
+    </div>
+  );
+};
+
 // Summary Cards Component
 const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   const cards = [
@@ -336,7 +429,7 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component - Fixed with Array.from()
+// Mobile Card View Component
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
   const filteredItems = filterStatus === 'ALL' 
     ? payment.items 
@@ -346,7 +439,6 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
   
   const filteredEarnings = filteredItems.reduce((sum: number, item: OrderItem) => sum + item.earnings, 0);
   
-  // Fixed: Use Array.from() instead of spread operator
   const trackingNumbers = Array.from(
     new Set(
       payment.items
@@ -725,10 +817,81 @@ export default function RiderPaymentHistory({
     });
   };
   
+  // Add CSS animation to the document head
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className={`bg-white rounded-lg shadow ${className}`}>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <Shimmer className="h-6 w-6 rounded" />
+            <Shimmer className="h-6 w-48" />
+          </div>
+          {riderId && (
+            <Shimmer className="h-4 w-32 mt-2" />
+          )}
+          <Shimmer className="h-3 w-64 mt-1" />
+        </div>
+
+        {showSummary && <ShimmerSummaryCards />}
+
+        <ShimmerFilterBar />
+
+        {/* Desktop Shimmer Table */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-16" /></th>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-20" /></th>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-20" /></th>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-16" /></th>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-20" /></th>
+                <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-16" /></th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {[...Array(5)].map((_, index) => (
+                <ShimmerTableRow key={index} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Shimmer Cards */}
+        <div className="md:hidden px-4 py-2">
+          {[...Array(3)].map((_, index) => (
+            <ShimmerMobileCard key={index} />
+          ))}
+        </div>
+
+        {/* Shimmer Pagination */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
+          <div className="flex justify-between items-center">
+            <Shimmer className="h-5 w-32" />
+            <div className="flex gap-2">
+              <Shimmer className="h-8 w-20 rounded" />
+              <Shimmer className="h-8 w-20 rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -806,7 +969,6 @@ export default function RiderPaymentHistory({
                     (sum, item) => sum + item.earnings, 0
                   );
                   
-                  // Fixed: Use Array.from() instead of spread operator
                   const trackingNumbers = Array.from(
                     new Set(
                       payment.items
@@ -918,4 +1080,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-              }
+    }
