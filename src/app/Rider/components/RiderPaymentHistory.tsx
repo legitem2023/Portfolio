@@ -103,7 +103,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   }
 `;
 
-// Item status enum - Added SHIPPED
+// Item status enum
 enum ItemStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -113,7 +113,7 @@ enum ItemStatus {
   REFUNDED = 'REFUNDED'
 }
 
-// Filter status type - Added SHIPPED
+// Filter status type
 type FilterStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
 
 // Types
@@ -134,7 +134,7 @@ type Payment = {
   method: string;
   orderId: string;
   orderNumber: string;
-  trackingNumber: string; // Added tracking number at payment level (from first item or combined)
+  trackingNumber: string;
   createdAt: string;
   customerName?: string;
   customerEmail?: string;
@@ -166,7 +166,7 @@ interface RiderPaymentHistoryProps {
   className?: string;
 }
 
-// Status Badge Component - Added SHIPPED
+// Status Badge Component
 const StatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
     DELIVERED: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
@@ -188,7 +188,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// Summary Cards Component - Added Shipped Amount
+// Summary Cards Component
 const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   const cards = [
     {
@@ -268,7 +268,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   );
 };
 
-// Filter Bar Component - Added SHIPPED filter
+// Filter Bar Component
 const FilterBar = ({ 
   activeFilter, 
   onFilterChange, 
@@ -288,7 +288,6 @@ const FilterBar = ({
     { value: 'REFUNDED', label: 'Refunded', color: 'gray' },
   ];
 
-  // Helper function to get color classes
   const getButtonClasses = (filter: typeof filters[0]) => {
     if (activeFilter === filter.value) {
       const colorMap: Record<string, string> = {
@@ -337,9 +336,8 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component - Updated to show tracking number from items
+// Mobile Card View Component - Fixed with Array.from()
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
-  // Filter items based on status
   const filteredItems = filterStatus === 'ALL' 
     ? payment.items 
     : payment.items.filter((item: OrderItem) => item.status === filterStatus);
@@ -348,12 +346,14 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
   
   const filteredEarnings = filteredItems.reduce((sum: number, item: OrderItem) => sum + item.earnings, 0);
   
-  // Get unique tracking numbers from items (non-empty)
-  const trackingNumbers = [...new Set(
-    payment.items
-      .filter((item: OrderItem) => item.trackingNumber && item.trackingNumber.trim() !== '')
-      .map((item: OrderItem) => item.trackingNumber)
-  )];
+  // Fixed: Use Array.from() instead of spread operator
+  const trackingNumbers = Array.from(
+    new Set(
+      payment.items
+        .filter((item: OrderItem) => item.trackingNumber && item.trackingNumber.trim() !== '')
+        .map((item: OrderItem) => item.trackingNumber)
+    )
+  );
   
   const displayTrackingNumber = trackingNumbers.length > 0 
     ? trackingNumbers.join(', ') 
@@ -376,7 +376,6 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
       </div>
       
       <div className="border-t border-gray-100 pt-3 space-y-2">
-        {/* Show filtered items */}
         {filteredItems.map((item: OrderItem, idx: number) => (
           <div key={idx} className="flex justify-between items-start py-1">
             <div className="flex-1">
@@ -388,7 +387,6 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
                 Qty: {item.quantity} × ₱{item.individualShipping.toFixed(2)} shipping
                 {item.price > 0 && <span className="ml-2">(Item price: ₱{item.price.toFixed(2)})</span>}
               </div>
-              {/* Show individual item tracking number if it exists and differs from order tracking */}
               {item.trackingNumber && item.trackingNumber.trim() !== '' && trackingNumbers.length > 1 && (
                 <div className="text-xs text-gray-400 mt-1">
                   Item Tracking: {item.trackingNumber}
@@ -468,18 +466,14 @@ export default function RiderPaymentHistory({
     totalPages: 0,
   });
 
-  // Build filter for orders
   const buildOrderFilter = () => {
     const filter: any = {};
-    
     if (riderId) {
       filter.riderId = riderId;
     }
-
     return filter;
   };
 
-  // Query orders
   const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST_PAYMENTS, {
     variables: {
       filter: buildOrderFilter(),
@@ -491,7 +485,6 @@ export default function RiderPaymentHistory({
     fetchPolicy: 'network-only',
   });
 
-  // Process orders based on item statuses - earnings = sum of individualShipping
   useEffect(() => {
     if (data?.riderPayments?.orders) {
       const orders = data.riderPayments.orders;
@@ -510,7 +503,6 @@ export default function RiderPaymentHistory({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Initialize filter counts - Added SHIPPED
       const counts: Record<FilterStatus, number> = {
         ALL: 0,
         PENDING: 0,
@@ -524,7 +516,6 @@ export default function RiderPaymentHistory({
       orders.forEach((order: any) => {
         uniqueOrders.add(order.id);
         
-        // Calculate item totals based on individualShipping
         let deliveredItemsTotal = 0;
         let pendingItemsTotal = 0;
         let processingItemsTotal = 0;
@@ -538,7 +529,6 @@ export default function RiderPaymentHistory({
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
-            // Get product name - check multiple possible locations
             let productName: any;
             if (item.product && item.product[0]) {
               productName = item.product[0].name;
@@ -550,16 +540,13 @@ export default function RiderPaymentHistory({
               productName = 'Unknown Product';
             }
             
-            // Get tracking number from item
             const itemTrackingNumber = item.trackingNumber || '';
             if (itemTrackingNumber && !orderTrackingNumber) {
               orderTrackingNumber = itemTrackingNumber;
             }
             
-            // Earnings = individualShipping (not price)
             const itemEarnings = item.individualShipping || 0;
             
-            // Track item for filtering
             orderItems.push({
               id: item.id,
               name: productName,
@@ -571,14 +558,12 @@ export default function RiderPaymentHistory({
               price: item.price || 0,
             });
             
-            // Update counts for filtering
             const statusKey = item.status as FilterStatus;
             if (counts.hasOwnProperty(statusKey)) {
               counts[statusKey]++;
             }
             counts.ALL++;
             
-            // Calculate totals by status - Added SHIPPED
             if (item.status === ItemStatus.DELIVERED) {
               deliveredItemsTotal += itemEarnings;
               hasDeliveredItems = true;
@@ -596,12 +581,10 @@ export default function RiderPaymentHistory({
           });
         }
         
-        // Count as delivered order if has at least one delivered item
         if (hasDeliveredItems) {
           deliveredOrdersCount++;
         }
         
-        // Process payments - create one payment entry per order
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
             extractedPayments.push({
@@ -625,7 +608,6 @@ export default function RiderPaymentHistory({
             });
           });
         } else {
-          // If no payments array, create a placeholder
           extractedPayments.push({
             id: order.id,
             amount: order.total || 0,
@@ -647,7 +629,6 @@ export default function RiderPaymentHistory({
           });
         }
         
-        // Calculate totals for summary
         totalEarnings += deliveredItemsTotal;
         totalPendingAmount += pendingItemsTotal;
         totalProcessingAmount += processingItemsTotal;
@@ -655,14 +636,12 @@ export default function RiderPaymentHistory({
         totalCancelledAmount += cancelledItemsTotal;
         totalRefundedAmount += refundedItemsTotal;
         
-        // Calculate today's earnings
         const orderDate = new Date(order.createdAt);
         if (orderDate >= today) {
           todayEarnings += deliveredItemsTotal;
         }
       });
 
-      // Sort by date (newest first)
       extractedPayments.sort((a, b) => 
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
@@ -694,7 +673,6 @@ export default function RiderPaymentHistory({
     }
   }, [data]);
 
-  // Apply filter to payments
   useEffect(() => {
     if (activeFilter === 'ALL') {
       setFilteredPayments(payments);
@@ -769,7 +747,6 @@ export default function RiderPaymentHistory({
 
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
-      {/* Header */}
       <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
         <div className="flex items-center gap-2">
           <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
@@ -783,17 +760,14 @@ export default function RiderPaymentHistory({
         </p>
       </div>
 
-      {/* Summary Cards */}
       {showSummary && <PaymentSummaryCards summary={summary} />}
 
-      {/* Filter Bar */}
       <FilterBar 
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         counts={filterCounts}
       />
 
-      {/* Payments List */}
       {filteredPayments.length === 0 ? (
         <div className="text-center py-12 text-gray-500 px-4">
           <Package className="mx-auto h-12 w-12 text-gray-400" />
@@ -824,7 +798,6 @@ export default function RiderPaymentHistory({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPayments.map((payment) => {
-                  // Filter items based on active filter
                   const displayItems = activeFilter === 'ALL' 
                     ? payment.items 
                     : payment.items.filter(item => item.status === activeFilter);
@@ -833,12 +806,14 @@ export default function RiderPaymentHistory({
                     (sum, item) => sum + item.earnings, 0
                   );
                   
-                  // Get unique tracking numbers for display
-                  const trackingNumbers = [...new Set(
-                    payment.items
-                      .filter(item => item.trackingNumber && item.trackingNumber.trim() !== '')
-                      .map(item => item.trackingNumber)
-                  )];
+                  // Fixed: Use Array.from() instead of spread operator
+                  const trackingNumbers = Array.from(
+                    new Set(
+                      payment.items
+                        .filter(item => item.trackingNumber && item.trackingNumber.trim() !== '')
+                        .map(item => item.trackingNumber)
+                    )
+                  );
                   const displayTrackingNumber = trackingNumbers.length > 0 
                     ? trackingNumbers.join(', ') 
                     : 'N/A';
@@ -876,16 +851,16 @@ export default function RiderPaymentHistory({
                             </div>
                           ))}
                         </div>
-                      </td>
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                         {formatCurrency(totalEarningsForDisplay)}
-                      </td>
+                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           {getPaymentMethodIcon(payment.method)}
                           {payment.method}
                         </span>
-                      </td>
+                       </td>
                     </tr>
                   );
                 })}
@@ -909,7 +884,6 @@ export default function RiderPaymentHistory({
         </>
       )}
 
-      {/* Pagination */}
       {pagination.totalPages > 1 && (
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
           <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
@@ -944,4 +918,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-    }
+              }
