@@ -371,7 +371,7 @@ export default function RiderPaymentHistory({
           });
           
           // Calculate based on order total
-          if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.COMPLETED) {
+          if (order.status === OrderStatus.DELIVERED) {
             totalEarnings += order.total;
             
             const orderDate = new Date(order.createdAt);
