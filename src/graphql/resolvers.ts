@@ -1367,6 +1367,8 @@ const orders = await prisma.order.findMany({
             supplierId: true,
             riderId: true,
             quantity: true,
+            createdAt: true,
+            updatedAt: true,
             price: true,
             variantInfo: true,
             status: true, // STATUS IS HERE
@@ -1464,6 +1466,8 @@ const orders = await prisma.order.findMany({
         status: item.status,
         supplierId: item.supplierId,
         quantity: item.quantity,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
         trackingNumber: item.trackingNumber,
         individualShipping: item.individualShipping,
         individualDistance: item.individualDistance,
