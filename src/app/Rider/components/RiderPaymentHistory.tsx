@@ -19,10 +19,11 @@ import {
   CheckCircle,
   XCircle,
   Clock as PendingIcon,
-  Truck
+  Truck,
+  Ship
 } from 'lucide-react';
 
-// Updated query - removed description field that doesn't exist
+// Updated query
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -101,17 +102,18 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   }
 `;
 
-// Item status enum
+// Item status enum - Added SHIPPED
 enum ItemStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
+  SHIPPED = 'SHIPPED',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED',
   REFUNDED = 'REFUNDED'
 }
 
-// Filter status type
-type FilterStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
+// Filter status type - Added SHIPPED
+type FilterStatus = 'ALL' | 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'REFUNDED';
 
 // Types
 type OrderItem = {
@@ -136,6 +138,7 @@ type Payment = {
   deliveredItemsTotal: number;
   pendingItemsTotal: number;
   processingItemsTotal: number;
+  shippedItemsTotal: number;
   cancelledItemsTotal: number;
   refundedItemsTotal: number;
   items: OrderItem[];
@@ -146,6 +149,7 @@ type PaymentSummary = {
   todayEarnings: number;
   pendingPayments: number;
   processingPayments: number;
+  shippedPayments: number;
   completedPayments: number;
   cancelledPayments: number;
   refundedPayments: number;
@@ -159,12 +163,13 @@ interface RiderPaymentHistoryProps {
   className?: string;
 }
 
-// Status Badge Component
+// Status Badge Component - Added SHIPPED
 const StatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
     DELIVERED: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    PENDING: { color: 'bg-yellow-100 text-yellow-800', icon: PendingIcon },
+    SHIPPED: { color: 'bg-indigo-100 text-indigo-800', icon: Ship },
     PROCESSING: { color: 'bg-blue-100 text-blue-800', icon: Truck },
+    PENDING: { color: 'bg-yellow-100 text-yellow-800', icon: PendingIcon },
     CANCELLED: { color: 'bg-red-100 text-red-800', icon: XCircle },
     REFUNDED: { color: 'bg-gray-100 text-gray-800', icon: XCircle },
   };
@@ -180,7 +185,7 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-// Summary Cards Component
+// Summary Cards Component - Added Shipped Amount
 const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   const cards = [
     {
@@ -216,6 +221,14 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
       icon: <Truck className="w-5 h-5 sm:w-6 sm:h-6" />,
     },
     {
+      title: 'Shipped Amount',
+      amount: summary.shippedPayments,
+      bgColor: 'bg-indigo-50',
+      textColor: 'text-indigo-700',
+      borderColor: 'border-indigo-200',
+      icon: <Ship className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
       title: 'Delivered Orders',
       amount: summary.deliveredOrders,
       bgColor: 'bg-purple-50',
@@ -228,7 +241,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4 mb-4 sm:mb-6 px-4 sm:px-6">
       {cards.map((card, index) => (
         <div
           key={index}
@@ -252,7 +265,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   );
 };
 
-// Filter Bar Component
+// Filter Bar Component - Added SHIPPED filter
 const FilterBar = ({ 
   activeFilter, 
   onFilterChange, 
@@ -265,6 +278,7 @@ const FilterBar = ({
   const filters: { value: FilterStatus; label: string; color: string }[] = [
     { value: 'ALL', label: 'All Items', color: 'gray' },
     { value: 'DELIVERED', label: 'Delivered', color: 'green' },
+    { value: 'SHIPPED', label: 'Shipped', color: 'indigo' },
     { value: 'PROCESSING', label: 'Processing', color: 'blue' },
     { value: 'PENDING', label: 'Pending', color: 'yellow' },
     { value: 'CANCELLED', label: 'Cancelled', color: 'red' },
@@ -277,6 +291,7 @@ const FilterBar = ({
       const colorMap: Record<string, string> = {
         gray: 'bg-gray-600 text-white',
         green: 'bg-green-600 text-white',
+        indigo: 'bg-indigo-600 text-white',
         blue: 'bg-blue-600 text-white',
         yellow: 'bg-yellow-600 text-white',
         red: 'bg-red-600 text-white',
@@ -287,6 +302,7 @@ const FilterBar = ({
     const colorMap: Record<string, string> = {
       gray: 'bg-gray-50 text-gray-700 hover:bg-gray-100 border-gray-200',
       green: 'bg-green-50 text-green-700 hover:bg-green-100 border-green-200',
+      indigo: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-200',
       blue: 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200',
       yellow: 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200',
       red: 'bg-red-50 text-red-700 hover:bg-red-100 border-red-200',
@@ -408,6 +424,7 @@ export default function RiderPaymentHistory({
     ALL: 0,
     PENDING: 0,
     PROCESSING: 0,
+    SHIPPED: 0,
     DELIVERED: 0,
     CANCELLED: 0,
     REFUNDED: 0,
@@ -417,6 +434,7 @@ export default function RiderPaymentHistory({
     todayEarnings: 0,
     pendingPayments: 0,
     processingPayments: 0,
+    shippedPayments: 0,
     completedPayments: 0,
     cancelledPayments: 0,
     refundedPayments: 0,
@@ -463,6 +481,7 @@ export default function RiderPaymentHistory({
       let todayEarnings = 0;
       let totalPendingAmount = 0;
       let totalProcessingAmount = 0;
+      let totalShippedAmount = 0;
       let totalCancelledAmount = 0;
       let totalRefundedAmount = 0;
       let deliveredOrdersCount = 0;
@@ -471,11 +490,12 @@ export default function RiderPaymentHistory({
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Initialize filter counts
+      // Initialize filter counts - Added SHIPPED
       const counts: Record<FilterStatus, number> = {
         ALL: 0,
         PENDING: 0,
         PROCESSING: 0,
+        SHIPPED: 0,
         DELIVERED: 0,
         CANCELLED: 0,
         REFUNDED: 0,
@@ -488,6 +508,7 @@ export default function RiderPaymentHistory({
         let deliveredItemsTotal = 0;
         let pendingItemsTotal = 0;
         let processingItemsTotal = 0;
+        let shippedItemsTotal = 0;
         let cancelledItemsTotal = 0;
         let refundedItemsTotal = 0;
         let hasDeliveredItems = false;
@@ -497,9 +518,9 @@ export default function RiderPaymentHistory({
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
             // Get product name - check multiple possible locations
-            let productName = 'Unknown Product';
+            let productName:any;
             if (item.product) {
-              productName = item.product.name || item.product.title || 'Unknown Product';
+              productName = item.product.name;
             } else if (item.name) {
               productName = item.name;
             } else if (item.productName) {
@@ -527,10 +548,12 @@ export default function RiderPaymentHistory({
             }
             counts.ALL++;
             
-            // Calculate totals by status
+            // Calculate totals by status - Added SHIPPED
             if (item.status === ItemStatus.DELIVERED) {
               deliveredItemsTotal += itemEarnings;
               hasDeliveredItems = true;
+            } else if (item.status === ItemStatus.SHIPPED) {
+              shippedItemsTotal += itemEarnings;
             } else if (item.status === ItemStatus.PENDING) {
               pendingItemsTotal += itemEarnings;
             } else if (item.status === ItemStatus.PROCESSING) {
@@ -564,6 +587,7 @@ export default function RiderPaymentHistory({
               deliveredItemsTotal,
               pendingItemsTotal,
               processingItemsTotal,
+              shippedItemsTotal,
               cancelledItemsTotal,
               refundedItemsTotal,
               items: orderItems,
@@ -584,6 +608,7 @@ export default function RiderPaymentHistory({
             deliveredItemsTotal,
             pendingItemsTotal,
             processingItemsTotal,
+            shippedItemsTotal,
             cancelledItemsTotal,
             refundedItemsTotal,
             items: orderItems,
@@ -594,6 +619,7 @@ export default function RiderPaymentHistory({
         totalEarnings += deliveredItemsTotal;
         totalPendingAmount += pendingItemsTotal;
         totalProcessingAmount += processingItemsTotal;
+        totalShippedAmount += shippedItemsTotal;
         totalCancelledAmount += cancelledItemsTotal;
         totalRefundedAmount += refundedItemsTotal;
         
@@ -617,6 +643,7 @@ export default function RiderPaymentHistory({
         todayEarnings,
         pendingPayments: totalPendingAmount,
         processingPayments: totalProcessingAmount,
+        shippedPayments: totalShippedAmount,
         completedPayments: totalEarnings,
         cancelledPayments: totalCancelledAmount,
         refundedPayments: totalRefundedAmount,
