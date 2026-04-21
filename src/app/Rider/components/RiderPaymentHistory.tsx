@@ -53,6 +53,8 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
           quantity
           price
           status
+          individualShipping
+          individualDistance
           product {
             name
             sku
