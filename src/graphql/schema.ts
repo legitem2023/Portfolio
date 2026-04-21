@@ -349,6 +349,8 @@ type ProofOfDelivery {
     rider: [User]
     isDefault: Boolean
     rejectedBy: [String]
+    createdAt: DateTime
+    updatedAt: DateTime
   }
 
 type VehicleType {
