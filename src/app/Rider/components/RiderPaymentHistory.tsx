@@ -17,7 +17,7 @@ import {
   User
 } from 'lucide-react';
 
-// Updated query - include item-level timestamps
+// Updated query - using updatedAt for item timestamps
 export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   query ActiveOrder(
     $filter: OrderFilterInput
@@ -53,7 +53,6 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
           status
           createdAt
           updatedAt
-          deliveredAt
           product {
             name
             sku
@@ -94,7 +93,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
   }
 `;
 
-// Item status enum - exactly as provided
+// Item status enum
 enum ItemStatus {
   PENDING = 'PENDING',
   PROCESSING = 'PROCESSING',
@@ -103,7 +102,7 @@ enum ItemStatus {
   REFUNDED = 'REFUNDED'
 }
 
-// Types - now based on items only
+// Types - based on items only
 type ItemPayment = {
   id: string;
   itemId: string;
@@ -114,8 +113,8 @@ type ItemPayment = {
   price: number;
   totalAmount: number;
   status: string;
-  deliveredAt: string | null;
   createdAt: string;
+  updatedAt: string;
   paymentMethod: string;
   paymentId: string;
   customerName?: string;
@@ -205,7 +204,7 @@ const PaymentSummaryCards = ({ summary }: { summary: PaymentSummary }) => {
   );
 };
 
-// Mobile Card View Component - now shows item-level details
+// Mobile Card View Component
 const MobilePaymentCard = ({ itemPayment, formatCurrency, formatDate, getPaymentMethodIcon }: any) => (
   <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
     <div className="flex justify-between items-start mb-3">
@@ -223,11 +222,11 @@ const MobilePaymentCard = ({ itemPayment, formatCurrency, formatDate, getPayment
           </span>
         </div>
         <p className="text-xs text-gray-500">
-          Item Date: {formatDate(itemPayment.createdAt)}
+          Created: {formatDate(itemPayment.createdAt)}
         </p>
-        {itemPayment.deliveredAt && (
+        {itemPayment.status === ItemStatus.DELIVERED && (
           <p className="text-xs text-gray-500">
-            Delivered: {formatDate(itemPayment.deliveredAt)}
+            Updated: {formatDate(itemPayment.updatedAt)}
           </p>
         )}
       </div>
@@ -356,7 +355,7 @@ export default function RiderPaymentHistory({
             const itemTotal = item.price * item.quantity;
             const itemStatus = item.status;
             const itemCreatedAt = item.createdAt;
-            const itemDeliveredAt = item.deliveredAt;
+            const itemUpdatedAt = item.updatedAt;
             
             // Calculate earnings based on item status
             if (itemStatus === ItemStatus.DELIVERED) {
@@ -364,10 +363,9 @@ export default function RiderPaymentHistory({
               deliveredItemsCount++;
               uniqueDeliveredOrders.add(order.id);
               
-              // Check if item was delivered today - using item's deliveredAt or createdAt
-              const dateToCheck = itemDeliveredAt || itemCreatedAt;
-              if (dateToCheck) {
-                const itemDate = new Date(dateToCheck);
+              // Check if item was updated (delivered) today - using updatedAt
+              if (itemUpdatedAt) {
+                const itemDate = new Date(itemUpdatedAt);
                 if (itemDate >= today) {
                   todayEarnings += itemTotal;
                 }
@@ -388,8 +386,8 @@ export default function RiderPaymentHistory({
               price: item.price,
               totalAmount: itemTotal,
               status: itemStatus,
-              deliveredAt: itemDeliveredAt,
-              createdAt: itemCreatedAt, // Using item's createdAt as required
+              createdAt: itemCreatedAt,
+              updatedAt: itemUpdatedAt,
               paymentMethod: paymentMethod,
               paymentId: paymentId,
               customerName: order.user ? 
@@ -514,12 +512,12 @@ export default function RiderPaymentHistory({
         </div>
       ) : (
         <>
-          {/* Desktop Table View - Now shows item-level details */}
+          {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
@@ -534,9 +532,9 @@ export default function RiderPaymentHistory({
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatDate(item.createdAt)}
-                      {item.deliveredAt && (
+                      {item.status === ItemStatus.DELIVERED && item.updatedAt && (
                         <div className="text-xs text-gray-400">
-                          Del: {formatDate(item.deliveredAt)}
+                          Updated: {formatDate(item.updatedAt)}
                         </div>
                       )}
                     </td>
@@ -643,4 +641,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-        }
+                            }
