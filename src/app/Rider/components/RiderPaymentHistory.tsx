@@ -59,6 +59,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
           quantity
           price
           status
+          trackingNumber
           individualShipping
           individualDistance
           product {
@@ -123,6 +124,7 @@ type OrderItem = {
   status: string;
   earnings: number;
   individualShipping: number;
+  trackingNumber: string;
   price: number;
 };
 
