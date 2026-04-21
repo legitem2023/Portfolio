@@ -524,7 +524,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   };
 
-  // Updated handleNavigate to use current location as origin
+  // Updated handleNavigate to use current location as origin with proper type handling
   const handleNavigate = () => {
     // Check if geolocation is supported
     if (!navigator.geolocation) {
@@ -543,29 +543,31 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
         
         let destLat: number | undefined;
         let destLng: number | undefined;
-        let destinationType: string = '';
 
-        // Determine destination based on status
         if (currentStatus === 'PROCESSING') {
           // Use pickup location as destination
-          destLat = delivery.pickupAddress?.lat;
-          destLng = delivery.pickupAddress?.lng;
-          destinationType = 'pickup';
+          const pickupLat = delivery.pickupAddress?.lat;
+          const pickupLng = delivery.pickupAddress?.lng;
           
-          if (!destLat || !destLng) {
+          if (!pickupLat || !pickupLng) {
             setMessage({ type: 'error', text: 'Pickup location coordinates are missing.' });
             return;
           }
+          
+          destLat = pickupLat;
+          destLng = pickupLng;
         } else if (currentStatus === 'SHIPPED') {
           // Use dropoff location as destination
-          destLat = delivery.dropoffAddress?.lat;
-          destLng = delivery.dropoffAddress?.lng;
-          destinationType = 'dropoff';
+          const dropoffLat = delivery.dropoffAddress?.lat;
+          const dropoffLng = delivery.dropoffAddress?.lng;
           
-          if (!destLat || !destLng) {
+          if (!dropoffLat || !dropoffLng) {
             setMessage({ type: 'error', text: 'Dropoff location coordinates are missing.' });
             return;
           }
+          
+          destLat = dropoffLat;
+          destLng = dropoffLng;
         } else {
           setMessage({ type: 'error', text: 'Cannot navigate for current status.' });
           return;
@@ -1321,4 +1323,4 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
       )}
     </>
   );
-}
+    }
