@@ -35,7 +35,7 @@ interface HeaderProps {
   newDeliveriesCount: number;
 }
 
-export default function Header({ 
+export default function TopNav({ 
   isMobile, 
   isOnline, 
   setIsOnline, 
