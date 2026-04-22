@@ -41,7 +41,8 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] }, // Admin only
-    { id: 12, label: 'Messages', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] } // Admin only
+    { id: 12, label: 'Messages', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] }, // Admin only
+    { id: 13, label: 'Settings', icon: MessagesSquare, roles: ['ADMINISTRATOR'] } // Admin only
 
   ];
 
