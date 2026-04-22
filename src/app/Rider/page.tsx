@@ -57,7 +57,8 @@ const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", 
 export default function RiderDashboard() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  
+    const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
+
   // State to manage active tab with persistence from localStorage
   const [activeTab, setActiveTab] = useState(() => {
     // Check if we're in browser environment
@@ -337,7 +338,7 @@ showToast(
   // Render active tab content
   const renderTabContent = () => {
     switch (activeTab) {
-      case "newDeliveries":
+      case 1:
         return (
           <NewDeliveriesTab
             isMobile={isMobile}
@@ -345,20 +346,20 @@ showToast(
             onRejectDelivery={handleRejectDelivery}
           />
         );
-      case "deliveries":
+      case 2:
         return <ActiveDeliveriesTab 
                  isMobile={isMobile} 
                  onAcceptDelivery={handleAcceptDelivery}
                  onRejectDelivery={handleRejectDelivery}
                 />;
-      case "history":
+      case 3:
         return <RiderPaymentHistory
           riderId={user?.userId}
           showSummary={true}
         />;
-      case "message":
+      case 4:
         return <PMTab UserId={user?.userId} />;
-      case "user":
+      case 5:
         return <UserProfile userId={user?.userId}/>;
       default:
         return null;
@@ -420,7 +421,7 @@ showToast(
       {/* Mobile/Tablet Bottom Navigation */}
       {isMobile && (
         <NavigationTabs
-          activeTab={activeTab}
+          activeTab={activeIndex}
           setActiveTab={handleTabChange}
           isMobile={isMobile}
           newDeliveriesCount={newDeliveriesCount}
