@@ -190,7 +190,7 @@ export default function ManagementDashboard() {
       case 11:
         return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
       case 12:
-        return <PMTab userId={activeselectedUser?activeselectedUser:''}/>
+        return <PMTab UserId={user?.userId?user?.userId:''}/>
       default:
         return <></>;
     }
