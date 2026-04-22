@@ -795,7 +795,7 @@ useEffect(() => {
                                       {notification.message}
                                     </p>
                                     <div className="mt-2 flex space-x-2">
-                                      {notification.type === NotificationType.NEW_MESSAGE && (
+                                      {/*notification.type === NotificationType.NEW_MESSAGE && (
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -806,8 +806,8 @@ useEffect(() => {
                                         >
                                           View Message
                                         </button>
-                                      )}
-                                      {(notification.type === NotificationType.ORDER_CREATED || 
+                                      )*/}
+                                      {/*(notification.type === NotificationType.ORDER_CREATED || 
                                         notification.type === NotificationType.ORDER_UPDATED || 
                                         notification.type === NotificationType.ORDER_DELIVERED) && (
                                         <button
@@ -820,7 +820,7 @@ useEffect(() => {
                                         >
                                           View Order
                                         </button>
-                                      )}
+                                      )*/}
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
