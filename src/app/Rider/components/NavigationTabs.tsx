@@ -14,7 +14,7 @@ import {
 import { TabType } from '../lib/types';
 
 interface NavigationTabsProps {
-  activeTab: string;
+  activeTab: number;
   setActiveTab: (tab: string) => void;
   isMobile: boolean;
   newDeliveriesCount: number;
@@ -22,32 +22,32 @@ interface NavigationTabsProps {
 
 const TABS_WITH_ICONS: TabType[] = [
   { 
-    id: "newDeliveries", 
+    id: 1, 
     label: "New", 
     icon: <Bell />,
     desktopLabel: "New Deliveries",
     hasNotification: true 
   },
   { 
-    id: "deliveries", 
+    id: 2, 
     label: "Active", 
     icon: <Package />,
     desktopLabel: "Active Deliveries" 
   },
   { 
-    id: "history", 
+    id: 3, 
     label: "History", 
     icon: <Clock />,
     desktopLabel: "Payment History" 
   },
   { 
-    id: "message", 
+    id: 4, 
     label: "Messages", 
     icon: <MessageCircle />,
     desktopLabel: "Messages" 
   },
   { 
-    id: "user", 
+    id: 5, 
     label: "Profile", 
     icon: <User/>,
     desktopLabel: "User Profile" 
@@ -71,12 +71,12 @@ export default function NavigationTabs({
       }
       
       // Number keys 1-6 for tab navigation
-      const keyToTab: { [key: string]: string } = {
-        '1': 'newDeliveries',
-        '2': 'deliveries',
-        '3': 'history',
-        '4': 'message',
-        '5': 'user'
+      const keyToTab: { [key: number]: number } = {
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
+        5: 5
       };
       
       if (keyToTab[event.key]) {
