@@ -492,7 +492,7 @@ export default function Header({ user }: HeaderProps) {
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
       {/* Top Accent Line */}
-      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
+      <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
        
       <div className="max-w-7xl mx-auto px-6 py-3 relative">
         <div className="flex items-center justify-between">
