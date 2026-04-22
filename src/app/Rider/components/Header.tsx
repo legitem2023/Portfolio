@@ -472,7 +472,7 @@ export default function Header({ user }: HeaderProps) {
     
     switch (notification.type) {
       case NotificationType.NEW_MESSAGE:
-        dispatch(setActiveIndex(12));
+        dispatch(setActiveIndex(3));
         dispatch(setSelectedUser(notification.link || ""));
         break;
       case NotificationType.ORDER_CREATED:
