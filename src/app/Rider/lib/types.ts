@@ -379,7 +379,7 @@ export interface MapDelivery extends Delivery {
   route?: [number, number][];
 }
 export interface TabType {
-  id: string;
+  id: number;
   label: string;
   icon: React.ReactNode;
   desktopLabel: string;
