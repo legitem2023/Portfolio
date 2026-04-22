@@ -245,7 +245,7 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
 };
 
 export default function OrderTracking({ userId }: { userId: string }) {
-  const [selectedStatus, setSelectedStatus] = useState<string>('SHIPPED'); // Default to SHIPPED to see tracking
+  const [selectedStatus, setSelectedStatus] = useState<string>('PENDING'); // Default to SHIPPED to see tracking
   const [selectedGroup, setSelectedGroup] = useState<SupplierGroup | null>(null);
   const [showReviewForm, setShowReviewForm] = useState<{ show: boolean; productId: string; productName: string }>({
     show: false,
