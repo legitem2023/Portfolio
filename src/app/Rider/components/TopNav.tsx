@@ -562,9 +562,9 @@ export default function TopNav({
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-lime-200/20 via-transparent to-transparent"></div>
           <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-lime-400/30 to-transparent"></div>
           
-          <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%] relative">
+          <div className="flex items-center justify-between p-2 h-[100%] w-[100%] relative">
             {/* Logo with Premium Effect */}
-            <div className="z-20 h-[100%] flex items-center group">
+            <div className="h-[100%] flex items-center group">
               <div className="relative">
                 <div className="absolute inset-0 bg-lime-400/20 rounded-lg blur-md group-hover:blur-lg transition-all duration-300"></div>
                 <Image 
