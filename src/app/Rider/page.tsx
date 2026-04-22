@@ -306,19 +306,7 @@ const formatRow = (icon: any, value: any) => {
       
 const border = '─'.repeat(maxLen + 2);
 
-showToast(
-  `┌${border}┐\n` +
-  `│ ✅ DELIVERY ACCEPTED${' '.repeat(maxLen - 18)} │\n` +
-  `├${border}┤\n` +
-  `│ ${formatRow('🏪', delivery.restaurant)} │\n` +
-  `│ ${formatRow('🆔', delivery.orderId)} │\n` +
-  `│ ${formatRow('💰 $', delivery.payout)} │\n` +
-  `│ ${formatRow('📦', delivery.items)} │\n` +
-  `│ ${formatRow('📍', delivery.pickup)} │\n` +
-  `│ ${formatRow('🎯', delivery.dropoff)} │\n` +
-  `└${border}┘`,
-  'success'
-);
+showToast('Delivery Accepted!','success');
     }
   };
 
@@ -339,7 +327,7 @@ showToast(
   // Render active tab content
   const renderTabContent = () => {
     switch (activeIndex) {
-      case 1:
+      case 0:
         return (
           <NewDeliveriesTab
             isMobile={isMobile}
@@ -347,20 +335,20 @@ showToast(
             onRejectDelivery={handleRejectDelivery}
           />
         );
-      case 2:
+      case 1:
         return <ActiveDeliveriesTab 
                  isMobile={isMobile} 
                  onAcceptDelivery={handleAcceptDelivery}
                  onRejectDelivery={handleRejectDelivery}
                 />;
-      case 3:
+      case 2:
         return <RiderPaymentHistory
           riderId={user?.userId}
           showSummary={true}
         />;
       case 4:
         return <PMTab UserId={user?.userId} />;
-      case 5:
+      case 4:
         return <UserProfile userId={user?.userId}/>;
       default:
         return null;
