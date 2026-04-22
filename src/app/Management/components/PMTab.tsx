@@ -633,7 +633,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleBackToContacts = () => {
-    dispatch(setSelectedUser(null)); // Clear the ID from Redux
+    dispatch(setSelectedUser("")); // Clear the ID from Redux
     setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
