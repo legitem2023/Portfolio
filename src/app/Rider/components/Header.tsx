@@ -682,22 +682,21 @@ export default function Header({ user }: HeaderProps) {
 
   return (
     <>
-      <header className="relative h-[10vh] bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
+      <header className="relative bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
         {/* Top Accent Line */}
         <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
          
-        <div className="max-w-7xl mx-auto px-6 py-3 relative">
+        <div className="w-full px-4 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
             {/* Left section - Logo only */}
-            <div className="relative">
-              <div className="relative inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-              
+            <div className="relative flex-shrink-0">
               <Image 
                 src="/VendorCity_Rider.webp" 
                 alt="Logo" 
-                height={100} 
-                width={100} 
-                className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
+                height={50} 
+                width={50} 
+                className="h-10 sm:h-12 w-auto rounded-xl object-contain"
+                priority
               />
             </div>
             
@@ -707,12 +706,12 @@ export default function Header({ user }: HeaderProps) {
               <div className="relative" ref={bellRef}>
                 <button
                   onClick={toggleBellPopup}
-                  className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative"
+                  className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative"
                   disabled={!userId && notificationsLoading}
                   title={!userId ? "Sign in to view notifications" : ""}
                 >
                   <span className="sr-only">View notifications</span>
-                  <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Bell className="h-5 w-5" />
                   {notificationsLoading && userId ? (
                     <span className="absolute top-0 right-0 flex items-center justify-center">
                       <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
@@ -730,21 +729,23 @@ export default function Header({ user }: HeaderProps) {
                 <button
                   onClick={toggleDropdown}
                   disabled={isLoggingOut}
-                  className="flex items-center gap-1 sm:gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
+                  className="flex items-center gap-1 sm:gap-2 bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-1 pr-2 py-1"
                   id="user-menu-button"
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
                 >
                   <span className="sr-only">Open user menu</span>
                   <img 
-                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full object-cover" 
                     src={user?.image || '/NoImage_2.webp'} 
-                    alt={user?.name}
+                    alt={user?.name || 'User avatar'}
                   />
                   <div className="hidden sm:block text-left">
-                    <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
+                    <p className="text-xs sm:text-sm font-medium text-white truncate max-w-[120px]">
+                      {user?.name || user?.email || 'User'}
+                    </p>
                   </div>
-                  <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -754,7 +755,7 @@ export default function Header({ user }: HeaderProps) {
                       onClick={handleProfile}
                       className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
                     >
-                      <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                      <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
                       <span className="font-medium">Profile</span>
                     </button>
 
@@ -763,7 +764,7 @@ export default function Header({ user }: HeaderProps) {
                       disabled={isLoggingOut}
                       className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
                     >
-                      <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                      <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0 ${isLoggingOut ? 'animate-spin' : ''}`} />
                       <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
                     </button>
                   </div>
@@ -778,4 +779,4 @@ export default function Header({ user }: HeaderProps) {
       {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
-    }
+  }
