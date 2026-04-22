@@ -291,11 +291,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
-  const [isSending, setIsSending] = useState(false); // Add loading state
+  const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   
-  // Add these new state variables for keyboard handling
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -304,7 +303,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // GraphQL Queries
   const { data: threadsData, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
-    pollInterval: 30000, // Refresh every 30 seconds
+    pollInterval: 30000,
   });
 
   const { data: usersData } = useQuery(GET_ALL_USERS, {
@@ -336,7 +335,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const allContacts = useMemo(() => {
     const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
     const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId && // Exclude current user
+      user.id !== userId &&
       !threadUsers.some(threadUser => threadUser.id === user.id)
     ) || [];
     
@@ -370,7 +369,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      // On mobile, sidebar starts closed; on desktop, it starts open
       if (mobile) {
         setIsSidebarOpen(false);
       } else {
@@ -394,12 +392,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const viewportHeight = visualViewport.height;
       const newKeyboardHeight = windowHeight - viewportHeight;
       
-      // More reliable keyboard detection
       if (newKeyboardHeight > 100 && isInputFocused) {
         setIsKeyboardVisible(true);
         setKeyboardHeight(newKeyboardHeight);
         
-        // Scroll to bottom when keyboard appears
         setTimeout(() => {
           scrollToBottom();
         }, 100);
@@ -409,11 +405,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Handle focus events
     const handleFocusIn = (e: FocusEvent) => {
       if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
         setIsInputFocused(true);
-        // Give time for keyboard to fully appear
         setTimeout(() => {
           handleResize();
         }, 200);
@@ -423,7 +417,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     const handleFocusOut = (e: FocusEvent) => {
       if (!textareaRef.current?.contains(e.target as Node)) {
         setIsInputFocused(false);
-        // Small delay to ensure keyboard is fully dismissed
         setTimeout(() => {
           setIsKeyboardVisible(false);
           setKeyboardHeight(0);
@@ -431,12 +424,10 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       }
     };
 
-    // Add event listeners
     visualViewport.addEventListener('resize', handleResize);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
-    // Initial check
     handleResize();
 
     return () => {
@@ -450,7 +441,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   useEffect(() => {
     if (messagesContainerRef.current && isMobile) {
       if (isKeyboardVisible) {
-        // Add padding to prevent content from being hidden behind keyboard
         messagesContainerRef.current.style.bottom = `${keyboardHeight}px`;
       } else {
         messagesContainerRef.current.style.bottom = '0px';
@@ -497,7 +487,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      // Sort messages by createdAt in ascending order (oldest first)
       const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -519,7 +508,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
 
       setMessages(uiMessages);
 
-      // Mark messages as read when conversation is opened
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
@@ -537,60 +525,17 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-const handleSendMessage = async () => {
-  if (newMessage.trim() === "" || !selectedUser || isSending) return;
 
-  setIsSending(true);
-
-  try {
-    const { data } = await sendMessageMutation({
-      variables: {
-        input: {
-          senderId: userId, // Changed from UserId to userId
-          recipientId: selectedUser.id,
-          body: newMessage.trim()
-        }
-      }
-    });
-
-    if (data?.sendMessage) {
-      const newMsg: Message = {
-        id: data.sendMessage.id,
-        sender: name,
-        avatar: avatar,
-        timestamp: data.sendMessage.createdAt,
-        content: data.sendMessage.body,
-        likes: 0,
-        comments: 0,
-        isLikedByMe: false,
-        images: [],
-        isOwnMessage: true,
-        isRead: data.sendMessage.isRead,
-        graphQLData: data.sendMessage
-      };
-
-      setMessages(prev => [...prev, newMsg]);
-      setNewMessage("");
-      refetchThreads();
-      refetchConversation();
-    }
-  } catch (error) {
-    console.error('Error sending message:', error);
-  } finally {
-    setIsSending(false);
-  }
-};
-/*
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !selectedUser || isSending) return; // Add isSending check
+    if (newMessage.trim() === "" || !selectedUser || isSending) return;
 
-    setIsSending(true); // Set loading state to true
+    setIsSending(true);
 
     try {
       const { data } = await sendMessageMutation({
         variables: {
           input: {
-            senderId: UserId,
+            senderId: userId,
             recipientId: selectedUser.id,
             body: newMessage.trim()
           }
@@ -621,12 +566,12 @@ const handleSendMessage = async () => {
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {
-      setIsSending(false); // Set loading state to false after completion
+      setIsSending(false);
     }
-  };*/
+  };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey && !isSending) { // Add isSending check
+    if (e.key === 'Enter' && !e.shiftKey && !isSending) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -659,12 +604,10 @@ const handleSendMessage = async () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // Handle textarea focus
   const handleTextareaFocus = () => {
     setIsInputFocused(true);
   };
 
-  // Handle textarea blur
   const handleTextareaBlur = () => {
     setIsInputFocused(false);
   };
@@ -694,12 +637,10 @@ const handleSendMessage = async () => {
     }
   };
 
-  // Get thread info for a user
   const getThreadInfo = (user: User) => {
     return messageThreads.find(thread => thread.user.id === user.id);
   };
 
-  // Group messages by date - messages are already sorted by time
   const groupMessagesByDate = () => {
     const groups: { [key: string]: Message[] } = {};
     
@@ -724,30 +665,29 @@ const handleSendMessage = async () => {
     return user.avatar || "/NoImage_1.webp";
   };
 
-  // Determine which view to show based on mobile/desktop and state
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
  
   return (
     <div>
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-green-50 to-lime-100">
+    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-zinc-100 to-zinc-200">
       <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
         <div className="flex h-full relative">
           {/* Sidebar/Contacts List */}
           <div className={`
             ${isMobile ? 'relative inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
-            bg-gradient-to-b from-green-50 to-lime-50 border-r border-green-200
+            bg-gradient-to-b from-zinc-50 to-zinc-100 border-r border-zinc-200
             transform transition-transform duration-300 ease-in-out h-full
             ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
             flex flex-col
           `}>
             {/* Fixed Sidebar Header */}
             <div className="flex-shrink-0">
-              <div className="p-4 md:p-6 bg-gradient-to-r from-green-600 to-lime-600 text-white">
+              <div className="p-4 md:p-6 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
-                    <p className="text-green-200 text-sm hidden md:block">
+                    <p className="text-zinc-300 text-sm hidden md:block">
                       {unreadCountData?.unreadMessageCount > 0 
                         ? `${unreadCountData.unreadMessageCount} unread messages`
                         : 'Chat with your connections'
@@ -757,7 +697,7 @@ const handleSendMessage = async () => {
                   {isMobile && (
                     <button 
                       onClick={handleToggleSidebar}
-                      className="p-2 rounded-lg bg-green-700 hover:bg-green-800"
+                      className="p-2 rounded-lg bg-zinc-600 hover:bg-zinc-700"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -766,16 +706,16 @@ const handleSendMessage = async () => {
               </div>
               
               {/* Search and Tabs */}
-              <div className="p-3 md:p-4 bg-white border-b border-green-200">
+              <div className="p-3 md:p-4 bg-white border-b border-zinc-200">
                 <div className="relative mb-3">
                   <input
                     type="text"
                     placeholder="Search conversations..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-green-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent bg-white"
+                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-transparent bg-white"
                   />
-                  <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-green-400" />
+                  <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-zinc-400" />
                 </div>
 
                 {/* Tabs */}
@@ -784,8 +724,8 @@ const handleSendMessage = async () => {
                     onClick={() => setActiveTab("threads")}
                     className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
                       activeTab === "threads"
-                        ? "bg-green-600 text-white"
-                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                        ? "bg-zinc-700 text-white"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                     }`}
                   >
                     Conversations
@@ -794,8 +734,8 @@ const handleSendMessage = async () => {
                     onClick={() => setActiveTab("allUsers")}
                     className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
                       activeTab === "allUsers"
-                        ? "bg-green-600 text-white"
-                        : "bg-green-100 text-green-600 hover:bg-green-200"
+                        ? "bg-zinc-700 text-white"
+                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                     }`}
                   >
                     All Users
@@ -811,8 +751,8 @@ const handleSendMessage = async () => {
                 return (
                   <div
                     key={user.id}
-                    className={`flex items-center p-3 border-b border-green-50 cursor-pointer transition-all duration-200 ${
-                      selectedUser?.id === user.id ? 'bg-green-50 border-l-4 border-l-green-500' : 'hover:bg-green-25'
+                    className={`flex items-center p-3 border-b border-zinc-100 cursor-pointer transition-all duration-200 ${
+                      selectedUser?.id === user.id ? 'bg-zinc-50 border-l-4 border-l-zinc-500' : 'hover:bg-zinc-50'
                     }`}
                     onClick={() => handleUserSelect(user)}
                   >
@@ -820,7 +760,7 @@ const handleSendMessage = async () => {
                       <img
                         src={getUserAvatar(user)}
                         alt={getUserFullName(user)}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-green-200"
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
                       />
                       {thread && thread.unreadCount > 0 && (
                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -830,20 +770,20 @@ const handleSendMessage = async () => {
                     </div>
                     <div className="ml-3 flex-1 min-w-0">
                       <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-green-900 text-sm md:text-base truncate">
+                        <h3 className="font-semibold text-zinc-800 text-sm md:text-base truncate">
                           {getUserFullName(user)}
                         </h3>
                         {thread?.lastMessage && (
-                          <span className="text-xs text-green-400 whitespace-nowrap ml-2">
+                          <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
                             {formatTime(thread.lastMessage.createdAt)}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs md:text-sm text-green-600 truncate">
+                      <p className="text-xs md:text-sm text-zinc-500 truncate">
                         {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                       </p>
                       {!thread && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
                           New
                         </span>
                       )}
@@ -853,7 +793,7 @@ const handleSendMessage = async () => {
               })}
               
               {displayContacts.length === 0 && (
-                <div className="text-center py-8 text-green-400">
+                <div className="text-center py-8 text-zinc-400">
                   <MessageCircle className="w-12 h-12 mx-auto mb-3" />
                   <p className="text-sm">
                     {searchTerm ? 'No users found' : 
@@ -876,12 +816,12 @@ const handleSendMessage = async () => {
             `}>
               {/* Fixed Chat Header */}
               {selectedUser ? (
-                <div className="bg-gradient-to-r from-green-50 to-lime-50 border-b border-green-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
                   <div className="flex items-center">
                     {isMobile && (
                       <button 
                         onClick={handleBackToContacts}
-                        className="mr-3 p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600"
+                        className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
@@ -889,23 +829,23 @@ const handleSendMessage = async () => {
                     <img
                       src={getUserAvatar(selectedUser)}
                       alt={getUserFullName(selectedUser)}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-green-200"
+                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
                     />
                     <div className="ml-3 flex-1 min-w-0">
-                      <h2 className="font-bold text-green-900 text-sm md:text-base truncate">
+                      <h2 className="font-bold text-zinc-800 text-sm md:text-base truncate">
                         {getUserFullName(selectedUser)}
                       </h2>
-                      <p className="text-xs md:text-sm text-green-500 truncate">
+                      <p className="text-xs md:text-sm text-zinc-500 truncate">
                         {selectedUser.email}
                       </p>
                     </div>
                     <div className="flex space-x-2">
-                      <button className="p-2 text-green-400 hover:text-green-600 transition-colors">
+                      <button className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors">
                         <Phone className="w-5 h-5" />
                       </button>
                       <button 
                         onClick={handleToggleSidebar}
-                        className="p-2 text-green-400 hover:text-green-600 transition-colors md:hidden"
+                        className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors md:hidden"
                       >
                         <Menu className="w-5 h-5" />
                       </button>
@@ -913,20 +853,20 @@ const handleSendMessage = async () => {
                   </div>
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-green-50 to-lime-50 border-b border-green-200 p-4 safe-area-inset-top flex-shrink-0">
+                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       {isMobile && (
                         <button 
                           onClick={handleToggleSidebar}
-                          className="mr-3 p-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-600"
+                          className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
                         >
                           <Menu className="w-5 h-5" />
                         </button>
                       )}
                       <div>
-                        <h2 className="font-bold text-green-900 text-sm md:text-base">Messages</h2>
-                        <p className="text-xs md:text-sm text-green-500">Select a conversation</p>
+                        <h2 className="font-bold text-zinc-800 text-sm md:text-base">Messages</h2>
+                        <p className="text-xs md:text-sm text-zinc-500">Select a conversation</p>
                       </div>
                     </div>
                   </div>
@@ -936,14 +876,14 @@ const handleSendMessage = async () => {
               {/* Messages Container - This is the scrollable part */}
               <div 
                 ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-green-25 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
+                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-zinc-50 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
               >
                 {selectedUser ? (
                   <div className="space-y-4">
                     {Object.entries(messageGroups).map(([date, dateMessages]) => (
                       <div key={date}>
                         <div className="flex justify-center my-4">
-                          <span className="bg-green-100 text-green-600 px-3 py-1 rounded-full text-xs font-medium">
+                          <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-full text-xs font-medium">
                             {date}
                           </span>
                         </div>
@@ -958,24 +898,24 @@ const handleSendMessage = async () => {
                               <img
                                 src={message.avatar}
                                 alt={message.sender}
-                                className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-green-200 flex-shrink-0"
+                                className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 flex-shrink-0"
                               />
                               <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
                                 <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
                                   message.isOwnMessage
-                                    ? 'bg-gradient-to-r from-green-600 to-lime-600 text-white rounded-br-none'
-                                    : 'bg-white text-green-900 border border-green-100 rounded-bl-none'
+                                    ? 'bg-gradient-to-r from-zinc-600 to-zinc-700 text-white rounded-br-none'
+                                    : 'bg-white text-zinc-800 border border-zinc-200 rounded-bl-none'
                                 }`}>
                                   <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
                                 </div>
                                 <div className={`flex items-center mt-1 space-x-2 text-xs ${
                                   message.isOwnMessage ? 'justify-end' : 'justify-start'
                                 }`}>
-                                  <span className={`${message.isOwnMessage ? 'text-green-300' : 'text-green-400'}`}>
+                                  <span className={`${message.isOwnMessage ? 'text-zinc-400' : 'text-zinc-400'}`}>
                                     {formatTime(message.timestamp)}
                                   </span>
                                   {message.isOwnMessage && (
-                                    <Check className="w-3 h-3 md:w-4 md:h-4 text-green-300" />
+                                    <Check className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
                                   )}
                                 </div>
                               </div>
@@ -988,7 +928,7 @@ const handleSendMessage = async () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-green-400">
+                    <div className="text-center text-zinc-400">
                       <MessageSquare className="w-16 h-16 mx-auto mb-4" />
                       <p className="text-lg font-medium">Select a conversation</p>
                       <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
@@ -1000,7 +940,7 @@ const handleSendMessage = async () => {
               {/* Message Input */}
               {selectedUser && (
                 <div 
-                  className="border-t border-green-200 bg-white transition-all duration-300 flex-shrink-0"
+                  className="border-t border-zinc-200 bg-white transition-all duration-300 flex-shrink-0"
                   style={{
                     position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
                     bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
@@ -1019,7 +959,7 @@ const handleSendMessage = async () => {
                     }}
                   >
                     <div className="flex space-x-3">
-                      <div className="flex-1 bg-green-50 rounded-2xl border border-green-200 focus-within:ring-2 focus-within:ring-green-300 focus-within:border-green-300">
+                      <div className="flex-1 bg-zinc-50 rounded-2xl border border-zinc-200 focus-within:ring-2 focus-within:ring-zinc-400 focus-within:border-zinc-300">
                         <textarea
                           ref={textareaRef}
                           value={newMessage}
@@ -1036,8 +976,8 @@ const handleSendMessage = async () => {
                       <button
                         onClick={handleSendMessage}
                         disabled={!newMessage.trim() || isSending}
-                        className={`bg-gradient-to-r from-green-600 to-lime-600 text-white p-3 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
-                          isSending ? 'opacity-70 cursor-wait' : 'hover:from-green-700 hover:to-lime-700'
+                        className={`bg-gradient-to-r from-zinc-600 to-zinc-700 text-white p-3 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+                          isSending ? 'opacity-70 cursor-wait' : 'hover:from-zinc-700 hover:to-zinc-800'
                         }`}
                       >
                         {isSending ? (
@@ -1050,19 +990,19 @@ const handleSendMessage = async () => {
                     <div className="flex justify-between items-center mt-2 px-1">
                       <div className="flex space-x-2">
                         <button 
-                          className="p-2 text-green-400 hover:text-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={isSending}
                         >
                           <Paperclip className="w-5 h-5" />
                         </button>
                         <button 
-                          className="p-2 text-green-400 hover:text-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           disabled={isSending}
                         >
                           <Image className="w-5 h-5" />
                         </button>
                       </div>
-                      <div className="text-xs text-green-400 hidden md:block">
+                      <div className="text-xs text-zinc-400 hidden md:block">
                         Press Enter to send • Shift+Enter for new line
                       </div>
                     </div>
@@ -1087,12 +1027,12 @@ const handleSendMessage = async () => {
         }
         
         .messages-scrollbar::-webkit-scrollbar-thumb {
-          background: #bef264;
+          background: #a1a1aa;
           border-radius: 10px;
         }
         
         .messages-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #a3e635;
+          background: #71717a;
         }
 
         /* Mobile optimizations */
@@ -1103,12 +1043,8 @@ const handleSendMessage = async () => {
         }
 
         /* Custom colors */
-        .bg-lime-50 {
-          background-color: #f7fee7;
-        }
-
-        .bg-green-25 {
-          background-color: #f9fef7;
+        .bg-zinc-50 {
+          background-color: #fafafa;
         }
 
         /* Loading animation */
