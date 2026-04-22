@@ -243,7 +243,7 @@ export default function MobileProductCard({
             )}
 
             {/* Variants List */}
-            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+            <div className="space-y-3 max-h-[500px] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {safeVariants.length > 0 ? (
                 safeVariants.map((variant) => {
                  // console.log('🟠 MOBILE CARD - rendering variant:', variant.id, variant.name);
