@@ -675,32 +675,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                                     {notification.message}
                                   </p>
                                   <div className="mt-2 flex flex-wrap gap-2">
-                                    {notification.type === NotificationType.NEW_MESSAGE && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setIsBellPopupOpen(false);
-                                          router.push('/Messaging');
-                                        }}
-                                        className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
-                                      >
-                                        View Message
-                                      </button>
-                                    )}
-                                    {(notification.type === NotificationType.ORDER_CREATED || 
-                                      notification.type === NotificationType.ORDER_UPDATED || 
-                                      notification.type === NotificationType.ORDER_DELIVERED) && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setIsBellPopupOpen(false);
-                                          router.push('/orders');
-                                        }}
-                                        className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-200"
-                                      >
-                                        View Order
-                                      </button>
-                                    )}
+                                    
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
