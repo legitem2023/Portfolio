@@ -11,7 +11,7 @@ import {
   FileText,
   HeadphonesIcon,
   Truck,
-  Message,
+  MessagesSquare,
   BanknoteArrowUp
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
@@ -41,7 +41,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] }, // Admin only
-    { id: 12, label: 'Messages', icon: Message, roles: ['ADMINISTRATOR','MANAGER'] } // Admin only
+    { id: 12, label: 'Messages', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] } // Admin only
 
   ];
 
