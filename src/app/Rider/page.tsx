@@ -388,7 +388,7 @@ showToast(
       {/* Desktop Navigation Tabs */}
       {!isMobile && (
         <NavigationTabs
-          activeTab={activeTab}
+          activeTab={activeIndex}
           setActiveTab={handleTabChange}
           isMobile={isMobile}
           newDeliveriesCount={newDeliveriesCount}
