@@ -490,9 +490,9 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="bg-gray-800 shadow-sm sticky top-0 z-50">
+    <header className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-gradient-to-r from-white via-white to-lime-50/80 shadow-lg sticky top-0 z-50 border-b border-lime-100/50 backdrop-blur-sm z-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex justify-between h-14 sm:h-16">
+        <div className="flex justify-between">
           {/* Left section - Logo only */}
               <div className="relative">
                 <div className="absolute inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
