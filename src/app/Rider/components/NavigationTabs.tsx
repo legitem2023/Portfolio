@@ -22,32 +22,32 @@ interface NavigationTabsProps {
 
 const TABS_WITH_ICONS: TabType[] = [
   { 
-    id: 1, 
+    id: 0, 
     label: "New", 
     icon: <Bell />,
     desktopLabel: "New Deliveries",
     hasNotification: true 
   },
   { 
-    id: 2, 
+    id: 1, 
     label: "Active", 
     icon: <Package />,
     desktopLabel: "Active Deliveries" 
   },
   { 
-    id: 3, 
+    id: 2, 
     label: "History", 
     icon: <Clock />,
     desktopLabel: "Payment History" 
   },
   { 
-    id: 4, 
+    id: 3, 
     label: "Messages", 
     icon: <MessageCircle />,
     desktopLabel: "Messages" 
   },
   { 
-    id: 5, 
+    id: 4, 
     label: "Profile", 
     icon: <User/>,
     desktopLabel: "User Profile" 
@@ -72,11 +72,11 @@ export default function NavigationTabs({
       
       // Number keys 1-5 for tab navigation - FIXED: use string keys
       const keyToTab: Record<string, number> = {
+        '0': 0,
         '1': 1,
         '2': 2,
         '3': 3,
-        '4': 4,
-        '5': 5
+        '4': 4
       };
       
       if (keyToTab[event.key]) {
