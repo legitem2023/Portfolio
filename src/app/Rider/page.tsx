@@ -346,7 +346,7 @@ showToast('Delivery Accepted!','success');
           riderId={user?.userId}
           showSummary={true}
         />;
-      case 4:
+      case 3:
         return <PMTab UserId={user?.userId} />;
       case 4:
         return <UserProfile userId={user?.userId}/>;
