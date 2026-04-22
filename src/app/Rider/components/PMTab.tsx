@@ -632,7 +632,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleBackToContacts = () => {
-    dispatch(setSelectedUser(null));
+    dispatch(setSelectedUser(""));
     setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
