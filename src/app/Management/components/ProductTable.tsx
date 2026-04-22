@@ -236,7 +236,7 @@ export default function ProductTable({ products,refetch, onProductDeleted }: Pro
       </div>
      */}
       {/* Mobile Card View - Visible only on mobile */}
-      <div className="md:hidden space-y-3 px-1">
+      <div className="space-y-3 px-1">
         {filteredAndSortedProducts.map((product) => (
           <MobileProductCard 
             key={product.id} 
