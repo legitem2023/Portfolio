@@ -370,13 +370,14 @@ showToast(
       </Head>
 
       {/* Header */}
-      <Header
+      <Header user={user}/>
+      {/*<Header
         isMobile={isMobile}
         isOnline={isOnline}
         setIsOnline={setIsOnline}
         activeTab={activeTab}
         newDeliveriesCount={newDeliveriesCount}
-      />
+      />*/}
 
       {/* Desktop Navigation Tabs */}
       {!isMobile && (
