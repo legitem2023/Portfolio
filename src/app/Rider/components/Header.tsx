@@ -537,7 +537,7 @@ export default function Header({ user }: HeaderProps) {
                 <>
                   {/* Backdrop for mobile */}
                   <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+                    className="fixed bottom-0 inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
                     onClick={() => slideUpNotification('down')}
                   />
                   
