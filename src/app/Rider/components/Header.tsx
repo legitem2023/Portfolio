@@ -490,7 +490,8 @@ export default function Header({ user }: HeaderProps) {
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
+    <>
+    <header className="h-[10vh] bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
       {/* Top Accent Line */}
       <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
        
@@ -532,7 +533,57 @@ export default function Header({ user }: HeaderProps) {
                 ) : null}
               </button>
 
-              {/* Notification Popup - FIXED POSITION AT BOTTOM */}
+            </div>
+
+            {/* User Menu Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={toggleDropdown}
+                disabled={isLoggingOut}
+                className="flex items-center gap-1 sm:gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
+                id="user-menu-button"
+                aria-expanded={isDropdownOpen}
+                aria-haspopup="true"
+              >
+                <span className="sr-only">Open user menu</span>
+                <img 
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                  src={user?.image || '/NoImage_2.webp'} 
+                  alt={user?.name}
+                />
+                <div className="hidden sm:block text-left">
+                  <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
+                </div>
+                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                  <button
+                    onClick={handleProfile}
+                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
+                  >
+                    <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                    <span className="font-medium">Profile</span>
+                  </button>
+
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
+                  >
+                    <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                    <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+                    {/* Notification Popup - FIXED POSITION AT BOTTOM */}
               {isBellPopupOpen && userId && (
                 <>
                   {/* Backdrop for mobile */}
@@ -728,55 +779,6 @@ export default function Header({ user }: HeaderProps) {
                   </div>
                 </>
               )}
-            </div>
-
-            {/* User Menu Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggleDropdown}
-                disabled={isLoggingOut}
-                className="flex items-center gap-1 sm:gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
-                id="user-menu-button"
-                aria-expanded={isDropdownOpen}
-                aria-haspopup="true"
-              >
-                <span className="sr-only">Open user menu</span>
-                <img 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  src={user?.image || '/NoImage_2.webp'} 
-                  alt={user?.name}
-                />
-                <div className="hidden sm:block text-left">
-                  <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
-                </div>
-                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <button
-                    onClick={handleProfile}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
-                  >
-                    <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
-                    <span className="font-medium">Profile</span>
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
-                  >
-                    <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
-                    <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </header>
+    </>
   );
     }
