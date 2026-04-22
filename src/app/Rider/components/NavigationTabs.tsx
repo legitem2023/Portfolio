@@ -70,13 +70,13 @@ export default function NavigationTabs({
         return;
       }
       
-      // Number keys 1-6 for tab navigation
-      const keyToTab: { [key: number]: number } = {
-        1: 1,
-        2: 2,
-        3: 3,
-        4: 4,
-        5: 5
+      // Number keys 1-5 for tab navigation - FIXED: use string keys
+      const keyToTab: Record<string, number> = {
+        '1': 1,
+        '2': 2,
+        '3': 3,
+        '4': 4,
+        '5': 5
       };
       
       if (keyToTab[event.key]) {
