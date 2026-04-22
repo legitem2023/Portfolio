@@ -15,7 +15,7 @@ import { TabType } from '../lib/types';
 
 interface NavigationTabsProps {
   activeTab: number;
-  setActiveTab: (tab: string) => void;
+  setActiveTab: (tab: number) => void;
   isMobile: boolean;
   newDeliveriesCount: number;
 }
