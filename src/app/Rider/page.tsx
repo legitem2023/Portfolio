@@ -377,13 +377,13 @@ showToast(
 
       {/* TopNav */}
       <Header user={user}/>
-      <TopNav
+      {/*<TopNav
         isMobile={isMobile}
         isOnline={isOnline}
         setIsOnline={setIsOnline}
         activeTab={activeTab}
         newDeliveriesCount={newDeliveriesCount}
-      />
+      />*/}
 
       {/* Desktop Navigation Tabs */}
       {!isMobile && (
