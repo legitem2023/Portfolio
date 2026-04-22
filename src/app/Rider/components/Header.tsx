@@ -493,13 +493,18 @@ export default function Header({ user }: HeaderProps) {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between h-14 sm:h-16">
           {/* Left section - Logo only */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-white font-bold text-base sm:text-xl">VendorCity</span>
-              <span className="ml-1 sm:ml-2 text-gray-300 text-xs sm:text-sm hidden sm:inline">Rider</span>
-            </div>
-          </div>
-
+              <div className="relative">
+                <div className="absolute inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+                <Image 
+                  src="/VendorCity_Rider.webp" 
+                  alt="Logo" 
+                  height={100} 
+                  width={100} 
+                  className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div>
+          
           {/* Right section - Notifications and User Menu only */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Notification Bell */}
