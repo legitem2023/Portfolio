@@ -1,19 +1,28 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import initialSizeData from './Json/sizes.json'; // Adjust path to where you placed sizes.json
-import fs from 'fs';
-import path from 'path';
+import initialSizeData from './Json/sizes.json';
+
+// Define types
+interface SizeCategory {
+    parent: string;
+    values: string[];
+}
+
+interface EditingValue {
+    parent: string;
+    value: string;
+}
 
 export default function SizeManager() {
-    const [sizeData, setSizeData] = useState([]);
-    const [editingParent, setEditingParent] = useState(null);
+    const [sizeData, setSizeData] = useState<SizeCategory[]>([]);
+    const [editingParent, setEditingParent] = useState<string | null>(null);
     const [editParentName, setEditParentName] = useState('');
-    const [editingValue, setEditingValue] = useState(null);
+    const [editingValue, setEditingValue] = useState<EditingValue | null>(null);
     const [editValueText, setEditValueText] = useState('');
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newValue, setNewValue] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [message, setMessage] = useState('');
 
     // Load data on mount
@@ -22,21 +31,21 @@ export default function SizeManager() {
     }, []);
 
     const loadData = () => {
-        // Try to load from localStorage first, then from JSON file
+        // Try to load from localStorage first
         const savedData = localStorage.getItem('sizeData');
         if (savedData) {
             setSizeData(JSON.parse(savedData));
         } else {
-            setSizeData(initialSizeData);
-            saveToLocalStorage(initialSizeData);
+            setSizeData(initialSizeData as SizeCategory[]);
+            saveToLocalStorage(initialSizeData as SizeCategory[]);
         }
     };
 
-    const saveToLocalStorage = (data) => {
+    const saveToLocalStorage = (data: SizeCategory[]) => {
         localStorage.setItem('sizeData', JSON.stringify(data));
     };
 
-    const saveToJsonFile = (data) => {
+    const saveToJsonFile = (data: SizeCategory[]) => {
         // This will trigger a download of the JSON file
         const dataStr = JSON.stringify(data, null, 2);
         const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
@@ -46,7 +55,7 @@ export default function SizeManager() {
         linkElement.click();
     };
 
-    const updateData = (newData, saveToFile = false) => {
+    const updateData = (newData: SizeCategory[], saveToFile = false) => {
         setSizeData(newData);
         saveToLocalStorage(newData);
         
@@ -62,21 +71,21 @@ export default function SizeManager() {
 
     const addCategory = () => {
         if (newCategoryName.trim() && !sizeData.find(item => item.parent === newCategoryName.trim())) {
-            const newCategory = { parent: newCategoryName.trim(), values: [] };
+            const newCategory: SizeCategory = { parent: newCategoryName.trim(), values: [] };
             const updatedData = [...sizeData, newCategory];
             updateData(updatedData);
             setNewCategoryName('');
         }
     };
 
-    const deleteCategory = (parentName) => {
+    const deleteCategory = (parentName: string) => {
         if (confirm(`Are you sure you want to delete "${parentName}" category?`)) {
             const updatedData = sizeData.filter(item => item.parent !== parentName);
             updateData(updatedData);
         }
     };
 
-    const startEditCategory = (parent) => {
+    const startEditCategory = (parent: string) => {
         setEditingParent(parent);
         setEditParentName(parent);
     };
@@ -92,7 +101,7 @@ export default function SizeManager() {
         }
     };
 
-    const addValue = (parentName) => {
+    const addValue = (parentName: string) => {
         if (newValue.trim()) {
             const updatedData = sizeData.map(item =>
                 item.parent === parentName 
@@ -105,7 +114,7 @@ export default function SizeManager() {
         }
     };
 
-    const deleteValue = (parentName, valueToDelete) => {
+    const deleteValue = (parentName: string, valueToDelete: string) => {
         if (confirm(`Delete "${valueToDelete}"?`)) {
             const updatedData = sizeData.map(item =>
                 item.parent === parentName
@@ -116,13 +125,13 @@ export default function SizeManager() {
         }
     };
 
-    const startEditValue = (parentName, value) => {
+    const startEditValue = (parentName: string, value: string) => {
         setEditingValue({ parent: parentName, value });
         setEditValueText(value);
     };
 
     const saveEditValue = () => {
-        if (editValueText.trim()) {
+        if (editValueText.trim() && editingValue) {
             const updatedData = sizeData.map(item =>
                 item.parent === editingValue.parent
                     ? { ...item, values: item.values.map(v => v === editingValue.value ? editValueText.trim() : v) }
@@ -142,8 +151,8 @@ export default function SizeManager() {
 
     const resetToDefault = () => {
         if (confirm('Reset to default data? All changes will be lost.')) {
-            setSizeData(initialSizeData);
-            saveToLocalStorage(initialSizeData);
+            setSizeData(initialSizeData as SizeCategory[]);
+            saveToLocalStorage(initialSizeData as SizeCategory[]);
             setMessage('Reset to default data!');
             setTimeout(() => setMessage(''), 3000);
         }
@@ -184,7 +193,7 @@ export default function SizeManager() {
                         value={newCategoryName}
                         onChange={(e) => setNewCategoryName(e.target.value)}
                         placeholder="Category name"
-                        className="flex-1 p-2 border rounded"
+                        className="flex-1 p-2 border rounded text-black"
                     />
                     <button
                         onClick={addCategory}
@@ -207,7 +216,7 @@ export default function SizeManager() {
                                         type="text"
                                         value={editParentName}
                                         onChange={(e) => setEditParentName(e.target.value)}
-                                        className="flex-1 p-1 border rounded"
+                                        className="flex-1 p-1 border rounded text-black"
                                         autoFocus
                                     />
                                     <button
@@ -225,7 +234,7 @@ export default function SizeManager() {
                                 </div>
                             ) : (
                                 <>
-                                    <h2 className="text-xl font-semibold">{category.parent}</h2>
+                                    <h2 className="text-xl font-semibold text-black">{category.parent}</h2>
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => startEditCategory(category.parent)}
@@ -254,7 +263,7 @@ export default function SizeManager() {
                                                 type="text"
                                                 value={editValueText}
                                                 onChange={(e) => setEditValueText(e.target.value)}
-                                                className="w-32 p-1 border rounded text-sm"
+                                                className="w-32 p-1 border rounded text-sm text-black"
                                                 autoFocus
                                             />
                                             <button
@@ -272,7 +281,7 @@ export default function SizeManager() {
                                         </div>
                                     ) : (
                                         <>
-                                            <span>{value}</span>
+                                            <span className="text-black">{value}</span>
                                             <button
                                                 onClick={() => startEditValue(category.parent, value)}
                                                 className="text-blue-500 hover:text-blue-700 ml-2 text-sm"
@@ -299,7 +308,7 @@ export default function SizeManager() {
                                     value={newValue}
                                     onChange={(e) => setNewValue(e.target.value)}
                                     placeholder="New value"
-                                    className="flex-1 p-2 border rounded text-sm"
+                                    className="flex-1 p-2 border rounded text-sm text-black"
                                     autoFocus
                                 />
                                 <button
@@ -328,4 +337,4 @@ export default function SizeManager() {
             </div>
         </div>
     );
-}
+                                    }
