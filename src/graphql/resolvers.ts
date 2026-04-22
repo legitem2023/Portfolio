@@ -6644,12 +6644,12 @@ deleteProduct: async (_: any, { id }: any) => {
           variants: {
             create: {
               name,
-              sku,
+              sku:generatedSKU,
               color,
               size,
               price,
-              salePrice: salePrice || null, // Ensure it can be null
-              stock: stock || 0,
+              salePrice: salePrice, // Ensure it can be null
+              stock: stock,
             } as any
           },
           supplier: {
