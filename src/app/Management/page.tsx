@@ -19,7 +19,7 @@ import UserProfile from './components/UserProfile';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import PMTab from './components/PMTab';
-
+import SizeManager from './components/SizeManager';
 import { useAuth } from './hooks/useAuth';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -191,6 +191,8 @@ export default function ManagementDashboard() {
         return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
       case 12:
         return <PMTab UserId={user?.userId?user?.userId:''}/>
+      case 13:
+        return <SizeManager/>
       default:
         return <></>;
     }
