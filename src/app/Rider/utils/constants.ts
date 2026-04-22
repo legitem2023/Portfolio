@@ -9,9 +9,10 @@ import {
   MessageCircle,
   User
 } from "lucide-react";
-// Tabs configuration without JSX - we'll create the icons in the components
-export const TABS: Omit<TabType, 'icon'>[] = [
-   { 
+
+// Tabs configuration with JSX icons
+export const TABS: TabType[] = [
+  { 
     id: 1, 
     label: "New", 
     icon: <Bell />,
@@ -39,7 +40,7 @@ export const TABS: Omit<TabType, 'icon'>[] = [
   { 
     id: 5, 
     label: "Profile", 
-    icon: <User/>,
+    icon: <User />,
     desktopLabel: "User Profile" 
   }
 ];
