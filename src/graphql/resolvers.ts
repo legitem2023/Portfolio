@@ -1,6 +1,6 @@
 // resolvers.ts
 import { PrismaClient, PrivacySetting, OrderStatus } from "@prisma/client";
-import { comparePassword, encryptPassword, generateOrderNumber, generateTrackingNumber } from '../../utils/script';
+import { comparePassword, encryptPassword, generateOrderNumber, generateTrackingNumber, generateSKU } from '../../utils/script';
 import { EncryptJWT, jwtDecrypt } from 'jose';
 import { saveBase64Image, upload3DModel } from '../../utils/saveBase64Image';
 import { v4 as uuidv4 } from 'uuid';
@@ -6628,12 +6628,18 @@ deleteProduct: async (_: any, { id }: any) => {
     },
 
     createProduct: async (_: any, { id, name, description, price, salePrice, color, size, stock, sku, supplierId }: any) => {
+      let generatedSKU:any;
+      if(sku===""|| sku===null || sku===undefined) {
+        generatedSKU = generateSKU(name);
+      }else{
+        generatedSKU = sku;
+      }
       await prisma.product.create({
         data: {
           name,
           description,
           price,
-          sku,
+          sku:generatedSKU,
           salePrice,
           variants: {
             create: {
@@ -6679,10 +6685,16 @@ deleteProduct: async (_: any, { id }: any) => {
           }
         }
 
+    let generatedSKU:any;
+      if(input.sku===""|| input.sku===null || input.sku===undefined) {
+        generatedSKU = generateSKU(imput.name);
+      }else{
+        generatedSKU = input.sku;
+      } 
         // Check for duplicate SKU
-        if (input.sku) {
+        if (generatedSKU) {
           const existingVariant = await prisma.productVariant.findUnique({
-            where: { sku: input.sku }
+            where: { sku: generatedSKU }
           });
 
           if (existingVariant) {
@@ -6697,7 +6709,7 @@ deleteProduct: async (_: any, { id }: any) => {
           data: {
             name: input.name,
             productId: input.productId,
-            sku: input.sku || `SKU-${Date.now()}`, // Generate SKU if not provided
+            sku: generatedSKU, // Generate SKU if not provided
             color: input.color,
             size: input.size,
             price: input.price,
