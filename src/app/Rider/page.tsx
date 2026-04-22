@@ -56,6 +56,7 @@ const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", 
 
 export default function RiderDashboard() {
   const router = useRouter();
+  const dispatch = useDispatch()
   const { user, loading: authLoading } = useAuth();
     const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
 
@@ -330,8 +331,8 @@ showToast(
   };
 
   // Handle tab change with persistence
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: number) => {
+    dispatch(setActiveIndex(tab));
     // The useEffect will handle saving to localStorage
   };
 
