@@ -232,7 +232,7 @@ export default function VariantCard({
 
               {/* Thumbnails - Responsive layout */}
               {imageCount > 1 && (
-                <div className="relative px-4 sm:px-6 aspect-[1/1]">
+                <div className="relative px-4 sm:px-6">
                   <Swiper
                     modules={[Thumbs]}
                     watchSlidesProgress
@@ -248,7 +248,7 @@ export default function VariantCard({
                             <img 
                               src={image} 
                               alt={`Thumbnail ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              className="aspect-[1/1] w-full h-full"
                               loading="lazy"
                             />
                           </div>
