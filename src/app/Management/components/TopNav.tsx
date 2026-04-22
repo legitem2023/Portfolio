@@ -731,7 +731,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                         <div className="flex flex-col items-center justify-center p-8 text-center">
                           <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
                           <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
-                          <p className="text-xs sm:text-sm text-gray-400 mt-1">You're all caught up!</p>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
                         </div>
                       )}
                     </div>
