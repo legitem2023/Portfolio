@@ -232,7 +232,7 @@ export default function VariantCard({
 
               {/* Thumbnails - Responsive layout */}
               {imageCount > 1 && (
-                <div className="relative px-4 sm:px-6">
+                <div className="relative px-4 sm:px-6 aspect-[1/1]">
                   <Swiper
                     modules={[Thumbs]}
                     watchSlidesProgress
@@ -243,7 +243,7 @@ export default function VariantCard({
                   >
                     {variant.images!.map((image, index) => (
                       <SwiperSlide key={index}>
-                        <div className="relative group/thumb aspect-[1/1]">
+                        <div className="relative group/thumb">
                           <div className="bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-transparent transition-all duration-200 group-[.swiper-slide-thumb-active]:border-blue-500 group-[.swiper-slide-thumb-active]:shadow-md">
                             <img 
                               src={image} 
