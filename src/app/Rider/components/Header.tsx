@@ -532,25 +532,21 @@ export default function Header({ user }: HeaderProps) {
                 ) : null}
               </button>
 
-              {/* Notification Popup - FIXED POSITION */}
+              {/* Notification Popup - FIXED POSITION AT BOTTOM */}
               {isBellPopupOpen && userId && (
                 <>
                   {/* Backdrop for mobile */}
                   <div 
-                    className="fixed bottom-0 inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
                     onClick={() => slideUpNotification('down')}
                   />
                   
-                  {/* Bell Popup with correct positioning */}
+                  {/* Bell Popup - Now properly positioned at the very bottom */}
                   <div 
                     className={`
                       fixed md:absolute
                       transition-all duration-300 ease-out
-                      ${isBellPopupOpen 
-                        ? 'opacity-100 visible' 
-                        : 'opacity-0 invisible'
-                      }
-                      /* Mobile styles */
+                      /* Mobile styles - stick to bottom of viewport */
                       bottom-0 left-0 right-0
                       /* Desktop styles */
                       md:bottom-auto md:left-auto md:right-0 md:top-full md:mt-2
@@ -574,7 +570,7 @@ export default function Header({ user }: HeaderProps) {
                     onTouchEnd={handleTouchEnd}
                   >
                     {/* Drag handle for mobile */}
-                    <div className="md:hidden w-full flex justify-center py-2">
+                    <div className="md:hidden w-full flex justify-center py-2 cursor-grab active:cursor-grabbing">
                       <div className="w-12 h-1 bg-gray-300 rounded-full" />
                     </div>
 
@@ -783,4 +779,4 @@ export default function Header({ user }: HeaderProps) {
       </div>
     </header>
   );
-}
+    }
