@@ -21,7 +21,9 @@ import {
   Clock,
   Menu,
   Heart,
-  MessageSquareQuote
+  MessageSquareQuote,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import FBXViewer from './FBXViewer';
 // Import queries and mutations
@@ -72,8 +74,8 @@ const Header: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
+  const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
   
-  // FIX: Add refs for cleanup
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -87,31 +89,24 @@ const Header: React.FC = () => {
   const dispatch = useDispatch();
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
 
-  // Get user data
   const { data: userData, loading: userLoading } = useQuery(USERS);
   
-  // Check if current route is auth page
   const isAuthPage = useMemo(() => {
     return ['/Login', '/Signup', '/ForgotPassword', '/Application'].includes(pathname);
   }, [pathname]);
   
-  // Check if user is logged in
   const isUserLoggedIn = useMemo(() => {
     return !!user || !!userData?.users?.[0];
   }, [user, userData]);
 
-  // Check if current activeIndex requires authentication
   const isProtectedIndex = useMemo(() => {
     return [5, 6, 7, 10].includes(activeIndex);
   }, [activeIndex]);
   
-  // Get userId from user data or auth
   const userId = user?.userId;
 
-  // Track overall user loading state
   const isLoadingUser = userLoading || isLoading;
 
-  // FIX: Memoize the extractNotifications function to prevent unnecessary re-renders
   const extractNotifications = useCallback((data: any): Notification[] => {
     try {
       if (!data?.notifications?.edges) return [];
@@ -122,9 +117,7 @@ const Header: React.FC = () => {
     }
   }, []);
 
-  // FIX: Memoize triggerPushNotification with proper cleanup
   const triggerPushNotification = useCallback((notification: Notification) => {
-    // Only show push notification for unread notifications that haven't been shown yet
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
       return;
     }
@@ -153,7 +146,6 @@ const Header: React.FC = () => {
       }
     };
 
-    // Show browser notification
     showNotification(
       notification.title,
       notification.message,
@@ -170,14 +162,12 @@ const Header: React.FC = () => {
     ).then(result => {
       console.log(`Push notification shown: ${notification.title}`);
       
-      // Add to shown notifications set
       setShownNotificationIds(prev => {
         const newSet = new Set(prev);
         newSet.add(notification.id);
         return newSet;
       });
       
-      // Handle click on notification
       if (result.type === 'click' && notification.link) {
         router.push(notification.link);
       }
@@ -186,23 +176,19 @@ const Header: React.FC = () => {
     });
   }, [shownNotificationIds, router]);
 
-  // FIX: Memoize handleNewNotifications to prevent recreating on every render
   const handleNewNotifications = useCallback((data: any) => {
     const latestNotifications = extractNotifications(data);
     
-    // Find unread notifications that haven't been shown yet
     const newNotifications = latestNotifications.filter(
       (notification: Notification) => 
         !notification.isRead && !shownNotificationIds.has(notification.id)
     );
     
-    // Trigger push notifications for each new notification
     newNotifications.forEach(notification => {
       triggerPushNotification(notification);
     });
   }, [extractNotifications, shownNotificationIds, triggerPushNotification]);
 
-  // OPTIMIZED: Use Apollo's built-in polling
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
@@ -215,21 +201,19 @@ const Header: React.FC = () => {
       userId: userId || '',
       limit: 5
     },
-    skip: !userId, // Don't query if no userId
+    skip: !userId,
     fetchPolicy: 'cache-and-network',
     pollInterval: userId ? 10000 : 0,
     onError: (error) => {
       console.error('Notification query error:', error);
     },
     onCompleted: (data) => {
-      // Handle new notifications when query completes
       if (data && userId) {
         handleNewNotifications(data);
       }
     },
   });
 
-  // Memoize expensive calculations for better performance
   const notifications = useMemo(() => 
     notificationsData ? extractNotifications(notificationsData) : [], 
     [notificationsData, extractNotifications]
@@ -240,7 +224,6 @@ const Header: React.FC = () => {
     [notificationsData]
   );
 
-  // Notification mutations
   const [markAsReadMutation] = useMutation(MARK_AS_READ, {
     onError: (error) => console.error('Mark as read error:', error)
   });
@@ -251,10 +234,8 @@ const Header: React.FC = () => {
     onError: (error) => console.error('Delete notification error:', error)
   });
 
-  // FIX: Check authentication status with cleanup
   useEffect(() => {
     const getRole = async () => {
-      // Cancel previous request if exists
       if (authCheckAbortControllerRef.current) {
         authCheckAbortControllerRef.current.abort();
       }
@@ -302,7 +283,6 @@ const Header: React.FC = () => {
     
     getRole();
     
-    // Cleanup function
     return () => {
       if (authCheckAbortControllerRef.current) {
         authCheckAbortControllerRef.current.abort();
@@ -311,22 +291,14 @@ const Header: React.FC = () => {
     };
   }, []);
 
-// Add this after line ~215 (after the existing auth check useEffect)
-
-// Role-based redirect effect
 useEffect(() => {
-  // Don't redirect if we're still loading or no user
   if (isLoading || !user) {
     return;
   }
 
-  // Get the user's role from the decrypted token
-  const userRole = user?.role; // Adjust this path based on your token structure
-  
-  // Current path to avoid redirect loops
+  const userRole = user?.role;
   const currentPath = pathname;
   
-  // Role-based redirect logic
   if (userRole === 'RIDER' && currentPath !== '/Rider') {
     router.push('/Rider');
   } else if (userRole === 'MANAGER' && currentPath !== '/Management') {
@@ -334,32 +306,24 @@ useEffect(() => {
   }
 }, [user, isLoading, pathname, router]);
   
-  // Clear shown notifications when user changes
   useEffect(() => {
     if (userId) {
       setShownNotificationIds(new Set());
     }
   }, [userId]);
 
-  // Check if current route requires authentication
   useEffect(() => {
     if (isLoadingUser) {
       return;
     }
 
     const protectedIndexes = [5, 6, 7, 10];
-    // Redirect to login if trying to access protected index without user
     if (protectedIndexes.includes(activeIndex) && !hasCheckedAuth) {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
     }
   }, [hasCheckedAuth, activeIndex, isUserLoggedIn, isLoadingUser, router]);
 
-
-
-
-  
-  // FIX: Close dropdown when clicking outside (desktop) with cleanup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -376,7 +340,6 @@ useEffect(() => {
     };
   }, []);
 
-  // FIX: Close modal when clicking outside or pressing escape (mobile) with cleanup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
@@ -406,25 +369,19 @@ useEffect(() => {
     };
   }, [isModalOpen]);
 
-  // Refetch notifications when bell popup opens
   useEffect(() => {
     if (isBellPopupOpen && userId) {
       refetchNotifications();
     }
   }, [isBellPopupOpen, userId, refetchNotifications]);
 
-  // FIX: Check if mobile device with memoization
   const isMobile = useCallback(() => {
     if (typeof window === 'undefined') return false;
     return window.innerWidth < 768;
   }, []);
 
-  // FIX: Add resize event listener cleanup
   useEffect(() => {
-    const handleResize = () => {
-      // Force re-render when window size changes
-      // This ensures isMobile returns correct value
-    };
+    const handleResize = () => {};
     
     window.addEventListener('resize', handleResize);
     return () => {
@@ -432,7 +389,6 @@ useEffect(() => {
     };
   }, []);
 
-  // FIX: Memoize handlers to prevent unnecessary re-renders
   const handleUserButtonClick = useCallback(() => {
     if (isAuthPage) return;
     
@@ -486,6 +442,7 @@ useEffect(() => {
   }, [markAllAsReadMutation, userId]);
 
   const deleteNotification = useCallback(async (id: string) => {
+    setDeletingNotificationId(id);
     try {
       await deleteNotificationMutation({
         variables: { id },
@@ -495,10 +452,11 @@ useEffect(() => {
       });
     } catch (error) {
       console.error('Error deleting notification:', error);
+    } finally {
+      setDeletingNotificationId(null);
     }
   }, [deleteNotificationMutation]);
 
-  // FIX: Memoize icon and color functions
   const getNotificationIcon = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
@@ -587,7 +545,6 @@ useEffect(() => {
   }, [markAsRead, router]);
 
   const handleTabClick = useCallback((tabId: number) => {
-    // Check if this is a protected tab and user is not logged in
     if ([5, 6, 7, 10].includes(tabId) && !isUserLoggedIn) {
       router.push('/Login');
       return;
@@ -608,7 +565,6 @@ useEffect(() => {
     dispatch(setActiveIndex(1));
   }, [router, dispatch]);
 
-  // FIX: Clean up polling on unmount
   useEffect(() => {
     return () => {
       if (stopPolling) {
@@ -620,8 +576,6 @@ useEffect(() => {
   return (
     <div>
       <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
-        {/*<AnimatedCrowd/>*/}
-        {/*<FBXViewer modelPath="/City/City.FBX" />*/}
         <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
         
           <div className="z-20 h-[100%] flex items-center">
@@ -636,7 +590,6 @@ useEffect(() => {
           </div>
              
           <div className="z-20 h-[100%] flex items-center space-x-2">
-            {/* Bell Button with Notification Badge - Hidden on auth pages */}
             {!isAuthPage && (
               <div className="relative" ref={bellRef}>
                 <button
@@ -668,10 +621,8 @@ useEffect(() => {
                   )}
                 </button>
 
-                {/* Slide-up Bell Popup with enhanced animation */}
                 {isBellPopupOpen && userId && (
                   <div className="fixed inset-0 z-50 transition-opacity duration-300 ease md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-96">
-                    {/* Backdrop for mobile with fade-in animation */}
                     <div 
                       className="fixed inset-0 bg-black md:hidden"
                       style={{
@@ -681,7 +632,6 @@ useEffect(() => {
                       onClick={() => setIsBellPopupOpen(false)}
                     />
                     
-                    {/* Popup Container with enhanced slide-up animation */}
                     <div className={`
                       fixed z-50 bottom-0 left-0 right-0 
                       md:absolute md:bottom-auto md:top-full 
@@ -691,7 +641,6 @@ useEffect(() => {
                       ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 md:translate-y-2 md:opacity-0'}
                       max-h-[80vh] md:max-h-[70vh] flex flex-col
                     `}>
-                      {/* Header */}
                       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-2xl md:rounded-t-2xl">
                         <div className="flex items-center space-x-2">
                           <Bell className="w-5 h-5 text-purple-600" />
@@ -726,7 +675,6 @@ useEffect(() => {
                         </div>
                       </div>
 
-                      {/* Notifications List */}
                       <div className="flex-1 overflow-y-auto">
                         {notificationsLoading ? (
                           <div className="flex flex-col items-center justify-center p-8">
@@ -795,40 +743,25 @@ useEffect(() => {
                                       {notification.message}
                                     </p>
                                     <div className="mt-2 flex space-x-2">
-                                      {/*notification.type === NotificationType.NEW_MESSAGE && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsBellPopupOpen(false);
-                                            router.push('/Messaging');
-                                          }}
-                                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-all duration-200"
-                                        >
-                                          View Message
-                                        </button>
-                                      )*/}
-                                      {/*(notification.type === NotificationType.ORDER_CREATED || 
-                                        notification.type === NotificationType.ORDER_UPDATED || 
-                                        notification.type === NotificationType.ORDER_DELIVERED) && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setIsBellPopupOpen(false);
-                                            handleTabClick(10);
-                                          }}
-                                          className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-all duration-200"
-                                        >
-                                          View Order
-                                        </button>
-                                      )*/}
                                       <button
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                           e.stopPropagation();
-                                          deleteNotification(notification.id);
+                                          await deleteNotification(notification.id);
                                         }}
-                                        className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200"
+                                        className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
+                                        disabled={deletingNotificationId === notification.id}
                                       >
-                                        Delete
+                                        {deletingNotificationId === notification.id ? (
+                                          <>
+                                            <Loader2 className="w-3 h-3 animate-spin" />
+                                            <span>Deleting...</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Trash2 className="w-3 h-3" />
+                                            <span>Delete</span>
+                                          </>
+                                        )}
                                       </button>
                                     </div>
                                   </div>
@@ -845,7 +778,6 @@ useEffect(() => {
                         )}
                       </div>
 
-                      {/* Footer */}
                       <div className="p-4 border-t border-gray-200 bg-gray-50">
                         <button
                           onClick={() => {
@@ -863,7 +795,6 @@ useEffect(() => {
               </div>
             )}
 
-            {/* User Button - Hidden on auth pages */}
             {!isAuthPage && (
               <div ref={dropdownRef}>
                 <button
@@ -875,7 +806,6 @@ useEffect(() => {
                   </div>
                 </button>
                 
-                {/* Desktop Dropdown with slide-down animation - Only show if user is logged in */}
                 {isDropdownOpen && !isMobile() && hasCheckedAuth && (
                   <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
                     style={{
@@ -940,10 +870,8 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Mobile Slide From Left Modal with enhanced animation - Only show if user is logged in */}
       {isModalOpen && isMobile() && !isAuthPage && hasCheckedAuth && (
         <>
-          {/* Backdrop with fade-in animation */}
           <div 
             className="fixed inset-0 bg-black z-40 md:hidden transition-all duration-300 ease-out"
             style={{
@@ -953,7 +881,6 @@ useEffect(() => {
             onClick={() => setIsModalOpen(false)}
           />
           
-          {/* Modal with slide-in animation */}
           <div 
             ref={modalRef}
             className="fixed top-0 left-0 h-full w-3/4 max-w-sm shadow-2xl z-50 md:hidden"
@@ -962,7 +889,6 @@ useEffect(() => {
               transition: 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
           >
-            {/* Header with close button - FIXED: Removed duplicate p-2 class */}
             <div className="flex items-center justify-between border-b bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] p-2 aspect-[3/1]">
               <div className="z-20 h-[100%] flex items-center transform transition-all duration-300 hover:scale-105">
                 <Image 
@@ -983,7 +909,6 @@ useEffect(() => {
               </button>
             </div>
 
-            {/* Modal content with staggered animation */}
             <div className="overflow-y-auto h-full pb-20 bg-[#f1f1f1]">
               <div className="p-4">
                 <div className="space-y-1">
@@ -1080,9 +1005,6 @@ useEffect(() => {
           </div>
         </>
       )}
-      {/*<VisitorCounter/>*/}
-      
-      {/*<Ads/>*/}
     </div>
   );
 };
