@@ -1,4 +1,4 @@
-import { TabType } from '../lib/types';
+/*import { TabType } from '../lib/types';
 import { 
   Navigation, 
   Package, 
@@ -102,4 +102,4 @@ export const MOCK_DELIVERIES = [
       }
     ]
   }
-];
+];*/
