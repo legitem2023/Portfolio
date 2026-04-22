@@ -1,32 +1,46 @@
 import { TabType } from '../lib/types';
-
+import { 
+  Navigation, 
+  Package, 
+  Map, 
+  BarChart,
+  Bell,
+  Clock,
+  MessageCircle,
+  User
+} from "lucide-react";
 // Tabs configuration without JSX - we'll create the icons in the components
 export const TABS: Omit<TabType, 'icon'>[] = [
-  { 
-    id: "newDeliveries", 
+   { 
+    id: 1, 
     label: "New", 
+    icon: <Bell />,
     desktopLabel: "New Deliveries",
     hasNotification: true 
   },
   { 
-    id: "tracking", 
-    label: "Tracking", 
-    desktopLabel: "Live Tracking" 
-  },
-  { 
-    id: "deliveries", 
+    id: 2, 
     label: "Active", 
+    icon: <Package />,
     desktopLabel: "Active Deliveries" 
   },
   { 
-    id: "map", 
-    label: "Map", 
-    desktopLabel: "Navigation Map" 
+    id: 3, 
+    label: "History", 
+    icon: <Clock />,
+    desktopLabel: "Payment History" 
   },
   { 
-    id: "performance", 
-    label: "Stats", 
-    desktopLabel: "Performance" 
+    id: 4, 
+    label: "Messages", 
+    icon: <MessageCircle />,
+    desktopLabel: "Messages" 
+  },
+  { 
+    id: 5, 
+    label: "Profile", 
+    icon: <User/>,
+    desktopLabel: "User Profile" 
   }
 ];
 
