@@ -5,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
 import { signOut } from 'next-auth/react';
+import Image from 'next/image';
 import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_NOTIFICATIONS } from '../../components/graphql/query';
