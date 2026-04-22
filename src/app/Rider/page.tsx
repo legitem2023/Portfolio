@@ -338,7 +338,7 @@ showToast(
 
   // Render active tab content
   const renderTabContent = () => {
-    switch (activeTab) {
+    switch (activeIndex) {
       case 1:
         return (
           <NewDeliveriesTab
