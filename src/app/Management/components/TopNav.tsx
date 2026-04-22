@@ -462,6 +462,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
           dispatch(setActiveIndex(12));
+          dispatch(setSelectedUser(notification.link));
           break;
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
