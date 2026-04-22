@@ -6687,7 +6687,7 @@ deleteProduct: async (_: any, { id }: any) => {
 
     let generatedSKU:any;
       if(input.sku===""|| input.sku===null || input.sku===undefined) {
-        generatedSKU = generateSKU(imput.name);
+        generatedSKU = generateSKU(input.name);
       }else{
         generatedSKU = input.sku;
       } 
