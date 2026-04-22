@@ -11,6 +11,7 @@ import {
   FileText,
   HeadphonesIcon,
   Truck,
+  Message,
   BanknoteArrowUp
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
@@ -39,7 +40,9 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 6, label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] } // Admin only
+    { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 12, label: 'Messages', icon: Message, roles: ['ADMINISTRATOR','MANAGER'] } // Admin only
+
   ];
 
   // Filter nav items based on user role
