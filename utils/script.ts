@@ -101,3 +101,12 @@ export function calculateDistanceInKm(
 
   return R * c;
 }
+
+export function generateSKU(category: string = "PRD"): string {
+  const date: Date = new Date();
+  const year: number = date.getFullYear();
+  const month: string = String(date.getMonth() + 1).padStart(2, '0');
+  const seq: string = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+  const catCode: string = category.substring(0, 3).toUpperCase();
+  return `${catCode}-${year}${month}-${seq}`;
+}
