@@ -20,7 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-// GraphQL Queries & Mutations (same as before)
+// GraphQL Queries & Mutations
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -71,7 +71,7 @@ const GET_MY_MESSAGES = gql`
 
 const GET_CONVERSATION = gql`
   query GetConversation($currentUser:ID, $userId: ID!, $page: Int, $limit: Int) {
-    conversation(currentUser:$currentUser,userId: $userId, page: $page, limit: $limit) {
+    conversation(currentUser:$currentUser, userId: $userId, page: $page, limit: $limit) {
       messages {
         id
         subject
@@ -153,6 +153,23 @@ const GET_UNREAD_MESSAGE_COUNT = gql`
 const GET_ALL_USERS = gql`
   query GetUsers {
     users {
+      id
+      email
+      firstName
+      lastName
+      avatar
+      phone
+      emailVerified
+      createdAt
+      updatedAt
+      role
+    }
+  }
+`;
+
+const GET_USER_BY_ID = gql`
+  query GetUserById($userId: ID!) {
+    user(id: $userId) {
       id
       email
       firstName
@@ -287,9 +304,11 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [avatar, setAvatar] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  const SelectedUser:any = useSelector((state: any) => state.selectedUser.value);
+  
+  // Use Redux for selectedUser (this is the ID)
+  const dispatch = useDispatch();
+  const selectedUserId = useSelector((state: any) => state.selectedUser.value);
+  const [selectedUser, setSelectedUserState] = useState<User | null>(null);
   
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -316,14 +335,20 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     skip: !userId
   });
 
+  // Fetch user details when selectedUserId changes
+  const { data: selectedUserData } = useQuery(GET_USER_BY_ID, {
+    variables: { userId: selectedUserId },
+    skip: !selectedUserId
+  });
+
   const { data: conversationData, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
-      currentUser:UserId,
-      userId: selectedUser?.id,
+      currentUser: UserId,
+      userId: selectedUserId,
       page: 1,
       limit: 50
     },
-    skip: !selectedUser?.id || !userId
+    skip: !selectedUserId || !userId
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
@@ -336,6 +361,15 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [markAsReadMutation] = useMutation(MARK_AS_READ);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
   const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
+
+  // Update selectedUser state when data is fetched
+  useEffect(() => {
+    if (selectedUserData?.user) {
+      setSelectedUserState(selectedUserData.user);
+    } else if (!selectedUserId) {
+      setSelectedUserState(null);
+    }
+  }, [selectedUserData, selectedUserId]);
 
   // Combine and filter contacts
   const allContacts = useMemo(() => {
@@ -533,7 +567,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !selectedUser || isSending) return;
+    if (newMessage.trim() === "" || !selectedUserId || isSending) return;
 
     setIsSending(true);
 
@@ -542,7 +576,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         variables: {
           input: {
             senderId: userId,
-            recipientId: selectedUser.id,
+            recipientId: selectedUserId,
             body: newMessage.trim()
           }
         }
@@ -584,7 +618,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleUserSelect = async (user: User) => {
-    setSelectedUser(user);
+    dispatch(setSelectedUser(user.id)); // Store only the ID in Redux
     setSelectedThread(messageThreads.find(thread => thread.user.id === user.id) || null);
     
     if (isMobile) {
@@ -599,7 +633,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleBackToContacts = () => {
-    setSelectedUser(null);
+    dispatch(setSelectedUser(null)); // Clear the ID from Redux
     setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
@@ -676,347 +710,348 @@ const PMTab = ({ UserId }: { UserId: string }) => {
  
   return (
     <div>
-    <div className="relative top-0 h-[100vh] bg-gradient-to-br from-zinc-100 to-zinc-200">
-      <div className="max-w-6xl mx-auto bg-white rounded-none shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
-        <div className="flex h-full relative">
-          {/* Sidebar/Contacts List */}
-          <div className={`
-            ${isMobile ? 'relative inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
-            bg-gradient-to-b from-zinc-50 to-zinc-100 border-r border-zinc-200
-            transform transition-transform duration-300 ease-in-out h-full
-            ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
-            flex flex-col
-          `}>
-            {/* Fixed Sidebar Header */}
-            <div className="flex-shrink-0">
-              <div className="p-4 md:p-6 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
-                    <p className="text-zinc-300 text-sm hidden md:block">
-                      {unreadCountData?.unreadMessageCount > 0 
-                        ? `${unreadCountData.unreadMessageCount} unread messages`
-                        : 'Chat with your connections'
-                      }
-                    </p>
-                  </div>
-                  {isMobile && (
-                    <button 
-                      onClick={handleToggleSidebar}
-                      className="p-2 rounded-lg bg-zinc-600 hover:bg-zinc-700"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Search and Tabs */}
-              <div className="p-3 md:p-4 bg-white border-b border-zinc-200">
-                <div className="relative mb-3">
-                  <input
-                    type="text"
-                    placeholder="Search conversations..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-transparent bg-white"
-                  />
-                  <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-zinc-400" />
-                </div>
-
-                {/* Tabs */}
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setActiveTab("threads")}
-                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                      activeTab === "threads"
-                        ? "bg-zinc-700 text-white"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                    }`}
-                  >
-                    Conversations
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("allUsers")}
-                    className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                      activeTab === "allUsers"
-                        ? "bg-zinc-700 text-white"
-                        : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                    }`}
-                  >
-                    All Users
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Scrollable Contacts List */}
-            <div className="flex-1 overflow-y-auto messages-scrollbar">
-              {displayContacts.map((user) => {
-                const thread = getThreadInfo(user);
-                return (
-                  <div
-                    key={user.id}
-                    className={`flex items-center p-3 border-b border-zinc-100 cursor-pointer transition-all duration-200 ${
-                      selectedUser?.id === user.id ? 'bg-zinc-50 border-l-4 border-l-zinc-500' : 'hover:bg-zinc-50'
-                    }`}
-                    onClick={() => handleUserSelect(user)}
-                  >
-                    <div className="relative flex-shrink-0">
-                      <img
-                        src={getUserAvatar(user)}
-                        alt={getUserFullName(user)}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
-                      />
-                      {thread && thread.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                          {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
-                        </div>
-                      )}
+      <div className="relative top-0 h-[100vh] bg-gradient-to-br from-zinc-100 to-zinc-200">
+        <div className="max-w-6xl mx-auto bg-white rounded-none shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
+          <div className="flex h-full relative">
+            {/* Sidebar/Contacts List */}
+            <div className={`
+              ${isMobile ? 'relative inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+              bg-gradient-to-b from-zinc-50 to-zinc-100 border-r border-zinc-200
+              transform transition-transform duration-300 ease-in-out h-full
+              ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
+              flex flex-col
+            `}>
+              {/* Fixed Sidebar Header */}
+              <div className="flex-shrink-0">
+                <div className="p-4 md:p-6 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
+                      <p className="text-zinc-300 text-sm hidden md:block">
+                        {unreadCountData?.unreadMessageCount > 0 
+                          ? `${unreadCountData.unreadMessageCount} unread messages`
+                          : 'Chat with your connections'
+                        }
+                      </p>
                     </div>
-                    <div className="ml-3 flex-1 min-w-0">
-                      <div className="flex justify-between items-center">
-                        <h3 className="font-semibold text-zinc-800 text-sm md:text-base truncate">
-                          {getUserFullName(user)}
-                        </h3>
-                        {thread?.lastMessage && (
-                          <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
-                            {formatTime(thread.lastMessage.createdAt)}
+                    {isMobile && (
+                      <button 
+                        onClick={handleToggleSidebar}
+                        className="p-2 rounded-lg bg-zinc-600 hover:bg-zinc-700"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Search and Tabs */}
+                <div className="p-3 md:p-4 bg-white border-b border-zinc-200">
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      placeholder="Search conversations..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-transparent bg-white"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-zinc-400" />
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => setActiveTab("threads")}
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                        activeTab === "threads"
+                          ? "bg-zinc-700 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      Conversations
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("allUsers")}
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                        activeTab === "allUsers"
+                          ? "bg-zinc-700 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      All Users
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Scrollable Contacts List */}
+              <div className="flex-1 overflow-y-auto messages-scrollbar">
+                {displayContacts.map((user) => {
+                  const thread = getThreadInfo(user);
+                  return (
+                    <div
+                      key={user.id}
+                      className={`flex items-center p-3 border-b border-zinc-100 cursor-pointer transition-all duration-200 ${
+                        selectedUserId === user.id ? 'bg-zinc-50 border-l-4 border-l-zinc-500' : 'hover:bg-zinc-50'
+                      }`}
+                      onClick={() => handleUserSelect(user)}
+                    >
+                      <div className="relative flex-shrink-0">
+                        <img
+                          src={getUserAvatar(user)}
+                          alt={getUserFullName(user)}
+                          className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
+                        />
+                        {thread && thread.unreadCount > 0 && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                            {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-3 flex-1 min-w-0">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-semibold text-zinc-800 text-sm md:text-base truncate">
+                            {getUserFullName(user)}
+                          </h3>
+                          {thread?.lastMessage && (
+                            <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
+                              {formatTime(thread.lastMessage.createdAt)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs md:text-sm text-zinc-500 truncate">
+                          {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
+                        </p>
+                        {!thread && (
+                          <span className="inline-block mt-1 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
+                            New
                           </span>
                         )}
                       </div>
-                      <p className="text-xs md:text-sm text-zinc-500 truncate">
-                        {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
-                      </p>
-                      {!thread && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
-                          New
-                        </span>
-                      )}
                     </div>
+                  );
+                })}
+                
+                {displayContacts.length === 0 && (
+                  <div className="text-center py-8 text-zinc-400">
+                    <MessageCircle className="w-12 h-12 mx-auto mb-3" />
+                    <p className="text-sm">
+                      {searchTerm ? 'No users found' : 
+                       activeTab === "threads" ? 'No conversations yet' : 'No users available'}
+                    </p>
+                    <p className="text-xs mt-1">
+                      {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
+                    </p>
                   </div>
-                );
-              })}
-              
-              {displayContacts.length === 0 && (
-                <div className="text-center py-8 text-zinc-400">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-3" />
-                  <p className="text-sm">
-                    {searchTerm ? 'No users found' : 
-                     activeTab === "threads" ? 'No conversations yet' : 'No users available'}
-                  </p>
-                  <p className="text-xs mt-1">
-                    {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
-                  </p>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Chat Area - Only show when not in sidebar mode on mobile */}
-          {shouldShowChat && (
-            <div className={`
-              ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-              flex flex-col h-full bg-white
-              transform transition-transform duration-300 ease-in-out
-            `}>
-              {/* Fixed Chat Header */}
-              {selectedUser ? (
-                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
-                  <div className="flex items-center">
-                    {isMobile && (
-                      <button 
-                        onClick={handleBackToContacts}
-                        className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
-                      >
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                    )}
-                    <img
-                      src={getUserAvatar(selectedUser)}
-                      alt={getUserFullName(selectedUser)}
-                      className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
-                    />
-                    <div className="ml-3 flex-1 min-w-0">
-                      <h2 className="font-bold text-zinc-800 text-sm md:text-base truncate">
-                        {getUserFullName(selectedUser)}
-                      </h2>
-                      <p className="text-xs md:text-sm text-zinc-500 truncate">
-                        {selectedUser.email}
-                      </p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors">
-                        <Phone className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={handleToggleSidebar}
-                        className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors md:hidden"
-                      >
-                        <Menu className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
-                  <div className="flex items-center justify-between">
+            {/* Chat Area - Only show when not in sidebar mode on mobile */}
+            {shouldShowChat && (
+              <div className={`
+                ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
+                flex flex-col h-full bg-white
+                transform transition-transform duration-300 ease-in-out
+              `}>
+                {/* Fixed Chat Header */}
+                {selectedUser ? (
+                  <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
                     <div className="flex items-center">
                       {isMobile && (
                         <button 
-                          onClick={handleToggleSidebar}
+                          onClick={handleBackToContacts}
                           className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                      )}
+                      <img
+                        src={getUserAvatar(selectedUser)}
+                        alt={getUserFullName(selectedUser)}
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
+                      />
+                      <div className="ml-3 flex-1 min-w-0">
+                        <h2 className="font-bold text-zinc-800 text-sm md:text-base truncate">
+                          {getUserFullName(selectedUser)}
+                        </h2>
+                        <p className="text-xs md:text-sm text-zinc-500 truncate">
+                          {selectedUser.email}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors">
+                          <Phone className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={handleToggleSidebar}
+                          className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors md:hidden"
                         >
                           <Menu className="w-5 h-5" />
                         </button>
-                      )}
-                      <div>
-                        <h2 className="font-bold text-zinc-800 text-sm md:text-base">Messages</h2>
-                        <p className="text-xs md:text-sm text-zinc-500">Select a conversation</p>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-
-              {/* Messages Container - This is the scrollable part */}
-              <div 
-                ref={messagesContainerRef}
-                className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-zinc-50 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
-              >
-                {selectedUser ? (
-                  <div className="space-y-4">
-                    {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                      <div key={date}>
-                        <div className="flex justify-center my-4">
-                          <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-full text-xs font-medium">
-                            {date}
-                          </span>
-                        </div>
-                        {dateMessages.map((message) => (
-                          <div
-                            key={message.id}
-                            className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                ) : (
+                  <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        {isMobile && (
+                          <button 
+                            onClick={handleToggleSidebar}
+                            className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
                           >
-                            <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
-                              message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                            }`}>
-                              <img
-                                src={message.avatar}
-                                alt={message.sender}
-                                className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 flex-shrink-0"
-                              />
-                              <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
-                                <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
-                                  message.isOwnMessage
-                                    ? 'bg-gradient-to-r from-zinc-600 to-zinc-700 text-white rounded-br-none'
-                                    : 'bg-white text-zinc-800 border border-zinc-200 rounded-bl-none'
-                                }`}>
-                                  <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
-                                </div>
-                                <div className={`flex items-center mt-1 space-x-2 text-xs ${
-                                  message.isOwnMessage ? 'justify-end' : 'justify-start'
-                                }`}>
-                                  <span className={`${message.isOwnMessage ? 'text-zinc-400' : 'text-zinc-400'}`}>
-                                    {formatTime(message.timestamp)}
-                                  </span>
-                                  {message.isOwnMessage && (
-                                    <Check className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
-                                  )}
+                            <Menu className="w-5 h-5" />
+                          </button>
+                        )}
+                        <div>
+                          <h2 className="font-bold text-zinc-800 text-sm md:text-base">Messages</h2>
+                          <p className="text-xs md:text-sm text-zinc-500">Select a conversation</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Messages Container - This is the scrollable part */}
+                <div 
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-zinc-50 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
+                >
+                  {selectedUser ? (
+                    <div className="space-y-4">
+                      {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                        <div key={date}>
+                          <div className="flex justify-center my-4">
+                            <span className="bg-zinc-100 text-zinc-600 px-3 py-1 rounded-full text-xs font-medium">
+                              {date}
+                            </span>
+                          </div>
+                          {dateMessages.map((message) => (
+                            <div
+                              key={message.id}
+                              className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                            >
+                              <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
+                                message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                              }`}>
+                                <img
+                                  src={message.avatar}
+                                  alt={message.sender}
+                                  className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 flex-shrink-0"
+                                />
+                                <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
+                                  <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
+                                    message.isOwnMessage
+                                      ? 'bg-gradient-to-r from-zinc-600 to-zinc-700 text-white rounded-br-none'
+                                      : 'bg-white text-zinc-800 border border-zinc-200 rounded-bl-none'
+                                  }`}>
+                                    <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
+                                  </div>
+                                  <div className={`flex items-center mt-1 space-x-2 text-xs ${
+                                    message.isOwnMessage ? 'justify-end' : 'justify-start'
+                                  }`}>
+                                    <span className={`${message.isOwnMessage ? 'text-zinc-400' : 'text-zinc-400'}`}>
+                                      {formatTime(message.timestamp)}
+                                    </span>
+                                    {message.isOwnMessage && (
+                                      <Check className="w-3 h-3 md:w-4 md:h-4 text-zinc-400" />
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
+                      ))}
+                      <div ref={messagesEndRef} />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center text-zinc-400">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4" />
+                        <p className="text-lg font-medium">Select a conversation</p>
+                        <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
                       </div>
-                    ))}
-                    <div ref={messagesEndRef} />
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-center text-zinc-400">
-                      <MessageSquare className="w-16 h-16 mx-auto mb-4" />
-                      <p className="text-lg font-medium">Select a conversation</p>
-                      <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Message Input */}
+                {selectedUser && (
+                  <div 
+                    className="border-t border-zinc-200 bg-white transition-all duration-300 flex-shrink-0"
+                    style={{
+                      position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
+                      bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
+                      left: isKeyboardVisible && isMobile ? '0' : '0',
+                      right: isKeyboardVisible && isMobile ? '0' : '0',
+                      width: isKeyboardVisible && isMobile ? '100%' : '100%',
+                      zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
+                    }}
+                  >
+                    <div 
+                      className="p-4 mx-auto w-full"
+                      style={{
+                        maxWidth: isKeyboardVisible && isMobile ? '100%' : 'none',
+                        paddingLeft: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                        paddingRight: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                      }}
+                    >
+                      <div className="flex space-x-3">
+                        <div className="flex-1 bg-zinc-50 rounded-2xl border border-zinc-200 focus-within:ring-2 focus-within:ring-zinc-400 focus-within:border-zinc-300">
+                          <textarea
+                            ref={textareaRef}
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            onFocus={handleTextareaFocus}
+                            onBlur={handleTextareaBlur}
+                            placeholder={isSending ? "Sending..." : "Type your message..."}
+                            disabled={isSending}
+                            className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
+                            rows={1}
+                          />
+                        </div>
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={!newMessage.trim() || isSending}
+                          className={`bg-gradient-to-r from-zinc-600 to-zinc-700 text-white p-3 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+                            isSending ? 'opacity-70 cursor-wait' : 'hover:from-zinc-700 hover:to-zinc-800'
+                          }`}
+                        >
+                          {isSending ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          ) : (
+                            <Send className="w-6 h-6" />
+                          )}
+                        </button>
+                      </div>
+                      <div className="flex justify-between items-center mt-2 px-1">
+                        <div className="flex space-x-2">
+                          <button 
+                            className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSending}
+                          >
+                            <Paperclip className="w-5 h-5" />
+                          </button>
+                          <button 
+                            className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isSending}
+                          >
+                            <Image className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <div className="text-xs text-zinc-400 hidden md:block">
+                          Press Enter to send • Shift+Enter for new line
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Message Input */}
-              {selectedUser && (
-                <div 
-                  className="border-t border-zinc-200 bg-white transition-all duration-300 flex-shrink-0"
-                  style={{
-                    position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
-                    bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
-                    left: isKeyboardVisible && isMobile ? '0' : '0',
-                    right: isKeyboardVisible && isMobile ? '0' : '0',
-                    width: isKeyboardVisible && isMobile ? '100%' : '100%',
-                    zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
-                  }}
-                >
-                  <div 
-                    className="p-4 mx-auto w-full"
-                    style={{
-                      maxWidth: isKeyboardVisible && isMobile ? '100%' : 'none',
-                      paddingLeft: isKeyboardVisible && isMobile ? '1rem' : '1rem',
-                      paddingRight: isKeyboardVisible && isMobile ? '1rem' : '1rem',
-                    }}
-                  >
-                    <div className="flex space-x-3">
-                      <div className="flex-1 bg-zinc-50 rounded-2xl border border-zinc-200 focus-within:ring-2 focus-within:ring-zinc-400 focus-within:border-zinc-300">
-                        <textarea
-                          ref={textareaRef}
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          onFocus={handleTextareaFocus}
-                          onBlur={handleTextareaBlur}
-                          placeholder={isSending ? "Sending..." : "Type your message..."}
-                          disabled={isSending}
-                          className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
-                          rows={1}
-                        />
-                      </div>
-                      <button
-                        onClick={handleSendMessage}
-                        disabled={!newMessage.trim() || isSending}
-                        className={`bg-gradient-to-r from-zinc-600 to-zinc-700 text-white p-3 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
-                          isSending ? 'opacity-70 cursor-wait' : 'hover:from-zinc-700 hover:to-zinc-800'
-                        }`}
-                      >
-                        {isSending ? (
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                        ) : (
-                          <Send className="w-6 h-6" />
-                        )}
-                      </button>
-                    </div>
-                    <div className="flex justify-between items-center mt-2 px-1">
-                      <div className="flex space-x-2">
-                        <button 
-                          className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={isSending}
-                        >
-                          <Paperclip className="w-5 h-5" />
-                        </button>
-                        <button 
-                          className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={isSending}
-                        >
-                          <Image className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div className="text-xs text-zinc-400 hidden md:block">
-                        Press Enter to send • Shift+Enter for new line
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -1063,7 +1098,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           }
         }
       `}</style>
-    </div>
     </div>
   );
 };
