@@ -62,69 +62,24 @@ export default function Header({ user }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
   const notificationPopupRef = useRef<HTMLDivElement>(null);
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-  const [slideUpDirection, setSlideUpDirection] = useState<'up' | 'down'>('up');
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
 
-  // Slide up function for notification popup
-  const slideUpNotification = useCallback((direction: 'up' | 'down' = 'up') => {
-    setSlideUpDirection(direction);
-    
-    if (direction === 'up') {
-      setIsBellPopupOpen(true);
-      setIsDropdownOpen(false);
-    } else {
-      setIsBellPopupOpen(false);
-    }
-  }, []);
-
-  // Handle touch swipe for mobile
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStart({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    });
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStart || !isBellPopupOpen) return;
-
-    const touchEnd = e.touches[0];
-    const deltaX = touchEnd.clientX - touchStart.x;
-    const deltaY = touchEnd.clientY - touchStart.y;
-
-    // Swipe down to close (slide down)
-    if (deltaY > 50 && Math.abs(deltaX) < 50) {
-      slideUpNotification('down');
-      setTouchStart(null);
-    }
-    // Swipe up to open (slide up)
-    else if (deltaY < -50 && Math.abs(deltaX) < 50 && !isBellPopupOpen) {
-      slideUpNotification('up');
-      setTouchStart(null);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    setTouchStart(null);
-  };
-
   // Handle escape key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsDropdownOpen(false);
-        slideUpNotification('down');
+        setIsBellPopupOpen(false);
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [slideUpNotification]);
+  }, []);
 
   // Prevent body scroll when mobile popup is open
   useEffect(() => {
@@ -141,12 +96,13 @@ export default function Header({ user }: HeaderProps) {
   // Handle click outside for notification popup
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      // Only close if clicking outside both the bell and the popup
       if (isBellPopupOpen && 
           notificationPopupRef.current && 
           !notificationPopupRef.current.contains(event.target as Node) &&
           bellRef.current && 
           !bellRef.current.contains(event.target as Node)) {
-        slideUpNotification('down');
+        setIsBellPopupOpen(false);
       }
     };
 
@@ -157,7 +113,24 @@ export default function Header({ user }: HeaderProps) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isBellPopupOpen, slideUpNotification]);
+  }, [isBellPopupOpen]);
+
+  // Handle click outside for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
 
   const triggerPushNotification = useCallback((notification: Notification) => {
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
@@ -287,23 +260,6 @@ export default function Header({ user }: HeaderProps) {
     }
   });
 
-  // Handle click outside for dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, []);
-
   useEffect(() => {
     if (isBellPopupOpen && userId) {
       refetchNotifications();
@@ -357,7 +313,8 @@ export default function Header({ user }: HeaderProps) {
       router.push('/Login');
       return;
     }
-    slideUpNotification(isBellPopupOpen ? 'down' : 'up');
+    setIsBellPopupOpen(!isBellPopupOpen);
+    if (isDropdownOpen) setIsDropdownOpen(false);
   };
 
   const markAsRead = async (id: string) => {
@@ -512,19 +469,17 @@ export default function Header({ user }: HeaderProps) {
       default:
         break;
     }
-    slideUpNotification('down');
+    setIsBellPopupOpen(false);
   };
 
   const NotificationPopup = () => (
     <div 
       ref={notificationPopupRef}
       className={`
-        fixed md:absolute
-        transition-all duration-300 ease-out
-        /* Mobile styles - stick to bottom of viewport */
-        bottom-0 left-0 right-0
-        /* Desktop styles */
-        md:bottom-auto md:left-auto md:right-0 md:top-[calc(10vh+0.5rem)] md:mt-2
+        /* Desktop: positioned below bell */
+        absolute top-full right-0 mt-2
+        /* Mobile: full width at bottom */
+        fixed bottom-0 left-0 right-0 md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full
         /* Sizing */
         w-full md:w-96
         max-h-[85vh] md:max-h-[500px]
@@ -533,21 +488,12 @@ export default function Header({ user }: HeaderProps) {
         shadow-xl border-t md:border border-gray-200
         z-[9999]
         flex flex-col
-        /* Ensure popup receives clicks */
-        pointer-events-auto
+        /* Animation */
+        animate-in slide-in-from-top-2 duration-200
       `}
-      style={{
-        transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(100%)',
-        ...(typeof window !== 'undefined' && window.innerWidth >= 768 && {
-          transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(-10px)',
-        })
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
     >
-      {/* Drag handle for mobile */}
-      <div className="md:hidden w-full flex justify-center py-2 cursor-grab active:cursor-grabbing">
+      {/* Mobile drag handle */}
+      <div className="md:hidden w-full flex justify-center py-2">
         <div className="w-12 h-1 bg-gray-300 rounded-full" />
       </div>
 
@@ -576,7 +522,7 @@ export default function Header({ user }: HeaderProps) {
                 </button>
               )}
               <button
-                onClick={() => slideUpNotification('down')}
+                onClick={() => setIsBellPopupOpen(false)}
                 className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -694,7 +640,7 @@ export default function Header({ user }: HeaderProps) {
       <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
         <button
           onClick={() => {
-            slideUpNotification('down');
+            setIsBellPopupOpen(false);
             router.push('/Notifications');
           }}
           className="w-full py-1.5 sm:py-2 text-center text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
@@ -748,6 +694,9 @@ export default function Header({ user }: HeaderProps) {
                     </span>
                   ) : null}
                 </button>
+
+                {/* Notification Popup - Now positioned relative to bell */}
+                {isBellPopupOpen && userId && <NotificationPopup />}
               </div>
 
               {/* User Menu Dropdown */}
@@ -798,19 +747,6 @@ export default function Header({ user }: HeaderProps) {
           </div>
         </div>
       </header>
-
-      {/* Notification Popup rendered via Portal */}
-      {mounted && isBellPopupOpen && userId && createPortal(
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden transition-opacity duration-300"
-            onClick={() => slideUpNotification('down')}
-          />
-          <NotificationPopup />
-        </>,
-        document.body
-      )}
     </>
   );
-                                           }
+      }
