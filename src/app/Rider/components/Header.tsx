@@ -695,7 +695,7 @@ export default function Header({ user }: HeaderProps) {
                 alt="Logo" 
                 height={50} 
                 width={50} 
-                className="h-10 sm:h-12 w-auto rounded-xl object-contain"
+                className="h-20 sm:h-24 w-auto rounded-xl object-contain"
                 priority
               />
             </div>
