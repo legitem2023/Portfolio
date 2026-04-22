@@ -19,38 +19,6 @@ import {
   startOfYear, endOfYear, format, subMonths, subYears 
 } from 'date-fns';
 
-/*
-interface LocationInput {
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-  altitude?: number;
-  speed?: number;
-  heading?: number;
-  timestamp: string;
-}
-
-interface TrackLocationArgs {
-  userId: string;
-  trackingId?: string;
-  location: LocationInput;
-}
-
-interface LocationResponse {
-  success: boolean;
-  message?: string;
-  trackingId?: string;
-  location?: LocationInput;
-}
-
-// In-memory storage
-const locationStore: Array<{
-  userId: string;
-  trackingId: string;
-  location: LocationInput;
-  createdAt: Date;
-}> = [];
-*/
 
 
 
@@ -455,22 +423,6 @@ async function getSalesTrendData(
   }));
 }
 
-// Example usage:
-// const filters = { 
-//   supplierId: 'supplier-123', 
-//   status: 'COMPLETED',
-//   userId: 'user-456',
-//   minAmount: 100,
-//   maxAmount: 1000
-// };
-// const dateRange = { start: new Date('2024-01-01'), end: new Date('2024-12-31') };
-// 
-// const groupedData = await getGroupedSalesData(filters, 'MONTHLY', dateRange);
-// const salesSummary = await getSalesSummary(filters, dateRange);
-// const basicMetrics = await getBasicMetrics(filters, dateRange);
-// const statusBreakdown = await getOrderStatusBreakdown(filters, dateRange);
-// const customerMetrics = await getCustomerMetrics(filters, dateRange);
-// const trendData = await getSalesTrendData(filters, 'MONTHLY', dateRange);
 
 function calculateGrowthRate(current: number, previous: number): number {
   if (previous === 0) return current > 0 ? 100 : 0;
@@ -2031,187 +1983,11 @@ salesTrend: async (
     throw new Error('Failed to fetch sales trend data');
   }
 },
-    /*
-    salesData: async (
-      _: any,
-      { timeframe, groupBy, filters = {} }: 
-      { timeframe: string; groupBy: string; filters?: SalesFilters }
-    ) => {
-      try {
-        const dateRange = getDateRange(timeframe, filters?.dateRange);
-        const whereClause = buildWhereClause(filters, dateRange);
-        
-        const [orders, summary] = await Promise.all([
-          getGroupedSalesData(whereClause, groupBy, dateRange),
-          getSalesSummary(whereClause, dateRange)
-        ]);
-
-        return {
-          data: orders,
-          summary,
-          timeframe: {
-            start: dateRange.start,
-            end: dateRange.end,
-            label: timeframe
-          }
-        };
-      } catch (error) {
-        console.error('Error in salesData query:', error);
-        throw new Error('Failed to fetch sales data');
-      }
-    },
-
-    salesMetrics: async (
-      _: any,
-      { timeframe, filters = {} }: 
-      { timeframe: string; filters?: SalesFilters }
-    ) => {
-      try {
-        const dateRange = getDateRange(timeframe, filters?.dateRange);
-        const whereClause = buildWhereClause(filters, dateRange);
-        const previousDateRange = getPreviousDateRange(timeframe, dateRange);
-        const previousWhereClause = buildWhereClause(filters, previousDateRange);
-
-        const [
-          currentMetrics,
-          previousMetrics,
-          statusBreakdown,
-          customerData
-        ] = await Promise.all([
-          getBasicMetrics(whereClause),
-          getBasicMetrics(previousWhereClause),
-          getOrderStatusBreakdown(whereClause),
-          getCustomerMetrics(whereClause, previousWhereClause)
-        ]);
-
-        return {
-          revenue: {
-            total: currentMetrics.totalRevenue,
-            average: currentMetrics.averageOrderValue,
-            growth: calculateGrowthRate(currentMetrics.totalRevenue, previousMetrics.totalRevenue),
-            target: null // You can implement target logic
-          },
-          orders: {
-            total: currentMetrics.totalOrders,
-            averageValue: currentMetrics.averageOrderValue,
-            growth: calculateGrowthRate(currentMetrics.totalOrders, previousMetrics.totalOrders),
-            statusBreakdown
-          },
-          customers: customerData
-        };
-      } catch (error) {
-        console.error('Error in salesMetrics query:', error);
-        throw new Error('Failed to fetch sales metrics');
-      }
-    },
-
-topProducts: async (
-  _: any,
-  { timeframe, limit = 10, filters = {} }: 
-  { timeframe: string; limit?: number; filters?: SalesFilters }
-) => {
-  try {
-    const dateRange = getDateRange(timeframe);
-    const whereClause = buildWhereClause(filters, dateRange);
-
-    // Get orderItems with product included
-    const orderItems = await prisma.orderItem.findMany({
-      where: {
-        order: {
-          ...whereClause
-        }
-      },
-      include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            sku: true
-          }
-        }
-      }
-    });
-
-    if (orderItems.length === 0) {
-      return [];
-    }
-
-    // Aggregate by product
-    const productMap = new Map();
-
-    orderItems.forEach(item => {
-      const productId = item.productId;
-      const productName = item.product?.name;
-      const productSku = item.product?.sku;
-
-      if (!productMap.has(productId)) {
-        productMap.set(productId, {
-          productId: productId,
-          productName: productName,
-          productSku: productSku,
-          unitsSold: 0,
-          revenue: 0
-        });
-      }
-
-      const productData = productMap.get(productId);
-      productData.unitsSold += item.quantity || 0;
-      productData.revenue += item.price || 0;
-    });
-
-    // Convert to array, sort by revenue, and limit
-    const result = Array.from(productMap.values())
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, limit);
-
-    const totalRevenue = result.reduce((sum, item) => sum + item.revenue, 0);
-
-    // Add percentage
-    return result.map(item => ({
-      ...item,
-      percentage: totalRevenue > 0 ? (item.revenue / totalRevenue) * 100 : 0
-    }));
-  } catch (error) {
-    console.error('Error in topProducts query:', error);
-    throw new Error('Failed to fetch top products');
-  }
-},
-    salesTrend: async (
-      _: any,
-      { timeframe, groupBy, filters = {} }: 
-      { timeframe: string; groupBy: string; filters?: SalesFilters}
-    ) => {
-      try {
-        const dateRange = getDateRange(timeframe);
-        const whereClause = buildWhereClause(filters, dateRange);
-        
-        return await getSalesTrendData(whereClause, groupBy, dateRange);
-      } catch (error) {
-        console.error('Error in salesTrend query:', error);
-        throw new Error('Failed to fetch sales trend data');
-      }
-    },  
+    /*  
     */
 // In your GraphQL resolver file - update the notifications resolver
 notifications: async (_:any, { userId, filters }:any, context:any) => {
   try {
-    // Check if user is authenticated
-   /* if (!context.user) {
-      console.warn('No authenticated user in context');
-      // Return empty instead of throwing error
-      return {
-        edges: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null,
-        },
-        totalCount: 0,
-        unreadCount: 0,
-      };
-    }*/
-
     // Validate userId parameter
     if (!userId || userId.trim() === '') {
       console.warn('Empty userId provided');
@@ -2229,19 +2005,7 @@ notifications: async (_:any, { userId, filters }:any, context:any) => {
     }
 
     // Users can only access their own notifications
-  /*  if (context.user.id !== userId) {
-      return {
-        edges: [],
-        pageInfo: {
-          hasNextPage: false,
-          hasPreviousPage: false,
-          startCursor: null,
-          endCursor: null,
-        },
-        totalCount: 0,
-        unreadCount: 0,
-      };
-    }*/
+
 
     const { isRead, type, limit = 20, cursor } = filters || {};
 
@@ -2505,84 +2269,7 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
       });
     },
 
- /*   messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
-      const skip = (page - 1) * limit;
-    if (!userId) {
-      throw new Error(`User ID is required ${userId}`);
-    }
-      // Get unique users that current user has conversations with
-      const conversations: any = await prisma.message.findMany({
-        where: {
-          OR: [
-            { senderId: userId },
-            { recipientId: userId }
-          ]
-        },
-        select: {
-          id:true,
-          senderId: true,
-          recipientId: true,
-          createdAt: true,
-          isRead: true
-        },
-        orderBy: { createdAt: 'desc' }
-      });
-    
-      // Group by other user and get latest message
-      const threadMap = new Map();
-      
-      for (const msg of conversations) {
-        const otherUserId = msg.senderId === userId ? msg.recipientId : msg.senderId;
-        
-        if (!threadMap.has(otherUserId)) {
-          threadMap.set(otherUserId, {
-            lastMessage: msg,
-            unreadCount: 0
-          });
-        }
-        
-        if (!msg.isRead && msg.recipientId === userId) {
-          threadMap.get(otherUserId).unreadCount++;
-        }
-      }
-  
-      const threads: any = await Promise.all(
-        Array.from(threadMap.entries()).map(async ([otherUserId, data]: any) => {
-          const user = await prisma.user.findMany({
-            where: { id: otherUserId },
-            select: { id: true, firstName: true, lastName: true, avatar: true, email: true }
-          });
 
-          const lastMessage = await prisma.message.findUnique({
-            where: { id: data.lastMessage.id },
-            include: {
-              sender: true,
-              recipient: true
-            }
-          });
-
-          return {
-            user,
-            lastMessage,
-            unreadCount: data.unreadCount,
-            updatedAt: data.lastMessage.createdAt
-          };
-        })
-      );
-   
-      // Sort by last message date
-      threads.sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-
-      const paginatedThreads = threads.slice(skip, skip + limit);
-
-      return {
-        threads: paginatedThreads,
-        totalCount: threads.length,
-        hasNextPage: threads.length > skip + limit,
-        page
-      };
-    },
-*/
     messageThreads: async (_: any, { page = 1, limit = 20, userId }: any): Promise<any> => {
   const skip = (page - 1) * limit;
   if (!userId) {
