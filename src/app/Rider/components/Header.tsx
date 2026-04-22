@@ -62,6 +62,7 @@ export default function Header({ user }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
   const notificationPopupRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -93,24 +94,47 @@ export default function Header({ user }: HeaderProps) {
     };
   }, [isBellPopupOpen]);
 
-  // Handle click outside for notification popup
+  // Handle touch swipe to close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart({
+      x: e.touches[0].clientX,
+      y: e.touches[0].clientY
+    });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart || !isBellPopupOpen) return;
+
+    const touchEnd = e.touches[0];
+    const deltaY = touchEnd.clientY - touchStart.y;
+
+    // Swipe down to close (only if swiping from the top area)
+    if (deltaY > 100 && Math.abs(touchEnd.clientX - touchStart.x) < 50) {
+      setIsBellPopupOpen(false);
+      setTouchStart(null);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStart(null);
+  };
+
+  // Handle click outside for notification popup - ONLY on backdrop, not on content
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      // Only close if clicking outside both the bell and the popup
-      if (isBellPopupOpen && 
-          notificationPopupRef.current && 
-          !notificationPopupRef.current.contains(event.target as Node) &&
-          bellRef.current && 
-          !bellRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement;
+      
+      // Only close if clicking directly on the backdrop (the overlay)
+      if (isBellPopupOpen && target.classList.contains('notification-backdrop')) {
         setIsBellPopupOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     document.addEventListener('touchstart', handleClickOutside);
     
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isBellPopupOpen]);
@@ -473,182 +497,187 @@ export default function Header({ user }: HeaderProps) {
   };
 
   const NotificationPopup = () => (
-    <div 
-      ref={notificationPopupRef}
-      className={`
-        /* Desktop: positioned below bell */
-        absolute top-full right-0 mt-2
-        /* Mobile: full width at bottom */
-        fixed bottom-0 left-0 right-0 md:absolute md:bottom-auto md:left-auto md:right-0 md:top-full
-        /* Sizing */
-        w-full md:w-96
-        max-h-[85vh] md:max-h-[500px]
-        /* Visual styles */
-        bg-white rounded-t-2xl md:rounded-lg
-        shadow-xl border-t md:border border-gray-200
-        z-[9999]
-        flex flex-col
-        /* Animation */
-        animate-in slide-in-from-top-2 duration-200
-      `}
-    >
-      {/* Mobile drag handle */}
-      <div className="md:hidden w-full flex justify-center py-2">
-        <div className="w-12 h-1 bg-gray-300 rounded-full" />
-      </div>
-
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl md:rounded-t-lg flex-shrink-0">
-        <div className="flex items-center space-x-2">
-          <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-          <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
-          {unreadCount > 0 && !notificationsLoading && (
-            <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
-              {unreadCount} new
-            </span>
-          )}
+    <>
+      {/* Backdrop overlay - only closes when clicking this specific element */}
+      <div 
+        className="notification-backdrop fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden"
+        onClick={() => setIsBellPopupOpen(false)}
+      />
+      
+      <div 
+        ref={notificationPopupRef}
+        className={`
+          fixed bottom-0 left-0 right-0
+          transition-transform duration-300 ease-out
+          bg-white rounded-t-2xl shadow-xl
+          z-[9999] flex flex-col
+          ${isBellPopupOpen ? 'transform translate-y-0' : 'transform translate-y-full'}
+        `}
+        style={{
+          maxHeight: '85vh',
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
+        {/* Drag handle for mobile */}
+        <div className="w-full flex justify-center py-2">
+          <div className="w-12 h-1 bg-gray-300 rounded-full" />
         </div>
-        <div className="flex items-center space-x-2">
-          {notificationsLoading ? (
-            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-gray-600"></div>
-          ) : (
-            <>
-              {unreadCount > 0 && (
+
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl flex-shrink-0">
+          <div className="flex items-center space-x-2">
+            <Bell className="w-5 h-5 text-gray-600" />
+            <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+            {unreadCount > 0 && !notificationsLoading && (
+              <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                {unreadCount} new
+              </span>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            {notificationsLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+            ) : (
+              <>
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    className="px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                  >
+                    Mark all read
+                  </button>
+                )}
                 <button
-                  onClick={markAllAsRead}
-                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                  onClick={() => setIsBellPopupOpen(false)}
+                  className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
                 >
-                  Mark all read
+                  <X className="w-5 h-5 text-gray-500" />
                 </button>
-              )}
-              <button
-                onClick={() => setIsBellPopupOpen(false)}
-                className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-              </button>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Notifications List */}
-      <div className="flex-1 overflow-y-auto overscroll-contain">
-        {notificationsLoading ? (
-          <div className="flex flex-col items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-indigo-600 mb-4"></div>
-            <p className="text-sm sm:text-base text-gray-600">Loading notifications...</p>
-          </div>
-        ) : notificationsError ? (
-          <div className="flex flex-col items-center justify-center p-8">
-            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mb-4" />
-            <p className="text-sm sm:text-base text-gray-600">Failed to load notifications</p>
-            <button
-              onClick={() => refetchNotifications()}
-              className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-            >
-              Retry
-            </button>
-          </div>
-        ) : notifications.length > 0 ? (
-          <div className="divide-y divide-gray-100">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`
-                  p-3 sm:p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
-                  ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
-                  ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
-                `}
-                onClick={() => {
-                  if (deletingNotificationId !== notification.id) {
-                    handleNotificationClick(notification);
-                  }
-                }}
+        {/* Notifications List */}
+        <div className="flex-1 overflow-y-auto">
+          {notificationsLoading ? (
+            <div className="flex flex-col items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
+              <p className="text-gray-600">Loading notifications...</p>
+            </div>
+          ) : notificationsError ? (
+            <div className="flex flex-col items-center justify-center p-8">
+              <AlertCircle className="w-12 h-12 text-red-400 mb-4" />
+              <p className="text-gray-600">Failed to load notifications</p>
+              <button
+                onClick={() => refetchNotifications()}
+                className="mt-2 px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
               >
-                <div className="flex items-start space-x-2 sm:space-x-3">
-                  <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                    getNotificationColor(notification.type)
-                  }`}>
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                      <p className={`text-xs sm:text-sm font-medium ${
-                        !notification.isRead ? 'text-gray-900' : 'text-gray-700'
-                      }`}>
-                        {notification.title}
-                      </p>
-                      <div className="flex items-center justify-between sm:justify-end space-x-2">
-                        <span className="text-[10px] sm:text-xs text-gray-500 flex items-center whitespace-nowrap">
-                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                          {getTimeAgo(notification.createdAt)}
-                        </span>
-                        {!notification.isRead && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification.id);
-                            }}
-                            className="text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                          >
-                            Mark read
-                          </button>
-                        )}
-                      </div>
+                Retry
+              </button>
+            </div>
+          ) : notifications.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`
+                    p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
+                    ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                    ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
+                  `}
+                  onClick={() => {
+                    if (deletingNotificationId !== notification.id) {
+                      handleNotificationClick(notification);
+                    }
+                  }}
+                >
+                  <div className="flex items-start space-x-3">
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      getNotificationColor(notification.type)
+                    }`}>
+                      {getNotificationIcon(notification.type)}
                     </div>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">
-                      {notification.message}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          await deleteNotification(notification.id);
-                        }}
-                        className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
-                        disabled={deletingNotificationId === notification.id}
-                      >
-                        {deletingNotificationId === notification.id ? (
-                          <>
-                            <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
-                            <span>Deleting...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                            <span>Delete</span>
-                          </>
-                        )}
-                      </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={`text-sm font-medium ${
+                          !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                        }`}>
+                          {notification.title}
+                        </p>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500 flex items-center whitespace-nowrap">
+                            <Clock className="w-3 h-3 mr-1" />
+                            {getTimeAgo(notification.createdAt)}
+                          </span>
+                          {!notification.isRead && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsRead(notification.id);
+                              }}
+                              className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+                            >
+                              Mark read
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-600 break-words">
+                        {notification.message}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            await deleteNotification(notification.id);
+                          }}
+                          className="px-3 py-1 text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
+                          disabled={deletingNotificationId === notification.id}
+                        >
+                          {deletingNotificationId === notification.id ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Deleting...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 className="w-3 h-3" />
+                              <span>Delete</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
-            <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
-            <p className="text-xs sm:text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-center">
+              <Bell className="w-12 h-12 text-gray-300 mb-4" />
+              <p className="text-gray-500 font-medium">No notifications</p>
+              <p className="text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
+            </div>
+          )}
+        </div>
 
-      {/* Footer */}
-      <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
-        <button
-          onClick={() => {
-            setIsBellPopupOpen(false);
-            router.push('/Notifications');
-          }}
-          className="w-full py-1.5 sm:py-2 text-center text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
-        >
-          View all notifications
-        </button>
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex-shrink-0">
+          <button
+            onClick={() => {
+              setIsBellPopupOpen(false);
+              router.push('/Notifications');
+            }}
+            className="w-full py-2 text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
+          >
+            View all notifications
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 
   return (
@@ -694,9 +723,6 @@ export default function Header({ user }: HeaderProps) {
                     </span>
                   ) : null}
                 </button>
-
-                {/* Notification Popup - Now positioned relative to bell */}
-                {isBellPopupOpen && userId && <NotificationPopup />}
               </div>
 
               {/* User Menu Dropdown */}
@@ -747,6 +773,9 @@ export default function Header({ user }: HeaderProps) {
           </div>
         </div>
       </header>
+
+      {/* Notification Popup */}
+      {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
-      }
+    }
