@@ -288,6 +288,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const SelectedUser:any = useSelector((state: any) => state.selectedUser.value);
+  
   const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
