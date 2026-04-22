@@ -503,7 +503,8 @@ export default function Header({ user }: HeaderProps) {
                   className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
-              <div>
+              
+                
           
           {/* Right section - Notifications and User Menu only */}
           <div className="flex items-center space-x-2 sm:space-x-3">
