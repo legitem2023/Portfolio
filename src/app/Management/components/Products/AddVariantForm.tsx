@@ -55,6 +55,7 @@ export default function AddVariantForm({
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank'); // SKU option state
 
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -119,6 +120,13 @@ export default function AddVariantForm({
         stock: editingVariant.stock?.toString() || ''
       });
       
+      // Set SKU option based on existing variant
+      if (editingVariant.sku) {
+        setSkuOption('manual');
+      } else {
+        setSkuOption('blank');
+      }
+      
       const detectedParent = sizeData.find(category => 
         category.values.includes(editingVariant.size)
       )?.parent || '';
@@ -166,10 +174,13 @@ export default function AddVariantForm({
     setSuccessMessage('');
     setIsSubmitting(true);
 
+    // Determine SKU value based on option
+    const finalSku = skuOption === 'blank' ? '' : formData.sku;
+
     const input = {
       name: formData.name,
       productId,
-      sku: formData.sku || undefined,
+      sku: finalSku || undefined,
       color: formData.color || undefined,
       size: formData.size || undefined,
       price: formData.price ? parseFloat(formData.price) : undefined,
@@ -253,6 +264,7 @@ export default function AddVariantForm({
     setShowColorPicker(false);
     setCopySuccess('');
     setIsPickingColor(false);
+    setSkuOption('blank');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,19 +335,66 @@ export default function AddVariantForm({
                 />
               </div>
 
+              {/* SKU Section with Radio Options */}
               <div>
-                <label htmlFor="sku" className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   SKU
                 </label>
-                <input
-                  type="text"
-                  id="sku"
-                  name="sku"
-                  value={formData.sku}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
-                  placeholder="e.g., TSHIRT-BLUE-M"
-                />
+                
+                {/* Radio Buttons for SKU Option */}
+                <div className="flex gap-6 mb-3">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="skuOption"
+                      value="blank"
+                      checked={skuOption === 'blank'}
+                      onChange={() => {
+                        setSkuOption('blank');
+                        setFormData({...formData, sku: ''});
+                      }}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Auto-generate SKU (Leave blank for backend)</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="skuOption"
+                      value="manual"
+                      checked={skuOption === 'manual'}
+                      onChange={() => setSkuOption('manual')}
+                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Enter SKU manually</span>
+                  </label>
+                </div>
+                
+                {/* Manual SKU Input */}
+                {skuOption === 'manual' && (
+                  <input
+                    type="text"
+                    id="sku"
+                    name="sku"
+                    value={formData.sku}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
+                    placeholder="Enter custom SKU"
+                  />
+                )}
+                
+                {/* Blank SKU Info */}
+                {skuOption === 'blank' && (
+                  <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
+                    SKU will be left blank for backend to auto-generate
+                  </div>
+                )}
+                
+                <p className="text-xs text-gray-500 mt-1">
+                  {skuOption === 'blank' 
+                    ? 'Leave SKU empty - backend will auto-generate a unique SKU' 
+                    : 'Enter a custom SKU for this variant'}
+                </p>
               </div>
 
               <div>
