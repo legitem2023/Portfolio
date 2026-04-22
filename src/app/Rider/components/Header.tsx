@@ -434,24 +434,24 @@ export default function Header({ user }: HeaderProps) {
   const getNotificationColor = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
-        return 'bg-blue-100 text-blue-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
-        return 'bg-green-100 text-green-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.PROMOTIONAL:
-        return 'bg-purple-100 text-purple-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
-        return 'bg-yellow-100 text-yellow-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.SYSTEM_ALERT:
-        return 'bg-red-100 text-red-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.PAYMENT_RECEIVED:
-        return 'bg-emerald-100 text-emerald-600';
+        return 'bg-lime-100 text-lime-600';
       case NotificationType.PAYMENT_FAILED:
-        return 'bg-orange-100 text-orange-600';
+        return 'bg-lime-100 text-lime-600';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-lime-100 text-lime-600';
     }
   }, []);
 
@@ -526,34 +526,34 @@ export default function Header({ user }: HeaderProps) {
         </div>
 
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-lime-200 bg-gradient-to-r from-lime-50 to-lime-100 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2">
-            <Bell className="w-5 h-5 text-gray-600" />
-            <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+            <Bell className="w-5 h-5 text-lime-600" />
+            <h3 className="text-lg font-semibold text-lime-800">Notifications</h3>
             {unreadCount > 0 && !notificationsLoading && (
-              <span className="px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full">
+              <span className="px-2 py-1 text-xs font-bold text-white bg-lime-500 rounded-full">
                 {unreadCount} new
               </span>
             )}
           </div>
           <div className="flex items-center space-x-2">
             {notificationsLoading ? (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-lime-600"></div>
             ) : (
               <>
                 {unreadCount > 0 && (
                   <button
                     onClick={markAllAsRead}
-                    className="px-3 py-1 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                    className="px-3 py-1 text-sm text-lime-600 hover:bg-lime-50 rounded-lg transition-colors duration-200"
                   >
                     Mark all read
                   </button>
                 )}
                 <button
                   onClick={() => setIsBellPopupOpen(false)}
-                  className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
+                  className="p-1 hover:bg-lime-200 rounded-full transition-colors duration-200"
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className="w-5 h-5 text-lime-600" />
                 </button>
               </>
             )}
@@ -564,7 +564,7 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex-1 overflow-y-auto">
           {notificationsLoading ? (
             <div className="flex flex-col items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-4"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-600 mb-4"></div>
               <p className="text-gray-600">Loading notifications...</p>
             </div>
           ) : notificationsError ? (
@@ -573,19 +573,19 @@ export default function Header({ user }: HeaderProps) {
               <p className="text-gray-600">Failed to load notifications</p>
               <button
                 onClick={() => refetchNotifications()}
-                className="mt-2 px-4 py-2 text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+                className="mt-2 px-4 py-2 text-sm text-lime-600 hover:text-lime-800 transition-colors duration-200"
               >
                 Retry
               </button>
             </div>
           ) : notifications.length > 0 ? (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-lime-100">
               {notifications.map((notification) => (
                 <div
                   key={notification.id}
                   className={`
-                    p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
-                    ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                    p-4 hover:bg-lime-50 active:bg-lime-100 transition-all duration-200 cursor-pointer
+                    ${!notification.isRead ? 'bg-lime-50 bg-opacity-50' : ''}
                     ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
                   `}
                   onClick={() => {
@@ -603,7 +603,7 @@ export default function Header({ user }: HeaderProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <p className={`text-sm font-medium ${
-                          !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                          !notification.isRead ? 'text-lime-900' : 'text-gray-700'
                         }`}>
                           {notification.title}
                         </p>
@@ -618,7 +618,7 @@ export default function Header({ user }: HeaderProps) {
                                 e.stopPropagation();
                                 markAsRead(notification.id);
                               }}
-                              className="text-xs text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+                              className="text-xs text-lime-600 hover:text-lime-800 transition-colors duration-200"
                             >
                               Mark read
                             </button>
@@ -657,7 +657,7 @@ export default function Header({ user }: HeaderProps) {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-center">
-              <Bell className="w-12 h-12 text-gray-300 mb-4" />
+              <Bell className="w-12 h-12 text-lime-300 mb-4" />
               <p className="text-gray-500 font-medium">No notifications</p>
               <p className="text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
             </div>
@@ -665,13 +665,13 @@ export default function Header({ user }: HeaderProps) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex-shrink-0">
+        <div className="p-4 border-t border-lime-200 bg-lime-50 rounded-b-2xl flex-shrink-0">
           <button
             onClick={() => {
               setIsBellPopupOpen(false);
               router.push('/Notifications');
             }}
-            className="w-full py-2 text-center text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
+            className="w-full py-2 text-center text-sm text-lime-600 hover:text-lime-800 font-medium transition-colors duration-200"
           >
             View all notifications
           </button>
@@ -682,9 +682,9 @@ export default function Header({ user }: HeaderProps) {
 
   return (
     <>
-      <header className="relative bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
+      <header className="relative bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-200">
         {/* Top Accent Line */}
-        <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
+        <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-600"></div>
          
         <div className="w-full px-4 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
@@ -695,7 +695,7 @@ export default function Header({ user }: HeaderProps) {
                 alt="Logo" 
                 height={50} 
                 width={50} 
-                className="h-20 sm:h-24 w-auto rounded-xl object-contain"
+                className="h-12 sm:h-14 w-auto rounded-xl object-contain"
                 priority
               />
             </div>
@@ -706,7 +706,7 @@ export default function Header({ user }: HeaderProps) {
               <div className="relative" ref={bellRef}>
                 <button
                   onClick={toggleBellPopup}
-                  className="p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative"
+                  className="p-2 rounded-full text-lime-600 hover:text-white hover:bg-lime-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-lime-500 transition-colors relative"
                   disabled={!userId && notificationsLoading}
                   title={!userId ? "Sign in to view notifications" : ""}
                 >
@@ -714,10 +714,10 @@ export default function Header({ user }: HeaderProps) {
                   <Bell className="h-5 w-5" />
                   {notificationsLoading && userId ? (
                     <span className="absolute top-0 right-0 flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-lime-600"></div>
                     </span>
                   ) : unreadCount > 0 && userId && !notificationsLoading ? (
-                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full px-1">
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-[10px] sm:text-xs font-bold text-white bg-lime-500 rounded-full px-1">
                       {unreadCount > 99 ? '99+' : unreadCount}
                     </span>
                   ) : null}
@@ -729,7 +729,7 @@ export default function Header({ user }: HeaderProps) {
                 <button
                   onClick={toggleDropdown}
                   disabled={isLoggingOut}
-                  className="flex items-center gap-1 sm:gap-2 bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-1 pr-2 py-1"
+                  className="flex items-center gap-1 sm:gap-2 bg-lime-600 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-lime-500 disabled:opacity-50 transition-all hover:bg-lime-700 pl-1 pr-2 py-1"
                   id="user-menu-button"
                   aria-expanded={isDropdownOpen}
                   aria-haspopup="true"
@@ -745,7 +745,7 @@ export default function Header({ user }: HeaderProps) {
                       {user?.name || user?.email || 'User'}
                     </p>
                   </div>
-                  <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-white transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
@@ -753,9 +753,9 @@ export default function Header({ user }: HeaderProps) {
                   <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                     <button
                       onClick={handleProfile}
-                      className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
+                      className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-lime-50 flex items-center gap-2 sm:gap-3 transition-colors"
                     >
-                      <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                      <Building className="h-3 w-3 sm:h-4 sm:w-4 text-lime-600 flex-shrink-0" />
                       <span className="font-medium">Profile</span>
                     </button>
 
