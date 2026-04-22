@@ -231,7 +231,11 @@ const Header: React.FC = () => {
     onError: (error) => console.error('Mark all as read error:', error)
   });
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
-    onError: (error) => console.error('Delete notification error:', error)
+    onError: (error) => console.error('Delete notification error:', error),
+    onCompleted: () => {
+      // Clear the deleting state after successful deletion
+      setDeletingNotificationId(null);
+    }
   });
 
   useEffect(() => {
@@ -442,20 +446,45 @@ useEffect(() => {
   }, [markAllAsReadMutation, userId]);
 
   const deleteNotification = useCallback(async (id: string) => {
+    // Set loading state immediately
     setDeletingNotificationId(id);
+    
     try {
       await deleteNotificationMutation({
         variables: { id },
-        optimisticResponse: {
-          deleteNotification: true
-        },
+        update: (cache) => {
+          // Manually update the cache to remove the notification immediately
+          const cachedData: any = cache.readQuery({
+            query: GET_NOTIFICATIONS,
+            variables: { userId, limit: 5 }
+          });
+          
+          if (cachedData && cachedData.notifications) {
+            const updatedEdges = cachedData.notifications.edges.filter(
+              (edge: any) => edge.node.id !== id
+            );
+            
+            cache.writeQuery({
+              query: GET_NOTIFICATIONS,
+              variables: { userId, limit: 5 },
+              data: {
+                notifications: {
+                  ...cachedData.notifications,
+                  edges: updatedEdges,
+                  unreadCount: cachedData.notifications.unreadCount
+                }
+              }
+            });
+          }
+        }
       });
+      // Note: The deleting state will be cleared in onCompleted callback of the mutation
     } catch (error) {
       console.error('Error deleting notification:', error);
-    } finally {
+      // Only clear loading state on error
       setDeletingNotificationId(null);
     }
-  }, [deleteNotificationMutation]);
+  }, [deleteNotificationMutation, userId]);
 
   const getNotificationIcon = useCallback((type: NotificationType) => {
     switch (type) {
@@ -702,11 +731,16 @@ useEffect(() => {
                                   ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
                                   transform transition-transform duration-300 ease-out
                                   ${isBellPopupOpen ? 'translate-x-0 opacity-100' : 'translate-x-10 opacity-0'}
+                                  ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
                                 `}
                                 style={{
                                   transitionDelay: `${index * 50}ms`
                                 }}
-                                onClick={() => handleNotificationClick(notification)}
+                                onClick={() => {
+                                  if (deletingNotificationId !== notification.id) {
+                                    handleNotificationClick(notification);
+                                  }
+                                }}
                               >
                                 <div className="flex items-start space-x-3">
                                   <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
