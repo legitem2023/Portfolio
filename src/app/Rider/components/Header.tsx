@@ -264,7 +264,7 @@ export default function Header({ user }: HeaderProps) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
       }
-      if (bellRef.current && !bellRef.current.contains(event.target as Node)) {
+      if (bellRef.current && !bellRef.current.contains(event.target as Node) && isBellPopupOpen) {
         slideUpNotification('down');
       }
     };
@@ -276,7 +276,7 @@ export default function Header({ user }: HeaderProps) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [slideUpNotification]);
+  }, [slideUpNotification, isBellPopupOpen]);
 
   useEffect(() => {
     if (isBellPopupOpen && userId) {
@@ -492,31 +492,22 @@ export default function Header({ user }: HeaderProps) {
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
       {/* Top Accent Line */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
        
       <div className="max-w-7xl mx-auto px-6 py-3 relative">
         <div className="flex items-center justify-between">
           {/* Left section - Logo only */}
-              <div className="relative">
-                <div className="absolute inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-                
-    
-                
-                
-                
-                
-                  
-                
-                <Image 
-                  src="/VendorCity_Rider.webp" 
-                  alt="Logo" 
-                  height={100} 
-                  width={100} 
-                  className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
-                />
-              </div>
-              
-                
+          <div className="relative">
+            <div className="absolute inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+            
+            <Image 
+              src="/VendorCity_Rider.webp" 
+              alt="Logo" 
+              height={100} 
+              width={100} 
+              className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
+            />
+          </div>
           
           {/* Right section - Notifications and User Menu only */}
           <div className="flex items-center space-x-2 sm:space-x-3">
@@ -541,7 +532,7 @@ export default function Header({ user }: HeaderProps) {
                 ) : null}
               </button>
 
-              {/* Mobile Overlay */}
+              {/* Notification Popup - FIXED POSITION */}
               {isBellPopupOpen && userId && (
                 <>
                   {/* Backdrop for mobile */}
@@ -550,29 +541,34 @@ export default function Header({ user }: HeaderProps) {
                     onClick={() => slideUpNotification('down')}
                   />
                   
-                  {/* Bell Popup with Slide Animation */}
+                  {/* Bell Popup with correct positioning */}
                   <div 
                     className={`
                       fixed md:absolute
-                      transition-transform duration-300 ease-out
+                      transition-all duration-300 ease-out
                       ${isBellPopupOpen 
-                        ? slideUpDirection === 'up' 
-                          ? 'translate-y-0' 
-                          : 'translate-y-0'
-                        : 'translate-y-full'
+                        ? 'opacity-100 visible' 
+                        : 'opacity-0 invisible'
                       }
-                      ${isBellPopupOpen ? 'opacity-100' : 'opacity-0'}
-                      bottom-0 md:bottom-auto
-                      left-0 md:left-auto
-                      right-0
-                      md:right-0 md:mt-2
+                      /* Mobile styles */
+                      bottom-0 left-0 right-0
+                      /* Desktop styles */
+                      md:bottom-auto md:left-auto md:right-0 md:top-full md:mt-2
+                      /* Sizing */
                       w-full md:w-96
                       max-h-[85vh] md:max-h-[500px]
+                      /* Visual styles */
                       bg-white rounded-t-2xl md:rounded-lg
                       shadow-xl border-t md:border border-gray-200
                       z-50
                       flex flex-col
                     `}
+                    style={{
+                      transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(100%)',
+                      ...(typeof window !== 'undefined' && window.innerWidth >= 768 && {
+                        transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(-10px)',
+                      })
+                    }}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
@@ -787,4 +783,4 @@ export default function Header({ user }: HeaderProps) {
       </div>
     </header>
   );
-}
+    }
