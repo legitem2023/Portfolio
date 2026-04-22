@@ -499,7 +499,7 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex items-center justify-between">
           {/* Left section - Logo only */}
           <div className="relative">
-            <div className="absolute inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+            <div className="relative inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
             
             <Image 
               src="/VendorCity_Rider.webp" 
