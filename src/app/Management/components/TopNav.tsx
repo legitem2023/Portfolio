@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { signOut } from 'next-auth/react';
-import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle } from 'lucide-react';
+import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_NOTIFICATIONS } from '../../components/graphql/query';
 import { 
@@ -54,6 +54,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const [isBellPopupOpen, setIsBellPopupOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
+  const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
@@ -180,7 +181,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     onError: (error) => console.error('Mark all as read error:', error)
   });
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
-    onError: (error) => console.error('Delete notification error:', error)
+    onError: (error) => console.error('Delete notification error:', error),
+    onCompleted: () => {
+      // Clear the deleting state after successful deletion
+      setDeletingNotificationId(null);
+    }
   });
 
   // Handle click outside
@@ -343,15 +348,43 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   };
 
   const deleteNotification = async (id: string) => {
+    // Set loading state immediately
+    setDeletingNotificationId(id);
+    
     try {
       await deleteNotificationMutation({
         variables: { id },
-        optimisticResponse: {
-          deleteNotification: true
-        },
+        update: (cache) => {
+          // Manually update the cache to remove the notification immediately
+          const cachedData: any = cache.readQuery({
+            query: GET_NOTIFICATIONS,
+            variables: { userId, filters: { limit: 10 } }
+          });
+          
+          if (cachedData && cachedData.notifications) {
+            const updatedEdges = cachedData.notifications.edges.filter(
+              (edge: any) => edge.node.id !== id
+            );
+            
+            cache.writeQuery({
+              query: GET_NOTIFICATIONS,
+              variables: { userId, filters: { limit: 10 } },
+              data: {
+                notifications: {
+                  ...cachedData.notifications,
+                  edges: updatedEdges,
+                  unreadCount: cachedData.notifications.unreadCount
+                }
+              }
+            });
+          }
+        }
       });
+      // Note: The deleting state will be cleared in onCompleted callback of the mutation
     } catch (error) {
       console.error('Error deleting notification:', error);
+      // Only clear loading state on error
+      setDeletingNotificationId(null);
     }
   };
 
@@ -599,8 +632,13 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                               className={`
                                 p-3 sm:p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
                                 ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                                ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
                               `}
-                              onClick={() => handleNotificationClick(notification)}
+                              onClick={() => {
+                                if (deletingNotificationId !== notification.id) {
+                                  handleNotificationClick(notification);
+                                }
+                              }}
                             >
                               <div className="flex items-start space-x-2 sm:space-x-3">
                                 <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
@@ -664,13 +702,24 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                                       </button>
                                     )}
                                     <button
-                                      onClick={(e) => {
+                                      onClick={async (e) => {
                                         e.stopPropagation();
-                                        deleteNotification(notification.id);
+                                        await deleteNotification(notification.id);
                                       }}
-                                      className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-500 hover:text-red-600 transition-colors duration-200"
+                                      className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
+                                      disabled={deletingNotificationId === notification.id}
                                     >
-                                      Delete
+                                      {deletingNotificationId === notification.id ? (
+                                        <>
+                                          <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                                          <span>Deleting...</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                          <span>Delete</span>
+                                        </>
+                                      )}
                                     </button>
                                   </div>
                                 </div>
@@ -682,7 +731,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                         <div className="flex flex-col items-center justify-center p-8 text-center">
                           <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
                           <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
-                          <p className="text-xs sm:text-sm text-gray-400 mt-1">Youre all caught up!</p>
+                          <p className="text-xs sm:text-sm text-gray-400 mt-1">You're all caught up!</p>
                         </div>
                       )}
                     </div>
