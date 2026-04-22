@@ -16,6 +16,7 @@ import {
 } from '../../components/graphql/mutation';
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
+import { createPortal } from 'react-dom';
 
 interface Notification {
   id: string;
@@ -57,10 +58,17 @@ export default function Header({ user }: HeaderProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
   const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
+  const notificationPopupRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
   const [slideUpDirection, setSlideUpDirection] = useState<'up' | 'down'>('up');
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Slide up function for notification popup
   const slideUpNotification = useCallback((direction: 'up' | 'down' = 'up') => {
@@ -129,6 +137,27 @@ export default function Header({ user }: HeaderProps) {
       document.body.style.overflow = '';
     };
   }, [isBellPopupOpen]);
+
+  // Handle click outside for notification popup
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (isBellPopupOpen && 
+          notificationPopupRef.current && 
+          !notificationPopupRef.current.contains(event.target as Node) &&
+          bellRef.current && 
+          !bellRef.current.contains(event.target as Node)) {
+        slideUpNotification('down');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isBellPopupOpen, slideUpNotification]);
 
   const triggerPushNotification = useCallback((notification: Notification) => {
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
@@ -258,14 +287,11 @@ export default function Header({ user }: HeaderProps) {
     }
   });
 
-  // Handle click outside
+  // Handle click outside for dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsDropdownOpen(false);
-      }
-      if (bellRef.current && !bellRef.current.contains(event.target as Node) && isBellPopupOpen) {
-        slideUpNotification('down');
       }
     };
 
@@ -276,7 +302,7 @@ export default function Header({ user }: HeaderProps) {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [slideUpNotification, isBellPopupOpen]);
+  }, []);
 
   useEffect(() => {
     if (isBellPopupOpen && userId) {
@@ -489,299 +515,302 @@ export default function Header({ user }: HeaderProps) {
     slideUpNotification('down');
   };
 
-  return (
-    <>
-    <header className="relative h-[10vh] bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
-      {/* Top Accent Line */}
-      <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
-       
-      <div className="max-w-7xl mx-auto px-6 py-3 relative">
-        <div className="flex items-center justify-between">
-          {/* Left section - Logo only */}
-          <div className="relative">
-            <div className="relative inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-            
-            <Image 
-              src="/VendorCity_Rider.webp" 
-              alt="Logo" 
-              height={100} 
-              width={100} 
-              className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
-            />
-          </div>
-          
-          {/* Right section - Notifications and User Menu only */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Notification Bell */}
-            <div className="relative" ref={bellRef}>
-              <button
-                onClick={toggleBellPopup}
-                className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative"
-                disabled={!userId && notificationsLoading}
-                title={!userId ? "Sign in to view notifications" : ""}
-              >
-                <span className="sr-only">View notifications</span>
-                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-                {notificationsLoading && userId ? (
-                  <span className="absolute top-0 right-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
-                  </span>
-                ) : unreadCount > 0 && userId && !notificationsLoading ? (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full px-1">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                  </span>
-                ) : null}
-              </button>
+  const NotificationPopup = () => (
+    <div 
+      ref={notificationPopupRef}
+      className={`
+        fixed md:absolute
+        transition-all duration-300 ease-out
+        /* Mobile styles - stick to bottom of viewport */
+        bottom-0 left-0 right-0
+        /* Desktop styles */
+        md:bottom-auto md:left-auto md:right-0 md:top-[calc(10vh+0.5rem)] md:mt-2
+        /* Sizing */
+        w-full md:w-96
+        max-h-[85vh] md:max-h-[500px]
+        /* Visual styles */
+        bg-white rounded-t-2xl md:rounded-lg
+        shadow-xl border-t md:border border-gray-200
+        z-[9999]
+        flex flex-col
+        /* Ensure popup receives clicks */
+        pointer-events-auto
+      `}
+      style={{
+        transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(100%)',
+        ...(typeof window !== 'undefined' && window.innerWidth >= 768 && {
+          transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(-10px)',
+        })
+      }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Drag handle for mobile */}
+      <div className="md:hidden w-full flex justify-center py-2 cursor-grab active:cursor-grabbing">
+        <div className="w-12 h-1 bg-gray-300 rounded-full" />
+      </div>
 
-            </div>
-
-            {/* User Menu Dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={toggleDropdown}
-                disabled={isLoggingOut}
-                className="flex items-center gap-1 sm:gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
-                id="user-menu-button"
-                aria-expanded={isDropdownOpen}
-                aria-haspopup="true"
-              >
-                <span className="sr-only">Open user menu</span>
-                <img 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
-                  src={user?.image || '/NoImage_2.webp'} 
-                  alt={user?.name}
-                />
-                <div className="hidden sm:block text-left">
-                  <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
-                </div>
-                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Dropdown Menu */}
-              {isDropdownOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <button
-                    onClick={handleProfile}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
-                  >
-                    <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
-                    <span className="font-medium">Profile</span>
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
-                  >
-                    <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
-                    <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
-                  </button>
-                </div>
+      {/* Header */}
+      <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl md:rounded-t-lg flex-shrink-0">
+        <div className="flex items-center space-x-2">
+          <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
+          {unreadCount > 0 && !notificationsLoading && (
+            <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
+              {unreadCount} new
+            </span>
+          )}
+        </div>
+        <div className="flex items-center space-x-2">
+          {notificationsLoading ? (
+            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-gray-600"></div>
+          ) : (
+            <>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
+                >
+                  Mark all read
+                </button>
               )}
-            </div>
-          </div>
+              <button
+                onClick={() => slideUpNotification('down')}
+                className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              </button>
+            </>
+          )}
         </div>
       </div>
-    </header>
-    
-    {/* Notification Popup - FIXED POSITION AT BOTTOM */}
-    {isBellPopupOpen && userId && (
-      <>
-        {/* Backdrop for mobile - click to close */}
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
-          onClick={() => slideUpNotification('down')}
-        />
-        
-        {/* Bell Popup - Now properly positioned at the very bottom */}
-        <div 
-          className={`
-            fixed md:absolute
-            transition-all duration-300 ease-out
-            /* Mobile styles - stick to bottom of viewport */
-            bottom-0 left-0 right-0
-            /* Desktop styles */
-            md:bottom-auto md:left-auto md:right-0 md:top-full md:mt-2
-            /* Sizing */
-            w-full md:w-96
-            max-h-[85vh] md:max-h-[500px]
-            /* Visual styles */
-            bg-white rounded-t-2xl md:rounded-lg
-            shadow-xl border-t md:border border-gray-200
-            z-50
-            flex flex-col
-            /* Ensure popup receives clicks */
-            pointer-events-auto
-          `}
-          style={{
-            transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(100%)',
-            ...(typeof window !== 'undefined' && window.innerWidth >= 768 && {
-              transform: isBellPopupOpen ? 'translateY(0)' : 'translateY(-10px)',
-            })
-          }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Drag handle for mobile */}
-          <div className="md:hidden w-full flex justify-center py-2 cursor-grab active:cursor-grabbing">
-            <div className="w-12 h-1 bg-gray-300 rounded-full" />
-          </div>
 
-          {/* Header */}
-          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-2xl md:rounded-t-lg flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-800">Notifications</h3>
-              {unreadCount > 0 && !notificationsLoading && (
-                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
-                  {unreadCount} new
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              {notificationsLoading ? (
-                <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-gray-600"></div>
-              ) : (
-                <>
-                  {unreadCount > 0 && (
-                    <button
-                      onClick={markAllAsRead}
-                      className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200"
-                    >
-                      Mark all read
-                    </button>
-                  )}
-                  <button
-                    onClick={() => slideUpNotification('down')}
-                    className="p-1 hover:bg-gray-200 rounded-full transition-colors duration-200"
-                  >
-                    <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                  </button>
-                </>
-              )}
-            </div>
+      {/* Notifications List */}
+      <div className="flex-1 overflow-y-auto overscroll-contain">
+        {notificationsLoading ? (
+          <div className="flex flex-col items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-indigo-600 mb-4"></div>
+            <p className="text-sm sm:text-base text-gray-600">Loading notifications...</p>
           </div>
-
-          {/* Notifications List */}
-          <div className="flex-1 overflow-y-auto overscroll-contain">
-            {notificationsLoading ? (
-              <div className="flex flex-col items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-indigo-600 mb-4"></div>
-                <p className="text-sm sm:text-base text-gray-600">Loading notifications...</p>
-              </div>
-            ) : notificationsError ? (
-              <div className="flex flex-col items-center justify-center p-8">
-                <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mb-4" />
-                <p className="text-sm sm:text-base text-gray-600">Failed to load notifications</p>
-                <button
-                  onClick={() => refetchNotifications()}
-                  className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : notifications.length > 0 ? (
-              <div className="divide-y divide-gray-100">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className={`
-                      p-3 sm:p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
-                      ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
-                      ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
-                    `}
-                    onClick={() => {
-                      if (deletingNotificationId !== notification.id) {
-                        handleNotificationClick(notification);
-                      }
-                    }}
-                  >
-                    <div className="flex items-start space-x-2 sm:space-x-3">
-                      <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                        getNotificationColor(notification.type)
-                      }`}>
-                        {getNotificationIcon(notification.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                          <p className={`text-xs sm:text-sm font-medium ${
-                            !notification.isRead ? 'text-gray-900' : 'text-gray-700'
-                          }`}>
-                            {notification.title}
-                          </p>
-                          <div className="flex items-center justify-between sm:justify-end space-x-2">
-                            <span className="text-[10px] sm:text-xs text-gray-500 flex items-center whitespace-nowrap">
-                              <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                              {getTimeAgo(notification.createdAt)}
-                            </span>
-                            {!notification.isRead && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  markAsRead(notification.id);
-                                }}
-                                className="text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                              >
-                                Mark read
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                        <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">
-                          {notification.message}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          <button
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              await deleteNotification(notification.id);
-                            }}
-                            className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
-                            disabled={deletingNotificationId === notification.id}
-                          >
-                            {deletingNotificationId === notification.id ? (
-                              <>
-                                <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
-                                <span>Deleting...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                                <span>Delete</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center p-8 text-center">
-                <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
-                <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
-                <p className="text-xs sm:text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
-              </div>
-            )}
-          </div>
-
-          {/* Footer */}
-          <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
+        ) : notificationsError ? (
+          <div className="flex flex-col items-center justify-center p-8">
+            <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mb-4" />
+            <p className="text-sm sm:text-base text-gray-600">Failed to load notifications</p>
             <button
-              onClick={() => {
-                slideUpNotification('down');
-                router.push('/Notifications');
-              }}
-              className="w-full py-1.5 sm:py-2 text-center text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
+              onClick={() => refetchNotifications()}
+              className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
             >
-              View all notifications
+              Retry
             </button>
           </div>
+        ) : notifications.length > 0 ? (
+          <div className="divide-y divide-gray-100">
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`
+                  p-3 sm:p-4 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
+                  ${!notification.isRead ? 'bg-blue-50 bg-opacity-50' : ''}
+                  ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
+                `}
+                onClick={() => {
+                  if (deletingNotificationId !== notification.id) {
+                    handleNotificationClick(notification);
+                  }
+                }}
+              >
+                <div className="flex items-start space-x-2 sm:space-x-3">
+                  <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
+                    getNotificationColor(notification.type)
+                  }`}>
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                      <p className={`text-xs sm:text-sm font-medium ${
+                        !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                      }`}>
+                        {notification.title}
+                      </p>
+                      <div className="flex items-center justify-between sm:justify-end space-x-2">
+                        <span className="text-[10px] sm:text-xs text-gray-500 flex items-center whitespace-nowrap">
+                          <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
+                          {getTimeAgo(notification.createdAt)}
+                        </span>
+                        {!notification.isRead && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notification.id);
+                            }}
+                            className="text-[10px] sm:text-xs text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
+                          >
+                            Mark read
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 break-words">
+                      {notification.message}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          await deleteNotification(notification.id);
+                        }}
+                        className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-gray-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
+                        disabled={deletingNotificationId === notification.id}
+                      >
+                        {deletingNotificationId === notification.id ? (
+                          <>
+                            <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                            <span>Deleting...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <span>Delete</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mb-4" />
+            <p className="text-sm sm:text-base text-gray-500 font-medium">No notifications</p>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1">You&apos;re all caught up!</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
+        <button
+          onClick={() => {
+            slideUpNotification('down');
+            router.push('/Notifications');
+          }}
+          className="w-full py-1.5 sm:py-2 text-center text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors duration-200"
+        >
+          View all notifications
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      <header className="relative h-[10vh] bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-100">
+        {/* Top Accent Line */}
+        <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-400"></div>
+         
+        <div className="max-w-7xl mx-auto px-6 py-3 relative">
+          <div className="flex items-center justify-between">
+            {/* Left section - Logo only */}
+            <div className="relative">
+              <div className="relative inset-0 bg-lime-400/30 rounded-xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
+              
+              <Image 
+                src="/VendorCity_Rider.webp" 
+                alt="Logo" 
+                height={100} 
+                width={100} 
+                className="h-[100%] w-[auto] rounded-xl relative transform group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            
+            {/* Right section - Notifications and User Menu only */}
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {/* Notification Bell */}
+              <div className="relative" ref={bellRef}>
+                <button
+                  onClick={toggleBellPopup}
+                  className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-colors relative"
+                  disabled={!userId && notificationsLoading}
+                  title={!userId ? "Sign in to view notifications" : ""}
+                >
+                  <span className="sr-only">View notifications</span>
+                  <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {notificationsLoading && userId ? (
+                    <span className="absolute top-0 right-0 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
+                    </span>
+                  ) : unreadCount > 0 && userId && !notificationsLoading ? (
+                    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full px-1">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  ) : null}
+                </button>
+              </div>
+
+              {/* User Menu Dropdown */}
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={toggleDropdown}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-1 sm:gap-2 max-w-xs bg-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 disabled:opacity-50 transition-all hover:bg-gray-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
+                  id="user-menu-button"
+                  aria-expanded={isDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <span className="sr-only">Open user menu</span>
+                  <img 
+                    className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                    src={user?.image || '/NoImage_2.webp'} 
+                    alt={user?.name}
+                  />
+                  <div className="hidden sm:block text-left">
+                    <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
+                  </div>
+                  <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                  <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <button
+                      onClick={handleProfile}
+                      className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 sm:gap-3 transition-colors"
+                    >
+                      <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />
+                      <span className="font-medium">Profile</span>
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
+                    >
+                      <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                      <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </>
-    )}
+      </header>
+
+      {/* Notification Popup rendered via Portal */}
+      {mounted && isBellPopupOpen && userId && createPortal(
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden transition-opacity duration-300"
+            onClick={() => slideUpNotification('down')}
+          />
+          <NotificationPopup />
+        </>,
+        document.body
+      )}
     </>
   );
-            }
+                                           }
