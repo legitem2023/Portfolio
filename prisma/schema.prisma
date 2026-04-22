@@ -289,8 +289,8 @@ model Product {
   attributes  Json?
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
-  supplierId  String? @default("68c8c1765038c47a4b9ef519") @db.ObjectId
-  model       String? @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
+  supplierId  String? @db.ObjectId
+  model       String?
   category    Category? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   supplier    User?    @relation(fields: [supplierId], references: [id], onDelete: Cascade)
 
@@ -324,7 +324,7 @@ model ProductVariant {
   stock       Int?     @default(0)
   weight      Float?
   images      String[]
-  model       String? @default("https://portfolio-xi-eight-92.vercel.app/watch_test.glb")
+  model       String?
   isActive    Boolean? @default(true)
   options     String[]
   createdAt   DateTime? @default(now())
