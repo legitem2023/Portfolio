@@ -459,7 +459,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     
       switch (notification.type) {
         case NotificationType.NEW_MESSAGE:
-          router.push(`/Messaging?id=${notification.link}`);
+          dispatch(setActiveIndex(12));
           break;
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
@@ -468,13 +468,10 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
           break;
         case NotificationType.PAYMENT_RECEIVED:
         case NotificationType.PAYMENT_FAILED:
-          //router.push('/payments');
           break;
         default:
           break;
       }
-  
-
     setIsBellPopupOpen(false);
   };
 
