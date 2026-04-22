@@ -4,7 +4,7 @@ import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
 import { useState, useRef } from 'react';
 // ✅ CORRECTED LUCIDE-REACT IMPORTS
-import { Pipette, Copy, Check } from 'lucide-react';
+import { Pipette, Copy, Check, RefreshCw } from 'lucide-react';
 
 interface ProductFormProps {
   supplierId: String;
@@ -35,52 +35,70 @@ export default function ProductForm({
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [copySuccess, setCopySuccess] = useState('');
   const [isPickingColor, setIsPickingColor] = useState(false);
+  const [skuOption, setSkuOption] = useState<'auto' | 'manual'>('auto'); // State for SKU option
+  const [autoSku, setAutoSku] = useState(''); // Store auto-generated SKU
   
   const colorInputRef = useRef<HTMLInputElement>(null);
 
-  const sizeData = [
-    // Clothing & Apparel
-    { parent: "Letter Sizes", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
-    { parent: "Numeric Sizes", values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"] },
-    { parent: "US Shoes", values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"] },
-    { parent: "EU Shoes", values: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
-    { parent: "Men's Waist", values: ["28", "30", "32", "34", "36", "38", "40", "42", "44"] },
-    { parent: "Bra Sizes", values: ["30A", "32A", "34A", "36A", "38A", "30B", "32B", "34B", "36B", "38B", "30C", "32C", "34C", "36C", "38C"] },
-    { parent: "Kids Sizes", values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"] },
-    { parent: "Baby Sizes", values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"] },
-    
-    // Electronics - Mobile Phones
-    { parent: "Phone Screen", values: ["5.0\"", "5.5\"", "6.0\"", "6.1\"", "6.3\"", "6.5\"", "6.7\"", "6.8\"", "7.0\""] },
-    { parent: "Phone Storage", values: ["64GB", "128GB", "256GB", "512GB", "1TB"] },
-    { parent: "Phone RAM", values: ["4GB", "6GB", "8GB", "12GB", "16GB"] },
-    
-    // Electronics - Laptops
-    { parent: "Laptop Screen", values: ["11.6\"", "13.3\"", "14\"", "15.6\"", "16\"", "17.3\""] },
-    { parent: "Laptop Storage", values: ["256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD", "256GB HDD", "512GB HDD", "1TB HDD", "2TB HDD"] },
-    { parent: "Laptop RAM", values: ["4GB", "8GB", "16GB", "32GB", "64GB"] },
-    { parent: "Laptop Processor", values: ["i3", "i5", "i7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "M1", "M2", "M3"] },
-    
-    // Electronics - Tablets
-    { parent: "Tablet Screen", values: ["7.9\"", "8.3\"", "9.7\"", "10.2\"", "10.5\"", "10.9\"", "11\"", "12.9\""] },
-    { parent: "Tablet Storage", values: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"] },
-    
-    // Electronics - Monitors
-    { parent: "Monitor Size", values: ["19\"", "21.5\"", "24\"", "27\"", "32\"", "34\"", "38\"", "43\"", "49\""] },
-    { parent: "Monitor Resolution", values: ["HD (1366x768)", "Full HD (1920x1080)", "2K (2560x1440)", "4K (3840x2160)", "UltraWide (3440x1440)", "5K (5120x2880)"] },
-    { parent: "Refresh Rate", values: ["60Hz", "75Hz", "120Hz", "144Hz", "165Hz", "240Hz", "360Hz"] },
-    
-    // Electronics - TVs
-    { parent: "TV Size", values: ["32\"", "40\"", "43\"", "50\"", "55\"", "65\"", "75\"", "85\"", "98\""] },
-    { parent: "TV Resolution", values: ["HD", "Full HD", "4K UHD", "8K UHD"] },
-    
-    // Electronics - Smartwatches
-    { parent: "Watch Size", values: ["38mm", "40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "47mm"] },
-    { parent: "Watch Band", values: ["S", "M", "L", "XS", "XL"] },
-    
-    // Universal
-    { parent: "One Size", values: ["One Size Fits All"] },
-    { parent: "Custom", values: [] }
-];
+  // Function to generate auto SKU based on product name and timestamp
+  const generateAutoSku = (productName: string) => {
+    if (!productName) return '';
+    const prefix = productName.substring(0, 3).toUpperCase();
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}${timestamp}${random}`;
+  };
+
+  // Update auto SKU when product name changes or when in auto mode
+  const updateAutoSku = (productName: string) => {
+    if (skuOption === 'auto' && productName) {
+      const newAutoSku = generateAutoSku(productName);
+      setAutoSku(newAutoSku);
+      setNewProduct({...newProduct, sku: newAutoSku});
+    } else if (skuOption === 'auto' && !productName) {
+      setAutoSku('');
+      setNewProduct({...newProduct, sku: ''});
+    }
+  };
+
+  // Handle product name change
+  const handleProductNameChange = (name: string) => {
+    setNewProduct({...newProduct, name: name});
+    setErrorMessage('');
+    if (skuOption === 'auto') {
+      updateAutoSku(name);
+    }
+  };
+
+  // Handle SKU option change
+  const handleSkuOptionChange = (option: 'auto' | 'manual') => {
+    setSkuOption(option);
+    if (option === 'auto') {
+      // Generate auto SKU based on current product name
+      if (newProduct.name) {
+        const newAutoSku = generateAutoSku(newProduct.name);
+        setAutoSku(newAutoSku);
+        setNewProduct({...newProduct, sku: newAutoSku});
+      } else {
+        setAutoSku('');
+        setNewProduct({...newProduct, sku: ''});
+      }
+    } else {
+      // Switch to manual mode, preserve existing SKU or clear
+      if (newProduct.sku === autoSku) {
+        setNewProduct({...newProduct, sku: ''});
+      }
+    }
+  };
+
+  // Manual regenerate auto SKU
+  const regenerateAutoSku = () => {
+    if (newProduct.name) {
+      const newAutoSku = generateAutoSku(newProduct.name);
+      setAutoSku(newAutoSku);
+      setNewProduct({...newProduct, sku: newAutoSku});
+    }
+  };
 
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
@@ -130,6 +148,9 @@ export default function ProductForm({
     e.preventDefault();
     setErrorMessage('');
     
+    // SKU is already set in newProduct based on the selected option
+    const finalSku = newProduct.sku || '';
+    
     try {
       const { data } = await insertProduct({
         variables: {
@@ -137,7 +158,7 @@ export default function ProductForm({
           description: newProduct.description,
           price: parseFloat(newProduct.price),
           salePrice: parseFloat(newProduct.salePrice || '0'),
-          sku: newProduct.sku,
+          sku: finalSku,
           id: newProduct.categoryId,
           supplierId: supplierId,
           color: newProduct.color,
@@ -173,6 +194,8 @@ export default function ProductForm({
         setShowColorPicker(false);
         setCopySuccess('');
         setIsPickingColor(false);
+        setSkuOption('auto');
+        setAutoSku('');
         
         onProductAdded();
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -223,10 +246,7 @@ export default function ProductForm({
           type="text"
           className="w-full px-3 py-2 border border-gray-300 rounded-md"
           value={newProduct.name}
-          onChange={(e) => {
-            setNewProduct({...newProduct, name: e.target.value});
-            setErrorMessage('');
-          }}
+          onChange={(e) => handleProductNameChange(e.target.value)}
           required
         />
       </div>
@@ -271,17 +291,83 @@ export default function ProductForm({
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-          <input
-            type="text"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            value={newProduct.sku}
-            onChange={(e) => {
-              setNewProduct({...newProduct, sku: e.target.value});
-              setErrorMessage('');
-            }}
-            required
-          />
+          
+          {/* Radio Buttons for SKU Option */}
+          <div className="flex gap-6 mb-3">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="skuOption"
+                value="auto"
+                checked={skuOption === 'auto'}
+                onChange={() => handleSkuOptionChange('auto')}
+                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Auto-generate SKU</span>
+            </label>
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="radio"
+                name="skuOption"
+                value="manual"
+                checked={skuOption === 'manual'}
+                onChange={() => handleSkuOptionChange('manual')}
+                className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Enter SKU manually</span>
+            </label>
+          </div>
+          
+          {/* Auto SKU Display */}
+          {skuOption === 'auto' && (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
+                  value={autoSku}
+                  disabled
+                  placeholder="SKU will be auto-generated"
+                />
+                {autoSku && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                    <span className="text-xs text-green-600">✓ Auto</span>
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={regenerateAutoSku}
+                disabled={!newProduct.name}
+                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Regenerate SKU"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+          
+          {/* Manual SKU Input */}
+          {skuOption === 'manual' && (
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              value={newProduct.sku}
+              onChange={(e) => {
+                setNewProduct({...newProduct, sku: e.target.value});
+                setErrorMessage('');
+              }}
+              placeholder="Enter custom SKU (optional)"
+            />
+          )}
+          
+          <p className="text-xs text-gray-500 mt-1">
+            {skuOption === 'auto' 
+              ? 'SKU will be automatically generated based on product name' 
+              : 'Leave blank or enter a custom SKU'}
+          </p>
         </div>
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
           <input
@@ -314,7 +400,7 @@ export default function ProductForm({
             />
           </div>
           
-          {/* Color Tools Row - ICONS UPDATED HERE */}
+          {/* Color Tools Row */}
           <div className="flex items-center space-x-2 mt-2">
             <button
               type="button"
@@ -329,7 +415,6 @@ export default function ProductForm({
                 </>
               ) : (
                 <>
-                  {/* ✅ UPDATED: Using Pipette icon */}
                   <Pipette className="w-4 h-4" />
                   <span>Pick Color</span>
                 </>
@@ -344,13 +429,11 @@ export default function ProductForm({
             >
               {copySuccess === 'Copied!' ? (
                 <>
-                  {/* ✅ UPDATED: Using Check icon */}
                   <Check className="w-4 h-4 text-green-600" />
                   <span className="text-green-600">Copied!</span>
                 </>
               ) : (
                 <>
-                  {/* ✅ UPDATED: Using Copy icon */}
                   <Copy className="w-4 h-4" />
                   <span>Copy</span>
                 </>
@@ -363,23 +446,6 @@ export default function ProductForm({
               </span>
             )}
           </div>
-          
-          {/* Quick Color Grid */}
-          {/*<div className="mt-3">
-            <p className="text-xs text-gray-600 mb-2">Quick colors:</p>
-            <div className="grid grid-cols-5 gap-2">
-              {colorOptions.map(color => (
-                <button
-                  key={color}
-                  type="button"
-                  className="w-8 h-8 rounded-md border border-gray-300 hover:scale-110 transition-transform"
-                  style={{ backgroundColor: color }}
-                  onClick={() => setNewProduct({...newProduct, color: color})}
-                  title={color}
-                />
-              ))}
-            </div>
-          </div>*/}
         </div>
         
         <div>
@@ -513,4 +579,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+              }
