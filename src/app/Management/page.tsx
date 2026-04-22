@@ -18,6 +18,8 @@ import VehicleTypeManager from './components/VehicleTypeManager';
 import UserProfile from './components/UserProfile';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
+import PMTab from './components/PMTab';
+
 import { useAuth } from './hooks/useAuth';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -183,10 +185,12 @@ export default function ManagementDashboard() {
         return <></>
       case 9:
         return <VehicleTypeManager/>
-      case 11:
-        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
       case 10:
         return <UserProfile userId={user?.userId?user?.userId:''}/>
+      case 11:
+        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
+      case 12:
+        return <PMTab userId={activeselectedUser?activeselectedUser:''}/>
       default:
         return <></>;
     }
