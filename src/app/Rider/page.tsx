@@ -7,6 +7,8 @@ import { ACCEPT_BY_RIDER, ORDER_LIST_QUERY, OrderListResponse } from './lib/type
 import { mapOrdersToDeliveriesBySupplier } from './lib/utils';
 import { useWindowSize } from './hooks/useWindowSize';
 import Header from './components/Header';
+import TopNav from './components/TopNav';
+
 import NavigationTabs from './components/NavigationTabs';
 import NewDeliveriesTab from './components/NewDeliveriesTab';
 import TrackingTab from './components/TrackingTab';
@@ -369,15 +371,15 @@ showToast(
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Header */}
+      {/* TopNav */}
       <Header user={user}/>
-      {/*<Header
+      <TopNav
         isMobile={isMobile}
         isOnline={isOnline}
         setIsOnline={setIsOnline}
         activeTab={activeTab}
         newDeliveriesCount={newDeliveriesCount}
-      />*/}
+      />
 
       {/* Desktop Navigation Tabs */}
       {!isMobile && (
