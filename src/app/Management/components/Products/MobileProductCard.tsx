@@ -213,7 +213,7 @@ export default function MobileProductCard({
         }`}
       >
         <div className="border-t border-gray-100 bg-amber-200">
-          <div className="p-4">
+          <div className="p-2">
             
             {/* Add Variant Button */}
             {!showAddForm && (
@@ -230,7 +230,7 @@ export default function MobileProductCard({
 
             {/* Add/Edit Form */}
             {showAddForm && (
-              <div className="mb-4 rounded-lg border border-gray-200 bg-white overflow-hidden">
+              <div className="mb-2 rounded-lg border border-gray-200 bg-white overflow-hidden">
                 <AddVariantForm
                   productId={product.id}
                   refetch={refetch}
@@ -243,7 +243,7 @@ export default function MobileProductCard({
             )}
 
             {/* Variants List */}
-            <div className="space-y-3 max-h-[500px] grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="space-y-2 max-h-[500px] grid gap-1 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {safeVariants.length > 0 ? (
                 safeVariants.map((variant) => {
                  // console.log('🟠 MOBILE CARD - rendering variant:', variant.id, variant.name);
