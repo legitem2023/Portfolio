@@ -153,7 +153,7 @@ export default function VariantCard({
             <div className="space-y-3 sm:space-y-4">
               {/* Main Image Container */}
               <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl overflow-hidden">
-                <div className="aspect-video">
+                <div className="">
                   <Swiper
                     modules={[Navigation, Pagination, Thumbs]}
                     navigation={{
