@@ -348,7 +348,7 @@ export default function LuxurySignup() {
                  type="button"
                  disabled={isLoading}
                  className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
-                  isLoading || !!userData
+                  isLoading
                   ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                   : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
