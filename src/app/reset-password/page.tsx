@@ -387,7 +387,7 @@ export default function ResetPassword() {
                 {/* Help Text */}
                 <div className="text-center">
                   <p className="text-xs text-gray-500">
-                    If you're having trouble resetting your password,{' '}
+                    If you&apos;re having trouble resetting your password,{' '}
                     <a
                       href="mailto:support@elegance.com"
                       className="text-indigo-600 hover:text-indigo-500 font-medium"
@@ -403,7 +403,7 @@ export default function ResetPassword() {
             <div className="pt-4 sm:pt-5 md:pt-6 mt-4 sm:mt-5 md:mt-6 border-t border-gray-100">
               <p className="text-xs text-gray-500 text-center leading-relaxed px-1">
                 For security reasons, this password reset link will expire after 30 minutes.
-                If you didn't request this reset, please ignore this email.
+                If you didn&apos;t request this reset, please ignore this email.
               </p>
             </div>
           </div>
