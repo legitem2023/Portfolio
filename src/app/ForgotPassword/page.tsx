@@ -168,7 +168,7 @@ export default function ForgotPassword() {
                       ) : (
                         <Mail className="w-4 h-4 mr-2" />
                       )}
-                      Didn't receive the email? Send again
+                      Didn&apos;t receive the email? Send again
                     </button>
                   </div>
                 </div>
@@ -225,7 +225,7 @@ export default function ForgotPassword() {
                         Security Information
                       </p>
                       <p className="text-xs text-blue-700">
-                        The password reset link will be valid for 30 minutes. For security reasons, please check your spam folder if you don't see the email.
+                        The password reset link will be valid for 30 minutes. For security reasons, please check your spam folder if you don&apos;t see the email.
                       </p>
                     </div>
                   </div>
