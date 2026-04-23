@@ -153,7 +153,7 @@ export default function LuxuryLogin() {
       if (result?.error) {
         setError('Login failed: ' + result.error);
         setIsLoading(false);
-      } else if (result?.statusText === 'success') {
+      } else if (result?.status === 200) {
         // Only proceed if statusText is exactly 'success'
         console.log('✅ Login successful with statusText: success');
         
