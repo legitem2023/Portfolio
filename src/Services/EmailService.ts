@@ -55,12 +55,12 @@ export class EmailService {
 
   constructor(config: EmailServiceConfig) {
     this.config = {
-      fromEmail: 'noreply@yourapp.com',
-      appName: 'Our App',
-      baseUrl: 'http://localhost:3000',
+      fromEmail: 'noreply@vendorcity.com',
+      appName: 'VendorCity',
+      baseUrl: 'https://vendorcity.net',
       logoUrl: 'https://vendorcity.net/VendorCity_Store.webp', // Added default
-      supportEmail: 'support@yourapp.com', // Added default
-      supportPhone: '+1 (800) 123-4567', // Added default
+      supportEmail: 'support@vendorcity.com', // Added default
+      supportPhone: '+639153392813', // Added default
       ...config
     };
   }
