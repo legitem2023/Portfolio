@@ -9,6 +9,7 @@ import Header from './Header';
 import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { GETCATEGORY } from './graphql/query'; // Import your existing query
+import { AddressComponents } from './LocationPicker';
 
 // Dynamically import Leaflet with no SSR
 const LocationPicker = dynamic(
@@ -65,8 +66,13 @@ interface SignupFormData {
   businessDescription: string;
   website: string;
   
-  // Location
+  // Location - Full fields
   businessAddress: string;
+  businessStreet: string;
+  businessCity: string;
+  businessState: string;
+  businessCountry: string;
+  businessZipcode: string;
   addressInstruction: string;
   currentLatitude: number | null;
   currentLongitude: number | null;
@@ -92,6 +98,11 @@ export default function VendorSignupForm() {
     businessDescription: '',
     website: '',
     businessAddress: '',
+    businessStreet: '',
+    businessCity: '',
+    businessState: '',
+    businessCountry: '',
+    businessZipcode: '',
     addressInstruction: '',
     currentLatitude: null,
     currentLongitude: null,
@@ -129,12 +140,22 @@ export default function VendorSignupForm() {
     }
   };
 
-  const handleLocationSelect = (lat: number, lng: number, address: string) => {
+  const handleLocationSelect = (
+    lat: number, 
+    lng: number, 
+    fullAddress: string, 
+    addressComponents: AddressComponents
+  ) => {
     setFormData(prev => ({
       ...prev,
       currentLatitude: lat,
       currentLongitude: lng,
-      businessAddress: address
+      businessAddress: fullAddress,
+      businessStreet: addressComponents.street,
+      businessCity: addressComponents.city,
+      businessState: addressComponents.state,
+      businessCountry: addressComponents.country,
+      businessZipcode: addressComponents.zipcode
     }));
   };
 
@@ -157,6 +178,18 @@ export default function VendorSignupForm() {
       return;
     }
     
+    // Format the complete address from components for the API
+    const addressParts = [];
+    if (formData.businessStreet) addressParts.push(formData.businessStreet);
+    if (formData.businessCity) addressParts.push(formData.businessCity);
+    if (formData.businessState) addressParts.push(formData.businessState);
+    if (formData.businessZipcode) addressParts.push(formData.businessZipcode);
+    if (formData.businessCountry) addressParts.push(formData.businessCountry);
+    
+    const formattedAddress = addressParts.length > 0 
+      ? addressParts.join(', ') 
+      : formData.businessAddress;
+    
     try {
       const { data } = await vendorSignup({
         variables: {
@@ -171,7 +204,7 @@ export default function VendorSignupForm() {
             productCategory: formData.productCategory,
             businessDescription: formData.businessDescription,
             website: formData.website || null,
-            businessAddress: formData.businessAddress,
+            businessAddress: formattedAddress,
             addressInstruction: formData.addressInstruction || null,
             currentLatitude: formData.currentLatitude,
             currentLongitude: formData.currentLongitude,
@@ -517,17 +550,78 @@ export default function VendorSignupForm() {
                   </div>
 
                   {formData.businessAddress && (
-                    <div>
-                      <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
-                        Detected Address
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.businessAddress}
-                        readOnly
-                        className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-gray-50 text-gray-700"
-                      />
-                    </div>
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-[#4a3f5c] mb-2">
+                          Full Address
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.businessAddress}
+                          readOnly
+                          className="w-full px-4 py-3 rounded-xl border border-[#d9c0e8] bg-gray-50 text-gray-700"
+                        />
+                      </div>
+                      
+                      {/* Display parsed address components */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-[#4a3f5c] mb-1">
+                            Street
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.businessStreet}
+                            readOnly
+                            className="w-full px-3 py-2 rounded-lg border border-[#d9c0e8] bg-gray-50 text-gray-700 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4a3f5c] mb-1">
+                            City
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.businessCity}
+                            readOnly
+                            className="w-full px-3 py-2 rounded-lg border border-[#d9c0e8] bg-gray-50 text-gray-700 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4a3f5c] mb-1">
+                            State
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.businessState}
+                            readOnly
+                            className="w-full px-3 py-2 rounded-lg border border-[#d9c0e8] bg-gray-50 text-gray-700 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4a3f5c] mb-1">
+                            ZIP Code
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.businessZipcode}
+                            readOnly
+                            className="w-full px-3 py-2 rounded-lg border border-[#d9c0e8] bg-gray-50 text-gray-700 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-[#4a3f5c] mb-1">
+                            Country
+                          </label>
+                          <input
+                            type="text"
+                            value={formData.businessCountry}
+                            readOnly
+                            className="w-full px-3 py-2 rounded-lg border border-[#d9c0e8] bg-gray-50 text-gray-700 text-sm"
+                          />
+                        </div>
+                      </div>
+                    </>
                   )}
 
                   <div>
@@ -589,7 +683,11 @@ export default function VendorSignupForm() {
                       activeCategories.find((c:any) => c.id === formData.productCategory)?.name || formData.productCategory
                     }</p>
                     {formData.website && <p><strong>Website:</strong> {formData.website}</p>}
-                    <p><strong>Location:</strong> {formData.businessAddress || 'Not set'}</p>
+                    <p><strong>Street:</strong> {formData.businessStreet || 'Not set'}</p>
+                    <p><strong>City:</strong> {formData.businessCity || 'Not set'}</p>
+                    <p><strong>State:</strong> {formData.businessState || 'Not set'}</p>
+                    <p><strong>Country:</strong> {formData.businessCountry || 'Not set'}</p>
+                    <p><strong>ZIP Code:</strong> {formData.businessZipcode || 'Not set'}</p>
                     <p><strong>Tax ID:</strong> {formData.taxId}</p>
                   </div>
                   
@@ -686,4 +784,4 @@ export default function VendorSignupForm() {
       `}</style>
     </>
   );
-              }
+      }
