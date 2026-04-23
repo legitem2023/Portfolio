@@ -6491,88 +6491,96 @@ deleteProduct: async (_: any, { id }: any) => {
     },
 
     // Existing e-commerce mutations
-    login: async (_: any, args: any) => {
-      try {
-        const { email, password } = args.input || {};
-        
-        if (!email || !password) {
-          console.error("Missing email or password.", "BAD_USER_INPUT");
-          return {
-            statusText: "Missing email or password.",
-            token:"",
-            role:""
-         };
-          
-        }
+ login: async (_: any, args: any) => {
+  try {
+    const { email, password } = args.input || {};
+    
+    if (!email || !password) {
+      console.error("Missing email or password.", "BAD_USER_INPUT");
+      return {
+        statusText: "Missing email or password.",
+        token: "",
+        role: ""
+      };
+    }
 
-        const user = await prisma.user.findUnique({ 
-          where: { email: email },
-          include: {
-            addresses: true
-          }
-        });
-        
-        if (!user) {
-          console.log("User not found");
-          console.error("User not found.", "USER_NOT_FOUND");
-          return {
-            statusText: "User not found.",
-            token:"",
-            role:""
-         };
-        }
-
-        if (!user?.password) {
-          console.error("User has no password set.", "INTERNAL_SERVER_ERROR");
-       return {
-            statusText: "User has no password set.",
-            token:"",
-            role:""
-         };
-        }
-
-        const isValid = await comparePassword(password, user?.password);
-       
-        if (!isValid) {
-          console.error("Invalid credentials.", "INVALID_CREDENTIALS");
-        return {
-            statusText: "Invalid credentials.",
-            token:"",
-            role:""
-         };
-        }
-
-        const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
-
-        let token;
-        try {
-          token = await new EncryptJWT({
-            userId: user?.id,
-            phone: user?.phone,
-            email: user?.email,
-            name: user?.firstName,
-            role: user?.role,
-            image: user?.avatar,
-            addresses: user?.addresses
-          })
-            .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
-            .setIssuedAt()
-            .encrypt(secret);
-        } catch (err) {
-          console.error('Token encryption error:', err);
-          // throw new ApolloError("Token generation failed.", "TOKEN_ERROR");
-        }
-
-        return {
-          statusText: "success",
-          token,
-          role:user?.role
-        };
-
-      } catch (err) {
-        console.error('Login resolver error:', err);
+    const user = await prisma.user.findUnique({ 
+      where: { email: email },
+      include: {
+        addresses: true
       }
-    },
+    });
+    
+    if (!user) {
+      console.log("User not found");
+      console.error("User not found.", "USER_NOT_FOUND");
+      return {
+        statusText: "User not found.",
+        token: "",
+        role: ""
+      };
+    }
+
+    if (!user?.password) {
+      console.error("User has no password set.", "INTERNAL_SERVER_ERROR");
+      return {
+        statusText: "User has no password set.",
+        token: "",
+        role: ""
+      };
+    }
+
+    const isValid = await comparePassword(password, user?.password);
+   
+    if (!isValid) {
+      console.error("Invalid credentials.", "INVALID_CREDENTIALS");
+      return {
+        statusText: "Invalid credentials.",
+        token: "",
+        role: ""
+      };
+    }
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+
+    let token;
+    try {
+      token = await new EncryptJWT({
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar,
+        addresses: user?.addresses
+      })
+        .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+        .setIssuedAt()
+        .encrypt(secret);
+    } catch (err) {
+      console.error('Token encryption error:', err);
+      return {
+        statusText: "Token generation failed.",
+        token: "",
+        role: ""
+      };
+    }
+
+    return {
+      statusText: "success",
+      token,
+      role: user?.role
+    };
+
+  } catch (err) {
+    console.error('Login resolver error:', err);
+    return {
+      statusText: "An unexpected error occurred.",
+      token: "",
+      role: ""
+    };
+  }
+},
 
     logout: async (_: any, __: any, context: Context): Promise<LogoutResponse> => {
       try {
