@@ -4587,14 +4587,14 @@ const response = await prisma.address.create({
         type: 'HOME',
         receiver: `${user.firstName} ${user.lastName}`,
         phone: phone,
-        street: businessStreet || '',
-        city: businessCity || '',
-        state: businessState || '',
-        zipCode: businessZipcode || '',
-        country: businessCountry || '',
+        street: businessStreet,
+        city: businessCity,
+        state: businessState,
+        zipCode: businessZipcode,
+        country: businessCountry,
         isDefault: true,
-        lat: currentLatitude || null,
-        lng: currentLongitude || null
+        lat: currentLatitude,
+        lng: currentLongitude
       },
     });
 
