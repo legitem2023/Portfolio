@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("Credentials login attempt:", credentials?.email);
+        //console.log("Credentials login attempt:", credentials?.email);
         
         if (!credentials?.email || !credentials?.password) {
           throw new Error("Email and password are required");
@@ -67,9 +67,7 @@ export const authOptions: NextAuthOptions = {
               },
             },
           });
-
-          console.log("Login response:", data?.login);
-
+             console.error(data?.login,"<<<<");
           if (data?.login?.token) {
             // Return the user object with the token from your backend
             return {
@@ -78,7 +76,7 @@ export const authOptions: NextAuthOptions = {
               serverToken: data.login.token, // This is your returned token
             };
           } else {
-            throw new Error("No token received from server");
+            console.error("No token received from server");
           }
         } catch (error: any) {
           console.error("Login error:", error);
