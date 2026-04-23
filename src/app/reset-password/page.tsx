@@ -95,13 +95,16 @@ export default function ResetPassword() {
         }
       });
       
-      console.log('Password reset successfully:', response.data?.resetPassword?.statusText);
-      setIsSubmitted(true);
-      
+     // console.log('Password reset successfully:', response.data?.resetPassword?.statusText);
+      if(response.data?.resetPassword?.statusText==='Success'){
+        setIsSubmitted(true);
       // Auto redirect to login after 3 seconds
-      setTimeout(() => {
-        router.push('/Login');
-      }, 3000);
+        setTimeout(() => {
+          router.push('/Login');
+        }, 3000);
+      }else{
+        setError(response.data?.resetPassword?.statusText);
+      }
       
     } catch (err) {
       console.error('Password reset failed:', err);
