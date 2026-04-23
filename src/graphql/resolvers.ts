@@ -16,7 +16,7 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
 // Initialize EmailService ONCE
 const emailService = new EmailService({
-  service: process.env.YAHOO_EMAIL as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  service: process.env.YAHOO_EMAIL as 'nodemailer',
   apiKey: process.env.YAHOO_APP_PASSWORD,
   fromEmail: 'onboarding@vendorcity.net',
   appName: 'VendorCity', // REMOVE DUPLICATE
