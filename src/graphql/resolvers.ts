@@ -8429,6 +8429,48 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         );
       }
     },
+        resetPassword: async (_: any, { input }: { input: ResetPasswordInput }) => {
+  try {
+    const { token, newPassword } = input;
+
+    if (!token || !newPassword) {
+      throw new Error('Token and new password are required');
+    }
+
+    const result = await passwordResetService.resetPassword(token, newPassword);
+    
+    if (result.success) {
+      // Update the user's password in the database
+      const tokenValidation:any = await passwordResetService.validateResetToken(token);
+      if (tokenValidation.valid) {
+        const passwordHash = await encryptPassword(newPassword, 10);
+        await prisma.user.update({
+          where: { email: tokenValidation.email },
+          data: { 
+             passwordHash 
+          }
+        });
+        return {
+          statusText: result.message // Changed from result.success to result.message
+        };
+      } else {
+        return {
+          statusText: tokenValidation.message
+        };
+      }
+    } else {
+      return {
+        statusText: result.message
+      };
+    }
+    
+  } catch (error) {
+    console.error('Error in resetPassword resolver:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to reset password'
+    );
+  }
+},
     removeTagFromPost: async (_: any, { postId, userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
