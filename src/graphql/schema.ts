@@ -1230,7 +1230,10 @@ type Mutation {
   deleteReviewImage(imageId: String): Result
   reorderImages(input: ReorderImagesInput):Result
     
-    
+   requestPasswordReset(input: RequestPasswordResetInput!):Result
+   resetPassword(input: ResetPasswordInput!): Result
+   validateResetToken(input: ValidateResetTokenInput!): TokenValidationResult!
+ 
     
     remit(id:ID): Result
     finishorder(id:ID): Result
