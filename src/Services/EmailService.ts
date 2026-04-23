@@ -123,7 +123,7 @@ export class EmailService {
     }
 
     const mailOptions = {
-      from: `"${this.config.appName}" <${gmailUser}>`,
+      from: `"${this.config.appName}" <${User}>`,
       to: options.to,
       subject: options.subject,
       html: options.html,
@@ -132,14 +132,14 @@ export class EmailService {
 
     try {
       const info = await transporter.sendMail(mailOptions);
-      console.log("✅ Google email sent successfully:", {
+      console.log("✅ Email sent successfully:", {
         messageId: info.messageId,
         accepted: info.accepted,
         response: info.response
       });
       return true;
     } catch (error: any) {
-      console.error("❌ Google email sending failed:", {
+      console.error("❌ Email sending failed:", {
         error: error.message,
         code: error.code,
         response: error.response
