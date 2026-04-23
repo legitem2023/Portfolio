@@ -16,9 +16,9 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
 // Initialize EmailService ONCE
 const emailService = new EmailService({
-  service: process.env.YAHOO_EMAIL as 'nodemailer',
-  apiKey: process.env.YAHOO_APP_PASSWORD,
-  fromEmail: process.env.YAHOO_EMAIL,
+  service: process.env.GOOGLE_EMAIL as 'nodemailer',
+  apiKey: process.env.GOOGLE_APP_PASSWORD,
+  fromEmail: process.env.GOOGLE_EMAIL,
   appName: 'VendorCity', // REMOVE DUPLICATE
   baseUrl: 'https://vendorcity.net',
   logoUrl: 'https://vendorcity.net/VendorCity_Store.webp',
@@ -30,9 +30,9 @@ const emailService = new EmailService({
     
 // For the emailConfig object (if you still need it separately):
 const emailConfig: EmailServiceConfig = {
-  service: process.env.YAHOO_EMAIL as 'nodemailer',
-  apiKey: process.env.YAHOO_APP_PASSWORD,
-  fromEmail: process.env.YAHOO_EMAIL,
+  service: process.env.GOOGLE_EMAIL as 'nodemailer',
+  apiKey: process.env.GOOGLE_APP_PASSWORD,
+  fromEmail: process.env.GOOGLE_EMAIL,
   appName: 'VendorCity',
   baseUrl: 'https://vendorcity.net'
 };
