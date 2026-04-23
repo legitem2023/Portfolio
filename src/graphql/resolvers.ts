@@ -16,8 +16,8 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
 // Initialize EmailService ONCE
 const emailService = new EmailService({
-  service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
-  apiKey: process.env.EMAIL_APIKEY,
+  service: process.env.YAHOO_EMAIL as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  apiKey: process.env.YAHOO_APP_PASSWORD,
   fromEmail: 'onboarding@vendorcity.net',
   appName: 'VendorCity', // REMOVE DUPLICATE
   baseUrl: 'https://vendorcity.net',
@@ -27,15 +27,14 @@ const emailService = new EmailService({
   supportPhone: process.env.SUPPORT_PHONE || '+1 (800) 123-4567',
 });
 
+    
 // For the emailConfig object (if you still need it separately):
 const emailConfig: EmailServiceConfig = {
-  service: 'robert_sanco_marquez@yahoo.com' as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
-  apiKey: process.env.EMAIL_APIKEY,
+  service: process.env.YAHOO_EMAIL as 'nodemailer',
+  apiKey: process.env.YAHOO_APP_PASSWORD,
   fromEmail: 'onboarding@vendorcity.com',
   appName: 'VendorCity',
   baseUrl: 'https://vendorcity.net'
-  // Note: You can add the other properties here if needed
-  // logoUrl, logisticsTeamEmail, supportEmail, supportPhone
 };
 
 const passwordResetService = new PasswordResetService(emailConfig);
