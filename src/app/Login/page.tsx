@@ -149,6 +149,7 @@ export default function LuxuryLogin() {
       }) as SignInResponse;
     
       // Check if login was successful - must have statusText === 'success' AND no error
+      console.log(result);
       if (result?.error) {
         setError('Login failed: ' + result.error);
         setIsLoading(false);
