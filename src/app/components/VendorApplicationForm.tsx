@@ -1,4 +1,4 @@
-// src/app/components/VendorSignupForm.tsx
+// src/app/components/VendorApplicationForm.tsx
 'use client';
 
 import React from 'react';
@@ -84,7 +84,7 @@ interface SignupFormData {
   agreeTerms: boolean;
 }
 
-export default function VendorSignupForm() {
+export default function VendorApplicationForm() {
   const [formData, setFormData] = useState<SignupFormData>({
     email: '',
     password: '',
