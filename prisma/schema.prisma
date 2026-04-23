@@ -128,6 +128,7 @@ model User {
   rider           OrderItem[] @relation("RiderOrderItems")
   posts           Post[]
   comments        Comment[]
+  paswordResets   PasswordReset[]
   likes           Like[]
   followers       Follow[]         @relation("Follower")
   following       Follow[]         @relation("Following")
@@ -137,6 +138,21 @@ model User {
   @@index([createdAt])
   @@map("users")
 }
+
+model PasswordReset {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userEmail String?
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@index([userId])
+  @@index([userEmail])
+}
+
 
 model BlacklistedToken {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
