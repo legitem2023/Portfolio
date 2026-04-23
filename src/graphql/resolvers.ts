@@ -38,6 +38,7 @@ const emailConfig: EmailServiceConfig = {
   // logoUrl, logisticsTeamEmail, supportEmail, supportPhone
 };
 
+const passwordResetService = new PasswordResetService(emailConfig);
 
 const prisma = new PrismaClient();
 
@@ -8446,7 +8447,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           };
         }
 
-        const result = await PasswordResetService.requestPasswordReset(email);
+        const result = await passwordResetService.requestPasswordReset(email);
         return {
             statusText:'Success'
         };
@@ -8465,11 +8466,11 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       throw new Error('Token and new password are required');
     }
 
-    const result = await PasswordResetService.resetPassword(token, newPassword);
+    const result = await passwordResetService.resetPassword(token, newPassword);
     
     if (result.success) {
       // Update the user's password in the database
-      const tokenValidation:any = await PasswordResetService.validateResetToken(token);
+      const tokenValidation:any = await passwordResetService.validateResetToken(token);
       if (tokenValidation.valid) {
         const passwordHash = await encryptPassword(newPassword, 10);
         await prisma.user.update({
