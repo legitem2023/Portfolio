@@ -8475,7 +8475,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         await prisma.user.update({
           where: { email: tokenValidation.email },
           data: { 
-             passwordHash 
+             password:passwordHash 
           }
         });
         return {
