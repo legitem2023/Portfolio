@@ -4360,7 +4360,7 @@ salesList: async (
   },
 
   Mutation: {
-    vendorSignup: async (_parent: any, { input }: any) => {
+  /*  vendorSignup: async (_parent: any, { input }: any) => {
       try {
         const {
           email,
@@ -4435,7 +4435,7 @@ salesList: async (
         });
 
 
-/*const response = await prisma.address.create({
+const response = await prisma.address.create({
         data: {
           userId:user.id,
           type,
@@ -4450,10 +4450,10 @@ salesList: async (
           lat:user.currentLatitude,
           lng:user.currentLongitude
         },
-      });*/
+      });
         
         // Generate JWT token
-     /*   const token = jwt.sign(
+        const token = jwt.sign(
           { 
             userId: user.id, 
             email: user.email,
@@ -4461,7 +4461,7 @@ salesList: async (
           },
           process.env.JWT_SECRET || 'your-secret-key',
           { expiresIn: '7d' }
-        );*/
+        );
 
       const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
       const token = await new EncryptJWT({
@@ -4494,7 +4494,143 @@ salesList: async (
           token: null
         };
       }
-    },
+    },*/
+    vendorSignup: async (_parent: any, { input }: any) => {
+  try {
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      businessName,
+      businessType,
+      productCategory,
+      businessDescription,
+      website,
+      businessAddress,
+      businessStreet,
+      businessCity,
+      businessState,
+      businessCountry,
+      businessZipcode,
+      addressInstruction,
+      currentLatitude,
+      currentLongitude,
+      taxId,
+    } = input;
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        message: 'Email already registered',
+        user: null,
+        token: null
+      };
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      return {
+        success: false,
+        message: 'Password must be at least 6 characters',
+        user: null,
+        token: null
+      };
+    }
+
+    // Hash password
+    const passwordHash = await encryptPassword(password, 10);
+
+    // Create full address from components if available, otherwise use businessAddress
+    const fullAddress = businessStreet || businessCity || businessState || businessZipcode || businessCountry
+      ? [businessStreet, businessCity, businessState, businessZipcode, businessCountry]
+          .filter(part => part && part.trim() !== '')
+          .join(', ')
+      : businessAddress;
+
+    // Create new user with vendor application
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: passwordHash,
+        firstName,
+        lastName,
+        phone,
+        role: 'MANAGER',
+        isVendor: true,
+        vendorApplicationStatus: 'PENDING',
+        businessName,
+        businessType,
+        productCategory,
+        businessDescription,
+        website: website || null,
+        businessAddress: fullAddress || businessAddress,
+        addressInstruction: addressInstruction || null,
+        currentLatitude: currentLatitude || null,
+        currentLongitude: currentLongitude || null,
+        taxId,
+        emailVerified: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    });
+
+    // Create address record with the individual components
+    const addressResponse = await prisma.address.create({
+      data: {
+        userId: user.id,
+        type: 'HOME',
+        receiver: `${user.firstName} ${user.lastName}`,
+        phone: phone,
+        street: businessStreet || '',
+        city: businessCity || '',
+        state: businessState || '',
+        zipCode: businessZipcode || '',
+        country: businessCountry || '',
+        isDefault: true,
+        lat: currentLatitude || null,
+        lng: currentLongitude || null
+      },
+    });
+
+    // Generate JWT token
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+    const token = await new EncryptJWT({
+      userId: user?.id,
+      phone: user?.phone,
+      email: user?.email,
+      name: user?.firstName,
+      role: user?.role,
+      image: user?.avatar,
+      addresses: user?.businessAddress
+    }).setProtectedHeader({ alg: 'dir', enc: 'A256GCM' }).setIssuedAt().encrypt(secret);
+
+    // Remove password from response
+    const { password: _, ...userWithoutPassword } = user;
+
+    return {
+      success: true,
+      message: 'Vendor application submitted successfully! We will review your application within 3-5 business days.',
+      user: userWithoutPassword,
+      token
+    };
+
+  } catch (error) {
+    console.error('Vendor signup error:', error);
+    return {
+      success: false,
+      message: 'Failed to create vendor account. Please try again.',
+      user: null,
+      token: null
+    };
+  }
+  },
   locationTracking: async (_: any, args: any) => {
   try {
     const { userID, latitude, longitude } = args.input;
