@@ -407,7 +407,7 @@ export default function LuxuryLogin() {
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3">
               <button
   type="button"
   disabled={isLoading || !!userData}
