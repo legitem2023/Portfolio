@@ -15,7 +15,7 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
 
 // Initialize EmailService ONCE
-const emailService = new EmailService({
+/*const emailService = new EmailService({
   service: process.env.GOOGLE_EMAIL as 'nodemailer',
   apiKey: process.env.GOOGLE_APP_PASSWORD,
   fromEmail: process.env.GOOGLE_EMAIL,
@@ -26,7 +26,7 @@ const emailService = new EmailService({
   supportEmail: process.env.SUPPORT_EMAIL || 'support@yourapp.com',
   supportPhone: process.env.SUPPORT_PHONE || '+1 (800) 123-4567',
 });
-
+*/
     
 // For the emailConfig object (if you still need it separately):
 const emailConfig: EmailServiceConfig = {
