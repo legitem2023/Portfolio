@@ -6496,7 +6496,13 @@ deleteProduct: async (_: any, { id }: any) => {
         const { email, password } = args.input || {};
         
         if (!email || !password) {
-          console.log("Bad User Inputs"); // throw new ApolloError("Missing email or password.", "BAD_USER_INPUT");
+          console.error("Missing email or password.", "BAD_USER_INPUT");
+          return {
+            statusText: "Missing email or password.",
+            token:"",
+            role:""
+         };
+          
         }
 
         const user = await prisma.user.findUnique({ 
@@ -6508,19 +6514,32 @@ deleteProduct: async (_: any, { id }: any) => {
         
         if (!user) {
           console.log("User not found");
-          // throw new ApolloError("User not found.", "USER_NOT_FOUND");
+          console.error("User not found.", "USER_NOT_FOUND");
+          return {
+            statusText: "User not found.",
+            token:"",
+            role:""
+         };
         }
 
         if (!user?.password) {
-          console.log("User has no password");
-          // throw new ApolloError("User has no password set.", "INTERNAL_SERVER_ERROR");
+          console.error("User has no password set.", "INTERNAL_SERVER_ERROR");
+       return {
+            statusText: "User has no password set.",
+            token:"",
+            role:""
+         };
         }
 
-        const isValid = await comparePassword(password, user?.password || "");
+        const isValid = await comparePassword(password, user?.password);
        
         if (!isValid) {
-          console.log("Invalid password");
-          // throw new ApolloError("Invalid credentials.", "INVALID_CREDENTIALS");
+          console.error("Invalid credentials.", "INVALID_CREDENTIALS");
+        return {
+            statusText: "Invalid credentials.",
+            token:"",
+            role:""
+         };
         }
 
         const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
