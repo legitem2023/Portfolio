@@ -10,8 +10,8 @@ import { emailMutations } from '../../lib/email/emailService';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import { LogoutResponse, Context } from './Types/graphql.js';
 import { pusherServer } from '../app/lib/pusher/server';
-import { PasswordResetService } from '../Services/PasswordResetService.js';
-import { EmailServiceConfig, EmailService } from '../Services/EmailService.js';
+import { PasswordResetService } from '../Services/PasswordResetService';
+import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
 const prisma = new PrismaClient();
 
