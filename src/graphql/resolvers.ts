@@ -4117,8 +4117,7 @@ products: async (
       });
       
       return followers.map(f => f.follower);
-    },
-    
+    },   
     following: async (_: any, { userId }: any, context: any) => {
       getUserId(context);
       
