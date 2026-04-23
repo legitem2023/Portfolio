@@ -8384,7 +8384,37 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         commentCount: updatedPost?._count?.comments || 0
       };
     },
-    
+     requestPasswordReset: async (_: any, { input }: { input: RequestPasswordResetInput }) => {
+      try {
+        const { email } = input;
+
+        if (!email) {
+          throw new Error('Email is required');
+        }
+
+        // Check if user exists with this email
+        const user = await prisma.user.findUnique({
+          where: { email }
+        });
+
+        if (!user) {
+          // For security, don't reveal that the email doesn't exist
+          return {
+            statusText:'Account doesnt exist!'
+          };
+        }
+
+        const result = await passwordResetService.requestPasswordReset(email);
+        return {
+            statusText:'Success'
+        };
+      } catch (error) {
+        console.error('Error in requestPasswordReset resolver:', error);
+        throw new Error(
+          error instanceof Error ? error.message : 'Failed to request password reset'
+        );
+      }
+    },
     removeTagFromPost: async (_: any, { postId, userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
