@@ -210,12 +210,12 @@ private async sendWithNodemailer(options: EmailOptions): Promise<boolean> {
 // src/services/EmailService.ts (Updated - Only adding logistics functionality)
 
 // Keep all your existing imports
-import { generatePasswordResetEmail } from '../emailTemplates/passwordResetEmail.js';
+import { generatePasswordResetEmail } from '../emailTemplates/passwordResetEmail';
 // Add this import for logistics emails
 import { 
   generateLogisticsContactEmail, 
   generateCustomerNotificationEmail 
-} from '../emailTemplates/logisticsContactEmail.js';
+} from '../emailTemplates/logisticsContactEmail';
 
 // Keep your existing interfaces and add new ones
 export interface EmailOptions {
