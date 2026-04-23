@@ -90,7 +90,7 @@ export class EmailService {
     const nodemailer = await import('nodemailer');
 
     const User = options.from;
-    const Password = process.env.EMAIL_APIKEY;
+    const Password = process.env.YAHOO_APP_PASSWORD;
 
     if (!User || !Password) {
       throw new Error('Google SMTP credentials not found. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
