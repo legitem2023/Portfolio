@@ -8446,7 +8446,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           };
         }
 
-        const result = await passwordResetService.requestPasswordReset(email);
+        const result = await PasswordResetService.requestPasswordReset(email);
         return {
             statusText:'Success'
         };
