@@ -270,12 +270,7 @@ export class EmailService {
         from: this.config.fromEmail,
       };
 
-      // For console mode, just simulate success
-      if (this.config.service === 'console') {
-        console.log('Test connection: Console mode - always returns success');
-        return { success: true, message: 'Console mode - test passed' };
-      }
-
+  
       const result = await this.sendEmail(testEmail);
       
       return {
