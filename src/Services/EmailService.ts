@@ -89,10 +89,10 @@ export class EmailService {
     // KEEP THIS METHOD EXACTLY AS YOU HAD IT
     const nodemailer = await import('nodemailer');
 
-    const gmailUser = options.from;
-    const gmailPassword = process.env.EMAIL_APIKEY;
+    const User = options.from;
+    const Password = process.env.EMAIL_APIKEY;
 
-    if (!gmailUser || !gmailPassword) {
+    if (!User || !Password) {
       throw new Error('Google SMTP credentials not found. Please set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.');
     }
 
@@ -101,8 +101,8 @@ export class EmailService {
       port: 465,
       secure: true,
       auth: {
-        user: gmailUser,
-        pass: gmailPassword,
+        user: User,
+        pass: Password,
       }
     });
 
