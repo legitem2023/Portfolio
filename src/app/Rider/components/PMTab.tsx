@@ -4,6 +4,7 @@ import { useQuery, useMutation, gql } from '@apollo/client';
 import { decryptToken } from '../../../../utils/decryptToken';
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
+
 import { 
   Search, 
   X, 
@@ -19,7 +20,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-// Shimmer Components with proper shimmer effect
+// Shimmer Components ONLY - added at the top
 const Shimmer = ({ className, children }: { className?: string; children?: React.ReactNode }) => (
   <div className={`relative overflow-hidden bg-gradient-to-r from-lime-100 via-lime-200 to-lime-100 ${className}`}>
     {children}
@@ -28,36 +29,35 @@ const Shimmer = ({ className, children }: { className?: string; children?: React
 );
 
 const ContactShimmer = () => (
-  <div className="w-full flex items-center space-x-3 p-3 rounded-xl mb-1">
-    <Shimmer className="w-12 h-12 rounded-xl" />
-    <div className="flex-1">
+  <div className="flex items-center p-3 border-b border-lime-100">
+    <Shimmer className="w-10 h-10 md:w-12 md:h-12 rounded-xl" />
+    <div className="ml-3 flex-1">
       <Shimmer className="h-4 rounded w-3/4 mb-2" />
       <Shimmer className="h-3 rounded w-1/2" />
     </div>
-    <Shimmer className="w-4 h-4 rounded" />
   </div>
 );
 
 const MessageShimmer = ({ isOwnMessage = false }: { isOwnMessage?: boolean }) => (
   <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3`}>
     {!isOwnMessage && (
-      <Shimmer className="w-8 h-8 rounded-full mr-2 self-end mb-1" />
+      <Shimmer className="w-6 h-6 md:w-8 md:h-8 rounded-full mr-2 self-end mb-1" />
     )}
-    <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
-      <Shimmer className={`rounded-2xl ${isOwnMessage ? 'w-48' : 'w-64'}`}>
-        <div className="h-10"></div>
+    <div className={`max-w-[85%] md:max-w-xs lg:max-w-md ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+      <Shimmer className={`rounded-2xl md:rounded-3xl ${isOwnMessage ? 'w-48' : 'w-64'}`}>
+        <div className="h-10 md:h-12"></div>
       </Shimmer>
       <div className="mt-1">
         <Shimmer className="h-3 rounded w-16" />
       </div>
     </div>
     {isOwnMessage && (
-      <Shimmer className="w-8 h-8 rounded-full ml-2 self-end mb-1" />
+      <Shimmer className="w-6 h-6 md:w-8 md:h-8 rounded-full ml-2 self-end mb-1" />
     )}
   </div>
 );
 
-// GraphQL Queries & Mutations
+// GraphQL Queries & Mutations (unchanged)
 const GET_MY_MESSAGES = gql`
   query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
     myMessages(page: $page, limit: $limit, isRead: $isRead) {
@@ -341,7 +341,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const [avatar, setAvatar] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // ADDED for shimmer
   
   // Use Redux for selectedUser (this is the ID)
   const dispatch = useDispatch();
@@ -374,7 +374,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   });
 
   // Fetch user details when selectedUserId changes
-  const { data: selectedUserData, loading: selectedUserLoading } = useQuery(GET_USER_BY_ID, {
+  const { data: selectedUserData } = useQuery(GET_USER_BY_ID, {
     variables: { userId: selectedUserId },
     skip: !selectedUserId
   });
@@ -386,8 +386,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       page: 1,
       limit: 50
     },
-    skip: !selectedUserId || !userId,
-    pollInterval: 30000,
+    skip: !selectedUserId || !userId
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
@@ -566,7 +565,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages
+  // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
       const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
@@ -576,7 +575,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
       const uiMessages: Message[] = sortedMessages.map((msg: GraphQLMessage) => ({
         id: msg.id,
         sender: `${msg.sender.firstName} ${msg.sender.lastName}`,
-        avatar: msg.sender.avatar || "/NoImage_1.webp",
+        avatar: msg.sender.avatar || "/NoImage.webp",
         timestamp: msg.createdAt,
         content: msg.body,
         likes: 0,
@@ -660,7 +659,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleUserSelect = async (user: User) => {
-    dispatch(setSelectedUser(user.id));
+    dispatch(setSelectedUser(user.id)); // Store only the ID in Redux
     setSelectedThread(messageThreads.find(thread => thread.user.id === user.id) || null);
     
     if (isMobile) {
@@ -675,7 +674,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   };
 
   const handleBackToContacts = () => {
-    dispatch(setSelectedUser(""));
+    dispatch(setSelectedUser("")); // Clear the ID from Redux
     setSelectedThread(null);
     if (isMobile) {
       setIsSidebarOpen(true);
@@ -750,63 +749,67 @@ const PMTab = ({ UserId }: { UserId: string }) => {
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
   
+  // Loading state for shimmer
   const isSidebarLoading = isInitialLoading || threadsLoading || usersLoading;
   const isChatLoading = conversationLoading && selectedUser;
  
   return (
     <div>
-      <div className="fixed inset-0 bg-gradient-to-br from-lime-50 via-green-50 to-emerald-50">
-        <div className="h-full max-w-6xl mx-auto bg-white md:rounded-2xl md:shadow-2xl overflow-hidden">
-          <div className="flex h-full">
+      <div className="relative top-0 h-[100vh] bg-gradient-to-br from-lime-50 to-green-50">
+        <div className="max-w-6xl mx-auto bg-white rounded-none md:rounded-2xl md:rounded-3xl shadow-none md:shadow-xl md:shadow-2xl overflow-hidden h-full">
+          <div className="flex h-full relative">
             {/* Sidebar/Contacts List */}
             <div className={`
-              ${isMobile ? 'absolute inset-0 z-30' : 'relative w-80'}
-              bg-white border-r border-lime-200
-              transform transition-transform duration-300 ease-in-out
+              ${isMobile ? 'relative inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+              bg-gradient-to-b from-lime-50 to-green-50 border-r border-lime-200
+              transform transition-transform duration-300 ease-in-out h-full
               ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
               flex flex-col
-              h-full
             `}>
               {/* Fixed Sidebar Header */}
               <div className="flex-shrink-0">
-                <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(163,230,53,0.3)_100%)]">
-                  <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                    <div className="z-20 h-[100%] flex items-center">
-                      <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-lime-600 to-green-600 bg-clip-text text-transparent">
-                        Messages
-                      </h1>
+                <div className="p-4 md:p-6 bg-gradient-to-r from-lime-600 to-green-600 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
+                      <p className="text-lime-200 text-sm hidden md:block">
+                        {unreadCountData?.unreadMessageCount > 0 
+                          ? `${unreadCountData.unreadMessageCount} unread messages`
+                          : 'Chat with your connections'
+                        }
+                      </p>
                     </div>
                     {isMobile && (
                       <button 
                         onClick={handleToggleSidebar}
-                        className="z-20 p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300"
+                        className="p-2 rounded-lg bg-lime-700 hover:bg-lime-800"
                       >
-                        <X className="w-5 h-5 text-gray-700" />
+                        <X className="w-5 h-5" />
                       </button>
                     )}
                   </div>
                 </div>
                 
                 {/* Search and Tabs */}
-                <div className="p-4 border-b border-lime-200">
+                <div className="p-3 md:p-4 bg-white border-b border-lime-200">
                   <div className="relative mb-3">
                     <input
                       type="text"
                       placeholder="Search conversations..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-lime-200 focus:outline-none focus:ring-2 focus:ring-lime-300 focus:border-transparent bg-white"
+                      className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-lime-200 focus:outline-none focus:ring-2 focus:ring-lime-300 focus:border-transparent bg-white"
                     />
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-lime-400" />
+                    <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-lime-400" />
                   </div>
 
                   {/* Tabs */}
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-1">
                     <button
                       onClick={() => setActiveTab("threads")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
                         activeTab === "threads"
-                          ? "bg-gradient-to-r from-lime-600 to-green-600 text-white shadow-md"
+                          ? "bg-lime-600 text-white"
                           : "bg-lime-100 text-lime-600 hover:bg-lime-200"
                       }`}
                     >
@@ -814,9 +817,9 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     </button>
                     <button
                       onClick={() => setActiveTab("allUsers")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
                         activeTab === "allUsers"
-                          ? "bg-gradient-to-r from-lime-600 to-green-600 text-white shadow-md"
+                          ? "bg-lime-600 text-white"
                           : "bg-lime-100 text-lime-600 hover:bg-lime-200"
                       }`}
                     >
@@ -826,8 +829,8 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
 
-              {/* Scrollable Contacts List with Shimmer */}
-              <div className="flex-1 overflow-y-auto px-2 pb-4">
+              {/* Scrollable Contacts List - WITH SHIMMER */}
+              <div className="flex-1 overflow-y-auto messages-scrollbar">
                 {isSidebarLoading ? (
                   // Show shimmer while loading
                   <>
@@ -842,50 +845,58 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                     {displayContacts.map((user) => {
                       const thread = getThreadInfo(user);
                       return (
-                        <button
+                        <div
                           key={user.id}
+                          className={`flex items-center p-3 border-b border-lime-50 cursor-pointer transition-all duration-200 ${
+                            selectedUserId === user.id ? 'bg-lime-50 border-l-4 border-l-lime-500' : 'hover:bg-lime-50'
+                          }`}
                           onClick={() => handleUserSelect(user)}
-                          className={`
-                            w-full flex items-center space-x-3 p-3 rounded-xl transition-all mb-1
-                            ${selectedUserId === user.id 
-                              ? 'bg-gradient-to-r from-lime-50 to-green-50 border-l-4 border-lime-500' 
-                              : 'hover:bg-lime-50'
-                            }
-                          `}
                         >
                           <div className="relative flex-shrink-0">
                             <img
                               src={getUserAvatar(user)}
                               alt={getUserFullName(user)}
-                              className="w-12 h-12 rounded-xl object-cover border-2 border-lime-200"
+                              className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-lime-200"
                             />
                             {thread && thread.unreadCount > 0 && (
-                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                              <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                                 {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
                               </div>
                             )}
                           </div>
-                          <div className="flex-1 text-left min-w-0">
-                            <h3 className="font-semibold text-gray-800 truncate">{getUserFullName(user)}</h3>
-                            <p className="text-sm text-lime-600 truncate">
+                          <div className="ml-3 flex-1 min-w-0">
+                            <div className="flex justify-between items-center">
+                              <h3 className="font-semibold text-lime-900 text-sm md:text-base truncate">
+                                {getUserFullName(user)}
+                              </h3>
+                              {thread?.lastMessage && (
+                                <span className="text-xs text-lime-400 whitespace-nowrap ml-2">
+                                  {formatTime(thread.lastMessage.createdAt)}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs md:text-sm text-lime-600 truncate">
                               {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
                             </p>
+                            {!thread && (
+                              <span className="inline-block mt-1 px-2 py-0.5 bg-lime-100 text-lime-600 text-xs rounded-full">
+                                New
+                              </span>
+                            )}
                           </div>
-                          {thread?.lastMessage && (
-                            <span className="text-xs text-lime-400 flex-shrink-0">
-                              {formatTime(thread.lastMessage.createdAt)}
-                            </span>
-                          )}
-                        </button>
+                        </div>
                       );
                     })}
                     
                     {displayContacts.length === 0 && (
-                      <div className="text-center py-12">
-                        <MessageCircle className="w-12 h-12 mx-auto text-lime-300 mb-3" />
-                        <p className="text-lime-500">
+                      <div className="text-center py-8 text-lime-400">
+                        <MessageCircle className="w-12 h-12 mx-auto mb-3" />
+                        <p className="text-sm">
                           {searchTerm ? 'No users found' : 
                            activeTab === "threads" ? 'No conversations yet' : 'No users available'}
+                        </p>
+                        <p className="text-xs mt-1">
+                          {searchTerm ? 'Try a different search term' : 'Start a conversation with someone!'}
                         </p>
                       </div>
                     )}
@@ -894,169 +905,173 @@ const PMTab = ({ UserId }: { UserId: string }) => {
               </div>
             </div>
 
-            {/* Chat Area */}
+            {/* Chat Area - Only show when not in sidebar mode on mobile */}
             {shouldShowChat && (
-              <div className="flex-1 flex flex-col h-full bg-white">
-                {/* Chat Header */}
+              <div className={`
+                ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
+                flex flex-col h-full bg-white
+                transform transition-transform duration-300 ease-in-out
+              `}>
+                {/* Fixed Chat Header */}
                 {selectedUser ? (
-                  <div className="flex-shrink-0">
-                    <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(163,230,53,0.3)_100%)]">
-                      <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                        <div className="z-20 h-[100%] flex items-center gap-3 min-w-0 flex-1">
-                          {isMobile && (
-                            <button 
-                              onClick={handleBackToContacts}
-                              className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 flex-shrink-0"
-                            >
-                              <ChevronLeft className="w-5 h-5 text-gray-700" />
-                            </button>
-                          )}
-                          <img
-                            src={getUserAvatar(selectedUser)}
-                            alt={getUserFullName(selectedUser)}
-                            className="w-10 h-10 rounded-xl object-cover border-2 border-lime-200 flex-shrink-0"
-                          />
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">
-                              {getUserFullName(selectedUser)}
-                            </h2>
-                            <p className="text-xs text-lime-600 truncate">
-                              {selectedUser.email}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 flex-shrink-0">
-                          <button className="p-2 text-lime-600 hover:text-lime-800 transition-all duration-300">
-                            <Phone className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={handleToggleSidebar}
-                            className="p-2 text-lime-600 hover:text-lime-800 transition-all duration-300 md:hidden"
-                          >
-                            <Menu className="w-5 h-5" />
-                          </button>
-                        </div>
+                  <div className="bg-gradient-to-r from-lime-50 to-green-50 border-b border-lime-200 p-4 safe-area-inset-top flex-shrink-0">
+                    <div className="flex items-center">
+                      {isMobile && (
+                        <button 
+                          onClick={handleBackToContacts}
+                          className="mr-3 p-2 rounded-lg bg-lime-100 hover:bg-lime-200 text-lime-600"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </button>
+                      )}
+                      <img
+                        src={getUserAvatar(selectedUser)}
+                        alt={getUserFullName(selectedUser)}
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-lime-200"
+                      />
+                      <div className="ml-3 flex-1 min-w-0">
+                        <h2 className="font-bold text-lime-900 text-sm md:text-base truncate">
+                          {getUserFullName(selectedUser)}
+                        </h2>
+                        <p className="text-xs md:text-sm text-lime-500 truncate">
+                          {selectedUser.email}
+                        </p>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button className="p-2 text-lime-400 hover:text-lime-600 transition-colors">
+                          <Phone className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={handleToggleSidebar}
+                          className="p-2 text-lime-400 hover:text-lime-600 transition-colors md:hidden"
+                        >
+                          <Menu className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex-shrink-0">
-                    <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(163,230,53,0.3)_100%)]">
-                      <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
-                        <div className="z-20 h-[100%] flex items-center min-w-0 flex-1">
-                          <div>
-                            <h2 className="font-bold text-gray-800 text-sm md:text-base">Messages</h2>
-                            <p className="text-xs text-lime-600">Select a conversation</p>
-                          </div>
-                        </div>
+                  <div className="bg-gradient-to-r from-lime-50 to-green-50 border-b border-lime-200 p-4 safe-area-inset-top flex-shrink-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
                         {isMobile && (
                           <button 
                             onClick={handleToggleSidebar}
-                            className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 flex-shrink-0"
+                            className="mr-3 p-2 rounded-lg bg-lime-100 hover:bg-lime-200 text-lime-600"
                           >
-                            <Menu className="w-5 h-5 text-gray-700" />
+                            <Menu className="w-5 h-5" />
                           </button>
                         )}
+                        <div>
+                          <h2 className="font-bold text-lime-900 text-sm md:text-base">Messages</h2>
+                          <p className="text-xs md:text-sm text-lime-500">Select a conversation</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Messages Container - Scrollable with Shimmer */}
-                <div className="flex-1 relative overflow-hidden">
-                  <div 
-                    ref={messagesContainerRef}
-                    className="absolute inset-0 overflow-y-auto bg-gradient-to-br from-gray-50 to-lime-50"
-                  >
-                    {selectedUser ? (
-                      isChatLoading ? (
-                        // Show shimmer while loading messages
-                        <div className="p-4">
-                          <div className="flex justify-center my-4">
-                            <Shimmer className="h-6 w-20 rounded-full" />
-                          </div>
-                          <MessageShimmer />
-                          <MessageShimmer isOwnMessage={true} />
-                          <MessageShimmer />
-                          <MessageShimmer isOwnMessage={true} />
-                          <MessageShimmer />
+                {/* Messages Container - WITH SHIMMER */}
+                <div 
+                  ref={messagesContainerRef}
+                  className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-lime-50 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
+                >
+                  {selectedUser ? (
+                    isChatLoading ? (
+                      // Show shimmer while loading messages
+                      <div className="space-y-4">
+                        <div className="flex justify-center my-4">
+                          <Shimmer className="h-6 w-20 rounded-full" />
                         </div>
-                      ) : (
-                        <div className="p-4">
-                          {Object.entries(messageGroups).map(([date, dateMessages]) => (
-                            <div key={date}>
-                              <div className="flex justify-center my-4">
-                                <span className="bg-gradient-to-r from-lime-100 to-green-100 text-lime-600 px-3 py-1 rounded-full text-xs font-medium shadow-sm">
-                                  {date}
-                                </span>
-                              </div>
-                              <div className="space-y-3">
-                                {dateMessages.map((message) => (
-                                  <div
-                                    key={message.id}
-                                    className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                                  >
-                                    {!message.isOwnMessage && (
-                                      <img
-                                        src={message.avatar}
-                                        alt={message.sender}
-                                        className="w-8 h-8 rounded-full object-cover border-2 border-lime-200 mr-2 self-end mb-1 flex-shrink-0"
-                                      />
-                                    )}
-                                    <div className={`max-w-[70%] ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
-                                      <div className={`
-                                        rounded-2xl px-4 py-2
-                                        ${message.isOwnMessage 
-                                          ? 'bg-gradient-to-r from-lime-600 to-green-600 text-white rounded-br-none shadow-md' 
-                                          : 'bg-white text-gray-800 border border-lime-100 rounded-bl-none shadow-sm'
-                                        }
-                                      `}>
-                                        <p className="text-sm whitespace-pre-wrap break-words">
-                                          {message.content}
-                                        </p>
-                                      </div>
-                                      <div className={`flex items-center gap-1 mt-1 text-xs ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-                                        <span className={message.isOwnMessage ? 'text-lime-500' : 'text-gray-400'}>
-                                          {formatTime(message.timestamp)}
-                                        </span>
-                                        {message.isOwnMessage && (
-                                          <Check className="w-3 h-3 text-lime-500" />
-                                        )}
-                                      </div>
-                                    </div>
-                                    {message.isOwnMessage && (
-                                      <img
-                                        src={message.avatar}
-                                        alt={message.sender}
-                                        className="w-8 h-8 rounded-full object-cover border-2 border-lime-200 ml-2 self-end mb-1 flex-shrink-0"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
-                          <div ref={messagesEndRef} />
-                        </div>
-                      )
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-center text-lime-400">
-                          <MessageSquare className="w-16 h-16 mx-auto mb-4" />
-                          <p className="text-lg font-medium">Select a conversation</p>
-                          <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
-                        </div>
+                        <MessageShimmer />
+                        <MessageShimmer isOwnMessage={true} />
+                        <MessageShimmer />
+                        <MessageShimmer isOwnMessage={true} />
+                        <MessageShimmer />
                       </div>
-                    )}
-                  </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {Object.entries(messageGroups).map(([date, dateMessages]) => (
+                          <div key={date}>
+                            <div className="flex justify-center my-4">
+                              <span className="bg-lime-100 text-lime-600 px-3 py-1 rounded-full text-xs font-medium">
+                                {date}
+                              </span>
+                            </div>
+                            {dateMessages.map((message) => (
+                              <div
+                                key={message.id}
+                                className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                              >
+                                <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
+                                  message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                                }`}>
+                                  <img
+                                    src={message.avatar}
+                                    alt={message.sender}
+                                    className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-lime-200 flex-shrink-0"
+                                  />
+                                  <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
+                                    <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
+                                      message.isOwnMessage
+                                        ? 'bg-gradient-to-r from-lime-600 to-green-600 text-white rounded-br-none'
+                                        : 'bg-white text-lime-900 border border-lime-100 rounded-bl-none'
+                                    }`}>
+                                      <p className="text-sm md:text-base whitespace-pre-wrap break-words">{message.content}</p>
+                                    </div>
+                                    <div className={`flex items-center mt-1 space-x-2 text-xs ${
+                                      message.isOwnMessage ? 'justify-end' : 'justify-start'
+                                    }`}>
+                                      <span className={`${message.isOwnMessage ? 'text-lime-400' : 'text-lime-400'}`}>
+                                        {formatTime(message.timestamp)}
+                                      </span>
+                                      {message.isOwnMessage && (
+                                        <Check className="w-3 h-3 md:w-4 md:h-4 text-lime-400" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ))}
+                        <div ref={messagesEndRef} />
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="text-center text-lime-400">
+                        <MessageSquare className="w-16 h-16 mx-auto mb-4" />
+                        <p className="text-lg font-medium">Select a conversation</p>
+                        <p className="text-sm mt-2">Choose from your contacts to start messaging</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Input Area - Fixed at bottom */}
-                {selectedUser && !isChatLoading && (
-                  <div className="border-t border-lime-100 bg-white flex-shrink-0">
-                    <div className="p-4">
+                {/* Message Input */}
+                {selectedUser && (
+                  <div 
+                    className="border-t border-lime-200 bg-white transition-all duration-300 flex-shrink-0"
+                    style={{
+                      position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
+                      bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
+                      left: isKeyboardVisible && isMobile ? '0' : '0',
+                      right: isKeyboardVisible && isMobile ? '0' : '0',
+                      width: isKeyboardVisible && isMobile ? '100%' : '100%',
+                      zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
+                    }}
+                  >
+                    <div 
+                      className="p-4 mx-auto w-full"
+                      style={{
+                        maxWidth: isKeyboardVisible && isMobile ? '100%' : 'none',
+                        paddingLeft: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                        paddingRight: isKeyboardVisible && isMobile ? '1rem' : '1rem',
+                      }}
+                    >
                       <div className="flex space-x-3">
-                        <div className="flex-1 bg-lime-50 rounded-2xl border border-lime-200 focus-within:ring-2 focus-within:ring-lime-300 transition-all duration-300">
+                        <div className="flex-1 bg-lime-50 rounded-2xl border border-lime-200 focus-within:ring-2 focus-within:ring-lime-300 focus-within:border-lime-300">
                           <textarea
                             ref={textareaRef}
                             value={newMessage}
@@ -1068,13 +1083,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                             disabled={isSending}
                             className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
                             rows={1}
-                            style={{ height: 'auto' }}
                           />
                         </div>
                         <button
                           onClick={handleSendMessage}
                           disabled={!newMessage.trim() || isSending}
-                          className="bg-gradient-to-r from-lime-600 to-green-600 text-white p-3 rounded-2xl hover:from-lime-700 hover:to-green-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 active:scale-95 min-w-[52px]"
+                          className={`bg-gradient-to-r from-lime-600 to-green-600 text-white p-3 rounded-2xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 ${
+                            isSending ? 'opacity-70 cursor-wait' : 'hover:from-lime-700 hover:to-green-700'
+                          }`}
                         >
                           {isSending ? (
                             <Loader2 className="w-6 h-6 animate-spin" />
@@ -1086,13 +1102,13 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       <div className="flex justify-between items-center mt-2 px-1">
                         <div className="flex space-x-2">
                           <button 
-                            className="p-2 text-lime-400 hover:text-lime-600 transition-all duration-300 hover:scale-110"
+                            className="p-2 text-lime-400 hover:text-lime-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSending}
                           >
                             <Paperclip className="w-5 h-5" />
                           </button>
                           <button 
-                            className="p-2 text-lime-400 hover:text-lime-600 transition-all duration-300 hover:scale-110"
+                            className="p-2 text-lime-400 hover:text-lime-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             disabled={isSending}
                           >
                             <Image className="w-5 h-5" />
