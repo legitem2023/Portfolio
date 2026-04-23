@@ -4434,6 +4434,24 @@ salesList: async (
           }
         });
 
+
+/*const response = await prisma.address.create({
+        data: {
+          userId:user.id,
+          type,
+          receiver: `${user.firstName} ${user.lastName}`,
+          phone,
+          street:businessAddress,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault:true,
+          lat:user.currentLatitude,
+          lng:user.currentLongitude
+        },
+      });*/
+        
         // Generate JWT token
      /*   const token = jwt.sign(
           { 
