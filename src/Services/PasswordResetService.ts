@@ -1,6 +1,6 @@
 // src/services/PasswordResetService.ts
 import { PrismaClient } from '@prisma/client';
-import { EmailService, EmailServiceConfig } from './EmailService.js';
+import { EmailService, EmailServiceConfig } from './EmailService';
 import crypto from 'crypto';
 
 export interface ResetTokenData {
