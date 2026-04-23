@@ -33,6 +33,20 @@ const getUserId = (context: any, required = true): string => {
   return userId;
 };
 
+// Define input types for TypeScript
+interface RequestPasswordResetInput {
+  email: string;
+}
+
+interface ResetPasswordInput {
+  token: string;
+  newPassword: string;
+}
+
+interface ValidateResetTokenInput {
+  token: string;
+}
+
 interface SetDefaultAddressArgs {
   addressId: string;
   userId: string;
