@@ -1,6 +1,26 @@
 import { gql } from "@apollo/client";
 
 // In your mutation.ts file - add these mutations
+export const REQUESTPASSWORDRESET = gql`
+  mutation RequestPasswordReset($email: String!) {
+    requestPasswordReset(input: { email: $email }) {
+      statusText
+    }
+  }
+`
+
+export const RESETPASSWORD = gql`
+  mutation ResetPassword($token: String!, $newPassword: String!) {
+    resetPassword(input: {
+      token: $token,
+      newPassword: $newPassword
+    }) {
+      statusText
+    }
+  }
+`
+
+
 
 export const UPDATE_USER_BUSINESS_NAME = gql`
   mutation UpdateUserBusinessName($id: ID, $businessName: String) {
