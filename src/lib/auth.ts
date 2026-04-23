@@ -76,7 +76,7 @@ export const authOptions: NextAuthOptions = {
               serverToken: data.login.token, // This is your returned token
             };
           } else {
-            console.error("No token received from server");
+           throw new Error(data?.login.statusText);
           }
         } catch (error: any) {
           console.error("Login error:", error);
