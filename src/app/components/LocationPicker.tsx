@@ -13,8 +13,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+// Interface for address components
+export interface AddressComponents {
+  street: string;
+  city: string;
+  state: string;
+  country: string;
+  zipcode: string;
+  fullAddress: string;
+}
+
 interface LocationPickerProps {
-  onLocationSelect: (lat: number, lng: number, address: string) => void;
+  onLocationSelect: (lat: number, lng: number, address: string, addressComponents: AddressComponents) => void;
 }
 
 export default function LocationPicker({ onLocationSelect }: LocationPickerProps) {
@@ -45,7 +55,21 @@ export default function LocationPicker({ onLocationSelect }: LocationPickerProps
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
       );
       const data = await response.json();
-      const address = data.display_name || `${lat}, ${lng}`;
+      
+      // Extract address components
+      const address = data.address || {};
+      const roadNumber = address.house_number ? `${address.house_number} ` : '';
+      const road = address.road || address.pedestrian || address.street || '';
+      const street = `${roadNumber}${road}`.trim();
+      
+      const addressComponents: AddressComponents = {
+        street: street || '',
+        city: address.city || address.town || address.village || address.hamlet || '',
+        state: address.state || address.province || '',
+        country: address.country || '',
+        zipcode: address.postcode || '',
+        fullAddress: data.display_name || `${lat}, ${lng}`
+      };
       
       if (marker) {
         marker.setLatLng([lat, lng]);
@@ -54,10 +78,19 @@ export default function LocationPicker({ onLocationSelect }: LocationPickerProps
         setMarker(newMarker);
       }
       
-      onLocationSelect(lat, lng, address);
+      // Pass all components to parent
+      onLocationSelect(lat, lng, addressComponents.fullAddress, addressComponents);
     } catch (error) {
       console.error('Error reverse geocoding:', error);
-      onLocationSelect(lat, lng, `${lat}, ${lng}`);
+      const fallbackComponents: AddressComponents = {
+        street: '',
+        city: '',
+        state: '',
+        country: '',
+        zipcode: '',
+        fullAddress: `${lat}, ${lng}`
+      };
+      onLocationSelect(lat, lng, `${lat}, ${lng}`, fallbackComponents);
     }
   };
 
