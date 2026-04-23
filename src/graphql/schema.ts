@@ -1232,9 +1232,7 @@ type PasswordResetResult {
     newPassword: String!
   }
 
-  input ValidateResetTokenInput {
-    token: String!
-  }
+  
 
 type Mutation {
   locationTracking(input: LocationTrackingInput): LocationTrackingData
@@ -1250,8 +1248,7 @@ type Mutation {
     
    requestPasswordReset(input: RequestPasswordResetInput!):Result
    resetPassword(input: ResetPasswordInput!): Result
-   validateResetToken(input: ValidateResetTokenInput!): TokenValidationResult!
- 
+   
     
     remit(id:ID): Result
     finishorder(id:ID): Result
