@@ -18,7 +18,7 @@ import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 const emailService = new EmailService({
   service: process.env.YAHOO_EMAIL as 'nodemailer',
   apiKey: process.env.YAHOO_APP_PASSWORD,
-  fromEmail: 'onboarding@vendorcity.net',
+  fromEmail: process.env.YAHOO_EMAIL,
   appName: 'VendorCity', // REMOVE DUPLICATE
   baseUrl: 'https://vendorcity.net',
   logoUrl: 'https://vendorcity.net/VendorCity_Store.webp',
@@ -32,7 +32,7 @@ const emailService = new EmailService({
 const emailConfig: EmailServiceConfig = {
   service: process.env.YAHOO_EMAIL as 'nodemailer',
   apiKey: process.env.YAHOO_APP_PASSWORD,
-  fromEmail: 'onboarding@vendorcity.com',
+  fromEmail: process.env.YAHOO_EMAIL,
   appName: 'VendorCity',
   baseUrl: 'https://vendorcity.net'
 };
