@@ -1216,7 +1216,25 @@ input LocationTrackingInput {
   timestamp: String
 }
 
+type PasswordResetResult {
+    success: Boolean!
+    message: String!
+    token: String
+  }
 
+
+  input RequestPasswordResetInput {
+    email: String!
+  }
+
+  input ResetPasswordInput {
+    token: String!
+    newPassword: String!
+  }
+
+  input ValidateResetTokenInput {
+    token: String!
+  }
 
 type Mutation {
   locationTracking(input: LocationTrackingInput): LocationTrackingData
