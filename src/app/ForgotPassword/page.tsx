@@ -3,6 +3,7 @@
 import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { REQUESTPASSWORDRESET } from '../components/graphql/mutation';
+import { useMutation } from '@apollo/client'
 import Head from 'next/head';
 import Link from 'next/link';
 import Header from '../components/Header';
@@ -25,7 +26,8 @@ export default function ForgotPassword() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
-
+  const [requestPasswordReset, { loading: gqlLoading, error: gqlError }] = useMutation(REQUESTPASSWORDRESET)
+  
   // Handle viewport height for mobile browsers
   useEffect(() => {
     const setVH = () => {
