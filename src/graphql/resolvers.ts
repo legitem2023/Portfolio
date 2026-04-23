@@ -8465,11 +8465,11 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       throw new Error('Token and new password are required');
     }
 
-    const result = await passwordResetService.resetPassword(token, newPassword);
+    const result = await PasswordResetService.resetPassword(token, newPassword);
     
     if (result.success) {
       // Update the user's password in the database
-      const tokenValidation:any = await passwordResetService.validateResetToken(token);
+      const tokenValidation:any = await PasswordResetService.validateResetToken(token);
       if (tokenValidation.valid) {
         const passwordHash = await encryptPassword(newPassword, 10);
         await prisma.user.update({
