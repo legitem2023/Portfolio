@@ -8506,7 +8506,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           }
         });
         return {
-          statusText: result.message // Changed from result.success to result.message
+          statusText: "Success" // Changed from result.success to result.message
         };
       } else {
         return {
