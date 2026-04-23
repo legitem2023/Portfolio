@@ -97,7 +97,7 @@ export class EmailService {
     }
 
     const transporter = nodemailer.createTransport({
-      host: 'smtp.mail.yahoo.com',
+      host: 'smtp.mail.google.com',
       port: 465,
       secure: true,
       auth: {
@@ -108,9 +108,9 @@ export class EmailService {
 
     try {
       await transporter.verify();
-      console.log("✅ SMTP connection verified successfully");
+      console.log("✅ GOOGLE SMTP connection verified successfully");
     } catch (error: any) {
-      console.error("❌ SMTP connection failed:", error.message);
+      console.error("❌ GOOGLE SMTP connection failed:", error.message);
       
       if (error.code === 'EAUTH') {
         console.error("\n⚠️  AUTHENTICATION ERROR: You need to use a Google App Password.");
