@@ -238,7 +238,7 @@ export class PasswordResetService {
         email: email 
       },
       data: { 
-        passwordHash: hashedPassword
+        password: hashedPassword
       }
     });
 
