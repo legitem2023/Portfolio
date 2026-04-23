@@ -13,6 +13,32 @@ import { pusherServer } from '../app/lib/pusher/server';
 import { PasswordResetService } from '../Services/PasswordResetService';
 import { EmailServiceConfig, EmailService } from '../Services/EmailService';
 
+
+// Initialize EmailService ONCE
+const emailService = new EmailService({
+  service: process.env.EMAIL_SERVICE as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  apiKey: process.env.EMAIL_APIKEY,
+  fromEmail: 'onboarding@vendorcity.net',
+  appName: 'VendorCity', // REMOVE DUPLICATE
+  baseUrl: 'https://vendorcity.net',
+  logoUrl: 'https://vendorcity.net/VendorCity_Store.webp',
+  logisticsTeamEmail: process.env.LOGISTICS_TEAM_EMAIL,
+  supportEmail: process.env.SUPPORT_EMAIL || 'support@yourapp.com',
+  supportPhone: process.env.SUPPORT_PHONE || '+1 (800) 123-4567',
+});
+
+// For the emailConfig object (if you still need it separately):
+const emailConfig: EmailServiceConfig = {
+  service: 'robert_sanco_marquez@yahoo.com' as 'sendgrid' | 'resend' | 'nodemailer' | 'console' || 'console',
+  apiKey: process.env.EMAIL_APIKEY,
+  fromEmail: 'onboarding@vendorcity.com',
+  appName: 'VendorCity',
+  baseUrl: 'https://vendorcity.net'
+  // Note: You can add the other properties here if needed
+  // logoUrl, logisticsTeamEmail, supportEmail, supportPhone
+};
+
+
 const prisma = new PrismaClient();
 
 // Add date-fns imports for sales analytics
