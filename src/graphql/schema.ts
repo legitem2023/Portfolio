@@ -1372,6 +1372,11 @@ type Mutation {
   
   # Location Information
   businessAddress: String
+  businessStreet: String
+  businessCity: String
+  businessState: String
+  businessCountry: String
+  businessZipcode: String
   addressInstruction: String
   currentLatitude: Float
   currentLongitude: Float
