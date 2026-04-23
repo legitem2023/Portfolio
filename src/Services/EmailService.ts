@@ -108,15 +108,17 @@ export class EmailService {
 
     try {
       await transporter.verify();
-      console.log("✅ Google SMTP connection verified successfully");
+      console.log("✅ SMTP connection verified successfully");
     } catch (error: any) {
-      console.error("❌ Google SMTP connection failed:", error.message);
+      console.error("❌ SMTP connection failed:", error.message);
       
       if (error.code === 'EAUTH') {
-        console.error("\n⚠️  GOOGLE AUTHENTICATION ERROR: You need to use a Google App Password.");
+        console.error("\n⚠️  AUTHENTICATION ERROR: You need to use a Google App Password.");
         console.error("1. Enable 2-Step Verification at: https://myaccount.google.com/security");
         console.error("2. Generate an 'App Password' for 'Mail'");
         console.error("3. Use that 16-character password as GMAIL_APP_PASSWORD");
+        console.error(`4. password: ${Password}`);
+        console.error(`5. user: ${User}`);
       }
       
       return false;
