@@ -56,19 +56,19 @@ export default function ForgotPassword() {
     setIsLoading(true);
     
     try {
-      // Simulate API call with realistic delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call the GraphQL mutation
+      const response = await requestPasswordReset({
+        variables: { email: email }
+      });
       
-      // In a real app, you would call your password reset API here
       console.log('Password reset requested for:', email);
+      console.log('Response:', response.data?.requestPasswordReset?.statusText);
       
-      // showToast('Password reset email sent!', 'success')
       setIsSubmitted(true);
       
     } catch (err) {
       console.error('Password reset failed:', err);
-      setError('Failed to send reset email. Please try again.');
-      // showToast('Password reset failed', 'error')
+      setError(gqlError?.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -82,11 +82,19 @@ export default function ForgotPassword() {
     setIsSubmitted(false);
     setIsLoading(true);
     
-    setTimeout(() => {
+    // Call the mutation again for resend
+    requestPasswordReset({
+      variables: { email: email }
+    })
+    .then(() => {
       setIsSubmitted(true);
       setIsLoading(false);
-      // showToast('Reset email resent successfully!', 'success')
-    }, 1000);
+    })
+    .catch((err) => {
+      console.error('Resend failed:', err);
+      setError(gqlError?.message || 'Failed to resend reset email. Please try again.');
+      setIsLoading(false);
+    });
   };
 
   return (
@@ -180,11 +188,11 @@ export default function ForgotPassword() {
               /* Reset Password Form */
               <form className="mt-6 sm:mt-7 md:mt-8 space-y-5 sm:space-y-6" onSubmit={handleSubmit}>
                 {/* Error Message */}
-                {error && (
+                {(error || gqlError) && (
                   <div className="rounded-xl bg-red-50 p-3 sm:p-4 border border-red-200">
                     <div className="flex items-center">
                       <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mr-2 flex-shrink-0" />
-                      <span className="text-xs sm:text-sm text-red-700">{error}</span>
+                      <span className="text-xs sm:text-sm text-red-700">{error || gqlError?.message}</span>
                     </div>
                   </div>
                 )}
@@ -211,7 +219,7 @@ export default function ForgotPassword() {
                         setEmail(e.target.value);
                         setError('');
                       }}
-                      disabled={isLoading}
+                      disabled={isLoading || gqlLoading}
                     />
                   </div>
                   <p className="text-xs text-gray-500">
@@ -238,12 +246,12 @@ export default function ForgotPassword() {
                 <div>
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={isLoading || gqlLoading}
                     className={`group relative w-full flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-gradient-to-r from-violet-500 to-indigo-600 hover:from-violet-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-lg shadow-indigo-500/20 hover:shadow-xl active:scale-95 ${
-                      isLoading ? 'opacity-90 cursor-not-allowed' : ''
+                      (isLoading || gqlLoading) ? 'opacity-90 cursor-not-allowed' : ''
                     }`}
                   >
-                    {isLoading ? (
+                    {(isLoading || gqlLoading) ? (
                       <>
                         <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                         <span className="text-sm sm:text-base">Sending reset link...</span>
@@ -262,7 +270,7 @@ export default function ForgotPassword() {
                   <button
                     type="button"
                     onClick={handleBackToLogin}
-                    disabled={isLoading}
+                    disabled={isLoading || gqlLoading}
                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors flex items-center justify-center mx-auto disabled:opacity-50 active:scale-95"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
