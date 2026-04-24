@@ -342,7 +342,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
     <div className="min-h-screen p-0">
       <div className="max-w-2xl mx-auto">
         {/* Cover Photo */}
-        <div className="h-36 relative overflow bg-gradient-to-r from-gray-500 to-gray-800 bg-opacity-90 backdrop-blur-sm">
+        <div className="h-36 relative overflow bg-gradient-to-r from-zinc-500 to-zinc-800 bg-opacity-90 backdrop-blur-sm">
           <div className="absolute bottom-0 w-full h-1/2"></div>
           
           
@@ -385,7 +385,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
         </div>
 
         {/* Profile Info */}
-        <div className="max-w-4xl mx-auto px-4 pt-16 md:pt-20 pb-4">
+        <div className="max-w-6xl mx-auto px-4 pt-16 md:pt-20 pb-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <div className="w-full md:w-auto">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
