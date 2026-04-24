@@ -5478,7 +5478,27 @@ updateVehicleType:async (_parent: any,args:any) => {
     throw new Error(`Failed to update business name: ${error.message}`);
   }
 },
-
+    
+updateVendorStatus: async(_:any, { id, vendorApplicationStatus }: any ) => {
+  try {
+    
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: { vendorApplicationStatus: vendorApplicationStatus.trim() },
+      include: {
+        posts: true,
+        addresses: true
+      }
+    });
+    
+    return updatedUser;
+  
+  }
+  catch (error: any) {
+  
+  }
+},
+    
 updateUserBusinessType: async (_: any, { id, businessType }: any) => {
   try {
     // Validate business type
