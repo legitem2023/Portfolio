@@ -469,7 +469,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   };
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-zinc-800 shadow-md sticky top-0 z-50">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 sm:h-20">
           {/* Left section - Menu Button */}
