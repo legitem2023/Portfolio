@@ -4359,141 +4359,7 @@ salesList: async (
   },
 
   Mutation: {
-  /*  vendorSignup: async (_parent: any, { input }: any) => {
-      try {
-        const {
-          email,
-          password,
-          firstName,
-          lastName,
-          phone,
-          businessName,
-          businessType,
-          productCategory,
-          businessDescription,
-          website,
-          businessAddress,
-          addressInstruction,
-          currentLatitude,
-          currentLongitude,
-          taxId,
-        } = input;
 
-        // Check if user already exists
-        const existingUser = await prisma.user.findUnique({
-          where: { email }
-        });
-
-        if (existingUser) {
-          return {
-            success: false,
-            message: 'Email already registered',
-            user: null,
-            token: null
-          };
-        }
-
-        // Validate password length
-        if (password.length < 6) {
-          return {
-            success: false,
-            message: 'Password must be at least 6 characters',
-            user: null,
-            token: null
-          };
-        }
-
-        // Hash password
-      const passwordHash = await encryptPassword(password, 10);
-
-        // Create new user with vendor application
-        const user = await prisma.user.create({
-          data: {
-            email,
-            password: passwordHash,
-            firstName,
-            lastName,
-            phone,
-            role: 'MANAGER',
-            isVendor: false,
-            vendorApplicationStatus: 'PENDING',
-            businessName,
-            businessType,
-            productCategory,
-            businessDescription,
-            website: website || null,
-            businessAddress,
-            addressInstruction: addressInstruction || null,
-            currentLatitude: currentLatitude || null,
-            currentLongitude: currentLongitude || null,
-            taxId,
-            emailVerified: false,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        });
-
-
-const response = await prisma.address.create({
-        data: {
-          userId:user.id,
-          type,
-          receiver: `${user.firstName} ${user.lastName}`,
-          phone,
-          street:businessAddress,
-          city,
-          state,
-          zipCode,
-          country,
-          isDefault:true,
-          lat:user.currentLatitude,
-          lng:user.currentLongitude
-        },
-      });
-        
-        // Generate JWT token
-        const token = jwt.sign(
-          { 
-            userId: user.id, 
-            email: user.email,
-            role: user.role 
-          },
-          process.env.JWT_SECRET || 'your-secret-key',
-          { expiresIn: '7d' }
-        );
-
-      const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
-      const token = await new EncryptJWT({
-        userId: user?.id,
-        phone: user?.phone,
-        email: user?.email,
-        name: user?.firstName,
-        role: user?.role,
-        image: user?.avatar,
-        addresses: user?.businessAddress
-      }).setProtectedHeader({ alg: 'dir', enc: 'A256GCM' }).setIssuedAt().encrypt(secret);
-        
-
-        // Remove password from response
-        const { password: _, ...userWithoutPassword } = user;
-
-        return {
-          success: true,
-          message: 'Vendor application submitted successfully! We will review your application within 3-5 business days.',
-          user: userWithoutPassword,
-          token
-        };
-
-      } catch (error) {
-        console.error('Vendor signup error:', error);
-        return {
-          success: false,
-          message: 'Failed to create vendor account. Please try again.',
-          user: null,
-          token: null
-        };
-      }
-    },*/
     vendorSignup: async (_parent: any, { input }: any) => {
   try {
     const {
@@ -4518,13 +4384,7 @@ const response = await prisma.address.create({
       currentLongitude,
       taxId,
     } = input;
-  console.error(businessStreet,
-      businessCity,
-      businessState,
-      businessCountry,
-      businessZipcode,
-      addressInstruction);
-    return
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
