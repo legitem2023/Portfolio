@@ -492,7 +492,7 @@ export default function VendorApplicationForm() {
                         >
                           <option value="">Select category</option>
                           {activeCategories.map((category: Category) => (
-                            <option key={category.id} value={category.id}>
+                            <option key={category.id} value={category.name}>
                               {category.name}
                             </option>
                           ))}
