@@ -168,7 +168,7 @@ export default function VariantsModal({
                           onImageDelete={handleVariantImageDelete}
                           onImageUpload={handleImageUploadWithLogging}
                           isUploading={uploadingVariantId === variant.id}
-                          onEdit={handleEditVariant}
+                          //onEdit={handleEditVariant}
                         />
                       </div>
                     );
