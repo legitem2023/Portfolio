@@ -28,6 +28,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const [updateUserWebsite] = useMutation(UPDATE_USER_WEBSITE);
   const [updateUserBusinessAddress] = useMutation(UPDATE_USER_BUSINESS_ADDRESS);
   const [updateUserAddressInstruction] = useMutation(UPDATE_USER_ADDRESS_INSTRUCTION);
+  const [updateVendorApplicationStatus] = useMutation(UPDATE_VENDOR_APPLICATION_STATUS);
   
   const [activeTab, setActiveTab] = useState<string>('address');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
@@ -38,6 +39,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const [isEditingWebsite, setIsEditingWebsite] = useState(false);
   const [isEditingBusinessAddress, setIsEditingBusinessAddress] = useState(false);
   const [isEditingAddressInstruction, setIsEditingAddressInstruction] = useState(false);
+  const [isEditingVendorStatus, setIsEditingVendorStatus] = useState(false);
   
   const [phoneNumber, setPhoneNumber] = useState('');
   const [businessName, setBusinessName] = useState('');
@@ -47,8 +49,10 @@ const UserProfile = ({ userId }: { userId: string }) => {
   const [website, setWebsite] = useState('');
   const [businessAddress, setBusinessAddress] = useState('');
   const [addressInstruction, setAddressInstruction] = useState('');
+  const [vendorStatus, setVendorStatus] = useState('');
   
   const [isUploading, setIsUploading] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (loading) return <UserProfileShimmer />;
@@ -245,6 +249,31 @@ const UserProfile = ({ userId }: { userId: string }) => {
     }
   };
 
+  const handleVendorStatusUpdate = async () => {
+    if (!vendorStatus.trim()) {
+      alert('Please select a vendor application status');
+      return;
+    }
+
+    try {
+      setIsUpdatingStatus(true);
+      await updateVendorApplicationStatus({
+        variables: {
+          id: userId,
+          vendorApplicationStatus: vendorStatus
+        }
+      });
+      setIsEditingVendorStatus(false);
+      refetch();
+      alert(`Vendor application status updated to ${vendorStatus}!`);
+    } catch (error) {
+      console.error('Error updating vendor status:', error);
+      alert('Failed to update vendor application status. Please try again.');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -298,6 +327,15 @@ const UserProfile = ({ userId }: { userId: string }) => {
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();
+  };
+
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'APPROVED': return 'bg-green-100 text-green-800';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -357,7 +395,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 @{user.firstName.toLowerCase()}{user.lastName.toLowerCase()}
               </p>
               
-              {/* Business Name - NEW */}
+              {/* Business Name */}
               <div className="flex items-center gap-2 mt-3 text-gray-700">
                 <Building2 className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 {isEditingBusinessName ? (
@@ -409,7 +447,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Business Type - NEW */}
+              {/* Business Type */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Briefcase className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 {isEditingBusinessType ? (
@@ -461,7 +499,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Product Category - NEW */}
+              {/* Product Category */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Package className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 {isEditingProductCategory ? (
@@ -513,7 +551,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Business Description - NEW */}
+              {/* Business Description */}
               <div className="flex items-start gap-2 mt-2 text-gray-700">
                 <FileText className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
                 {isEditingBusinessDescription ? (
@@ -565,7 +603,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Website - NEW */}
+              {/* Website */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Globe className="w-5 h-5 text-gray-500 flex-shrink-0" />
                 {isEditingWebsite ? (
@@ -626,51 +664,62 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              {/* Business Address - NEW
-              <div className="flex items-start gap-2 mt-2 text-gray-700">
-                <Home className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
-                {isEditingBusinessAddress ? (
-                  <div className="flex items-start gap-2 flex-wrap flex-1">
-                    <textarea
-                      value={businessAddress}
-                      onChange={(e) => setBusinessAddress(e.target.value)}
-                      placeholder="Enter business address"
+              {/* Vendor Application Status - NEW */}
+              <div className="flex items-center gap-2 mt-2 text-gray-700">
+                <Briefcase className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                {isEditingVendorStatus ? (
+                  <div className="flex items-center gap-2 flex-wrap flex-1">
+                    <select
+                      value={vendorStatus}
+                      onChange={(e) => setVendorStatus(e.target.value)}
                       className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      rows={2}
                       autoFocus
-                    />
+                      disabled={isUpdatingStatus}
+                    >
+                      <option value="NOT_SUBMITTED">Not Submitted</option>
+                      <option value="PENDING">Pending</option>
+                      <option value="APPROVED">Approved</option>
+                      <option value="REJECTED">Rejected</option>
+                    </select>
                     <div className="flex gap-2">
                       <button
-                        onClick={handleBusinessAddressUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save business address"
+                        onClick={handleVendorStatusUpdate}
+                        disabled={isUpdatingStatus}
+                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors disabled:opacity-50"
+                        aria-label="Save vendor status"
                       >
-                        <Check className="w-4 h-4" />
+                        {isUpdatingStatus ? (
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
                       </button>
                       <button
                         onClick={() => {
-                          setIsEditingBusinessAddress(false);
-                          setBusinessAddress(user.businessAddress || '');
+                          setIsEditingVendorStatus(false);
+                          setVendorStatus(user.vendorApplicationStatus || 'NOT_SUBMITTED');
                         }}
                         className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
                         aria-label="Cancel editing"
+                        disabled={isUpdatingStatus}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <span className="text-sm md:text-base break-words">
-                      {user.businessAddress || 'Business address not provided'}
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <span className="text-sm md:text-base font-medium">Vendor Status:</span>
+                    <span className={`text-sm md:text-base px-2 py-1 rounded-full ${getStatusColor(user.vendorApplicationStatus || 'NOT_SUBMITTED')}`}>
+                      {user.vendorApplicationStatus || 'NOT_SUBMITTED'}
                     </span>
                     <button
                       onClick={() => {
-                        setBusinessAddress(user.businessAddress || '');
-                        setIsEditingBusinessAddress(true);
+                        setVendorStatus(user.vendorApplicationStatus || 'NOT_SUBMITTED');
+                        setIsEditingVendorStatus(true);
                       }}
                       className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Edit business address"
+                      aria-label="Edit vendor status"
                     >
                       <Pencil className="w-4 h-4 text-gray-500" />
                     </button>
@@ -678,59 +727,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
                 )}
               </div>
 
-              
-              <div className="flex items-start gap-2 mt-2 text-gray-700">
-                <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-1" />
-                {isEditingAddressInstruction ? (
-                  <div className="flex items-start gap-2 flex-wrap flex-1">
-                    <textarea
-                      value={addressInstruction}
-                      onChange={(e) => setAddressInstruction(e.target.value)}
-                      placeholder="Enter delivery instructions (e.g., gate code, landmark, special notes)"
-                      className="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-lime-500 text-sm"
-                      rows={2}
-                      autoFocus
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleAddressInstructionUpdate}
-                        className="p-1 bg-lime-500 text-white rounded-md hover:bg-lime-600 transition-colors"
-                        aria-label="Save address instructions"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditingAddressInstruction(false);
-                          setAddressInstruction(user.addressInstruction || '');
-                        }}
-                        className="p-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-                        aria-label="Cancel editing"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <span className="text-sm md:text-base break-words">
-                      Delivery Instructions: {user.addressInstruction || 'Not provided'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setAddressInstruction(user.addressInstruction || '');
-                        setIsEditingAddressInstruction(true);
-                      }}
-                      className="p-1 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-                      aria-label="Edit address instructions"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              */}
-              {/* Phone Number - ORIGINAL - KEPT EXACTLY THE SAME */}
+              {/* Phone Number */}
               <div className="flex items-center gap-2 mt-2 text-gray-700">
                 <Phone className="w-5 h-5 text-gray-500" />
                 {isEditingPhone ? (
@@ -793,19 +790,17 @@ const UserProfile = ({ userId }: { userId: string }) => {
             </div>
           </div>
           
-          {/* Tabs Navigation - ORIGINAL - KEPT EXACTLY THE SAME */}
+          {/* Tabs Navigation */}
           <ProfileTabs 
             activeTab={activeTab}
             onTabChange={setActiveTab}
             tabsConfig={[
-            //{ id: 'posts', label: 'Posts', icon: 'user' },
               { id: 'address', label: 'Addresses', icon: 'location' },
-            //{ id: 'wishlist', label: 'Wishlist', icon: 'wishlist' }
             ]}
           />
         </div>
 
-        {/* Tab Content - ORIGINAL - KEPT EXACTLY THE SAME */}
+        {/* Tab Content */}
         <TabContent activeTab={activeTab} user={user} userId={userId} refetch={refetch} />
       </div>
     </div>
