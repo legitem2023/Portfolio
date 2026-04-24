@@ -4,7 +4,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
-
+import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2 } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
