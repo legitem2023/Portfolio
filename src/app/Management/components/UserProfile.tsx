@@ -4,7 +4,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import Image from 'next/image';
 import { GET_USER_PROFILE } from '../../components/graphql/query';
-import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR, UPDATE_USER_BUSINESS_NAME, UPDATE_USER_BUSINESS_TYPE, UPDATE_USER_PRODUCT_CATEGORY, UPDATE_USER_BUSINESS_DESCRIPTION, UPDATE_USER_WEBSITE, UPDATE_USER_BUSINESS_ADDRESS, UPDATE_USER_ADDRESS_INSTRUCTION } from '../../components/graphql/mutation';
+import { UPDATE_USER_PHONE, UPDATE_USER_AVATAR, UPDATE_USER_BUSINESS_NAME, UPDATE_USER_BUSINESS_TYPE, UPDATE_USER_PRODUCT_CATEGORY, UPDATE_USER_BUSINESS_DESCRIPTION, UPDATE_USER_WEBSITE, UPDATE_USER_BUSINESS_ADDRESS, UPDATE_USER_ADDRESS_INSTRUCTION, UPDATE_VENDOR_APPLICATION_STATUS } from '../../components/graphql/mutation';
 import { User } from '../../../../types';
 import UserProfileShimmer from '../../components/UserProfileShimmer';
 import UserProfileShimmerRed from '../../components/UserProfileShimmerRed';
