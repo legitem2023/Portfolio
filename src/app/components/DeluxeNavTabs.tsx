@@ -200,7 +200,7 @@ const DeluxeNavTabs: React.FC = () => {
             <span className="text-xl ml-2 hidden md:inline">{tab.label}</span>
             {/* Cart notification badge with dynamic count */}
             {tab.label === 'Cart' && cartCount > 0 && (
-              <span className="absolute top-[-0.2px] right-[-0.1px] flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+              <span className="absolute top-[-0.2px] right-[-0px] flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
                 {cartCount > 99 ? '99+' : cartCount}
               </span>
             )}
