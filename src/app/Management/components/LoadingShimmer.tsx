@@ -5,7 +5,7 @@ const LoadingShimmer = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Top Nav Shimmer */}
-      <div className="fixed top-0 left-0 right-0 z-30 bg-gray-800 border-b border-gray-200">
+      <div className="fixed top-0 left-0 right-0 z-30 bg-zinc-800 border-b border-gray-200">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-4">
             <div className="w-8 h-8 bg-gray-300 rounded-lg shimmer"></div>
@@ -21,7 +21,7 @@ const LoadingShimmer = () => {
       </div>
 
       {/* Sidebar Shimmer */}
-      <div className="fixed inset-y-0 left-0 z-20 hidden w-64 bg-gray-800 md:flex md:flex-col">
+      <div className="fixed inset-y-0 left-0 z-20 hidden w-64 bg-zinc-800 md:flex md:flex-col">
         <div className="flex flex-col flex-grow overflow-y-auto">
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
             <div className="w-32 h-6 bg-gray-600 rounded shimmer"></div>
