@@ -4518,7 +4518,13 @@ const response = await prisma.address.create({
       currentLongitude,
       taxId,
     } = input;
-
+  console.error(businessStreet,
+      businessCity,
+      businessState,
+      businessCountry,
+      businessZipcode,
+      addressInstruction);
+    return
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email }
