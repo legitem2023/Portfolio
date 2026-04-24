@@ -335,7 +335,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     
     try {
       // Create cart item with variant-specific data and proper error handling
-      console.log(selectedVariant);
+      console.log(selectedVariant?.images[0]);
       const cartItem = {
         id: selectedVariant.id?.toString(),
         productId: selectedVariant.id?.toString(), //product.id?.toString() || 'unknown',
