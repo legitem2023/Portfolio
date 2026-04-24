@@ -112,7 +112,7 @@ export default function LuxurySignup() {
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
         <Header/>
         
-        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8 ">
           <div className="max-w-2xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
             {/* Logo and Header */}
             <div>
