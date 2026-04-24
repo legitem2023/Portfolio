@@ -6718,12 +6718,20 @@ deleteProduct: async (_: any, { id }: any) => {
         role: ""
       };
     }
-
-    return {
+   if (user?.role==='MANAGER' && user?.vendorApplicationStatus==='PENDING' ||  user?.role==='MANAGER' && user?.vendorApplicationStatus==='' || user?.role==='MANAGER' && user?.vendorApplicationStatus===null){
+     return {
+      statusText: "You account is under evaluation contact Administrator",
+      token:"",
+      role: ""
+    }
+   }else { 
+     return {
       statusText: "success",
       token,
       role: user?.role
-    };
+     }
+   }
+    
 
   } catch (err) {
     console.error('Login resolver error:', err);
