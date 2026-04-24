@@ -507,9 +507,15 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               </button>
             </div>
 
-            <div className="flex-shrink-0 flex items-center">
-              <span className="text-white font-bold text-base sm:text-xl">VendorCity</span>
-              <span className="ml-1 sm:ml-2 text-gray-300 text-xs sm:text-sm hidden sm:inline">Rider</span>
+            <div className="relative flex-shrink-0">
+              <Image 
+                src="/VendorCity_Management.webp" 
+                alt="Logo" 
+                height={50} 
+                width={50} 
+                className="h-12 sm:h-14 w-auto rounded-xl object-contain"
+                priority
+              />
             </div>
           </div>
 
