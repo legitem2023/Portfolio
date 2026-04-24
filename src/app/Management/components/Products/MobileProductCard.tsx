@@ -255,7 +255,7 @@ export default function MobileProductCard({
                       onImageUpload={handleVariantImageUploadWithLogging}
                       refetch={refetch}
                       isUploading={uploadingVariantId === variant.id}
-                      onEdit={handleEditVariant}
+                      //onEdit={handleEditVariant}
                     />
                   );
                 })
