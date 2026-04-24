@@ -513,9 +513,9 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               <Image 
                 src="/VendorCity_Management.webp" 
                 alt="Logo" 
-                height={60} 
-                width={60} 
-                className="h-13 sm:h-15 w-auto object-contain"
+                height={55} 
+                width={55} 
+                className="h-12 sm:h-14 w-auto object-contain"
                 priority
               />
           </div>
