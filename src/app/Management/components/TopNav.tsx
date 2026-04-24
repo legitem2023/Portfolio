@@ -185,7 +185,6 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const [deleteNotificationMutation] = useMutation(DELETE_NOTIFICATION, {
     onError: (error) => console.error('Delete notification error:', error),
     onCompleted: () => {
-      // Clear the deleting state after successful deletion
       setDeletingNotificationId(null);
     }
   });
@@ -225,7 +224,6 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     const deltaX = touchEnd.clientX - touchStart.x;
     const deltaY = touchEnd.clientY - touchStart.y;
 
-    // Swipe down to close
     if (deltaY > 50 && Math.abs(deltaX) < 50) {
       setIsBellPopupOpen(false);
       setTouchStart(null);
@@ -276,7 +274,6 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const handleProfile = () => {
     setIsDropdownOpen(false);
     dispatch(setActiveIndex(10));
-    
   };
 
   const handleLogout = async () => {
@@ -350,14 +347,12 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   };
 
   const deleteNotification = async (id: string) => {
-    // Set loading state immediately
     setDeletingNotificationId(id);
     
     try {
       await deleteNotificationMutation({
         variables: { id },
         update: (cache) => {
-          // Manually update the cache to remove the notification immediately
           const cachedData: any = cache.readQuery({
             query: GET_NOTIFICATIONS,
             variables: { userId, filters: { limit: 10 } }
@@ -382,10 +377,8 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
           }
         }
       });
-      // Note: The deleting state will be cleared in onCompleted callback of the mutation
     } catch (error) {
       console.error('Error deleting notification:', error);
-      // Only clear loading state on error
       setDeletingNotificationId(null);
     }
   };
@@ -416,24 +409,24 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
   const getNotificationColor = useCallback((type: NotificationType) => {
     switch (type) {
       case NotificationType.NEW_MESSAGE:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-blue-100 text-blue-600';
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-green-100 text-green-600';
       case NotificationType.PROMOTIONAL:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-purple-100 text-purple-600';
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-teal-100 text-teal-600';
       case NotificationType.SYSTEM_ALERT:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-orange-100 text-orange-600';
       case NotificationType.PAYMENT_RECEIVED:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-emerald-100 text-emerald-600';
       case NotificationType.PAYMENT_FAILED:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-red-100 text-red-600';
       default:
-        return 'bg-zinc-100 text-zinc-600';
+        return 'bg-gray-100 text-gray-600';
     }
   }, []);
 
@@ -459,104 +452,100 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       await markAsRead(notification.id);
     }
     
-      switch (notification.type) {
-        case NotificationType.NEW_MESSAGE:
-          dispatch(setActiveIndex(12));
-          dispatch(setSelectedUser(notification.link || ""));
-          break;
-        case NotificationType.ORDER_CREATED:
-        case NotificationType.ORDER_UPDATED:
-        case NotificationType.ORDER_DELIVERED:
-          dispatch(setActiveIndex(4));
-          break;
-        case NotificationType.PAYMENT_RECEIVED:
-        case NotificationType.PAYMENT_FAILED:
-          break;
-        default:
-          break;
-      }
+    switch (notification.type) {
+      case NotificationType.NEW_MESSAGE:
+        dispatch(setActiveIndex(12));
+        dispatch(setSelectedUser(notification.link || ""));
+        break;
+      case NotificationType.ORDER_CREATED:
+      case NotificationType.ORDER_UPDATED:
+      case NotificationType.ORDER_DELIVERED:
+        dispatch(setActiveIndex(4));
+        break;
+      default:
+        break;
+    }
     setIsBellPopupOpen(false);
   };
 
   return (
-    <nav className="bg-zinc-800 shadow-sm sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex justify-between h-14 sm:h-16">
-          {/* Left section */}
-          <div className="flex">
-            <div className="md:hidden flex items-center">
-              <button
-                onClick={onMenuClick}
-                className="inline-flex items-center justify-center p-1.5 sm:p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-zinc-500 transition-colors"
-                aria-label="Open main menu"
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 sm:h-20">
+          {/* Left section - Menu Button */}
+          <div className="flex items-center">
+            <button
+              onClick={onMenuClick}
+              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 transition-all duration-200 md:hidden"
+              aria-label="Open main menu"
+            >
+              <svg 
+                className="h-6 w-6" 
+                xmlns="http://www.w3.org/2000/svg" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
               >
-                <svg 
-                  className="h-5 w-5 sm:h-6 sm:w-6" 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  fill="none" 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M4 6h16M4 12h16M4 18h16" 
-                  />
-                </svg>
-              </button>
-            </div>
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M4 6h16M4 12h16M4 18h16" 
+                />
+              </svg>
+            </button>
+          </div>
 
-            
+          {/* Center - Logo */}
+          <div className="flex items-center justify-center flex-shrink-0">
+            <Image 
+              src="/VendorCity_Management.webp" 
+              alt="Logo" 
+              height={56} 
+              width={56} 
+              className="h-14 sm:h-16 w-auto object-contain"
+              priority
+            />
           </div>
-          <div className="relative items-center justify-center flex-shrink-0">
-              <Image 
-                src="/VendorCity_Management.webp" 
-                alt="Logo" 
-                height={55} 
-                width={55} 
-                className="h-12 sm:h-14 w-auto object-contain"
-                priority
-              />
-          </div>
-          {/* Right section */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+
+          {/* Right section - Actions */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Notification Bell */}
             <div className="relative" ref={bellRef}>
               <button
                 onClick={toggleBellPopup}
-                className="p-1.5 sm:p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-800 focus:ring-zinc-500 transition-colors relative"
+                className="relative p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
                 disabled={!userId && notificationsLoading}
                 title={!userId ? "Sign in to view notifications" : ""}
               >
                 <span className="sr-only">View notifications</span>
-                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
                 {notificationsLoading && userId ? (
-                  <span className="absolute top-0 right-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white"></div>
+                  <span className="absolute top-0 right-0">
+                    <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-blue-600"></div>
                   </span>
                 ) : unreadCount > 0 && userId && !notificationsLoading ? (
-                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full px-1">
+                  <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[1.25rem] h-5 text-xs font-bold text-white bg-red-500 rounded-full px-1 shadow-sm">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>
                 ) : null}
               </button>
 
-              {/* Mobile Overlay */}
+              {/* Notification Popup */}
               {isBellPopupOpen && userId && (
                 <>
-                  {/* Backdrop for mobile */}
+                  {/* Backdrop */}
                   <div 
-                    className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300"
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300"
                     onClick={() => setIsBellPopupOpen(false)}
                   />
                   
-                  {/* Bell Popup - Mobile & Desktop Responsive */}
+                  {/* Popup Content */}
                   <div 
                     className={`
                       fixed md:absolute
-                      ${isBellPopupOpen ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}
-                      transition-all duration-300 ease-out
+                      ${isBellPopupOpen ? 'translate-y-0' : 'translate-y-full'}
+                      transition-transform duration-300 ease-out
                       bottom-0 md:bottom-auto
                       left-0 md:left-auto
                       right-0
@@ -564,7 +553,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                       w-full md:w-96
                       max-h-[85vh] md:max-h-[500px]
                       bg-white rounded-t-2xl md:rounded-lg
-                      shadow-xl border-t md:border border-zinc-200
+                      shadow-xl
                       z-50
                       flex flex-col
                     `}
@@ -573,39 +562,41 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                     onTouchEnd={handleTouchEnd}
                   >
                     {/* Drag handle for mobile */}
-                    <div className="md:hidden w-full flex justify-center py-2">
-                      <div className="w-12 h-1 bg-zinc-300 rounded-full" />
+                    <div className="md:hidden flex justify-center py-3">
+                      <div className="w-12 h-1 bg-gray-300 rounded-full" />
                     </div>
 
                     {/* Header */}
-                    <div className="flex items-center justify-between p-3 sm:p-4 border-b border-zinc-200 bg-gradient-to-r from-zinc-50 to-zinc-100 rounded-t-2xl md:rounded-t-lg flex-shrink-0">
-                      <div className="flex items-center space-x-2">
-                        <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-600" />
-                        <h3 className="text-base sm:text-lg font-semibold text-zinc-800">Notifications</h3>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white rounded-t-2xl md:rounded-t-lg flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1 bg-blue-100 rounded-lg">
+                          <Bell className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900">Notifications</h3>
                         {unreadCount > 0 && !notificationsLoading && (
-                          <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-bold text-white bg-red-500 rounded-full">
+                          <span className="px-2 py-0.5 text-xs font-bold text-white bg-red-500 rounded-full">
                             {unreadCount} new
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center gap-2">
                         {notificationsLoading ? (
-                          <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-zinc-600"></div>
+                          <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
                         ) : (
                           <>
                             {unreadCount > 0 && (
                               <button
                                 onClick={markAllAsRead}
-                                className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-zinc-600 hover:bg-zinc-50 rounded-lg transition-colors duration-200"
+                                className="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                               >
                                 Mark all read
                               </button>
                             )}
                             <button
                               onClick={() => setIsBellPopupOpen(false)}
-                              className="p-1 hover:bg-zinc-200 rounded-full transition-colors duration-200"
+                              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
                             >
-                              <X className="w-4 h-4 sm:w-5 sm:h-5 text-zinc-500" />
+                              <X className="w-4 h-4 text-gray-500" />
                             </button>
                           </>
                         )}
@@ -613,31 +604,31 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                     </div>
 
                     {/* Notifications List */}
-                    <div className="flex-1 overflow-y-auto overscroll-contain">
+                    <div className="flex-1 overflow-y-auto">
                       {notificationsLoading ? (
-                        <div className="flex flex-col items-center justify-center p-8">
-                          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-zinc-600 mb-4"></div>
-                          <p className="text-sm sm:text-base text-zinc-600">Loading notifications...</p>
+                        <div className="flex flex-col items-center justify-center py-12">
+                          <Loader2 className="w-8 h-8 animate-spin text-gray-400 mb-3" />
+                          <p className="text-sm text-gray-500">Loading notifications...</p>
                         </div>
                       ) : notificationsError ? (
-                        <div className="flex flex-col items-center justify-center p-8">
-                          <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-400 mb-4" />
-                          <p className="text-sm sm:text-base text-zinc-600">Failed to load notifications</p>
+                        <div className="flex flex-col items-center justify-center py-12 px-4">
+                          <AlertCircle className="w-12 h-12 text-red-400 mb-3" />
+                          <p className="text-sm text-gray-600 text-center">Failed to load notifications</p>
                           <button
                             onClick={() => refetchNotifications()}
-                            className="mt-2 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-zinc-600 hover:text-zinc-800 transition-colors duration-200"
+                            className="mt-3 px-4 py-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
                           >
                             Retry
                           </button>
                         </div>
                       ) : notifications.length > 0 ? (
-                        <div className="divide-y divide-zinc-100">
+                        <div className="divide-y divide-gray-100">
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
                               className={`
-                                p-3 sm:p-4 hover:bg-zinc-50 active:bg-zinc-100 transition-all duration-200 cursor-pointer
-                                ${!notification.isRead ? 'bg-zinc-50 bg-opacity-50' : ''}
+                                px-4 py-3 hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 cursor-pointer
+                                ${!notification.isRead ? 'bg-blue-50/30' : ''}
                                 ${deletingNotificationId === notification.id ? 'opacity-50 pointer-events-none' : ''}
                               `}
                               onClick={() => {
@@ -646,58 +637,51 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                                 }
                               }}
                             >
-                              <div className="flex items-start space-x-2 sm:space-x-3">
-                                <div className={`flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                                  getNotificationColor(notification.type)
-                                }`}>
+                              <div className="flex gap-3">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${getNotificationColor(notification.type)}`}>
                                   {getNotificationIcon(notification.type)}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
-                                    <p className={`text-xs sm:text-sm font-medium ${
-                                      !notification.isRead ? 'text-zinc-900' : 'text-zinc-700'
-                                    }`}>
+                                  <div className="flex items-start justify-between gap-2 mb-1">
+                                    <p className={`text-sm font-medium ${!notification.isRead ? 'text-gray-900' : 'text-gray-700'}`}>
                                       {notification.title}
                                     </p>
-                                    <div className="flex items-center justify-between sm:justify-end space-x-2">
-                                      <span className="text-[10px] sm:text-xs text-zinc-500 flex items-center whitespace-nowrap">
-                                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
-                                        {getTimeAgo(notification.createdAt)}
-                                      </span>
-                                      {!notification.isRead && (
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            markAsRead(notification.id);
-                                          }}
-                                          className="text-[10px] sm:text-xs text-zinc-600 hover:text-zinc-800 transition-colors duration-200"
-                                        >
-                                          Mark read
-                                        </button>
-                                      )}
-                                    </div>
+                                    <span className="text-xs text-gray-500 flex items-center whitespace-nowrap">
+                                      <Clock className="w-3 h-3 mr-1" />
+                                      {getTimeAgo(notification.createdAt)}
+                                    </span>
                                   </div>
-                                  <p className="mt-1 text-xs sm:text-sm text-zinc-600 break-words">
+                                  <p className="text-sm text-gray-600 break-words mb-2">
                                     {notification.message}
                                   </p>
-                                  <div className="mt-2 flex flex-wrap gap-2">
-                                    
+                                  <div className="flex items-center gap-2">
+                                    {!notification.isRead && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          markAsRead(notification.id);
+                                        }}
+                                        className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                                      >
+                                        Mark as read
+                                      </button>
+                                    )}
                                     <button
                                       onClick={async (e) => {
                                         e.stopPropagation();
                                         await deleteNotification(notification.id);
                                       }}
-                                      className="px-2 sm:px-3 py-1 text-[10px] sm:text-xs text-zinc-500 hover:text-red-600 transition-colors duration-200 flex items-center space-x-1"
+                                      className="text-xs text-gray-500 hover:text-red-600 transition-colors flex items-center gap-1"
                                       disabled={deletingNotificationId === notification.id}
                                     >
                                       {deletingNotificationId === notification.id ? (
                                         <>
-                                          <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                                          <Loader2 className="w-3 h-3 animate-spin" />
                                           <span>Deleting...</span>
                                         </>
                                       ) : (
                                         <>
-                                          <Trash2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                          <Trash2 className="w-3 h-3" />
                                           <span>Delete</span>
                                         </>
                                       )}
@@ -709,22 +693,22 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                           ))}
                         </div>
                       ) : (
-                        <div className="flex flex-col items-center justify-center p-8 text-center">
-                          <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-zinc-300 mb-4" />
-                          <p className="text-sm sm:text-base text-zinc-500 font-medium">No notifications</p>
-                          <p className="text-xs sm:text-sm text-zinc-400 mt-1">You&apos;re all caught up!</p>
+                        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                          <Bell className="w-12 h-12 text-gray-300 mb-3" />
+                          <p className="text-sm text-gray-500 font-medium">No notifications</p>
+                          <p className="text-xs text-gray-400 mt-1">You&apos;re all caught up!</p>
                         </div>
                       )}
                     </div>
 
                     {/* Footer */}
-                    <div className="p-3 sm:p-4 border-t border-zinc-200 bg-zinc-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
+                    <div className="px-4 py-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl md:rounded-b-lg flex-shrink-0">
                       <button
                         onClick={() => {
                           setIsBellPopupOpen(false);
                           router.push('/Notifications');
                         }}
-                        className="w-full py-1.5 sm:py-2 text-center text-xs sm:text-sm text-zinc-600 hover:text-zinc-800 font-medium transition-colors duration-200"
+                        className="w-full py-2 text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
                       >
                         View all notifications
                       </button>
@@ -739,42 +723,45 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               <button
                 onClick={toggleDropdown}
                 disabled={isLoggingOut}
-                className="flex items-center gap-1 sm:gap-2 max-w-xs bg-zinc-700 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-800 focus:ring-zinc-500 disabled:opacity-50 transition-all hover:bg-zinc-600 pl-0.5 sm:pl-1 pr-1 sm:pr-2 py-0.5 sm:py-1"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
                 id="user-menu-button"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
                 <span className="sr-only">Open user menu</span>
                 <img 
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" 
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-white shadow-sm" 
                   src={user?.image || '/NoImage_2.webp'} 
-                  alt={user?.name}
+                  alt={user?.name || 'User avatar'}
                 />
                 <div className="hidden sm:block text-left">
-                  <p className="text-xs sm:text-sm font-medium text-white">{user?.name}</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.role || 'Guest'}</p>
                 </div>
-                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-zinc-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                  <button
-                    onClick={handleProfile}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-zinc-700 hover:bg-zinc-50 flex items-center gap-2 sm:gap-3 transition-colors"
-                  >
-                    <Building className="h-3 w-3 sm:h-4 sm:w-4 text-zinc-500" />
-                    <span className="font-medium">Profile</span>
-                  </button>
+                <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black/5 focus:outline-none z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="py-1">
+                    <button
+                      onClick={handleProfile}
+                      className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                    >
+                      <Building className="h-4 w-4 text-gray-500" />
+                      <span className="font-medium">Profile</span>
+                    </button>
 
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="w-full text-left px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 sm:gap-3 transition-colors border-t border-zinc-100 disabled:opacity-50"
-                  >
-                    <LogOut className={`h-3 w-3 sm:h-4 sm:w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
-                    <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
-                  </button>
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors border-t border-gray-100 disabled:opacity-50"
+                    >
+                      <LogOut className={`h-4 w-4 ${isLoggingOut ? 'animate-spin' : ''}`} />
+                      <span className="font-medium">{isLoggingOut ? 'Logging out...' : 'Sign Out'}</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -783,4 +770,4 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       </div>
     </nav>
   );
-  }
+                    }
