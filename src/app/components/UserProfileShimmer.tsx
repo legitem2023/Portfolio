@@ -67,7 +67,7 @@ const UserProfileShimmer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <div key={item} className="relative group cursor-pointer rounded-lg overflow-hidden shadow-md">
-              <div className="aspect-square bg-gray-300 relative overflow-hidden">
+              <div className="aspect-video bg-gray-300 relative overflow-hidden">
                 <div className="absolute inset-0 shimmer-effect"></div>
               </div>
             </div>
