@@ -10,7 +10,7 @@ import Head from 'next/head';
 import dynamic from 'next/dynamic';
 import { GETCATEGORY } from './graphql/query'; // Import your existing query
 import { AddressComponents } from './LocationPicker';
-
+import { showToast } from '../../../utils/toastify';
 // Dynamically import Leaflet with no SSR
 const LocationPicker = dynamic(
   () => import('./LocationPicker'),
@@ -214,15 +214,10 @@ export default function VendorApplicationForm() {
       });
       
       if (data.vendorSignup.success) {
-        if (data.vendorSignup.token) {
-          localStorage.setItem('token', data.vendorSignup.token);
-          localStorage.setItem('user', JSON.stringify(data.vendorSignup.user));
-        }
-        
-        alert(data.vendorSignup.message);
-        
+         
+        showToast(data.vendorSignup.message,'success');
         setTimeout(() => {
-          window.location.href = '/login?registered=true';
+          window.location.href = '/Login';
         }, 2000);
       } else {
         setSubmitError(data.vendorSignup.message);
