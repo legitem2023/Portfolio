@@ -343,7 +343,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
-        image: getImageSrc(0) || product.image || '/NoImage.webp',
+        image: product.image || '/NoImage.webp',
         quantity: quantity,
         color: selectedColor || 'Unknown',
         size: selectedSize || 'Unknown',
