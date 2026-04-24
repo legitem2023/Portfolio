@@ -335,13 +335,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     
     try {
       // Create cart item with variant-specific data and proper error handling
-      console.log(selectedVariant?.images[0])
+      console.log(selectedVariant);
       const cartItem = {
         id: selectedVariant.id?.toString(),
         productId: selectedVariant.id?.toString(), //product.id?.toString() || 'unknown',
         userId: 'current-user-id',
         supplierId:product.supplierId,
-        sku: selectedVariant.sku?.toString() || `SKU-${selectedVariant.id || 'unknown'}`,
+        sku: selectedVariant.sku?.toString(),
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
         image: product.image || '/NoImage.webp',
