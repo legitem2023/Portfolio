@@ -725,7 +725,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               <button
                 onClick={toggleDropdown}
                 disabled={isLoggingOut}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-full inset-shadow-black bg-zinc-100 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-full shadow-inner bg-zinc-100 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
                 id="user-menu-button"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
