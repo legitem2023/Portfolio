@@ -507,18 +507,18 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               </button>
             </div>
 
-            <div className="relative flex-shrink-0">
+            
+          </div>
+          <div className="relative items-center justify-center flex-shrink-0">
               <Image 
                 src="/VendorCity_Management.webp" 
                 alt="Logo" 
-                height={50} 
-                width={50} 
-                className="h-12 sm:h-14 w-auto rounded-xl object-contain"
+                height={60} 
+                width={60} 
+                className="h-13 sm:h-15 w-auto object-contain"
                 priority
               />
-            </div>
           </div>
-
           {/* Right section */}
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Notification Bell */}
