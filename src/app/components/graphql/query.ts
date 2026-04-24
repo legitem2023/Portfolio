@@ -541,6 +541,7 @@ query GetUser($id: ID) {
       website
       businessAddress
       addressInstruction
+      vendorApplicationStatus
       phone
       followerCount
       followingCount
