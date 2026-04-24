@@ -178,36 +178,36 @@ export default function VendorApplicationForm() {
       return;
     }
     
-    // Format the complete address from components for the API
-    const addressParts = [];
-    if (formData.businessStreet) addressParts.push(formData.businessStreet);
-    if (formData.businessCity) addressParts.push(formData.businessCity);
-    if (formData.businessState) addressParts.push(formData.businessState);
-    if (formData.businessZipcode) addressParts.push(formData.businessZipcode);
-    if (formData.businessCountry) addressParts.push(formData.businessCountry);
-    
-    const formattedAddress = addressParts.length > 0 
-      ? addressParts.join(', ') 
-      : formData.businessAddress;
-    
     try {
       const { data } = await vendorSignup({
         variables: {
           input: {
+            // Account Information
             email: formData.email,
             password: formData.password,
             firstName: formData.firstName,
             lastName: formData.lastName,
             phone: formData.phone,
+            
+            // Business Information
             businessName: formData.businessName,
             businessType: formData.businessType,
             productCategory: formData.productCategory,
             businessDescription: formData.businessDescription,
             website: formData.website || null,
-            businessAddress: formattedAddress,
+            
+            // Location Information - Send ALL address fields individually
+            businessAddress: formData.businessAddress,
+            businessStreet: formData.businessStreet,
+            businessCity: formData.businessCity,
+            businessState: formData.businessState,
+            businessCountry: formData.businessCountry,
+            businessZipcode: formData.businessZipcode,
             addressInstruction: formData.addressInstruction || null,
             currentLatitude: formData.currentLatitude,
             currentLongitude: formData.currentLongitude,
+            
+            // Tax Information
             taxId: formData.taxId,
           }
         }
@@ -784,4 +784,4 @@ export default function VendorApplicationForm() {
       `}</style>
     </>
   );
-      }
+              }
