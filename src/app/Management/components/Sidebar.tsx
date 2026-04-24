@@ -81,7 +81,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
         md:fixed md:translate-x-0
         md:flex md:w-64 md:flex-col
       `}>
-        <div className="flex flex-col flex-grow bg-gray-800 overflow-y-auto h-full">
+        <div className="flex flex-col flex-grow bg-zinc-800 overflow-y-auto h-full">
           {/* Close button for mobile */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
             <div className="text-lg font-semibold text-white">Menu</div>
