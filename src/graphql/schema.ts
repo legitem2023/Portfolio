@@ -1271,6 +1271,8 @@ type Mutation {
     updateUserWebsite(id: ID, website: String): User
     updateUserBusinessAddress(id: ID, businessAddress: String): User
     updateUserAddressInstruction(id: ID, addressInstruction: String): User
+
+    updateVendorStatus(id: ID, vendorApplicationStatus: String): User
     
     addToWishList(userId:ID,productId:ID):Result
     updateRole(userId:ID,Level:Role):Result
