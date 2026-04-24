@@ -19,6 +19,35 @@ interface VariantCardProps {
   isUploading: boolean;
 }
 
+const sizeData = [
+  { parent: "Letter Sizes", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
+  { parent: "Numeric Sizes", values: ["0", "2", "4", "6", "8", "10", "12", "14", "16", "18", "20"] },
+  { parent: "US Shoes", values: ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10", "10.5", "11", "12", "13"] },
+  { parent: "EU Shoes", values: ["35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46"] },
+  { parent: "Men's Waist", values: ["28", "30", "32", "34", "36", "38", "40", "42", "44"] },
+  { parent: "Bra Sizes", values: ["30A", "32A", "34A", "36A", "38A", "30B", "32B", "34B", "36B", "38B", "30C", "32C", "34C", "36C", "38C"] },
+  { parent: "Kids Sizes", values: ["2T", "3T", "4T", "5", "6", "7", "8", "10", "12", "14"] },
+  { parent: "Baby Sizes", values: ["Newborn", "0-3M", "3-6M", "6-9M", "9-12M", "12-18M", "18-24M"] },
+  { parent: "Phone Screen", values: ["5.0\"", "5.5\"", "6.0\"", "6.1\"", "6.3\"", "6.5\"", "6.7\"", "6.8\"", "7.0\""] },
+  { parent: "Phone Storage", values: ["64GB", "128GB", "256GB", "512GB", "1TB"] },
+  { parent: "Phone RAM", values: ["4GB", "6GB", "8GB", "12GB", "16GB"] },
+  { parent: "Laptop Screen", values: ["11.6\"", "13.3\"", "14\"", "15.6\"", "16\"", "17.3\""] },
+  { parent: "Laptop Storage", values: ["256GB SSD", "512GB SSD", "1TB SSD", "2TB SSD", "256GB HDD", "512GB HDD", "1TB HDD", "2TB HDD"] },
+  { parent: "Laptop RAM", values: ["4GB", "8GB", "16GB", "32GB", "64GB"] },
+  { parent: "Laptop Processor", values: ["i3", "i5", "i7", "i9", "Ryzen 3", "Ryzen 5", "Ryzen 7", "Ryzen 9", "M1", "M2", "M3"] },
+  { parent: "Tablet Screen", values: ["7.9\"", "8.3\"", "9.7\"", "10.2\"", "10.5\"", "10.9\"", "11\"", "12.9\""] },
+  { parent: "Tablet Storage", values: ["32GB", "64GB", "128GB", "256GB", "512GB", "1TB"] },
+  { parent: "Monitor Size", values: ["19\"", "21.5\"", "24\"", "27\"", "32\"", "34\"", "38\"", "43\"", "49\""] },
+  { parent: "Monitor Resolution", values: ["HD (1366x768)", "Full HD (1920x1080)", "2K (2560x1440)", "4K (3840x2160)", "UltraWide (3440x1440)", "5K (5120x2880)"] },
+  { parent: "Refresh Rate", values: ["60Hz", "75Hz", "120Hz", "144Hz", "165Hz", "240Hz", "360Hz"] },
+  { parent: "TV Size", values: ["32\"", "40\"", "43\"", "50\"", "55\"", "65\"", "75\"", "85\"", "98\""] },
+  { parent: "TV Resolution", values: ["HD", "Full HD", "4K UHD", "8K UHD"] },
+  { parent: "Watch Size", values: ["38mm", "40mm", "41mm", "42mm", "44mm", "45mm", "46mm", "47mm"] },
+  { parent: "Watch Band", values: ["S", "M", "L", "XS", "XL"] },
+  { parent: "One Size", values: ["One Size Fits All"] },
+  { parent: "Custom", values: [] }
+];
+
 export default function VariantCard({ 
   variant, 
   onImageUpload,
@@ -31,6 +60,8 @@ export default function VariantCard({
   const [isMobile, setIsMobile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedSizeParent, setSelectedSizeParent] = useState('');
+  const [showCustomSize, setShowCustomSize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [editData, setEditData] = useState({
@@ -56,6 +87,18 @@ export default function VariantCard({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Detect size category when editing starts
+  useEffect(() => {
+    if (isEditing && variant.size) {
+      const detectedParent = sizeData.find(category => 
+        category.values.includes(variant.size)
+      )?.parent || '';
+      
+      setSelectedSizeParent(detectedParent);
+      setShowCustomSize(!detectedParent && variant.size !== '');
+    }
+  }, [isEditing, variant.size]);
 
   // Reset edit data when variant changes
   useEffect(() => {
@@ -113,7 +156,8 @@ export default function VariantCard({
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Reset edit data to original variant values
+    setSelectedSizeParent('');
+    setShowCustomSize(false);
     setEditData({
       name: variant.name,
       sku: variant.sku || '',
@@ -146,6 +190,8 @@ export default function VariantCard({
       });
 
       setIsEditing(false);
+      setSelectedSizeParent('');
+      setShowCustomSize(false);
       refetch();
     } catch (error) {
       console.error('Error updating variant:', error);
@@ -158,6 +204,18 @@ export default function VariantCard({
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEditData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSizeCategoryChange = (parent: string) => {
+    setSelectedSizeParent(parent);
+    setShowCustomSize(parent === 'Custom');
+    if (parent !== 'Custom') {
+      setEditData(prev => ({ ...prev, size: '' }));
+    }
+  };
+
+  const handleSizeSelect = (size: string) => {
+    setEditData(prev => ({ ...prev, size }));
   };
 
   const hasImages = variant.images && variant.images.length > 0;
@@ -174,7 +232,7 @@ export default function VariantCard({
     }).format(price).replace('PHP', '₱');
   };
 
-  // Stock status indicator with responsive text
+  // Stock status indicator
   const getStockStatus = (stock: number | undefined) => {
     const stockValue = stock ?? 0;
     if (stockValue === 0) return { label: isMobile ? 'Out' : 'Out of Stock', color: 'bg-red-100 text-red-800' };
@@ -196,33 +254,40 @@ export default function VariantCard({
       {/* Header Section */}
       <div className="relative">
         <div className="absolute top-0 left-0 right-0 h-0.5 sm:h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="p-3 sm:p-5">
+        <div className="p-4 sm:p-5">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               {isEditing ? (
-                // Edit Mode - Name Input
-                <div className="mb-2">
+                <div className="space-y-2">
                   <input
                     type="text"
                     name="name"
                     value={editData.name}
                     onChange={handleEditChange}
-                    className="w-full px-3 py-1.5 text-sm sm:text-base md:text-lg font-bold text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base font-bold text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     placeholder="Variant name"
                     autoFocus
+                  />
+                  <input
+                    type="text"
+                    name="sku"
+                    value={editData.sku}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-1.5 text-xs border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="SKU"
                   />
                 </div>
               ) : (
                 <>
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
-                    <h4 className="text-sm sm:text-base md:text-lg font-bold text-gray-900 truncate max-w-[150px] sm:max-w-[200px] md:max-w-none">
+                    <h4 className="text-sm sm:text-base md:text-lg font-bold text-gray-900">
                       {variant.name}
                     </h4>
                     <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${stockStatus.color} whitespace-nowrap`}>
                       {stockStatus.label}
                     </span>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-gray-500 font-mono truncate">SKU: {variant.sku || 'N/A'}</p>
+                  <p className="text-[11px] sm:text-xs text-gray-500 font-mono">SKU: {variant.sku || 'N/A'}</p>
                 </>
               )}
             </div>
@@ -260,7 +325,6 @@ export default function VariantCard({
                 onClick={handleEditClick}
                 className="flex-shrink-0 p-2 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg sm:rounded-xl transition-all duration-200 active:bg-blue-100"
                 title="Edit variant"
-                aria-label="Edit variant"
               >
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -272,92 +336,88 @@ export default function VariantCard({
       </div>
       
       {/* Image Gallery Section */}
-      <div className="px-3 sm:px-5 pb-3 sm:pb-5">
+      <div className="px-4 sm:px-5 pb-3 sm:pb-5">
         <div className="relative">
           {hasImages ? (
             <div className="space-y-3 sm:space-y-4">
               {/* Main Image Container */}
               <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl overflow-hidden">
-                <div className="">
-                  <Swiper
-                    modules={[Navigation, Pagination, Thumbs]}
-                    navigation={{
-                      nextEl: '.swiper-button-next',
-                      prevEl: '.swiper-button-prev',
-                    }}
-                    pagination={{
-                      clickable: true,
-                      type: imageCount > 1 ? 'bullets' : 'fraction',
-                      dynamicBullets: isMobile,
-                    }}
-                    thumbs={{ swiper: thumbsSwiper }}
-                    spaceBetween={0}
-                    slidesPerView={1}
-                    className="h-full w-full"
-                    touchRatio={1.5}
-                    resistanceRatio={0.85}
-                  >
-                    {variant.images!.map((image, index) => (
-                      <SwiperSlide key={index}>
-                        <div className="relative w-full h-full bg-gray-100">
-                          <img 
-                            src={image} 
-                            alt={`${variant.name} - Image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                          
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleDeleteClick(index)}
-                            className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-white/90 backdrop-blur-sm text-red-600 p-1.5 sm:p-2 rounded-lg sm:rounded-xl hover:bg-red-600 hover:text-white transition-all duration-200 shadow-lg z-20 active:scale-95"
-                            aria-label={`Delete image ${index + 1}`}
-                          >
-                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </SwiperSlide>
-                    ))}
-                  </Swiper>
+                <Swiper
+                  modules={[Navigation, Pagination, Thumbs]}
+                  navigation={{
+                    nextEl: '.swiper-button-next',
+                    prevEl: '.swiper-button-prev',
+                  }}
+                  pagination={{
+                    clickable: true,
+                    type: imageCount > 1 ? 'bullets' : 'fraction',
+                    dynamicBullets: isMobile,
+                  }}
+                  thumbs={{ swiper: thumbsSwiper }}
+                  spaceBetween={0}
+                  slidesPerView={1}
+                  className="h-full w-full"
+                  touchRatio={1.5}
+                  resistanceRatio={0.85}
+                >
+                  {variant.images!.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <div className="relative w-full h-full bg-gray-100">
+                        <img 
+                          src={image} 
+                          alt={`${variant.name} - Image ${index + 1}`}
+                          className="w-full h-48 sm:h-64 object-cover"
+                          loading="lazy"
+                        />
+                        
+                        <button
+                          onClick={() => handleDeleteClick(index)}
+                          className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-red-600 p-1.5 sm:p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 shadow-lg z-20"
+                        >
+                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
 
-                  {/* Navigation Buttons */}
-                  {imageCount > 1 && !isMobile && (
-                    <>
-                      <button className="swiper-button-prev absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                      </button>
-                      <button className="swiper-button-next absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 sm:w-8 sm:h-8 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </>
-                  )}
+                {/* Navigation Buttons */}
+                {imageCount > 1 && !isMobile && (
+                  <>
+                    <button className="swiper-button-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button className="swiper-button-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
 
-                  {/* Upload Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-1rem)] sm:w-auto">
-                      <button
-                        onClick={handleAddImageClick}
-                        className="w-full sm:w-auto bg-white text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95"
-                      >
-                        <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        <span>Add Image</span>
-                      </button>
-                    </div>
+                {/* Upload Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-1rem)] sm:w-auto">
+                    <button
+                      onClick={handleAddImageClick}
+                      className="w-full sm:w-auto bg-white text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      <span>Add Image</span>
+                    </button>
                   </div>
                 </div>
               </div>
 
               {/* Thumbnails */}
               {imageCount > 1 && (
-                <div className="relative px-4 sm:px-6">
+                <div className="relative px-4">
                   <Swiper
                     modules={[Thumbs]}
                     watchSlidesProgress
@@ -369,22 +429,19 @@ export default function VariantCard({
                     {variant.images!.map((image, index) => (
                       <SwiperSlide key={index}>
                         <div className="relative group/thumb">
-                          <div className="bg-gray-100 rounded-lg sm:rounded-xl overflow-hidden border-2 border-transparent transition-all duration-200 group-[.swiper-slide-thumb-active]:border-blue-500 group-[.swiper-slide-thumb-active]:shadow-md">
+                          <div className="bg-gray-100 rounded-lg overflow-hidden border-2 border-transparent transition-all duration-200 group-[.swiper-slide-thumb-active]:border-blue-500">
                             <img 
                               src={image} 
                               alt={`Thumbnail ${index + 1}`}
-                              className="aspect-[1/1] w-full h-full"
+                              className="aspect-square w-full h-full object-cover"
                               loading="lazy"
                             />
                           </div>
-                          
-                          {/* Delete Button on Thumbnail */}
                           <button
                             onClick={() => handleDeleteClick(index)}
-                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1 sm:p-1.5 rounded-full hover:bg-red-600 transition-all opacity-0 group-hover/thumb:opacity-100 active:opacity-100 shadow-lg z-10"
-                            aria-label={`Delete image ${index + 1}`}
+                            className="absolute -top-1 -right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-all opacity-0 group-hover/thumb:opacity-100 active:opacity-100 shadow-lg z-10"
                           >
-                            <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
@@ -397,19 +454,19 @@ export default function VariantCard({
             </div>
           ) : (
             /* Empty State */
-            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl overflow-hidden">
+            <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
               <div className="aspect-video flex flex-col items-center justify-center p-4">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl shadow-sm flex items-center justify-center mb-2 sm:mb-3">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-xl shadow-sm flex items-center justify-center mb-2">
                   <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <p className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4">No images yet</p>
+                <p className="text-gray-500 text-xs sm:text-sm mb-3">No images yet</p>
                 <button
                   onClick={handleAddImageClick}
-                  className="bg-blue-600 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-all duration-200 shadow-md active:scale-95"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-all duration-200"
                 >
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
                   <span>Upload Image</span>
@@ -420,13 +477,14 @@ export default function VariantCard({
         </div>
       </div>
       
-      {/* Variant Details Grid - With Inline Editing */}
-      <div className="px-3 sm:px-5 py-3 sm:py-4 bg-gray-50/50 border-y border-gray-100">
+      {/* Variant Details - Vertical Layout */}
+      <div className="px-4 sm:px-5 py-4 bg-gray-50/50 border-y border-gray-100">
         {isEditing ? (
-          // Edit Mode - All fields editable
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          // Edit Mode - Vertical Form Layout
+          <div className="space-y-4">
+            {/* Color */}
             <div>
-              <label className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                 Color
               </label>
               <div className="flex gap-2">
@@ -434,37 +492,73 @@ export default function VariantCard({
                   type="color"
                   value={editData.color || '#000000'}
                   onChange={(e) => setEditData(prev => ({ ...prev, color: e.target.value }))}
-                  className="w-8 h-8 rounded border border-gray-300 cursor-pointer"
+                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
                 />
                 <input
                   type="text"
                   name="color"
                   value={editData.color}
                   onChange={handleEditChange}
-                  className="flex-1 px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Color"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Color name or hex code"
                 />
               </div>
             </div>
+
+            {/* Size with Dropdown */}
             <div>
-              <label className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                 Size
               </label>
-              <input
-                type="text"
-                name="size"
-                value={editData.size}
-                onChange={handleEditChange}
-                className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Size"
-              />
+              <div className="space-y-2">
+                <select
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  value={selectedSizeParent}
+                  onChange={(e) => handleSizeCategoryChange(e.target.value)}
+                >
+                  <option value="">Select size category</option>
+                  {sizeData.map((category) => (
+                    <option key={category.parent} value={category.parent}>
+                      {category.parent}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+                  <select
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    value={editData.size}
+                    onChange={(e) => handleSizeSelect(e.target.value)}
+                  >
+                    <option value="">Select a size</option>
+                    {sizeData
+                      .find(cat => cat.parent === selectedSizeParent)
+                      ?.values.map(size => (
+                        <option key={size} value={size}>{size}</option>
+                      ))}
+                  </select>
+                )}
+
+                {(showCustomSize || selectedSizeParent === 'Custom') && (
+                  <input
+                    type="text"
+                    name="size"
+                    value={editData.size}
+                    onChange={handleEditChange}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Enter custom size"
+                  />
+                )}
+              </div>
             </div>
+
+            {/* Price */}
             <div>
-              <label className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">
-                Price
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                Regular Price (₱)
               </label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">₱</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
                 <input
                   type="number"
                   step="0.01"
@@ -472,17 +566,19 @@ export default function VariantCard({
                   name="price"
                   value={editData.price}
                   onChange={handleEditChange}
-                  className="w-full pl-5 pr-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="0.00"
                 />
               </div>
             </div>
+
+            {/* Sale Price */}
             <div>
-              <label className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">
-                Sale Price
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                Sale Price (₱)
               </label>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500 text-xs">₱</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">₱</span>
                 <input
                   type="number"
                   step="0.01"
@@ -490,77 +586,83 @@ export default function VariantCard({
                   name="salePrice"
                   value={editData.salePrice}
                   onChange={handleEditChange}
-                  className="w-full pl-5 pr-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  className="w-full pl-8 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="0.00"
                 />
               </div>
             </div>
-            <div className="col-span-2">
-              <label className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1 block">
-                SKU
+
+            {/* Stock */}
+            <div>
+              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                Stock Quantity
               </label>
               <input
-                type="text"
-                name="sku"
-                value={editData.sku}
+                type="number"
+                name="stock"
+                value={editData.stock}
                 onChange={handleEditChange}
-                className="w-full px-2 py-1 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="SKU"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                placeholder="0"
+                min="0"
               />
             </div>
           </div>
         ) : (
-          // Display Mode
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            <div>
-              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Color</p>
+          // Display Mode - Vertical Layout
+          <div className="space-y-3">
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Color</span>
               <div className="flex items-center gap-2">
                 {variant.color && (
                   <div 
-                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-gray-300"
+                    className="w-4 h-4 rounded-full border border-gray-300"
                     style={{ backgroundColor: variant.color }}
                   />
                 )}
-                <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{variant.color || '—'}</p>
+                <span className="text-sm font-semibold text-gray-900">{variant.color || '—'}</span>
               </div>
             </div>
-            <div>
-              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Size</p>
-              <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{variant.size || '—'}</p>
+            
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Size</span>
+              <span className="text-sm font-semibold text-gray-900">{variant.size || '—'}</span>
             </div>
-            <div>
-              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Price</p>
-              <div className="flex flex-wrap items-baseline gap-1 sm:gap-2">
-                <span className="text-xs sm:text-sm font-bold text-gray-900">{formatPrice(variant.price)}</span>
-                {variant.salePrice && variant.price && variant.salePrice < variant.price && (
-                  <span className="text-[10px] sm:text-xs text-red-500 line-through">
-                    {formatPrice(variant.salePrice)}
-                  </span>
-                )}
+            
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Price</span>
+              <div className="text-right">
+                <div className="flex flex-wrap items-center gap-1 justify-end">
+                  <span className="text-sm font-bold text-gray-900">{formatPrice(variant.price)}</span>
+                  {variant.salePrice && variant.price && variant.salePrice < variant.price && (
+                    <span className="text-xs text-red-500 line-through">
+                      {formatPrice(variant.salePrice)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <div>
-              <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider mb-0.5 sm:mb-1">Stock</p>
-              <p className="text-xs sm:text-sm font-semibold text-gray-900">{variant.stock} units</p>
+            
+            <div className="flex justify-between items-start">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</span>
+              <span className="text-sm font-semibold text-gray-900">{variant.stock} units</span>
             </div>
           </div>
         )}
       </div>
       
-      {/* Footer - Responsive layout */}
-      <div className="px-3 sm:px-5 py-3 sm:py-4 bg-white">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
-          <div className="text-[10px] sm:text-xs text-gray-400">
+      {/* Footer */}
+      <div className="px-4 sm:px-5 py-3 bg-white">
+        <div className="flex flex-col gap-2">
+          <div className="text-[10px] text-gray-400">
             <div>Created {new Date(variant.createdAt || '').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
-            <div className="font-mono text-[9px] sm:text-[11px] mt-0.5">ID: {variant.id.slice(-8)}</div>
+            <div className="font-mono text-[9px] mt-0.5">ID: {variant.id.slice(-8)}</div>
           </div>
           
-          {/* Edit Button Footer - Only show in display mode */}
           {!isEditing && (
             <button
               onClick={handleEditClick}
-              className="w-full sm:w-auto inline-flex items-center justify-center px-3 py-2 sm:px-3 sm:py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg sm:rounded-lg transition-all duration-200 active:bg-blue-200"
-              aria-label="Edit variant"
+              className="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200"
             >
               <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -573,29 +675,25 @@ export default function VariantCard({
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm !== null && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 max-w-sm w-full shadow-2xl transform transition-all mx-3 sm:mx-0">
-            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full mx-auto mb-3 sm:mb-4">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-5 max-w-sm w-full">
+            <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
+              <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </div>
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 text-center mb-1 sm:mb-2">
-              Delete Image?
-            </h3>
-            <p className="text-gray-600 text-center text-xs sm:text-sm mb-4 sm:mb-6">
-              Are you sure you want to delete this image? This action cannot be undone.
-            </p>
-            <div className="flex space-x-2 sm:space-x-3">
+            <h3 className="text-lg font-bold text-gray-900 text-center mb-2">Delete Image?</h3>
+            <p className="text-gray-600 text-center text-sm mb-6">This action cannot be undone.</p>
+            <div className="flex gap-3">
               <button
                 onClick={handleCancelDelete}
-                className="flex-1 px-3 py-2 sm:px-4 sm:py-2.5 border border-gray-200 text-gray-700 rounded-lg sm:rounded-xl hover:bg-gray-50 transition-colors font-medium text-sm active:bg-gray-100"
+                className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleConfirmDelete(showDeleteConfirm)}
-                className="flex-1 bg-red-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl hover:bg-red-700 transition-colors font-medium text-sm shadow-sm active:bg-red-800"
+                className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 font-medium"
               >
                 Delete
               </button>
@@ -606,10 +704,10 @@ export default function VariantCard({
 
       {/* Loading Overlay */}
       {isUploading && (
-        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-40 rounded-xl sm:rounded-2xl">
+        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center z-40 rounded-xl">
           <div className="text-center p-4">
-            <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 border-3 border-blue-600 border-t-transparent mx-auto mb-2 sm:mb-3"></div>
-            <p className="text-xs sm:text-sm font-medium text-gray-700">Uploading image...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent mx-auto mb-2"></div>
+            <p className="text-sm font-medium text-gray-700">Uploading image...</p>
           </div>
         </div>
       )}
@@ -624,4 +722,4 @@ export default function VariantCard({
       />
     </div>
   );
-}
+              }
