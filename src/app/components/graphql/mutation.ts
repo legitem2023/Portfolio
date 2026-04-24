@@ -20,6 +20,17 @@ export const RESETPASSWORD = gql`
   }
 `
 
+export const UPDATE_VENDOR_APPLICATION_STATUS = gql`
+  mutation UpdateUserBusinessName($id: ID, $vendorApplicationStatus: String) {
+    updateVendorStatus(id: $id, vendorApplicationStatus: $vendorApplicationStatus) {
+      id
+      businessName
+      firstName
+      lastName
+      avatar
+    }
+  }
+`;
 
 
 export const UPDATE_USER_BUSINESS_NAME = gql`
@@ -33,6 +44,8 @@ export const UPDATE_USER_BUSINESS_NAME = gql`
     }
   }
 `;
+
+
 
 export const UPDATE_USER_BUSINESS_TYPE = gql`
   mutation UpdateUserBusinessType($id: ID, $businessType: String) {
