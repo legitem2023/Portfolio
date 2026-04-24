@@ -495,7 +495,9 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               </svg>
             </button>
           </div>
-
+         <div className="flex items-center justify-center flex-shrink-0">
+            {/* blank space */}
+         </div>
           {/* Center - Logo */}
           <div className="flex items-center justify-center flex-shrink-0">
             <Image 
