@@ -6718,13 +6718,15 @@ deleteProduct: async (_: any, { id }: any) => {
         role: ""
       };
     }
-   if (user?.role==='MANAGER' && user?.vendorApplicationStatus==='PENDING' ||  user?.role==='MANAGER' && user?.vendorApplicationStatus==='' || user?.role==='MANAGER' && user?.vendorApplicationStatus===null){
+
+    const restrictedStatuses = ['PENDING', '', null, undefined];
+  if (user?.role === 'MANAGER' && restrictedStatuses.includes(user?.vendorApplicationStatus)) {
      return {
       statusText: "You account is under evaluation contact Administrator",
       token:"",
       role: ""
     }
-   }else { 
+   } else { 
      return {
       statusText: "success",
       token,
@@ -6732,7 +6734,6 @@ deleteProduct: async (_: any, { id }: any) => {
      }
    }
     
-
   } catch (err) {
     console.error('Login resolver error:', err);
     return {
