@@ -16,7 +16,7 @@ export interface User {
   website: string
   businessAddress: string
   addressInstruction: string
-  
+  vendorApplicationStatus: string
   phone: string;
   emailVerified: boolean;
   createdAt: string;
