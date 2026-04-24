@@ -725,14 +725,14 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
               <button
                 onClick={toggleDropdown}
                 disabled={isLoggingOut}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-full bg-zinc-400 hover:bg-zinc-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
+                className="flex items-center gap-2 px-2 py-1.5 rounded-full inset-shadow-md bg-zinc-100 hover:bg-zinc-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-200"
                 id="user-menu-button"
                 aria-expanded={isDropdownOpen}
                 aria-haspopup="true"
               >
                 <span className="sr-only">Open user menu</span>
                 <img 
-                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-white shadow-sm" 
+                  className="bg-white h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover border-2 border-white shadow-sm" 
                   src={user?.image || '/NoImage_2.webp'} 
                   alt={user?.name || 'User avatar'}
                 />
