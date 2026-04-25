@@ -5633,7 +5633,7 @@ updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) =>
       }
     });
     if(status ==='DELIVERED') {
-      await prisma.payment.update({
+      await prisma.payment.updateMany({
         where:{
           orderId:updatedItem?.orderId
         },
