@@ -7101,7 +7101,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
 /// First, map and validate the items with their shipping costs
 const itemsWithShipping = items.map((item: any) => ({
   supplierId: item.supplierId,
-  individualShipping: item.individualShipping
+  individualShipping_input: item.individualShipping_input
 }));
 
 // Sum individualShipping vertically per supplierId
@@ -7109,7 +7109,7 @@ const supplierShippingMap = new Map<string, number>();
 
 for (const item of itemsWithShipping) {
   const currentTotal = supplierShippingMap.get(item.supplierId) || 0;
-  supplierShippingMap.set(item.supplierId, currentTotal + item.individualShipping);
+  supplierShippingMap.set(item.supplierId, currentTotal + item.individualShipping_input);
 }
 
 // Create payment records using Array.from to iterate the Map
