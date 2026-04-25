@@ -7098,7 +7098,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       include: { items: true },
     });
 //##########
-// First, map and validate the items
+    // First, map and validate the items
 const supplierIds = items.map((item: any) => {
   return {
     supplierId: item.supplierId,
@@ -7106,14 +7106,14 @@ const supplierIds = items.map((item: any) => {
 });
 
 // Get unique supplierIds - fixed to avoid iteration error
-const uniqueSupplierIds = Array.from(new Set(supplierIds.map((item:any) => item.supplierId)));
+const uniqueSupplierIds: string[] = Array.from(new Set(supplierIds.map((item:any) => item.supplierId)));
 
 // Create payment records for each unique supplier
 for (const supplierId of uniqueSupplierIds) {
   await prisma.payment.create({
     data: {
-      orderId:response?.id,
-      supplierId: supplierId || "",
+      orderId: response?.id,
+      supplierId: supplierId,
       method: 'COD',
       status: 'PENDING'
     }
