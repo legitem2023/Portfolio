@@ -134,10 +134,27 @@ model User {
   following       Follow[]         @relation("Following")
   taggedPosts     PostTaggedUser[]
   blacklistedTokens  BlacklistedToken[]
-  
+
+  suggestions Suggestion[]
   @@index([createdAt])
   @@map("users")
 }
+
+model Suggestion {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  text        String
+  suggestioncategory   SuggestionCategory
+  isAnonymous Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // User relation (nullable for anonymous suggestions)
+  userId      String?  @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  @@map("suggestions")
+}
+
 
 model PasswordReset {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -736,7 +753,13 @@ enum TicketPriority {
   URGENT
 }
 
-
+enum SuggestionCategory {
+  GENERAL     @map("general")
+  FEATURE     @map("feature")
+  BUG         @map("bug")
+  IMPROVEMENT @map("improvement")
+  OTHER       @map("other")
+}
 
 
 enum NotificationType {
