@@ -8574,6 +8574,47 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     );
   }
 },
+
+  createSuggestion: async (_: any, { input }: any) => {
+      const { text, category, isAnonymous, userId } = input;  
+      const suggestion = await prisma.suggestion.create({
+        data: {
+          text,
+          category,
+          isAnonymous,
+          userId,
+        },
+        include: {
+          user: true,
+        },
+      });
+      
+      return {
+        statusText:'success'
+      }
+    },
+    
+    deleteSuggestion: async (_: any, { id }: any, context: any) => {
+      // Optional: Check if user owns the suggestion or is admin
+      const suggestion = await prisma.suggestion.findUnique({
+        where: { id },
+      });
+      
+      if (!suggestion) throw new Error('Suggestion not found');
+      
+      // Check if user owns the suggestion
+      if (suggestion.userId && suggestion.userId !== context.user?.id) {
+        throw new Error('Not authorized to delete this suggestion');
+      }
+      
+      await prisma.suggestion.delete({
+        where: { id },
+      });
+      
+      return true;
+    },
+  
+  
     removeTagFromPost: async (_: any, { postId, userId }: any, context: any) => {
       const currentUserId = getUserId(context);
       
