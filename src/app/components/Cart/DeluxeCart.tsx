@@ -114,7 +114,7 @@ const CartStage = ({ cartItems, onQuantityChange }: CartStageProps) => {
                   <li key={item.id} className="flex py-3 sm:py-4 md:py-5">
                     <div className="h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 lg:h-24 lg:w-24 flex-shrink-0 overflow-hidden rounded border border-gray-200">
                       <img
-                        src={item.images?item.images:'/NoImage.webp'}
+                        src={item.image?item.image:'/NoImage.webp'}
                         alt={item.name}
                         className="h-full w-full object-cover object-center"
                       />
