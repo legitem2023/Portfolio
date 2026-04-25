@@ -7113,7 +7113,7 @@ for (const supplierId of uniqueSupplierIds) {
   await prisma.payment.create({
     data: {
       orderId:response?.id,
-      supplierId: supplierId,
+      supplierId: supplierId || "",
       method: 'COD',
       status: 'PENDING'
     }
