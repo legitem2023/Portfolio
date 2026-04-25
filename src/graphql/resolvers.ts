@@ -7098,10 +7098,10 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       include: { items: true },
     });
 //##########
-// First, map and validate the items with their shipping costs
+/// First, map and validate the items with their shipping costs
 const itemsWithShipping = items.map((item: any) => ({
   supplierId: item.supplierId,
-  individualShipping: item.individualShipping // default to 0 if not present
+  individualShipping: item.individualShipping
 }));
 
 // Sum individualShipping vertically per supplierId
@@ -7112,16 +7112,15 @@ for (const item of itemsWithShipping) {
   supplierShippingMap.set(item.supplierId, currentTotal + item.individualShipping);
 }
 
-// Create payment records for each unique supplier with the summed shipping
-for (const [supplierId, totalShipping] of supplierShippingMap) {
+// Create payment records using Array.from to iterate the Map
+for (const [supplierId, totalShipping] of Array.from(supplierShippingMap)) {
   await prisma.payment.create({
     data: {
       orderId: response?.id,
       supplierId: supplierId,
       method: 'COD',
       status: 'PENDING',
-      amount: totalShipping // add the summed shipping amount
-      // include other payment fields as needed
+      amount: totalShipping
     }
   });
 }
