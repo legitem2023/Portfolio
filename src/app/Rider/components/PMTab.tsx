@@ -909,7 +909,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             {shouldShowChat && (
               <div className={`
                 ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-                flex flex-col h-[50vh] bg-white
+                flex flex-col h-full bg-white
                 transform transition-transform duration-300 ease-in-out
               `}>
                 {/* Fixed Chat Header */}
