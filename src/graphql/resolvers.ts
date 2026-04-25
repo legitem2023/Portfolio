@@ -7098,17 +7098,25 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       include: { items: true },
     });
 //##########
-  const totalAmount = items.reduce((sum: number, item: any) => {
-      return sum + (item.individualShipping_input);
-    }, 0);
-    await prisma.payment.create({
-        data:{
-            orderId:response.id,
-            method:'COD',
-            amount:totalAmount,
-            status:'PENDING'
-        }
-    })
+    // First, map and validate the items
+const supplierIds = items.map((item: any) => {
+  return {
+    supplierId: item.supplierId,
+  };
+});
+// Get unique supplierIds
+const uniqueSupplierIds = [...new Set(supplierIds.map(item => item.supplierId))];
+
+// Create payment records for each unique supplier
+for (const supplierId of uniqueSupplierIds) {
+  await prisma.payment.create({
+    data: {
+      supplierId: supplierId,
+      method:'COD',
+      status:'PENDING'
+    }
+  });
+}
 //##########    
     if (response) {
       try {
