@@ -7112,6 +7112,7 @@ const uniqueSupplierIds = Array.from(new Set(supplierIds.map((item:any) => item.
 for (const supplierId of uniqueSupplierIds) {
   await prisma.payment.create({
     data: {
+      orderId:response?.id,
       supplierId: supplierId,
       method: 'COD',
       status: 'PENDING'
