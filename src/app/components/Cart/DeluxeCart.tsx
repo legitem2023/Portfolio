@@ -785,7 +785,7 @@ const ConfirmationStage = ({
                           <div key={item.id} className="flex items-start space-x-2 p-2 bg-gray-50 rounded border border-gray-200">
                             <div className="flex-shrink-0">
                               <img
-                                src={item.images?.[0] ?? '/NoImage.webp'}
+                                src={item.image?item.image:'/NoImage.webp'}
                                 alt={item.name}
                                 className="w-12 h-12 sm:w-14 sm:h-14 object-cover object-center rounded"
                               />
