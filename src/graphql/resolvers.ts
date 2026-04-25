@@ -5716,19 +5716,34 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   try {  
     const rider = await prisma.user.findUnique({
       where: { id: riderId },
-      select: { firstName: true, email:true }
+      select: { 
+        firstName: true, 
+        email:true 
+      }
     });
     const trackingNumber = await generateTrackingNumber(supplierId);
     const updatedOrder = await prisma.orderItem.updateMany({
-        where: { orderId:itemId,
-                 supplierId:supplierId
-               },
-        data: {
+        where: { 
+          orderId:itemId,
+          supplierId:supplierId
+        },
+        data:{
           status: 'PROCESSING',
           riderId: riderId,
           trackingNumber:trackingNumber
-        }});
+        }
+    });
 
+    await prisma.payment.updateMany({
+        where:{
+          supplierId,
+          orderId:itemId
+        },
+        data:{
+          riderId
+        }
+      })
+    
      await prisma.notification.create({
         data: { 
           type: NotificationType.ORDER_UPDATED,
