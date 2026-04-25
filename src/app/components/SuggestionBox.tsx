@@ -5,7 +5,7 @@ import { useState, FormEvent } from 'react';
 import { useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useAuth } from './hooks/useAuth';
-
+import { showToast } from '../../../utils/toastify';
 interface Suggestion {
   id: string;
   text: string;
@@ -80,7 +80,7 @@ export default function SuggestionBox() {
         setSuggestion('');
         setCategory('GENERAL');
         setIsAnonymous(false);
-        
+        showToast("Thank's for your suggestion we will evaluate it right away","success");
         setTimeout(() => setSubmitStatus('idle'), 3000);
       } else {
         throw new Error('Failed to create suggestion');
