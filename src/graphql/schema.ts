@@ -1253,7 +1253,7 @@ type PasswordResetResult {
 
  input CreateSuggestionInput {
     text: String
-    suggestionCategory: SuggestionCategory
+    suggestioncategory: SuggestionCategory
     isAnonymous: Boolean
     userId:ID
   }
