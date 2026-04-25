@@ -56,7 +56,7 @@ export default function SuggestionBox() {
       // Prepare the input matching your exact schema
       const input = {
         text: suggestion.trim(),
-        suggestionCategory: category, // Now directly using the enum value
+        suggestioncategory: category, // Now directly using the enum value
         isAnonymous: isAnonymous,
         userId: user?.userId
       };
