@@ -356,7 +356,7 @@ showToast('Delivery Accepted!','success');
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="bg-gray-100">
       <Head>
         <title>VendorCity Rider Dashboard</title>
         <meta name="description" content="VendorCity Rider Tracking System" />
