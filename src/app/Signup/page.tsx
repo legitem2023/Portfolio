@@ -346,7 +346,7 @@ export default function LuxurySignup() {
             <div className="grid gap-3">
               <button
                  type="button"
-                 disabled={isLoading}
+                 disabled={true}
                  className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
                   isLoading
                   ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
