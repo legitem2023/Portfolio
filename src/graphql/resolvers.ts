@@ -7106,7 +7106,7 @@ const supplierIds = items.map((item: any) => {
 });
 
 // Get unique supplierIds - fixed to avoid iteration error
-const uniqueSupplierIds = Array.from(new Set(supplierIds.map(item => item.supplierId)));
+const uniqueSupplierIds = Array.from(new Set(supplierIds.map((item:any) => item.supplierId)));
 
 // Create payment records for each unique supplier
 for (const supplierId of uniqueSupplierIds) {
