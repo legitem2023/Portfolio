@@ -807,9 +807,7 @@ const ConfirmationStage = ({
                                       
                                     )}
                                     {item.size && (
-                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                                        {item.size}
-                                      </span>
+                                     <p className="text-xs text-indigo-600">{item.size}</p>
                                     )}
                                   </div>
                                   <p className="text-xs text-gray-600 mt-1">
