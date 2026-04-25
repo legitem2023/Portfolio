@@ -8576,11 +8576,11 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
 },
 
   createSuggestion: async (_: any, { input }: any) => {
-      const { text, category, isAnonymous, userId } = input;  
+      const { text, suggestionCategory, isAnonymous, userId } = input;  
       const suggestion = await prisma.suggestion.create({
         data: {
           text,
-          category,
+          suggestionCategory,
           isAnonymous,
           userId,
         },
