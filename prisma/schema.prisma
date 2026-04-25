@@ -754,11 +754,11 @@ enum TicketPriority {
 }
 
 enum SuggestionCategory {
-  GENERAL     @map("general")
-  FEATURE     @map("feature")
-  BUG         @map("bug")
-  IMPROVEMENT @map("improvement")
-  OTHER       @map("other")
+  GENERAL
+  FEATURE
+  BUG        
+  IMPROVEMENT 
+  OTHER      
 }
 
 
