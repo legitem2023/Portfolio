@@ -2,6 +2,9 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import { useMutation } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useAuth } from './hooks/useAuth';
 
 interface Suggestion {
   id: string;
@@ -9,8 +12,16 @@ interface Suggestion {
   category: string;
   createdAt: Date;
 }
-
+export const CREATE_SUGGESTION = gql`
+  mutation CreateSuggestion($input: CreateSuggestionInput) {
+    createSuggestion(input: $input) {
+     statusText
+    }
+  }
+`;
 export default function SuggestionBox() {
+  const { user, loading } = useAuth();
+  
   const [suggestion, setSuggestion] = useState('');
   const [category, setCategory] = useState('general');
   const [isAnonymous, setIsAnonymous] = useState(false);
