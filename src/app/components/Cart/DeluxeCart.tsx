@@ -819,9 +819,9 @@ const ConfirmationStage = ({
                                   <p className="text-xs font-semibold text-gray-900 whitespace-nowrap">
                                     {formatPesoPrice(item.price * item.quantity)}
                                   </p>
-                                  <p className="text-xs text-indigo-600">
+                                  {/*<p className="text-xs text-indigo-600">
                                     Shipping: {formatPesoPrice(itemShippingCost)}
-                                  </p>
+                                  </p>*/}
                                 </div>
                               </div>
                             </div>
