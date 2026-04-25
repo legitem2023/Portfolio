@@ -12,30 +12,37 @@ interface Suggestion {
   category: string;
   createdAt: Date;
 }
+
 export const CREATE_SUGGESTION = gql`
   mutation CreateSuggestion($input: CreateSuggestionInput) {
     createSuggestion(input: $input) {
-     statusText
+      statusText
     }
   }
 `;
+
 export default function SuggestionBox() {
   const { user, loading } = useAuth();
   
   const [suggestion, setSuggestion] = useState('');
-  const [category, setCategory] = useState('general');
+  const [category, setCategory] = useState<SuggestionCategory>('GENERAL');
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [recentSuggestions, setRecentSuggestions] = useState<Suggestion[]>([]);
 
+  // Implement the mutation hook
+  const [createSuggestion] = useMutation(CREATE_SUGGESTION);
+
   const categories = [
-    { value: 'general', label: 'General', emoji: '💬' },
-    { value: 'feature', label: 'Feature', emoji: '✨' },
-    { value: 'bug', label: 'Bug', emoji: '🐛' },
-    { value: 'improvement', label: 'Improvement', emoji: '⚡' },
-    { value: 'other', label: 'Other', emoji: '📝' },
+    { value: 'GENERAL' as const, label: 'General', emoji: '💬' },
+    { value: 'FEATURE' as const, label: 'Feature', emoji: '✨' },
+    { value: 'BUG' as const, label: 'Bug', emoji: '🐛' },
+    { value: 'IMPROVEMENT' as const, label: 'Improvement', emoji: '⚡' },
+    { value: 'OTHER' as const, label: 'Other', emoji: '📝' },
   ];
+
+  type SuggestionCategory = 'GENERAL' | 'FEATURE' | 'BUG' | 'IMPROVEMENT' | 'OTHER';
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -45,24 +52,41 @@ export default function SuggestionBox() {
     setIsSubmitting(true);
     setSubmitStatus('idle');
     
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
     try {
-      const newSuggestion: Suggestion = {
-        id: Date.now().toString(),
-        text: suggestion,
-        category,
-        createdAt: new Date(),
+      // Prepare the input matching your exact schema
+      const input = {
+        text: suggestion.trim(),
+        suggestionCategory: category, // Now directly using the enum value
+        isAnonymous: isAnonymous,
+        userId: user?.userId
       };
-      
-      setRecentSuggestions(prev => [newSuggestion, ...prev].slice(0, 3));
-      setSubmitStatus('success');
-      setSuggestion('');
-      setCategory('general');
-      setIsAnonymous(false);
-      
-      setTimeout(() => setSubmitStatus('idle'), 3000);
+
+      // Execute the mutation
+      const { data } = await createSuggestion({
+        variables: { input },
+      });
+
+      if (data?.createSuggestion) {
+        // Create local suggestion object for display
+        const newSuggestion: Suggestion = {
+          id: Date.now().toString(),
+          text: suggestion,
+          category: category.toLowerCase(), // Store lowercase for display
+          createdAt: new Date(),
+        };
+        
+        setRecentSuggestions(prev => [newSuggestion, ...prev].slice(0, 3));
+        setSubmitStatus('success');
+        setSuggestion('');
+        setCategory('GENERAL');
+        setIsAnonymous(false);
+        
+        setTimeout(() => setSubmitStatus('idle'), 3000);
+      } else {
+        throw new Error('Failed to create suggestion');
+      }
     } catch (error) {
+      console.error('Error submitting suggestion:', error);
       setSubmitStatus('error');
       setTimeout(() => setSubmitStatus('idle'), 3000);
     } finally {
@@ -71,8 +95,20 @@ export default function SuggestionBox() {
   };
 
   const getCategoryEmoji = (catValue: string) => {
-    return categories.find(c => c.value === catValue)?.emoji || '📝';
+    // Find the category by matching lowercase version
+    const category = categories.find(c => c.value.toLowerCase() === catValue.toLowerCase());
+    return category?.emoji || '📝';
   };
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="w-full p-8 text-center">
+        <div className="animate-spin h-6 w-6 border-2 border-indigo-500 border-t-transparent rounded-full inline-block"></div>
+        <p className="mt-2 text-sm text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -185,7 +221,7 @@ export default function SuggestionBox() {
               )}
               {submitStatus === 'error' && (
                 <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm text-center">
-                  ⚠️ Failed. Please try again.
+                  ⚠️ Failed to submit. Please try again.
                 </div>
               )}
             </form>
