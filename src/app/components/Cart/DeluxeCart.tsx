@@ -799,9 +799,12 @@ const ConfirmationStage = ({
                                   </h4>
                                   <div className="mt-1 flex flex-wrap gap-1">
                                     {item.color && (
-                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
-                                        {item.color}
-                                      </span>
+                                 <div 
+                                   className="h-3 w-3 sm:h-4 sm:w-4 rounded-full border border-gray-300 shadow-sm"
+                                   style={{ backgroundColor: item.color }}
+                                   title={item.color}
+                                   />
+                                      
                                     )}
                                     {item.size && (
                                       <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
