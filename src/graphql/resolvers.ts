@@ -7108,7 +7108,7 @@ const itemsWithShipping = items.map((item: any) => ({
 const supplierShippingMap = new Map<string, number>();
 
 for (const item of itemsWithShipping) {
-  const currentTotal = supplierShippingMap.get(item.supplierId);
+  const currentTotal = supplierShippingMap.get(item.supplierId) || 0;
   supplierShippingMap.set(item.supplierId, currentTotal + item.individualShipping);
 }
 
