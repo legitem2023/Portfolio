@@ -1255,6 +1255,7 @@ type PasswordResetResult {
     text: String
     suggestionCategory: SuggestionCategory
     isAnonymous: Boolean
+    userId:ID
   }
   
   
