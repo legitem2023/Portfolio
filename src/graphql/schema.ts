@@ -1251,9 +1251,17 @@ type PasswordResetResult {
     newPassword: String!
   }
 
+ input CreateSuggestionInput {
+    text: String
+    suggestionCategory: SuggestionCategory
+    isAnonymous: Boolean
+  }
+  
   
 
 type Mutation {
+  createSuggestion(input: CreateSuggestionInput): Result
+  deleteSuggestion(id: ID): Boolean
   locationTracking(input: LocationTrackingInput): LocationTrackingData
   createReview(data: CreateReviewInput): ReviewResult
   updateReview(id: String, data: UpdateReviewInput!): Result
