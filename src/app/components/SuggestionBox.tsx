@@ -80,7 +80,7 @@ export default function SuggestionBox() {
         setSuggestion('');
         setCategory('GENERAL');
         setIsAnonymous(false);
-        showToast("Thank's for your suggestion we will evaluate it right away","success");
+        showToast("Thank you for your suggestion. Our team will review it promptly.", "success");
         setTimeout(() => setSubmitStatus('idle'), 3000);
       } else {
         throw new Error('Failed to create suggestion');
