@@ -163,6 +163,24 @@ enum NotificationType {
     MONTH
   }
 
+enum SuggestionCategory {
+    GENERAL
+    FEATURE
+    BUG
+    IMPROVEMENT
+    OTHER
+  }
+  
+  type Suggestion {
+    id: ID
+    text: String
+    suggestionCategory: SuggestionCategory
+    isAnonymous: Boolean
+    createdAt: DateTime
+    updatedAt: DateTime
+    user: User
+  }
+
   # ================= Models =================
 type User {
   id: ID
@@ -198,7 +216,8 @@ type User {
   followerCount: Int
   followingCount: Int
   isFollowing: Boolean
-  
+
+  suggestions: [Suggestion]
   # NEW VENDOR FIELDS
   businessName: String
   businessType: String
