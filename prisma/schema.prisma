@@ -512,6 +512,8 @@ model WishlistItem {
 model Payment {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   orderId       String?       @db.ObjectId
+  supplierId    String?
+  riderId       String?       @db.ObjectId
   userId        String?       @db.ObjectId
   amount        Float?
   method        PaymentMethod?
