@@ -5633,11 +5633,12 @@ updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) =>
       }
     });
     if(status ==='DELIVERED') {
-      await prisma.payment.create({
+      await prisma.payment.update({
+        where:{
+          orderId:updatedItem?.orderId
+        },
         data:{
-            orderId:updatedItem.orderId,
-            userId:riderId,
-            amount:updatedItem.individualShipping,
+            userId:riderId,         
             status:'COMPLETED'
         }
       })
@@ -7096,7 +7097,19 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       },
       include: { items: true },
     });
-    
+//##########
+  const totalAmount = items.reduce((sum: number, item: any) => {
+      return sum + (item.individualShipping_input);
+    }, 0);
+    await prisma.payment.create({
+        data:{
+            orderId:response.id,
+            method:'COD',
+            amount:totalAmount,
+            status:'PENDING'
+        }
+    })
+//##########    
     if (response) {
       try {
         // Update stock for all items
