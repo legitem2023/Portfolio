@@ -7098,22 +7098,23 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
       include: { items: true },
     });
 //##########
-    // First, map and validate the items
+// First, map and validate the items
 const supplierIds = items.map((item: any) => {
   return {
     supplierId: item.supplierId,
   };
 });
-// Get unique supplierIds
-const uniqueSupplierIds = [...new Set(supplierIds.map(item => item.supplierId))];
+
+// Get unique supplierIds - fixed to avoid iteration error
+const uniqueSupplierIds = Array.from(new Set(supplierIds.map(item => item.supplierId)));
 
 // Create payment records for each unique supplier
 for (const supplierId of uniqueSupplierIds) {
   await prisma.payment.create({
     data: {
       supplierId: supplierId,
-      method:'COD',
-      status:'PENDING'
+      method: 'COD',
+      status: 'PENDING'
     }
   });
 }
