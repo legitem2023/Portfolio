@@ -7131,6 +7131,7 @@ for (const item of itemsWithShipping) {
 for (const [supplierId, totalShipping] of Array.from(supplierShippingMap)) {
   await prisma.payment.create({
     data: {
+      userId,
       orderId: response?.id,
       supplierId: supplierId,
       method: 'COD',
