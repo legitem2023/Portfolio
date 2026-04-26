@@ -1057,16 +1057,29 @@ export default function RiderPaymentHistory({
 
           {/* Mobile Card View */}
           <div className="md:hidden px-4 py-2">
-            {filteredPayments.map((payment) => (
-              <MobilePaymentCard
-                key={payment.id}
-                payment={payment}
-                formatCurrency={formatCurrency}
-                formatDate={formatDate}
-                getPaymentMethodIcon={getPaymentMethodIcon}
-                filterStatus={activeFilter}
-              />
-            ))}
+            {Object.entries(
+  filteredPayments.reduce((acc, payment) => {
+    const tn = payment.trackingNumber;
+    if (tn) {
+      if (!acc[tn]) acc[tn] = [];
+      acc[tn].push(payment);
+    }
+    return acc;
+  }, {})
+).map(([trackingNumber, payments]) => (
+  <>
+    {payments.map((payment) => (
+      <MobilePaymentCard
+        key={payment.id}
+        payment={payment}
+        formatCurrency={formatCurrency}
+        formatDate={formatDate}
+        getPaymentMethodIcon={getPaymentMethodIcon}
+        filterStatus={activeFilter}
+      />
+    ))}
+  </>
+))}
           </div>
         </>
       )}
