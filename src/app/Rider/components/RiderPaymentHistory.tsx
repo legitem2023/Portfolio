@@ -128,23 +128,29 @@ type OrderItem = {
   price: number;
 };
 
+type TrackingGroup = {
+  trackingNumber: string;
+  items: OrderItem[];
+  totalEarnings: number;
+};
+
 type Payment = {
   id: string;
   amount: number;
   method: string;
   orderId: string;
   orderNumber: string;
-  trackingNumber: string;
   createdAt: string;
   customerName?: string;
   customerEmail?: string;
+  trackingGroups: TrackingGroup[]; // Changed from items to trackingGroups
+  allItems: OrderItem[]; // Keep all items for calculations
   deliveredItemsTotal: number;
   pendingItemsTotal: number;
   processingItemsTotal: number;
   shippedItemsTotal: number;
   cancelledItemsTotal: number;
   refundedItemsTotal: number;
-  items: OrderItem[];
 };
 
 type PaymentSummary = {
@@ -167,7 +173,7 @@ interface RiderPaymentHistoryProps {
 }
 
 // Helper function to group items by tracking number
-const groupItemsByTrackingNumber = (items: OrderItem[]) => {
+const groupItemsByTrackingNumber = (items: OrderItem[]): TrackingGroup[] => {
   const grouped = new Map<string, OrderItem[]>();
   
   items.forEach(item => {
@@ -181,7 +187,18 @@ const groupItemsByTrackingNumber = (items: OrderItem[]) => {
     grouped.get(trackingKey)!.push(item);
   });
   
-  return grouped;
+  // Convert to array of TrackingGroup objects
+  const trackingGroups: TrackingGroup[] = [];
+  grouped.forEach((items, trackingNumber) => {
+    const totalEarnings = items.reduce((sum, item) => sum + item.earnings, 0);
+    trackingGroups.push({
+      trackingNumber,
+      items,
+      totalEarnings
+    });
+  });
+  
+  return trackingGroups;
 };
 
 // Status Badge Component
@@ -447,25 +464,24 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component - UPDATED with grouping
+// Mobile Card View Component - UPDATED with tracking groups
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
-  const filteredItems = filterStatus === 'ALL' 
-    ? payment.items 
-    : payment.items.filter((item: OrderItem) => item.status === filterStatus);
+  // Filter tracking groups based on filter status
+  const filteredGroups = filterStatus === 'ALL'
+    ? payment.trackingGroups
+    : payment.trackingGroups.filter((group: TrackingGroup) =>
+        group.items.some((item: OrderItem) => item.status === filterStatus)
+      );
   
-  if (filteredItems.length === 0) return null;
-  
-  // Group items by tracking number
-  const groupedItems = groupItemsByTrackingNumber(filteredItems);
+  if (filteredGroups.length === 0) return null;
   
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
-      {Array.from(groupedItems.entries()).map(([trackingNumber, items]) => {
-        const displayTrackingNumber = trackingNumber === 'NO_TRACKING' ? 'No tracking number' : trackingNumber;
-        const groupEarnings = items.reduce((sum, item) => sum + item.earnings, 0);
+      {filteredGroups.map((group: TrackingGroup, groupIdx: number) => {
+        const displayTrackingNumber = group.trackingNumber === 'NO_TRACKING' ? 'No tracking number' : group.trackingNumber;
         
         return (
-          <div key={`${payment.id}-${trackingNumber}`} className="mb-4 last:mb-0">
+          <div key={`${payment.id}-${group.trackingNumber}`} className={groupIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}>
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -476,12 +492,12 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
                 <p className="text-xs text-gray-500">{formatDate(payment.createdAt)}</p>
               </div>
               <div className="text-right">
-                <p className="text-lg font-bold text-gray-900">{formatCurrency(groupEarnings)}</p>
+                <p className="text-lg font-bold text-gray-900">{formatCurrency(group.totalEarnings)}</p>
               </div>
             </div>
             
-            <div className="border-t border-gray-100 pt-3 space-y-2">
-              {items.map((item: OrderItem, idx: number) => (
+            <div className="space-y-2">
+              {group.items.map((item: OrderItem, idx: number) => (
                 <div key={idx} className="flex justify-between items-start py-1">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -628,7 +644,6 @@ export default function RiderPaymentHistory({
         let hasDeliveredItems = false;
         
         const orderItems: OrderItem[] = [];
-        let orderTrackingNumber = '';
         
         if (order.items && order.items.length > 0) {
           order.items.forEach((item: any) => {
@@ -643,11 +658,6 @@ export default function RiderPaymentHistory({
               productName = 'Unknown Product';
             }
             
-            const itemTrackingNumber = item.trackingNumber || '';
-            if (itemTrackingNumber && !orderTrackingNumber) {
-              orderTrackingNumber = itemTrackingNumber;
-            }
-            
             const itemEarnings = item.individualShipping || 0;
             
             orderItems.push({
@@ -657,7 +667,7 @@ export default function RiderPaymentHistory({
               status: item.status,
               earnings: itemEarnings,
               individualShipping: item.individualShipping,
-              trackingNumber: itemTrackingNumber,
+              trackingNumber: item.trackingNumber || '',
               price: item.price || 0,
             });
             
@@ -688,6 +698,9 @@ export default function RiderPaymentHistory({
           deliveredOrdersCount++;
         }
         
+        // Group items by tracking number for this order
+        const trackingGroups = groupItemsByTrackingNumber(orderItems);
+        
         if (order.payments && order.payments.length > 0) {
           order.payments.forEach((payment: any) => {
             extractedPayments.push({
@@ -696,18 +709,18 @@ export default function RiderPaymentHistory({
               method: payment.method,
               orderId: order.id,
               orderNumber: order.orderNumber,
-              trackingNumber: orderTrackingNumber,
               createdAt: order.createdAt,
               customerName: order.user ? 
                 `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
               customerEmail: order.user?.email,
+              trackingGroups: trackingGroups,
+              allItems: orderItems,
               deliveredItemsTotal,
               pendingItemsTotal,
               processingItemsTotal,
               shippedItemsTotal,
               cancelledItemsTotal,
               refundedItemsTotal,
-              items: orderItems,
             });
           });
         } else {
@@ -717,18 +730,18 @@ export default function RiderPaymentHistory({
             method: 'UNKNOWN',
             orderId: order.id,
             orderNumber: order.orderNumber,
-            trackingNumber: orderTrackingNumber,
             createdAt: order.createdAt,
             customerName: order.user ? 
               `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
             customerEmail: order.user?.email,
+            trackingGroups: trackingGroups,
+            allItems: orderItems,
             deliveredItemsTotal,
             pendingItemsTotal,
             processingItemsTotal,
             shippedItemsTotal,
             cancelledItemsTotal,
             refundedItemsTotal,
-            items: orderItems,
           });
         }
         
@@ -781,7 +794,7 @@ export default function RiderPaymentHistory({
       setFilteredPayments(payments);
     } else {
       const filtered = payments.filter(payment => 
-        payment.items.some(item => item.status === activeFilter)
+        payment.allItems.some(item => item.status === activeFilter)
       );
       setFilteredPayments(filtered);
     }
@@ -957,7 +970,7 @@ export default function RiderPaymentHistory({
         </div>
       ) : (
         <>
-          {/* Desktop Table View - UPDATED with grouping */}
+          {/* Desktop Table View - COMPLETELY REWRITTEN with tracking groups */}
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -971,71 +984,78 @@ export default function RiderPaymentHistory({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPayments.map((payment) => {
-                  // Filter items based on active filter
-                  const filteredItems = activeFilter === 'ALL' 
-                    ? payment.items 
-                    : payment.items.filter(item => item.status === activeFilter);
-                  
-                  // Group filtered items by tracking number
-                  const groupedItems = groupItemsByTrackingNumber(filteredItems);
-                  
-                  return Array.from(groupedItems.entries()).map(([trackingNumber, items]) => {
-                    const displayTrackingNumber = trackingNumber === 'NO_TRACKING' ? 'No tracking number' : trackingNumber;
-                    const groupEarnings = items.reduce((sum, item) => sum + item.earnings, 0);
-                    
-                    return (
-                      <tr key={`${payment.id}-${trackingNumber}`} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {formatDate(payment.createdAt)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {displayTrackingNumber}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <User className="w-3 h-3" />
-                            {payment.customerName || 'N/A'}
-                          </div>
-                          {payment.customerEmail && (
-                            <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
-                              <Mail className="w-3 h-3" />
-                              {payment.customerEmail}
-                            </div>
+                {filteredPayments.map((payment) => (
+                  // Filter tracking groups based on active filter
+                  payment.trackingGroups
+                    .filter(group => 
+                      activeFilter === 'ALL' 
+                        ? true 
+                        : group.items.some(item => item.status === activeFilter)
+                    )
+                    .map((group, groupIndex) => {
+                      const displayTrackingNumber = group.trackingNumber === 'NO_TRACKING' ? 'No tracking number' : group.trackingNumber;
+                      
+                      return (
+                        <tr key={`${payment.id}-${group.trackingNumber}`} className="hover:bg-gray-50">
+                          {groupIndex === 0 && (
+                            <>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" rowSpan={payment.trackingGroups.length}>
+                                {formatDate(payment.createdAt)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" rowSpan={payment.trackingGroups.length}>
+                                {/* We don't show tracking number here since each group has its own */}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-500" rowSpan={payment.trackingGroups.length}>
+                                <div className="flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  {payment.customerName || 'N/A'}
+                                </div>
+                                {payment.customerEmail && (
+                                  <div className="text-xs text-gray-400 flex items-center gap-1 mt-1">
+                                    <Mail className="w-3 h-3" />
+                                    {payment.customerEmail}
+                                  </div>
+                                )}
+                              </td>
+                            </>
                           )}
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">
-                          <div className="space-y-2">
-                            {items.map((item, idx) => (
-                              <div key={idx} className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium">{item.name}</span>
-                                <span className="text-xs">(x{item.quantity})</span>
-                                <StatusBadge status={item.status} />
-                                <span className="text-xs text-gray-400">
-                                  ₱{item.individualShipping.toFixed(2)}/item
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                          {formatCurrency(groupEarnings)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            {getPaymentMethodIcon(payment.method)}
-                            {payment.method}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  });
-                })}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {displayTrackingNumber}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="space-y-2">
+                              {group.items.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium">{item.name}</span>
+                                  <span className="text-xs">(x{item.quantity})</span>
+                                  <StatusBadge status={item.status} />
+                                  <span className="text-xs text-gray-400">
+                                    ₱{item.individualShipping.toFixed(2)}/item
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                            {formatCurrency(group.totalEarnings)}
+                          </td>
+                          {groupIndex === 0 && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" rowSpan={payment.trackingGroups.length}>
+                              <span className="flex items-center gap-1">
+                                {getPaymentMethodIcon(payment.method)}
+                                {payment.method}
+                              </span>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })
+                ))}
               </tbody>
             </table>
           </div>
 
-          {/* Mobile Card View - UPDATED with grouping */}
+          {/* Mobile Card View */}
           <div className="md:hidden px-4 py-2">
             {filteredPayments.map((payment) => (
               <MobilePaymentCard
@@ -1085,4 +1105,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-    }
+                }
