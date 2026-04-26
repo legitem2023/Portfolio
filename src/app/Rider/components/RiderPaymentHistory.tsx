@@ -59,7 +59,7 @@ export const ACTIVE_ORDER_LIST_PAYMENTS = gql`
           quantity
           price
           status
-          trackingNumber    // <-- trackingNumber comes from here in the GraphQL query
+          trackingNumber
           individualShipping
           individualDistance
           product {
@@ -124,12 +124,12 @@ type OrderItem = {
   status: string;
   earnings: number;
   individualShipping: number;
-  trackingNumber: string;  // <-- trackingNumber property in OrderItem
+  trackingNumber: string;
   price: number;
 };
 
 type TrackingGroup = {
-  trackingNumber: string;  // <-- trackingNumber as the group key
+  trackingNumber: string;
   items: OrderItem[];
   totalEarnings: number;
 };
@@ -143,8 +143,8 @@ type Payment = {
   createdAt: string;
   customerName?: string;
   customerEmail?: string;
-  trackingGroups: TrackingGroup[]; // Items grouped by tracking number
-  allItems: OrderItem[];
+  trackingGroups: TrackingGroup[]; // Changed from items to trackingGroups
+  allItems: OrderItem[]; // Keep all items for calculations
   deliveredItemsTotal: number;
   pendingItemsTotal: number;
   processingItemsTotal: number;
@@ -173,13 +173,10 @@ interface RiderPaymentHistoryProps {
 }
 
 // Helper function to group items by tracking number
-// This is where trackingNumber is used to group items
 const groupItemsByTrackingNumber = (items: OrderItem[]): TrackingGroup[] => {
   const grouped = new Map<string, OrderItem[]>();
   
   items.forEach(item => {
-    // Use trackingNumber as the grouping key
-    // If no tracking number, group as 'NO_TRACKING'
     const trackingKey = item.trackingNumber && item.trackingNumber.trim() !== '' 
       ? item.trackingNumber 
       : 'NO_TRACKING';
@@ -195,7 +192,7 @@ const groupItemsByTrackingNumber = (items: OrderItem[]): TrackingGroup[] => {
   grouped.forEach((items, trackingNumber) => {
     const totalEarnings = items.reduce((sum, item) => sum + item.earnings, 0);
     trackingGroups.push({
-      trackingNumber,  // <-- Each group has a trackingNumber
+      trackingNumber,
       items,
       totalEarnings
     });
@@ -467,7 +464,7 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component - with tracking groups
+// Mobile Card View Component - UPDATED with tracking groups
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
   // Filter tracking groups based on filter status
   const filteredGroups = filterStatus === 'ALL'
@@ -489,7 +486,7 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className="text-sm font-semibold text-gray-900">
-                    Tracking #{displayTrackingNumber}  {/* <-- Display tracking number */}
+                    Tracking #{displayTrackingNumber}
                   </span>
                 </div>
                 <p className="text-xs text-gray-500">{formatDate(payment.createdAt)}</p>
@@ -670,7 +667,7 @@ export default function RiderPaymentHistory({
               status: item.status,
               earnings: itemEarnings,
               individualShipping: item.individualShipping,
-              trackingNumber: item.trackingNumber || '',  // <-- Extract trackingNumber from each item
+              trackingNumber: item.trackingNumber || '',
               price: item.price || 0,
             });
             
@@ -716,7 +713,7 @@ export default function RiderPaymentHistory({
               customerName: order.user ? 
                 `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
               customerEmail: order.user?.email,
-              trackingGroups: trackingGroups,  // <-- trackingGroups contains items grouped by trackingNumber
+              trackingGroups: trackingGroups,
               allItems: orderItems,
               deliveredItemsTotal,
               pendingItemsTotal,
@@ -737,7 +734,7 @@ export default function RiderPaymentHistory({
             customerName: order.user ? 
               `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
             customerEmail: order.user?.email,
-            trackingGroups: trackingGroups,  // <-- trackingGroups contains items grouped by trackingNumber
+            trackingGroups: trackingGroups,
             allItems: orderItems,
             deliveredItemsTotal,
             pendingItemsTotal,
@@ -792,14 +789,10 @@ export default function RiderPaymentHistory({
     }
   }, [data]);
 
-  // This is where filteredPayments is created based on the active filter
   useEffect(() => {
     if (activeFilter === 'ALL') {
-      // When filter is 'ALL', show all payments with all their tracking groups
       setFilteredPayments(payments);
     } else {
-      // When a specific status is selected, filter payments to only include
-      // those that have at least one item with the matching status
       const filtered = payments.filter(payment => 
         payment.allItems.some(item => item.status === activeFilter)
       );
@@ -896,7 +889,7 @@ export default function RiderPaymentHistory({
                 <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-16" /></th>
                 <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-20" /></th>
                 <th className="px-6 py-3 text-left"><Shimmer className="h-4 w-16" /></th>
-              </td>
+              </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {[...Array(5)].map((_, index) => (
@@ -977,7 +970,7 @@ export default function RiderPaymentHistory({
         </div>
       ) : (
         <>
-          {/* Desktop Table View - with tracking groups */}
+          {/* Desktop Table View - COMPLETELY REWRITTEN with tracking groups */}
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -1010,7 +1003,7 @@ export default function RiderPaymentHistory({
                                 {formatDate(payment.createdAt)}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" rowSpan={payment.trackingGroups.length}>
-                                {/* Tracking number column is handled below */}
+                                {/* We don't show tracking number here since each group has its own */}
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-500" rowSpan={payment.trackingGroups.length}>
                                 <div className="flex items-center gap-1">
@@ -1027,7 +1020,7 @@ export default function RiderPaymentHistory({
                             </>
                           )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {displayTrackingNumber}  {/* <-- Display tracking number for this group */}
+                            {displayTrackingNumber}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             <div className="space-y-2">
@@ -1112,4 +1105,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-      }
+          }
