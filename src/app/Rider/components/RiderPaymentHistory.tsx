@@ -1052,42 +1052,74 @@ export default function RiderPaymentHistory({
             </table>
           </div>
 
-          {/* Mobile Card View - Grouped by distinct tracking number */}
+          {/* Mobile Card View - Grouped by distinct tracking number across all orders */}
           <div className="md:hidden px-4 py-2">
             {(() => {
-              // First, collect all tracking groups from filtered payments
-              const allTrackingGroups: { group: TrackingGroup; payment: Payment }[] = [];
+              // Step 1: Collect all items with their tracking numbers from filtered payments
+              const allItemsWithMeta: { 
+                item: OrderItem; 
+                trackingNumber: string; 
+                payment: Payment;
+              }[] = [];
               
               filteredPayments.forEach(payment => {
-                const filteredGroups = activeFilter === 'ALL'
-                  ? payment.trackingGroups
-                  : payment.trackingGroups.filter(group =>
-                      group.items.some(item => item.status === activeFilter)
-                    );
-                
-                filteredGroups.forEach(group => {
-                  allTrackingGroups.push({ group, payment });
+                payment.trackingGroups.forEach(group => {
+                  // Filter items based on activeFilter
+                  const itemsToShow = activeFilter === 'ALL' 
+                    ? group.items 
+                    : group.items.filter(item => item.status === activeFilter);
+                  
+                  itemsToShow.forEach(item => {
+                    allItemsWithMeta.push({
+                      item,
+                      trackingNumber: group.trackingNumber,
+                      payment
+                    });
+                  });
                 });
               });
               
-              // Group by tracking number across all payments
-              const groupedByTrackingNumber = new Map<string, { group: TrackingGroup; payment: Payment }[]>();
+              // Step 2: Group by tracking number
+              const groupedByTrackingNumber = new Map<string, {
+                trackingNumber: string;
+                items: { item: OrderItem; payment: Payment }[];
+                totalEarnings: number;
+              }>();
               
-              allTrackingGroups.forEach(item => {
-                const trackingKey = item.group.trackingNumber;
-                if (!groupedByTrackingNumber.has(trackingKey)) {
-                  groupedByTrackingNumber.set(trackingKey, []);
+              allItemsWithMeta.forEach(({ item, trackingNumber, payment }) => {
+                if (!groupedByTrackingNumber.has(trackingNumber)) {
+                  groupedByTrackingNumber.set(trackingNumber, {
+                    trackingNumber,
+                    items: [],
+                    totalEarnings: 0
+                  });
                 }
-                groupedByTrackingNumber.get(trackingKey)!.push(item);
+                const group = groupedByTrackingNumber.get(trackingNumber)!;
+                // Check if this exact item (by id) is already in the group to prevent duplicates
+                const isDuplicate = group.items.some(existing => existing.item.id === item.id);
+                if (!isDuplicate) {
+                  group.items.push({ item, payment });
+                  group.totalEarnings += item.earnings;
+                }
               });
               
-              // Render each tracking number group
-              return Array.from(groupedByTrackingNumber.entries()).map(([trackingNumber, items]) => {
-                const displayTrackingNumber = trackingNumber === 'NO_TRACKING' ? 'No tracking number' : trackingNumber;
-                const totalEarnings = items.reduce((sum, item) => sum + item.group.totalEarnings, 0);
+              // Step 3: Render each tracking number group
+              return Array.from(groupedByTrackingNumber.values()).map((group) => {
+                const displayTrackingNumber = group.trackingNumber === 'NO_TRACKING' 
+                  ? 'No tracking number' 
+                  : group.trackingNumber;
+                
+                // Group items by payment/order for display within the tracking group
+                const itemsByPayment = new Map<string, { payment: Payment; items: OrderItem[] }>();
+                group.items.forEach(({ item, payment }) => {
+                  if (!itemsByPayment.has(payment.id)) {
+                    itemsByPayment.set(payment.id, { payment, items: [] });
+                  }
+                  itemsByPayment.get(payment.id)!.items.push(item);
+                });
                 
                 return (
-                  <div key={trackingNumber} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
+                  <div key={group.trackingNumber} className="bg-white border border-gray-200 rounded-lg p-4 mb-3 shadow-sm">
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -1096,21 +1128,22 @@ export default function RiderPaymentHistory({
                           </span>
                         </div>
                         <p className="text-xs text-gray-500">
-                          {items.length} order{items.length !== 1 ? 's' : ''}
+                          {itemsByPayment.size} order{itemsByPayment.size !== 1 ? 's' : ''} • {group.items.length} item{group.items.length !== 1 ? 's' : ''}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">{formatCurrency(totalEarnings)}</p>
+                        <p className="text-lg font-bold text-gray-900">{formatCurrency(group.totalEarnings)}</p>
                       </div>
                     </div>
                     
                     <div className="space-y-4">
-                      {items.map(({ group, payment }, idx) => (
-                        <div key={`${payment.id}-${idx}`} className={idx > 0 ? 'pt-3 border-t border-gray-100' : ''}>
-                          <div className="text-xs text-gray-400 mb-2">
-                            Order #{payment.orderNumber} • {formatDate(payment.createdAt)}
+                      {Array.from(itemsByPayment.entries()).map(([paymentId, { payment, items }], idx) => (
+                        <div key={paymentId} className={idx > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                          <div className="text-xs text-gray-400 mb-2 flex justify-between">
+                            <span>Order #{payment.orderNumber}</span>
+                            <span>{formatDate(payment.createdAt)}</span>
                           </div>
-                          {group.items.map((item: OrderItem, itemIdx: number) => (
+                          {items.map((item, itemIdx) => (
                             <div key={itemIdx} className="flex justify-between items-start py-1">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1119,6 +1152,7 @@ export default function RiderPaymentHistory({
                                 </div>
                                 <div className="text-xs text-gray-500 mt-1">
                                   Qty: {item.quantity} × ₱{item.individualShipping.toFixed(2)} shipping
+                                  {item.price > 0 && <span className="ml-2">(Item price: ₱{item.price.toFixed(2)})</span>}
                                 </div>
                               </div>
                               <span className="text-sm font-semibold text-green-600">
@@ -1127,7 +1161,10 @@ export default function RiderPaymentHistory({
                             </div>
                           ))}
                           <div className="flex justify-between items-center mt-2 pt-1 text-xs text-gray-500">
-                            <span>Customer: {payment.customerName || 'N/A'}</span>
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {payment.customerName || 'N/A'}
+                            </span>
                             <span className="flex items-center gap-1">
                               {getPaymentMethodIcon(payment.method)}
                               {payment.method}
