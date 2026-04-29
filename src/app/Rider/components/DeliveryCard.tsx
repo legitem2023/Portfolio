@@ -213,9 +213,14 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
             </div>
           </div>
           
-          {/* Payments Section */}
+
+
+          {/* Payout Section */}
+          <div className="bg-green-50 p-3 rounded-xl space-y-1">
+
+                      {/* Payments Section */}
           {payments.length > 0 && (
-            <div className="bg-purple-50 p-3 rounded-xl space-y-2">
+            <div className="p-3 rounded-xl space-y-2">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                 <span className="font-semibold text-purple-700 text-sm">Payments</span>
@@ -239,21 +244,21 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
                       {payment.status || 'N/A'}
                     </span>
                   </div>
-                  {payment.amount && (
+                  {/*payment.amount && (
                     <div className="flex justify-between items-center mt-2 pt-2 border-t border-purple-100">
                       <span className="text-sm font-medium text-gray-700">Amount:</span>
                       <span className="text-sm font-bold text-purple-700">
                         {formatPeso(payment.amount)}
                       </span>
                     </div>
-                  )}
+                  )*/}
                 </div>
               ))}
             </div>
           )}
 
-          {/* Payout Section */}
-          <div className="bg-green-50 p-3 rounded-xl space-y-1">
+
+            
             <div className="text-xl font-bold text-green-600">{formatPeso(payout)}</div>
             <p className="text-gray-500 text-xs">Total shipping payout</p>
             <div className="border-t border-green-100 pt-2 mt-2">
