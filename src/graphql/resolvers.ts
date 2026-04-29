@@ -1032,6 +1032,9 @@ const orders = await prisma.order.findMany({
                 email: true,
                 phone:true,
                 addresses: {
+                  where: {
+                    isDefault: true
+                  },
                   // Removed isDefault filter to match frontend query
                   select: {
                     street: true,
