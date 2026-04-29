@@ -157,7 +157,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   };
 
   const isLoading = acceptLoading || rejectLoading;
-
+console.log(delivery,"<---");
   return (
     <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
       {/* Header with timer and order info */}
