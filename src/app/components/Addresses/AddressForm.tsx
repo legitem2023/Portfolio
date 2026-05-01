@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation';
-import { useSession, getSession } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 
 interface AddressFormProps {
   userId: string;
@@ -57,24 +57,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // Function to update session with new token (SAME PATTERN AS LOGIN)
-  const updateSessionWithNewToken = async (newToken: string, userData?: any) => {
+  // Function to update ONLY the token in session
+  const updateSessionToken = async (newToken: string) => {
     setIsSessionUpdating(true);
     try {
-      // Update the NextAuth session with the new token from server
+      // Only update the serverToken, keep everything else the same
       await update({
         ...session,
-        serverToken: newToken,  // This is the key - getting token from mutation result
-        user: {
-          ...session?.user,
-          ...userData,  // Any additional user data from the mutation
-        }
+        serverToken: newToken,
       });
       
-      console.log('✅ Session updated with new token from address creation');
+      console.log('✅ Session token updated');
       return true;
     } catch (error) {
-      console.error('Error updating session:', error);
+      console.error('Error updating session token:', error);
       return false;
     } finally {
       setIsSessionUpdating(false);
@@ -316,21 +312,22 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         },
       });
 
-      // ✅ GET THE NEW TOKEN FROM THE MUTATION RESULT (JUST LIKE LOGIN)
+      // GET THE NEW TOKEN FROM THE MUTATION RESULT
       const newToken = result.data?.createAddress?.token;
-      const updatedUserData = result.data?.createAddress?.user;
       
       if (newToken) {
-        // ✅ UPDATE SESSION WITH THE NEW TOKEN (SAME PATTERN AS LOGIN)
-        await updateSessionWithNewToken(newToken, updatedUserData);
+        // UPDATE ONLY THE TOKEN IN SESSION
+        await updateSessionToken(newToken);
         
-        console.log('✅ Address created and session updated with new token');
+        console.log('✅ Address created and session token updated');
         
         // Trigger callbacks
         onSuccess?.();
         onAddressUpdate?.();
       } else {
-        throw new Error('No token returned from server');
+        console.log('No new token returned, but address was created');
+        onSuccess?.();
+        onAddressUpdate?.();
       }
       
     } catch (err) {
@@ -389,7 +386,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <div className="mb-4 p-3 bg-blue-50 border border-blue-300 rounded-lg">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-sm text-blue-700">Updating session with new token...</span>
+              <span className="text-sm text-blue-700">Updating session token...</span>
             </div>
           </div>
         )}
@@ -640,7 +637,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
               {!formData.lat || !formData.lng 
                 ? '⚠️ GET LOCATION FIRST' 
                 : isSessionUpdating
-                  ? '🔄 Updating Session...'
+                  ? '🔄 Updating Token...'
                   : loading 
                     ? 'Adding Address...' 
                     : '✓ Add Address'}
@@ -668,4 +665,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-        }
+}
