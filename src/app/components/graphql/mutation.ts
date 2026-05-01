@@ -731,6 +731,7 @@ export const CREATE_ADDRESS = gql`
   mutation CreateAddress($input: AddressInputs!) {
     createAddress(input: $input) {
       statusText
+      token
     }
   }
 `;
