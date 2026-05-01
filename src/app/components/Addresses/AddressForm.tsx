@@ -1,8 +1,7 @@
-// components/AddressForm.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation';
-import { useSession } from 'next-auth/react';
+import { useSession } from "next-auth/react";
 
 interface AddressFormProps {
   userId: string;
@@ -25,6 +24,11 @@ interface FormData {
   lng: number | null;
 }
 
+interface GeocodeResult {
+  lat: number;
+  lng: number;
+}
+
 interface ReverseGeocodeResult {
   street: string;
   city: string;
@@ -34,9 +38,7 @@ interface ReverseGeocodeResult {
 }
 
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
-  const { data: session, update, status } = useSession();
-  const [isSessionUpdating, setIsSessionUpdating] = useState(false);
-  
+  const { data: session, update } = useSession();
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
     street: '',
@@ -55,43 +57,15 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
   
-  const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS, {
-    onError: (err) => {
-      console.error('Mutation error:', err);
-      setLocationError(err.message || 'Failed to create address');
-    }
-  });
+  const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // Function to update ONLY the token in session
-  const updateSessionToken = async (newToken: string) => {
-    if (!session) {
-      console.warn('No session found to update');
-      return false;
-    }
-    
-    setIsSessionUpdating(true);
-    try {
-      // Only update the serverToken, keep everything else the same
-      await update({
-        ...session,
-        serverToken: newToken,
-      });
-      
-      console.log('✅ Session token updated');
-      return true;
-    } catch (error) {
-      console.error('Error updating session token:', error);
-      return false;
-    } finally {
-      setIsSessionUpdating(false);
-    }
-  };
-
-  // Reverse geocoding functions
+  // COMPLETE geocoding functions
   const reverseGeocodeWithGoogle = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
-    if (!apiKey) return null;
+    if (!apiKey) {
+      return null;
+    }
 
     try {
       const response = await fetch(
@@ -114,18 +88,39 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         addressComponents.forEach((component: any) => {
           const types = component.types;
           
-          if (types.includes('street_number')) streetNumber = component.long_name;
-          if (types.includes('route')) route = component.long_name;
-          if (types.includes('locality')) city = component.long_name;
-          if (types.includes('administrative_area_level_1')) state = component.short_name;
-          if (types.includes('postal_code')) zipCode = component.long_name;
-          if (types.includes('country')) country = component.long_name;
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name;
+          }
+          if (types.includes('route')) {
+            route = component.long_name;
+          }
+          if (types.includes('locality')) {
+            city = component.long_name;
+          }
+          if (types.includes('administrative_area_level_1')) {
+            state = component.short_name;
+          }
+          if (types.includes('postal_code')) {
+            zipCode = component.long_name;
+          }
+          if (types.includes('country')) {
+            country = component.long_name;
+          }
         });
 
-        if (streetNumber && route) street = `${streetNumber} ${route}`;
-        else if (route) street = route;
+        if (streetNumber && route) {
+          street = `${streetNumber} ${route}`;
+        } else if (route) {
+          street = route;
+        }
 
-        return { street, city, state, zipCode, country };
+        return {
+          street: street || result.formatted_address.split(',')[0],
+          city,
+          state,
+          zipCode,
+          country
+        };
       }
       return null;
     } catch (error) {
@@ -149,13 +144,19 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
       if (data && data.address) {
         const address = data.address;
+        
         let street = '';
         
         if (address.road) {
           street = address.road;
-          if (address.house_number) street = `${address.house_number} ${street}`;
-        } else if (address.pedestrian) street = address.pedestrian;
-        else if (address.footway) street = address.footway;
+          if (address.house_number) {
+            street = `${address.house_number} ${street}`;
+          }
+        } else if (address.pedestrian) {
+          street = address.pedestrian;
+        } else if (address.footway) {
+          street = address.footway;
+        }
 
         return {
           street: street || data.display_name.split(',')[0],
@@ -172,6 +173,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
+  // MAIN FUNCTION: Get current location (REQUIRED)
   const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -212,32 +214,41 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     });
   };
 
+  // Reverse geocode to get address from coordinates
   const reverseGeocode = async (lat: number, lng: number): Promise<ReverseGeocodeResult> => {
     setLocationStep('reverse-geocoding');
     
     const googleResult = await reverseGeocodeWithGoogle(lat, lng);
-    if (googleResult) return googleResult;
+    if (googleResult) {
+      return googleResult;
+    }
 
     const osmResult = await reverseGeocodeWithOSM(lat, lng);
-    if (osmResult) return osmResult;
+    if (osmResult) {
+      return osmResult;
+    }
 
     throw new Error('Could not get address from coordinates');
   };
 
+  // MAIN FUNCTION: Handle getting current location (REQUIRED)
   const handleGetCurrentLocation = async () => {
     setIsGeocoding(true);
     setLocationError(null);
     setLocationStep('getting-location');
     
     try {
+      // Force location retrieval
       const location = await getCurrentLocation();
       
+      // Update coordinates
       setFormData(prev => ({
         ...prev,
         lat: location.lat,
         lng: location.lng
       }));
 
+      // Get address from coordinates
       const address = await reverseGeocode(location.lat, location.lng);
       
       setFormData(prev => ({
@@ -259,7 +270,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
+  // Validate form before submission
   const validateForm = (): boolean => {
+    // PRIMARY VALIDATION: Location is MANDATORY
     if (!formData.lat || !formData.lng) {
       setLocationError('⚠️ CURRENT LOCATION IS REQUIRED. Please click "Get My Current Location" button above.');
       return false;
@@ -313,35 +326,67 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
     
     try {
+      // Execute the create address mutation with the current auth token
       const result = await createAddress({
         variables: {
           input: {
             userId,
-            ...formData,
+            type: formData.type,
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zipCode: formData.zipCode,
+            country: formData.country,
+            isDefault: formData.isDefault,
+            receiver: formData.receiver,
+            phone: formData.phone,
+            lat: formData.lat,
+            lng: formData.lng
+          },
+        },
+        context: {
+          headers: {
+            Authorization: `Bearer ${session?.serverToken}`,
           },
         },
       });
 
-      // GET THE NEW TOKEN FROM THE MUTATION RESULT
-      const newToken = result.data?.createAddress?.token;
-      
-      if (newToken && session) {
-        // UPDATE ONLY THE TOKEN IN SESSION
-        await updateSessionToken(newToken);
-        console.log('✅ Address created and session token updated');
-      } else if (newToken && !session) {
-        console.warn('New token received but no session to update');
+      // Check if the mutation returns a new auth token
+      if (result.data?.createAddress?.token) {
+        const newToken = result.data.createAddress.token;
+        
+        console.log("New token received from address creation, updating session...");
+        
+        // Update the NextAuth session with the new token
+        await update({
+          ...session,
+          serverToken: newToken,
+        });
+        
+        console.log("Session successfully updated with new token");
+        
+        // Optional: Show success message with token update
+        setLocationError(null);
+      } else if (result.data?.createAddress) {
+        // Address created but no new token returned
+        console.log("Address created successfully, no token update needed");
       } else {
-        console.log('No new token returned, but address was created');
+        throw new Error("Failed to create address");
       }
-      
-      // Trigger callbacks
+
+      // Call success callbacks
       onSuccess?.();
       onAddressUpdate?.();
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating address:', err);
-      setLocationError('Failed to save address. Please try again.');
+      
+      // Handle specific error cases
+      if (err.message?.includes("token") || err.message?.includes("unauthorized")) {
+        setLocationError('Session expired. Please refresh the page and login again.');
+      } else {
+        setLocationError(err.message || 'Failed to save address. Please try again.');
+      }
     }
   };
 
@@ -359,18 +404,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       setLocationError(null);
     }
   };
-
-  // Show loading state while session is loading
-  if (status === 'loading') {
-    return (
-      <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div className="flex items-center justify-center p-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -402,13 +435,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
 
       <div className="px-6 py-6 sm:px-8 sm:py-8">
-        {/* Session Update Status */}
-        {isSessionUpdating && (
-          <div className="mb-4 p-3 bg-blue-50 border border-blue-300 rounded-lg">
-            <div className="flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-sm text-blue-700">Updating session token...</span>
-            </div>
+        {/* Session Info (Debug - remove in production) */}
+        {process.env.NODE_ENV === 'development' && session?.serverToken && (
+          <div className="mb-4 p-2 bg-gray-100 rounded text-xs text-gray-600 truncate">
+            Token: {session.serverToken.substring(0, 50)}...
           </div>
         )}
 
@@ -497,7 +527,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </div>
         )}
 
-        {/* Form */}
+        {/* Form - Disabled until location is obtained */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className={(!formData.lat || !formData.lng) ? 'opacity-50 pointer-events-none' : ''}>
             <div>
@@ -646,10 +676,10 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <button
               type="submit"
-              disabled={loading || !formData.lat || !formData.lng || isSessionUpdating}
+              disabled={loading || !formData.lat || !formData.lng}
               className={`
                 flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200
-                ${formData.lat && formData.lng && !loading && !isSessionUpdating
+                ${formData.lat && formData.lng && !loading
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 cursor-pointer'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }
@@ -657,11 +687,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             >
               {!formData.lat || !formData.lng 
                 ? '⚠️ GET LOCATION FIRST' 
-                : isSessionUpdating
-                  ? '🔄 Updating Token...'
-                  : loading 
-                    ? 'Adding Address...' 
-                    : '✓ Add Address'}
+                : loading 
+                  ? 'Adding Address...' 
+                  : '✓ Add Address'}
             </button>
             
             {onCancel && (
@@ -686,4 +714,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-                       }
+  }
