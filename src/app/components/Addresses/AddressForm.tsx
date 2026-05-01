@@ -824,7 +824,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           {(!formData.lat || !formData.lng) && (
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800">
-                🔴 You must click <strong>"GET MY CURRENT LOCATION"</strong> before saving this address
+                🔴 You must click &qoute;<strong>GET MY CURRENT LOCATION</strong>&qoute; before saving this address
               </p>
             </div>
           )}
