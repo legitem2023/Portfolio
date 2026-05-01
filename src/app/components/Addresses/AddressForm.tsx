@@ -1,9 +1,8 @@
 // components/AddressForm.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation';
 import { useSession, getSession } from 'next-auth/react';
-import { decryptToken } from '../../../../utils/decryptToken';
 
 interface AddressFormProps {
   userId: string;
@@ -26,11 +25,6 @@ interface FormData {
   lng: number | null;
 }
 
-interface GeocodeResult {
-  lat: number;
-  lng: number;
-}
-
 interface ReverseGeocodeResult {
   street: string;
   city: string;
@@ -39,19 +33,8 @@ interface ReverseGeocodeResult {
   country: string;
 }
 
-interface UserData {
-  userId: string;
-  role: 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
-  name?: string;
-  email?: string;
-  phone: string;
-  image?: string;
-  addresses: string[];
-}
-
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
   const { data: session, update } = useSession();
-  const [userData, setUserData] = useState<UserData | null>(null);
   const [isSessionUpdating, setIsSessionUpdating] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
@@ -74,92 +57,35 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   
   const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
 
-  // Load current user data from session on component mount
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const currentSession = await getSession();
-        if (currentSession?.serverToken) {
-          await decryptAndUpdateUserData(currentSession.serverToken);
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-    };
-    
-    loadUserData();
-  }, []);
-
-  // Function to decrypt and update user data (from your login pattern)
-  const decryptAndUpdateUserData = async (serverToken: string) => {
-    const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-    
-    try {
-      const decrypted = await decryptToken(serverToken, secret);
-      
-      const updatedUserData: UserData = {
-        userId: decrypted.userId || '',
-        role: decrypted.role || 'USER',
-        phone: decrypted.phone || '',
-        addresses: Array.isArray(decrypted.addresses) ? decrypted.addresses : [],
-        name: decrypted.name,
-        email: decrypted.email,
-        image: decrypted.image
-      };
-      
-      setUserData(updatedUserData);
-      return updatedUserData;
-      
-    } catch (error: any) {
-      console.error('❌ Failed to decrypt token:', error);
-      throw error;
-    }
-  };
-
-  // Function to refresh session after address creation
-  const refreshSessionAfterAddressCreation = async () => {
+  // Function to update session with new token (SAME PATTERN AS LOGIN)
+  const updateSessionWithNewToken = async (newToken: string, userData?: any) => {
     setIsSessionUpdating(true);
     try {
-      const refreshedSession = await getSession();
-      if (refreshedSession?.serverToken) {
-        const updatedUser = await decryptAndUpdateUserData(refreshedSession.serverToken);
-        
-        // Update the NextAuth session with new data
-        await update({
-          ...session,
-          user: updatedUser,
-          serverToken: refreshedSession.serverToken,
-        });
-        
-        console.log('✅ Session updated with new address data');
-        return true;
-      }
+      // Update the NextAuth session with the new token from server
+      await update({
+        ...session,
+        serverToken: newToken,  // This is the key - getting token from mutation result
+        user: {
+          ...session?.user,
+          ...userData,  // Any additional user data from the mutation
+        }
+      });
+      
+      console.log('✅ Session updated with new token from address creation');
+      return true;
     } catch (error) {
-      console.error('Error refreshing session:', error);
+      console.error('Error updating session:', error);
       return false;
     } finally {
       setIsSessionUpdating(false);
     }
   };
 
-  // Update local user data with new address
-  const updateLocalUserDataWithAddress = (newAddressId: string) => {
-    if (userData) {
-      const updatedAddresses = [...userData.addresses, newAddressId];
-      setUserData({
-        ...userData,
-        addresses: updatedAddresses
-      });
-    }
-  };
-
-  // COMPLETE geocoding functions (same as before)
+  // Reverse geocoding functions
   const reverseGeocodeWithGoogle = async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     
-    if (!apiKey) {
-      return null;
-    }
+    if (!apiKey) return null;
 
     try {
       const response = await fetch(
@@ -182,39 +108,18 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         addressComponents.forEach((component: any) => {
           const types = component.types;
           
-          if (types.includes('street_number')) {
-            streetNumber = component.long_name;
-          }
-          if (types.includes('route')) {
-            route = component.long_name;
-          }
-          if (types.includes('locality')) {
-            city = component.long_name;
-          }
-          if (types.includes('administrative_area_level_1')) {
-            state = component.short_name;
-          }
-          if (types.includes('postal_code')) {
-            zipCode = component.long_name;
-          }
-          if (types.includes('country')) {
-            country = component.long_name;
-          }
+          if (types.includes('street_number')) streetNumber = component.long_name;
+          if (types.includes('route')) route = component.long_name;
+          if (types.includes('locality')) city = component.long_name;
+          if (types.includes('administrative_area_level_1')) state = component.short_name;
+          if (types.includes('postal_code')) zipCode = component.long_name;
+          if (types.includes('country')) country = component.long_name;
         });
 
-        if (streetNumber && route) {
-          street = `${streetNumber} ${route}`;
-        } else if (route) {
-          street = route;
-        }
+        if (streetNumber && route) street = `${streetNumber} ${route}`;
+        else if (route) street = route;
 
-        return {
-          street: street || result.formatted_address.split(',')[0],
-          city,
-          state,
-          zipCode,
-          country
-        };
+        return { street, city, state, zipCode, country };
       }
       return null;
     } catch (error) {
@@ -238,19 +143,13 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
 
       if (data && data.address) {
         const address = data.address;
-        
         let street = '';
         
         if (address.road) {
           street = address.road;
-          if (address.house_number) {
-            street = `${address.house_number} ${street}`;
-          }
-        } else if (address.pedestrian) {
-          street = address.pedestrian;
-        } else if (address.footway) {
-          street = address.footway;
-        }
+          if (address.house_number) street = `${address.house_number} ${street}`;
+        } else if (address.pedestrian) street = address.pedestrian;
+        else if (address.footway) street = address.footway;
 
         return {
           street: street || data.display_name.split(',')[0],
@@ -267,7 +166,6 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // MAIN FUNCTION: Get current location (REQUIRED)
   const getCurrentLocation = (): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -308,41 +206,32 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     });
   };
 
-  // Reverse geocode to get address from coordinates
   const reverseGeocode = async (lat: number, lng: number): Promise<ReverseGeocodeResult> => {
     setLocationStep('reverse-geocoding');
     
     const googleResult = await reverseGeocodeWithGoogle(lat, lng);
-    if (googleResult) {
-      return googleResult;
-    }
+    if (googleResult) return googleResult;
 
     const osmResult = await reverseGeocodeWithOSM(lat, lng);
-    if (osmResult) {
-      return osmResult;
-    }
+    if (osmResult) return osmResult;
 
     throw new Error('Could not get address from coordinates');
   };
 
-  // MAIN FUNCTION: Handle getting current location (REQUIRED)
   const handleGetCurrentLocation = async () => {
     setIsGeocoding(true);
     setLocationError(null);
     setLocationStep('getting-location');
     
     try {
-      // Force location retrieval
       const location = await getCurrentLocation();
       
-      // Update coordinates
       setFormData(prev => ({
         ...prev,
         lat: location.lat,
         lng: location.lng
       }));
 
-      // Get address from coordinates
       const address = await reverseGeocode(location.lat, location.lng);
       
       setFormData(prev => ({
@@ -364,9 +253,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // Validate form before submission
   const validateForm = (): boolean => {
-    // PRIMARY VALIDATION: Location is MANDATORY
     if (!formData.lat || !formData.lng) {
       setLocationError('⚠️ CURRENT LOCATION IS REQUIRED. Please click "Get My Current Location" button above.');
       return false;
@@ -429,39 +316,21 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         },
       });
 
-      // Check if address was created successfully
-      if (result.data?.createAddress?.success || result.data?.createAddress?.id) {
-        const newAddressId = result.data.createAddress.id;
+      // ✅ GET THE NEW TOKEN FROM THE MUTATION RESULT (JUST LIKE LOGIN)
+      const newToken = result.data?.createAddress?.token;
+      const updatedUserData = result.data?.createAddress?.user;
+      
+      if (newToken) {
+        // ✅ UPDATE SESSION WITH THE NEW TOKEN (SAME PATTERN AS LOGIN)
+        await updateSessionWithNewToken(newToken, updatedUserData);
         
-        // UPDATE LOCAL USER DATA with the new address
-        updateLocalUserDataWithAddress(newAddressId);
+        console.log('✅ Address created and session updated with new token');
         
-        // REFRESH SESSION to get updated user data from server
-        const sessionRefreshed = await refreshSessionAfterAddressCreation();
-        
-        if (sessionRefreshed) {
-          console.log('✅ Session and user data updated successfully');
-          
-          // Show success message based on user role (like your login component)
-          const roleMessage = userData?.role 
-            ? `Redirecting to ${userData.role === 'ADMINISTRATOR' ? 'Management' : 
-               userData.role === 'MANAGER' ? 'Management' : 
-               userData.role === 'RIDER' ? 'Rider' : 'Home'}...`
-            : 'Address added successfully!';
-          
-          setLocationError(null); // Clear any errors
-          
-          // Optional: Show temporary success message
-          // You can add a toast notification here
-        } else {
-          console.warn('Address created but session refresh failed');
-        }
-
         // Trigger callbacks
         onSuccess?.();
         onAddressUpdate?.();
       } else {
-        throw new Error('Address creation failed');
+        throw new Error('No token returned from server');
       }
       
     } catch (err) {
@@ -485,25 +354,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
     }
   };
 
-  // Get role badge color (from your login component)
-  const getRoleBadgeColor = (role: string) => {
-    switch(role) {
-      case 'ADMINISTRATOR':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'MANAGER':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'RIDER':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'USER':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   return (
     <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-      {/* Header - Updated to show role if available */}
+      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5 sm:px-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -514,14 +367,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white">Add New Address</h2>
-              <p className="text-blue-100 text-sm mt-1">
-                Location verification required for delivery
-                {userData && (
-                  <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${getRoleBadgeColor(userData.role)}`}>
-                    {userData.role}
-                  </span>
-                )}
-              </p>
+              <p className="text-blue-100 text-sm mt-1">Location verification required for delivery</p>
             </div>
           </div>
           {onCancel && (
@@ -543,17 +389,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           <div className="mb-4 p-3 bg-blue-50 border border-blue-300 rounded-lg">
             <div className="flex items-center">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className="text-sm text-blue-700">Updating session with new address...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Address Count Display - Shows how many addresses user has */}
-        {userData && userData.addresses.length > 0 && (
-          <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">📦 Total Addresses:</span>
-              <span className="text-sm font-semibold text-gray-900">{userData.addresses.length}</span>
+              <span className="text-sm text-blue-700">Updating session with new token...</span>
             </div>
           </div>
         )}
@@ -643,7 +479,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </div>
         )}
 
-        {/* Form - Disabled until location is obtained */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className={(!formData.lat || !formData.lng) ? 'opacity-50 pointer-events-none' : ''}>
             <div>
@@ -824,16 +660,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           {(!formData.lat || !formData.lng) && (
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <p className="text-sm text-yellow-800">
-                🔴 You must click &qoute;<strong>GET MY CURRENT LOCATION</strong>&qoute; before saving this address
-              </p>
-            </div>
-          )}
-
-          {/* Success message after session update */}
-          {!isSessionUpdating && userData && userData.addresses.length > 0 && (
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-800">
-                ✅ You have {userData.addresses.length} address{userData.addresses.length !== 1 ? 'es' : ''} saved
+                🔴 You must click <strong>GET MY CURRENT LOCATION</strong> before saving this address
               </p>
             </div>
           )}
@@ -841,4 +668,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-}
+        }
