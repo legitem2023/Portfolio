@@ -6981,8 +6981,37 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
           lng
         },
       });
+
+
+ const user = await prisma.user.findUnique({ 
+      where: { id: userId },
+      include: {
+        addresses: true
+      }
+    });
+    
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+
+    let token;
+    try {
+      token = await new EncryptJWT({
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar,
+        addresses: user?.addresses
+      })
+        .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+        .setIssuedAt()
+        .encrypt(secret);
+     
       return {
-        statusText: "Succesful"
+        statusText: "success",
+        token,
+        role: user?.role
       };
     },
 
