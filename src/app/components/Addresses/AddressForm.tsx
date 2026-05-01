@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_ADDRESS } from '../graphql/mutation';
 import { useSession, getSession } from 'next-auth/react';
-import { decryptToken } from '../../../utils/decryptToken';
+import { decryptToken } from '../../../../utils/decryptToken';
 
 interface AddressFormProps {
   userId: string;
