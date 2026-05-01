@@ -6949,7 +6949,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     };
   }
 },
-    createAddress: async (_: any, args: any) => {
+  createAddress: async (_: any, args: any) => {
       const {
         userId,
         type,
@@ -6965,6 +6965,18 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         lng
       } = args.input;
 
+if(isDefault) {
+  
+  await prisma.address.updateMany({
+      where:{
+        userId
+      }, 
+    data: {isDefault:false },
+  })
+
+}
+
+    
       const response = await prisma.address.create({
         data: {
           userId,
@@ -6994,7 +7006,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
 
     let token;
-    try {
+    
       token = await new EncryptJWT({
         userId: user?.id,
         phone: user?.phone,
@@ -7012,7 +7024,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         statusText: "success",
         token,
         role: user?.role
-      };
+      }
     },
 
     createCategory: async (_: any, { name, description, status }: any) => {
