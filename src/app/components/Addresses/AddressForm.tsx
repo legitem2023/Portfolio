@@ -34,7 +34,7 @@ interface ReverseGeocodeResult {
 }
 
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
-  const { data: session, update } = useSession();
+  const { data: session, update, status } = useSession();
   const [isSessionUpdating, setIsSessionUpdating] = useState(false);
   
   const [formData, setFormData] = useState<FormData>({
@@ -55,10 +55,20 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
   
-  const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS);
+  const [createAddress, { loading, error }] = useMutation(CREATE_ADDRESS, {
+    onError: (err) => {
+      console.error('Mutation error:', err);
+      setLocationError(err.message || 'Failed to create address');
+    }
+  });
 
   // Function to update ONLY the token in session
   const updateSessionToken = async (newToken: string) => {
+    if (!session) {
+      console.warn('No session found to update');
+      return false;
+    }
+    
     setIsSessionUpdating(true);
     try {
       // Only update the serverToken, keep everything else the same
@@ -315,20 +325,19 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       // GET THE NEW TOKEN FROM THE MUTATION RESULT
       const newToken = result.data?.createAddress?.token;
       
-      if (newToken) {
+      if (newToken && session) {
         // UPDATE ONLY THE TOKEN IN SESSION
         await updateSessionToken(newToken);
-        
         console.log('✅ Address created and session token updated');
-        
-        // Trigger callbacks
-        onSuccess?.();
-        onAddressUpdate?.();
+      } else if (newToken && !session) {
+        console.warn('New token received but no session to update');
       } else {
         console.log('No new token returned, but address was created');
-        onSuccess?.();
-        onAddressUpdate?.();
       }
+      
+      // Trigger callbacks
+      onSuccess?.();
+      onAddressUpdate?.();
       
     } catch (err) {
       console.error('Error creating address:', err);
@@ -350,6 +359,18 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       setLocationError(null);
     }
   };
+
+  // Show loading state while session is loading
+  if (status === 'loading') {
+    return (
+      <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="flex items-center justify-center p-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -665,4 +686,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-}
+                       }
