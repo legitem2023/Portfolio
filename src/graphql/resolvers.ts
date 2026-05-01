@@ -6999,7 +6999,7 @@ if(isDefault) {
 
 
  const user = await prisma.user.findUnique({ 
-  where: { email: email },
+  where: { id: userId },
   include: {
     addresses: {
       where: { isDefault: true },
