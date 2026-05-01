@@ -6563,11 +6563,14 @@ deleteProduct: async (_: any, { id }: any) => {
     }
 
     const user = await prisma.user.findUnique({ 
-      where: { email: email },
-      include: {
-        addresses: true
-      }
-    });
+  where: { email: email },
+  include: {
+    addresses: {
+      where: { isDefault: true },
+      take: 1  // ensures you only get one address even if multiple have isDefault true
+    }
+  }
+});
     
     if (!user) {
       console.log("User not found");
@@ -6996,11 +6999,14 @@ if(isDefault) {
 
 
  const user = await prisma.user.findUnique({ 
-      where: { id: userId },
-      include: {
-        addresses: true
-      }
-    });
+  where: { email: email },
+  include: {
+    addresses: {
+      where: { isDefault: true },
+      take: 1  // ensures you only get one address even if multiple have isDefault true
+    }
+  }
+});
     
 
     const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
