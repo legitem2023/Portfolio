@@ -28,6 +28,7 @@ interface Address {
 }
 
 interface EditAddressFormProps {
+  userId: string;
   address: Address;
   onSuccess?: (result: any) => void;
   onCancel: () => void;
@@ -43,6 +44,7 @@ interface ReverseGeocodeResult {
 }
 
 const EditAddressForm: React.FC<EditAddressFormProps> = ({
+  userId,
   address,
   onSuccess,
   onCancel,
@@ -53,7 +55,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
   
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
-  console.log(address);
+//  console.log(address);
   const [formData, setFormData] = useState({
     type: address.type || 'home',
     receiver: address.receiver || '',
@@ -365,7 +367,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
         variables: {
           input: {
             id: address.id,
-            userId: address.userId,
+            userId: userId,
             type: formData.type,
             receiver: formData.receiver,
             phone: formData.phone,
