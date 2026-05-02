@@ -6952,6 +6952,85 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     };
   }
 },
+  updateAddress: async (_: any, args: any) => {
+      const {
+        id,
+        userId,
+        type,
+        receiver,
+        phone,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault,
+        lat,
+        lng
+      } = args.input;
+    
+   if(isDefault) { 
+     await prisma.address.updateMany({
+      where:{
+        userId
+      }, 
+      data: {isDefault:false },
+    }
+  }
+  
+    const response = await prisma.address.update({
+        where: {
+          id:id
+        },
+        data: {
+          userId,
+          type,
+          receiver,
+          phone,
+          street,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault,
+          lat,
+          lng
+        },
+      });
+
+
+ const user = await prisma.user.findUnique({ 
+  where: { id: userId },
+  include: {
+    addresses: {
+       where: { isDefault: true },
+       take: 1  // ensures you only get one address even if multiple have isDefault true
+     }
+    }
+   });
+    
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+    let token;
+      token = await new EncryptJWT({
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar,
+        addresses: user?.addresses
+      })
+        .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+        .setIssuedAt()
+        .encrypt(secret);
+     
+      return {
+        statusText: "success",
+        token,
+        role: user?.role
+      }
+    },
   createAddress: async (_: any, args: any) => {
       const {
         userId,
