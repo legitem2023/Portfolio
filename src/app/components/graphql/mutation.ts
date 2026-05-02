@@ -724,3 +724,13 @@ export const CREATE_ADDRESS = gql`
     }
   }
 `;
+
+
+export const UPDATE_ADDRESS = gql`
+  mutation UpdateAddress($input: UpdateAddressInput!) {
+    updateAddress(input: $input) {
+      statusText
+      token
+    }
+  }
+`;
