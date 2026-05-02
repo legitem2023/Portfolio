@@ -1348,7 +1348,7 @@ type Mutation {
     createVariant(input: ProductVariantInput): Result
     updateVariant(id: String, input: ProductVariantInput): Result
     createAddress(input: AddressInputs): Result
-    updateAddress(input: AddressInputs): Result
+    updateAddress(input: UpdateAddressInputs): Result
     deleteAddress(id: ID): Result
     # Social media mutations
     createPost(input: CreatePostInput): Post
@@ -1487,7 +1487,21 @@ type VendorSignupResponse {
     salePrice: Float
     stock: Int
   }
-
+input UpdateAddressInputs {
+    id: String
+    userId: String
+    type: String
+    receiver: String
+    phone: String
+    street: String
+    city: String
+    state: String
+    zipCode: String
+    country: String
+    lat: Float
+    lng: Float
+    isDefault: Boolean
+  }
   input AddressInputs {
     userId: String
     type: String
