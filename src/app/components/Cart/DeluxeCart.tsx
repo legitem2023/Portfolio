@@ -261,7 +261,7 @@ const ShippingStage = ({
         Shipping Information
       </h2>
           <AddressesTab
-               addresses={savedAddresses || []}
+               addresses={(savedAddresses || []) as any}
                userId={userId}
                onAddressUpdate={async () => await refresh()}
            />
