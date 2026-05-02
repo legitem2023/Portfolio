@@ -564,15 +564,14 @@ const AddressesTab: React.FC<AddressesTabProps> = ({
 
       {/* Edit Address Modal */}
       {showEditForm && editingAddress && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="max-w-2xl w-full my-8">
+        <div className="mb-6 animate-in slide-in-from-top-2 duration-200">
             <EditAddressForm
+              userId={userId}
               address={editingAddress}
               onSuccess={handleEditSuccess}
               onCancel={handleEditCancel}
               onAddressUpdate={onAddressUpdate}
             />
-          </div>
         </div>
       )}
 
