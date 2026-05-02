@@ -675,7 +675,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             </div>
 
             {/* Default Address Checkbox */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 pt-2 mb-4">
               <input
                 type="checkbox"
                 id="isDefault"
