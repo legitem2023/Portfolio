@@ -389,9 +389,15 @@ export default function ParticleBackground() {
       className="relative inset-0 pointer-events-none"
       style={{
         width: '100vw',
-        height: '100%', // This sets the container height
+        height: '100%',
         zIndex: 0,
-        background: 'linear-gradient(to bottom, #050520 0%, #0a0a30 30%, #1a1a40 100%)'
+        background: `radial-gradient(circle at center, 
+          #E6E6FA 0%, 
+          #D4D4F5 30%, 
+          #B8B8E8 50%, 
+          #8A8AD4 70%, 
+          #6B6BB5 85%, 
+          #4A4A8A 100%)`
       }}
     />
   );
