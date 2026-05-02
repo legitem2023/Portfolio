@@ -28,7 +28,43 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
-    scene.background = isDarkMode ? new THREE.Color(0x0a0a0a) : new THREE.Color(0xf5f5f5);
+    
+    // Create radial gradient background instead of solid color
+    const createRadialGradient = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) return new THREE.Color(isDarkMode ? 0x0a0a0a : 0xf5f5f5);
+      
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2;
+      
+      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      
+      if (isDarkMode) {
+        // Dark mode: darker center, slightly lighter edges
+        gradient.addColorStop(0, '#0a0a0a');
+        gradient.addColorStop(0.5, '#1a1a2e');
+        gradient.addColorStop(1, '#16213e');
+      } else {
+        // Light mode: original color at center, darker toward edges
+        gradient.addColorStop(0, '#f5f5f5');     // Original light color at center
+        gradient.addColorStop(0.4, '#e0e0e8');
+        gradient.addColorStop(0.7, '#c8c8d8');
+        gradient.addColorStop(1, '#a0a0b8');     // Darker at edges
+      }
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      return texture;
+    };
+    
+    scene.background = createRadialGradient();
     
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 30;
@@ -131,7 +167,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     
     window.addEventListener('resize', handleResize);
     
-    // Cleanup - FIXED VERSION
+    // Cleanup
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
