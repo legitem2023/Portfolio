@@ -1,417 +1,288 @@
-// components/MinimalParticles.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-export default function ParticleBackground() {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+interface ParticleBackgroundProps {
+  children?: React.ReactNode;
+}
+
+const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
-    if (!mountRef.current) return;
-
-    // Get container dimensions
-    const updateContainerSize = () => {
-      if (mountRef.current) {
-        const { width, height } = mountRef.current.getBoundingClientRect();
-        setContainerSize({ width, height });
-      }
+    // Check for dark mode
+    const checkDarkMode = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setIsDarkMode(isDark);
     };
-
-    // Initial size
-    updateContainerSize();
-
-    // Create ResizeObserver to track container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      updateContainerSize();
-    });
-
-    if (mountRef.current) {
-      resizeObserver.observe(mountRef.current);
-    }
-
-    return () => {
-      resizeObserver.disconnect();
-    };
+    
+    checkDarkMode();
+    
+    // Watch for dark mode changes
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (!mountRef.current || containerSize.width === 0 || containerSize.height === 0) return;
+    if (!containerRef.current) return;
 
-    // Setup
+    // Scene setup
     const scene = new THREE.Scene();
+    scene.background = isDarkMode ? new THREE.Color(0x0a0a0a) : new THREE.Color(0xf5f5f5);
+    scene.fog = new THREE.FogExp2(isDarkMode ? 0x0a0a0a : 0xf5f5f5, 0.0008);
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 30;
+    camera.position.y = 5;
+    camera.lookAt(0, 0, 0);
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    containerRef.current.appendChild(renderer.domElement);
+
+    // Create particle system
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particlesCount = 2000;
     
-    // Create a radial gradient canvas texture for the background
-    const createRadialGradientBackground = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const context = canvas.getContext('2d');
-      
-      if (!context) return new THREE.Color(0x4A4A8A);
-      
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = canvas.width / 2;
-      
-      const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-      
-      // Existing color at center (lighter)
-      gradient.addColorStop(0, '#E6E6FA');
-      // Transition to darker
-      gradient.addColorStop(0.3, '#C8C8F0');
-      gradient.addColorStop(0.6, '#9A9AD8');
-      gradient.addColorStop(0.8, '#6B6BB5');
-      gradient.addColorStop(1, '#4A4A8A');
-      
-      context.fillStyle = gradient;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.wrapS = THREE.ClampToEdgeWrapping;
-      texture.wrapT = THREE.ClampToEdgeWrapping;
-      
-      return texture;
-    };
+    const positions = new Float32Array(particlesCount * 3);
+    const colors = new Float32Array(particlesCount * 3);
     
-    // Apply gradient background to scene
-    const backgroundTexture = createRadialGradientBackground();
-    scene.background = backgroundTexture;
+    // Colors based on theme
+    const primaryColor = isDarkMode ? new THREE.Color(0x3b82f6) : new THREE.Color(0x2563eb);
+    const secondaryColor = isDarkMode ? new THREE.Color(0x8b5cf6) : new THREE.Color(0x7c3aed);
+    const accentColor = isDarkMode ? new THREE.Color(0xec4899) : new THREE.Color(0xdb2777);
     
-    const camera = new THREE.PerspectiveCamera(75, containerSize.width / containerSize.height, 1, 1000);
-    camera.position.z = 400;
-    
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true,
-      alpha: false // Set to false since we have a background
-    });
-    renderer.setSize(containerSize.width, containerSize.height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mountRef.current.appendChild(renderer.domElement);
-    
-    // Winter ice blue colors (slightly brighter to stand out against darker background)
-    const winterColors = [
-      0x88ccff, // Light sky blue
-      0xaaddff, // Very light blue
-      0xcceeff, // Pale blue
-      0x99ddff, // Soft blue
-      0xbbefff, // Ice blue
-      0xddefff, // Frosty white-blue
-    ];
-    
-    // Create a proper snowflake texture
-    const createSnowflakeTexture = (): THREE.Texture => {
-      const canvas = document.createElement('canvas');
-      const size = 256; // Larger for better quality
-      canvas.width = size;
-      canvas.height = size;
-      const context = canvas.getContext('2d');
+    for (let i = 0; i < particlesCount; i++) {
+      // Position in a sphere-like distribution
+      const radius = 25;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
       
-      if (!context) return new THREE.Texture();
+      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta) * 0.6; // Flatten slightly
+      positions[i * 3 + 2] = radius * Math.cos(phi);
       
-      // Clear with transparent
-      context.clearRect(0, 0, size, size);
-      const center = size / 2;
-      
-      // Create softer hexagonal snowflake
-      context.beginPath();
-      context.fillStyle = 'rgba(255, 255, 255, 0.85)'; // Slightly brighter
-      
-      // Main hexagon - smaller core
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 * i) / 6;
-        const radius = 60;
-        const x = center + Math.cos(angle) * radius;
-        const y = center + Math.sin(angle) * radius;
-        if (i === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      }
-      context.closePath();
-      context.fill();
-      
-      // Draw a second, slightly larger hexagon for soft edge
-      context.beginPath();
-      context.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 * i) / 6;
-        const radius = 70;
-        const x = center + Math.cos(angle) * radius;
-        const y = center + Math.sin(angle) * radius;
-        if (i === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      }
-      context.closePath();
-      context.fill();
-      
-      // Add arms/points to make it look like a snowflake
-      context.lineWidth = 4;
-      context.strokeStyle = 'rgba(220, 240, 255, 0.7)';
-      
-      for (let i = 0; i < 6; i++) {
-        const angle = (Math.PI * 2 * i) / 6;
-        const innerRadius = 30;
-        const outerRadius = 90;
-        
-        const x1 = center + Math.cos(angle) * innerRadius;
-        const y1 = center + Math.sin(angle) * innerRadius;
-        const x2 = center + Math.cos(angle) * outerRadius;
-        const y2 = center + Math.sin(angle) * outerRadius;
-        
-        context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(x2, y2);
-        context.stroke();
-        
-        // Add branches
-        const branchAngle = angle + Math.PI / 6;
-        const branchX1 = x1 + Math.cos(branchAngle) * 25;
-        const branchY1 = y1 + Math.sin(branchAngle) * 25;
-        const branchX2 = x1 - Math.cos(branchAngle) * 25;
-        const branchY2 = y1 - Math.sin(branchAngle) * 25;
-        
-        context.beginPath();
-        context.moveTo(x1, y1);
-        context.lineTo(branchX1, branchY1);
-        context.moveTo(x1, y1);
-        context.lineTo(branchX2, branchY2);
-        context.stroke();
+      // Color based on position
+      const colorChoice = Math.random();
+      let color: THREE.Color;
+      if (colorChoice < 0.6) {
+        color = primaryColor;
+      } else if (colorChoice < 0.8) {
+        color = secondaryColor;
+      } else {
+        color = accentColor;
       }
       
-      // Add smooth fade glow
-      context.beginPath();
-      context.arc(center, center, 140, 0, Math.PI * 2);
-      const gradient = context.createRadialGradient(
-        center, center, 10,
-        center, center, 140
-      );
-      
-      gradient.addColorStop(0, 'rgba(200, 230, 255, 0.95)');
-      gradient.addColorStop(0.1, 'rgba(180, 220, 255, 0.8)');
-      gradient.addColorStop(0.3, 'rgba(150, 200, 255, 0.5)');
-      gradient.addColorStop(0.6, 'rgba(120, 180, 255, 0.2)');
-      gradient.addColorStop(0.8, 'rgba(100, 160, 255, 0.05)');
-      gradient.addColorStop(1, 'rgba(80, 140, 255, 0)');
-      context.fillStyle = gradient;
-      context.fill();
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      return texture;
-    };
-    
-    // Create particle system - adjust particle count based on container size
-    const createParticleSystem = () => {
-      // Calculate particle count based on container size
-      const baseParticles = 1000;
-      const density = (containerSize.width * containerSize.height) / (1920 * 1080);
-      const particleCount = Math.max(500, Math.min(2000, Math.floor(baseParticles * density)));
-      
-      const geometry = new THREE.BufferGeometry();
-      const positions = new Float32Array(particleCount * 3);
-      const colors = new Float32Array(particleCount * 3);
-      const sizes = new Float32Array(particleCount);
-      
-      // Calculate bounds based on container size
-      const widthBound = containerSize.width * 2;
-      const heightBound = containerSize.height * 2;
-      const depthBound = 1000;
-      
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        
-        // Spread particles within container bounds
-        positions[i3] = (Math.random() - 0.5) * widthBound;
-        positions[i3 + 1] = (Math.random() - 0.5) * heightBound;
-        positions[i3 + 2] = (Math.random() - 0.5) * depthBound;
-        
-        // Winter blue color (brighter to stand out against darker background)
-        const colorIndex = Math.floor(Math.random() * winterColors.length);
-        const color = new THREE.Color(winterColors[colorIndex]);
-        
-        // Make it brighter
-        const brightness = 1.0 + Math.random() * 0.4;
-        color.r *= brightness;
-        color.g *= brightness;
-        color.b *= brightness;
-        
-        colors[i3] = color.r;
-        colors[i3 + 1] = color.g;
-        colors[i3 + 2] = color.b;
-        
-        // Size variation - adjust based on container size
-        const baseSize = Math.min(15, Math.max(5, containerSize.width / 100));
-        sizes[i] = baseSize + Math.random() * (baseSize * 0.5);
-      }
-      
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-      geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-      
-      return geometry;
-    };
-    
-    // Create texture
-    const snowflakeTexture = createSnowflakeTexture();
-    
-    // Adjust material size based on container
-    const baseSize = Math.min(20, Math.max(8, containerSize.width / 80));
-    
-    // Create material with glow
-    const material = new THREE.PointsMaterial({
-      size: baseSize,
-      sizeAttenuation: true,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.9,
-      blending: THREE.AdditiveBlending,
-      map: snowflakeTexture,
-      alphaTest: 0.01,
-      depthWrite: false
-    });
-    
-    // Create main particle system
-    const geometry = createParticleSystem();
-    const particles = new THREE.Points(geometry, material);
-    scene.add(particles);
-    
-    // Create glow particles (larger, more transparent)
-    const glowGeometry = createParticleSystem();
-    const glowMaterial = new THREE.PointsMaterial({
-      size: baseSize * 2.5,
-      sizeAttenuation: true,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-      map: snowflakeTexture,
-      alphaTest: 0.005,
-      depthWrite: false
-    });
-    
-    const glowParticles = new THREE.Points(glowGeometry, glowMaterial);
-    scene.add(glowParticles);
-    
-    // Add point lights that move around
-    const pointLights: THREE.PointLight[] = [];
-    const lightRange = Math.min(containerSize.width, containerSize.height) * 0.5;
-    
-    for (let i = 0; i < 3; i++) {
-      const light = new THREE.PointLight(0xaaddff, 0.5, lightRange);
-      light.position.set(
-        Math.random() * lightRange - lightRange / 2,
-        Math.random() * lightRange - lightRange / 2,
-        Math.random() * lightRange * 0.5 - lightRange * 0.25
-      );
-      scene.add(light);
-      pointLights.push(light);
+      colors[i * 3] = color.r;
+      colors[i * 3 + 1] = color.g;
+      colors[i * 3 + 2] = color.b;
     }
     
-    // Animation
+    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    
+    // Create particle texture (circular gradient)
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.fillStyle = 'white';
+      ctx.arc(16, 16, 14, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.shadowBlur = 0;
+      const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 14);
+      gradient.addColorStop(0, 'rgba(255,255,255,1)');
+      gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+      gradient.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 32, 32);
+    }
+    
+    const particleTexture = new THREE.CanvasTexture(canvas);
+    
+    const particlesMaterial = new THREE.PointsMaterial({
+      size: 0.25,
+      map: particleTexture,
+      vertexColors: true,
+      blending: THREE.AdditiveBlending,
+      transparent: true,
+      opacity: 0.8
+    });
+    
+    const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particlesMesh);
+    
+    // Create additional floating particles
+    const floatingParticlesCount = 800;
+    const floatingGeometry = new THREE.BufferGeometry();
+    const floatingPositions = new Float32Array(floatingParticlesCount * 3);
+    
+    for (let i = 0; i < floatingParticlesCount; i++) {
+      floatingPositions[i * 3] = (Math.random() - 0.5) * 80;
+      floatingPositions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+      floatingPositions[i * 3 + 2] = (Math.random() - 0.5) * 50 - 20;
+    }
+    
+    floatingGeometry.setAttribute('position', new THREE.BufferAttribute(floatingPositions, 3));
+    
+    const floatingMaterial = new THREE.PointsMaterial({
+      size: 0.08,
+      color: isDarkMode ? 0x6b7280 : 0x9ca3af,
+      transparent: true,
+      opacity: 0.4,
+      blending: THREE.AdditiveBlending
+    });
+    
+    const floatingParticles = new THREE.Points(floatingGeometry, floatingMaterial);
+    scene.add(floatingParticles);
+    
+    // Create connecting lines between nearby particles
+    const linePositions: number[] = [];
+    const connectionDistance = 4;
+    
+    for (let i = 0; i < particlesCount; i++) {
+      const x1 = positions[i * 3];
+      const y1 = positions[i * 3 + 1];
+      const z1 = positions[i * 3 + 2];
+      
+      for (let j = i + 1; j < particlesCount; j++) {
+        const x2 = positions[j * 3];
+        const y2 = positions[j * 3 + 1];
+        const z2 = positions[j * 3 + 2];
+        
+        const distance = Math.sqrt(
+          Math.pow(x2 - x1, 2) + 
+          Math.pow(y2 - y1, 2) + 
+          Math.pow(z2 - z1, 2)
+        );
+        
+        if (distance < connectionDistance) {
+          linePositions.push(x1, y1, z1, x2, y2, z2);
+        }
+      }
+    }
+    
+    const lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(linePositions), 3));
+    
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: isDarkMode ? 0x1f2937 : 0xe5e7eb,
+      transparent: true,
+      opacity: 0.15
+    });
+    
+    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+    scene.add(lines);
+    
+    // Add ambient light
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    
+    // Add directional light for depth
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    // Mouse interaction variables
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetRotationX = 0;
+    let targetRotationY = 0;
+    
+    const handleMouseMove = (event: MouseEvent) => {
+      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+      targetRotationY = mouseX * 0.5;
+      targetRotationX = mouseY * 0.3;
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    
+    // Animation variables
     let time = 0;
     let animationId: number;
     
+    // Helper function to check if object is a texture
+    const isTexture = (obj: any): obj is THREE.Texture => {
+      return obj && typeof obj.dispose === 'function';
+    };
+    
+    // Animation loop
     const animate = () => {
       animationId = requestAnimationFrame(animate);
-      time += 0.01;
       
-      // Update particle positions (snow falling)
-      const positions = geometry.attributes.position.array as Float32Array;
-      const glowPositions = glowGeometry.attributes.position.array as Float32Array;
+      time += 0.002;
       
-      // Adjust fall speed based on container height
-      const fallSpeed = containerSize.height * 0.001;
+      // Smooth rotation following mouse
+      particlesMesh.rotation.y += (targetRotationY - particlesMesh.rotation.y) * 0.05;
+      particlesMesh.rotation.x += (targetRotationX - particlesMesh.rotation.x) * 0.05;
+      floatingParticles.rotation.y = time * 0.1;
+      floatingParticles.rotation.x = Math.sin(time * 0.2) * 0.1;
+      lines.rotation.y = particlesMesh.rotation.y;
+      lines.rotation.x = particlesMesh.rotation.x;
       
-      for (let i = 0; i < positions.length; i += 3) {
-        // Gentle falling motion
-        positions[i + 1] -= fallSpeed * (0.8 + Math.random() * 0.4);
-        
-        // Gentle swaying
-        positions[i] += Math.sin(time * 0.5 + i * 0.001) * 0.2;
-        positions[i + 2] += Math.cos(time * 0.3 + i * 0.001) * 0.1;
-        
-        // Reset if fallen too low
-        if (positions[i + 1] < -containerSize.height) {
-          positions[i + 1] = containerSize.height;
-          positions[i] = (Math.random() - 0.5) * containerSize.width * 2;
-          positions[i + 2] = (Math.random() - 0.5) * 1000;
-        }
-        
-        // Copy to glow particles
-        glowPositions[i] = positions[i];
-        glowPositions[i + 1] = positions[i + 1];
-        glowPositions[i + 2] = positions[i + 2];
-      }
-      
-      geometry.attributes.position.needsUpdate = true;
-      glowGeometry.attributes.position.needsUpdate = true;
-      
-      // Rotate entire scene slowly
-      particles.rotation.y = time * 0.02;
-      glowParticles.rotation.y = time * 0.02;
-      
-      // Animate lights
-      const lightMovement = Math.min(containerSize.width, containerSize.height) * 0.3;
-      pointLights.forEach((light, index) => {
-        light.position.x = Math.sin(time * 0.3 + index) * lightMovement;
-        light.position.y = Math.cos(time * 0.4 + index) * lightMovement * 0.7;
-        light.position.z = Math.sin(time * 0.5 + index) * lightMovement * 0.4;
-      });
+      // Camera slight movement for parallax effect
+      camera.position.x += (mouseX * 2 - camera.position.x) * 0.02;
+      camera.position.y += (-mouseY * 2 - camera.position.y) * 0.02;
+      camera.lookAt(0, 0, 0);
       
       renderer.render(scene, camera);
     };
     
-    // Start animation
     animate();
     
-    // Handle container resize
+    // Handle window resize
     const handleResize = () => {
-      if (!mountRef.current) return;
-      
-      const { width, height } = mountRef.current.getBoundingClientRect();
-      
-      if (width > 0 && height > 0) {
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-        renderer.setSize(width, height);
-      }
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
     };
     
-    // Create ResizeObserver for the container
-    const containerResizeObserver = new ResizeObserver(handleResize);
-    if (mountRef.current) {
-      containerResizeObserver.observe(mountRef.current);
-    }
+    window.addEventListener('resize', handleResize);
     
-    // Cleanup
+    // Cleanup function
     return () => {
-      containerResizeObserver.disconnect();
-      if (animationId) cancelAnimationFrame(animationId);
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
       
-      if (mountRef.current && renderer.domElement.parentNode === mountRef.current) {
-        mountRef.current.removeChild(renderer.domElement);
+      // Dispose geometries and materials
+      particlesGeometry.dispose();
+      floatingGeometry.dispose();
+      lineGeometry.dispose();
+      
+      particlesMaterial.dispose();
+      floatingMaterial.dispose();
+      lineMaterial.dispose();
+      
+      if (isTexture(particleTexture)) {
+        particleTexture.dispose();
       }
       
-      // Dispose resources
-      geometry.dispose();
-      glowGeometry.dispose();
-      material.dispose();
-      glowMaterial.dispose();
-      snowflakeTexture.dispose();
-      backgroundTexture?.dispose();
-      pointLights.forEach(light => light.dispose());
+      // Dispose renderer
       renderer.dispose();
+      
+      // Remove canvas from DOM
+      if (containerRef.current && renderer.domElement) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
     };
-  }, [containerSize]);
+  }, [isDarkMode]);
 
   return (
-    <div 
-      ref={mountRef} 
-      className="relative inset-0 pointer-events-none"
-      style={{
-        width: '100vw',
-        height: '100%',
-        zIndex: 0
-      }}
-    />
+    <div ref={containerRef} className="fixed inset-0 w-full h-full -z-10">
+      {children}
+    </div>
   );
-      }
+};
+
+export default ParticleBackground;
