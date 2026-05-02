@@ -7049,7 +7049,7 @@ if(isDefault) {
       throw new Error('Failed to create category');
     },
 
-    setDefaultAddress: async (_: any, { addressId, userId }: SetDefaultAddressArgs): Promise<SetDefaultAddressResponse> => {
+    setDefaultAddress: async (_: any, { addressId, userId }: any) => {
       try {
         // Find the target address and verify ownership
         const targetAddress = await prisma.address.findFirst({
@@ -7097,18 +7097,46 @@ if(isDefault) {
           return updatedAddress;
         });
 
-        return {
-          success: true,
-          message: 'Default address updated successfully',
-          address: result,
-        };
+      const user = await prisma.user.findUnique({ 
+           where: { id: userId },
+             include: {
+               addresses: {
+               where: { isDefault: true },
+               take: 1  // ensures you only get one address even if multiple have isDefault true
+              }
+            }
+         });
+    
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+
+    let token;
+    
+      token = await new EncryptJWT({
+        userId: user?.id,
+        phone: user?.phone,
+        email: user?.email,
+        name: user?.firstName,
+        role: user?.role,
+        image: user?.avatar,
+        addresses: user?.addresses
+      })
+        .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+        .setIssuedAt()
+        .encrypt(secret);
+     
+       return {
+         statusText: "success",
+         token,
+         role: user?.role
+      }
 
       } catch (error: any) {
         console.error('Error setting default address:', error);
         return {
-          success: false,
-          message: error.message,
-          address: null,
+          success: "failed",
+          token:"",
+          role:"",
         };
       }
     },
