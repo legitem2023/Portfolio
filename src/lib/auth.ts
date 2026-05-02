@@ -101,24 +101,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, account, user, trigger, session }) {
       console.log("\n🔄 [JWT] ========== START ==========");
       console.log("🔄 [JWT] Trigger:", trigger || "initial sign in");
-      
-      // Safe logging of token
-      const tokenStr = typeof token.serverToken === 'string' ? token.serverToken : 'not a string';
       console.log("🔄 [JWT] Has token:", !!token.serverToken);
-      if (tokenStr && tokenStr !== 'not a string') {
-        console.log("🔄 [JWT] Token preview:", tokenStr.substring(0, 30) + "...");
-      }
       
       // Handle session update (when update() is called from client)
       if (trigger === "update") {
         console.log("🔄 [JWT] Session update triggered!");
         
         if (session?.serverToken && typeof session.serverToken === 'string') {
-          console.log("✅ [JWT] New serverToken received in update!");
-          console.log("✅ [JWT] Updating token...");
+          console.log("✅ [JWT] New serverToken received!");
           token.serverToken = session.serverToken;
           token.tokenUpdatedAt = Date.now();
-          console.log("✅ [JWT] Token updated at:", new Date(token.tokenUpdatedAt).toISOString());
+          console.log("✅ [JWT] Token updated");
         }
       }
       
