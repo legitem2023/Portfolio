@@ -1,7 +1,6 @@
 import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-import { NextResponse } from "next/server";
 import { gql, ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { cookies } from "next/headers";
 import { FBLOGIN, LOGIN, LOGOUT_MUTATION } from "../app/components/graphql/mutation";
@@ -29,7 +28,7 @@ declare module "next-auth" {
     serverToken?: string;
     error?: string;
     userId?: string;
-    tokenUpdatedAt?: number; // Track when token was last updated
+    tokenUpdatedAt?: number;
   }
 
   interface User {
@@ -69,19 +68,15 @@ export const authOptions: NextAuthOptions = {
             },
           });
           
-          console.log("🔐 [Authorize] Login response:", JSON.stringify(data?.login, null, 2));
-          
           if (data?.login?.token) {
-            console.log("✅ [Authorize] Token received, length:", data.login.token.length);
-            console.log("✅ [Authorize] Token preview:", data.login.token.substring(0, 50) + "...");
-            
+            console.log("✅ [Authorize] Token received");
             return {
               id: credentials.email,
               email: credentials.email,
               serverToken: data.login.token,
             };
           } else {
-            throw new Error(data?.login.statusText || "Login failed");
+            throw new Error(data?.login?.statusText || "Login failed");
           }
         } catch (error: any) {
           console.error("❌ [Authorize] Login error:", error.message);
@@ -104,51 +99,36 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, account, user, trigger, session }) {
-      console.log("\n🔄 [JWT Callback] ========== START ==========");
+      console.log("\n🔄 [JWT] ========== START ==========");
       console.log("🔄 [JWT] Trigger:", trigger || "initial sign in");
-      console.log("🔄 [JWT] Current token before changes:", {
-        hasServerToken: !!token.serverToken,
-        serverTokenPreview: token.serverToken ? token.serverToken.substring(0, 50) + "..." : "none",
-        provider: token.provider,
-        tokenUpdatedAt: token.tokenUpdatedAt ? new Date(token.tokenUpdatedAt).toISOString() : "never",
-        error: token.error
-      });
+      
+      // Safe logging of token
+      const tokenStr = typeof token.serverToken === 'string' ? token.serverToken : 'not a string';
+      console.log("🔄 [JWT] Has token:", !!token.serverToken);
+      if (tokenStr && tokenStr !== 'not a string') {
+        console.log("🔄 [JWT] Token preview:", tokenStr.substring(0, 30) + "...");
+      }
       
       // Handle session update (when update() is called from client)
       if (trigger === "update") {
         console.log("🔄 [JWT] Session update triggered!");
-        console.log("🔄 [JWT] Session data received:", JSON.stringify(session, null, 2));
         
-        if (session?.serverToken) {
+        if (session?.serverToken && typeof session.serverToken === 'string') {
           console.log("✅ [JWT] New serverToken received in update!");
-          console.log("✅ [JWT] Old token preview:", token.serverToken?.substring(0, 50) + "...");
-          console.log("✅ [JWT] New token preview:", session.serverToken.substring(0, 50) + "...");
-          
-          // Check if token actually changed
-          if (token.serverToken !== session.serverToken) {
-            console.log("🔄 [JWT] Token is DIFFERENT! Updating...");
-            token.serverToken = session.serverToken;
-            token.tokenUpdatedAt = Date.now();
-            console.log("✅ [JWT] Token updated at:", new Date(token.tokenUpdatedAt).toISOString());
-          } else {
-            console.log("⚠️ [JWT] Token is the SAME, no update needed");
-          }
-        }
-        
-        if (session?.user) {
-          console.log("✅ [JWT] User data received in update");
-          token.user = session.user;
+          console.log("✅ [JWT] Updating token...");
+          token.serverToken = session.serverToken;
+          token.tokenUpdatedAt = Date.now();
+          console.log("✅ [JWT] Token updated at:", new Date(token.tokenUpdatedAt).toISOString());
         }
       }
       
       // Initial sign in with Facebook
       if (account?.provider === "facebook") {
-        console.log("📘 [JWT] Facebook account detected, processing initial login...");
+        console.log("📘 [JWT] Facebook account detected");
         token.accessToken = account.access_token;
         token.provider = account.provider;
 
         const token_en = account.access_token?.toString() || "";
-        console.log("📘 [JWT] Facebook access token preview:", token_en.substring(0, 50) + "...");
         
         try {
           const { data } = await client.mutate({
@@ -160,16 +140,12 @@ export const authOptions: NextAuthOptions = {
             },
           });
           
-          console.log("📘 [JWT] GraphQL response:", JSON.stringify(data, null, 2));
-          
           if (data?.loginWithFacebook?.token) {
-            console.log("✅ [JWT] Server token received from Facebook login!");
-            console.log("✅ [JWT] New token preview:", data.loginWithFacebook.token.substring(0, 50) + "...");
-            token.serverToken = data.loginWithFacebook.token as string;
+            console.log("✅ [JWT] Server token received from Facebook");
+            token.serverToken = data.loginWithFacebook.token;
             token.tokenUpdatedAt = Date.now();
-            console.log("✅ [JWT] Token stored at:", new Date(token.tokenUpdatedAt).toISOString());
           } else {
-            console.log("❌ [JWT] No token received from GraphQL mutation");
+            console.log("❌ [JWT] No token received");
             token.error = "Authentication failed";
           }
         } catch (err) {
@@ -179,41 +155,23 @@ export const authOptions: NextAuthOptions = {
       } 
       // Initial sign in with Credentials
       else if (user && user.serverToken && trigger !== "update") {
-        console.log("🔐 [JWT] Credentials login detected, initial setup");
-        console.log("🔐 [JWT] User token preview:", user.serverToken.substring(0, 50) + "...");
+        console.log("🔐 [JWT] Credentials login detected");
         token.provider = "credentials";
         token.serverToken = user.serverToken;
         token.userId = user.id;
         token.tokenUpdatedAt = Date.now();
-        console.log("✅ [JWT] Token stored at:", new Date(token.tokenUpdatedAt).toISOString());
-      } 
-      else if (trigger !== "update") {
-        console.log("⚠️ [JWT] No provider or user data, keeping existing token");
+        console.log("✅ [JWT] Token stored");
       }
       
-      console.log("🔄 [JWT] Final token state:", {
-        hasServerToken: !!token.serverToken,
-        serverTokenPreview: token.serverToken ? token.serverToken.substring(0, 50) + "..." : "none",
-        provider: token.provider,
-        tokenUpdatedAt: token.tokenUpdatedAt ? new Date(token.tokenUpdatedAt).toISOString() : "never",
-        error: token.error
-      });
-      console.log("🔄 [JWT Callback] ========== END ==========\n");
+      console.log("🔄 [JWT] Final - Has token:", !!token.serverToken);
+      console.log("🔄 [JWT] ========== END ==========\n");
       
       return token;
     },
 
     async session({ session, token }) {
-      console.log("\n💬 [Session Callback] ========== START ==========");
-      console.log("💬 [Session] Session before update:", {
-        hasServerToken: !!session.serverToken,
-        serverTokenPreview: session.serverToken ? session.serverToken.substring(0, 50) + "..." : "none",
-      });
-      console.log("💬 [Session] Token data:", {
-        hasServerToken: !!token.serverToken,
-        serverTokenPreview: token.serverToken ? token.serverToken.substring(0, 50) + "..." : "none",
-        tokenUpdatedAt: token.tokenUpdatedAt ? new Date(token.tokenUpdatedAt).toISOString() : "never",
-      });
+      console.log("\n💬 [Session] ========== START ==========");
+      console.log("💬 [Session] Has token in token:", !!token.serverToken);
       
       if (token) {
         const oldToken = session.serverToken;
@@ -222,33 +180,21 @@ export const authOptions: NextAuthOptions = {
         session.serverToken = token.serverToken as string | undefined;
         session.error = token.error as string | undefined;
         
-        // Check if token changed
-        if (oldToken !== session.serverToken) {
-          console.log("✅ [Session] Token has been UPDATED in session!");
-          console.log("✅ [Session] Old token preview:", oldToken?.substring(0, 50) + "...");
-          console.log("✅ [Session] New token preview:", session.serverToken?.substring(0, 50) + "...");
-        } else {
+        if (oldToken !== session.serverToken && session.serverToken) {
+          console.log("✅ [Session] Token has been UPDATED!");
+        } else if (session.serverToken) {
           console.log("ℹ️ [Session] Token unchanged");
         }
       }
       
-      console.log("💬 [Session] Final session:", {
-        hasServerToken: !!session.serverToken,
-        serverTokenPreview: session.serverToken ? session.serverToken.substring(0, 50) + "..." : "none",
-        provider: session.provider,
-        hasError: !!session.error
-      });
-      console.log("💬 [Session Callback] ========== END ==========\n");
+      console.log("💬 [Session] Has token in session:", !!session.serverToken);
+      console.log("💬 [Session] ========== END ==========\n");
       
       return session;
     },
 
     async signIn({ user, account, profile }) {
-      console.log("🚪 [SignIn] ========== START ==========");
-      console.log("🚪 [SignIn] User:", JSON.stringify(user, null, 2));
       console.log("🚪 [SignIn] Account provider:", account?.provider);
-      console.log("🚪 [SignIn] Profile:", JSON.stringify(profile, null, 2));
-      console.log("🚪 [SignIn] ========== END ==========\n");
       return true;
     },
   },
@@ -284,16 +230,11 @@ export const authOptions: NextAuthOptions = {
   
   events: {
     async signOut({ token, session }) {
-      console.log("\n🚪 [SignOut Event] ========== START ==========");
       console.log("🚪 [SignOut] User signing out");
-      console.log("🚪 [SignOut] Token before logout:", {
-        hasServerToken: !!token?.serverToken,
-        tokenPreview: token?.serverToken?.substring(0, 50) + "..."
-      });
       
       try {
-        if (token?.serverToken) {
-          console.log("🚪 [SignOut] Calling server logout endpoint");
+        if (token?.serverToken && typeof token.serverToken === 'string') {
+          console.log("🚪 [SignOut] Calling server logout");
           await client.mutate({
             mutation: LOGOUT_MUTATION,
             context: {
@@ -302,17 +243,14 @@ export const authOptions: NextAuthOptions = {
               },
             },
           });
-          console.log("✅ [SignOut] Server logout successful");
         }
         
         const cookieStore = await cookies();
         cookieStore.delete('auth-token');
-        console.log("✅ [SignOut] Auth cookie deleted");
-        
+        console.log("✅ [SignOut] Complete");
       } catch (error) {
-        console.error("❌ [SignOut] Error during logout:", error);
+        console.error("❌ [SignOut] Error:", error);
       }
-      console.log("🚪 [SignOut Event] ========== END ==========\n");
     },
   },
 
@@ -324,13 +262,15 @@ export const authOptions: NextAuthOptions = {
   
   logger: {
     error(code, metadata) {
-      console.error("❌ [NextAuth Error]:", code, metadata);
+      console.error("❌ [NextAuth Error]:", code);
     },
     warn(code) {
       console.warn("⚠️ [NextAuth Warning]:", code);
     },
     debug(code, metadata) {
-      console.log("🐛 [NextAuth Debug]:", code, metadata);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("🐛 [NextAuth Debug]:", code);
+      }
     }
   }
 };
