@@ -1,3 +1,4 @@
+"use client";
 import { metadata as baseMetadata, viewport as baseViewport } from './components/Seo/Seo';
 import ReduxWrapper from "./components/ApolloProvider/ReduxWrapper"; 
 import { ApolloWrapper } from './components/ApolloWrapper';
@@ -13,8 +14,8 @@ import { SessionProvider } from "next-auth/react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = baseMetadata;
-export const viewport = baseViewport;
+//export const metadata = baseMetadata;
+//export const viewport = baseViewport;
 
 export default function RootLayout({
   children,
