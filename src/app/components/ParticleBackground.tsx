@@ -24,61 +24,18 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     return () => observer.disconnect();
   }, []);
 
-  // Create CSS radial gradient string (matches the Three.js gradient)
-  const getCSSRadialGradient = () => {
-    if (isDarkMode) {
-      return `radial-gradient(circle at center, 
-        #0a0a0a 0%, 
-        #1a1a2e 50%, 
-        #16213e 100%)`;
-    } else {
-      return `radial-gradient(circle at center, 
-        #f5f5f5 0%, 
-        #e0e0e8 40%, 
-        #c8c8d8 70%, 
-        #a0a0b8 100%)`;
-    }
-  };
-
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Clear any existing canvas
+    while (containerRef.current.firstChild) {
+      containerRef.current.removeChild(containerRef.current.firstChild);
+    }
+
     const scene = new THREE.Scene();
     
-    // Create radial gradient background for Three.js
-    const createRadialGradient = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) return new THREE.Color(isDarkMode ? 0x0a0a0a : 0xf5f5f5);
-      
-      const centerX = canvas.width / 2;
-      const centerY = canvas.height / 2;
-      const radius = canvas.width / 2;
-      
-      const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-      
-      if (isDarkMode) {
-        gradient.addColorStop(0, '#0a0a0a');
-        gradient.addColorStop(0.5, '#1a1a2e');
-        gradient.addColorStop(1, '#16213e');
-      } else {
-        gradient.addColorStop(0, '#f5f5f5');
-        gradient.addColorStop(0.4, '#e0e0e8');
-        gradient.addColorStop(0.7, '#c8c8d8');
-        gradient.addColorStop(1, '#a0a0b8');
-      }
-      
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      return texture;
-    };
-    
-    scene.background = createRadialGradient();
+    // Set solid color background first (fallback)
+    scene.background = new THREE.Color(isDarkMode ? 0x0a0a0a : 0xf5f5f5);
     
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 30;
@@ -181,54 +138,63 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     
     window.addEventListener('resize', handleResize);
     
-    // Cleanup - Store references for disposal
-    const backgroundTexture = scene.background;
-    
+    // Cleanup
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       
-      // Remove meshes from scene
-      scene.remove(particlesMesh);
-      scene.remove(floatingParticles);
-      
-      // Dispose geometries and materials
       particlesGeometry.dispose();
       floatingGeometry.dispose();
       particlesMaterial.dispose();
       floatingMaterial.dispose();
+      renderer.dispose();
       
-      // Dispose background texture if it's a texture
-      if (backgroundTexture instanceof THREE.Texture) {
-        backgroundTexture.dispose();
-      }
-      
-      // Remove renderer from DOM
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
-      
-      // Dispose renderer
-      renderer.dispose();
     };
   }, [isDarkMode]);
 
-  return (
-    <div 
-      ref={containerRef} 
-      className="fixed inset-0 w-full h-full -z-10"
-      style={{ 
-        background: getCSSRadialGradient(),
-        position: 'fixed',
+  // Create CSS radial gradient for container background
+  const getContainerStyle = () => {
+    if (isDarkMode) {
+      return {
+        position: 'fixed' as const,
         top: 0,
         left: 0,
         width: '100%',
-        height: '100%'
-      }}
-    >
-      {children}
-    </div>
+        height: '100%',
+        zIndex: -10,
+        background: `radial-gradient(circle at center, 
+          #0a0a0a 0%, 
+          #1a1a2e 50%, 
+          #16213e 100%)`
+      };
+    } else {
+      return {
+        position: 'fixed' as const,
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: -10,
+        background: `radial-gradient(circle at center, 
+          #f5f5f5 0%, 
+          #e0e0e8 40%, 
+          #c8c8d8 70%, 
+          #a0a0b8 100%)`
+      };
+    }
+  };
+
+  return (
+    <>
+      <div ref={containerRef} style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -10 }} />
+      <div style={getContainerStyle()}>
+        {children}
+      </div>
+    </>
   );
 };
 
