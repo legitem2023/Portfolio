@@ -197,6 +197,7 @@ const ShippingStage = ({
   shippingInfo, 
   addresses, 
   setShippingInfo, 
+  userId,
   refresh 
 }: ShippingStageProps) => {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -259,7 +260,11 @@ const ShippingStage = ({
       <h2 className="text-lg sm:text-xl md:text-2xl font-serif font-bold text-indigo-900 mb-3 sm:mb-4 pb-2 border-b border-indigo-100">
         Shipping Information
       </h2>
-
+          <AddressesTab
+               addresses={savedAddresses || []}
+               userId={userId}
+               onAddressUpdate={async () => await refresh()}
+           />
       {savedAddresses.length > 0 && (
         <div className="mb-4 sm:mb-6">
           <h3 className="text-sm sm:text-base font-semibold text-indigo-800 mb-2 sm:mb-3">
@@ -267,6 +272,7 @@ const ShippingStage = ({
           </h3>
           
           <div className="space-y-2 sm:space-y-3 mb-3">
+            
             {savedAddresses.map((address) => (
               <div
                 key={address.id}
