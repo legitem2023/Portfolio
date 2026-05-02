@@ -265,7 +265,7 @@ const ShippingStage = ({
                userId={userId}
                onAddressUpdate={async () => await refresh()}
            />
-      {savedAddresses.length > 0 && (
+      {/*savedAddresses.length > 0 && (
         <div className="mb-4 sm:mb-6">
           <h3 className="text-sm sm:text-base font-semibold text-indigo-800 mb-2 sm:mb-3">
             Select a saved address
@@ -318,7 +318,7 @@ const ShippingStage = ({
             <span>Use a new address</span>
           </button>
         </div>
-      )}
+      )*/}
 
       <div className="space-y-3 sm:space-y-4">
         <div>
