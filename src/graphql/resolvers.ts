@@ -6975,7 +6975,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         userId
       }, 
       data: {isDefault:false },
-    }
+    })
   }
   
     const response = await prisma.address.update({
