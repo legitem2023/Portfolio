@@ -55,7 +55,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
   
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
-//  console.log(address);
+ console.log(address);
   const [formData, setFormData] = useState({
     type: address.type || 'home',
     receiver: address.receiver || '',
