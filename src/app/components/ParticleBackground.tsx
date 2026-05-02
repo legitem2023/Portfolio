@@ -41,21 +41,56 @@ export default function ParticleBackground() {
 
     // Setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xE6E6FA); // Deep blue winter night
+    
+    // Create a radial gradient canvas texture for the background
+    const createRadialGradientBackground = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext('2d');
+      
+      if (!context) return new THREE.Color(0x4A4A8A);
+      
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = canvas.width / 2;
+      
+      const gradient = context.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      
+      // Existing color at center (lighter)
+      gradient.addColorStop(0, '#E6E6FA');
+      // Transition to darker
+      gradient.addColorStop(0.3, '#C8C8F0');
+      gradient.addColorStop(0.6, '#9A9AD8');
+      gradient.addColorStop(0.8, '#6B6BB5');
+      gradient.addColorStop(1, '#4A4A8A');
+      
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.ClampToEdgeWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      
+      return texture;
+    };
+    
+    // Apply gradient background to scene
+    const backgroundTexture = createRadialGradientBackground();
+    scene.background = backgroundTexture;
     
     const camera = new THREE.PerspectiveCamera(75, containerSize.width / containerSize.height, 1, 1000);
     camera.position.z = 400;
     
     const renderer = new THREE.WebGLRenderer({ 
       antialias: true,
-      alpha: true 
+      alpha: false // Set to false since we have a background
     });
     renderer.setSize(containerSize.width, containerSize.height);
-    renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     mountRef.current.appendChild(renderer.domElement);
     
-    // Winter ice blue colors
+    // Winter ice blue colors (slightly brighter to stand out against darker background)
     const winterColors = [
       0x88ccff, // Light sky blue
       0xaaddff, // Very light blue
@@ -81,7 +116,7 @@ export default function ParticleBackground() {
       
       // Create softer hexagonal snowflake
       context.beginPath();
-      context.fillStyle = 'rgba(255, 255, 255, 0.7)'; // Less opaque
+      context.fillStyle = 'rgba(255, 255, 255, 0.85)'; // Slightly brighter
       
       // Main hexagon - smaller core
       for (let i = 0; i < 6; i++) {
@@ -97,7 +132,7 @@ export default function ParticleBackground() {
       
       // Draw a second, slightly larger hexagon for soft edge
       context.beginPath();
-      context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      context.fillStyle = 'rgba(255, 255, 255, 0.4)';
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI * 2 * i) / 6;
         const radius = 70;
@@ -110,8 +145,8 @@ export default function ParticleBackground() {
       context.fill();
       
       // Add arms/points to make it look like a snowflake
-      context.lineWidth = 4; // Thinner
-      context.strokeStyle = 'rgba(220, 240, 255, 0.6)'; // More transparent
+      context.lineWidth = 4;
+      context.strokeStyle = 'rgba(220, 240, 255, 0.7)';
       
       for (let i = 0; i < 6; i++) {
         const angle = (Math.PI * 2 * i) / 6;
@@ -147,11 +182,10 @@ export default function ParticleBackground() {
       context.beginPath();
       context.arc(center, center, 140, 0, Math.PI * 2);
       const gradient = context.createRadialGradient(
-        center, center, 10,     // Smaller inner radius
-        center, center, 140     // Larger outer radius
+        center, center, 10,
+        center, center, 140
       );
       
-      // Softer, more gradual fade
       gradient.addColorStop(0, 'rgba(200, 230, 255, 0.95)');
       gradient.addColorStop(0.1, 'rgba(180, 220, 255, 0.8)');
       gradient.addColorStop(0.3, 'rgba(150, 200, 255, 0.5)');
@@ -169,7 +203,7 @@ export default function ParticleBackground() {
     const createParticleSystem = () => {
       // Calculate particle count based on container size
       const baseParticles = 1000;
-      const density = (containerSize.width * containerSize.height) / (1920 * 1080); // Relative to 1080p
+      const density = (containerSize.width * containerSize.height) / (1920 * 1080);
       const particleCount = Math.max(500, Math.min(2000, Math.floor(baseParticles * density)));
       
       const geometry = new THREE.BufferGeometry();
@@ -190,12 +224,12 @@ export default function ParticleBackground() {
         positions[i3 + 1] = (Math.random() - 0.5) * heightBound;
         positions[i3 + 2] = (Math.random() - 0.5) * depthBound;
         
-        // Winter blue color
+        // Winter blue color (brighter to stand out against darker background)
         const colorIndex = Math.floor(Math.random() * winterColors.length);
         const color = new THREE.Color(winterColors[colorIndex]);
         
-        // Make it slightly brighter
-        const brightness = 0.9 + Math.random() * 0.3;
+        // Make it brighter
+        const brightness = 1.0 + Math.random() * 0.4;
         color.r *= brightness;
         color.g *= brightness;
         color.b *= brightness;
@@ -222,16 +256,16 @@ export default function ParticleBackground() {
     // Adjust material size based on container
     const baseSize = Math.min(20, Math.max(8, containerSize.width / 80));
     
-    // Create material with glow - lower alphaTest for smoother edges
+    // Create material with glow
     const material = new THREE.PointsMaterial({
       size: baseSize,
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.8, // Slightly less opaque
+      opacity: 0.9,
       blending: THREE.AdditiveBlending,
       map: snowflakeTexture,
-      alphaTest: 0.01, // Lower for smoother edges
+      alphaTest: 0.01,
       depthWrite: false
     });
     
@@ -240,36 +274,29 @@ export default function ParticleBackground() {
     const particles = new THREE.Points(geometry, material);
     scene.add(particles);
     
-    // Create glow particles (larger, more transparent) - very soft
+    // Create glow particles (larger, more transparent)
     const glowGeometry = createParticleSystem();
     const glowMaterial = new THREE.PointsMaterial({
-      size: baseSize * 2.5, // Slightly larger ratio
+      size: baseSize * 2.5,
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
-      opacity: 0.8, // More transparent and subtle
+      opacity: 0.6,
       blending: THREE.AdditiveBlending,
       map: snowflakeTexture,
-      alphaTest: 0.005, // Very low for soft fade
+      alphaTest: 0.005,
       depthWrite: false
     });
     
     const glowParticles = new THREE.Points(glowGeometry, glowMaterial);
     scene.add(glowParticles);
     
-    // Add fog for depth
-    //scene.fog = new THREE.FogExp2(0x050520, 0.001);
-    
-    // Add lights for glow effect
-    const ambientLight = new THREE.AmbientLight(0x88aaff, 0.4);
-   // scene.add(ambientLight);
-    
-    // Add point lights that move around - scale with container
+    // Add point lights that move around
     const pointLights: THREE.PointLight[] = [];
     const lightRange = Math.min(containerSize.width, containerSize.height) * 0.5;
     
     for (let i = 0; i < 3; i++) {
-      const light = new THREE.PointLight(0xaaddff, 0.7, lightRange);
+      const light = new THREE.PointLight(0xaaddff, 0.5, lightRange);
       light.position.set(
         Math.random() * lightRange - lightRange / 2,
         Math.random() * lightRange - lightRange / 2,
@@ -302,7 +329,7 @@ export default function ParticleBackground() {
         positions[i] += Math.sin(time * 0.5 + i * 0.001) * 0.2;
         positions[i + 2] += Math.cos(time * 0.3 + i * 0.001) * 0.1;
         
-        // Reset if fallen too low (use container height as reference)
+        // Reset if fallen too low
         if (positions[i + 1] < -containerSize.height) {
           positions[i + 1] = containerSize.height;
           positions[i] = (Math.random() - 0.5) * containerSize.width * 2;
@@ -322,7 +349,7 @@ export default function ParticleBackground() {
       particles.rotation.y = time * 0.02;
       glowParticles.rotation.y = time * 0.02;
       
-      // Animate lights - scale movement with container
+      // Animate lights
       const lightMovement = Math.min(containerSize.width, containerSize.height) * 0.3;
       pointLights.forEach((light, index) => {
         light.position.x = Math.sin(time * 0.3 + index) * lightMovement;
@@ -343,16 +370,9 @@ export default function ParticleBackground() {
       const { width, height } = mountRef.current.getBoundingClientRect();
       
       if (width > 0 && height > 0) {
-        // Update camera aspect ratio
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
-        
-        // Update renderer size
         renderer.setSize(width, height);
-        
-        // Update particle bounds if needed (simpler approach - just resize)
-        // Note: For a perfect solution, you might want to recreate the particle system
-        // But this keeps it simple and responsive
       }
     };
     
@@ -377,11 +397,11 @@ export default function ParticleBackground() {
       material.dispose();
       glowMaterial.dispose();
       snowflakeTexture.dispose();
-      ambientLight.dispose();
+      backgroundTexture?.dispose();
       pointLights.forEach(light => light.dispose());
       renderer.dispose();
     };
-  }, [containerSize]); // Re-run when container size changes
+  }, [containerSize]);
 
   return (
     <div 
@@ -390,15 +410,8 @@ export default function ParticleBackground() {
       style={{
         width: '100vw',
         height: '100%',
-        zIndex: 0,
-        background: `radial-gradient(circle at center, 
-          #E6E6FA 0%, 
-          #D4D4F5 30%, 
-          #B8B8E8 50%, 
-          #8A8AD4 70%, 
-          #6B6BB5 85%, 
-          #4A4A8A 100%)`
+        zIndex: 0
       }}
     />
   );
-}
+      }
