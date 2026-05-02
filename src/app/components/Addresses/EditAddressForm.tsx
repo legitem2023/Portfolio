@@ -55,7 +55,8 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
   
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
- console.log(address);
+  console.log(address);
+  
   const [formData, setFormData] = useState({
     type: address.type || 'home',
     receiver: address.receiver || '',
@@ -426,314 +427,336 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
   const currentTypeIcon = addressTypes.find(t => t.value === formData.type)?.icon || MapPin;
   const TypeIcon = currentTypeIcon;
 
+  // Check if location is provided
+  const hasLocation = formData.lat && formData.lng;
+
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+    <div className="w-full max-w-3xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Header - Matching AddressForm styling */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-4 sm:px-6 sm:py-5">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Edit Address</h3>
-            <p className="text-sm text-gray-500 mt-1">Update your address information</p>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-white">Edit Address</h2>
+              <p className="text-blue-100 text-xs sm:text-sm mt-0.5">Update your address information</p>
+            </div>
           </div>
           <button
             onClick={onCancel}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 sm:p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6">
-        <div className="space-y-4">
-          {/* Location Section */}
-          <div className="space-y-3">
-            {/* Location Status */}
-            {formData.lat && formData.lng && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-sm text-green-700">✓ Location verified</span>
-                  </div>
-                  <div className="text-xs text-green-600 font-mono">
-                    {formData.lat?.toFixed(6)}°, {formData.lng?.toFixed(6)}°
-                  </div>
-                </div>
+      {/* Form Content - Matching AddressForm padding */}
+      <div className="px-4 py-4 sm:px-6 sm:py-6">
+        {/* Location Required Banner - Matching AddressForm style */}
+        {!hasLocation && (
+          <div className="mb-3 p-3 bg-red-50 border-2 border-red-400 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-red-800">Location Required</h3>
+                <p className="text-xs text-red-700 mt-0.5">
+                  You must provide your current location to update an address.
+                </p>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Get Location Button */}
-            <button
-              type="button"
-              onClick={handleGetCurrentLocation}
-              disabled={isGeocoding}
-              className={`
-                w-full py-2.5 px-4 rounded-lg font-medium text-white shadow-sm transition-all
-                ${(!formData.lat || !formData.lng) && !isGeocoding
-                  ? 'bg-blue-600 hover:bg-blue-700' 
-                  : 'bg-gray-600 hover:bg-gray-700'
-                }
-                ${isGeocoding ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                flex items-center justify-center gap-2
-              `}
+        {/* Location Success - Matching AddressForm style */}
+        {hasLocation && (
+          <div className="mb-3 p-2 bg-green-50 border border-green-300 rounded-lg">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-green-600" />
+                <span className="text-xs sm:text-sm text-green-700">✓ Location verified</span>
+              </div>
+              <div className="text-xs text-green-600 font-mono">
+                {formData.lat?.toFixed(6)}°, {formData.lng?.toFixed(6)}°
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Get Location Button - Matching AddressForm style */}
+        <button
+          type="button"
+          onClick={handleGetCurrentLocation}
+          disabled={isGeocoding}
+          className={`
+            w-full py-2.5 px-4 rounded-lg font-medium text-white shadow-sm transition-all
+            ${!hasLocation && !isGeocoding
+              ? 'bg-blue-600 hover:bg-blue-700' 
+              : 'bg-gray-600 hover:bg-gray-700'
+            }
+            ${isGeocoding ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}
+            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+            flex items-center justify-center gap-2
+            mb-4
+          `}
+        >
+          {isGeocoding ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>
+                {locationStep === 'getting-location' && 'Getting your location...'}
+                {locationStep === 'reverse-geocoding' && 'Converting to address...'}
+              </span>
+            </>
+          ) : (
+            <>
+              <LocateFixed className="w-4 h-4" />
+              <span>
+                {!hasLocation 
+                  ? '📍 Get Current Location' 
+                  : '🔄 Update Location'}
+              </span>
+            </>
+          )}
+        </button>
+
+        {/* Location Error - Matching AddressForm style */}
+        {errors.location && (
+          <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-red-600 text-sm flex-1">{errors.location}</p>
+          </div>
+        )}
+
+        {/* Address Type - Matching AddressForm input styling */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Address Type *
+          </label>
+          <div className="relative">
+            <TypeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
             >
-              {isGeocoding ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>
-                    {locationStep === 'getting-location' && 'Getting your location...'}
-                    {locationStep === 'reverse-geocoding' && 'Converting to address...'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <LocateFixed className="w-4 h-4" />
-                  <span>
-                    {!formData.lat || !formData.lng 
-                      ? '📍 Get Current Location' 
-                      : '🔄 Update Location'}
-                  </span>
-                </>
-              )}
-            </button>
+              {addressTypes.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-            {/* Location Error */}
-            {errors.location && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-red-600 text-sm flex-1">{errors.location}</p>
-              </div>
+        {/* Receiver Name - Matching AddressForm input styling */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Receiver Name
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              name="receiver"
+              value={formData.receiver}
+              onChange={handleChange}
+              placeholder="Full name of receiver"
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Phone Number - Matching AddressForm input styling */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
+          </label>
+          <div className="relative">
+            <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              placeholder="+63 912 345 6789"
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          {errors.phone && (
+            <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+          )}
+        </div>
+
+        {/* Street Address - Matching AddressForm input styling */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Street Address *
+          </label>
+          <div className="relative">
+            <Map className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              name="street"
+              value={formData.street}
+              onChange={handleChange}
+              placeholder="123 Main Street"
+              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          {errors.street && (
+            <p className="text-red-500 text-xs mt-1">{errors.street}</p>
+          )}
+        </div>
+
+        {/* City and State Row - Matching AddressForm grid layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              City *
+            </label>
+            <div className="relative">
+              <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+                placeholder="Makati City"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            {errors.city && (
+              <p className="text-red-500 text-xs mt-1">{errors.city}</p>
             )}
           </div>
 
-          {/* Address Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address Type *
+              State/Province *
+            </label>
+            <input
+              type="text"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              placeholder="Metro Manila"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.state && (
+              <p className="text-red-500 text-xs mt-1">{errors.state}</p>
+            )}
+          </div>
+        </div>
+
+        {/* ZIP Code and Country Row - Matching AddressForm grid layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              ZIP Code *
+            </label>
+            <input
+              type="text"
+              name="zipCode"
+              value={formData.zipCode}
+              onChange={handleChange}
+              placeholder="1200"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            {errors.zipCode && (
+              <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Country *
             </label>
             <div className="relative">
-              <TypeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <select
-                name="type"
-                value={formData.type}
+                name="country"
+                value={formData.country}
                 onChange={handleChange}
                 className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               >
-                {addressTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
+                <option value="">Select Country</option>
+                {countries.map(country => (
+                  <option key={country.code} value={country.name}>
+                    {country.name}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
-
-          {/* Receiver Name */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Receiver Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                name="receiver"
-                value={formData.receiver}
-                onChange={handleChange}
-                placeholder="Full name of receiver"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Phone Number */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+63 912 345 6789"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            {errors.phone && (
-              <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+            {errors.country && (
+              <p className="text-red-500 text-xs mt-1">{errors.country}</p>
             )}
-          </div>
-
-          {/* Street Address */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Street Address *
-            </label>
-            <div className="relative">
-              <Map className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                name="street"
-                value={formData.street}
-                onChange={handleChange}
-                placeholder="123 Main Street"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            {errors.street && (
-              <p className="text-red-500 text-xs mt-1">{errors.street}</p>
-            )}
-          </div>
-
-          {/* City and State Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                City *
-              </label>
-              <div className="relative">
-                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  name="city"
-                  value={formData.city}
-                  onChange={handleChange}
-                  placeholder="Makati City"
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              {errors.city && (
-                <p className="text-red-500 text-xs mt-1">{errors.city}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                State/Province *
-              </label>
-              <input
-                type="text"
-                name="state"
-                value={formData.state}
-                onChange={handleChange}
-                placeholder="Metro Manila"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {errors.state && (
-                <p className="text-red-500 text-xs mt-1">{errors.state}</p>
-              )}
-            </div>
-          </div>
-
-          {/* ZIP Code and Country Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ZIP Code *
-              </label>
-              <input
-                type="text"
-                name="zipCode"
-                value={formData.zipCode}
-                onChange={handleChange}
-                placeholder="1200"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              {errors.zipCode && (
-                <p className="text-red-500 text-xs mt-1">{errors.zipCode}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Country *
-              </label>
-              <div className="relative">
-                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-                >
-                  <option value="">Select Country</option>
-                  {countries.map(country => (
-                    <option key={country.code} value={country.name}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {errors.country && (
-                <p className="text-red-500 text-xs mt-1">{errors.country}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Set as Default */}
-          <div className="flex items-center gap-3 pt-2">
-            <input
-              type="checkbox"
-              name="isDefault"
-              id="isDefault"
-              checked={formData.isDefault}
-              onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            />
-            <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 flex items-center gap-1">
-              <CheckSquare className="w-4 h-4" />
-              Set as default address
-            </label>
-          </div>
-
-          {/* Submit Error */}
-          {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-red-600 text-sm flex-1">{errors.submit}</p>
-            </div>
-          )}
-
-          {/* Mutation Error */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-red-600 text-sm flex-1">{error.message}</p>
-            </div>
-          )}
-
-          {/* Form Actions */}
-          <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Update Address'
-              )}
-            </button>
-            
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={loading}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-all duration-200"
-            >
-              Cancel
-            </button>
           </div>
         </div>
-      </form>
+
+        {/* Set as Default - Matching AddressForm checkbox styling */}
+        <div className="flex items-center gap-3 pt-2 mb-4">
+          <input
+            type="checkbox"
+            name="isDefault"
+            id="isDefault"
+            checked={formData.isDefault}
+            onChange={handleChange}
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+            <CheckSquare className="w-4 h-4" />
+            Set as default address
+          </label>
+        </div>
+
+        {/* Submit Error - Matching AddressForm style */}
+        {errors.submit && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-red-600 text-sm flex-1">{errors.submit}</p>
+          </div>
+        )}
+
+        {/* Mutation Error - Matching AddressForm style */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-red-600 text-sm flex-1">{error.message}</p>
+          </div>
+        )}
+
+        {/* Form Actions - Matching AddressForm button styling */}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating...
+              </>
+            ) : (
+              'Update Address'
+            )}
+          </button>
+          
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 px-4 rounded-lg transition-all duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
