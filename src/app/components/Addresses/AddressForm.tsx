@@ -38,7 +38,7 @@ interface ReverseGeocodeResult {
 }
 
 export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpdate }: AddressFormProps) {
-  const { data: session, update } = useSession();
+ // const { data: session, update } = useSession();//writing this line makes the load of this component collapses the page
   const [formData, setFormData] = useState<FormData>({
     type: 'HOME',
     street: '',
