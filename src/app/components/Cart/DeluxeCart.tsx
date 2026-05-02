@@ -15,6 +15,7 @@ import { CREATE_ORDER } from '../graphql/mutation';
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import CartStageShimmer from './CartStageShimmer';
 import { getDistanceInKm } from '../../../../utils/getDistanceInKm';
+import AddressesTab from '../AddressesTab';
 
 // VAT constant from environment (already a decimal, e.g., 0.12)
 const VAT = Number(process.env.NEXT_PUBLIC_VAT);
