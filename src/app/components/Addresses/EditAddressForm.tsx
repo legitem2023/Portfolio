@@ -3,6 +3,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation } from '@apollo/client';
 import { useSession } from 'next-auth/react';
 import { UPDATE_ADDRESS } from '../graphql/mutation';
+import { 
+  MapPin, X, AlertTriangle, CheckCircle, Loader2, 
+  Home, Briefcase, CreditCard, Package, Navigation,
+  User, Phone, Map, Building, Globe, CheckSquare,
+  LocateFixed
+} from 'lucide-react';
 
 interface Address {
   id: string;
@@ -56,7 +62,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
     city: address.city || '',
     state: address.state || '',
     zipCode: address.zipCode || '',
-    country: address.country || '',
+    country: address.country || 'Philippines',
     isDefault: address.isDefault || false,
     lat: address.lat || null,
     lng: address.lng || null,
@@ -64,17 +70,18 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Address types for dropdown
+  // Address types for dropdown with icons
   const addressTypes = [
-    { value: 'home', label: 'Home' },
-    { value: 'work', label: 'Work' },
-    { value: 'shipping', label: 'Shipping' },
-    { value: 'billing', label: 'Billing' },
-    { value: 'other', label: 'Other' }
+    { value: 'home', label: 'Home', icon: Home },
+    { value: 'work', label: 'Work', icon: Briefcase },
+    { value: 'shipping', label: 'Shipping', icon: Package },
+    { value: 'billing', label: 'Billing', icon: CreditCard },
+    { value: 'other', label: 'Other', icon: MapPin }
   ];
 
-  // Countries list
+  // Countries list with Philippines included
   const countries = [
+    { code: 'PH', name: 'Philippines' },
     { code: 'US', name: 'United States' },
     { code: 'CA', name: 'Canada' },
     { code: 'GB', name: 'United Kingdom' },
@@ -89,6 +96,11 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
     { code: 'ES', name: 'Spain' },
     { code: 'IT', name: 'Italy' },
     { code: 'KR', name: 'South Korea' },
+    { code: 'SG', name: 'Singapore' },
+    { code: 'MY', name: 'Malaysia' },
+    { code: 'TH', name: 'Thailand' },
+    { code: 'VN', name: 'Vietnam' },
+    { code: 'ID', name: 'Indonesia' },
   ];
 
   const reverseGeocodeWithGoogle = useCallback(async (lat: number, lng: number): Promise<ReverseGeocodeResult | null> => {
@@ -282,7 +294,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
         city: address.city,
         state: address.state,
         zipCode: address.zipCode,
-        country: address.country
+        country: address.country || prev.country
       }));
       
       setLocationStep('complete');
@@ -409,25 +421,36 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
     }
   };
 
+  const currentTypeIcon = addressTypes.find(t => t.value === formData.type)?.icon || MapPin;
+  const TypeIcon = currentTypeIcon;
+
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
       <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
-        <h3 className="text-lg font-semibold text-gray-900">Edit Address</h3>
-        <p className="text-sm text-gray-500 mt-1">Update your address information</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Edit Address</h3>
+            <p className="text-sm text-gray-500 mt-1">Update your address information</p>
+          </div>
+          <button
+            onClick={onCancel}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6">
         <div className="space-y-4">
-          {/* Location Section - Similar to AddressForm */}
+          {/* Location Section */}
           <div className="space-y-3">
             {/* Location Status */}
             {formData.lat && formData.lng && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
-                    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <CheckCircle className="w-5 h-5 text-green-600" />
                     <span className="text-sm text-green-700">✓ Location verified</span>
                   </div>
                   <div className="text-xs text-green-600 font-mono">
@@ -450,37 +473,34 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
                 }
                 ${isGeocoding ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}
                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                flex items-center justify-center gap-2
               `}
             >
               {isGeocoding ? (
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   <span>
                     {locationStep === 'getting-location' && 'Getting your location...'}
                     {locationStep === 'reverse-geocoding' && 'Converting to address...'}
                   </span>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
+                <>
+                  <LocateFixed className="w-4 h-4" />
                   <span>
                     {!formData.lat || !formData.lng 
                       ? '📍 Get Current Location' 
                       : '🔄 Update Location'}
                   </span>
-                </div>
+                </>
               )}
             </button>
 
             {/* Location Error */}
             {errors.location && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                <p className="text-red-600 text-sm">{errors.location}</p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-red-600 text-sm flex-1">{errors.location}</p>
               </div>
             )}
           </div>
@@ -490,18 +510,21 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Address Type *
             </label>
-            <select
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {addressTypes.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <TypeIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <select
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              >
+                {addressTypes.map(type => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Receiver Name */}
@@ -509,14 +532,17 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Receiver Name
             </label>
-            <input
-              type="text"
-              name="receiver"
-              value={formData.receiver}
-              onChange={handleChange}
-              placeholder="Full name of receiver"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                name="receiver"
+                value={formData.receiver}
+                onChange={handleChange}
+                placeholder="Full name of receiver"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
           </div>
 
           {/* Phone Number */}
@@ -524,14 +550,17 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Phone Number
             </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+1 (555) 555-5555"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="+63 912 345 6789"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             {errors.phone && (
               <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
             )}
@@ -542,33 +571,39 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Street Address *
             </label>
-            <input
-              type="text"
-              name="street"
-              value={formData.street}
-              onChange={handleChange}
-              placeholder="123 Main Street"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div className="relative">
+              <Map className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                name="street"
+                value={formData.street}
+                onChange={handleChange}
+                placeholder="123 Main Street"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             {errors.street && (
               <p className="text-red-500 text-xs mt-1">{errors.street}</p>
             )}
           </div>
 
           {/* City and State Row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 City *
               </label>
-              <input
-                type="text"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-                placeholder="Los Angeles"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  placeholder="Makati City"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
               {errors.city && (
                 <p className="text-red-500 text-xs mt-1">{errors.city}</p>
               )}
@@ -576,14 +611,14 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                State *
+                State/Province *
               </label>
               <input
                 type="text"
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                placeholder="California"
+                placeholder="Metro Manila"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.state && (
@@ -593,7 +628,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
           </div>
 
           {/* ZIP Code and Country Row */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 ZIP Code *
@@ -603,7 +638,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
                 name="zipCode"
                 value={formData.zipCode}
                 onChange={handleChange}
-                placeholder="90210"
+                placeholder="1200"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               {errors.zipCode && (
@@ -615,19 +650,22 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Country *
               </label>
-              <select
-                name="country"
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="">Select Country</option>
-                {countries.map(country => (
-                  <option key={country.code} value={country.name}>
-                    {country.name}
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <select
+                  name="country"
+                  value={formData.country}
+                  onChange={handleChange}
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+                >
+                  <option value="">Select Country</option>
+                  {countries.map(country => (
+                    <option key={country.code} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               {errors.country && (
                 <p className="text-red-500 text-xs mt-1">{errors.country}</p>
               )}
@@ -644,22 +682,25 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <label htmlFor="isDefault" className="text-sm font-medium text-gray-700">
+            <label htmlFor="isDefault" className="text-sm font-medium text-gray-700 flex items-center gap-1">
+              <CheckSquare className="w-4 h-4" />
               Set as default address
             </label>
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{errors.submit}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-red-600 text-sm flex-1">{errors.submit}</p>
             </div>
           )}
 
           {/* Mutation Error */}
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <p className="text-red-600 text-sm">{error.message}</p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-red-600 text-sm flex-1">{error.message}</p>
             </div>
           )}
 
@@ -672,10 +713,7 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Updating...
                 </>
               ) : (
