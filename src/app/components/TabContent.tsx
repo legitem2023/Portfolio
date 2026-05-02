@@ -82,7 +82,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   const renderAddressTab = () => {
     return (
       <AddressesTab
-        addresses={user?.addresses || []}
+        addresses={(user?.addresses || []) as any}
         userId={userId}
         onAddressUpdate={async () => await refetch()}
       />
