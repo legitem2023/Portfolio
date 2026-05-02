@@ -22,6 +22,7 @@ interface AddressesTabProps {
   addresses: Address[];
   userId: string;
   onAddressUpdate: () => void;
+  onTokenUpdate?: (newToken: string) => void; // Add callback for token update
 }
 
 // Delete Address Mutation
@@ -248,32 +249,69 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () 
 };
 
 // Main Addresses Tab Component
-const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddressUpdate }) => {
-  const { update: updateSession } = useSession(); // ✅ Get session update function
+const AddressesTab: React.FC<AddressesTabProps> = ({ 
+  addresses, 
+  userId, 
+  onAddressUpdate,
+  onTokenUpdate 
+}) => {
+  const { update: updateSession, data: session } = useSession();
   const [setDefaultAddress, { loading: updatingDefault }] = useMutation(SET_DEFAULT_ADDRESS);
   const [deleteAddress, { loading: deletingAddress }] = useMutation(DELETE_ADDRESS);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<Address | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Helper function to refresh session data
-  const refreshSession = async () => {
+  // Helper function to refresh session data and sync with useAuth
+  const refreshSession = async (newToken?: string) => {
     try {
-      await updateSession();
+      setIsRefreshing(true);
+      
+      if (newToken) {
+        // Update NextAuth session with new token
+        await updateSession({
+          serverToken: newToken,
+          user: session?.user
+        });
+        
+        // Notify parent component about token update
+        if (onTokenUpdate) {
+          onTokenUpdate(newToken);
+        }
+        
+        // Dispatch custom event for useAuth hook to listen to
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth-token-updated', { 
+            detail: { token: newToken } 
+          }));
+        }
+      } else {
+        // Just refresh existing session
+        await updateSession();
+      }
+      
       return true;
     } catch (error) {
       console.error('Failed to refresh session:', error);
       return false;
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
   const handleAddressSuccess = async () => {
     setShowAddressForm(false);
-    await refreshSession(); // ✅ Refresh session after adding address
+    await refreshSession();
     onAddressUpdate?.();
   };
 
   const handleMakeDefault = async (addressId: string) => {
+    if (isRefreshing) {
+      showToast('Please wait, updating session...', 'error');
+      return;
+    }
+
     try {
       const response = await setDefaultAddress({
         variables: {
@@ -282,25 +320,28 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
         },
       });
 
-      // ✅ Check if the mutation returns a token or updated user data
       const result = response.data?.setDefaultAddress;
       
+      // Check if mutation returned a new token
       if (result?.token) {
-        // If mutation returns a new token, update session with the new data
-        await updateSession({
-          user: result.user || result,
-          token: result.token
-        });
-      } else {
-        // Otherwise just refresh the session
+        // Update session with the new token
+        await refreshSession(result.token);
+        showToast('Default address updated and session synced successfully', 'success');
+      } else if (result?.user) {
+        // If no token but user data returned, just refresh
         await refreshSession();
+        showToast('Default address updated successfully', 'success');
+      } else {
+        // Just refresh to get latest data
+        await refreshSession();
+        showToast('Default address updated successfully', 'success');
       }
       
       onAddressUpdate?.();
-      showToast('Default address updated successfully', 'success');
-    } catch (error) {
+      
+    } catch (error: any) {
       console.error('Error setting default address:', error);
-      showToast('Failed to update default address', 'error');
+      showToast(error.message || 'Failed to update default address', 'error');
     }
   };
 
@@ -318,7 +359,6 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
     try {
       const response = await deleteAddress({
         variables: { id: addressToDelete.id },
-        // Optimistic cache update
         update: (cache) => {
           cache.modify({
             fields: {
@@ -333,7 +373,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
       });
 
       if (response.data?.deleteAddress?.statusText === "Successful deleted") {
-        // ✅ Refresh session after deleting address
+        // Refresh session after deletion
         await refreshSession();
         showToast(`${addressToDelete.type} address deleted successfully`, 'success');
         setAddressToDelete(null);
@@ -357,14 +397,16 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
   });
 
   // Loading State
-  if (updatingDefault || deletingAddress) {
+  if (updatingDefault || deletingAddress || isRefreshing) {
     return (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-xl shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             <p className="text-gray-700 font-medium">
-              {deletingAddress ? 'Deleting address...' : 'Updating default address...'}
+              {deletingAddress ? 'Deleting address...' : 
+               isRefreshing ? 'Updating session...' : 
+               'Updating default address...'}
             </p>
           </div>
         </div>
@@ -450,7 +492,7 @@ const AddressesTab: React.FC<AddressesTabProps> = ({ addresses, userId, onAddres
         </div>
       )}
 
-      {/* Address Cards Grid - Responsive */}
+      {/* Address Cards Grid */}
       <div className="grid gap-4 sm:gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-2">
         {sortedAddresses.map((address, index) => (
           <AddressCard
