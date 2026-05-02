@@ -600,6 +600,7 @@ query GetUser($id: ID) {
       addresses {
         id
         type
+        phone
         receiver
         street
         city
