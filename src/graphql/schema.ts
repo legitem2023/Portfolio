@@ -1331,7 +1331,7 @@ type Mutation {
     # Delete conversation with a user
     deleteConversation(userId: ID): Boolean
 
-    setDefaultAddress(addressId: ID, userId: ID): SetDefaultAddressResponse
+    setDefaultAddress(addressId: ID, userId: ID): Result
     logout: LogoutResponse
     login(input: LoginInput): Result
     loginWithGoogle(input: GoogleLoginInput): Result
