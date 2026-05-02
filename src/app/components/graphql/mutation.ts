@@ -451,19 +451,8 @@ export const LOGOUT_MUTATION = gql`
 export const SET_DEFAULT_ADDRESS = gql`
   mutation SetDefaultAddress($addressId: ID!, $userId: ID!) {
     setDefaultAddress(addressId: $addressId, userId: $userId) {
-      success
-      message
-      address {
-        id
-        type
-        street
-        city
-        state
-        zipCode
-        country
-        isDefault
-        createdAt
-      }
+      statusText
+      token
     }
   }
 `;
