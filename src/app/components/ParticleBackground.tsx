@@ -24,12 +24,28 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     return () => observer.disconnect();
   }, []);
 
+  // Create CSS radial gradient string (matches the Three.js gradient)
+  const getCSSRadialGradient = () => {
+    if (isDarkMode) {
+      return `radial-gradient(circle at center, 
+        #0a0a0a 0%, 
+        #1a1a2e 50%, 
+        #16213e 100%)`;
+    } else {
+      return `radial-gradient(circle at center, 
+        #f5f5f5 0%, 
+        #e0e0e8 40%, 
+        #c8c8d8 70%, 
+        #a0a0b8 100%)`;
+    }
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
 
     const scene = new THREE.Scene();
     
-    // Create radial gradient background instead of solid color
+    // Create radial gradient background for Three.js
     const createRadialGradient = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
@@ -45,16 +61,14 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
       const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
       
       if (isDarkMode) {
-        // Dark mode: darker center, slightly lighter edges
         gradient.addColorStop(0, '#0a0a0a');
         gradient.addColorStop(0.5, '#1a1a2e');
         gradient.addColorStop(1, '#16213e');
       } else {
-        // Light mode: original color at center, darker toward edges
-        gradient.addColorStop(0, '#f5f5f5');     // Original light color at center
+        gradient.addColorStop(0, '#f5f5f5');
         gradient.addColorStop(0.4, '#e0e0e8');
         gradient.addColorStop(0.7, '#c8c8d8');
-        gradient.addColorStop(1, '#a0a0b8');     // Darker at edges
+        gradient.addColorStop(1, '#a0a0b8');
       }
       
       ctx.fillStyle = gradient;
@@ -70,7 +84,7 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     camera.position.z = 30;
     camera.position.y = 5;
     
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     containerRef.current.appendChild(renderer.domElement);
@@ -167,29 +181,52 @@ const ParticleBackground: React.FC<ParticleBackgroundProps> = ({ children }) => 
     
     window.addEventListener('resize', handleResize);
     
-    // Cleanup
+    // Cleanup - Store references for disposal
+    const backgroundTexture = scene.background;
+    
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       
+      // Remove meshes from scene
+      scene.remove(particlesMesh);
+      scene.remove(floatingParticles);
+      
+      // Dispose geometries and materials
       particlesGeometry.dispose();
       floatingGeometry.dispose();
       particlesMaterial.dispose();
       floatingMaterial.dispose();
       
-      if (renderer) {
-        renderer.dispose();
+      // Dispose background texture if it's a texture
+      if (backgroundTexture instanceof THREE.Texture) {
+        backgroundTexture.dispose();
       }
       
+      // Remove renderer from DOM
       if (containerRef.current && renderer.domElement) {
         containerRef.current.removeChild(renderer.domElement);
       }
+      
+      // Dispose renderer
+      renderer.dispose();
     };
   }, [isDarkMode]);
 
   return (
-    <div ref={containerRef} className="fixed inset-0 w-full h-full -z-10">
+    <div 
+      ref={containerRef} 
+      className="fixed inset-0 w-full h-full -z-10"
+      style={{ 
+        background: getCSSRadialGradient(),
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%'
+      }}
+    >
       {children}
     </div>
   );
