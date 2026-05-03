@@ -252,7 +252,7 @@ const Header: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [dispatch,previousIndex]);
+  }, [dispatch]);
   
   useEffect(() => {
     const getRole = async () => {
