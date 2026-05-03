@@ -239,19 +239,19 @@ const Header: React.FC = () => {
     }
   });
   
- useEffect(() => {
-    // beforePopState detects back/forward button clicks specifically
-    router.beforePopState(({ url, as, options }) => {
-      console.log('Back or forward button clicked!');
+  useEffect(() => {
+    const handlePopState = () => {
+      // Detects back/forward button clicks
+      console.log('Back/forward button clicked - restoring previous index');
       dispatch(restorePreviousIndex());
-      return true; // Allow the navigation
-    });
-
-    return () => {
-      router.beforePopState(() => true);
     };
-  }, [router, dispatch]);
 
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [dispatch]);
   
   useEffect(() => {
     const getRole = async () => {
