@@ -2,6 +2,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import PMTab from '../../components/PMTab';
+import PostDetail from '../../components/Posting/PostDetail';
 import OutFolderTabs from '../../components/OutFolderTabs';
 import Header from '../../components/Header';
 import { decryptToken } from '../../../../utils/decryptToken';
