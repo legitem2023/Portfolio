@@ -575,12 +575,15 @@ useEffect(() => {
           break;
         case NotificationType.ORDER_CREATED:
           dispatch(setActiveIndex(10));
+          router.push(`?index=${10}`);
           break;
         case NotificationType.ORDER_UPDATED:
           dispatch(setActiveIndex(10));
+          router.push(`?index=${10}`);
           break;
         case NotificationType.ORDER_DELIVERED:
           dispatch(setActiveIndex(10));
+          router.push(`?index=${10}`);
           break;
         default:
           break;
@@ -598,15 +601,18 @@ useEffect(() => {
       router.push('/');
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
+        router.push(`?index=${tabId}`);
       }, 100);
     } else {
       dispatch(setActiveIndex(tabId));
+      router.push(`?index=${tabId}`);
     }
   }, [isUserLoggedIn, pathname, router, dispatch]);
 
   const handleLogoClick = useCallback(() => {
     router.push('/');  
     dispatch(setActiveIndex(1));
+    router.push(`?index=${1}`);
   }, [router, dispatch]);
 
   useEffect(() => {
