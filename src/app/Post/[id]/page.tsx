@@ -1,7 +1,7 @@
 // app/profile/[id]/page.tsx
 'use client'
 import React, { useState, useEffect } from 'react';
-import { useParams } from "next/navigator";
+import { useParams } from 'next/navigation';
 import PMTab from '../../components/PMTab';
 import PostDetail from '../../components/Posting/PostDetail';
 import OutFolderTabs from '../../components/OutFolderTabs';
