@@ -1,6 +1,7 @@
 // app/profile/[id]/page.tsx
 'use client'
 import React, { useState, useEffect } from 'react';
+import { useParams } from "next/navigator";
 import PMTab from '../../components/PMTab';
 import PostDetail from '../../components/Posting/PostDetail';
 import OutFolderTabs from '../../components/OutFolderTabs';
@@ -11,7 +12,9 @@ export default function Page() {
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
-   
+   const params = useParams();
+   const activePostId = params?.id as string; // Extract id from URL params
+
   useEffect(() => {
     const getRole = async () => {
       try {
