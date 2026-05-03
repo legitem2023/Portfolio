@@ -147,7 +147,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 8,
       label: 'Post',
       icon: <ShoppingCart size={20} />,
-      content: <PostDetail postId={postIdFromUrl} />
+      content: <PostDetail postId={postIdFromUrl || ""} />
     },
     {
       id: 9,
