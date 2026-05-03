@@ -186,6 +186,29 @@ const MessagesTab = () => {
   const posts = data?.posts?.posts || [];
   const showLoader = postsLoading && page === 1;
 
+
+const getValidAvatarUrl = (avatar: string | null | undefined): string => {
+  if (!avatar || avatar.trim() === '') return '/NoImage.webp';
+  
+  // Check for base64 image
+  if (avatar.startsWith('data:image/')) {
+    // Ensure it's a complete base64 string
+    if (avatar.includes('base64,') && avatar.length > 100) {
+      return avatar;
+    }
+    return '/NoImage.webp';
+  }
+  
+  // Check for regular URL
+  try {
+    new URL(avatar);
+    return avatar;
+  } catch {
+    return '/NoImage.webp';
+  }
+};
+
+  
   return (
     <div className="min-h-screen bg-gray-100 p-0">
       <div className="max-w-2xl mx-auto">
@@ -211,7 +234,7 @@ const MessagesTab = () => {
             message={{
               id: post.id,
               sender: formatUserName(post.user),
-              avatar: post.user.avatar,
+              avatar: getValidAvatarUrl(post.user.avatar),
               timestamp: formatDate(post.createdAt),
               content: post.content,
               likes: post.likeCount,
