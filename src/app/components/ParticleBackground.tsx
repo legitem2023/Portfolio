@@ -388,8 +388,8 @@ export default function ParticleBackground() {
         width: '100vw',
         height: '100%', // This sets the container height
         zIndex: 0,
-        background: 'radial-gradient(circle at center, #6b4c7a 0%, #9b7bb5 50%, #d8bfd8 100%)'
+        background: 'radial-gradient(circle at center, #6b4c7a 0%, #808080 100%)'
       }}
     />
   );
-}
+    }
