@@ -388,7 +388,7 @@ export default function ParticleBackground() {
         width: '100vw',
         height: '100%', // This sets the container height
         zIndex: 0,
-        background: 'radial-gradient(circle at center, #aeb1c2 0%, #e3e5f3 100%)'
+        background: 'radial-gradient(circle at center, #aeb1c2 100%, #e3e5f3 0%)'
       }}
     />
   );
