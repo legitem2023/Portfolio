@@ -468,7 +468,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       <div className="flex-1">
         <h3 className="text-sm font-bold text-blue-800">Complete Your Address</h3>
         <p className="text-xs text-blue-700 mt-0.5">
-          If you reside in an apartment, condominium, or multi-unit building, please edit and provide your full address including unit, suite, or house number.
+          If you reside in an apartment, condominium, or multi-unit building, please provide your full address including unit, suite, or house number by editing street address input
         </p>
       </div>
     </div>
