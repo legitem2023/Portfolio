@@ -85,7 +85,10 @@ const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const previousIndex:any = searchParams.get('index');
+  const currentIndex = searchParams.get('index');
+  const previousIndexRef = useRef(currentIndex);
+
+
   const drawer = useAdDrawer({ autoOpenDelay: 3000 });
   
   const dispatch = useDispatch();
@@ -240,19 +243,25 @@ const Header: React.FC = () => {
     }
   });
   
-  useEffect(() => {
-    const handlePopState = () => {
-      // Detects back/forward button clicks
-      console.log('Back/forward button clicked - restoring previous index');
-      dispatch(setActiveIndex(previousIndex));
-    };
+  // Store previous index before it changes
+useEffect(() => {
+  return () => {
+    // This cleanup runs before the next render
+    previousIndexRef.current = currentIndex;
+  };
+}, [currentIndex]);
 
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [dispatch]);
+useEffect(() => {
+  const handlePopState = () => {
+    const indexToRestore = previousIndexRef.current;
+    if (indexToRestore !== null) {
+      dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
+    }
+  };
+
+  window.addEventListener('popstate', handlePopState);
+  return () => window.removeEventListener('popstate', handlePopState);
+}, [dispatch]);
   
   useEffect(() => {
     const getRole = async () => {
