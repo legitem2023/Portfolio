@@ -254,6 +254,7 @@ useEffect(() => {
 useEffect(() => {
   const handlePopState = () => {
     const indexToRestore = previousIndexRef.current;
+    console.log(indexToRestore);
     if (indexToRestore !== null) {
       dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
     }
