@@ -239,14 +239,13 @@ const Header: React.FC = () => {
     }
   });
  useEffect(() => {
-    const handlePopState = (event) => {
+    const handlePopState = (event:any) => {
       // When back/forward button is clicked, restore previous index
       dispatch(restorePreviousIndex());
       console.log('Back button clicked - restoring previous index');
     };
     // Add event listener for browser navigation
     window.addEventListener('popstate', handlePopState);
-   
     // Cleanup
     return () => {
       window.removeEventListener('popstate', handlePopState);
