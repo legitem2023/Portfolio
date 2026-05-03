@@ -2,6 +2,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
+import { useNavigationType } from 'react-router-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
@@ -75,7 +76,7 @@ const Header: React.FC = () => {
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
   const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
-  
+  const navigationType = useNavigationType();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -237,7 +238,17 @@ const Header: React.FC = () => {
       setDeletingNotificationId(null);
     }
   });
-
+ useEffect(() => {
+    if (navigationType === 'POP') {
+      console.log('✅ Back or forward button was clicked');
+      // 'POP' = back/forward navigation
+    } else if (navigationType === 'PUSH') {
+      console.log('Normal navigation (link click)');
+    } else if (navigationType === 'REPLACE') {
+      console.log('Replace navigation');
+    }
+  }, [navigationType]);
+  
   useEffect(() => {
     const getRole = async () => {
       if (authCheckAbortControllerRef.current) {
