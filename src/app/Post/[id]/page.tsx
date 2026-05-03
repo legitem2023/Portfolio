@@ -43,6 +43,7 @@ export default function Page() {
   return (
     <>
       <div className="h-[100vh] bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+        <Header/>
         <OutFolderTabs/>
         <PostDetail postId={activePostId} />
       </div> 
