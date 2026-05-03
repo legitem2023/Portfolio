@@ -165,8 +165,8 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   
   const navigate = () => {
     dispatch(setActivePostId(id)); 
-    dispatch(setActiveIndex(8));
-    router.push(`?post=${id}`);
+    //dispatch(setActiveIndex(8));
+    router.push(`/Post/${id}`);
   };
 
   const handleRedirectToUser = () => {
