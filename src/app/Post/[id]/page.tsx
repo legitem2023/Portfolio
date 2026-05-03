@@ -41,7 +41,7 @@ export default function Page() {
     <>
       <div className="h-[100vh] bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
         <OutFolderTabs/>
-        <PMTab UserId={userId} />
+        <PostDetail postId={activePostId} />
       </div> 
     </>
   )    
