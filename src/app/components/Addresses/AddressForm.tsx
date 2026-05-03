@@ -461,6 +461,21 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </div>
         )}
 
+       {(formData.lat || formData.lng) && (
+          <div className="mb-3 p-3 bg-amber-50 border-2 border-amber-400 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-amber-800">Please Read</h3>
+                <p className="text-xs text-amber-700 mt-0.5">
+                  You must complete the address if you are inside building or apartment by adding unit or house number
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        
         {/* Location Success - Compact */}
         {formData.lat && formData.lng && (
           <div className="mb-3 p-2 bg-green-50 border border-green-300 rounded-lg">
