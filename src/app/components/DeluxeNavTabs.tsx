@@ -103,7 +103,7 @@ const DeluxeNavTabs: React.FC = () => {
       }, 100);
     } else { 
       dispatch(setActiveIndex(tabId));
-      router.push('/');
+      router.push(`?index=${tabId}`);
     }
   };
 
