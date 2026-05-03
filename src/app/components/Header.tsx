@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useNavigationType } from 'react-router-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+import { setActiveIndex , restorePreviousIndex } from '../../../Redux/activeIndexSlice';
 import { decryptToken } from '../../../utils/decryptToken';
 import { showNotification } from '../../../utils/notifications';
 import { useQuery, useMutation } from '@apollo/client';
@@ -243,7 +243,8 @@ const Header: React.FC = () => {
       console.log('✅ Back or forward button was clicked');
       // 'POP' = back/forward navigation
     } else if (navigationType === 'PUSH') {
-      console.log('Normal navigation (link click)');
+       console.log('Normal navigation (link click)');
+       dispatch(restorePreviousIndex());
     } else if (navigationType === 'REPLACE') {
       console.log('Replace navigation');
     }
