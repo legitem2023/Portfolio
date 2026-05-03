@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 //import { useNavigationType } from 'react-router-dom';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex , restorePreviousIndex } from '../../../Redux/activeIndexSlice';
 import { decryptToken } from '../../../utils/decryptToken';
@@ -84,7 +84,8 @@ const Header: React.FC = () => {
   
   const router = useRouter();
   const pathname = usePathname();
-  
+  const searchParams = useSearchParams();
+  const previousIndex:any = searchParams.get('index');
   const drawer = useAdDrawer({ autoOpenDelay: 3000 });
   
   const dispatch = useDispatch();
@@ -243,7 +244,7 @@ const Header: React.FC = () => {
     const handlePopState = () => {
       // Detects back/forward button clicks
       console.log('Back/forward button clicked - restoring previous index');
-      dispatch(restorePreviousIndex());
+      dispatch(setActiveIndex(previousIndex));
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -251,7 +252,7 @@ const Header: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [dispatch]);
+  }, [dispatch,previousIndex]);
   
   useEffect(() => {
     const getRole = async () => {
