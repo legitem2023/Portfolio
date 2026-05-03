@@ -122,6 +122,30 @@ const UserProfile = ({ userId }: { userId: string }) => {
     fileInputRef.current?.click();
   };
 
+const getValidAvatarUrl = (avatar: string | null | undefined): string => {
+  if (!avatar || avatar.trim() === '') return '/NoImage.webp';
+  
+  // Check for base64 image
+  if (avatar.startsWith('data:image/')) {
+    // Ensure it's a complete base64 string
+    if (avatar.includes('base64,') && avatar.length > 100) {
+      return avatar;
+    }
+    return '/NoImage.webp';
+  }
+  
+  // Check for regular URL
+  try {
+    new URL(avatar);
+    return avatar;
+  } catch {
+    return '/NoImage.webp';
+  }
+};
+
+
+
+  
   return (
     <div className="min-h-screen p-0">
       <div className="max-w-2xl mx-auto">
@@ -135,7 +159,7 @@ const UserProfile = ({ userId }: { userId: string }) => {
             <div className="relative w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
               <div className="relative w-full h-full rounded-full overflow-hidden border-4 border-white shadow-lg">
                 <Image
-                  src={user.avatar || '/NoImage.webp'}
+                  src={getValidAvatarUrl(user.avatar)}
                   alt={`${user.firstName}'s avatar`}
                   fill
                   className="object-cover"
