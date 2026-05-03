@@ -68,7 +68,7 @@ const DeluxeNavTabs: React.FC = () => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const merchantIdFromUrl = searchParams.get('id');
-
+  const postIdFromUrl = searchParams.get('post');
   useEffect(() => {
     const getRole = async () => {
       try {
@@ -147,7 +147,7 @@ const DeluxeNavTabs: React.FC = () => {
       id: 8,
       label: 'Post',
       icon: <ShoppingCart size={20} />,
-      content: <PostDetail postId={activePostId} />
+      content: <PostDetail postId={postIdFromUrl} />
     },
     {
       id: 9,
