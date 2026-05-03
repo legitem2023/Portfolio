@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-import { useNavigationType } from 'react-router-dom';
+//import { useNavigationType } from 'react-router-dom';
 import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex , restorePreviousIndex } from '../../../Redux/activeIndexSlice';
@@ -76,7 +76,7 @@ const Header: React.FC = () => {
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   const [shownNotificationIds, setShownNotificationIds] = useState<Set<string>>(new Set());
   const [deletingNotificationId, setDeletingNotificationId] = useState<string | null>(null);
-  const navigationType = useNavigationType();
+  //const navigationType = useNavigationType();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const bellRef = useRef<HTMLDivElement>(null);
@@ -239,16 +239,20 @@ const Header: React.FC = () => {
     }
   });
  useEffect(() => {
-    if (navigationType === 'POP') {
-      console.log('✅ Back or forward button was clicked');
-      // 'POP' = back/forward navigation
-    } else if (navigationType === 'PUSH') {
-       console.log('Normal navigation (link click)');
-       dispatch(restorePreviousIndex());
-    } else if (navigationType === 'REPLACE') {
-      console.log('Replace navigation');
-    }
-  }, [navigationType]);
+    const handlePopState = (event) => {
+      // When back/forward button is clicked, restore previous index
+      dispatch(restorePreviousIndex());
+      console.log('Back button clicked - restoring previous index');
+    };
+    // Add event listener for browser navigation
+    window.addEventListener('popstate', handlePopState);
+   
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [dispatch]);
+
   
   useEffect(() => {
     const getRole = async () => {
