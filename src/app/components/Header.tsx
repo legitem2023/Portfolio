@@ -238,19 +238,19 @@ const Header: React.FC = () => {
       setDeletingNotificationId(null);
     }
   });
+  
  useEffect(() => {
-    const handlePopState = (event:any) => {
-      // When back/forward button is clicked, restore previous index
+    // beforePopState detects back/forward button clicks specifically
+    router.beforePopState(({ url, as, options }) => {
+      console.log('Back or forward button clicked!');
       dispatch(restorePreviousIndex());
-      console.log('Back button clicked - restoring previous index');
-    };
-    // Add event listener for browser navigation
-    window.addEventListener('popstate', handlePopState);
-    // Cleanup
+      return true; // Allow the navigation
+    });
+
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      router.beforePopState(() => true);
     };
-  }, [dispatch]);
+  }, [router, dispatch]);
 
   
   useEffect(() => {
