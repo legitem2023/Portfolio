@@ -218,40 +218,21 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
           {/* Payout Section */}
           <div className="bg-green-50 p-3 rounded-xl space-y-1">
 
-                      {/* Payments Section */}
+        {/* Payments Section */}
           {payments.length > 0 && (
-            <div className="p-3 rounded-xl space-y-2">
+            <div className="p-0 rounded-xl space-y-2">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <span className="font-semibold text-purple-700 text-sm">Payments</span>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="font-semibold text-green-700 text-sm">Payments</span>
               </div>
               {payments.map((payment, index) => (
-                <div key={index} className="bg-white rounded-lg p-3 border border-purple-200">
+                <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700">Method:</span>
-                    <span className="text-sm font-semibold text-purple-600 capitalize">
+                    <span className="text-sm font-semibold text-green-600 capitalize">
                       {payment.method || 'N/A'}
                     </span>
-                  </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <span className="text-sm font-medium text-gray-700">Status:</span>
-                    <span className={`text-sm font-semibold capitalize ${
-                      payment.status === 'completed' ? 'text-green-600' :
-                      payment.status === 'pending' ? 'text-yellow-600' :
-                      payment.status === 'failed' ? 'text-red-600' :
-                      'text-gray-600'
-                    }`}>
-                      {payment.status || 'N/A'}
-                    </span>
-                  </div>
-                  {/*payment.amount && (
-                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-purple-100">
-                      <span className="text-sm font-medium text-gray-700">Amount:</span>
-                      <span className="text-sm font-bold text-purple-700">
-                        {formatPeso(payment.amount)}
-                      </span>
-                    </div>
-                  )*/}
+                  </div>   
                 </div>
               ))}
             </div>
