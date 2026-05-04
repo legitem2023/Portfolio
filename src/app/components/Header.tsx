@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
-//import { useNavigationType } from 'react-router-dom';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex , restorePreviousIndex } from '../../../Redux/activeIndexSlice';
