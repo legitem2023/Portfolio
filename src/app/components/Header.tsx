@@ -252,14 +252,12 @@ useEffect(() => {
 
 useEffect(() => {
   const handlePopState = () => {
-    const searchParams = useSearchParams();
-   let currIndex = parseInt(searchParams.get('index') || '0', 10);
-
-    //const indexToRestore = previousIndexRef.current;
-    console.log(currIndex);
-    //if (indexToRestore !== null) {
-     // dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
-    //}
+    
+    const indexToRestore = previousIndexRef.current;
+    //console.log(currIndex);
+    if (indexToRestore !== null) {
+      dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
+    }
   };
 
   window.addEventListener('popstate', handlePopState);
