@@ -1320,7 +1320,7 @@ const DeluxeCart = () => {
     variables: { id: user?.userId },
     skip: !user?.userId,
   });
-  console.log(user);
+  
   const [createOrder] = useMutation(CREATE_ORDER);
   
   const subtotal = cartItems.reduce((total: number, item: any) => 
