@@ -84,7 +84,7 @@ const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentIndex = searchParams.get('index');
+  const currentIndex:number = searchParams.get('index');
   const previousIndexRef = useRef(currentIndex);
 
 
@@ -252,16 +252,16 @@ useEffect(() => {
 
 useEffect(() => {
   const handlePopState = () => {
-    const indexToRestore = previousIndexRef.current;
-    console.log(indexToRestore);
-    if (indexToRestore !== null) {
-      dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
-    }
+    //const indexToRestore = previousIndexRef.current;
+    console.log(currentIndex);
+    //if (indexToRestore !== null) {
+     // dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
+    /}
   };
 
   window.addEventListener('popstate', handlePopState);
   return () => window.removeEventListener('popstate', handlePopState);
-}, [dispatch]);
+}, [dispatch,currentIndex]);
   
   useEffect(() => {
     const getRole = async () => {
