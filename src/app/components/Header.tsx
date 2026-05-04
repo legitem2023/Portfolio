@@ -84,7 +84,7 @@ const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentIndex:number = searchParams.get('index');
+  const currentIndex = parseInt(searchParams.get('index') || '0', 10);
   const previousIndexRef = useRef(currentIndex);
 
 
