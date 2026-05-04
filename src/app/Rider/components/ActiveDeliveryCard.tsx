@@ -797,13 +797,13 @@ console.log(payments);
                   <span className="font-semibold text-xs">Pickup From</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
+                  {/*<button
                     onClick={() => setShowMap(true)}
                     className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 bg-blue-100 px-2 py-1.5 rounded-full transition-colors"
                   >
                     <Navigation size={12} />
                     <span>Route</span>
-                  </button>
+                  </button>*/}
                 </div>
               </div>
               <p className="text-gray-700 text-xs break-words">{delivery.pickup}</p>
