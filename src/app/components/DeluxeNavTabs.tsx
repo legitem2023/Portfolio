@@ -100,6 +100,7 @@ const DeluxeNavTabs: React.FC = () => {
       router.push('/');
       setTimeout(() => {
         dispatch(setActiveIndex(tabId));
+        router.push(`?index=${tabId}`);
       }, 100);
     } else { 
       dispatch(setActiveIndex(tabId));
