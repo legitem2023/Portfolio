@@ -256,7 +256,7 @@ useEffect(() => {
     console.log(currentIndex);
     //if (indexToRestore !== null) {
      // dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
-    /}
+    //}
   };
 
   window.addEventListener('popstate', handlePopState);
