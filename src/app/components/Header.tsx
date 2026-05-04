@@ -252,15 +252,30 @@ useEffect(() => {
 
 useEffect(() => {
   const handlePopState = () => {
+    // Default JS method - fastest
+    const urlParams = new URLSearchParams(window.location.search);
+    const indexToRestore = urlParams.get('index');
     
-    const indexToRestore = previousIndexRef.current;
+    // Or even faster with regex (if you prefer)
+    // const indexToRestore = window.location.search.match(/index=([^&]*)/)?.[1];
+    
     if (indexToRestore !== null) {
       dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
     }
   };
-
+  
   window.addEventListener('popstate', handlePopState);
-  return () => window.removeEventListener('popstate', handlePopState);
+  
+  // Optional: Also get initial index on mount
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialIndex = initialParams.get('index');
+  if (initialIndex !== null) {
+    dispatch(setActiveIndex(parseInt(initialIndex, 10)));
+  }
+  
+  return () => {
+    window.removeEventListener('popstate', handlePopState);
+  };
 }, [dispatch]);
   
   useEffect(() => {
