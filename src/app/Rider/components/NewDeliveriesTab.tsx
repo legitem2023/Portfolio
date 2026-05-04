@@ -87,25 +87,7 @@ if (error) {
         </div>
       )}
 
-      {/* Bottom stats */}
-      <div className="mt-4 lg:mt-8 grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4">
-        <div className="bg-blue-50 p-2 lg:p-4 rounded-lg border border-blue-100">
-          <p className="text-gray-600 text-xs lg:text-sm">Today&apos;s Earnings</p>
-          <p className="font-bold text-lg lg:text-2xl">{formatPeso(86.50)}</p>
-        </div>
-        <div className="bg-green-50 p-2 lg:p-4 rounded-lg border border-green-100">
-          <p className="text-gray-600 text-xs lg:text-sm">Acceptance Rate</p>
-          <p className="font-bold text-lg lg:text-2xl">94%</p>
-        </div>
-        <div className="bg-purple-50 p-2 lg:p-4 rounded-lg border border-purple-100">
-          <p className="text-gray-600 text-xs lg:text-sm">Avg. Payout</p>
-          <p className="font-bold text-lg lg:text-2xl">{formatPeso(12.15)}</p>
-        </div>
-        <div className="bg-orange-50 p-2 lg:p-4 rounded-lg border border-orange-100">
-          <p className="text-gray-600 text-xs lg:text-sm">Response Time</p>
-          <p className="font-bold text-lg lg:text-2xl">8s</p>
-        </div>
-      </div>
+
     </div>
   );
             }
