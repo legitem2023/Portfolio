@@ -1,5 +1,5 @@
 // components/RiderPaymentHistory.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { 
@@ -464,7 +464,7 @@ const FilterBar = ({
   );
 };
 
-// Mobile Card View Component - UPDATED with tracking groups
+// Mobile Card View Component
 const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMethodIcon, filterStatus }: any) => {
   // Filter tracking groups based on filter status
   const filteredGroups = filterStatus === 'ALL'
@@ -548,7 +548,7 @@ const MobilePaymentCard = ({ payment, formatCurrency, formatDate, getPaymentMeth
   );
 };
 
-// Main Component
+// Main Component - FIXED VERSION
 export default function RiderPaymentHistory({
   riderId,
   showSummary = true,
@@ -585,15 +585,19 @@ export default function RiderPaymentHistory({
     totalPages: 0,
   });
 
-  const buildOrderFilter = () => {
+  // Track if this is initial load or refetch
+  const isInitialMount = useRef(true);
+  const previousDataRef = useRef<any>(null);
+
+  const buildOrderFilter = useCallback(() => {
     const filter: any = {};
     if (riderId) {
       filter.riderId = riderId;
     }
     return filter;
-  };
+  }, [riderId]);
 
-  const { loading, error, data, refetch } = useQuery(ACTIVE_ORDER_LIST_PAYMENTS, {
+  const { loading, error, data, refetch, networkStatus } = useQuery(ACTIVE_ORDER_LIST_PAYMENTS, {
     variables: {
       filter: buildOrderFilter(),
       pagination: {
@@ -601,133 +605,112 @@ export default function RiderPaymentHistory({
         pageSize: pagination.pageSize,
       },
     },
-    fetchPolicy: 'network-only',
+    fetchPolicy: 'cache-and-network', // Changed from 'network-only' to prevent flickering
+    notifyOnNetworkStatusChange: true, // Track refetch status
+    skip: false,
   });
 
-  useEffect(() => {
-    if (data?.riderPayments?.orders) {
-      const orders = data.riderPayments.orders;
-      
-      const extractedPayments: Payment[] = [];
-      let totalEarnings = 0;
-      let todayEarnings = 0;
-      let totalPendingAmount = 0;
-      let totalProcessingAmount = 0;
-      let totalShippedAmount = 0;
-      let totalCancelledAmount = 0;
-      let totalRefundedAmount = 0;
-      let deliveredOrdersCount = 0;
-      
-      const uniqueOrders = new Set();
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const counts: Record<FilterStatus, number> = {
-        ALL: 0,
-        PENDING: 0,
-        PROCESSING: 0,
-        SHIPPED: 0,
-        DELIVERED: 0,
-        CANCELLED: 0,
-        REFUNDED: 0,
-      };
+  // Process orders data - FIXED to handle undefined data gracefully
+  const processOrdersData = useCallback((ordersData: any[]) => {
+    const extractedPayments: Payment[] = [];
+    let totalEarnings = 0;
+    let todayEarnings = 0;
+    let totalPendingAmount = 0;
+    let totalProcessingAmount = 0;
+    let totalShippedAmount = 0;
+    let totalCancelledAmount = 0;
+    let totalRefundedAmount = 0;
+    let deliveredOrdersCount = 0;
+    
+    const uniqueOrders = new Set();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const counts: Record<FilterStatus, number> = {
+      ALL: 0,
+      PENDING: 0,
+      PROCESSING: 0,
+      SHIPPED: 0,
+      DELIVERED: 0,
+      CANCELLED: 0,
+      REFUNDED: 0,
+    };
 
-      orders.forEach((order: any) => {
-        uniqueOrders.add(order.id);
-        
-        let deliveredItemsTotal = 0;
-        let pendingItemsTotal = 0;
-        let processingItemsTotal = 0;
-        let shippedItemsTotal = 0;
-        let cancelledItemsTotal = 0;
-        let refundedItemsTotal = 0;
-        let hasDeliveredItems = false;
-        
-        const orderItems: OrderItem[] = [];
-        
-        if (order.items && order.items.length > 0) {
-          order.items.forEach((item: any) => {
-            let productName: any;
-            if (item.product && item.product[0]) {
-              productName = item.product[0].name;
-            } else if (item.name) {
-              productName = item.name;
-            } else if (item.productName) {
-              productName = item.productName;
-            } else {
-              productName = 'Unknown Product';
-            }
-            
-            const itemEarnings = item.individualShipping || 0;
-            
-            orderItems.push({
-              id: item.id,
-              name: productName,
-              quantity: item.quantity,
-              status: item.status,
-              earnings: itemEarnings,
-              individualShipping: item.individualShipping,
-              trackingNumber: item.trackingNumber || '',
-              price: item.price || 0,
-            });
-            
-            const statusKey = item.status as FilterStatus;
-            if (counts.hasOwnProperty(statusKey)) {
-              counts[statusKey]++;
-            }
-            counts.ALL++;
-            
-            if (item.status === ItemStatus.DELIVERED) {
-              deliveredItemsTotal += itemEarnings;
-              hasDeliveredItems = true;
-            } else if (item.status === ItemStatus.SHIPPED) {
-              shippedItemsTotal += itemEarnings;
-            } else if (item.status === ItemStatus.PENDING) {
-              pendingItemsTotal += itemEarnings;
-            } else if (item.status === ItemStatus.PROCESSING) {
-              processingItemsTotal += itemEarnings;
-            } else if (item.status === ItemStatus.CANCELLED) {
-              cancelledItemsTotal += itemEarnings;
-            } else if (item.status === ItemStatus.REFUNDED) {
-              refundedItemsTotal += itemEarnings;
-            }
+    ordersData.forEach((order: any) => {
+      uniqueOrders.add(order.id);
+      
+      let deliveredItemsTotal = 0;
+      let pendingItemsTotal = 0;
+      let processingItemsTotal = 0;
+      let shippedItemsTotal = 0;
+      let cancelledItemsTotal = 0;
+      let refundedItemsTotal = 0;
+      let hasDeliveredItems = false;
+      
+      const orderItems: OrderItem[] = [];
+      
+      if (order.items && order.items.length > 0) {
+        order.items.forEach((item: any) => {
+          let productName: any;
+          if (item.product && item.product[0]) {
+            productName = item.product[0].name;
+          } else if (item.name) {
+            productName = item.name;
+          } else if (item.productName) {
+            productName = item.productName;
+          } else {
+            productName = 'Unknown Product';
+          }
+          
+          const itemEarnings = item.individualShipping || 0;
+          
+          orderItems.push({
+            id: item.id,
+            name: productName,
+            quantity: item.quantity,
+            status: item.status,
+            earnings: itemEarnings,
+            individualShipping: item.individualShipping,
+            trackingNumber: item.trackingNumber || '',
+            price: item.price || 0,
           });
-        }
-        
-        if (hasDeliveredItems) {
-          deliveredOrdersCount++;
-        }
-        
-        // Group items by tracking number for this order
-        const trackingGroups = groupItemsByTrackingNumber(orderItems);
-        
-        if (order.payments && order.payments.length > 0) {
-          order.payments.forEach((payment: any) => {
-            extractedPayments.push({
-              id: payment.id,
-              amount: payment.amount,
-              method: payment.method,
-              orderId: order.id,
-              orderNumber: order.orderNumber,
-              createdAt: order.createdAt,
-              customerName: order.user ? 
-                `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
-              customerEmail: order.user?.email,
-              trackingGroups: trackingGroups,
-              allItems: orderItems,
-              deliveredItemsTotal,
-              pendingItemsTotal,
-              processingItemsTotal,
-              shippedItemsTotal,
-              cancelledItemsTotal,
-              refundedItemsTotal,
-            });
-          });
-        } else {
+          
+          const statusKey = item.status as FilterStatus;
+          if (counts.hasOwnProperty(statusKey)) {
+            counts[statusKey]++;
+          }
+          counts.ALL++;
+          
+          if (item.status === ItemStatus.DELIVERED) {
+            deliveredItemsTotal += itemEarnings;
+            hasDeliveredItems = true;
+          } else if (item.status === ItemStatus.SHIPPED) {
+            shippedItemsTotal += itemEarnings;
+          } else if (item.status === ItemStatus.PENDING) {
+            pendingItemsTotal += itemEarnings;
+          } else if (item.status === ItemStatus.PROCESSING) {
+            processingItemsTotal += itemEarnings;
+          } else if (item.status === ItemStatus.CANCELLED) {
+            cancelledItemsTotal += itemEarnings;
+          } else if (item.status === ItemStatus.REFUNDED) {
+            refundedItemsTotal += itemEarnings;
+          }
+        });
+      }
+      
+      if (hasDeliveredItems) {
+        deliveredOrdersCount++;
+      }
+      
+      // Group items by tracking number for this order
+      const trackingGroups = groupItemsByTrackingNumber(orderItems);
+      
+      if (order.payments && order.payments.length > 0) {
+        order.payments.forEach((payment: any) => {
           extractedPayments.push({
-            id: order.id,
-            amount: order.total || 0,
-            method: 'UNKNOWN',
+            id: payment.id,
+            amount: payment.amount,
+            method: payment.method,
             orderId: order.id,
             orderNumber: order.orderNumber,
             createdAt: order.createdAt,
@@ -743,29 +726,50 @@ export default function RiderPaymentHistory({
             cancelledItemsTotal,
             refundedItemsTotal,
           });
-        }
-        
-        totalEarnings += deliveredItemsTotal;
-        totalPendingAmount += pendingItemsTotal;
-        totalProcessingAmount += processingItemsTotal;
-        totalShippedAmount += shippedItemsTotal;
-        totalCancelledAmount += cancelledItemsTotal;
-        totalRefundedAmount += refundedItemsTotal;
-        
-        const orderDate = new Date(order.createdAt);
-        if (orderDate >= today) {
-          todayEarnings += deliveredItemsTotal;
-        }
-      });
-
-      extractedPayments.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-
-      setPayments(extractedPayments);
-      setFilterCounts(counts);
+        });
+      } else {
+        extractedPayments.push({
+          id: order.id,
+          amount: order.total || 0,
+          method: 'UNKNOWN',
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          createdAt: order.createdAt,
+          customerName: order.user ? 
+            `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim() : undefined,
+          customerEmail: order.user?.email,
+          trackingGroups: trackingGroups,
+          allItems: orderItems,
+          deliveredItemsTotal,
+          pendingItemsTotal,
+          processingItemsTotal,
+          shippedItemsTotal,
+          cancelledItemsTotal,
+          refundedItemsTotal,
+        });
+      }
       
-      setSummary({
+      totalEarnings += deliveredItemsTotal;
+      totalPendingAmount += pendingItemsTotal;
+      totalProcessingAmount += processingItemsTotal;
+      totalShippedAmount += shippedItemsTotal;
+      totalCancelledAmount += cancelledItemsTotal;
+      totalRefundedAmount += refundedItemsTotal;
+      
+      const orderDate = new Date(order.createdAt);
+      if (orderDate >= today) {
+        todayEarnings += deliveredItemsTotal;
+      }
+    });
+
+    extractedPayments.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    return {
+      payments: extractedPayments,
+      counts,
+      summary: {
         totalEarnings,
         todayEarnings,
         pendingPayments: totalPendingAmount,
@@ -776,7 +780,33 @@ export default function RiderPaymentHistory({
         refundedPayments: totalRefundedAmount,
         deliveredOrders: deliveredOrdersCount,
         totalOrders: uniqueOrders.size,
-      });
+      }
+    };
+  }, []);
+
+  // Effect to handle data updates - FIXED to prevent data clearing
+  useEffect(() => {
+    // Don't process if there's no data and we already have payments (prevents clearing)
+    if (!data && payments.length > 0 && !loading) {
+      console.log('No data but have existing payments, keeping existing data');
+      return;
+    }
+
+    // Don't process if we're in a refetch state and have existing data
+    if (networkStatus === 4 && payments.length > 0) {
+      console.log('Refetching but keeping existing data');
+      return;
+    }
+
+    // Only process if we have valid data
+    if (data?.riderPayments?.orders && Array.isArray(data.riderPayments.orders)) {
+      console.log('Processing new data, orders count:', data.riderPayments.orders.length);
+      
+      const processed = processOrdersData(data.riderPayments.orders);
+      
+      setPayments(processed.payments);
+      setFilterCounts(processed.counts);
+      setSummary(processed.summary);
 
       if (data.riderPayments.pagination) {
         setPagination({
@@ -786,9 +816,21 @@ export default function RiderPaymentHistory({
           totalPages: data.riderPayments.pagination.totalPages || 0,
         });
       }
+      
+      previousDataRef.current = data;
+    } else if (data && !data?.riderPayments?.orders) {
+      console.warn('Data received but no orders found:', data);
+      // Only clear if no data and it's the initial load
+      if (isInitialMount.current) {
+        setPayments([]);
+        setFilteredPayments([]);
+      }
     }
-  }, [data]);
+    
+    isInitialMount.current = false;
+  }, [data, loading, networkStatus, processOrdersData, payments.length]);
 
+  // Effect to filter payments based on active filter
   useEffect(() => {
     if (activeFilter === 'ALL') {
       setFilteredPayments(payments);
@@ -800,12 +842,29 @@ export default function RiderPaymentHistory({
     }
   }, [activeFilter, payments]);
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages) {
-      setPagination({ ...pagination, page: newPage });
-      refetch();
+  // Handle page change - FIXED to prevent race conditions
+  const handlePageChange = useCallback((newPage: number) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages && !loading) {
+      setPagination(prev => ({ ...prev, page: newPage }));
     }
-  };
+  }, [pagination.totalPages, loading]);
+
+  // Auto-refetch when page changes - FIXED to not clear data
+  useEffect(() => {
+    // Skip the initial mount
+    if (isInitialMount.current) return;
+    
+    // Refetch when page changes
+    refetch({
+      filter: buildOrderFilter(),
+      pagination: {
+        page: pagination.page,
+        pageSize: pagination.pageSize,
+      },
+    }).catch(err => {
+      console.error('Error refetching data:', err);
+    });
+  }, [pagination.page, refetch, buildOrderFilter]);
 
   const getPaymentMethodIcon = (method: string) => {
     const methodLower = method?.toLowerCase() || '';
@@ -860,7 +919,8 @@ export default function RiderPaymentHistory({
     };
   }, []);
   
-  if (loading) {
+  // Show loading only on initial load, not on refetch
+  if (loading && isInitialMount.current) {
     return (
       <div className={`bg-white rounded-lg shadow ${className}`}>
         <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
@@ -920,13 +980,19 @@ export default function RiderPaymentHistory({
     );
   }
 
-  if (error) {
+  if (error && payments.length === 0) {
     console.error('GraphQL Error:', error);
     return (
       <div className="bg-white rounded-lg shadow p-6">
         <div className="text-center py-12 text-red-600 px-4">
           <p className="font-semibold mb-2">Error loading payments:</p>
           <p className="text-sm">{error.message}</p>
+          <button
+            onClick={() => refetch()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );
@@ -970,7 +1036,7 @@ export default function RiderPaymentHistory({
         </div>
       ) : (
         <>
-          {/* Desktop Table View - COMPLETELY REWRITTEN with tracking groups */}
+          {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -1001,7 +1067,7 @@ export default function RiderPaymentHistory({
                             <>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" rowSpan={payment.trackingGroups.length}>
                                 {formatDate(payment.createdAt)}
-                              </td>
+                               </td>
                               <td className="px-6 py-4 text-sm text-gray-500" rowSpan={payment.trackingGroups.length}>
                                 <div className="flex items-center gap-1">
                                   <User className="w-3 h-3" />
@@ -1013,12 +1079,12 @@ export default function RiderPaymentHistory({
                                     {payment.customerEmail}
                                   </div>
                                 )}
-                              </td>
+                               </td>
                             </>
                           )}
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {displayTrackingNumber}
-                          </td>
+                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             <div className="space-y-2">
                               {group.items.map((item, idx) => (
@@ -1032,17 +1098,17 @@ export default function RiderPaymentHistory({
                                 </div>
                               ))}
                             </div>
-                          </td>
+                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
                             {formatCurrency(group.totalEarnings)}
-                          </td>
+                           </td>
                           {groupIndex === 0 && (
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" rowSpan={payment.trackingGroups.length}>
                               <span className="flex items-center gap-1">
                                 {getPaymentMethodIcon(payment.method)}
                                 {payment.method}
                               </span>
-                            </td>
+                             </td>
                           )}
                         </tr>
                       );
@@ -1052,10 +1118,10 @@ export default function RiderPaymentHistory({
             </table>
           </div>
 
-          {/* Mobile Card View - Grouped by distinct tracking number across all orders */}
+          {/* Mobile Card View */}
           <div className="md:hidden px-4 py-2">
             {(() => {
-              // Step 1: Collect all items with their tracking numbers from filtered payments
+              // Collect all items with their tracking numbers from filtered payments
               const allItemsWithMeta: { 
                 item: OrderItem; 
                 trackingNumber: string; 
@@ -1064,7 +1130,6 @@ export default function RiderPaymentHistory({
               
               filteredPayments.forEach(payment => {
                 payment.trackingGroups.forEach(group => {
-                  // Filter items based on activeFilter
                   const itemsToShow = activeFilter === 'ALL' 
                     ? group.items 
                     : group.items.filter(item => item.status === activeFilter);
@@ -1079,7 +1144,7 @@ export default function RiderPaymentHistory({
                 });
               });
               
-              // Step 2: Group by tracking number
+              // Group by tracking number
               const groupedByTrackingNumber = new Map<string, {
                 trackingNumber: string;
                 items: { item: OrderItem; payment: Payment }[];
@@ -1095,7 +1160,6 @@ export default function RiderPaymentHistory({
                   });
                 }
                 const group = groupedByTrackingNumber.get(trackingNumber)!;
-                // Check if this exact item (by id) is already in the group to prevent duplicates
                 const isDuplicate = group.items.some(existing => existing.item.id === item.id);
                 if (!isDuplicate) {
                   group.items.push({ item, payment });
@@ -1103,13 +1167,12 @@ export default function RiderPaymentHistory({
                 }
               });
               
-              // Step 3: Render each tracking number group
+              // Render each tracking number group
               return Array.from(groupedByTrackingNumber.values()).map((group) => {
                 const displayTrackingNumber = group.trackingNumber === 'NO_TRACKING' 
                   ? 'No tracking number' 
                   : group.trackingNumber;
                 
-                // Group items by payment/order for display within the tracking group
                 const itemsByPayment = new Map<string, { payment: Payment; items: OrderItem[] }>();
                 group.items.forEach(({ item, payment }) => {
                   if (!itemsByPayment.has(payment.id)) {
@@ -1192,7 +1255,7 @@ export default function RiderPaymentHistory({
             <div className="flex justify-center space-x-2">
               <button
                 onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
+                disabled={pagination.page === 1 || loading}
                 className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -1203,7 +1266,7 @@ export default function RiderPaymentHistory({
               </span>
               <button
                 onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
+                disabled={pagination.page === pagination.totalPages || loading}
                 className="px-2 sm:px-3 py-1 border border-gray-300 rounded-md text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors inline-flex items-center gap-1"
               >
                 Next
@@ -1215,4 +1278,4 @@ export default function RiderPaymentHistory({
       )}
     </div>
   );
-}
+      }
