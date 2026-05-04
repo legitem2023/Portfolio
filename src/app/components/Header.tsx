@@ -84,7 +84,7 @@ const Header: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentIndex = parseInt(searchParams.get('index') || '0', 10);
+  const currentIndex = searchParams.get('index');
   const previousIndexRef = useRef(currentIndex);
 
 
@@ -254,7 +254,6 @@ useEffect(() => {
   const handlePopState = () => {
     
     const indexToRestore = previousIndexRef.current;
-    //console.log(currIndex);
     if (indexToRestore !== null) {
       dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
     }
