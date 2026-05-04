@@ -166,19 +166,19 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const navigate = () => {
     //dispatch(setActivePostId(id)); 
     dispatch(setActiveIndex(8));
-    router.push(`?post=${id}`);
+    router.push(`?index=${8}&post=${id}`);
   };
 
   const handleRedirectToUser = () => {
     const userId = user?.id;
     dispatch(setActiveIndex(11));
-    router.push(`?id=${userId}`);
+    router.push(`?index=${8}&id=${userId}`);
     setDropdownOpen(false);
   };
 
   const handleSendMessage = () => {
     const userId = user?.id;
-    router.push(`/Messaging?id=${userId}`);
+    router.push(`/Messaging?index=${8}&id=${userId}`);
     setDropdownOpen(false);
   };
 
