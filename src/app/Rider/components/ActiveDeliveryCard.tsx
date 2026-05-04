@@ -602,6 +602,9 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     );
   }, [delivery]);
 
+const payments = delivery.orderData?.payments || [];
+console.log(payments);
+  
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
