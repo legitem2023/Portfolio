@@ -487,11 +487,6 @@ const ProofOfDeliverySection = ({
           <h4 className="font-semibold text-sm lg:text-base text-purple-700">
             Proof of Delivery ({filteredProofs.length})
           </h4>
-          {trackingNumber && (
-            <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
-              Track #{trackingNumber}
-            </span>
-          )}
         </div>
         {isOpen ? (
           <ChevronUp size={18} className="text-purple-600" />
