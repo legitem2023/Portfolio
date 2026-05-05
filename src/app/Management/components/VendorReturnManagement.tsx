@@ -1,5 +1,5 @@
 // components/VendorReturnManagement.tsx
-"use client";
+
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
@@ -28,7 +28,7 @@ import {
   Send
 } from "lucide-react";
 
-// GraphQL Queries and Mutations
+// GraphQL Queries and Mutations - FIXED product field (not an array)
 const GET_SUPPLIER_RETURNS = gql`
   query GetSupplierReturns($supplierId: ID!, $status: ReturnStatus, $limit: Int, $offset: Int) {
     getSupplierReturns(supplierId: $supplierId, status: $status, limit: $limit, offset: $offset) {
@@ -106,18 +106,6 @@ const GET_RETURN_STATS = gql`
   }
 `;
 
-const GET_RETURN_REASONS = gql`
-  query GetReturnReasons {
-    getReturnReasons {
-      id
-      reason
-      category
-      isActive
-      displayOrder
-    }
-  }
-`;
-
 const UPDATE_RETURN_STATUS = gql`
   mutation UpdateReturnStatus($input: UpdateReturnStatusInput!) {
     updateReturnStatus(input: $input) {
@@ -125,16 +113,6 @@ const UPDATE_RETURN_STATUS = gql`
       status
       vendorNotes
       updatedAt
-    }
-  }
-`;
-
-const ADD_RETURN_IMAGES = gql`
-  mutation AddReturnImages($input: AddReturnImagesInput!) {
-    addReturnImages(input: $input) {
-      id
-      imageUrl
-      imageType
     }
   }
 `;
@@ -164,22 +142,26 @@ interface ReturnTracking {
   deliveredAt?: string;
 }
 
+interface ProductInfo {
+  name: string;
+  sku: string;
+  images: string[];
+}
+
+interface OrderItemInfo {
+  id: string;
+  quantity: number;
+  price: number;
+  product: ProductInfo;  // Single object, not array
+}
+
 interface ReturnItem {
   id: string;
   quantity: number;
   reason: string;
   condition: string;
   refundAmount?: number;
-  orderItem: {
-    id: string;
-    quantity: number;
-    price: number;
-    product: Array<{
-      name: string;
-      sku: string;
-      images: string[];
-    }>;
-  };
+  orderItem: OrderItemInfo;
 }
 
 interface ReturnRequest {
@@ -292,10 +274,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     variables: { userId: supplierId }
   });
 
-  const { data: reasonsData } = useQuery(GET_RETURN_REASONS);
-
   const [updateReturnStatus] = useMutation(UPDATE_RETURN_STATUS);
-  const [addReturnImages] = useMutation(ADD_RETURN_IMAGES);
   const [processRefund] = useMutation(PROCESS_REFUND);
 
   const returns: ReturnRequest[] = data?.getSupplierReturns || [];
@@ -386,6 +365,17 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       console.error('Error updating status:', err);
       alert(`Failed to update: ${err.message}`);
     }
+  };
+
+  const getProductInfo = (product: any): ProductInfo => {
+    if (!product) {
+      return { name: 'Product Unavailable', sku: 'N/A', images: [] };
+    }
+    return {
+      name: product.name || 'Product Unavailable',
+      sku: product.sku || 'N/A',
+      images: product.images || []
+    };
   };
 
   const getTotalRefund = (returnReq: ReturnRequest) => {
@@ -486,6 +476,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
               <ReturnRequestCard
                 key={returnReq.id}
                 returnReq={returnReq}
+                getProductInfo={getProductInfo}
                 onViewDetails={() => setSelectedReturn(returnReq)}
                 onApprove={() => {
                   setSelectedReturn(returnReq);
@@ -564,6 +555,7 @@ function StatCard({ title, value, color, isCurrency = false }: { title: string; 
 // Return Request Card Component
 function ReturnRequestCard({ 
   returnReq, 
+  getProductInfo,
   onViewDetails, 
   onApprove, 
   onReject, 
@@ -572,6 +564,7 @@ function ReturnRequestCard({
   onProcessRefund
 }: { 
   returnReq: ReturnRequest;
+  getProductInfo: (product: any) => ProductInfo;
   onViewDetails: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -691,39 +684,42 @@ function ReturnRequestCard({
 
         {expanded && (
           <div className="mt-3 space-y-3">
-            {returnReq.items.map((item) => (
-              <div key={item.id} className="bg-gray-50 rounded-lg p-3">
-                <div className="flex gap-3">
-                  {item.orderItem.product[0]?.images?.[0] && (
-                    <img 
-                      src={item.orderItem.product[0].images[0]}
-                      alt={item.orderItem.product[0].name}
-                      className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-800">
-                      {item.orderItem.product[0]?.name}
-                    </h4>
-                    <p className="text-xs text-gray-500">SKU: {item.orderItem.product[0]?.sku}</p>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <span className="text-xs text-gray-500">Quantity:</span>
-                        <p className="text-sm font-medium">{item.quantity}</p>
+            {returnReq.items.map((item) => {
+              const productInfo = getProductInfo(item.orderItem.product);
+              return (
+                <div key={item.id} className="bg-gray-50 rounded-lg p-3">
+                  <div className="flex gap-3">
+                    {productInfo.images?.[0] && (
+                      <img 
+                        src={productInfo.images[0]}
+                        alt={productInfo.name}
+                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-800">
+                        {productInfo.name}
+                      </h4>
+                      <p className="text-xs text-gray-500">SKU: {productInfo.sku}</p>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
+                        <div>
+                          <span className="text-xs text-gray-500">Quantity:</span>
+                          <p className="text-sm font-medium">{item.quantity}</p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-gray-500">Condition:</span>
+                          <p className="text-sm">{item.condition}</p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-xs text-gray-500">Condition:</span>
-                        <p className="text-sm">{item.condition}</p>
+                      <div className="mt-2">
+                        <span className="text-xs text-gray-500">Return Reason:</span>
+                        <p className="text-sm">{item.reason}</p>
                       </div>
-                    </div>
-                    <div className="mt-2">
-                      <span className="text-xs text-gray-500">Return Reason:</span>
-                      <p className="text-sm">{item.reason}</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             {/* Return Images */}
             {returnReq.images.length > 0 && (
@@ -1012,4 +1008,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-}
+  }
