@@ -919,7 +919,19 @@ getSupplierReturns: async (_: any, { supplierId, status, limit = 50, offset = 0 
       skip: offset
     });
     
-    return returns;
+    // ADD THIS TRANSFORMATION - wraps product in array
+    const transformedReturns = returns.map(returnReq => ({
+      ...returnReq,
+      items: returnReq.items.map(item => ({
+        ...item,
+        orderItem: {
+          ...item.orderItem,
+          product: item.orderItem.product ? [item.orderItem.product] : []
+        }
+      }))
+    }));
+    
+    return transformedReturns;  // Return transformed instead of returns
   } catch (error: any) {
     console.error('Error in getSupplierReturns resolver:', error);
     throw new Error(`Failed to fetch supplier returns: ${error.message}`);
