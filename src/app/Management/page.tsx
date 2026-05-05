@@ -14,6 +14,7 @@ import CategoriesTab from './components/CategoriesTab';
 import ApiBillsTab from './components/ApiBillsTab';
 import LoadingShimmer from './components/LoadingShimmer';
 import SalesList from './components/SalesList';
+import VendorReturnManagement from "./components/VendorReturnManagement";
 import VehicleTypeManager from './components/VehicleTypeManager';
 import UserProfile from './components/UserProfile';
 import { Product, category, NewProduct, NewCategory } from '../../../types';
@@ -193,6 +194,8 @@ export default function ManagementDashboard() {
         return <PMTab UserId={user?.userId?user?.userId:''}/>
       case 13:
         return <SizeManager/>
+      case 14: 
+        return <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
       default:
         return <></>;
     }
