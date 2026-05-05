@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useMutation } from '@apollo/client';
 import { useSession } from 'next-auth/react';
 import { UPDATE_ADDRESS } from '../graphql/mutation';
+import { showToast } from '../../../../utils/toastify';
 import { 
   MapPin, X, AlertTriangle, CheckCircle, Loader2, 
   Home, Briefcase, CreditCard, Package, Navigation,
@@ -55,7 +56,6 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
   
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [locationStep, setLocationStep] = useState<'idle' | 'getting-location' | 'reverse-geocoding' | 'complete'>('idle');
-  console.log(address);
   
   const [formData, setFormData] = useState({
     type: address.type || 'home',
@@ -313,6 +313,49 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
     }
   }, [getCurrentLocation, reverseGeocode]);
 
+  // Helper function to handle update address response
+  const handleUpdateResponse = (result: any) => {
+    if (!result) {
+      return { success: false, message: 'No response from server' };
+    }
+
+    const { statusText, token } = result;
+    
+    // Check if statusText is exactly "success"
+    if (statusText === "success") {
+      if (token) {
+        return { 
+          success: true, 
+          message: 'Address updated and session synced successfully',
+          hasToken: true,
+          token: token
+        };
+      }
+      return { 
+        success: true, 
+        message: 'Address updated successfully',
+        hasToken: false 
+      };
+    }
+    
+    // If statusText is not "success", it's an error message
+    // This could be things like "Cannot update address while there's an active transaction" etc.
+    if (statusText && statusText !== "success") {
+      return { 
+        success: false, 
+        message: statusText, // Show the actual error message from the server
+        hasToken: false 
+      };
+    }
+    
+    // Fallback for any other case
+    return { 
+      success: false, 
+      message: 'Failed to update address',
+      hasToken: false 
+    };
+  };
+
   // Validate form
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -386,23 +429,29 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
 
       const result = response.data?.updateAddress;
       
-      if (result?.statusText === "success") {
-        console.log("✅ Address updated successfully");
+      // Process the response based on statusText
+      const { success, message, hasToken, token } = handleUpdateResponse(result);
+      
+      if (success) {
+        console.log("✅ Address updated successfully:", message);
         
         // If a new token was returned, update the session
-        if (result?.token) {
+        if (hasToken && token) {
           console.log("🔄 New token received, updating session...");
           await updateSession({
-            serverToken: result.token
+            serverToken: token
           });
           
           // Dispatch event for useAuth hook to refresh
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('auth-token-updated', {
-              detail: { token: result.token }
+              detail: { token: token }
             }));
           }
         }
+        
+        // Show success toast
+        showToast(message, 'success');
         
         // Refresh addresses
         if (onAddressUpdate) {
@@ -414,13 +463,21 @@ const EditAddressForm: React.FC<EditAddressFormProps> = ({
           onSuccess(result);
         }
         
-        // Close form
-        onCancel();
+        // Close form after short delay to show success message
+        setTimeout(() => {
+          onCancel();
+        }, 1000);
+      } else {
+        // Show error toast with the actual error message from the server
+        showToast(message, 'error');
+        setErrors({ submit: message });
       }
       
     } catch (err: any) {
       console.error("❌ Failed to update address:", err);
-      setErrors({ submit: err.message || 'Failed to update address' });
+      const errorMessage = err.message || 'Failed to update address';
+      showToast(errorMessage, 'error');
+      setErrors({ submit: errorMessage });
     }
   };
 
