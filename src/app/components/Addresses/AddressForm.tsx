@@ -355,7 +355,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       // Handle different statusText responses
       if (statusText === "Address added and set as default successfully") {
         // Success - default address created
-        showToast.success("Address added and set as your default address!");
+        showToast("Address added and set as your default address!","success");
         
         // Update session with new token if provided
         if (result.data?.createAddress?.token) {
@@ -372,25 +372,19 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         
       } else if (statusText === "Address added but not set as default because you have active orders") {
         // Warning - address added but not default due to active orders
-        showToast.warning("Address saved! However, it was not set as default because you have active orders.");
+        showToast("Address saved! However, it was not set as default because you have active orders.","warning");
         onSuccess?.();
         onAddressUpdate?.();
         
       } else if (statusText === "Address added successfully") {
         // Success - non-default address
-        showToast.success("Address added to your address book");
-        onSuccess?.();
-        onAddressUpdate?.();
-        
-      } else if (statusText?.includes("active orders")) {
-        // Fallback for any other active order related messages
-        showToast.warning(statusText);
+        showToast("Address added to your address book","success");
         onSuccess?.();
         onAddressUpdate?.();
         
       } else {
         // Default success case
-        showToast.success("Address saved successfully!");
+        showToast("Address saved successfully!","success");
         onSuccess?.();
         onAddressUpdate?.();
       }
