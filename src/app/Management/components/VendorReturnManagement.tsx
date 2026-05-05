@@ -389,8 +389,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           input: {
             returnId: selectedReturn.id,
             refundAmount: amount,
-            refundMethod: refundMethod,
-            resolvedBy: supplierId
+            refundMethod: refundMethod
           }
         }
       });
