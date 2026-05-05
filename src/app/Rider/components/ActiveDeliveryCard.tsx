@@ -856,16 +856,14 @@ console.log(payments);
                 <span className="font-semibold text-xs">Deliver To</span>
               </div>
               <p className="text-gray-700 text-xs break-words">{delivery.dropoff}</p>
-              {delivery.dropoffAddress && (
+
+
+              
                 <div className="mt-2 text-xs text-gray-500 space-y-1">
                   <div className="flex items-center gap-1">
                     <User size={10} />
                     <span className="truncate">{delivery.customer}</span>
                   </div>
-                  {/* <div className="flex items-center gap-1">
-                    <Phone size={10} />
-                    <span>{delivery.customerContact}</span>
-                  </div>*/}
                   <div className="flex items-center gap-1">
                      <Phone size={10} />
                      <a href={`tel:${delivery.customerContact}`}>
@@ -881,7 +879,29 @@ console.log(payments);
                     </span>
                   </div>
                 </div>
-              )}
+              
+              {/*delivery.dropoffAddress && (
+                <div className="mt-2 text-xs text-gray-500 space-y-1">
+                  <div className="flex items-center gap-1">
+                    <User size={10} />
+                    <span className="truncate">{delivery.customer}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                     <Phone size={10} />
+                     <a href={`tel:${delivery.customerContact}`}>
+                       <span>{delivery.customerContact}</span>
+                     </a>
+                     <span> / </span>
+                     <a href={`sms:${delivery.customerContact}`}>
+                       <span>SMS</span>
+                     </a>
+                    <span> / </span>
+                    <span onClick={()=> handlechat(delivery.customerId)}>
+                      <MessageCircle size={10}/>
+                    </span>
+                  </div>
+                </div>
+              )*/}
             </div>
           </div>
 
