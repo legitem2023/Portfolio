@@ -5671,10 +5671,16 @@ updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) =>
           message: message
         }
       });
-        
-    return {
-      statusText: "Successfully Pickup!",
-    };
+    if(status ==='DELIVERED') {
+       return {
+        statusText: "Parcel Successfully Delivered!",
+       };
+     } else {
+       return {
+        statusText: "Parcel successfully Pickup!",
+       };
+     }
+    
   } catch (error:any) {
     console.error('Error in Pickup:', error);
     throw new Error(`Failed to Pickup item: ${error.message}`);
