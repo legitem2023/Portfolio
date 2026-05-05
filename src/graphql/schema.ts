@@ -1049,7 +1049,8 @@ type ReviewResult {
    getProductReviewStats(productId: String): ReviewStats
    getReviewImages(reviewId: String): [ReviewImage]
 
-  
+    returnorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
+    refundedorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     neworder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     activeorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     orderlist(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
