@@ -7243,6 +7243,7 @@ if(isDefault) {
       }
       
       return {
+        userId,
         productId,
         supplierId: item.supplierId,
         quantity: item.quantity,
