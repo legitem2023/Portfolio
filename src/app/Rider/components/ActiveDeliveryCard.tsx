@@ -308,7 +308,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
 
   const handlechat = (id:any) => {
     dispatch(setSelectedUser(id));
-    dispatch(setActiveTab(3));
+    dispatch(setActiveIndex(3));
   }
   const clearSignature = (e: React.MouseEvent) => {
     e.preventDefault();
