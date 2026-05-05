@@ -1,5 +1,5 @@
 // components/VendorReturnManagement.tsx
-
+"use client";
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
