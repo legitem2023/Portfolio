@@ -65,25 +65,53 @@ export const typeDefs = gql`
     PROMOTIONAL
     SUPPORT
     SOCIAL
+    ORDER_CREATED
+    ORDER_UPDATED
+    ORDER_DELIVERED
+    PAYMENT_RECEIVED
+    PAYMENT_FAILED
+    ACCOUNT_VERIFIED
+    PASSWORD_CHANGED
+    NEW_MESSAGE
+    SYSTEM_ALERT
+    # Return Management Types
+    RETURN_REQUEST_CREATED
+    RETURN_STATUS_UPDATED
+    RETURN_APPROVED
+    RETURN_REJECTED
+    RETURN_SHIPPED
+    RETURN_RECEIVED
+    REFUND_PROCESSED
+    RETURN_COMPLETED
   }
 
-enum NotificationType {
-  ORDER_CREATED
-  ORDER_UPDATED
-  ORDER_DELIVERED
-  PAYMENT_RECEIVED
-  PAYMENT_FAILED
-  PAYMENT_CONFIRMATION
-  SHIPMENT
-  ACCOUNT_VERIFIED
-  PASSWORD_CHANGED
-  NEW_MESSAGE
-  SUPPORT
-  PROMOTIONAL
-  SOCIAL
-  SYSTEM_ALERT
-}
+  # ================= Return Management Enums =================
+  enum ReturnStatus {
+    PENDING
+    APPROVED
+    REJECTED
+    RETURN_SHIPPED
+    RECEIVED
+    INSPECTING
+    REFUND_INITIATED
+    COMPLETED
+    CANCELLED
+  }
 
+  enum ResolutionType {
+    FULL_REFUND
+    PARTIAL_REFUND
+    REPLACEMENT
+    STORE_CREDIT
+  }
+
+  enum RefundMethod {
+    ORIGINAL_PAYMENT
+    STORE_CREDIT
+    BANK_TRANSFER
+    GCASH
+    PAYMAYA
+  }
 
   # ================= API Bill Enums =================
   enum BillStatus {
@@ -163,7 +191,7 @@ enum NotificationType {
     MONTH
   }
 
-enum SuggestionCategory {
+  enum SuggestionCategory {
     GENERAL
     FEATURE
     BUG
@@ -181,58 +209,179 @@ enum SuggestionCategory {
     user: User
   }
 
-  # ================= Models =================
-type User {
-  id: ID
-  email: String
-  password: String
-  firstName: String
-  lastName: String
-  avatar: String
-  phone: String
-  plateNo: String
-  license: String
-  emailVerified: Boolean
-  createdAt: DateTime
-  updatedAt: DateTime
-  role: Role
-  addresses: [Address]
-  orders: [Order]
-  reviews: [Review]
-  wishlist: [WishlistItem]
-  cart: [CartItem]
-  products: [Product]
-  payments: [Payment]
-  messagesSent: [Message]
-  messagesReceived: [Message]
-  supportTickets: [SupportTicket]
-  notifications: [Notification]
-  ticketResponses: [TicketResponse]
-  rating: Int
-  # Social media fields
-  posts: [Post]
-  followers: [User]
-  following: [User]
-  followerCount: Int
-  followingCount: Int
-  isFollowing: Boolean
+  # ================= Return Management Types =================
+  type ReturnRequest {
+    id: ID
+    returnNumber: String
+    orderId: ID
+    userId: ID
+    supplierId: ID
+    status: ReturnStatus
+    reason: String
+    description: String
+    vendorNotes: String
+    refundAmount: Float
+    createdAt: DateTime
+    updatedAt: DateTime
+    
+    # Relations
+    order: Order
+    user: User
+    supplier: User
+    items: [ReturnItem]
+    images: [ReturnImage]
+    tracking: ReturnTracking
+    resolution: ReturnResolution
+    
+    # Computed fields
+    totalRefundAmount: Float
+    daysSinceRequest: Int
+    canBeCancelled: Boolean
+  }
 
-  suggestions: [Suggestion]
-  # NEW VENDOR FIELDS
-  businessName: String
-  businessType: String
-  productCategory: String
-  businessDescription: String
-  website: String
-  businessAddress: String
-  addressInstruction: String
-  currentLatitude: Float
-  currentLongitude: Float
-  taxId: String
-  isVendor: Boolean
-  vendorApplicationStatus: String
-  vendorApprovedAt: DateTime
-}
+  type ReturnItem {
+    id: ID
+    returnId: ID
+    orderItemId: ID
+    quantity: Int
+    reason: String
+    condition: String
+    refundAmount: Float
+    createdAt: DateTime
+    
+    # Relations
+    orderItem: OrderItem
+    
+    # Computed fields
+    itemTotal: Float
+  }
+
+  type ReturnImage {
+    id: ID
+    returnId: ID
+    imageUrl: String
+    imageType: String
+    uploadedBy: ID
+    createdAt: DateTime
+    
+    # Relations
+    uploader: User
+  }
+
+  type ReturnTracking {
+    id: ID
+    returnId: ID
+    returnLabelUrl: String
+    trackingNumber: String
+    shippedAt: DateTime
+    deliveredAt: DateTime
+    receivedBy: String
+    inspectionNotes: String
+    inspectionStatus: String
+    inspectedAt: DateTime
+    refundProcessedAt: DateTime
+    refundTransactionId: String
+    
+    # Computed fields
+    shippingStatus: String
+    estimatedDeliveryDate: DateTime
+  }
+
+  type ReturnResolution {
+    id: ID
+    returnId: ID
+    resolution: ResolutionType
+    partialAmount: Float
+    storeCreditId: String
+    adminNotes: String
+    resolvedBy: ID
+    resolvedAt: DateTime
+    
+    # Relations
+    admin: User
+  }
+
+  type ReturnStats {
+    totalReturns: Int
+    pendingCount: Int
+    approvedCount: Int
+    rejectedCount: Int
+    completedCount: Int
+    totalRefundAmount: Float
+    averageProcessingTime: Float
+    returnsByMonth: [MonthlyReturnStats]
+  }
+
+  type MonthlyReturnStats {
+    month: String
+    count: Int
+    totalAmount: Float
+  }
+
+  type ReturnReason {
+    id: ID
+    reason: String
+    category: String
+    isActive: Boolean
+    displayOrder: Int
+  }
+
+  # ================= Models =================
+  type User {
+    id: ID
+    email: String
+    password: String
+    firstName: String
+    lastName: String
+    avatar: String
+    phone: String
+    plateNo: String
+    license: String
+    emailVerified: Boolean
+    createdAt: DateTime
+    updatedAt: DateTime
+    role: Role
+    addresses: [Address]
+    orders: [Order]
+    reviews: [Review]
+    wishlist: [WishlistItem]
+    cart: [CartItem]
+    products: [Product]
+    payments: [Payment]
+    messagesSent: [Message]
+    messagesReceived: [Message]
+    supportTickets: [SupportTicket]
+    notifications: [Notification]
+    ticketResponses: [TicketResponse]
+    rating: Int
+    # Social media fields
+    posts: [Post]
+    followers: [User]
+    following: [User]
+    followerCount: Int
+    followingCount: Int
+    isFollowing: Boolean
+
+    suggestions: [Suggestion]
+    # NEW VENDOR FIELDS
+    businessName: String
+    businessType: String
+    productCategory: String
+    businessDescription: String
+    website: String
+    businessAddress: String
+    addressInstruction: String
+    currentLatitude: Float
+    currentLongitude: Float
+    taxId: String
+    isVendor: Boolean
+    vendorApplicationStatus: String
+    vendorApprovedAt: DateTime
+    
+    # Return Management Fields
+    customerReturns: [ReturnRequest]
+    supplierReturns: [ReturnRequest]
+  }
 
   type Address {
     id: ID
@@ -299,7 +448,7 @@ type User {
     reviews: [Review]
   }
 
-type Category {
+  type Category {
     id: ID
     name: String
     description: String
@@ -310,13 +459,11 @@ type Category {
     children: [Category]
     products: [Product]
     variantCount: Int
-}
+  }
 
-type Query {
+  type Query {
     categories: [Category]
-}
-
-
+  }
 
   type Order {
     id: ID
@@ -337,18 +484,20 @@ type Query {
     items: [OrderItem]
     payments: [Payment]
     proofOfDelivery: [ProofOfDelivery]
+    
+    # Return Management Fields
+    returns: [ReturnRequest]
   }
 
-type ProofOfDelivery {
-  id: String
-  order: Order
-  photoUrl: String
-  signatureData: String
-  receivedBy: String
-  receivedAt: String
-  trackingNumber: String
-}
-
+  type ProofOfDelivery {
+    id: String
+    order: Order
+    photoUrl: String
+    signatureData: String
+    receivedBy: String
+    receivedAt: String
+    trackingNumber: String
+  }
 
   type OrderItem {
     id: ID
@@ -370,21 +519,24 @@ type ProofOfDelivery {
     rejectedBy: [String]
     createdAt: DateTime
     updatedAt: DateTime
+    
+    # Return Management Fields
+    returnItems: [ReturnItem]
   }
 
-type VehicleType {
-  id            :String
-  name          :String
-  maxCapacityKg :Float
-  maxVolumeM3   :Float
-  description   :String
-  createdAt     :String
-  updatedAt     :String
-  icon          :String
-  cost          :Float
-  perKmRate     :Float
-  rushTimeAdd   :Float
-}
+  type VehicleType {
+    id: String
+    name: String
+    maxCapacityKg: Float
+    maxVolumeM3: Float
+    description: String
+    createdAt: String
+    updatedAt: String
+    icon: String
+    cost: Float
+    perKmRate: Float
+    rushTimeAdd: Float
+  }
 
   type CartItem {
     id: ID
@@ -415,111 +567,100 @@ type VehicleType {
     user: User
   }
 
-#  type Review {
-#    id: ID
-#    rating: Int
-#    title: String
-#    comment: String
-#    isApproved: Boolean
-#    createdAt: DateTime
-#    user: User
-#    product: Product
-#  }
-# ------------Review start
-type Review {
-  id: ID!
-  userId: String
-  productId: String
-  variantId: String
-  rating: Int
-  title: String
-  comment: String
-  isApproved: Boolean
-  createdAt: DateTime
-  user: User
-  product: Product
-  images: [ReviewImage!]
-}
+  type Review {
+    id: ID!
+    userId: String
+    productId: String
+    variantId: String
+    rating: Int
+    title: String
+    comment: String
+    isApproved: Boolean
+    createdAt: DateTime
+    user: User
+    product: Product
+    images: [ReviewImage!]
+  }
 
-type ReviewImage {
-  id: ID!
-  reviewId: String!
-  url: String!
-  publicId: String
-  position: Int!
-  createdAt: DateTime!
-  review: Review!
-}
+  type ReviewImage {
+    id: ID!
+    reviewId: String!
+    url: String!
+    publicId: String
+    position: Int!
+    createdAt: DateTime!
+    review: Review!
+  }
 
-type ReviewStats {
-  averageRating: Float!
-  totalReviews: Int!
-  minRating: Int
-  maxRating: Int
-  ratingDistribution: Json!
-}
+  type ReviewStats {
+    averageRating: Float!
+    totalReviews: Int!
+    minRating: Int
+    maxRating: Int
+    ratingDistribution: Json!
+  }
 
-type ReviewsResponse {
-  data: [Review!]!
-  meta: PaginationMeta!
-}
+  type ReviewsResponse {
+    data: [Review!]!
+    meta: PaginationMeta!
+  }
 
-type PaginationMeta {
-  total: Int!
-  page: Int!
-  limit: Int!
-  totalPages: Int!
-}
+  type PaginationMeta {
+    total: Int!
+    page: Int!
+    limit: Int!
+    totalPages: Int!
+  }
 
-input CreateReviewInput {
-  userId: String
-  productId: String
-  variantId: String
-  rating: Int!
-  title: String
-  comment: String
-  isApproved: Boolean
-  images: [CreateReviewImageInput!]
-}
+  input CreateReviewInput {
+    userId: String
+    productId: String
+    variantId: String
+    rating: Int!
+    title: String
+    comment: String
+    isApproved: Boolean
+    images: [CreateReviewImageInput!]
+  }
 
-input CreateReviewImageInput {
-  url: String!
-  publicId: String
-  position: Int
-}
+  input CreateReviewImageInput {
+    url: String!
+    publicId: String
+    position: Int
+  }
 
-input UpdateReviewInput {
-  rating: Int
-  title: String
-  comment: String
-  isApproved: Boolean
-  variantId: String
-}
+  input UpdateReviewInput {
+    rating: Int
+    title: String
+    comment: String
+    isApproved: Boolean
+    variantId: String
+  }
 
-input AddImageToReviewInput {
-  reviewId: String!
-  url: String!
-  publicId: String
-  position: Int
-}
+  input AddImageToReviewInput {
+    reviewId: String!
+    url: String!
+    publicId: String
+    position: Int
+  }
 
-input ReorderImagesInput {
-  reviewId: String!
-  imageIds: [String!]!
-}
+  input ReorderImagesInput {
+    reviewId: String!
+    imageIds: [String!]!
+  }
 
-input GetReviewsInput {
-  productId: String
-  userId: String
-  isApproved: Boolean
-  minRating: Int
-  maxRating: Int
-  page: Int
-  limit: Int
-  sortBy: String
-  sortOrder: String
-}
-#--------Review End---------
+  input GetReviewsInput {
+    productId: String
+    userId: String
+    isApproved: Boolean
+    minRating: Int
+    maxRating: Int
+    page: Int
+    limit: Int
+    sortBy: String
+    sortOrder: String
+  }
+
   type Message {
     id: ID
     subject: String
@@ -563,6 +704,10 @@ input GetReviewsInput {
     link: String
     createdAt: DateTime
     user: User
+    
+    # Return Management Fields
+    returnId: ID
+    returnRequest: ReturnRequest
   }
 
   # ================= API Bill Types =================
@@ -872,6 +1017,7 @@ input GetReviewsInput {
     title: String
     message: String
     link: String
+    returnId: ID
   }
 
   # API Bill Input Types
@@ -911,6 +1057,55 @@ input GetReviewsInput {
     dataProcessed: Float
     rate: Float
     customFields: Json
+  }
+
+  # Return Management Input Types
+  input CreateReturnInput {
+    orderId: ID!
+    userId: ID!
+    supplierId: ID
+    reason: String!
+    description: String
+    items: [ReturnItemInput!]!
+    images: [String]
+  }
+
+  input ReturnItemInput {
+    itemId: ID!
+    quantity: Int!
+    reason: String!
+    condition: String!
+  }
+
+  input UpdateReturnStatusInput {
+    returnId: ID!
+    status: ReturnStatus!
+    vendorNotes: String
+    refundAmount: Float
+  }
+
+  input AddReturnTrackingInput {
+    returnId: ID!
+    trackingNumber: String!
+    returnLabelUrl: String
+  }
+
+  input ProcessRefundInput {
+    returnId: ID!
+    refundAmount: Float!
+    refundMethod: RefundMethod!
+    transactionId: String
+  }
+
+  input AddReturnImagesInput {
+    returnId: ID!
+    imageUrls: [String!]!
+    imageType: String
+  }
+
+  input CancelReturnInput {
+    returnId: ID!
+    reason: String
   }
 
   # ================= Sales Analytics Input Types =================
@@ -1007,47 +1202,48 @@ input GetReviewsInput {
     minAmount: Float
     maxAmount: Float
   }
-  type PaginationInfo {
-  total: Int
-  page: Int
-  pageSize: Int
-  totalPages: Int
-}
-type OrderListResponse {
-  orders: [Order]
-  pagination: PaginationInfo
-}
-
-type newOrderListResponse {
-  neworder: [Order]
-  pagination: PaginationInfo
-}
-
-input OrderFilterInput {
-  trackingNumber: String
-  supplierId: String
-  riderId: String
-  userId: String
-  status: OrderStatus
-}
-
-input OrderPaginationInput {
-  page: Int
-  pageSize: Int
-}
-
-type ReviewResult {
-  id: ID
-  statusText: String
-}
   
-  # ================= Queries & Mutations =================
-  type Query {
+  type PaginationInfo {
+    total: Int
+    page: Int
+    pageSize: Int
+    totalPages: Int
+  }
+  
+  type OrderListResponse {
+    orders: [Order]
+    pagination: PaginationInfo
+  }
 
-   getReviews(filters: GetReviewsInput): ReviewsResponse
-   getReviewById(id: String): Review
-   getProductReviewStats(productId: String): ReviewStats
-   getReviewImages(reviewId: String): [ReviewImage]
+  type newOrderListResponse {
+    neworder: [Order]
+    pagination: PaginationInfo
+  }
+
+  input OrderFilterInput {
+    trackingNumber: String
+    supplierId: String
+    riderId: String
+    userId: String
+    status: OrderStatus
+  }
+
+  input OrderPaginationInput {
+    page: Int
+    pageSize: Int
+  }
+
+  type ReviewResult {
+    id: ID
+    statusText: String
+  }
+  
+  # ================= Queries =================
+  type Query {
+    getReviews(filters: GetReviewsInput): ReviewsResponse
+    getReviewById(id: String): Review
+    getProductReviewStats(productId: String): ReviewStats
+    getReviewImages(reviewId: String): [ReviewImage]
 
     returnorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
     refundedorder(filter: OrderFilterInput, pagination: OrderPaginationInput): OrderListResponse
@@ -1060,7 +1256,8 @@ type ReviewResult {
     apiBills(filters: ApiBillFilters,pagination: PaginationInput,sort: SortInput): ApiBillList 
     apiBill(id: ID): ApiBill
     billingSummary(service: String, year: Int, quarter: Int): BillingSummary
-    vehicles:[VehicleType]
+    vehicles: [VehicleType]
+    
     # Existing queries
     notifications(userId: ID, filters: NotificationFilters): NotificationConnection
     notification(id: ID): Notification
@@ -1146,102 +1343,120 @@ type ReviewResult {
     apiServices: [ServiceInfo]
     
     apiDashboardStats: DashboardStats
+
+    # ================= Return Management Queries =================
+    getReturn(id: ID!): ReturnRequest
+    getUserReturns(
+      userId: ID!
+      status: ReturnStatus
+      limit: Int
+      offset: Int
+    ): [ReturnRequest!]!
+    getSupplierReturns(
+      supplierId: ID!
+      status: ReturnStatus
+      limit: Int
+      offset: Int
+    ): [ReturnRequest!]!
+    getReturnStats(userId: ID): ReturnStats
+    getReturnReasons(category: String): [ReturnReason!]!
   }
 
-input ProofOfDeliveryInput {
-  id: String
-  receivedBy: String
-  receivedAt: String
-  photoUrl: String
-  signatureData: String
-  trackingNumber: String
-}
+  input ProofOfDeliveryInput {
+    id: String
+    receivedBy: String
+    receivedAt: String
+    photoUrl: String
+    signatureData: String
+    trackingNumber: String
+  }
 
-# Input type for updating vehicle type (all fields optional)
-input UpdateVehicleTypeInput {
-  name          :String
-  maxCapacityKg :Float
-  maxVolumeM3   :Float
-  description   :String
-  icon          :String
-  cost          :Float
-  perKmRate     :Float
-  rushTimeAdd   :Float
-}
+  # Input type for updating vehicle type (all fields optional)
+  input UpdateVehicleTypeInput {
+    name: String
+    maxCapacityKg: Float
+    maxVolumeM3: Float
+    description: String
+    icon: String
+    cost: Float
+    perKmRate: Float
+    rushTimeAdd: Float
+  }
 
-# Update mutation response
-type UpdateVehicleTypeResponse {
-  success     :Boolean
-  message     :String
-  vehicleType :VehicleType
-  errors      :[Error]
-}
+  # Update mutation response
+  type UpdateVehicleTypeResponse {
+    success: Boolean
+    message: String
+    vehicleType: VehicleType
+    errors: [Error]
+  }
 
-# Common error type
-type Error {
-  field   :String
-  message :String
-}
-# Delete mutation response
-type DeleteVehicleTypeResponse {
-  success     :Boolean
-  message     :String
-  deletedId   :String
-  errors      :[Error]
-}
+  # Common error type
+  type Error {
+    field: String
+    message: String
+  }
+  
+  # Delete mutation response
+  type DeleteVehicleTypeResponse {
+    success: Boolean
+    message: String
+    deletedId: String
+    errors: [Error]
+  }
 
-# Optional: Input for bulk delete
-input DeleteVehicleTypesInput {
-  ids :[String]
-}
-# Input type for creating vehicle type (all fields required except description)
-input CreateVehicleTypeInput {
-  name          :String!
-  maxCapacityKg :Float!
-  maxVolumeM3   :Float!
-  description   :String
-  icon          :String!
-  cost          :Float!
-  perKmRate     :Float!
-  rushTimeAdd   :Float!
-}
+  # Optional: Input for bulk delete
+  input DeleteVehicleTypesInput {
+    ids: [String]
+  }
+  
+  # Input type for creating vehicle type (all fields required except description)
+  input CreateVehicleTypeInput {
+    name: String!
+    maxCapacityKg: Float!
+    maxVolumeM3: Float!
+    description: String
+    icon: String!
+    cost: Float!
+    perKmRate: Float!
+    rushTimeAdd: Float!
+  }
 
-# Create mutation response
-type CreateVehicleTypeResponse {
-  success     :Boolean!
-  message     :String
-  vehicleType :VehicleType
-  errors      :[Error!]
-}
+  # Create mutation response
+  type CreateVehicleTypeResponse {
+    success: Boolean!
+    message: String
+    vehicleType: VehicleType
+    errors: [Error!]
+  }
 
-type LocationTrackingData {
-  userID: String
-  latitude: Float
-  longitude: Float
-  speed: Float
-  heading: Float
-  accuracy: Float
-  batteryLevel: Float
-  timestamp: String
-}
+  type LocationTrackingData {
+    userID: String
+    latitude: Float
+    longitude: Float
+    speed: Float
+    heading: Float
+    accuracy: Float
+    batteryLevel: Float
+    timestamp: String
+  }
 
-input LocationTrackingInput {
-  userID: String
-  latitude: Float
-  longitude: Float
-  speed: Float
-  heading: Float
-  accuracy: Float
-  batteryLevel: Float
-  timestamp: String
-}
+  input LocationTrackingInput {
+    userID: String
+    latitude: Float
+    longitude: Float
+    speed: Float
+    heading: Float
+    accuracy: Float
+    batteryLevel: Float
+    timestamp: String
+  }
 
-type PasswordResetResult {
+  type PasswordResetResult {
     success: Boolean!
     message: String!
     token: String
   }
-
 
   input RequestPasswordResetInput {
     email: String!
@@ -1252,42 +1467,41 @@ type PasswordResetResult {
     newPassword: String!
   }
 
- input CreateSuggestionInput {
+  input CreateSuggestionInput {
     text: String
     suggestioncategory: SuggestionCategory
     isAnonymous: Boolean
-    userId:ID
+    userId: ID
   }
   
-  
-
-type Mutation {
-  createSuggestion(input: CreateSuggestionInput): Result
-  deleteSuggestion(id: ID): Boolean
-  locationTracking(input: LocationTrackingInput): LocationTrackingData
-  createReview(data: CreateReviewInput): ReviewResult
-  updateReview(id: String, data: UpdateReviewInput!): Result
-  deleteReview(id: String): Result
-  approveReview(id: String): Result
-  
-  addImageToReview(input: AddImageToReviewInput): Result
-  updateReviewImage(imageId: String, url: String, publicId: String, position: Int): Result
-  deleteReviewImage(imageId: String): Result
-  reorderImages(input: ReorderImagesInput):Result
+  # ================= Mutations =================
+  type Mutation {
+    createSuggestion(input: CreateSuggestionInput): Result
+    deleteSuggestion(id: ID): Boolean
+    locationTracking(input: LocationTrackingInput): LocationTrackingData
+    createReview(data: CreateReviewInput): ReviewResult
+    updateReview(id: String, data: UpdateReviewInput!): Result
+    deleteReview(id: String): Result
+    approveReview(id: String): Result
     
-   requestPasswordReset(input: RequestPasswordResetInput!):Result
-   resetPassword(input: ResetPasswordInput!): Result
-   
+    addImageToReview(input: AddImageToReviewInput): Result
+    updateReviewImage(imageId: String, url: String, publicId: String, position: Int): Result
+    deleteReviewImage(imageId: String): Result
+    reorderImages(input: ReorderImagesInput): Result
+      
+    requestPasswordReset(input: RequestPasswordResetInput!): Result
+    resetPassword(input: ResetPasswordInput!): Result
     
-    remit(id:ID): Result
-    finishorder(id:ID): Result
+    remit(id: ID): Result
+    finishorder(id: ID): Result
+    
     # Update a vehicle type by ID
     createVehicleType(input: CreateVehicleTypeInput): CreateVehicleTypeResponse  
-    updateVehicleType(id:String,input: UpdateVehicleTypeInput): UpdateVehicleTypeResponse
-    deleteVehicleType(id:String): DeleteVehicleTypeResponse
+    updateVehicleType(id: String, input: UpdateVehicleTypeInput): UpdateVehicleTypeResponse
+    deleteVehicleType(id: String): DeleteVehicleTypeResponse
 
     # Existing mutations
-    uploadDeliveryProof(file:ProofOfDeliveryInput): Result
+    uploadDeliveryProof(file: ProofOfDeliveryInput): Result
     updateUserPhone(id: ID, phone: String): User
     updateUserAvatar(id: ID, avatar: String): User
    
@@ -1303,11 +1517,11 @@ type Mutation {
 
     updateVendorStatus(id: ID, vendorApplicationStatus: String): User
     
-    addToWishList(userId:ID,productId:ID):Result
-    updateRole(userId:ID,Level:Role):Result
-    updateOrderStatus(itemId:ID,riderId:ID,supplierId:ID,userId:ID,status:String,title:String,message:String): Result
-    rejectByRider(itemId:ID,riderId:ID):Result
-    acceptByRider(itemId:ID, riderId:ID, supplierId:ID, userId:ID ): Result
+    addToWishList(userId: ID, productId: ID): Result
+    updateRole(userId: ID, Level: Role): Result
+    updateOrderStatus(itemId: ID, riderId: ID, supplierId: ID, userId: ID, status: String, title: String, message: String): Result
+    rejectByRider(itemId: ID, riderId: ID): Result
+    acceptByRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
     createNotification(input: CreateNotificationInput): Notification
     markNotificationAsRead(id: ID): Notification
     markAllNotificationsAsRead(userId: ID): Boolean
@@ -1342,7 +1556,7 @@ type Mutation {
     deleteProduct(id: ID): Result
     deleteVariant(id: ID): Result
     createCategory(name: String, description: String, status: Boolean): Response
-    createOrder(userId: ID, addressId: ID, computedShipping_input: Float,computedDistance_input: Float, items: [OrderItemInput]): Result
+    createOrder(userId: ID, addressId: ID, computedShipping_input: Float, computedDistance_input: Float, items: [OrderItemInput]): Result
     respondToTicket(ticketId: ID, userId: ID, message: String): TicketResponse
     singleUpload(base64Image: String, productId: ID): Result
     categoryImageUpload(base64Image: String, categoryId: ID): Result
@@ -1351,6 +1565,7 @@ type Mutation {
     createAddress(input: AddressInputs): Result
     updateAddress(input: UpdateAddressInputs): Result
     deleteAddress(id: ID): Result
+    
     # Social media mutations
     createPost(input: CreatePostInput): Post
     updatePost(id: ID, input: UpdatePostInput): Post
@@ -1384,44 +1599,53 @@ type Mutation {
     addApiBillTag(id: ID, tag: String): ApiBill
     removeApiBillTag(id: ID, tag: String): ApiBill
     vendorSignup(input: VendorSignupInput): VendorSignupResponse
+    
+    # ================= Return Management Mutations =================
+    createReturn(input: CreateReturnInput!): ReturnRequest!
+    updateReturnStatus(input: UpdateReturnStatusInput!): ReturnRequest!
+    addReturnImages(input: AddReturnImagesInput!): [ReturnImage!]!
+    addReturnTracking(input: AddReturnTrackingInput!): ReturnTracking!
+    processRefund(input: ProcessRefundInput!): ReturnRequest!
+    cancelReturn(input: CancelReturnInput!): ReturnRequest!
   }
   
- input VendorSignupInput {
-  # Account Information
-  email: String
-  password: String
-  firstName: String
-  lastName: String
-  
-  # Business Information
-  businessName: String
-  phone: String
-  businessType: String
-  productCategory: String
-  businessDescription: String
-  website: String
-  
-  # Location Information
-  businessAddress: String
-  businessStreet: String
-  businessCity: String
-  businessState: String
-  businessCountry: String
-  businessZipcode: String
-  addressInstruction: String
-  currentLatitude: Float
-  currentLongitude: Float
-  
-  # Tax Information
-  taxId: String
-}
+  input VendorSignupInput {
+    # Account Information
+    email: String
+    password: String
+    firstName: String
+    lastName: String
+    
+    # Business Information
+    businessName: String
+    phone: String
+    businessType: String
+    productCategory: String
+    businessDescription: String
+    website: String
+    
+    # Location Information
+    businessAddress: String
+    businessStreet: String
+    businessCity: String
+    businessState: String
+    businessCountry: String
+    businessZipcode: String
+    addressInstruction: String
+    currentLatitude: Float
+    currentLongitude: Float
+    
+    # Tax Information
+    taxId: String
+  }
 
-type VendorSignupResponse {
-  success: Boolean
-  message: String
-  user: User
-  token: String
-}
+  type VendorSignupResponse {
+    success: Boolean
+    message: String
+    user: User
+    token: String
+  }
+  
   type ModelUploadResponse {
     success: Boolean
     message: String
@@ -1488,7 +1712,8 @@ type VendorSignupResponse {
     salePrice: Float
     stock: Int
   }
-input UpdateAddressInputs {
+  
+  input UpdateAddressInputs {
     id: String
     userId: String
     type: String
@@ -1503,6 +1728,7 @@ input UpdateAddressInputs {
     lng: Float
     isDefault: Boolean
   }
+  
   input AddressInputs {
     userId: String
     type: String
