@@ -855,7 +855,6 @@ getReturnReasons: async (_: any, { category }: any, { prisma }: any) => {
     throw new Error(`Failed to fetch return: ${error.message}`);
   }
 },
-
 getUserReturns: async (_: any, { userId, status, limit = 50, offset = 0 }: any) => {
   try {
     const where: any = { userId };
@@ -884,13 +883,24 @@ getUserReturns: async (_: any, { userId, status, limit = 50, offset = 0 }: any) 
       skip: offset
     });
     
-    return returns;
+    // ADD THIS TRANSFORMATION - wraps product in array
+    const transformedReturns = returns.map(returnReq => ({
+      ...returnReq,
+      items: returnReq.items.map(item => ({
+        ...item,
+        orderItem: {
+          ...item.orderItem,
+          product: item.orderItem.product ? [item.orderItem.product] : []
+        }
+      }))
+    }));
+    
+    return transformedReturns;
   } catch (error: any) {
     console.error('Error in getUserReturns resolver:', error);
     throw new Error(`Failed to fetch user returns: ${error.message}`);
   }
 },
-
 getSupplierReturns: async (_: any, { supplierId, status, limit = 50, offset = 0 }: any) => {
   try {
     const where: any = { supplierId };
