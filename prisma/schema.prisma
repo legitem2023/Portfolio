@@ -547,28 +547,6 @@ model Payment {
   @@map("payments")
 }
 
-// Reviews
-// model Review {
-//  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-// userId    String?  @db.ObjectId
-// productId String?  @db.ObjectId
-//  variantId String?
-//  rating    Int?
-//  title     String?
-//  comment   String?
-//  isApproved Boolean? @default(false)
-//  createdAt DateTime? @default(now())
-
-// user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-//  product   Product? @relation(fields: [productId], references: [id])
-
-//  @@index([userId])
-//  @@index([productId])
-//  @@index([rating])
-//  @@index([isApproved])
-//  @@map("reviews")
-//}
-
 model ReviewImage {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   reviewId  String   @db.ObjectId
@@ -736,8 +714,8 @@ model ReturnRequest {
   supplierId    String        @db.ObjectId
   status        ReturnStatus  @default(PENDING)
   reason        String
-  description   String?       @db.Text
-  vendorNotes   String?       @db.Text
+  description   String?
+  vendorNotes   String?
   refundAmount  Float?        @default(0)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -750,14 +728,13 @@ model ReturnRequest {
   images        ReturnImage[]
   tracking      ReturnTracking?
   resolution    ReturnResolution?
-  notifications Notification[]  // Using existing Notification model
+  notifications Notification[]
   
   @@index([orderId])
   @@index([userId])
   @@index([supplierId])
   @@index([status])
   @@index([createdAt])
-  @@index([returnNumber])
 }
 
 // Return Items Model
@@ -784,8 +761,8 @@ model ReturnImage {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   returnId      String        @db.ObjectId
   imageUrl      String
-  imageType     String?       // 'CUSTOMER_UPLOADED', 'VENDOR_RECEIVED', 'INSPECTION'
-  uploadedBy    String        @db.ObjectId // userId of who uploaded
+  imageType     String?
+  uploadedBy    String        @db.ObjectId
   createdAt     DateTime      @default(now())
   
   // Relationships
@@ -805,8 +782,8 @@ model ReturnTracking {
   shippedAt     DateTime?
   deliveredAt   DateTime?
   receivedBy    String?
-  inspectionNotes String?     @db.Text
-  inspectionStatus String?    // 'PENDING', 'PASSED', 'FAILED'
+  inspectionNotes String?
+  inspectionStatus String?
   inspectedAt   DateTime?
   refundProcessedAt DateTime?
   refundTransactionId String?
@@ -824,7 +801,7 @@ model ReturnResolution {
   resolution    ResolutionType
   partialAmount Float?
   storeCreditId String?
-  adminNotes    String?       @db.Text
+  adminNotes    String?
   resolvedBy    String        @db.ObjectId
   resolvedAt    DateTime      @default(now())
   
@@ -837,7 +814,7 @@ model ReturnResolution {
 model ReturnReason {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   reason        String        @unique
-  category      String        // 'PRODUCT_ISSUE', 'SHIPPING_ISSUE', 'CUSTOMER_REQUEST'
+  category      String
   isActive      Boolean       @default(true)
   displayOrder  Int           @default(0)
   createdAt     DateTime      @default(now())
@@ -846,7 +823,7 @@ model ReturnReason {
   @@index([isActive])
 }
 
-// Enums remain the same
+// Enums
 enum Role {
   ADMINISTRATOR
   MANAGER
@@ -907,39 +884,22 @@ enum SuggestionCategory {
   OTHER      
 }
 
-
 enum NotificationType {
-  // Order related
   ORDER_CREATED
   ORDER_UPDATED
   ORDER_DELIVERED
-  
-  // Payment related
   PAYMENT_RECEIVED
   PAYMENT_FAILED
   PAYMENT_CONFIRMATION
-  
-  // Shipping related
   SHIPMENT
-  
-  // Account related
   ACCOUNT_VERIFIED
   PASSWORD_CHANGED
-  
-  // Communication
   NEW_MESSAGE
   SUPPORT
-  
-  // Marketing
   PROMOTIONAL
-  
-  // Community
   SOCIAL
-  
-  // System
   SYSTEM_ALERT
-  
-  // Return Management (NEW)
+  // Return Management Types
   RETURN_REQUEST_CREATED
   RETURN_STATUS_UPDATED
   RETURN_APPROVED
@@ -950,32 +910,25 @@ enum NotificationType {
   RETURN_COMPLETED
 }
 
-
-// NEW Enums for Social Features
 enum PrivacySetting {
   PUBLIC
   FRIENDS
   ONLY_ME
 }
 
-// ============================================
-// RETURN MANAGEMENT ENUMS
-// ============================================
-
-// Return Status Enum
+// Return Management Enums
 enum ReturnStatus {
-  PENDING           // Customer submitted, waiting for vendor review
-  APPROVED          // Vendor approved the return
-  REJECTED          // Vendor rejected the return
-  RETURN_SHIPPED    // Customer shipped the item back
-  RECEIVED          // Vendor received the returned item
-  INSPECTING        // Vendor is inspecting the returned item
-  REFUND_INITIATED  // Refund process started
-  COMPLETED         // Refund completed
-  CANCELLED         // Return cancelled by customer or vendor
+  PENDING
+  APPROVED
+  REJECTED
+  RETURN_SHIPPED
+  RECEIVED
+  INSPECTING
+  REFUND_INITIATED
+  COMPLETED
+  CANCELLED
 }
 
-// Resolution Type Enum
 enum ResolutionType {
   FULL_REFUND
   PARTIAL_REFUND
