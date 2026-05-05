@@ -604,7 +604,7 @@ export default function OrderListComponent({
   // Get orders
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
-  
+  console.log(allOrders);
   // Filter orders with items
   const ordersWithItems = useMemo(() => {
     return allOrders.filter((order: Order) => order.items.length > 0);
