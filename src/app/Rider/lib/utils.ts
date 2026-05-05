@@ -128,7 +128,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
     const dropoffFormatted = dropoffAddress?.street 
       ? `${dropoffAddress.street}, ${dropoffAddress.city}, ${dropoffAddress.state} ${dropoffAddress.zipCode}`
       : "Address not available";
-    console.log(`${firstName} is missing its address ${dropoffAddress.city} ${dropoffAddress.state} ${dropoffAddress.zipCode}`);
+    console.log(`${firstName} is missing its address ${dropoffAddress?.street, dropoffAddress?.city, dropoffAddress?.state, dropoffAddress?.zipCode}`);
     // Calculate distance
     //const distance = items.reduce((sum,item) => sum + item.individualDistance);//calculateDistance(pickupAddress, dropoffAddress);
     const avgDistance = items.reduce((sum, item) => sum + item.individualDistance, 0) / items.length;
