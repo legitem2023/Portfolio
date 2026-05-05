@@ -6975,8 +6975,30 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         lat,
         lng
       } = args.input;
+
     
    if(isDefault) { 
+
+const activeorder = await prisma.orderItem.findMany({
+  where: {
+    OR: [
+      { userId: userId },
+      { supplierId: userId }
+    ],
+    status: {
+      in: ["PENDING", "PROCESSING", "SHIPPED"]
+    }
+  }
+})
+
+if (activeorder.length > 0) {
+  return {
+    statusText: "Updating Default Address while there's an active transaction is not allowed!",
+    token: "",
+    role: ""
+  }
+}
+   
      await prisma.address.updateMany({
       where:{
         userId
