@@ -7061,6 +7061,147 @@ if (activeorder.length > 0) {
       }
     },
   createAddress: async (_: any, args: any) => {
+  const {
+    userId,
+    type,
+    receiver,
+    phone,
+    street,
+    city,
+    state,
+    zipCode,
+    country,
+    isDefault,
+    lat,
+    lng
+  } = args.input;
+
+  // Check for active orders
+  const activeOrders = await prisma.orderItem.findMany({
+    where: {
+      OR: [
+        { userId: userId },
+        { supplierId: userId }
+      ],
+      status: {
+        in: ["PENDING", "PROCESSING", "SHIPPED"]
+      }
+    }
+  });
+
+  const hasActiveOrders = activeOrders.length > 0;
+
+  // Scenario 1: User wants default address but has active orders
+  if (isDefault && hasActiveOrders) {
+    // Add address but force isDefault to false
+    const newAddress = await prisma.address.create({
+      data: {
+        userId,
+        type,
+        receiver,
+        phone,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault: false,
+        lat,
+        lng
+      },
+    });
+
+    return {
+      statusText: "Address added but not set as default because you have active orders",
+      address: newAddress
+    };
+  }
+
+  // Scenario 2: User wants default address and has NO active orders
+  if (isDefault && !hasActiveOrders) {
+    // Remove default flag from all existing addresses
+    await prisma.address.updateMany({
+      where: { userId },
+      data: { isDefault: false },
+    });
+
+    // Create new default address
+    const newAddress = await prisma.address.create({
+      data: {
+        userId,
+        type,
+        receiver,
+        phone,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault: true,
+        lat,
+        lng
+      },
+    });
+
+    // Get updated user with new default address
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        addresses: {
+          where: { isDefault: true },
+          take: 1
+        }
+      }
+    });
+
+    const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+    const token = await new EncryptJWT({
+      userId: user?.id,
+      phone: user?.phone,
+      email: user?.email,
+      name: user?.firstName,
+      role: user?.role,
+      image: user?.avatar,
+      addresses: user?.addresses
+    })
+      .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+      .setIssuedAt()
+      .encrypt(secret);
+
+    return {
+      statusText: "Address added and set as default successfully",
+      token,
+      role: user?.role,
+      
+    };
+  }
+
+  // Scenario 3: User does NOT want default address
+  if (!isDefault) {
+    const newAddress = await prisma.address.create({
+      data: {
+        userId,
+        type,
+        receiver,
+        phone,
+        street,
+        city,
+        state,
+        zipCode,
+        country,
+        isDefault: false,
+        lat,
+        lng
+      },
+    });
+
+    return {
+      statusText: "Address added successfully",
+      address: newAddress
+    };
+  }
+},
+/*  createAddress: async (_: any, args: any) => {
       const {
         userId,
         type,
@@ -7185,7 +7326,7 @@ const user = await prisma.user.findUnique({
 }
 
  
-    },
+    },*/
 
     createCategory: async (_: any, { name, description, status }: any) => {
       const response = await prisma.category.create({
