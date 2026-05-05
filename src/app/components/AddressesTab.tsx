@@ -336,6 +336,49 @@ const AddressesTab: React.FC<AddressesTabProps> = ({
     }
   };
 
+  // Helper function to handle set default address response
+  const handleSetDefaultResponse = (result: any) => {
+    if (!result) {
+      return { success: false, message: 'No response from server', hasToken: false };
+    }
+
+    const { statusText, token } = result;
+    
+    // Check if statusText indicates success (exact match "success")
+    if (statusText === "success") {
+      if (token) {
+        return { 
+          success: true, 
+          message: 'Default address updated and session synced successfully',
+          hasToken: true,
+          token: token
+        };
+      }
+      return { 
+        success: true, 
+        message: 'Default address updated successfully',
+        hasToken: false 
+      };
+    }
+    
+    // If statusText is not "success", it's an error message
+    // This includes messages like "Changing Default Address while there's an active transaction is not allowed!"
+    if (statusText && statusText !== "success") {
+      return { 
+        success: false, 
+        message: statusText, // Show the actual error message from the server
+        hasToken: false 
+      };
+    }
+    
+    // Fallback for any other case
+    return { 
+      success: false, 
+      message: 'Failed to update default address',
+      hasToken: false 
+    };
+  };
+
   const handleAddressSuccess = async () => {
     setShowAddressForm(false);
     await refreshSession();
@@ -384,19 +427,22 @@ const AddressesTab: React.FC<AddressesTabProps> = ({
 
       const result = response.data?.setDefaultAddress;
       
-      // Check if mutation returned a new token
-      if (result?.token) {
-        // Update session with the new token
-        await refreshSession(result.token);
-        showToast('Default address updated and session synced successfully', 'success');
-      } else if (result?.user) {
-        // If no token but user data returned, just refresh
-        await refreshSession();
-        showToast('Default address updated successfully', 'success');
+      // Process the response based on statusText
+      const { success, message, hasToken, token } = handleSetDefaultResponse(result);
+      
+      if (success) {
+        // Refresh session with token if available
+        if (hasToken && token) {
+          await refreshSession(token);
+        } else {
+          await refreshSession();
+        }
+        
+        // Show success toast
+        showToast(message, 'success');
       } else {
-        // Just refresh to get latest data
-        await refreshSession();
-        showToast('Default address updated successfully', 'success');
+        // Show error toast with the actual error message from the server
+        showToast(message, 'error');
       }
       
       onAddressUpdate?.();
@@ -434,21 +480,26 @@ const AddressesTab: React.FC<AddressesTabProps> = ({
         },
       });
 
-      if (response.data?.deleteAddress?.statusText === "Successful deleted") {
+      const statusText = response.data?.deleteAddress?.statusText;
+      
+      // Check if deletion was successful
+      if (statusText === "Successful deleted" || statusText === "success") {
         // Refresh session after deletion
         await refreshSession();
         showToast(`${addressToDelete.type} address deleted successfully`, 'success');
         setAddressToDelete(null);
         onAddressUpdate?.();
+      } else if (statusText && statusText !== "success" && statusText !== "Successful deleted") {
+        // Show error message from server
+        showToast(statusText, 'error');
+      } else {
+        // Fallback error message
+        showToast(`Failed to delete ${addressToDelete.type} address`, 'error');
       }
     } catch (error: any) {
       console.error('Error deleting address:', error);
       showToast(error.message || 'Failed to delete address', 'error');
     }
-  };
-
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
   };
 
   // Sort addresses: default first, then by creation date
