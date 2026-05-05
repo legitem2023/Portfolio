@@ -34,7 +34,12 @@ import {
   TrendingUp,
   Award,
   Zap,
-  Shield
+  Shield,
+  Phone,
+  Mail,
+  MapPin,
+  Info,
+  Image as ImageIcon
 } from "lucide-react";
 
 // GraphQL Queries and Mutations
@@ -274,6 +279,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [selectedReturn, setSelectedReturn] = useState<ReturnRequest | null>(null);
   const [showApprovalModal, setShowApprovalModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [vendorNotes, setVendorNotes] = useState('');
   const [refundAmount, setRefundAmount] = useState('');
   const [refundMethod, setRefundMethod] = useState('ORIGINAL_PAYMENT');
@@ -289,6 +295,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       if (e.key === 'Escape') {
         setShowApprovalModal(false);
         setShowRefundModal(false);
+        setShowDetailsModal(false);
         setIsFilterOpen(false);
       }
     };
@@ -298,7 +305,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
 
   // Prevent body scroll when modals are open
   useEffect(() => {
-    if (showApprovalModal || showRefundModal) {
+    if (showApprovalModal || showRefundModal || showDetailsModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -306,7 +313,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showApprovalModal, showRefundModal]);
+  }, [showApprovalModal, showRefundModal, showDetailsModal]);
 
   const { loading, error, data, refetch } = useQuery(GET_SUPPLIER_RETURNS, {
     variables: { 
@@ -615,7 +622,10 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     key={returnReq.id}
                     returnReq={returnReq}
                     getProductInfo={getProductInfo}
-                    onViewDetails={() => setSelectedReturn(returnReq)}
+                    onViewDetails={() => {
+                      setSelectedReturn(returnReq);
+                      setShowDetailsModal(true);
+                    }}
                     onApprove={() => {
                       setSelectedReturn(returnReq);
                       setSelectedAction('APPROVED');
@@ -642,7 +652,10 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     key={returnReq.id}
                     returnReq={returnReq}
                     getProductInfo={getProductInfo}
-                    onViewDetails={() => setSelectedReturn(returnReq)}
+                    onViewDetails={() => {
+                      setSelectedReturn(returnReq);
+                      setShowDetailsModal(true);
+                    }}
                     onApprove={() => {
                       setSelectedReturn(returnReq);
                       setSelectedAction('APPROVED');
@@ -720,6 +733,17 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       </div>
 
       {/* Modals */}
+      {showDetailsModal && selectedReturn && (
+        <ReturnDetailsModal
+          returnReq={selectedReturn}
+          getProductInfo={getProductInfo}
+          onClose={() => {
+            setShowDetailsModal(false);
+            setSelectedReturn(null);
+          }}
+        />
+      )}
+
       {showApprovalModal && selectedReturn && selectedAction && (
         <ApprovalModal
           returnReq={selectedReturn}
@@ -753,7 +777,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   );
 }
 
-// Enhanced Stat Card Component
+// Stat Card Component
 function StatCard({ title, value, icon, color, isCurrency = false }: { title: string; value: number | string; icon: string; color: string; isCurrency?: boolean }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[140px] md:min-w-0 hover:shadow-md transition-shadow">
@@ -833,17 +857,21 @@ function ReturnRequestGridCard({
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all">
       <div className="relative">
         {/* Status Badge */}
-        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${statusColors[returnReq.status]} border`}>
+        <div className={`absolute top-3 right-3 z-10 px-2 py-1 rounded-full text-xs font-medium ${statusColors[returnReq.status]} border`}>
           {returnReq.status.replace('_', ' ')}
         </div>
         
         {/* Product Image */}
-        {productInfo.images?.[0] && (
+        {productInfo.images?.[0] ? (
           <img 
             src={productInfo.images[0]}
             alt={productInfo.name}
             className="w-full h-40 object-cover"
           />
+        ) : (
+          <div className="w-full h-40 bg-gray-100 flex items-center justify-center">
+            <Package size={40} className="text-gray-300" />
+          </div>
         )}
         
         {/* Content */}
@@ -1058,6 +1086,310 @@ function ReturnRequestCard({
               {getActionButtons()}
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Return Details Modal Component
+function ReturnDetailsModal({ 
+  returnReq, 
+  getProductInfo,
+  onClose 
+}: { 
+  returnReq: ReturnRequest;
+  getProductInfo: (product: any) => ProductInfo;
+  onClose: () => void;
+}) {
+  const [activeTab, setActiveTab] = useState<'details' | 'items' | 'images'>('details');
+  const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleBackdropClick}>
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex justify-between items-center z-10">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Return Details</h2>
+            <p className="text-xs text-gray-500 mt-1">#{returnReq.returnNumber}</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Status Bar */}
+        <div className={`px-5 py-3 border-b ${statusColors[returnReq.status]?.replace('text-', 'bg-').replace('800', '50') || 'bg-gray-50'}`}>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <span className={`text-xs px-2 py-1 rounded-full ${statusColors[returnReq.status]} border`}>
+              {returnReq.status.replace('_', ' ')}
+            </span>
+            <span className="text-xs text-gray-500">
+              Created: {formatDate(returnReq.createdAt)}
+            </span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 px-5 overflow-x-auto">
+          {[
+            { id: 'details', label: 'Details', icon: <FileText size={16} /> },
+            { id: 'items', label: 'Items', icon: <Package size={16} />, count: returnReq.items.length },
+            { id: 'images', label: 'Images', icon: <Camera size={16} />, count: returnReq.images.length }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'border-purple-600 text-purple-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+              {tab.count !== undefined && tab.count > 0 && (
+                <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${
+                  activeTab === tab.id ? 'bg-purple-100 text-purple-600' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="p-5">
+          {activeTab === 'details' && (
+            <div className="space-y-4">
+              {/* Customer Information */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <User size={16} className="text-blue-600" />
+                  Customer Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Name:</span>
+                    <span className="text-gray-700 font-medium">
+                      {returnReq.user.firstName} {returnReq.user.lastName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Email:</span>
+                    <span className="text-gray-700">{returnReq.user.email}</span>
+                  </div>
+                  {returnReq.user.phone && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Phone:</span>
+                      <span className="text-gray-700">{returnReq.user.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Order Information */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <Package size={16} className="text-green-600" />
+                  Order Information
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Order Number:</span>
+                    <span className="text-gray-700 font-medium">#{returnReq.order.orderNumber}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Order Date:</span>
+                    <span className="text-gray-700">{formatDate(returnReq.order.createdAt)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-500">Order Total:</span>
+                    <span className="text-gray-700">{formatPrice(returnReq.order.total)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Return Details */}
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <RotateCcw size={16} className="text-purple-600" />
+                  Return Details
+                </h3>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <span className="text-gray-500 block mb-1">Return Reason:</span>
+                    <p className="text-gray-700 bg-white/50 p-2 rounded-lg">{returnReq.reason}</p>
+                  </div>
+                  {returnReq.description && (
+                    <div>
+                      <span className="text-gray-500 block mb-1">Additional Details:</span>
+                      <p className="text-gray-700 bg-white/50 p-2 rounded-lg">{returnReq.description}</p>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center pt-2 border-t border-white/50">
+                    <span className="text-gray-500 font-medium">Total Refund Amount:</span>
+                    <span className="text-green-600 font-bold text-lg">{formatPrice(totalRefund)}</span>
+                  </div>
+                  {returnReq.vendorNotes && (
+                    <div>
+                      <span className="text-gray-500 block mb-1">Vendor Notes:</span>
+                      <p className="text-gray-700 bg-white/50 p-2 rounded-lg">{returnReq.vendorNotes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Tracking Information */}
+              {returnReq.tracking && (
+                <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <Truck size={16} className="text-orange-600" />
+                    Tracking Information
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    {returnReq.tracking.trackingNumber && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Tracking Number:</span>
+                        <span className="text-gray-700 font-mono">{returnReq.tracking.trackingNumber}</span>
+                      </div>
+                    )}
+                    {returnReq.tracking.shippedAt && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Shipped Date:</span>
+                        <span className="text-gray-700">{formatDate(returnReq.tracking.shippedAt)}</span>
+                      </div>
+                    )}
+                    {returnReq.tracking.deliveredAt && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500">Delivered Date:</span>
+                        <span className="text-gray-700">{formatDate(returnReq.tracking.deliveredAt)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'items' && (
+            <div className="space-y-3">
+              {returnReq.items.map((item, index) => {
+                const productInfo = getProductInfo(item.orderItem.product);
+                return (
+                  <div key={item.id} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div className="flex gap-3">
+                      {productInfo.images?.[0] ? (
+                        <img 
+                          src={productInfo.images[0]}
+                          alt={productInfo.name}
+                          className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                          <Package size={24} className="text-gray-400" />
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-800 text-sm mb-1">
+                          {productInfo.name}
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-2">SKU: {productInfo.sku}</p>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-xs text-gray-500">Quantity:</span>
+                            <p className="font-medium">{item.quantity}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Price:</span>
+                            <p>{formatPrice(item.orderItem.price)}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Condition:</span>
+                            <p className="capitalize">{item.condition.toLowerCase()}</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-gray-500">Subtotal:</span>
+                            <p className="text-green-600 font-medium">
+                              {formatPrice(item.orderItem.price * item.quantity)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <span className="text-xs text-gray-500">Return Reason:</span>
+                          <p className="text-sm mt-1">{item.reason}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {/* Total Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 sticky bottom-0">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Total Refund Amount:</span>
+                  <span className="text-xl font-bold text-green-600">{formatPrice(totalRefund)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'images' && (
+            <div>
+              {returnReq.images.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <ImageIcon size={32} className="text-gray-300" />
+                  </div>
+                  <p className="text-sm text-gray-500">No images uploaded by customer</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {returnReq.images.map((img) => (
+                    <div
+                      key={img.id}
+                      className="relative group cursor-pointer overflow-hidden rounded-xl"
+                      onClick={() => window.open(img.imageUrl, '_blank')}
+                    >
+                      <img
+                        src={img.imageUrl}
+                        alt={`Return evidence ${img.imageType}`}
+                        className="w-full h-40 object-cover rounded-xl border border-gray-200 group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-center justify-center">
+                        <Eye size={24} className="text-white" />
+                      </div>
+                      {img.imageType && (
+                        <span className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                          {img.imageType.replace('_', ' ')}
+                        </span>
+                      )}
+                      <span className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+                        {formatDate(img.createdAt)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-100 px-5 py-4">
+          <button
+            onClick={onClose}
+            className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-all active:scale-95"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -1333,4 +1665,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-                                         }
+}
