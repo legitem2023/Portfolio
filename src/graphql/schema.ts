@@ -1095,6 +1095,7 @@ export const typeDefs = gql`
     refundAmount: Float!
     refundMethod: RefundMethod!
     transactionId: String
+    resolvedBy: ID
   }
 
   input AddReturnImagesInput {
