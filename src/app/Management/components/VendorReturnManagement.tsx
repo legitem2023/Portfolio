@@ -39,7 +39,9 @@ import {
   Mail,
   MapPin,
   Info,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CreditCard,
+  Receipt
 } from "lucide-react";
 
 // GraphQL Queries and Mutations
@@ -137,6 +139,7 @@ const PROCESS_REFUND = gql`
       id
       status
       refundAmount
+      transactionId
     }
   }
 `;
@@ -283,6 +286,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [vendorNotes, setVendorNotes] = useState('');
   const [refundAmount, setRefundAmount] = useState('');
   const [refundMethod, setRefundMethod] = useState('ORIGINAL_PAYMENT');
+  const [transactionId, setTransactionId] = useState('');
   const [selectedAction, setSelectedAction] = useState<'APPROVED' | 'REJECTED' | 'RECEIVED' | 'INSPECTING' | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -383,6 +387,11 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       return;
     }
 
+    if (!transactionId.trim()) {
+      alert('Please enter a transaction ID');
+      return;
+    }
+
     try {
       await processRefund({
         variables: {
@@ -390,13 +399,16 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
             returnId: selectedReturn.id,
             refundAmount: amount,
             refundMethod: refundMethod,
-            resolvedBy: supplierId
+            resolvedBy: supplierId,
+            transactionId: transactionId
           }
         }
       });
       
+      alert('Refund processed successfully!');
       setShowRefundModal(false);
       setRefundAmount('');
+      setTransactionId('');
       refetch();
       refetchStats();
     } catch (err: any) {
@@ -576,7 +588,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
             </div>
 
             {/* Mobile Status Filter Dropdown */}
-            {isFilterOpen && (
+            if (isFilterOpen && (
               <div className="md:hidden bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
                 {statusOptions.map(option => (
                   <button
@@ -615,9 +627,9 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           </div>
         ) : (
           <>
-            <div className={viewMode === 'grid' && window.innerWidth < 768 ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+            <div className={viewMode === 'grid' && typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
               {paginatedReturns.map((returnReq) => (
-                viewMode === 'grid' && window.innerWidth < 768 ? (
+                viewMode === 'grid' && typeof window !== 'undefined' && window.innerWidth < 768 ? (
                   <ReturnRequestGridCard
                     key={returnReq.id}
                     returnReq={returnReq}
@@ -764,12 +776,15 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           returnReq={selectedReturn}
           refundAmount={refundAmount}
           refundMethod={refundMethod}
+          transactionId={transactionId}
           onAmountChange={setRefundAmount}
           onMethodChange={setRefundMethod}
+          onTransactionIdChange={setTransactionId}
           onConfirm={handleProcessRefund}
           onClose={() => {
             setShowRefundModal(false);
             setRefundAmount('');
+            setTransactionId('');
           }}
         />
       )}
@@ -1280,7 +1295,7 @@ function ReturnDetailsModal({
 
           {activeTab === 'items' && (
             <div className="space-y-3">
-              {returnReq.items.map((item, index) => {
+              {returnReq.items.map((item) => {
                 const productInfo = getProductInfo(item.orderItem.product);
                 return (
                   <div key={item.id} className="bg-gray-50 rounded-xl p-4 hover:shadow-md transition-shadow">
@@ -1412,7 +1427,6 @@ function ApprovalModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
-  // Close on backdrop click
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
@@ -1484,21 +1498,25 @@ function ApprovalModal({
   );
 }
 
-// Refund Modal Component (Touch Optimized)
+// Refund Modal Component with Transaction ID (Touch Optimized)
 function RefundModal({ 
   returnReq, 
   refundAmount, 
-  refundMethod, 
+  refundMethod,
+  transactionId,
   onAmountChange, 
-  onMethodChange, 
+  onMethodChange,
+  onTransactionIdChange,
   onConfirm, 
   onClose 
 }: { 
   returnReq: ReturnRequest;
   refundAmount: string;
   refundMethod: string;
+  transactionId: string;
   onAmountChange: (amount: string) => void;
   onMethodChange: (method: string) => void;
+  onTransactionIdChange: (id: string) => void;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -1556,6 +1574,25 @@ function RefundModal({
             )}
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Transaction ID *
+            </label>
+            <div className="relative">
+              <CreditCard size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={transactionId}
+                onChange={(e) => onTransactionIdChange(e.target.value)}
+                placeholder="Enter transaction ID (e.g., TXN-123456789)"
+                className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              This is the reference ID from your payment gateway (PayPal, Stripe, GCash, etc.)
+            </p>
+          </div>
+
           <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Refund Method *
@@ -1573,10 +1610,44 @@ function RefundModal({
             </select>
           </div>
 
+          {/* Summary Card */}
+          <div className="mb-5 p-3 bg-gray-50 rounded-xl">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+              <Receipt size={14} />
+              Refund Summary
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Return Number:</span>
+                <span className="font-mono text-gray-700">{returnReq.returnNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Order Number:</span>
+                <span className="font-mono text-gray-700">{returnReq.order.orderNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Customer:</span>
+                <span className="text-gray-700">{returnReq.user.firstName} {returnReq.user.lastName}</span>
+              </div>
+              <div className="flex justify-between pt-2 border-t border-gray-200">
+                <span className="font-medium text-gray-700">Refund Amount:</span>
+                <span className="font-bold text-green-600">
+                  {refundAmount ? formatPrice(parseFloat(refundAmount)) : formatPrice(0)}
+                </span>
+              </div>
+              {transactionId && (
+                <div className="flex justify-between">
+                  <span className="font-medium text-gray-700">Transaction ID:</span>
+                  <span className="font-mono text-purple-600 text-xs">{transactionId}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund}
+              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund || !transactionId.trim()}
               className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
             >
               Process Refund
@@ -1665,4 +1736,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-}
+    }
