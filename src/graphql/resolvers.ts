@@ -1543,6 +1543,15 @@ const orders = await prisma.order.findMany({
         createdAt: 'desc'
       },
       include: {
+        proofOfDelivery: {
+          select: {
+              id: true,
+              photoUrl:true,
+              signatureData:true,
+              receivedBy: true,
+              receivedAt: true
+          }
+        },
         items: {
           where: Object.keys(itemWhere).length > 0 ? itemWhere : {},
           select: {
@@ -1642,6 +1651,7 @@ const orders = await prisma.order.findMany({
       })),
       address: order.address,
       payments: order.payments,
+      proofOfDelivery: order.proofOfDelivery,
       computedShipping:order.computedShipping,
       computedDistance:order.computedDistance,
       items: order.items.map(item => ({
