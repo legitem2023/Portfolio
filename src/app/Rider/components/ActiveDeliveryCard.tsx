@@ -19,7 +19,8 @@ import {
   Phone,
   Camera,
   Image,
-  QrCode
+  QrCode,
+  MessageCircle
 } from "lucide-react";
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
@@ -30,6 +31,9 @@ import { useState, useMemo, useRef } from 'react';
 import DeliveryMap from './DeliveryMap';
 import { gql } from '@apollo/client';
 import { showToast } from '../../../../utils/toastify';
+import { useDispatch, useSelector } from "react-redux";
+import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
 
 export const UPLOAD = gql`
 mutation UploadDeliveryProof($file: ProofOfDeliveryInput) {
@@ -82,7 +86,7 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
   const [showMap, setShowMap] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [showProofSection, setShowProofSection] = useState(false);
-  
+  const dispatch = useDispatch();
   // Proof of delivery states
   const [showProofModal, setShowProofModal] = useState(false);
   const [proofPhoto, setProofPhoto] = useState<string | null>(null);
@@ -302,6 +306,10 @@ export default function ActiveDeliveryCard({ delivery, isMobile, currentStatus =
     }
   };
 
+  const handlechat = (id:any) => {
+    dispatch(setSelectedUser(id));
+    dispatch(setActiveTab(3));
+  }
   const clearSignature = (e: React.MouseEvent) => {
     e.preventDefault();
     const canvas = canvasRef.current;
@@ -867,6 +875,10 @@ console.log(payments);
                      <a href={`sms:${delivery.customerContact}`}>
                        <span>SMS</span>
                      </a>
+                    <span> / </span>
+                    <span onClick={()=> handlechat(delivery.customerId)}>
+                      <MessageCircle size={10}/>
+                    </span>
                   </div>
                 </div>
               )}
