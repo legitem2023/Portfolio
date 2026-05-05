@@ -7,7 +7,8 @@ import { useSession } from "next-auth/react";
 import { 
   MapPin, X, AlertTriangle, CheckCircle, Loader2, 
   Home, Briefcase, CreditCard, Package, Navigation,
-  User, Phone, Map, Building, Globe, CheckSquare, Info
+  User, Phone, Map, Building, Globe, CheckSquare, Info,
+  MapPinned, AlertCircle, Plus, LocateFixed
 } from 'lucide-react';
 
 interface AddressFormProps {
@@ -348,33 +349,65 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
         },
       });
 
-      if (result.data?.createAddress?.token) {
-        const newToken = result.data.createAddress.token;
+      const statusText = result.data?.createAddress?.statusText;
+      const address = result.data?.createAddress?.address;
+      
+      // Handle different statusText responses
+      if (statusText === "Address added and set as default successfully") {
+        // Success - default address created
+        showToast.success("Address added and set as your default address!");
         
-        console.log("New token received from address creation, updating session...");
-        
-        try {
+        // Update session with new token if provided
+        if (result.data?.createAddress?.token) {
+          const newToken = result.data.createAddress.token;
+          console.log("New token received, updating session...");
           await update({
             ...session,
             serverToken: newToken,
           });
-          
-          console.log("Session successfully updated with new token");
-        } catch (sessionError) {
-          console.error("Failed to update session:", sessionError);
         }
+        
+        onSuccess?.();
+        onAddressUpdate?.();
+        
+      } else if (statusText === "Address added but not set as default because you have active orders") {
+        // Warning - address added but not default due to active orders
+        showToast.warning("Address saved! However, it was not set as default because you have active orders.");
+        onSuccess?.();
+        onAddressUpdate?.();
+        
+      } else if (statusText === "Address added successfully") {
+        // Success - non-default address
+        showToast.success("Address added to your address book");
+        onSuccess?.();
+        onAddressUpdate?.();
+        
+      } else if (statusText?.includes("active orders")) {
+        // Fallback for any other active order related messages
+        showToast.warning(statusText);
+        onSuccess?.();
+        onAddressUpdate?.();
+        
+      } else {
+        // Default success case
+        showToast.success("Address saved successfully!");
+        onSuccess?.();
+        onAddressUpdate?.();
       }
 
-      onSuccess?.();
-      onAddressUpdate?.();
-      
     } catch (err: any) {
       console.error('Error creating address:', err);
       
+      // Handle different error types
       if (err.message?.includes("token") || err.message?.includes("unauthorized")) {
         setLocationError('Session expired. Please refresh the page and login again.');
+        showToast.error("Session expired. Please refresh and try again.");
+      } else if (err.message?.includes("active orders")) {
+        setLocationError(err.message);
+        showToast.warning(err.message);
       } else {
         setLocationError(err.message || 'Failed to save address. Please try again.');
+        showToast.error(err.message || "Failed to save address");
       }
     }
   }, [createAddress, formData, onSuccess, onAddressUpdate, session, update, userId, validateForm]);
@@ -463,20 +496,19 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           </div>
         )}
 
-{(formData.lat || formData.lng) && (
-  <div className="mb-3 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg">
-    <div className="flex items-start gap-2">
-      <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-      <div className="flex-1">
-        <h3 className="text-sm font-bold text-blue-800">Complete Your Address</h3>
-        <p className="text-xs text-blue-700 mt-0.5">
-          If you reside in an apartment, condominium, or multi-unit building, please provide your full address including unit, suite, or house number by editing street address input
-        </p>
-      </div>
-    </div>
-  </div>
-)}
-
+        {(formData.lat || formData.lng) && (
+          <div className="mb-3 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h3 className="text-sm font-bold text-blue-800">Complete Your Address</h3>
+                <p className="text-xs text-blue-700 mt-0.5">
+                  If you reside in an apartment, condominium, or multi-unit building, please provide your full address including unit, suite, or house number by editing street address input
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Location Success - Compact */}
         {formData.lat && formData.lng && (
@@ -484,7 +516,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="w-4 h-4 text-green-600" />
-                <span className="text-xs sm:text-sm text-green-700">✓ Location verified</span>
+                <span className="text-xs sm:text-sm text-green-700">Location verified</span>
               </div>
               <div className="text-xs text-green-600 font-mono">
                 {formData.lat.toFixed(4)}°, {formData.lng.toFixed(4)}°
@@ -518,11 +550,11 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
             </div>
           ) : (
             <div className="flex items-center justify-center gap-2">
-              <Navigation className="w-4 h-4" />
+              <LocateFixed className="w-4 h-4" />
               <span className="text-sm">
                 {!formData.lat || !formData.lng 
-                  ? '🔴 GET MY CURRENT LOCATION (REQUIRED)' 
-                  : '✅ UPDATE MY LOCATION'}
+                  ? 'GET MY CURRENT LOCATION (REQUIRED)' 
+                  : 'UPDATE MY LOCATION'}
               </span>
             </div>
           )}
@@ -595,7 +627,7 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
                     value={formData.phone}
                     onChange={handleChange}
                     className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="+63 912 345 6789"
+                    placeholder="+00 000 000 0000"
                     required
                   />
                 </div>
@@ -714,18 +746,29 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
               type="submit"
               disabled={loading || !formData.lat || !formData.lng}
               className={`
-                flex-1 py-2.5 px-4 rounded-lg font-medium transition-all text-sm
+                flex-1 py-2.5 px-4 rounded-lg font-medium transition-all text-sm flex items-center justify-center gap-2
                 ${formData.lat && formData.lng && !loading
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 cursor-pointer'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }
               `}
             >
-              {!formData.lat || !formData.lng 
-                ? '⚠️ GET LOCATION FIRST' 
-                : loading 
-                  ? 'Adding Address...' 
-                  : '✓ Add Address'}
+              {!formData.lat || !formData.lng ? (
+                <>
+                  <AlertCircle className="w-4 h-4" />
+                  <span>GET LOCATION FIRST</span>
+                </>
+              ) : loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Adding Address...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" />
+                  <span>Add Address</span>
+                </>
+              )}
             </button>
             
             {onCancel && (
@@ -742,8 +785,9 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
           {/* Warning Message - Compact */}
           {(!formData.lat || !formData.lng) && (
             <div className="text-center p-2 bg-yellow-50 rounded-lg">
-              <p className="text-xs text-yellow-800">
-                🔴 You must click <strong>GET MY CURRENT LOCATION</strong> before saving this address
+              <p className="text-xs text-yellow-800 flex items-center justify-center gap-1">
+                <AlertTriangle className="w-3 h-3" />
+                You must click <strong>GET MY CURRENT LOCATION</strong> before saving this address
               </p>
             </div>
           )}
@@ -751,4 +795,4 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       </div>
     </div>
   );
-            }
+}
