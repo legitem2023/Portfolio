@@ -7149,6 +7149,20 @@ if(isDefault) {
           throw new Error('Address not found or unauthorized');
         }
 
+       const activeorder = await prisma.orderItem.findMany({
+         where:{
+           userId:userId,
+           supplierId:userId,
+           status:"PENDING" || "PROCESSING" || "SHIPPED"
+         }
+       })
+      if(activeorder) {
+         return {
+            statusText: "Changing Default Address while theres an active transaction is not allowed!",
+            token:"",
+            role:""
+          } 
+        }                                                    
         // Use transaction to ensure data consistency
         const result = await prisma.$transaction(async (tx) => {
           // Set all user addresses to non-default first
