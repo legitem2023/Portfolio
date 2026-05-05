@@ -619,6 +619,209 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
+    getReturn: async (_: any, { id }: any) => {
+  try {
+    const returnRequest = await prisma.returnRequest.findUnique({
+      where: { id },
+      include: {
+        order: true,
+        user: true,
+        supplier: true,
+        items: {
+          include: {
+            orderItem: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        images: true,
+        tracking: true,
+        resolution: true
+      }
+    });
+    
+    if (!returnRequest) {
+      throw new Error('Return request not found');
+    }
+    
+    return returnRequest;
+  } catch (error) {
+    console.error('Error in getReturn resolver:', error);
+    throw new Error(`Failed to fetch return: ${error.message}`);
+  }
+},
+
+getUserReturns: async (_: any, { userId, status, limit = 50, offset = 0 }: any) => {
+  try {
+    const where: any = { userId };
+    if (status) where.status = status;
+    
+    const returns = await prisma.returnRequest.findMany({
+      where,
+      include: {
+        order: true,
+        supplier: true,
+        items: {
+          include: {
+            orderItem: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        images: true,
+        tracking: true,
+        resolution: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset
+    });
+    
+    return returns;
+  } catch (error) {
+    console.error('Error in getUserReturns resolver:', error);
+    throw new Error(`Failed to fetch user returns: ${error.message}`);
+  }
+},
+
+getSupplierReturns: async (_: any, { supplierId, status, limit = 50, offset = 0 }: any) => {
+  try {
+    const where: any = { supplierId };
+    if (status) where.status = status;
+    
+    const returns = await prisma.returnRequest.findMany({
+      where,
+      include: {
+        order: true,
+        user: true,
+        items: {
+          include: {
+            orderItem: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        images: true,
+        tracking: true,
+        resolution: true
+      },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset
+    });
+    
+    return returns;
+  } catch (error) {
+    console.error('Error in getSupplierReturns resolver:', error);
+    throw new Error(`Failed to fetch supplier returns: ${error.message}`);
+  }
+},
+
+getReturnStats: async (_: any, { userId }: any) => {
+  try {
+    const where: any = userId ? { userId } : {};
+    
+    const [totalReturns, pendingCount, approvedCount, rejectedCount, completedCount] = await Promise.all([
+      prisma.returnRequest.count({ where }),
+      prisma.returnRequest.count({ where: { ...where, status: 'PENDING' } }),
+      prisma.returnRequest.count({ where: { ...where, status: 'APPROVED' } }),
+      prisma.returnRequest.count({ where: { ...where, status: 'REJECTED' } }),
+      prisma.returnRequest.count({ where: { ...where, status: 'COMPLETED' } })
+    ]);
+    
+    const totalRefund = await prisma.returnRequest.aggregate({
+      where: { ...where, status: 'COMPLETED' },
+      _sum: { refundAmount: true }
+    });
+    
+    const completedReturns = await prisma.returnRequest.findMany({
+      where: { ...where, status: 'COMPLETED' },
+      select: { createdAt: true, updatedAt: true }
+    });
+    
+    let avgProcessingTime = 0;
+    if (completedReturns.length > 0) {
+      const totalDays = completedReturns.reduce((sum, ret) => {
+        const days = (new Date(ret.updatedAt) - new Date(ret.createdAt)) / (1000 * 60 * 60 * 24);
+        return sum + days;
+      }, 0);
+      avgProcessingTime = totalDays / completedReturns.length;
+    }
+    
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    
+    const allReturns = await prisma.returnRequest.findMany({
+      where: {
+        ...where,
+        createdAt: { gte: sixMonthsAgo }
+      },
+      select: {
+        createdAt: true,
+        refundAmount: true
+      }
+    });
+    
+    const monthlyStats: any[] = [];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+      
+      const monthReturns = allReturns.filter(r => {
+        const rDate = new Date(r.createdAt);
+        return rDate >= startOfMonth && rDate <= endOfMonth;
+      });
+      
+      monthlyStats.unshift({
+        month: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
+        count: monthReturns.length,
+        totalAmount: monthReturns.reduce((sum, r) => sum + (r.refundAmount || 0), 0)
+      });
+    }
+    
+    return {
+      totalReturns,
+      pendingCount,
+      approvedCount,
+      rejectedCount,
+      completedCount,
+      totalRefundAmount: totalRefund._sum.refundAmount || 0,
+      averageProcessingTime: avgProcessingTime,
+      returnsByMonth: monthlyStats
+    };
+  } catch (error) {
+    console.error('Error in getReturnStats resolver:', error);
+    throw new Error(`Failed to fetch return stats: ${error.message}`);
+  }
+},
+
+getReturnReasons: async (_: any, { category }: any, { prisma }: any) => {
+  try {
+    const where: any = { isActive: true };
+    if (category) where.category = category;
+    
+    const reasons = await prisma.returnReason.findMany({
+      where,
+      orderBy: { displayOrder: 'asc' }
+    });
+    
+    return reasons;
+  } catch (error) {
+    console.error('Error in getReturnReasons resolver:', error);
+    throw new Error(`Failed to fetch return reasons: ${error.message}`);
+  }
+},
     getReviews: async (_: any, { filters }: { filters?: any }) => {
       try {
         const {
