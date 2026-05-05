@@ -2,7 +2,7 @@
 "use client";
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   RotateCcw, 
   Search, 
@@ -25,10 +25,19 @@ import {
   Eye,
   Check,
   X,
-  Send
+  Send,
+  ChevronLeft,
+  ChevronRight,
+  Grid,
+  List,
+  Star,
+  TrendingUp,
+  Award,
+  Zap,
+  Shield
 } from "lucide-react";
 
-// GraphQL Queries and Mutations - FIXED product field (not an array)
+// GraphQL Queries and Mutations
 const GET_SUPPLIER_RETURNS = gql`
   query GetSupplierReturns($supplierId: ID!, $status: ReturnStatus, $limit: Int, $offset: Int) {
     getSupplierReturns(supplierId: $supplierId, status: $status, limit: $limit, offset: $offset) {
@@ -152,7 +161,7 @@ interface OrderItemInfo {
   id: string;
   quantity: number;
   price: number;
-  product: ProductInfo;  // Single object, not array
+  product: ProductInfo;
 }
 
 interface ReturnItem {
@@ -208,28 +217,28 @@ interface ReturnStats {
 }
 
 const statusColors: Record<string, string> = {
-  PENDING: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  APPROVED: 'bg-green-100 text-green-800 border-green-200',
-  REJECTED: 'bg-red-100 text-red-800 border-red-200',
-  RETURN_SHIPPED: 'bg-blue-100 text-blue-800 border-blue-200',
-  RECEIVED: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-  INSPECTING: 'bg-purple-100 text-purple-800 border-purple-200',
-  REFUND_INITIATED: 'bg-orange-100 text-orange-800 border-orange-200',
-  COMPLETED: 'bg-green-100 text-green-800 border-green-200',
-  CANCELLED: 'bg-gray-100 text-gray-800 border-gray-200'
+  PENDING: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+  APPROVED: 'bg-green-50 text-green-700 border-green-200',
+  REJECTED: 'bg-red-50 text-red-700 border-red-200',
+  RETURN_SHIPPED: 'bg-blue-50 text-blue-700 border-blue-200',
+  RECEIVED: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  INSPECTING: 'bg-purple-50 text-purple-700 border-purple-200',
+  REFUND_INITIATED: 'bg-orange-50 text-orange-700 border-orange-200',
+  COMPLETED: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  CANCELLED: 'bg-gray-50 text-gray-700 border-gray-200'
 };
 
 const statusOptions = [
-  { value: 'ALL', label: 'All Returns' },
-  { value: 'PENDING', label: 'Pending' },
-  { value: 'APPROVED', label: 'Approved' },
-  { value: 'REJECTED', label: 'Rejected' },
-  { value: 'RETURN_SHIPPED', label: 'Return Shipped' },
-  { value: 'RECEIVED', label: 'Received' },
-  { value: 'INSPECTING', label: 'Inspecting' },
-  { value: 'REFUND_INITIATED', label: 'Refund Initiated' },
-  { value: 'COMPLETED', label: 'Completed' },
-  { value: 'CANCELLED', label: 'Cancelled' }
+  { value: 'ALL', label: 'All Returns', icon: '📋' },
+  { value: 'PENDING', label: 'Pending', icon: '⏳' },
+  { value: 'APPROVED', label: 'Approved', icon: '✅' },
+  { value: 'REJECTED', label: 'Rejected', icon: '❌' },
+  { value: 'RETURN_SHIPPED', label: 'Return Shipped', icon: '📦' },
+  { value: 'RECEIVED', label: 'Received', icon: '📥' },
+  { value: 'INSPECTING', label: 'Inspecting', icon: '🔍' },
+  { value: 'REFUND_INITIATED', label: 'Refund Initiated', icon: '💰' },
+  { value: 'COMPLETED', label: 'Completed', icon: '✓' },
+  { value: 'CANCELLED', label: 'Cancelled', icon: '✗' }
 ];
 
 const formatPrice = (amount: number): string => {
@@ -240,12 +249,22 @@ const formatPrice = (amount: number): string => {
 };
 
 const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins} min ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: 'numeric'
   });
 };
 
@@ -259,6 +278,35 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [refundAmount, setRefundAmount] = useState('');
   const [refundMethod, setRefundMethod] = useState('ORIGINAL_PAYMENT');
   const [selectedAction, setSelectedAction] = useState<'APPROVED' | 'REJECTED' | 'RECEIVED' | 'INSPECTING' | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Close modals on escape key
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowApprovalModal(false);
+        setShowRefundModal(false);
+        setIsFilterOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, []);
+
+  // Prevent body scroll when modals are open
+  useEffect(() => {
+    if (showApprovalModal || showRefundModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showApprovalModal, showRefundModal]);
 
   const { loading, error, data, refetch } = useQuery(GET_SUPPLIER_RETURNS, {
     variables: { 
@@ -287,6 +335,13 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     returnReq.reason.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Pagination
+  const totalPages = Math.ceil(filteredReturns.length / itemsPerPage);
+  const paginatedReturns = filteredReturns.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const handleStatusUpdate = async () => {
     if (!selectedReturn || !selectedAction) return;
 
@@ -301,7 +356,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
         }
       });
       
-      alert(`Return request ${selectedAction.toLowerCase()} successfully!`);
       setShowApprovalModal(false);
       setSelectedAction(null);
       setVendorNotes('');
@@ -334,7 +388,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
         }
       });
       
-      alert('Refund processed successfully!');
       setShowRefundModal(false);
       setRefundAmount('');
       refetch();
@@ -358,7 +411,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           }
         }
       });
-      alert('Return marked as received!');
       refetch();
       refetchStats();
     } catch (err: any) {
@@ -378,26 +430,24 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     };
   };
 
-  const getTotalRefund = (returnReq: ReturnRequest) => {
-    return returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
-  };
-
   if (loading && returns.length === 0) {
     return <VendorReturnShimmer />;
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
-          <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
-          <h2 className="text-lg font-semibold text-red-600 mb-2">Failed to Load Returns</h2>
-          <p className="text-sm text-gray-500 mb-4">{error.message}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full text-center transform transition-all">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle size={40} className="text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to Load Returns</h2>
+          <p className="text-sm text-gray-500 mb-6">{error.message}</p>
           <button 
             onClick={() => refetch()}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg transform transition-all active:scale-95"
           >
-            Retry
+            Try Again
           </button>
         </div>
       </div>
@@ -405,106 +455,271 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-            <RotateCcw className="text-orange-500" />
-            Return Management
-          </h1>
-          <p className="text-sm text-gray-500">Manage customer return requests and process refunds</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 md:py-8">
+        {/* Header - Responsive */}
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                  <RotateCcw size={18} className="text-white" />
+                </div>
+                Return Management
+              </h1>
+              <p className="text-sm text-gray-500">Manage customer return requests and process refunds</p>
+            </div>
+            
+            {/* View Toggle for Mobile */}
+            <div className="flex gap-2 sm:hidden">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'list' 
+                    ? 'bg-purple-600 text-white shadow-md' 
+                    : 'bg-white text-gray-600 border border-gray-200'
+                }`}
+              >
+                <List size={16} className="inline mr-1" /> List
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                  viewMode === 'grid' 
+                    ? 'bg-purple-600 text-white shadow-md' 
+                    : 'bg-white text-gray-600 border border-gray-200'
+                }`}
+              >
+                <Grid size={16} className="inline mr-1" /> Grid
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Horizontal Scroll on Mobile */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
-            <StatCard title="Total Returns" value={stats.totalReturns} color="bg-blue-500" />
-            <StatCard title="Pending" value={stats.pendingCount} color="bg-yellow-500" />
-            <StatCard title="Approved" value={stats.approvedCount} color="bg-green-500" />
-            <StatCard title="Rejected" value={stats.rejectedCount} color="bg-red-500" />
-            <StatCard title="Completed" value={stats.completedCount} color="bg-purple-500" />
-            <StatCard title="Refunded" value={formatPrice(stats.totalRefundAmount)} color="bg-indigo-500" isCurrency />
+          <div className="mb-6 md:mb-8 overflow-x-auto pb-2 -mx-4 px-4">
+            <div className="flex gap-3 min-w-min md:grid md:grid-cols-3 lg:grid-cols-6 md:gap-4">
+              <StatCard title="Total Returns" value={stats.totalReturns} icon="📊" color="from-blue-500 to-blue-600" />
+              <StatCard title="Pending" value={stats.pendingCount} icon="⏳" color="from-yellow-500 to-yellow-600" />
+              <StatCard title="Approved" value={stats.approvedCount} icon="✅" color="from-green-500 to-green-600" />
+              <StatCard title="Rejected" value={stats.rejectedCount} icon="❌" color="from-red-500 to-red-600" />
+              <StatCard title="Completed" value={stats.completedCount} icon="✓" color="from-purple-500 to-purple-600" />
+              <StatCard title="Refunded" value={formatPrice(stats.totalRefundAmount)} icon="💰" color="from-indigo-500 to-indigo-600" isCurrency />
+            </div>
           </div>
         )}
 
-        {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 relative">
+        {/* Filters - Responsive */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex flex-col gap-3">
+            {/* Search Bar */}
+            <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by return #, customer name, or reason..."
+                placeholder="Search by return #, customer, or reason..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
               />
             </div>
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            >
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => {
-                refetch();
-                refetchStats();
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors"
-            >
-              <RefreshCw size={18} />
-              Refresh
-            </button>
+
+            {/* Filter Row */}
+            <div className="flex gap-2">
+              {/* Status Filter Button for Mobile */}
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="md:hidden flex items-center gap-2 px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-700 text-sm font-medium"
+              >
+                <Filter size={16} />
+                {selectedStatus === 'ALL' ? 'All Status' : statusOptions.find(s => s.value === selectedStatus)?.label}
+                <ChevronDown size={14} className={`transform transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {/* Desktop Status Select */}
+              <select
+                value={selectedStatus}
+                onChange={(e) => {
+                  setSelectedStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="hidden md:block px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 bg-white text-gray-700 text-sm font-medium cursor-pointer"
+              >
+                {statusOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.icon} {option.label}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={() => {
+                  refetch();
+                  refetchStats();
+                }}
+                className="px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 text-gray-700 text-sm font-medium active:scale-95"
+              >
+                <RefreshCw size={16} />
+                <span className="hidden sm:inline">Refresh</span>
+              </button>
+            </div>
+
+            {/* Mobile Status Filter Dropdown */}
+            {isFilterOpen && (
+              <div className="md:hidden bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                {statusOptions.map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSelectedStatus(option.value);
+                      setIsFilterOpen(false);
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full text-left px-4 py-3 text-sm transition-colors ${
+                      selectedStatus === option.value
+                        ? 'bg-purple-50 text-purple-700 font-medium'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="mr-2">{option.icon}</span>
+                    {option.label}
+                    {selectedStatus === option.value && (
+                      <Check size={16} className="float-right text-purple-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Returns List */}
-        {filteredReturns.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-            <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
+        {/* Returns List/Grid */}
+        {paginatedReturns.length === 0 ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <RotateCcw size={40} className="text-gray-300" />
+            </div>
             <h3 className="text-lg font-semibold text-gray-500 mb-2">No Return Requests</h3>
             <p className="text-sm text-gray-400">No return requests match your filters.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredReturns.map((returnReq) => (
-              <ReturnRequestCard
-                key={returnReq.id}
-                returnReq={returnReq}
-                getProductInfo={getProductInfo}
-                onViewDetails={() => setSelectedReturn(returnReq)}
-                onApprove={() => {
-                  setSelectedReturn(returnReq);
-                  setSelectedAction('APPROVED');
-                  setShowApprovalModal(true);
-                }}
-                onReject={() => {
-                  setSelectedReturn(returnReq);
-                  setSelectedAction('REJECTED');
-                  setShowApprovalModal(true);
-                }}
-                onMarkReceived={() => handleMarkAsReceived(returnReq)}
-                onStartInspection={() => {
-                  setSelectedReturn(returnReq);
-                  setSelectedAction('INSPECTING');
-                  setShowApprovalModal(true);
-                }}
-                onProcessRefund={() => {
-                  setSelectedReturn(returnReq);
-                  setShowRefundModal(true);
-                }}
-              />
-            ))}
-          </div>
+          <>
+            <div className={viewMode === 'grid' && window.innerWidth < 768 ? 'grid grid-cols-1 gap-4' : 'space-y-4'}>
+              {paginatedReturns.map((returnReq) => (
+                viewMode === 'grid' && window.innerWidth < 768 ? (
+                  <ReturnRequestGridCard
+                    key={returnReq.id}
+                    returnReq={returnReq}
+                    getProductInfo={getProductInfo}
+                    onViewDetails={() => setSelectedReturn(returnReq)}
+                    onApprove={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('APPROVED');
+                      setShowApprovalModal(true);
+                    }}
+                    onReject={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('REJECTED');
+                      setShowApprovalModal(true);
+                    }}
+                    onMarkReceived={() => handleMarkAsReceived(returnReq)}
+                    onStartInspection={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('INSPECTING');
+                      setShowApprovalModal(true);
+                    }}
+                    onProcessRefund={() => {
+                      setSelectedReturn(returnReq);
+                      setShowRefundModal(true);
+                    }}
+                  />
+                ) : (
+                  <ReturnRequestCard
+                    key={returnReq.id}
+                    returnReq={returnReq}
+                    getProductInfo={getProductInfo}
+                    onViewDetails={() => setSelectedReturn(returnReq)}
+                    onApprove={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('APPROVED');
+                      setShowApprovalModal(true);
+                    }}
+                    onReject={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('REJECTED');
+                      setShowApprovalModal(true);
+                    }}
+                    onMarkReceived={() => handleMarkAsReceived(returnReq)}
+                    onStartInspection={() => {
+                      setSelectedReturn(returnReq);
+                      setSelectedAction('INSPECTING');
+                      setShowApprovalModal(true);
+                    }}
+                    onProcessRefund={() => {
+                      setSelectedReturn(returnReq);
+                      setShowRefundModal(true);
+                    }}
+                  />
+                )
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <div className="flex gap-1">
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+                          currentPage === pageNum
+                            ? 'bg-purple-600 text-white shadow-md'
+                            : 'border border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      {/* Approval/Rejection Modal */}
+      {/* Modals */}
       {showApprovalModal && selectedReturn && selectedAction && (
         <ApprovalModal
           returnReq={selectedReturn}
@@ -520,7 +735,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
         />
       )}
 
-      {/* Refund Modal */}
       {showRefundModal && selectedReturn && (
         <RefundModal
           returnReq={selectedReturn}
@@ -539,20 +753,130 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   );
 }
 
-// Stat Card Component
-function StatCard({ title, value, color, isCurrency = false }: { title: string; value: number | string; color: string; isCurrency?: boolean }) {
+// Enhanced Stat Card Component
+function StatCard({ title, value, icon, color, isCurrency = false }: { title: string; value: number | string; icon: string; color: string; isCurrency?: boolean }) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 min-w-[140px] md:min-w-0 hover:shadow-md transition-shadow">
+      <div className="flex items-start justify-between mb-2">
+        <span className="text-2xl">{icon}</span>
+        <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${color} opacity-50`}></div>
+      </div>
       <p className="text-xs text-gray-500 mb-1">{title}</p>
       <p className={`text-xl font-bold ${isCurrency ? 'text-green-600' : 'text-gray-900'}`}>
         {isCurrency && typeof value === 'number' ? formatPrice(value) : value}
       </p>
-      <div className={`w-full h-1 bg-${color} rounded-full mt-2 opacity-50`}></div>
+      <div className={`w-full h-1 bg-gradient-to-r ${color} rounded-full mt-2`}></div>
     </div>
   );
 }
 
-// Return Request Card Component
+// Grid Card for Mobile
+function ReturnRequestGridCard({ 
+  returnReq, 
+  getProductInfo,
+  onViewDetails, 
+  onApprove, 
+  onReject, 
+  onMarkReceived,
+  onStartInspection,
+  onProcessRefund
+}: { 
+  returnReq: ReturnRequest;
+  getProductInfo: (product: any) => ProductInfo;
+  onViewDetails: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+  onMarkReceived: () => void;
+  onStartInspection: () => void;
+  onProcessRefund: () => void;
+}) {
+  const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
+  const productInfo = getProductInfo(returnReq.items[0]?.orderItem.product);
+
+  const getActionButtons = () => {
+    switch (returnReq.status) {
+      case 'PENDING':
+        return (
+          <div className="flex gap-2">
+            <button onClick={onApprove} className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:scale-95 transition-all">
+              Approve
+            </button>
+            <button onClick={onReject} className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 active:scale-95 transition-all">
+              Reject
+            </button>
+          </div>
+        );
+      case 'RETURN_SHIPPED':
+        return (
+          <button onClick={onMarkReceived} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all">
+            Mark Received
+          </button>
+        );
+      case 'RECEIVED':
+        return (
+          <button onClick={onStartInspection} className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 active:scale-95 transition-all">
+            Start Inspection
+          </button>
+        );
+      case 'INSPECTING':
+        return (
+          <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all">
+            Process Refund
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all">
+      <div className="relative">
+        {/* Status Badge */}
+        <div className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${statusColors[returnReq.status]} border`}>
+          {returnReq.status.replace('_', ' ')}
+        </div>
+        
+        {/* Product Image */}
+        {productInfo.images?.[0] && (
+          <img 
+            src={productInfo.images[0]}
+            alt={productInfo.name}
+            className="w-full h-40 object-cover"
+          />
+        )}
+        
+        {/* Content */}
+        <div className="p-4">
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-1">Return #{returnReq.returnNumber}</p>
+            <p className="font-semibold text-gray-800 text-sm line-clamp-2">{returnReq.reason}</p>
+          </div>
+
+          <div className="flex justify-between items-center mb-3 text-sm">
+            <div className="flex items-center gap-1 text-gray-500">
+              <User size={12} />
+              <span className="text-xs">{returnReq.user.firstName} {returnReq.user.lastName}</span>
+            </div>
+            <div className="text-green-600 font-bold">{formatPrice(totalRefund)}</div>
+          </div>
+
+          <div className="flex gap-2 mt-3">
+            <button
+              onClick={onViewDetails}
+              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all"
+            >
+              Details
+            </button>
+            {getActionButtons()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Main Return Request Card Component (Desktop)
 function ReturnRequestCard({ 
   returnReq, 
   getProductInfo,
@@ -580,29 +904,29 @@ function ReturnRequestCard({
       case 'PENDING':
         return (
           <div className="flex gap-2">
-            <button onClick={onApprove} className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors flex items-center justify-center gap-1">
+            <button onClick={onApprove} className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-all flex items-center justify-center gap-1">
               <Check size={16} /> Approve
             </button>
-            <button onClick={onReject} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors flex items-center justify-center gap-1">
+            <button onClick={onReject} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-all flex items-center justify-center gap-1">
               <X size={16} /> Reject
             </button>
           </div>
         );
       case 'RETURN_SHIPPED':
         return (
-          <button onClick={onMarkReceived} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors flex items-center justify-center gap-1">
+          <button onClick={onMarkReceived} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all flex items-center justify-center gap-1">
             <Package size={16} /> Mark as Received
           </button>
         );
       case 'RECEIVED':
         return (
-          <button onClick={onStartInspection} className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-1">
+          <button onClick={onStartInspection} className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all flex items-center justify-center gap-1">
             <Camera size={16} /> Start Inspection
           </button>
         );
       case 'INSPECTING':
         return (
-          <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors flex items-center justify-center gap-1">
+          <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-1">
             <DollarSign size={16} /> Process Refund
           </button>
         );
@@ -612,19 +936,21 @@ function ReturnRequestCard({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Header */}
-      <div className={`p-4 border-b ${statusColors[returnReq.status]?.replace('text-', 'bg-').replace('800', '50') || 'bg-gray-50'}`}>
-        <div className="flex justify-between items-start flex-wrap gap-2">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <RotateCcw size={18} className="text-orange-500" />
-              <span className="font-bold text-gray-900">Return #{returnReq.returnNumber}</span>
-              <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[returnReq.status]}`}>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all">
+      <div className="p-4 sm:p-5">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <div className="flex items-center gap-1">
+                <RotateCcw size={16} className="text-orange-500" />
+                <span className="font-semibold text-gray-900 text-sm">#{returnReq.returnNumber}</span>
+              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[returnReq.status]} border`}>
                 {returnReq.status.replace('_', ' ')}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-gray-500">
+            <div className="flex flex-wrap gap-3 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <Calendar size={12} /> {formatDate(returnReq.createdAt)}
               </span>
@@ -636,15 +962,13 @@ function ReturnRequestCard({
               </span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">Total Refund</div>
+          <div className="text-left sm:text-right">
+            <div className="text-xs text-gray-500">Total Refund</div>
             <div className="text-lg font-bold text-green-600">{formatPrice(totalRefund)}</div>
           </div>
         </div>
-      </div>
 
-      {/* Body */}
-      <div className="p-4">
+        {/* Reason */}
         <div className="mb-3">
           <div className="flex items-center gap-2 mb-1">
             <FileText size={14} className="text-gray-400" />
@@ -653,27 +977,7 @@ function ReturnRequestCard({
           <p className="text-sm text-gray-600 ml-6">{returnReq.reason}</p>
         </div>
 
-        {returnReq.description && (
-          <div className="mb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <MessageCircle size={14} className="text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Additional Details:</span>
-            </div>
-            <p className="text-sm text-gray-600 ml-6">{returnReq.description}</p>
-          </div>
-        )}
-
-        {returnReq.tracking?.trackingNumber && (
-          <div className="mb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Truck size={14} className="text-gray-400" />
-              <span className="text-sm font-medium text-gray-700">Return Tracking:</span>
-            </div>
-            <p className="text-sm text-gray-600 ml-6">{returnReq.tracking.trackingNumber}</p>
-          </div>
-        )}
-
-        {/* Items Summary */}
+        {/* Expand/Collapse */}
         <button
           onClick={() => setExpanded(!expanded)}
           className="w-full flex items-center justify-between text-gray-600 hover:text-gray-800 py-2 border-t border-gray-100 mt-2"
@@ -697,7 +1001,7 @@ function ReturnRequestCard({
                       />
                     )}
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-800">
+                      <h4 className="font-medium text-gray-800 text-sm line-clamp-2">
                         {productInfo.name}
                       </h4>
                       <p className="text-xs text-gray-500">SKU: {productInfo.sku}</p>
@@ -725,13 +1029,13 @@ function ReturnRequestCard({
             {returnReq.images.length > 0 && (
               <div className="mt-3">
                 <p className="text-sm font-medium text-gray-700 mb-2">Customer Uploaded Images:</p>
-                <div className="flex gap-2 overflow-x-auto">
+                <div className="flex gap-2 overflow-x-auto pb-2">
                   {returnReq.images.map((img) => (
                     <img
                       key={img.id}
                       src={img.imageUrl}
                       alt="Return evidence"
-                      className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80"
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={() => window.open(img.imageUrl, '_blank')}
                     />
                   ))}
@@ -743,14 +1047,16 @@ function ReturnRequestCard({
 
         {/* Action Buttons */}
         <div className="mt-4 pt-3 border-t border-gray-100">
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={onViewDetails}
-              className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-1"
+              className="sm:flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-1"
             >
               <Eye size={16} /> View Details
             </button>
-            {getActionButtons()}
+            <div className="sm:flex-1">
+              {getActionButtons()}
+            </div>
           </div>
         </div>
       </div>
@@ -758,7 +1064,7 @@ function ReturnRequestCard({
   );
 }
 
-// Approval Modal Component
+// Approval Modal Component (Touch Optimized)
 function ApprovalModal({ 
   returnReq, 
   action, 
@@ -774,32 +1080,36 @@ function ApprovalModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
-  return (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
-      <div className="absolute inset-0 bg-black bg-opacity-50" />
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
-              {action === 'APPROVED' ? 'Approve Return' : 
-               action === 'REJECTED' ? 'Reject Return' : 
-               action === 'INSPECTING' ? 'Start Inspection' : 'Update Status'}
-            </h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X size={24} />
-            </button>
-          </div>
+  // Close on backdrop click
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-2">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleBackdropClick}>
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">
+            {action === 'APPROVED' ? 'Approve Return' : 
+             action === 'REJECTED' ? 'Reject Return' : 
+             action === 'INSPECTING' ? 'Start Inspection' : 'Update Status'}
+          </h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-5">
+          <div className="mb-5">
+            <p className="text-sm text-gray-600 mb-1">
               <strong>Return #{returnReq.returnNumber}</strong>
             </p>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600">
               Customer: {returnReq.user.firstName} {returnReq.user.lastName}
             </p>
           </div>
 
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Vendor Notes (Optional)
             </label>
@@ -807,7 +1117,7 @@ function ApprovalModal({
               value={vendorNotes}
               onChange={(e) => onNotesChange(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
               placeholder={action === 'APPROVED' ? 
                 "Add instructions for customer to ship items back..." : 
                 action === 'REJECTED' ? 
@@ -816,10 +1126,10 @@ function ApprovalModal({
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              className={`flex-1 py-2 rounded-lg font-medium text-white transition-colors ${
+              className={`flex-1 py-3 rounded-xl font-medium text-white transition-all active:scale-95 ${
                 action === 'APPROVED' ? 'bg-green-600 hover:bg-green-700' :
                 action === 'REJECTED' ? 'bg-red-600 hover:bg-red-700' :
                 'bg-purple-600 hover:bg-purple-700'
@@ -831,7 +1141,7 @@ function ApprovalModal({
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -842,7 +1152,7 @@ function ApprovalModal({
   );
 }
 
-// Refund Modal Component
+// Refund Modal Component (Touch Optimized)
 function RefundModal({ 
   returnReq, 
   refundAmount, 
@@ -861,30 +1171,34 @@ function RefundModal({
   onClose: () => void;
 }) {
   const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
+  const maxRefund = Math.min(totalRefund, returnReq.refundAmount || totalRefund);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-50" onClick={onClose}>
-      <div className="absolute inset-0 bg-black bg-opacity-50" />
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl max-w-md w-full mx-4" onClick={e => e.stopPropagation()}>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Process Refund</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X size={24} />
-            </button>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleBackdropClick}>
+      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex justify-between items-center">
+          <h2 className="text-lg font-bold text-gray-900">Process Refund</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
 
-          <div className="mb-4">
-            <p className="text-sm text-gray-600 mb-2">
+        <div className="p-5">
+          <div className="mb-5">
+            <p className="text-sm text-gray-600 mb-1">
               <strong>Return #{returnReq.returnNumber}</strong>
             </p>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 mb-3">
               Customer: {returnReq.user.firstName} {returnReq.user.lastName}
             </p>
-            <div className="bg-gray-50 p-3 rounded-lg mb-4">
-              <div className="flex justify-between mb-2">
-                <span className="text-sm text-gray-600">Total Refund Amount:</span>
-                <span className="text-sm font-bold text-green-600">{formatPrice(totalRefund)}</span>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Maximum Refund Amount:</span>
+                <span className="text-lg font-bold text-green-600">{formatPrice(maxRefund)}</span>
               </div>
             </div>
           </div>
@@ -893,44 +1207,51 @@ function RefundModal({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Refund Amount *
             </label>
-            <input
-              type="number"
-              step="0.01"
-              value={refundAmount}
-              onChange={(e) => onAmountChange(e.target.value)}
-              placeholder={`Enter amount (max ${totalRefund})`}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₱</span>
+              <input
+                type="number"
+                step="0.01"
+                value={refundAmount}
+                onChange={(e) => onAmountChange(e.target.value)}
+                placeholder="0.00"
+                max={maxRefund}
+                className="w-full pl-8 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              />
+            </div>
+            {parseFloat(refundAmount) > maxRefund && (
+              <p className="text-xs text-red-500 mt-1">Amount exceeds maximum refund value</p>
+            )}
           </div>
 
-          <div className="mb-4">
+          <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Refund Method *
             </label>
             <select
               value={refundMethod}
               onChange={(e) => onMethodChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-white"
             >
-              <option value="ORIGINAL_PAYMENT">Original Payment Method</option>
-              <option value="STORE_CREDIT">Store Credit</option>
-              <option value="BANK_TRANSFER">Bank Transfer</option>
-              <option value="GCASH">GCash</option>
-              <option value="PAYMAYA">PayMaya</option>
+              <option value="ORIGINAL_PAYMENT">💳 Original Payment Method</option>
+              <option value="STORE_CREDIT">🎁 Store Credit</option>
+              <option value="BANK_TRANSFER">🏦 Bank Transfer</option>
+              <option value="GCASH">📱 GCash</option>
+              <option value="PAYMAYA">📱 PayMaya</option>
             </select>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              disabled={!refundAmount || parseFloat(refundAmount) <= 0}
-              className="flex-1 bg-orange-600 text-white py-2 rounded-lg font-medium hover:bg-orange-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund}
+              className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
             >
               Process Refund
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -944,35 +1265,39 @@ function RefundModal({
 // Shimmer Loading Component
 function VendorReturnShimmer() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+        {/* Header Shimmer */}
         <div className="mb-8">
-          <div className="h-8 w-48 bg-gray-200 rounded shimmer mb-2"></div>
-          <div className="h-4 w-64 bg-gray-200 rounded shimmer"></div>
+          <div className="h-8 w-48 bg-gray-200 rounded-lg shimmer mb-2"></div>
+          <div className="h-4 w-64 bg-gray-200 rounded-lg shimmer"></div>
         </div>
 
+        {/* Stats Shimmer */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
               <div className="h-3 w-16 bg-gray-200 rounded shimmer mb-2"></div>
-              <div className="h-6 w-20 bg-gray-200 rounded shimmer"></div>
+              <div className="h-7 w-20 bg-gray-200 rounded shimmer"></div>
             </div>
           ))}
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex gap-4">
-            <div className="flex-1 h-10 bg-gray-200 rounded shimmer"></div>
-            <div className="w-32 h-10 bg-gray-200 rounded shimmer"></div>
-            <div className="w-24 h-10 bg-gray-200 rounded shimmer"></div>
+        {/* Filter Shimmer */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
+          <div className="flex gap-3">
+            <div className="flex-1 h-11 bg-gray-200 rounded-xl shimmer"></div>
+            <div className="w-32 h-11 bg-gray-200 rounded-xl shimmer"></div>
+            <div className="w-24 h-11 bg-gray-200 rounded-xl shimmer"></div>
           </div>
         </div>
 
+        {/* Cards Shimmer */}
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
               <div className="flex justify-between mb-3">
-                <div className="space-y-2">
+                <div className="space-y-2 flex-1">
                   <div className="h-5 w-40 bg-gray-200 rounded shimmer"></div>
                   <div className="h-3 w-60 bg-gray-200 rounded shimmer"></div>
                 </div>
@@ -1008,4 +1333,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-  }
+                                         }
