@@ -424,6 +424,7 @@ model OrderItem {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId     String?  @db.ObjectId
   productId   String?  @db.ObjectId
+  userId      String?  @db.ObjectId
   supplierId  String?  @db.ObjectId
   riderId     String?  @db.ObjectId
   trackingNumber String?
