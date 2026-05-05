@@ -516,29 +516,30 @@ export default function OrderTracking({ userId }: { userId: string }) {
   };
 
   if (loading) return <ShimmerLoading status={selectedStatus}/>;
-  if (error) {
-    console.error('GraphQL Error:', error);
-    return <ErrorMessage error={error} />;
+if (error) {
+  console.error('GraphQL Error:', error);
+  return <ErrorMessage error={error} />;
+}
+
+const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
+const userReturns: ReturnRequest[] = returnsData?.getUserReturns || [];
+
+if (!hasOrders && selectedStatus !== 'ALL' && !showReturnHistory) return <EmptyState status={selectedStatus} />;
+
+// Fix: Add null check for data
+const orders: Order[] = data?.ordered_products?.orders || [];
+const currentOrderCount = orders.length;
+
+const allSupplierGroups: SupplierGroup[] = [];
+orders.forEach(order => {
+  if (order.items && order.items.length > 0) {
+    const groups = groupOrderBySupplier(order);
+    allSupplierGroups.push(...groups);
   }
+});
+
+const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
   
-  const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
-  const userReturns: ReturnRequest[] = returnsData?.getUserReturns || [];
-
-  if (!hasOrders && selectedStatus !== 'ALL' && !showReturnHistory) return <EmptyState status={selectedStatus} />;
-
-  const orders: Order[] = data.ordered_products.orders;
-  const currentOrderCount = orders.length;
-  
-  const allSupplierGroups: SupplierGroup[] = [];
-  orders.forEach(order => {
-    if (order.items && order.items.length > 0) {
-      const groups = groupOrderBySupplier(order);
-      allSupplierGroups.push(...groups);
-    }
-  });
-
-  const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
