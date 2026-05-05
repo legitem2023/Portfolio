@@ -947,7 +947,7 @@ function CreateReturnModal({ order, items, userId, onClose, onSubmit }: {
     field: 'quantity' | 'reason' | 'condition',
     value: any
   ) => {
-    const details = itemDetails.get(itemId);
+    const details:any = itemDetails.get(itemId);
     if (details) {
       details[field] = value;
       itemDetails.set(itemId, details);
