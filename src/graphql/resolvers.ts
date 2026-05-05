@@ -647,7 +647,7 @@ export const resolvers = {
     }
     
     return returnRequest;
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in getReturn resolver:', error);
     throw new Error(`Failed to fetch return: ${error.message}`);
   }
@@ -682,7 +682,7 @@ getUserReturns: async (_: any, { userId, status, limit = 50, offset = 0 }: any) 
     });
     
     return returns;
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in getUserReturns resolver:', error);
     throw new Error(`Failed to fetch user returns: ${error.message}`);
   }
@@ -717,7 +717,7 @@ getSupplierReturns: async (_: any, { supplierId, status, limit = 50, offset = 0 
     });
     
     return returns;
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in getSupplierReturns resolver:', error);
     throw new Error(`Failed to fetch supplier returns: ${error.message}`);
   }
@@ -800,7 +800,7 @@ getReturnStats: async (_: any, { userId }: any) => {
       averageProcessingTime: avgProcessingTime,
       returnsByMonth: monthlyStats
     };
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in getReturnStats resolver:', error);
     throw new Error(`Failed to fetch return stats: ${error.message}`);
   }
@@ -817,7 +817,7 @@ getReturnReasons: async (_: any, { category }: any, { prisma }: any) => {
     });
     
     return reasons;
-  } catch (error) {
+  } catch (error:any) {
     console.error('Error in getReturnReasons resolver:', error);
     throw new Error(`Failed to fetch return reasons: ${error.message}`);
   }
