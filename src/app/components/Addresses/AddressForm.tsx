@@ -395,13 +395,13 @@ export default function AddressForm({ userId, onSuccess, onCancel, onAddressUpda
       // Handle different error types
       if (err.message?.includes("token") || err.message?.includes("unauthorized")) {
         setLocationError('Session expired. Please refresh the page and login again.');
-        showToast.error("Session expired. Please refresh and try again.");
+        showToast("Session expired. Please refresh and try again.","error");
       } else if (err.message?.includes("active orders")) {
         setLocationError(err.message);
-        showToast.warning(err.message);
+        showToast(err.message,"warning");
       } else {
         setLocationError(err.message || 'Failed to save address. Please try again.');
-        showToast.error(err.message || "Failed to save address");
+        showToast(err.message || "Failed to save address","error");
       }
     }
   }, [createAddress, formData, onSuccess, onAddressUpdate, session, update, userId, validateForm]);
