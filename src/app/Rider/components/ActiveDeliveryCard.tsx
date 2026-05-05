@@ -813,9 +813,19 @@ console.log(payments);
                     <Building size={10} />
                     <span className="truncate">{delivery.supplierName}</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-1">
                     <Phone size={10} />
                     <span>{delivery.supplierContact}</span>
+                  </div>*/}
+                  <div className="flex items-center gap-1">
+                     <Phone size={10} />
+                     <a href={`tel:${delivery.supplierContact}`}>
+                       <span>{delivery.supplierContact}</span>
+                     </a>
+                     <span> / </span>
+                     <a href={`sms:${delivery.supplierContact}`}>
+                       <span>SMS</span>
+                     </a>
                   </div>
                 </div>
               )}
@@ -844,9 +854,19 @@ console.log(payments);
                     <User size={10} />
                     <span className="truncate">{delivery.customer}</span>
                   </div>
-                  <div className="flex items-center gap-1">
+                  {/* <div className="flex items-center gap-1">
                     <Phone size={10} />
                     <span>{delivery.customerContact}</span>
+                  </div>*/}
+                  <div className="flex items-center gap-1">
+                     <Phone size={10} />
+                     <a href={`tel:${delivery.customerContact}`}>
+                       <span>{delivery.customerContact}</span>
+                     </a>
+                     <span> / </span>
+                     <a href={`sms:${delivery.customerContact}`}>
+                       <span>SMS</span>
+                     </a>
                   </div>
                 </div>
               )}
