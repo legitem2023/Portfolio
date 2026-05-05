@@ -6,6 +6,7 @@ import { MoreVertical, Edit2, Trash2, MapPin, Home, Building2, Package, CreditCa
 import AddressForm from './Addresses/AddressForm';
 import EditAddressForm from './Addresses/EditAddressForm';
 import { SET_DEFAULT_ADDRESS } from './graphql/mutation';
+import { showToast } from '../../../utils/toastify';
 
 // Types
 export interface Address {
