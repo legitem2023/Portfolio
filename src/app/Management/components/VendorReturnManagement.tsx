@@ -588,7 +588,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
             </div>
 
             {/* Mobile Status Filter Dropdown */}
-            if (isFilterOpen && (
+            {isFilterOpen && (
               <div className="md:hidden bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
                 {statusOptions.map(option => (
                   <button
