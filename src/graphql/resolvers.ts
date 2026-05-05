@@ -7076,7 +7076,21 @@ if (activeorder.length > 0) {
         lng
       } = args.input;
 
-if(isDefault) {
+const activeorder = await prisma.orderItem.findMany({
+  where: {
+    OR: [
+      { userId: userId },
+      { supplierId: userId }
+    ],
+    status: {
+      in: ["PENDING", "PROCESSING", "SHIPPED"]
+    }
+  }
+})
+
+
+    
+if(isDefault && activeorder.length < 1) {
   
   await prisma.address.updateMany({
       where:{
@@ -7085,10 +7099,7 @@ if(isDefault) {
     data: {isDefault:false },
   })
 
-}
-
-    
-      const response = await prisma.address.create({
+const response = await prisma.address.create({
         data: {
           userId,
           type,
@@ -7104,9 +7115,8 @@ if(isDefault) {
           lng
         },
       });
-
-
- const user = await prisma.user.findUnique({ 
+  
+const user = await prisma.user.findUnique({ 
   where: { id: userId },
   include: {
     addresses: {
@@ -7116,11 +7126,8 @@ if(isDefault) {
   }
 });
     
-
     const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
-
-    let token;
-    
+    let token;  
       token = await new EncryptJWT({
         userId: user?.id,
         phone: user?.phone,
@@ -7138,7 +7145,46 @@ if(isDefault) {
         statusText: "success",
         token,
         role: user?.role
-      }
+     }
+ 
+} else if(isDefault && activeorder.length > 0) {
+   const response = await prisma.address.create({
+        data: {
+          userId,
+          type,
+          receiver,
+          phone,
+          street,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault: false,
+          lat,
+          lng
+        },
+      });
+
+}else {
+  const response = await prisma.address.create({
+        data: {
+          userId,
+          type,
+          receiver,
+          phone,
+          street,
+          city,
+          state,
+          zipCode,
+          country,
+          isDefault: false,
+          lat,
+          lng
+        },
+      });
+}
+
+ 
     },
 
     createCategory: async (_: any, { name, description, status }: any) => {
