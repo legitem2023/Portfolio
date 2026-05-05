@@ -849,6 +849,7 @@ const orders = await prisma.order.findMany({
             lastName: true,
             email: true,
             addresses: {
+              where:{isDefault:true},
               select: {
                 street: true,
                 city: true,
@@ -875,6 +876,7 @@ const orders = await prisma.order.findMany({
       }
     },
     address: {
+      where:{isDefault:true},
       select: {
         id: true,
         street: true,
@@ -1062,6 +1064,7 @@ const orders = await prisma.order.findMany({
           }
         },
         address: {
+          where:{isDefault:true},
           select: {
             id: true,
             street: true,
@@ -1203,7 +1206,7 @@ const orders = await prisma.order.findMany({
             individualDistance: true,
             rejectedBy: true,
             product:true,
-            supplier: {
+            supplier: {  
               select: {
                 id: true,
                 firstName: true,
@@ -1211,7 +1214,7 @@ const orders = await prisma.order.findMany({
                 email: true,
                 phone:true,
                 addresses: {
-                  // Removed isDefault filter to match frontend query
+                  where:{isDefault:true},
                   select: {
                     street: true,
                     city: true,
@@ -1238,6 +1241,7 @@ const orders = await prisma.order.findMany({
           }
         },
         address: {
+          where:{isDefault:true},
           select: {
             id: true,
             street: true,
@@ -1383,7 +1387,7 @@ const orders = await prisma.order.findMany({
                 lastName: true,
                 email: true,
                 addresses: {
-                  // Removed isDefault filter to match frontend query
+                  where:{isDefault:true},
                   select: {
                     street: true,
                     city: true,
@@ -1410,6 +1414,7 @@ const orders = await prisma.order.findMany({
           }
         },
         address: {
+          where:{isDefault:true},
           select: {
             id: true,
             street: true,
@@ -1563,7 +1568,7 @@ const orders = await prisma.order.findMany({
                 lastName: true,
                 email: true,
                 addresses: {
-                  // Removed isDefault filter to match frontend query
+                  where:{isDefault:true},
                   select: {
                     street: true,
                     city: true,
@@ -1590,6 +1595,7 @@ const orders = await prisma.order.findMany({
           }
         },
         address: {
+          where:{isDefault:true},
           select: {
             id: true,
             street: true,
@@ -1742,7 +1748,7 @@ salesorder: async(parent: any, args: any) => {
                 lastName: true,
                 email: true,
                 addresses: {
-                  // Removed isDefault filter to match frontend query
+                  where:{isDefault:true},
                   select: {
                     street: true,
                     city: true,
@@ -1769,6 +1775,7 @@ salesorder: async(parent: any, args: any) => {
           }
         },
         address: {
+          where:{isDefault:true},
           select: {
             id: true,
             street: true,
