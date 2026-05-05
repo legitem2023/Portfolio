@@ -5170,7 +5170,407 @@ salesList: async (
   },
 
   Mutation: {
-createReturn: async (_: any, { input }: any) => {
+    createReturn: async (_: any, { input }: any) => {
+  try {
+    const { orderId, userId, supplierId, reason, description, items, images } = input;
+    
+    const returnNumber = `RET-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
+    let totalRefund = 0;
+    const returnItems = [];
+    
+    for (const item of items) {
+      const orderItem = await prisma.orderItem.findUnique({
+        where: { id: item.itemId },
+        select: { price: true, quantity: true }
+      });
+      
+      if (!orderItem) {
+        throw new Error(`Order item ${item.itemId} not found`);
+      }
+      
+      const orderItemQuantity = orderItem.quantity ?? 0;
+      const itemQuantity = item.quantity ?? 0;
+      const orderItemPrice = orderItem.price ?? 0;
+      
+      if (itemQuantity > orderItemQuantity) {
+        throw new Error(`Quantity exceeds available for item ${item.itemId}`);
+      }
+      
+      const refundAmount = orderItemPrice * itemQuantity;
+      totalRefund = totalRefund + refundAmount;
+      
+      returnItems.push({
+        orderItemId: item.itemId,
+        quantity: itemQuantity,
+        reason: item.reason ?? '',
+        condition: item.condition ?? '',
+        refundAmount
+      });
+    }
+    
+    let finalSupplierId = supplierId;
+    if (!finalSupplierId) {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        select: { items: { take: 1, select: { supplierId: true } } }
+      });
+      finalSupplierId = order?.items?.[0]?.supplierId ?? null;
+    }
+    
+    const returnRequest = await prisma.returnRequest.create({
+      data: {
+        returnNumber,
+        orderId,
+        userId,
+        supplierId: finalSupplierId,
+        reason: reason ?? '',
+        description: description ?? null,
+        refundAmount: totalRefund,
+        items: {
+          create: returnItems
+        },
+        images: images && images.length > 0 ? {
+          create: images.map((url: string) => ({
+            imageUrl: url,
+            imageType: 'CUSTOMER_UPLOADED',
+            uploadedBy: userId
+          }))
+        } : undefined
+      },
+      include: {
+        items: {
+          include: {
+            orderItem: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        images: true
+      }
+    });
+    
+    if (finalSupplierId) {
+      await prisma.notification.create({
+        data: {
+          userId: finalSupplierId,
+          type: 'RETURN_REQUEST_CREATED',
+          title: 'New Return Request',
+          message: `Return request #${returnNumber} has been created for order #${orderId}`,
+          link: `/supplier/returns/${returnRequest.id}`,
+          returnId: returnRequest.id
+        }
+      });
+    }
+    
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        type: 'RETURN_REQUEST_CREATED',
+        title: 'Return Request Submitted',
+        message: `Your return request #${returnNumber} has been submitted successfully`,
+        link: `/account/returns/${returnRequest.id}`,
+        returnId: returnRequest.id
+      }
+    });
+    
+    return returnRequest;
+  } catch (error: any) {
+    console.error('Error in createReturn resolver:', error);
+    throw new Error(`Failed to create return: ${error.message}`);
+  }
+},
+
+updateReturnStatus: async (_: any, { input }: any) => {
+  try {
+    const { returnId, status, vendorNotes, refundAmount } = input;
+    
+    const existingReturn = await prisma.returnRequest.findUnique({
+      where: { id: returnId },
+      include: { user: true, supplier: true }
+    });
+    
+    if (!existingReturn) {
+      throw new Error('Return request not found');
+    }
+    
+    const updateData: any = {
+      status: status ?? 'PENDING',
+      updatedAt: new Date()
+    };
+    
+    if (vendorNotes) updateData.vendorNotes = vendorNotes;
+    if (refundAmount !== undefined && refundAmount !== null) updateData.refundAmount = refundAmount;
+    
+    const returnRequest = await prisma.returnRequest.update({
+      where: { id: returnId },
+      data: updateData,
+      include: {
+        items: {
+          include: {
+            orderItem: {
+              include: {
+                product: true
+              }
+            }
+          }
+        },
+        user: true,
+        supplier: true
+      }
+    });
+    
+    let notificationMessage = '';
+    let notificationTitle = '';
+    const returnNumber = existingReturn.returnNumber ?? 'N/A';
+    
+    switch (status) {
+      case 'APPROVED':
+        notificationTitle = 'Return Request Approved';
+        notificationMessage = `Your return request #${returnNumber} has been approved. Please ship the items back.`;
+        break;
+      case 'REJECTED':
+        notificationTitle = 'Return Request Rejected';
+        notificationMessage = `Your return request #${returnNumber} has been rejected. ${vendorNotes || 'Please contact support for more information.'}`;
+        break;
+      case 'RECEIVED':
+        notificationTitle = 'Return Items Received';
+        notificationMessage = `We have received your returned items for request #${returnNumber}. They are being inspected.`;
+        break;
+      case 'REFUND_INITIATED':
+        notificationTitle = 'Refund Initiated';
+        notificationMessage = `Refund for return #${returnNumber} has been initiated.`;
+        break;
+      case 'COMPLETED':
+        notificationTitle = 'Return Completed';
+        notificationMessage = `Return #${returnNumber} has been completed. Refund has been processed.`;
+        break;
+      default:
+        notificationTitle = 'Return Status Updated';
+        notificationMessage = `Your return request #${returnNumber} status has been updated to ${status}`;
+    }
+    
+    await prisma.notification.create({
+      data: {
+        userId: existingReturn.userId,
+        type: 'RETURN_STATUS_UPDATED',
+        title: notificationTitle,
+        message: notificationMessage,
+        link: `/account/returns/${returnRequest.id}`,
+        returnId: returnRequest.id
+      }
+    });
+    
+    return returnRequest;
+  } catch (error: any) {
+    console.error('Error in updateReturnStatus resolver:', error);
+    throw new Error(`Failed to update return status: ${error.message}`);
+  }
+},
+
+addReturnImages: async (_: any, { input }: any) => {
+  try {
+    const { returnId, imageUrls, imageType, uploadedBy } = input;
+    
+    const existingReturn = await prisma.returnRequest.findUnique({
+      where: { id: returnId },
+      select: { userId: true, supplierId: true }
+    });
+    
+    if (!existingReturn) {
+      throw new Error('Return request not found');
+    }
+    
+    if (imageUrls && imageUrls.length > 0) {
+      await prisma.returnImage.createMany({
+        data: imageUrls.map((url: string) => ({
+          returnId,
+          imageUrl: url,
+          imageType: imageType || (existingReturn.userId === uploadedBy ? 'CUSTOMER_UPLOADED' : 'VENDOR_RECEIVED'),
+          uploadedBy: uploadedBy
+        }))
+      });
+    }
+    
+    const createdImages = await prisma.returnImage.findMany({
+      where: { returnId }
+    });
+    
+    return createdImages;
+  } catch (error: any) {
+    console.error('Error in addReturnImages resolver:', error);
+    throw new Error(`Failed to add return images: ${error.message}`);
+  }
+},
+
+addReturnTracking: async (_: any, { input }: any) => {
+  try {
+    const { returnId, trackingNumber, returnLabelUrl } = input;
+    
+    const existingReturn = await prisma.returnRequest.findUnique({
+      where: { id: returnId },
+      select: { userId: true, supplierId: true, returnNumber: true, status: true }
+    });
+    
+    if (!existingReturn) {
+      throw new Error('Return request not found');
+    }
+    
+    const tracking = await prisma.returnTracking.upsert({
+      where: { returnId },
+      update: {
+        trackingNumber: trackingNumber ?? null,
+        returnLabelUrl: returnLabelUrl ?? null,
+        shippedAt: new Date()
+      },
+      create: {
+        returnId,
+        trackingNumber: trackingNumber ?? null,
+        returnLabelUrl: returnLabelUrl ?? null,
+        shippedAt: new Date()
+      }
+    });
+    
+    if (existingReturn.status === 'APPROVED') {
+      await prisma.returnRequest.update({
+        where: { id: returnId },
+        data: { status: 'RETURN_SHIPPED' }
+      });
+      
+      await prisma.notification.create({
+        data: {
+          userId: existingReturn.supplierId,
+          type: 'RETURN_SHIPPED',
+          title: 'Return Items Shipped',
+          message: `Customer has shipped return #${existingReturn.returnNumber ?? 'N/A'}. Tracking: ${trackingNumber ?? 'N/A'}`,
+          link: `/supplier/returns/${returnId}`,
+          returnId
+        }
+      });
+    }
+    
+    return tracking;
+  } catch (error: any) {
+    console.error('Error in addReturnTracking resolver:', error);
+    throw new Error(`Failed to add return tracking: ${error.message}`);
+  }
+},
+
+processRefund: async (_: any, { input }: any) => {
+  try {
+    const { returnId, refundAmount, refundMethod, transactionId, resolvedBy } = input;
+    
+    const existingReturn = await prisma.returnRequest.findUnique({
+      where: { id: returnId },
+      include: { user: true }
+    });
+    
+    if (!existingReturn) {
+      throw new Error('Return request not found');
+    }
+    
+    const finalRefundAmount = refundAmount ?? existingReturn.refundAmount ?? 0;
+    
+    const returnRequest = await prisma.returnRequest.update({
+      where: { id: returnId },
+      data: {
+        status: 'REFUND_INITIATED',
+        refundAmount: finalRefundAmount,
+        updatedAt: new Date()
+      }
+    });
+    
+    await prisma.returnTracking.update({
+      where: { returnId },
+      data: {
+        refundProcessedAt: new Date(),
+        refundTransactionId: transactionId ?? null
+      }
+    });
+    
+    const resolution = await prisma.returnResolution.create({
+      data: {
+        returnId,
+        resolution: refundMethod === 'STORE_CREDIT' ? 'STORE_CREDIT' : 
+                    finalRefundAmount === (existingReturn.refundAmount ?? 0) ? 'FULL_REFUND' : 'PARTIAL_REFUND',
+        partialAmount: finalRefundAmount !== (existingReturn.refundAmount ?? 0) ? finalRefundAmount : null,
+        adminNotes: `Refund processed via ${refundMethod ?? 'UNKNOWN'}`,
+        resolvedBy: resolvedBy
+      }
+    });
+    
+    await prisma.notification.create({
+      data: {
+        userId: existingReturn.userId,
+        type: 'REFUND_PROCESSED',
+        title: 'Refund Processed',
+        message: `Your refund of ${finalRefundAmount} for return #${existingReturn.returnNumber ?? 'N/A'} has been processed via ${refundMethod ?? 'UNKNOWN'}. Transaction ID: ${transactionId || 'N/A'}`,
+        link: `/account/returns/${returnId}`,
+        returnId
+      }
+    });
+    
+    return {
+      ...returnRequest,
+      resolution
+    };
+  } catch (error: any) {
+    console.error('Error in processRefund resolver:', error);
+    throw new Error(`Failed to process refund: ${error.message}`);
+  }
+},
+
+cancelReturn: async (_: any, { input }: any) => {
+  try {
+    const { returnId, reason, cancelledBy } = input;
+    
+    const existingReturn = await prisma.returnRequest.findUnique({
+      where: { id: returnId },
+      select: { userId: true, supplierId: true, status: true, returnNumber: true }
+    });
+    
+    if (!existingReturn) {
+      throw new Error('Return request not found');
+    }
+    
+    const currentStatus = existingReturn.status ?? 'PENDING';
+    if (currentStatus !== 'PENDING' && currentStatus !== 'APPROVED') {
+      throw new Error('Return cannot be cancelled at this stage');
+    }
+    
+    const returnRequest = await prisma.returnRequest.update({
+      where: { id: returnId },
+      data: {
+        status: 'CANCELLED',
+        vendorNotes: reason || 'Return cancelled by user',
+        updatedAt: new Date()
+      }
+    });
+    
+    const notifyUserId = existingReturn.userId === cancelledBy ? existingReturn.supplierId : existingReturn.userId;
+    
+    if (notifyUserId) {
+      await prisma.notification.create({
+        data: {
+          userId: notifyUserId,
+          type: 'RETURN_STATUS_UPDATED',
+          title: 'Return Cancelled',
+          message: `Return request #${existingReturn.returnNumber ?? 'N/A'} has been cancelled. Reason: ${reason || 'Not specified'}`,
+          link: `/returns/${returnId}`,
+          returnId
+        }
+      });
+    }
+    
+    return returnRequest;
+  } catch (error: any) {
+    console.error('Error in cancelReturn resolver:', error);
+    throw new Error(`Failed to cancel return: ${error.message}`);
+  }
+},
+/*createReturn: async (_: any, { input }: any) => {
   try {
     const { orderId, userId, supplierId, reason, description, items, images } = input;
     
@@ -5556,7 +5956,7 @@ cancelReturn: async (_: any, { input }: any) => {
     console.error('Error in cancelReturn resolver:', error);
     throw new Error(`Failed to cancel return: ${error.message}`);
   }
-},
+},*/
     vendorSignup: async (_parent: any, { input }: any) => {
   try {
     const {
