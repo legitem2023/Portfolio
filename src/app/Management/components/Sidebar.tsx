@@ -12,7 +12,8 @@ import {
   HeadphonesIcon,
   Truck,
   MessagesSquare,
-  BanknoteArrowUp
+  BanknoteArrowUp,
+  Return
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,7 +37,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 2, label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 3, label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 4, label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 14, label: 'Return Management', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] },
+    { id: 14, label: 'Return Management', icon: Return, roles: ['ADMINISTRATOR','MANAGER'] },
     { id: 5, label: 'Remittance', icon: BanknoteArrowUp, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 6, label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
