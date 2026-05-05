@@ -52,6 +52,14 @@ const ORDER_LIST_QUERY = gql`
           lat
           lng
         }
+        proofOfDelivery {
+          id
+          photoUrl
+          signatureData
+          receivedBy
+          receivedAt
+          trackingNumber
+        }
         items {
           id
           orderId
