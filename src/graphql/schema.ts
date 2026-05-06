@@ -1096,6 +1096,7 @@ export const typeDefs = gql`
     refundMethod: RefundMethod!
     transactionId: String
     resolvedBy: ID
+    orderItemId:ID
   }
 
   input AddReturnImagesInput {
