@@ -13,7 +13,7 @@ import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation';
 import ParticleBackground from './ParticleBackground';
 import { CartItem } from '../../../types'; // Import CartItem type
-
+import NotificationPage from "./NotificationPage";
 import {
   Home,
   ShoppingBag,
@@ -168,6 +168,13 @@ const DeluxeNavTabs: React.FC = () => {
       label: 'Merchants',
       icon: <ShoppingCart size={20} />,
       content: <MerchantDetails userId={merchantIdFromUrl || ""} />
+    },
+    {
+      id: 12,
+      label: 'All Notifications',
+      icon: <ShoppingCart size={20} />,
+      content:<NotificationPage userId={userId || ""} />
+
     }
   ];
 
