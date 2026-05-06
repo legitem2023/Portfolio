@@ -1890,4 +1890,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-      }
+}
