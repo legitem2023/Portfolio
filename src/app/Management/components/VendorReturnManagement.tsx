@@ -86,6 +86,7 @@ const GET_SUPPLIER_RETURNS = gql`
             name
             sku
             images
+            price
           }
         }
       }
@@ -165,6 +166,7 @@ interface ProductInfo {
   name: string;
   sku: string;
   images: string[];
+  price?: number;
 }
 
 interface OrderItemInfo {
@@ -498,7 +500,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       id: productData?.id || '',
       name: productData?.name || 'Product Unavailable',
       sku: productData?.sku || 'N/A',
-      images: productData?.images || []
+      images: productData?.images || [],
+      price: productData?.price
     };
   };
 
@@ -1773,8 +1776,9 @@ function RefundModal({
     if (e.target === e.currentTarget) onClose();
   };
 
-  // Get selected item details
+  // Get selected item details - FIXED: Access orderItem correctly
   const getSelectedItem = () => {
+    if (!selectedOrderItemId) return null;
     return returnReq.items.find(item => item.orderItem.id === selectedOrderItemId);
   };
 
@@ -1782,6 +1786,21 @@ function RefundModal({
   const selectedItemTotal = selectedItem 
     ? selectedItem.orderItem.price * selectedItem.quantity 
     : 0;
+
+  // Get product info for selected item
+  const getSelectedProductInfo = () => {
+    if (!selectedItem) return null;
+    const product = selectedItem.orderItem.product;
+    return {
+      name: product?.name || 'Product Unavailable',
+      sku: product?.sku || 'N/A',
+      price: selectedItem.orderItem.price,
+      quantity: selectedItem.quantity,
+      total: selectedItemTotal
+    };
+  };
+
+  const selectedProduct = getSelectedProductInfo();
 
   // Auto-set refund amount when item is selected
   const handleOrderItemChange = (itemId: string) => {
@@ -1841,33 +1860,33 @@ function RefundModal({
             </select>
           </div>
 
-          {/* Selected Item Details */}
-          {selectedOrderItemId && selectedItem && (
+          {/* Selected Item Details - FIXED: Now properly displays product info */}
+          {selectedOrderItemId && selectedProduct && (
             <div className="mb-4 p-3 bg-blue-50 rounded-xl">
               <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                 <Package size={14} />
                 Selected Item Details
               </h3>
-              <div className="space-y-1 text-sm">
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Product:</span>
-                  <span className="text-gray-800 font-medium">{selectedItem.orderItem.product?.name || 'N/A'}</span>
+                  <span className="text-gray-800 font-medium">{selectedProduct.name}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">SKU:</span>
-                  <span className="text-gray-800">{selectedItem.orderItem.product?.sku || 'N/A'}</span>
+                  <span className="text-gray-800 font-mono text-xs">{selectedProduct.sku}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Quantity:</span>
-                  <span className="text-gray-800">{selectedItem.quantity}</span>
+                  <span className="text-gray-800">{selectedProduct.quantity}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Unit Price:</span>
-                  <span className="text-gray-800">{formatPrice(selectedItem.orderItem.price)}</span>
+                  <span className="text-gray-800">{formatPrice(selectedProduct.price)}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-blue-200">
                   <span className="font-medium text-gray-700">Item Total:</span>
-                  <span className="font-bold text-green-600">{formatPrice(selectedItemTotal)}</span>
+                  <span className="font-bold text-green-600">{formatPrice(selectedProduct.total)}</span>
                 </div>
               </div>
             </div>
