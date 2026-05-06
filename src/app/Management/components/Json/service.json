@@ -1,0 +1,90 @@
+[
+  {
+    "name": "DOMAIN",
+    "service": "Domain name",
+    "payment_period": "Yearly",
+    "cost": "$14/year (e.g., .com, .net, .org)",
+    "upgradable": "NO",
+    "inuse": "Yes"
+  },
+  {
+    "name": "VERCEL",
+    "service": "Deployment",
+    "payment_period": "Monthly",
+    "cost": "Pro: $20/seat + usage (Functions $0.18/GB-hr)",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  },
+  {
+    "name": "SUPABASE",
+    "service": "Storage / Backend (PostgreSQL + Storage)",
+    "payment_period": "Monthly",
+    "cost": "Pro: ~$10/month (includes 8GB disk, 250GB egress)",
+    "upgradable": "Yes",
+    "inuse": "No"
+  },
+  {
+    "name": "MONGODB",
+    "service": "Database (NoSQL)",
+    "payment_period": "Monthly / Pay as you go",
+    "cost": "M0 (Shared): Free (512MB storage) | M2: $9/month | M5: $25/month | M10: ~$50/month",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GCASH",
+    "service": "Payment method",
+    "payment_period": "Per transaction",
+    "cost": "Merchant fee: 1.0%-2.0% per transaction",
+    "upgradable": "NO",
+    "inuse": "Yes"
+  },
+  {
+    "name": "MAYA",
+    "service": "Payment method",
+    "payment_period": "Per transaction",
+    "cost": "Merchant fee: 1.5%-3.5% per transaction",
+    "upgradable": "NO",
+    "inuse": "No"
+  },
+  {
+    "name": "BPI",
+    "service": "Payment method",
+    "payment_period": "Per transaction",
+    "cost": "Bank transfer fees vary",
+    "upgradable": "NO",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GOOGLE",
+    "service": "Login API",
+    "payment_period": "Free",
+    "cost": "$0 (included with Google Cloud account)",
+    "upgradable": "NO",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GOOGLE",
+    "service": "Geocoding API",
+    "payment_period": "Pay as you go",
+    "cost": "$5 per 1,000 requests (First $200 monthly free)",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GOOGLE",
+    "service": "Maps API",
+    "payment_period": "Pay as you go",
+    "cost": "$2-$7 per 1,000 loads (First $200 monthly free)",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GOOGLE WORKSPACE",
+    "service": "Company Email (Business Email)",
+    "payment_period": "Monthly / Yearly",
+    "cost": "Business Starter: $6/user/month | Business Standard: $12/user/month | Business Plus: $18/user/month",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  }
+]
