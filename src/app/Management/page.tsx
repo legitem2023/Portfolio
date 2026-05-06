@@ -17,6 +17,8 @@ import SalesList from './components/SalesList';
 import VendorReturnManagement from "./components/VendorReturnManagement";
 import VehicleTypeManager from './components/VehicleTypeManager';
 import UserProfile from './components/UserProfile';
+import ServicesTable from './components/ServicesTable';
+
 import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import PMTab from './components/PMTab';
@@ -196,6 +198,8 @@ export default function ManagementDashboard() {
         return <SizeManager/>
       case 14: 
         return <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
+      case 15:
+        return <ServicesTable/>
       default:
         return <></>;
     }
