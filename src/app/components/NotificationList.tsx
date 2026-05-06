@@ -163,7 +163,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
       <div className="flex flex-col items-center justify-center p-8 text-center">
         <Bell className="w-12 h-12 text-gray-300 mb-4" />
         <p className="text-gray-500 font-medium">No notifications</p>
-        <p className="text-gray-400 text-sm mt-1">You're all caught up!</p>
+        <p className="text-gray-400 text-sm mt-1">You&apos;re all caught up!</p>
       </div>
     );
   }
