@@ -5,9 +5,11 @@ import { GET_NOTIFICATIONS } from './graphql/query';
 import NotificationList from './NotificationList';
 import { extractNotifications } from '../../../utils/extractNotifications';
 
-const NotificationsPage: React.FC = (userId:any) => {
-  //const userId = "your-user-id"; // Get from auth context
-  
+interface NotificationsPageProps {
+  userId: string;
+}
+
+const NotificationsPage: React.FC<NotificationsPageProps> = ({ userId }) => {
   const { data, loading, error, refetch } = useQuery(GET_NOTIFICATIONS, {
     variables: { 
       userId: userId,
