@@ -14,7 +14,8 @@ import {
   MessagesSquare,
   BanknoteArrowUp,
   RotateCcw,
-  Server
+  Server,
+  Wrench
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
 import { useDispatch, useSelector } from 'react-redux';
@@ -45,7 +46,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 12, label: 'Messages', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] }, // Admin only
-    { id: 13, label: 'Settings', icon: MessagesSquare, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 13, label: 'Settings', icon: Wrench, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 15, label: 'Service Providers', icon: Server, roles: ['ADMINISTRATOR'] } // Admin only
 
   ];
