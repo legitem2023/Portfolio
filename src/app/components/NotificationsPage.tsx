@@ -368,7 +368,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({
     if (selectedNotifications.size === notifications.length) {
       setSelectedNotifications(new Set());
     } else {
-      setSelectedNotifications(new Set(notifications.map(n => n.id)));
+      setSelectedNotifications(new Set(notifications.map((n:any) => n.id)));
     }
   }, [notifications, selectedNotifications.size]);
 
