@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import { QrCode, Star, MapPin, X, RotateCcw, AlertCircle, FileText, Package, ChevronDown, ChevronUp, MessageCircle, DollarSign } from "lucide-react";
+import { QrCode, Star, MapPin, X, RotateCcw, AlertCircle, FileText, Package, ChevronDown, ChevronUp, MessageCircle, DollarSign, Loader2 } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
 import dynamic from 'next/dynamic';
@@ -400,6 +400,12 @@ export default function OrderTracking({ userId }: { userId: string }) {
     deliveryAddress: null
   });
   
+  // Loading states for buttons
+  const [refetchLoading, setRefetchLoading] = useState(false);
+  const [createReturnLoading, setCreateReturnLoading] = useState(false);
+  const [addTrackingLoading, setAddTrackingLoading] = useState(false);
+  const [cancelReturnLoading, setCancelReturnLoading] = useState<string | null>(null);
+  
   const { loading, error, data, refetch } = useQuery<{ ordered_products: { orders: Order[] } }>(ACTIVE_ORDER_LIST, {
     variables: { 
       filter: { 
@@ -428,15 +434,20 @@ export default function OrderTracking({ userId }: { userId: string }) {
     }
   }, [getCurrentUserLocation]);
 
-  const handleStatusChange = (status: string) => {
-    refetch({
-      filter: {
-        userId: userId,
-        status: status
-      },
-      pagination: { page: 1, pageSize: 50 }
-    });
-    setSelectedStatus(status);
+  const handleStatusChange = async (status: string) => {
+    setRefetchLoading(true);
+    try {
+      await refetch({
+        filter: {
+          userId: userId,
+          status: status
+        },
+        pagination: { page: 1, pageSize: 50 }
+      });
+      setSelectedStatus(status);
+    } finally {
+      setRefetchLoading(false);
+    }
   };
 
   const handleWriteReview = (productId: string, productName: string) => {
@@ -452,6 +463,7 @@ export default function OrderTracking({ userId }: { userId: string }) {
   };
 
   const handleSubmitReturn = async (returnData: { reason: string; description: string; items: Array<{ itemId: string; quantity: number; reason: string; condition: string }> }) => {
+    setCreateReturnLoading(true);
     try {
       const result = await createReturn({
         variables: {
@@ -468,15 +480,18 @@ export default function OrderTracking({ userId }: { userId: string }) {
       if (result.data?.createReturn) {
         alert('Return request submitted successfully!');
         setShowReturnModal({ show: false, order: null, items: [] });
-        refetchReturns();
+        await refetchReturns();
       }
     } catch (err: any) {
       console.error('Error creating return:', err);
       alert(`Failed to submit return request: ${err.message}`);
+    } finally {
+      setCreateReturnLoading(false);
     }
   };
 
   const handleAddTracking = async (returnId: string, trackingNumber: string) => {
+    setAddTrackingLoading(true);
     try {
       await addReturnTracking({
         variables: {
@@ -488,15 +503,18 @@ export default function OrderTracking({ userId }: { userId: string }) {
       });
       alert('Tracking number added successfully!');
       setShowReturnTrackingModal({ show: false, returnId: '' });
-      refetchReturns();
+      await refetchReturns();
     } catch (err: any) {
       console.error('Error adding tracking:', err);
       alert(`Failed to add tracking: ${err.message}`);
+    } finally {
+      setAddTrackingLoading(false);
     }
   };
 
   const handleCancelReturn = async (returnId: string) => {
     if (confirm('Are you sure you want to cancel this return request?')) {
+      setCancelReturnLoading(returnId);
       try {
         await cancelReturn({
           variables: {
@@ -507,38 +525,48 @@ export default function OrderTracking({ userId }: { userId: string }) {
           }
         });
         alert('Return request cancelled successfully!');
-        refetchReturns();
+        await refetchReturns();
       } catch (err: any) {
         console.error('Error cancelling return:', err);
         alert(`Failed to cancel return: ${err.message}`);
+      } finally {
+        setCancelReturnLoading(null);
       }
     }
   };
 
+  const handleRefreshReturns = async () => {
+    setRefetchLoading(true);
+    try {
+      await refetchReturns();
+    } finally {
+      setRefetchLoading(false);
+    }
+  };
+
   if (loading) return <ShimmerLoading status={selectedStatus}/>;
-if (error) {
-  console.error('GraphQL Error:', error);
-  return <ErrorMessage error={error} />;
-}
-
-const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
-const userReturns: ReturnRequest[] = returnsData?.getUserReturns || [];
-
-if (!hasOrders && selectedStatus !== 'ALL' && !showReturnHistory) return <EmptyState status={selectedStatus} />;
-
-// Fix: Add null check for data
-const orders: Order[] = data?.ordered_products?.orders || [];
-const currentOrderCount = orders.length;
-
-const allSupplierGroups: SupplierGroup[] = [];
-orders.forEach(order => {
-  if (order.items && order.items.length > 0) {
-    const groups = groupOrderBySupplier(order);
-    allSupplierGroups.push(...groups);
+  if (error) {
+    console.error('GraphQL Error:', error);
+    return <ErrorMessage error={error} />;
   }
-});
 
-const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
+  const hasOrders = data?.ordered_products?.orders && data.ordered_products.orders.length > 0;
+  const userReturns: ReturnRequest[] = returnsData?.getUserReturns || [];
+
+  if (!hasOrders && selectedStatus !== 'ALL' && !showReturnHistory) return <EmptyState status={selectedStatus} />;
+
+  const orders: Order[] = data?.ordered_products?.orders || [];
+  const currentOrderCount = orders.length;
+
+  const allSupplierGroups: SupplierGroup[] = [];
+  orders.forEach(order => {
+    if (order.items && order.items.length > 0) {
+      const groups = groupOrderBySupplier(order);
+      allSupplierGroups.push(...groups);
+    }
+  });
+
+  const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -553,23 +581,29 @@ const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
           <div className="flex gap-4">
             <button
               onClick={() => setShowReturnHistory(false)}
+              disabled={refetchLoading}
               className={`px-4 py-2 font-medium transition-colors ${
                 !showReturnHistory
                   ? 'text-purple-600 border-b-2 border-purple-600'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               My Orders
             </button>
             <button
               onClick={() => setShowReturnHistory(true)}
+              disabled={refetchLoading}
               className={`px-4 py-2 font-medium transition-colors flex items-center gap-2 ${
                 showReturnHistory
                   ? 'text-purple-600 border-b-2 border-purple-600'
                   : 'text-gray-500 hover:text-gray-700'
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <RotateCcw size={16} />
+              {refetchLoading && showReturnHistory ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <RotateCcw size={16} />
+              )}
               Return Requests
               {userReturns.length > 0 && (
                 <span className="bg-purple-100 text-purple-600 text-xs px-2 py-0.5 rounded-full">
@@ -591,6 +625,7 @@ const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
                     status={stage.key}
                     isActive={selectedStatus === stage.key}
                     onClick={() => handleStatusChange(stage.key)}
+                    isLoading={refetchLoading}
                   />
                 ))}
               </div>
@@ -631,7 +666,10 @@ const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
             returns={userReturns}
             onAddTracking={handleAddTracking}
             onCancelReturn={handleCancelReturn}
-            onRefresh={() => refetchReturns()}
+            onRefresh={handleRefreshReturns}
+            addTrackingLoading={addTrackingLoading}
+            cancelReturnLoading={cancelReturnLoading}
+            refreshLoading={refetchLoading}
           />
         )}
 
@@ -664,6 +702,7 @@ const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
             userId={userId}
             onClose={() => setShowReturnModal({ show: false, order: null, items: [] })}
             onSubmit={handleSubmitReturn}
+            isLoading={createReturnLoading}
           />
         )}
 
@@ -681,11 +720,14 @@ const currentStatus = ORDER_STAGES.find(s => s.key === selectedStatus);
 }
 
 // Return History List Component
-function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh }: { 
+function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh, addTrackingLoading, cancelReturnLoading, refreshLoading }: { 
   returns: ReturnRequest[];
   onAddTracking: (returnId: string, trackingNumber: string) => void;
   onCancelReturn: (returnId: string) => void;
   onRefresh: () => void;
+  addTrackingLoading: boolean;
+  cancelReturnLoading: string | null;
+  refreshLoading: boolean;
 }) {
   const [expandedReturn, setExpandedReturn] = useState<string | null>(null);
   const [showTrackingInput, setShowTrackingInput] = useState<string | null>(null);
@@ -696,8 +738,13 @@ function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh }
       <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
         <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
         <h3 className="text-lg font-semibold text-gray-500 mb-2">No Return Requests</h3>
-        <p className="text-sm text-gray-400">You haven&qoute;t submitted any return requests yet.</p>
-        <button onClick={onRefresh} className="mt-4 text-purple-600 text-sm hover:text-purple-700">
+        <p className="text-sm text-gray-400">You haven't submitted any return requests yet.</p>
+        <button 
+          onClick={onRefresh} 
+          disabled={refreshLoading}
+          className="mt-4 text-purple-600 text-sm hover:text-purple-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+        >
+          {refreshLoading && <Loader2 size={14} className="animate-spin" />}
           Refresh
         </button>
       </div>
@@ -853,8 +900,10 @@ function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh }
                     />
                     <button
                       onClick={() => handleSubmitTracking(returnReq.id)}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
+                      disabled={addTrackingLoading}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
                     >
+                      {addTrackingLoading && <Loader2 size={14} className="animate-spin" />}
                       Submit
                     </button>
                     <button
@@ -878,8 +927,10 @@ function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh }
             {canCancel(returnReq.status) && (
               <button
                 onClick={() => onCancelReturn(returnReq.id)}
-                className="w-full mt-2 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                disabled={cancelReturnLoading === returnReq.id}
+                className="w-full mt-2 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
               >
+                {cancelReturnLoading === returnReq.id && <Loader2 size={14} className="animate-spin" />}
                 Cancel Return Request
               </button>
             )}
@@ -913,12 +964,13 @@ function ReturnHistoryList({ returns, onAddTracking, onCancelReturn, onRefresh }
 }
 
 // Create Return Modal Component
-function CreateReturnModal({ order, items, userId, onClose, onSubmit }: { 
+function CreateReturnModal({ order, items, userId, onClose, onSubmit, isLoading }: { 
   order: Order;
   items: Order['items'];
   userId: string;
   onClose: () => void;
   onSubmit: (data: { reason: string; description: string; items: Array<{ itemId: string; quantity: number; reason: string; condition: string }> }) => void;
+  isLoading: boolean;
 }) {
   const [selectedReason, setSelectedReason] = useState('');
   const [description, setDescription] = useState('');
@@ -1137,14 +1189,16 @@ function CreateReturnModal({ order, items, userId, onClose, onSubmit }: {
           <div className="flex gap-2 pt-2">
             <button
               onClick={handleSubmit}
-              disabled={!isValid}
-              className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              disabled={!isValid || isLoading}
+              className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2"
             >
+              {isLoading && <Loader2 size={16} className="animate-spin" />}
               Submit Return Request
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
+              disabled={isLoading}
+              className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -1156,21 +1210,24 @@ function CreateReturnModal({ order, items, userId, onClose, onSubmit }: {
 }
 
 // Tab Button Component
-function TabButton({ label, status, isActive, onClick }: { 
+function TabButton({ label, status, isActive, onClick, isLoading }: { 
   label: string; 
   status: string;
   isActive: boolean; 
   onClick: () => void;
+  isLoading?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={isLoading}
       className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
         isActive
           ? 'bg-purple-600 text-white'
           : 'bg-white text-gray-600 hover:bg-gray-100'
-      }`}
+      } disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2`}
     >
+      {isLoading && isActive && <Loader2 size={14} className="animate-spin" />}
       {label}
     </button>
   );
@@ -1779,4 +1836,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-}
+    }
