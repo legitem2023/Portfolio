@@ -12,6 +12,7 @@ import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation'; // Add usePathname
 import ParticleBackground from './ParticleBackground';
+import { CartItem } from '../../../types'; // Import CartItem type
 
 import {
   Home,
