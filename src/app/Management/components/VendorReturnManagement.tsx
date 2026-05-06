@@ -41,7 +41,8 @@ import {
   Info,
   Image as ImageIcon,
   CreditCard,
-  Receipt
+  Receipt,
+  Loader2
 } from "lucide-react";
 
 // GraphQL Queries and Mutations
@@ -291,6 +292,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10;
 
@@ -366,6 +368,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const handleStatusUpdate = async () => {
     if (!selectedReturn || !selectedAction) return;
 
+    setLoadingAction(`status_${selectedReturn.id}`);
+    
     try {
       await updateReturnStatus({
         variables: {
@@ -387,6 +391,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     } catch (err: any) {
       console.error('Error updating return status:', err);
       alert(`Failed to update: ${err.message}`);
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -404,7 +410,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       return;
     }
 
-    setRefreshing(true);
+    setLoadingAction(`refund_${selectedReturn.id}`);
     
     try {
       // Step 1: Process the refund (this sets status to REFUND_INITIATED)
@@ -421,7 +427,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       });
       
       // Step 2: Immediately update the return status to COMPLETED
-      // This ensures the refund shows as completed right away
       await updateReturnStatus({
         variables: {
           input: {
@@ -440,96 +445,20 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       // Refresh all data
       await refetch();
       await refetchStats();
-      setRefreshing(false);
       
     } catch (err: any) {
       console.error('Error processing refund:', err);
       alert(`Failed to process refund: ${err.message}`);
-      setRefreshing(false);
-    }
-  };
-
-  // Alternative: If you want to handle async refunds (polling version)
-  const handleProcessRefundWithPolling = async () => {
-    if (!selectedReturn) return;
-
-    const amount = parseFloat(refundAmount);
-    if (isNaN(amount) || amount <= 0) {
-      alert('Please enter a valid refund amount');
-      return;
-    }
-
-    if (!transactionId.trim()) {
-      alert('Please enter a transaction ID');
-      return;
-    }
-
-    setRefreshing(true);
-    
-    try {
-      // Process the refund (this might take time on the backend)
-      await processRefund({
-        variables: {
-          input: {
-            returnId: selectedReturn.id,
-            refundAmount: amount,
-            refundMethod: refundMethod,
-            resolvedBy: supplierId,
-            transactionId: transactionId
-          }
-        }
-      });
-      
-      alert('Refund initiated successfully! Tracking status...');
-      setShowRefundModal(false);
-      setRefundAmount('');
-      setTransactionId('');
-      
-      // Refresh initial data
-      await refetch();
-      await refetchStats();
-      
-      // Start polling for completion
-      if (pollingInterval) {
-        clearInterval(pollingInterval);
-      }
-      
-      let attempts = 0;
-      const maxAttempts = 20; // 20 * 3 seconds = 60 seconds max
-      
-      const interval = setInterval(async () => {
-        attempts++;
-        const { data: freshData } = await refetch();
-        const updatedReturn = freshData?.getSupplierReturns?.find(
-          (r: ReturnRequest) => r.id === selectedReturn.id
-        );
-        
-        if (updatedReturn?.status === 'COMPLETED') {
-          clearInterval(interval);
-          setPollingInterval(null);
-          setRefreshing(false);
-          alert('Refund has been completed successfully!');
-          await refetchStats();
-        } else if (attempts >= maxAttempts) {
-          clearInterval(interval);
-          setPollingInterval(null);
-          setRefreshing(false);
-          alert('Refund is still processing. Please check back later.');
-        }
-      }, 3000); // Check every 3 seconds
-      
-      setPollingInterval(interval);
-      
-    } catch (err: any) {
-      console.error('Error processing refund:', err);
-      alert(`Failed to process refund: ${err.message}`);
-      setRefreshing(false);
+    } finally {
+      setLoadingAction(null);
     }
   };
 
   const handleMarkAsReceived = async (returnReq: ReturnRequest) => {
     if (!confirm('Mark this return as received? The items will be inspected.')) return;
 
+    setLoadingAction(`received_${returnReq.id}`);
+    
     try {
       await updateReturnStatus({
         variables: {
@@ -545,6 +474,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     } catch (err: any) {
       console.error('Error updating status:', err);
       alert(`Failed to update: ${err.message}`);
+    } finally {
+      setLoadingAction(null);
     }
   };
 
@@ -552,7 +483,6 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     if (!product) {
       return { name: 'Product Unavailable', sku: 'N/A', images: [] };
     }
-    // Handle both array and single object
     const productData = Array.isArray(product) ? product[0] : product;
     return {
       name: productData?.name || 'Product Unavailable',
@@ -615,7 +545,11 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                 disabled={refreshing}
                 className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 text-gray-700 text-sm font-medium active:scale-95 disabled:opacity-50"
               >
-                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                {refreshing ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <RefreshCw size={16} />
+                )}
                 <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
               
@@ -754,6 +688,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     key={returnReq.id}
                     returnReq={returnReq}
                     getProductInfo={getProductInfo}
+                    loadingAction={loadingAction}
                     onViewDetails={() => {
                       setSelectedReturn(returnReq);
                       setShowDetailsModal(true);
@@ -784,6 +719,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     key={returnReq.id}
                     returnReq={returnReq}
                     getProductInfo={getProductInfo}
+                    loadingAction={loadingAction}
                     onViewDetails={() => {
                       setSelectedReturn(returnReq);
                       setShowDetailsModal(true);
@@ -883,6 +819,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           vendorNotes={vendorNotes}
           onNotesChange={setVendorNotes}
           onConfirm={handleStatusUpdate}
+          loading={loadingAction === `status_${selectedReturn.id}`}
           onClose={() => {
             setShowApprovalModal(false);
             setSelectedAction(null);
@@ -901,6 +838,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           onMethodChange={setRefundMethod}
           onTransactionIdChange={setTransactionId}
           onConfirm={handleProcessRefund}
+          loading={loadingAction === `refund_${selectedReturn.id}`}
           onClose={() => {
             setShowRefundModal(false);
             setRefundAmount('');
@@ -933,6 +871,7 @@ function StatCard({ title, value, icon, color, isCurrency = false }: { title: st
 function ReturnRequestGridCard({ 
   returnReq, 
   getProductInfo,
+  loadingAction,
   onViewDetails, 
   onApprove, 
   onReject, 
@@ -942,6 +881,7 @@ function ReturnRequestGridCard({
 }: { 
   returnReq: ReturnRequest;
   getProductInfo: (product: any) => ProductInfo;
+  loadingAction: string | null;
   onViewDetails: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -951,45 +891,104 @@ function ReturnRequestGridCard({
 }) {
   const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
   const productInfo = getProductInfo(returnReq.items[0]?.orderItem.product);
+  const isLoading = loadingAction?.includes(returnReq.id);
 
   const getActionButtons = () => {
     switch (returnReq.status) {
       case 'PENDING':
         return (
           <div className="flex gap-2">
-            <button onClick={onApprove} className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:scale-95 transition-all">
+            <button 
+              onClick={onApprove} 
+              disabled={isLoading}
+              className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-green-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading && loadingAction === `status_${returnReq.id}` ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Check size={14} />
+              )}
               Approve
             </button>
-            <button onClick={onReject} className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 active:scale-95 transition-all">
+            <button 
+              onClick={onReject} 
+              disabled={isLoading}
+              className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading && loadingAction === `status_${returnReq.id}` ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <X size={14} />
+              )}
               Reject
             </button>
           </div>
         );
       case 'RETURN_SHIPPED':
         return (
-          <button onClick={onMarkReceived} className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all">
+          <button 
+            onClick={onMarkReceived} 
+            disabled={isLoading}
+            className="w-full bg-indigo-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isLoading && loadingAction === `received_${returnReq.id}` ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Package size={14} />
+            )}
             Mark Received
           </button>
         );
       case 'RECEIVED':
         return (
-          <button onClick={onStartInspection} className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 active:scale-95 transition-all">
+          <button 
+            onClick={onStartInspection} 
+            disabled={isLoading}
+            className="w-full bg-purple-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-purple-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isLoading && loadingAction === `status_${returnReq.id}` ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Camera size={14} />
+            )}
             Start Inspection
           </button>
         );
       case 'INSPECTING':
         return (
-          <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all">
+          <button 
+            onClick={onProcessRefund} 
+            disabled={isLoading}
+            className="w-full bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isLoading && loadingAction === `refund_${returnReq.id}` ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <DollarSign size={14} />
+            )}
             Process Refund
           </button>
         );
       case 'REFUND_INITIATED':
         return (
           <div className="flex gap-2">
-            <button onClick={onProcessRefund} className="flex-1 bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all">
+            <button 
+              onClick={onProcessRefund} 
+              disabled={isLoading}
+              className="flex-1 bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isLoading && loadingAction === `refund_${returnReq.id}` ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <DollarSign size={14} />
+              )}
               Complete Refund
             </button>
-            <button onClick={onViewDetails} className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+            <button 
+              onClick={onViewDetails} 
+              disabled={isLoading}
+              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               Check Status
             </button>
           </div>
@@ -1044,7 +1043,8 @@ function ReturnRequestGridCard({
           <div className="flex gap-2 mt-3">
             <button
               onClick={onViewDetails}
-              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all"
+              disabled={isLoading}
+              className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Details
             </button>
@@ -1060,6 +1060,7 @@ function ReturnRequestGridCard({
 function ReturnRequestCard({ 
   returnReq, 
   getProductInfo,
+  loadingAction,
   onViewDetails, 
   onApprove, 
   onReject, 
@@ -1069,6 +1070,7 @@ function ReturnRequestCard({
 }: { 
   returnReq: ReturnRequest;
   getProductInfo: (product: any) => ProductInfo;
+  loadingAction: string | null;
   onViewDetails: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -1078,45 +1080,104 @@ function ReturnRequestCard({
 }) {
   const [expanded, setExpanded] = useState(false);
   const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
+  const isLoading = loadingAction?.includes(returnReq.id);
 
   const getActionButtons = () => {
     switch (returnReq.status) {
       case 'PENDING':
         return (
           <div className="flex gap-2">
-            <button onClick={onApprove} className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-all flex items-center justify-center gap-1">
-              <Check size={16} /> Approve
+            <button 
+              onClick={onApprove} 
+              disabled={isLoading}
+              className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading && loadingAction === `status_${returnReq.id}` ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Check size={16} />
+              )}
+              Approve
             </button>
-            <button onClick={onReject} className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-all flex items-center justify-center gap-1">
-              <X size={16} /> Reject
+            <button 
+              onClick={onReject} 
+              disabled={isLoading}
+              className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading && loadingAction === `status_${returnReq.id}` ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <X size={16} />
+              )}
+              Reject
             </button>
           </div>
         );
       case 'RETURN_SHIPPED':
         return (
-          <button onClick={onMarkReceived} className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all flex items-center justify-center gap-1">
-            <Package size={16} /> Mark as Received
+          <button 
+            onClick={onMarkReceived} 
+            disabled={isLoading}
+            className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading && loadingAction === `received_${returnReq.id}` ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Package size={16} />
+            )}
+            Mark as Received
           </button>
         );
       case 'RECEIVED':
         return (
-          <button onClick={onStartInspection} className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all flex items-center justify-center gap-1">
-            <Camera size={16} /> Start Inspection
+          <button 
+            onClick={onStartInspection} 
+            disabled={isLoading}
+            className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading && loadingAction === `status_${returnReq.id}` ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Camera size={16} />
+            )}
+            Start Inspection
           </button>
         );
       case 'INSPECTING':
         return (
-          <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-1">
-            <DollarSign size={16} /> Process Refund
+          <button 
+            onClick={onProcessRefund} 
+            disabled={isLoading}
+            className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading && loadingAction === `refund_${returnReq.id}` ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <DollarSign size={16} />
+            )}
+            Process Refund
           </button>
         );
       case 'REFUND_INITIATED':
         return (
           <div className="flex gap-2">
-            <button onClick={onProcessRefund} className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-1">
-              <DollarSign size={16} /> Complete Refund
+            <button 
+              onClick={onProcessRefund} 
+              disabled={isLoading}
+              className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading && loadingAction === `refund_${returnReq.id}` ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <DollarSign size={16} />
+              )}
+              Complete Refund
             </button>
-            <button onClick={onViewDetails} className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-1">
+            <button 
+              onClick={onViewDetails} 
+              disabled={isLoading}
+              className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
               <Eye size={16} /> Check Status
             </button>
           </div>
@@ -1247,7 +1308,8 @@ function ReturnRequestCard({
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={onViewDetails}
-              className="sm:flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-1"
+              disabled={isLoading}
+              className="sm:flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Eye size={16} /> View Details
             </button>
@@ -1565,13 +1627,14 @@ function ReturnDetailsModal({
   );
 }
 
-// Approval Modal Component (Touch Optimized)
+// Approval Modal Component with Loading
 function ApprovalModal({ 
   returnReq, 
   action, 
   vendorNotes, 
   onNotesChange, 
   onConfirm, 
+  loading,
   onClose 
 }: { 
   returnReq: ReturnRequest;
@@ -1579,6 +1642,7 @@ function ApprovalModal({
   vendorNotes: string;
   onNotesChange: (notes: string) => void;
   onConfirm: () => void;
+  loading: boolean;
   onClose: () => void;
 }) {
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -1617,7 +1681,8 @@ function ApprovalModal({
               value={vendorNotes}
               onChange={(e) => onNotesChange(e.target.value)}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+              disabled={loading}
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
               placeholder={action === 'APPROVED' ? 
                 "Add instructions for customer to ship items back..." : 
                 action === 'REJECTED' ? 
@@ -1629,19 +1694,25 @@ function ApprovalModal({
           <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              className={`flex-1 py-3 rounded-xl font-medium text-white transition-all active:scale-95 ${
+              disabled={loading}
+              className={`flex-1 py-3 rounded-xl font-medium text-white transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                 action === 'APPROVED' ? 'bg-green-600 hover:bg-green-700' :
                 action === 'REJECTED' ? 'bg-red-600 hover:bg-red-700' :
                 'bg-purple-600 hover:bg-purple-700'
               }`}
             >
-              {action === 'APPROVED' ? 'Approve Return' : 
-               action === 'REJECTED' ? 'Reject Return' : 
-               'Start Inspection'}
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                action === 'APPROVED' ? 'Approve Return' : 
+                action === 'REJECTED' ? 'Reject Return' : 
+                'Start Inspection'
+              )}
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95"
+              disabled={loading}
+              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -1652,7 +1723,7 @@ function ApprovalModal({
   );
 }
 
-// Refund Modal Component with Transaction ID (Touch Optimized)
+// Refund Modal Component with Loading
 function RefundModal({ 
   returnReq, 
   refundAmount, 
@@ -1662,6 +1733,7 @@ function RefundModal({
   onMethodChange,
   onTransactionIdChange,
   onConfirm, 
+  loading,
   onClose 
 }: { 
   returnReq: ReturnRequest;
@@ -1672,6 +1744,7 @@ function RefundModal({
   onMethodChange: (method: string) => void;
   onTransactionIdChange: (id: string) => void;
   onConfirm: () => void;
+  loading: boolean;
   onClose: () => void;
 }) {
   const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
@@ -1720,7 +1793,8 @@ function RefundModal({
                 onChange={(e) => onAmountChange(e.target.value)}
                 placeholder="0.00"
                 max={maxRefund}
-                className="w-full pl-8 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                disabled={loading}
+                className="w-full pl-8 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
             </div>
             {parseFloat(refundAmount) > maxRefund && (
@@ -1739,7 +1813,8 @@ function RefundModal({
                 value={transactionId}
                 onChange={(e) => onTransactionIdChange(e.target.value)}
                 placeholder="Enter transaction ID (e.g., TXN-123456789)"
-                className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                disabled={loading}
+                className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
             </div>
             <p className="text-xs text-gray-500 mt-1">
@@ -1754,7 +1829,8 @@ function RefundModal({
             <select
               value={refundMethod}
               onChange={(e) => onMethodChange(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-white"
+              disabled={loading}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
             >
               <option value="ORIGINAL_PAYMENT">💳 Original Payment Method</option>
               <option value="STORE_CREDIT">🎁 Store Credit</option>
@@ -1801,14 +1877,19 @@ function RefundModal({
           <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund || !transactionId.trim()}
-              className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund || !transactionId.trim() || loading}
+              className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              Process Refund
+              {loading ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                'Process Refund'
+              )}
             </button>
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95"
+              disabled={loading}
+              className="flex-1 border border-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
@@ -1890,4 +1971,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-}
+              }
