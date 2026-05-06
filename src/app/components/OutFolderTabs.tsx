@@ -52,8 +52,11 @@ interface Tab  {
 const OutFolderTabs: React.FC = () => {
   const activeIndex = useSelector((state: any) => state.activeIndex.value);
   const activePostId = useSelector((state: any) => state.activePostId.value);
+  const cartItems = useSelector((state: any) => state.cart.cartItems as CartItem[]); 
   const dispatch = useDispatch();
   const [userId, setUserId] = useState("");
+  // Calculate total cart count
+  const cartCount = cartItems.reduce((total:number, item:any) => total + item?.quantity, 0);
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   
