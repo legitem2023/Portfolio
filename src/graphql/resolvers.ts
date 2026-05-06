@@ -5482,7 +5482,7 @@ addReturnTracking: async (_: any, { input }: any) => {
 
 processRefund: async (_: any, { input }: any) => {
   try {
-    const { returnId, refundAmount, refundMethod, transactionId, resolvedBy } = input;
+    const { returnId, refundAmount, refundMethod, transactionId, resolvedBy, orderItemId } = input;
     
     const existingReturn = await prisma.returnRequest.findUnique({
       where: { id: returnId },
@@ -5511,6 +5511,15 @@ processRefund: async (_: any, { input }: any) => {
         refundTransactionId: transactionId ?? null
       }
     });
+
+   await prisma.orderItem.update({
+       where: {
+         id: orderItemId
+       },
+      data: {
+        status:"REFUNDED"
+      }
+   })
     
     const resolution = await prisma.returnResolution.create({
       data: {
