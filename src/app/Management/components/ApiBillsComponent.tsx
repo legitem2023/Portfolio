@@ -494,7 +494,7 @@ const ApiBillsComponent: React.FC = () => {
                           </svg>
                         </div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
-                        <p className="text-gray-600">Try adjusting your filters to find what you're looking for.</p>
+                        <p className="text-gray-600">Try adjusting your filters to find what you&apos;re looking for.</p>
                       </td>
                     </tr>
                   )}
