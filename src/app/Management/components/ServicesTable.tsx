@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import service from ".Json/service.json";
+import service from "./Json/service.json";
 
 // Type definition for TypeScript
 type Service = {
