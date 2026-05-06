@@ -451,7 +451,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   if (loading && returns.length === 0) {
     return <VendorReturnShimmer />;
   }
-
+console.log(data);
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
