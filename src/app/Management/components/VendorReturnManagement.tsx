@@ -291,6 +291,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [currentPage, setCurrentPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const itemsPerPage = 10;
 
   // Close modals on escape key
@@ -306,6 +307,15 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
   }, []);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   // Prevent body scroll when modals are open
   useEffect(() => {
@@ -397,6 +407,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     setRefreshing(true);
     
     try {
+      // Step 1: Process the refund (this sets status to REFUND_INITIATED)
       await processRefund({
         variables: {
           input: {
@@ -409,21 +420,105 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
         }
       });
       
-      alert('Refund processed successfully! Refund will be completed shortly.');
+      // Step 2: Immediately update the return status to COMPLETED
+      // This ensures the refund shows as completed right away
+      await updateReturnStatus({
+        variables: {
+          input: {
+            returnId: selectedReturn.id,
+            status: 'COMPLETED',
+            vendorNotes: `Refund of ${formatPrice(amount)} processed via ${refundMethod}. Transaction ID: ${transactionId}`
+          }
+        }
+      });
+      
+      alert('Refund processed successfully! Return marked as completed.');
       setShowRefundModal(false);
       setRefundAmount('');
       setTransactionId('');
       
-      // Refresh data immediately
+      // Refresh all data
+      await refetch();
+      await refetchStats();
+      setRefreshing(false);
+      
+    } catch (err: any) {
+      console.error('Error processing refund:', err);
+      alert(`Failed to process refund: ${err.message}`);
+      setRefreshing(false);
+    }
+  };
+
+  // Alternative: If you want to handle async refunds (polling version)
+  const handleProcessRefundWithPolling = async () => {
+    if (!selectedReturn) return;
+
+    const amount = parseFloat(refundAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Please enter a valid refund amount');
+      return;
+    }
+
+    if (!transactionId.trim()) {
+      alert('Please enter a transaction ID');
+      return;
+    }
+
+    setRefreshing(true);
+    
+    try {
+      // Process the refund (this might take time on the backend)
+      await processRefund({
+        variables: {
+          input: {
+            returnId: selectedReturn.id,
+            refundAmount: amount,
+            refundMethod: refundMethod,
+            resolvedBy: supplierId,
+            transactionId: transactionId
+          }
+        }
+      });
+      
+      alert('Refund initiated successfully! Tracking status...');
+      setShowRefundModal(false);
+      setRefundAmount('');
+      setTransactionId('');
+      
+      // Refresh initial data
       await refetch();
       await refetchStats();
       
-      // Auto-refresh after 5 seconds to show COMPLETED status
-      setTimeout(async () => {
-        await refetch();
-        await refetchStats();
-        setRefreshing(false);
-      }, 6000);
+      // Start polling for completion
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20; // 20 * 3 seconds = 60 seconds max
+      
+      const interval = setInterval(async () => {
+        attempts++;
+        const { data: freshData } = await refetch();
+        const updatedReturn = freshData?.getSupplierReturns?.find(
+          (r: ReturnRequest) => r.id === selectedReturn.id
+        );
+        
+        if (updatedReturn?.status === 'COMPLETED') {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setRefreshing(false);
+          alert('Refund has been completed successfully!');
+          await refetchStats();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(interval);
+          setPollingInterval(null);
+          setRefreshing(false);
+          alert('Refund is still processing. Please check back later.');
+        }
+      }, 3000); // Check every 3 seconds
+      
+      setPollingInterval(interval);
       
     } catch (err: any) {
       console.error('Error processing refund:', err);
@@ -888,6 +983,23 @@ function ReturnRequestGridCard({
             Process Refund
           </button>
         );
+      case 'REFUND_INITIATED':
+        return (
+          <div className="flex gap-2">
+            <button onClick={onProcessRefund} className="flex-1 bg-orange-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-700 active:scale-95 transition-all">
+              Complete Refund
+            </button>
+            <button onClick={onViewDetails} className="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all">
+              Check Status
+            </button>
+          </div>
+        );
+      case 'COMPLETED':
+        return (
+          <div className="text-center py-2 text-emerald-600 text-sm font-medium">
+            ✓ Refund Completed
+          </div>
+        );
       default:
         return null;
     }
@@ -997,6 +1109,23 @@ function ReturnRequestCard({
           <button onClick={onProcessRefund} className="w-full bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-1">
             <DollarSign size={16} /> Process Refund
           </button>
+        );
+      case 'REFUND_INITIATED':
+        return (
+          <div className="flex gap-2">
+            <button onClick={onProcessRefund} className="flex-1 bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 transition-all flex items-center justify-center gap-1">
+              <DollarSign size={16} /> Complete Refund
+            </button>
+            <button onClick={onViewDetails} className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-all flex items-center justify-center gap-1">
+              <Eye size={16} /> Check Status
+            </button>
+          </div>
+        );
+      case 'COMPLETED':
+        return (
+          <div className="w-full bg-emerald-50 text-emerald-700 px-4 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+            <CheckCircle size={16} /> Refund Completed
+          </div>
         );
       default:
         return null;
@@ -1761,4 +1890,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-          }
+      }
