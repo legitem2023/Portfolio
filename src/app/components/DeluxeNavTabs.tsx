@@ -13,7 +13,7 @@ import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation';
 import ParticleBackground from './ParticleBackground';
 import { CartItem } from '../../../types'; // Import CartItem type
-import NotificationsPage from "./NotificationPage";
+import NotificationsPage from "./NotificationsPage";
 import {
   Home,
   ShoppingBag,
