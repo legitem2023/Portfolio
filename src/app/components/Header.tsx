@@ -862,7 +862,8 @@ useEffect(() => {
                         <button
                           onClick={() => {
                             setIsBellPopupOpen(false);
-                            router.push('/Notifications');
+                            dispatch(setActiveIndex(12));
+                            //router.push('/Notifications');
                           }}
                           className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
                         >
