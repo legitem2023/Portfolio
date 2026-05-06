@@ -139,7 +139,6 @@ const PROCESS_REFUND = gql`
       id
       status
       refundAmount
-      transactionId
     }
   }
 `;
