@@ -950,7 +950,7 @@ getSupplierReturns: async (_: any, { supplierId, status, limit = 50, offset = 0 
 
 getReturnStats: async (_: any, { userId }: any) => {
   try {
-    const where: any = userId ? { userId } : {};
+    const where: any = userId ? { supplierId: userId } : {};
     
     const [totalReturns, pendingCount, approvedCount, rejectedCount, completedCount] = await Promise.all([
       prisma.returnRequest.count({ where }),
