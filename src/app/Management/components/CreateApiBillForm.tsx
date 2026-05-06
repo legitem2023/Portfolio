@@ -1,6 +1,17 @@
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { CREATE_API_BILL_MUTATION, ApiBillInput } from '../../components/graphql/mutation';
+import serviceData from "./Json/service.json"; // Import service.json
+
+// Type definition for service.json
+type Service = {
+  name: string;
+  service: string;
+  payment_period: string;
+  cost: string;
+  upgradable: string;
+  inuse: string;
+};
 
 interface CreateApiBillFormProps {
   onSuccess?: (createdBill: any) => void;
@@ -13,6 +24,22 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
   onCancel,
   defaultService = ''
 }) => {
+  // Load service data from JSON
+  const services = serviceData as Service[];
+  
+  // Get unique service providers (name field) and APIs (service field)
+  const serviceProviders = Array.from(new Set(services.map(s => s.name)));
+  
+  // Get APIs filtered by selected service provider
+  const getApiOptions = (selectedService: string) => {
+    if (!selectedService) return [];
+    return Array.from(new Set(
+      services
+        .filter(s => s.name === selectedService)
+        .map(s => s.service)
+    ));
+  };
+
   // Basic form state
   const [formData, setFormData] = useState({
     service: defaultService,
@@ -58,6 +85,14 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
         ...prev,
         [name]: type === 'number' ? parseFloat(value) || 0 : value
       }));
+      
+      // If service changes, reset apiName
+      if (name === 'service') {
+        setFormData(prev => ({
+          ...prev,
+          apiName: ''
+        }));
+      }
     }
     
     // Clear error for this field
@@ -75,7 +110,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
 
     // Required fields
     if (!formData.service.trim()) {
-      newErrors.service = 'Service is required';
+      newErrors.service = 'Service provider is required';
     }
     
     if (!formData.apiName.trim()) {
@@ -239,7 +274,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 max-w-4xl mx-auto">
+    <div className="bg-white shadow-lg p-6 max-w-4xl mx-auto">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800">Add New API Bill</h2>
         <p className="text-gray-600 mt-1">Track API service costs and usage metrics</p>
@@ -247,7 +282,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
 
       {/* Success Message */}
       {successMessage && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -263,7 +298,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
 
       {/* Error Messages */}
       {errors.general && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -278,7 +313,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
       )}
 
       {errors.duplicate && (
-        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
@@ -302,17 +337,22 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Service Provider *
               </label>
-              <input
-                type="text"
+              <select
                 name="service"
                 value={formData.service}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                   errors.service ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="e.g., AWS, Stripe, Twilio"
                 required
-              />
+              >
+                <option value="">Select Service Provider</option>
+                {serviceProviders.map((provider) => (
+                  <option key={provider} value={provider}>
+                    {provider}
+                  </option>
+                ))}
+              </select>
               {errors.service && <p className="text-red-500 text-xs mt-1">{errors.service}</p>}
             </div>
 
@@ -320,17 +360,23 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 API Name *
               </label>
-              <input
-                type="text"
+              <select
                 name="apiName"
                 value={formData.apiName}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                   errors.apiName ? 'border-red-500' : 'border-gray-300'
                 }`}
-                placeholder="e.g., Payments, S3 Storage, SMS"
+                disabled={!formData.service}
                 required
-              />
+              >
+                <option value="">{formData.service ? 'Select API' : 'Select service provider first'}</option>
+                {getApiOptions(formData.service).map((api) => (
+                  <option key={api} value={api}>
+                    {api}
+                  </option>
+                ))}
+              </select>
               {errors.apiName && <p className="text-red-500 text-xs mt-1">{errors.apiName}</p>}
             </div>
 
@@ -342,7 +388,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="month"
                 value={formData.month}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                   errors.month ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -366,7 +412,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 onChange={handleInputChange}
                 min="2000"
                 max="2100"
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                   errors.year ? 'border-red-500' : 'border-gray-300'
                 }`}
                 required
@@ -387,7 +433,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                   onChange={handleInputChange}
                   step="0.01"
                   min="0.01"
-                  className={`w-full pl-8 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  className={`w-full pl-8 pr-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                     errors.amount ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="0.00"
@@ -405,7 +451,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="currency"
                 value={formData.currency}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
               >
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
@@ -423,7 +469,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="dueDate"
                 value={formData.dueDate}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white ${
                   errors.dueDate ? 'border-red-500' : 'border-gray-300'
                 }`}
                 required
@@ -440,7 +486,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="invoiceId"
                 value={formData.invoiceId}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                 placeholder="INV-2024-001"
               />
             </div>
@@ -454,7 +500,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="invoiceUrl"
                 value={formData.invoiceUrl}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                 placeholder="https://invoice.example.com/..."
               />
             </div>
@@ -468,7 +514,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 name="tags"
                 value={formData.tags}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                 placeholder="cloud, payments, api, monthly"
               />
               <p className="text-xs text-gray-500 mt-1">Separate tags with commas</p>
@@ -485,14 +531,14 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                 type="checkbox"
                 checked={includeUsage}
                 onChange={(e) => setIncludeUsage(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
               />
               <span className="text-sm text-gray-700">Include usage metrics</span>
             </label>
           </div>
 
           {includeUsage && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 space-y-4">
+            <div className="bg-blue-50 border border-blue-100 p-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -504,7 +550,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                     value={usageData.requests}
                     onChange={handleInputChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   />
                 </div>
 
@@ -518,7 +564,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                     value={usageData.successful}
                     onChange={handleInputChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   />
                 </div>
 
@@ -532,7 +578,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                     value={usageData.failed}
                     onChange={handleInputChange}
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   />
                 </div>
 
@@ -547,7 +593,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   />
                 </div>
 
@@ -562,7 +608,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                     onChange={handleInputChange}
                     min="0"
                     step="0.01"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   />
                 </div>
 
@@ -578,7 +624,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
                       customFieldsJson: e.target.value
                     }))}
                     rows={3}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-mono text-sm ${
+                    className={`w-full px-3 py-2 border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors font-mono text-sm bg-white ${
                       errors['usage.customFields'] ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder='{"region": "us-east-1", "plan": "pro"}'
@@ -598,7 +644,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors bg-white"
               disabled={isSubmitting}
             >
               Reset Form
@@ -607,7 +653,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
               <button
                 type="button"
                 onClick={onCancel}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                className="px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors bg-white"
                 disabled={isSubmitting}
               >
                 Cancel
@@ -618,7 +664,7 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center">
