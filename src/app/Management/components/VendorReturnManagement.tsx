@@ -82,6 +82,7 @@ const GET_SUPPLIER_RETURNS = gql`
           quantity
           price
           product {
+            id
             name
             sku
             images
@@ -160,6 +161,7 @@ interface ReturnTracking {
 }
 
 interface ProductInfo {
+  id: string;
   name: string;
   sku: string;
   images: string[];
@@ -287,6 +289,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [refundAmount, setRefundAmount] = useState('');
   const [refundMethod, setRefundMethod] = useState('ORIGINAL_PAYMENT');
   const [transactionId, setTransactionId] = useState('');
+  const [selectedOrderItemId, setSelectedOrderItemId] = useState<string>('');
   const [selectedAction, setSelectedAction] = useState<'APPROVED' | 'REJECTED' | 'RECEIVED' | 'INSPECTING' | null>(null);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -410,14 +413,20 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       return;
     }
 
+    if (!selectedOrderItemId) {
+      alert('Please select an item to refund');
+      return;
+    }
+
     setLoadingAction(`refund_${selectedReturn.id}`);
     
     try {
-      // Step 1: Process the refund (this sets status to REFUND_INITIATED)
+      // Step 1: Process the refund with orderItemId
       await processRefund({
         variables: {
           input: {
             returnId: selectedReturn.id,
+            orderItemId: selectedOrderItemId,
             refundAmount: amount,
             refundMethod: refundMethod,
             resolvedBy: supplierId,
@@ -432,7 +441,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           input: {
             returnId: selectedReturn.id,
             status: 'COMPLETED',
-            vendorNotes: `Refund of ${formatPrice(amount)} processed via ${refundMethod}. Transaction ID: ${transactionId}`
+            vendorNotes: `Refund of ${formatPrice(amount)} processed via ${refundMethod} for order item ${selectedOrderItemId}. Transaction ID: ${transactionId}`
           }
         }
       });
@@ -441,6 +450,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       setShowRefundModal(false);
       setRefundAmount('');
       setTransactionId('');
+      setSelectedOrderItemId('');
       
       // Refresh all data
       await refetch();
@@ -481,10 +491,11 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
 
   const getProductInfo = (product: any): ProductInfo => {
     if (!product) {
-      return { name: 'Product Unavailable', sku: 'N/A', images: [] };
+      return { id: '', name: 'Product Unavailable', sku: 'N/A', images: [] };
     }
     const productData = Array.isArray(product) ? product[0] : product;
     return {
+      id: productData?.id || '',
       name: productData?.name || 'Product Unavailable',
       sku: productData?.sku || 'N/A',
       images: productData?.images || []
@@ -711,6 +722,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     }}
                     onProcessRefund={() => {
                       setSelectedReturn(returnReq);
+                      setSelectedOrderItemId('');
+                      setRefundAmount('');
                       setShowRefundModal(true);
                     }}
                   />
@@ -742,6 +755,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
                     }}
                     onProcessRefund={() => {
                       setSelectedReturn(returnReq);
+                      setSelectedOrderItemId('');
+                      setRefundAmount('');
                       setShowRefundModal(true);
                     }}
                   />
@@ -834,15 +849,18 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           refundAmount={refundAmount}
           refundMethod={refundMethod}
           transactionId={transactionId}
+          selectedOrderItemId={selectedOrderItemId}
           onAmountChange={setRefundAmount}
           onMethodChange={setRefundMethod}
           onTransactionIdChange={setTransactionId}
+          onOrderItemChange={setSelectedOrderItemId}
           onConfirm={handleProcessRefund}
           loading={loadingAction === `refund_${selectedReturn.id}`}
           onClose={() => {
             setShowRefundModal(false);
             setRefundAmount('');
             setTransactionId('');
+            setSelectedOrderItemId('');
           }}
         />
       )}
@@ -1723,15 +1741,17 @@ function ApprovalModal({
   );
 }
 
-// Refund Modal Component with Loading
+// Refund Modal Component with Item Selection
 function RefundModal({ 
   returnReq, 
   refundAmount, 
   refundMethod,
   transactionId,
+  selectedOrderItemId,
   onAmountChange, 
   onMethodChange,
   onTransactionIdChange,
+  onOrderItemChange,
   onConfirm, 
   loading,
   onClose 
@@ -1740,19 +1760,42 @@ function RefundModal({
   refundAmount: string;
   refundMethod: string;
   transactionId: string;
+  selectedOrderItemId: string;
   onAmountChange: (amount: string) => void;
   onMethodChange: (method: string) => void;
   onTransactionIdChange: (id: string) => void;
+  onOrderItemChange: (itemId: string) => void;
   onConfirm: () => void;
   loading: boolean;
   onClose: () => void;
 }) {
-  const totalRefund = returnReq.items.reduce((sum, item) => sum + (item.orderItem.price * item.quantity), 0);
-  const maxRefund = Math.min(totalRefund, returnReq.refundAmount || totalRefund);
-
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  // Get selected item details
+  const getSelectedItem = () => {
+    return returnReq.items.find(item => item.orderItem.id === selectedOrderItemId);
+  };
+
+  const selectedItem = getSelectedItem();
+  const selectedItemTotal = selectedItem 
+    ? selectedItem.orderItem.price * selectedItem.quantity 
+    : 0;
+
+  // Auto-set refund amount when item is selected
+  const handleOrderItemChange = (itemId: string) => {
+    onOrderItemChange(itemId);
+    const item = returnReq.items.find(i => i.orderItem.id === itemId);
+    if (item) {
+      const amount = item.orderItem.price * item.quantity;
+      onAmountChange(amount.toString());
+    } else {
+      onAmountChange('');
+    }
+  };
+
+  const maxRefund = selectedItemTotal;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={handleBackdropClick}>
@@ -1772,13 +1815,73 @@ function RefundModal({
             <p className="text-sm text-gray-600 mb-3">
               Customer: {returnReq.user.firstName} {returnReq.user.lastName}
             </p>
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
+          </div>
+
+          {/* Order Item Selection */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Item to Refund *
+            </label>
+            <select
+              value={selectedOrderItemId}
+              onChange={(e) => handleOrderItemChange(e.target.value)}
+              disabled={loading}
+              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+            >
+              <option value="">Select an item...</option>
+              {returnReq.items.map((item) => {
+                const productInfo = item.orderItem.product;
+                const itemTotal = item.orderItem.price * item.quantity;
+                return (
+                  <option key={item.orderItem.id} value={item.orderItem.id}>
+                    {productInfo?.name || 'Product'} - Qty: {item.quantity} - {formatPrice(itemTotal)}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+
+          {/* Selected Item Details */}
+          {selectedOrderItemId && selectedItem && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-xl">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <Package size={14} />
+                Selected Item Details
+              </h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Product:</span>
+                  <span className="text-gray-800 font-medium">{selectedItem.orderItem.product?.name || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">SKU:</span>
+                  <span className="text-gray-800">{selectedItem.orderItem.product?.sku || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Quantity:</span>
+                  <span className="text-gray-800">{selectedItem.quantity}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Unit Price:</span>
+                  <span className="text-gray-800">{formatPrice(selectedItem.orderItem.price)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-blue-200">
+                  <span className="font-medium text-gray-700">Item Total:</span>
+                  <span className="font-bold text-green-600">{formatPrice(selectedItemTotal)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Maximum Refund Amount Display */}
+          {selectedOrderItemId && (
+            <div className="mb-4 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Maximum Refund Amount:</span>
                 <span className="text-lg font-bold text-green-600">{formatPrice(maxRefund)}</span>
               </div>
             </div>
-          </div>
+          )}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1792,13 +1895,13 @@ function RefundModal({
                 value={refundAmount}
                 onChange={(e) => onAmountChange(e.target.value)}
                 placeholder="0.00"
-                max={maxRefund}
-                disabled={loading}
+                max={maxRefund || undefined}
+                disabled={loading || !selectedOrderItemId}
                 className="w-full pl-8 pr-3 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm disabled:bg-gray-50 disabled:cursor-not-allowed"
               />
             </div>
             {parseFloat(refundAmount) > maxRefund && (
-              <p className="text-xs text-red-500 mt-1">Amount exceeds maximum refund value</p>
+              <p className="text-xs text-red-500 mt-1">Amount exceeds maximum refund value for this item</p>
             )}
           </div>
 
@@ -1841,43 +1944,49 @@ function RefundModal({
           </div>
 
           {/* Summary Card */}
-          <div className="mb-5 p-3 bg-gray-50 rounded-xl">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-              <Receipt size={14} />
-              Refund Summary
-            </h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Return Number:</span>
-                <span className="font-mono text-gray-700">{returnReq.returnNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Order Number:</span>
-                <span className="font-mono text-gray-700">{returnReq.order.orderNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Customer:</span>
-                <span className="text-gray-700">{returnReq.user.firstName} {returnReq.user.lastName}</span>
-              </div>
-              <div className="flex justify-between pt-2 border-t border-gray-200">
-                <span className="font-medium text-gray-700">Refund Amount:</span>
-                <span className="font-bold text-green-600">
-                  {refundAmount ? formatPrice(parseFloat(refundAmount)) : formatPrice(0)}
-                </span>
-              </div>
-              {transactionId && (
+          {selectedOrderItemId && (
+            <div className="mb-5 p-3 bg-gray-50 rounded-xl">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <Receipt size={14} />
+                Refund Summary
+              </h3>
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">Transaction ID:</span>
-                  <span className="font-mono text-purple-600 text-xs">{transactionId}</span>
+                  <span className="text-gray-500">Return Number:</span>
+                  <span className="font-mono text-gray-700">{returnReq.returnNumber}</span>
                 </div>
-              )}
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Order Number:</span>
+                  <span className="font-mono text-gray-700">{returnReq.order.orderNumber}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Order Item ID:</span>
+                  <span className="font-mono text-gray-700 text-xs">{selectedOrderItemId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Customer:</span>
+                  <span className="text-gray-700">{returnReq.user.firstName} {returnReq.user.lastName}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-200">
+                  <span className="font-medium text-gray-700">Refund Amount:</span>
+                  <span className="font-bold text-green-600">
+                    {refundAmount ? formatPrice(parseFloat(refundAmount)) : formatPrice(0)}
+                  </span>
+                </div>
+                {transactionId && (
+                  <div className="flex justify-between">
+                    <span className="font-medium text-gray-700">Transaction ID:</span>
+                    <span className="font-mono text-purple-600 text-xs">{transactionId}</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex gap-3">
             <button
               onClick={onConfirm}
-              disabled={!refundAmount || parseFloat(refundAmount) <= 0 || parseFloat(refundAmount) > maxRefund || !transactionId.trim() || loading}
+              disabled={!selectedOrderItemId || !refundAmount || parseFloat(refundAmount) <= 0 || (maxRefund && parseFloat(refundAmount) > maxRefund) || !transactionId.trim() || loading}
               className="flex-1 bg-gradient-to-r from-orange-600 to-red-600 text-white py-3 rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               {loading ? (
@@ -1971,4 +2080,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-              }
+}
