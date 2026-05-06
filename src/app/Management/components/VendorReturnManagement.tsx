@@ -290,6 +290,7 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [currentPage, setCurrentPage] = useState(1);
+  const [refreshing, setRefreshing] = useState(false);
   const itemsPerPage = 10;
 
   // Close modals on escape key
@@ -369,8 +370,10 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       setShowApprovalModal(false);
       setSelectedAction(null);
       setVendorNotes('');
-      refetch();
-      refetchStats();
+      
+      // Refresh data
+      await refetch();
+      await refetchStats();
     } catch (err: any) {
       console.error('Error updating return status:', err);
       alert(`Failed to update: ${err.message}`);
@@ -391,6 +394,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
       return;
     }
 
+    setRefreshing(true);
+    
     try {
       await processRefund({
         variables: {
@@ -404,15 +409,26 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
         }
       });
       
-      alert('Refund processed successfully!');
+      alert('Refund processed successfully! Refund will be completed shortly.');
       setShowRefundModal(false);
       setRefundAmount('');
       setTransactionId('');
-      refetch();
-      refetchStats();
+      
+      // Refresh data immediately
+      await refetch();
+      await refetchStats();
+      
+      // Auto-refresh after 5 seconds to show COMPLETED status
+      setTimeout(async () => {
+        await refetch();
+        await refetchStats();
+        setRefreshing(false);
+      }, 6000);
+      
     } catch (err: any) {
       console.error('Error processing refund:', err);
       alert(`Failed to process refund: ${err.message}`);
+      setRefreshing(false);
     }
   };
 
@@ -429,8 +445,8 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
           }
         }
       });
-      refetch();
-      refetchStats();
+      await refetch();
+      await refetchStats();
     } catch (err: any) {
       console.error('Error updating status:', err);
       alert(`Failed to update: ${err.message}`);
@@ -441,17 +457,26 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
     if (!product) {
       return { name: 'Product Unavailable', sku: 'N/A', images: [] };
     }
+    // Handle both array and single object
+    const productData = Array.isArray(product) ? product[0] : product;
     return {
-      name: product.name || 'Product Unavailable',
-      sku: product.sku || 'N/A',
-      images: product.images || []
+      name: productData?.name || 'Product Unavailable',
+      sku: productData?.sku || 'N/A',
+      images: productData?.images || []
     };
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    await refetchStats();
+    setRefreshing(false);
   };
 
   if (loading && returns.length === 0) {
     return <VendorReturnShimmer />;
   }
-console.log(data);
+
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
@@ -462,7 +487,7 @@ console.log(data);
           <h2 className="text-xl font-bold text-gray-800 mb-2">Failed to Load Returns</h2>
           <p className="text-sm text-gray-500 mb-6">{error.message}</p>
           <button 
-            onClick={() => refetch()}
+            onClick={() => handleRefresh()}
             className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:shadow-lg transform transition-all active:scale-95"
           >
             Try Again
@@ -488,28 +513,40 @@ console.log(data);
               <p className="text-sm text-gray-500">Manage customer return requests and process refunds</p>
             </div>
             
-            {/* View Toggle for Mobile */}
-            <div className="flex gap-2 sm:hidden">
+            {/* Refresh Button and View Toggle */}
+            <div className="flex gap-2">
               <button
-                onClick={() => setViewMode('list')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'list' 
-                    ? 'bg-purple-600 text-white shadow-md' 
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="px-4 py-2 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 text-gray-700 text-sm font-medium active:scale-95 disabled:opacity-50"
               >
-                <List size={16} className="inline mr-1" /> List
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                <span className="hidden sm:inline">{refreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-                  viewMode === 'grid' 
-                    ? 'bg-purple-600 text-white shadow-md' 
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}
-              >
-                <Grid size={16} className="inline mr-1" /> Grid
-              </button>
+              
+              {/* View Toggle for Mobile */}
+              <div className="flex gap-2 sm:hidden">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    viewMode === 'list' 
+                      ? 'bg-purple-600 text-white shadow-md' 
+                      : 'bg-white text-gray-600 border border-gray-200'
+                  }`}
+                >
+                  <List size={16} className="inline mr-1" /> List
+                </button>
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
+                    viewMode === 'grid' 
+                      ? 'bg-purple-600 text-white shadow-md' 
+                      : 'bg-white text-gray-600 border border-gray-200'
+                  }`}
+                >
+                  <Grid size={16} className="inline mr-1" /> Grid
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -573,17 +610,6 @@ console.log(data);
                   </option>
                 ))}
               </select>
-
-              <button
-                onClick={() => {
-                  refetch();
-                  refetchStats();
-                }}
-                className="px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all flex items-center gap-2 text-gray-700 text-sm font-medium active:scale-95"
-              >
-                <RefreshCw size={16} />
-                <span className="hidden sm:inline">Refresh</span>
-              </button>
             </div>
 
             {/* Mobile Status Filter Dropdown */}
@@ -1735,4 +1761,4 @@ function VendorReturnShimmer() {
       `}</style>
     </div>
   );
-    }
+          }
