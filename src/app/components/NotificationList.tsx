@@ -9,7 +9,7 @@ import {
   Info,
   Clock
 } from 'lucide-react';
-import { NotificationType } from '../types/notification';
+import { NotificationType } from '../../../types/notification';
 
 interface NotificationUser {
   id: string;
