@@ -42,12 +42,12 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 14, label: 'Return Management', icon: RotateCcw, roles: ['ADMINISTRATOR','MANAGER'] },
     { id: 5, label: 'Remittance', icon: BanknoteArrowUp, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 6, label: 'Sales', icon: DollarSign, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 8, label: 'Support Tickets', icon: HeadphonesIcon, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 9, label: 'Vehicle', icon: Truck, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 12, label: 'Messages', icon: MessagesSquare, roles: ['ADMINISTRATOR','MANAGER'] }, // Admin only
     { id: 13, label: 'Settings', icon: Wrench, roles: ['ADMINISTRATOR'] }, // Admin only
-    { id: 15, label: 'Service Providers', icon: Server, roles: ['ADMINISTRATOR'] } // Admin only
+    { id: 15, label: 'Service Providers', icon: Server, roles: ['ADMINISTRATOR'] }, // Admin only
+    { id: 7, label: 'Bills', icon: FileText, roles: ['ADMINISTRATOR'] }, // Admin only
 
   ];
 
