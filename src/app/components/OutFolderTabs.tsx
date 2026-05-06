@@ -204,9 +204,11 @@ const OutFolderTabs: React.FC = () => {
           >
             <span className="text-xl">{tab.icon}</span>
             <span className="text-xl ml-2 hidden md:inline">{tab.label}</span>
-            {tab.label==='Cart' && (
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">0</span>
-          )}
+            {tab.label === 'Cart' && cartCount > 0 && (
+              <span className="absolute top-[-0.2px] right-[-0px] flex items-center justify-center min-w-5 h-5 px-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </button>
         ))}
       </div>
