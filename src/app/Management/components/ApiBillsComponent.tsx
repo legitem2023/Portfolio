@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import serviceData from "./Json/service.json"; // Import your service.json
 
 // GraphQL Query - Fixed to match your actual schema
 const GET_API_BILLS = gql`
@@ -35,6 +36,16 @@ const GET_API_BILLS = gql`
   }
 `;
 
+// Type definitions for service.json
+type Service = {
+  name: string;
+  service: string;
+  payment_period: string;
+  cost: string;
+  upgradable: string;
+  inuse: string;
+};
+
 interface UsageMetrics {
     requests: number;
     successful: number;
@@ -42,9 +53,7 @@ interface UsageMetrics {
     dataProcessed: number;
     rate: number;
     customFields: any
-  }
-
-
+}
 
 // TypeScript Interfaces
 interface ApiBill {
@@ -68,6 +77,7 @@ interface ApiBill {
 
 interface ApiBillFilters {
   service?: string;
+  apiName?: string;
   year?: number;
   month?: number;
   status?: 'pending' | 'paid' | 'overdue';
@@ -112,6 +122,13 @@ const ApiBillsComponent: React.FC = () => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  // Load service data
+  const services = serviceData as Service[];
+  
+  // Get unique service names and API names from service.json
+  const uniqueServices = Array.from(new Set(services.map(s => s.name)));
+  const uniqueApiNames = Array.from(new Set(services.map(s => s.service)));
+
   const { data, loading, error, refetch } = useQuery<GetApiBillsResponse>(
     GET_API_BILLS,
     {
@@ -125,6 +142,16 @@ const ApiBillsComponent: React.FC = () => {
     setFilters(prev => ({
       ...prev,
       service: service || undefined,
+      // Reset apiName when service changes
+      apiName: undefined,
+    }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleApiNameFilter = (apiName: string) => {
+    setFilters(prev => ({
+      ...prev,
+      apiName: apiName || undefined,
     }));
     setPagination(prev => ({ ...prev, page: 1 }));
   };
@@ -205,7 +232,7 @@ const ApiBillsComponent: React.FC = () => {
       <div className="flex flex-col lg:flex-row gap-2 md:gap-6">
         {/* Filter Sidebar */}
         <div className={`lg:w-1/4 ${isFilterOpen ? 'block' : 'hidden'} lg:block`}>
-          <div className="bg-white rounded-xl shadow-sm p-2 md:p-6 border border-gray-200">
+          <div className="bg-white shadow-sm p-2 md:p-6 border border-gray-200">
             <div className="flex justify-between items-center mb-2 md:mb-6">
               <h2 className="text-xl font-semibold text-gray-800">Filters</h2>
               <button 
@@ -217,19 +244,37 @@ const ApiBillsComponent: React.FC = () => {
             </div>
 
             <div className="space-y-2 md:space-y-6">
-              {/* Service Filter */}
+              {/* Service Filter - from service.json */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Service</label>
                 <select 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   onChange={(e) => handleServiceFilter(e.target.value)}
                   value={filters.service || ''}
                 >
                   <option value="">All Services</option>
-                  <option value="Stripe">Stripe</option>
-                  <option value="AWS">AWS</option>
-                  <option value="Twilio">Twilio</option>
-                  <option value="SendGrid">SendGrid</option>
+                  {uniqueServices.map((service) => (
+                    <option key={service} value={service}>
+                      {service}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* API Name Filter - from service.json */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">API Name</label>
+                <select 
+                  className="w-full border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  onChange={(e) => handleApiNameFilter(e.target.value)}
+                  value={filters.apiName || ''}
+                >
+                  <option value="">All APIs</option>
+                  {uniqueApiNames.map((apiName) => (
+                    <option key={apiName} value={apiName}>
+                      {apiName}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -237,7 +282,7 @@ const ApiBillsComponent: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   onChange={(e) => handleStatusFilter(e.target.value)}
                   value={filters.status || ''}
                 >
@@ -255,14 +300,14 @@ const ApiBillsComponent: React.FC = () => {
                   <input 
                     type="number" 
                     placeholder="Min" 
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
                     onChange={(e) => handleAmountFilter('min', e.target.value)}
                     value={filters.minAmount || ''}
                   />
                   <input 
                     type="number" 
                     placeholder="Max" 
-                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
                     onChange={(e) => handleAmountFilter('max', e.target.value)}
                     value={filters.maxAmount || ''}
                   />
@@ -275,13 +320,13 @@ const ApiBillsComponent: React.FC = () => {
                 <div className="space-y-2 md:space-y-3">
                   <input 
                     type="date" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
                     onChange={(e) => handleDateFilter('from', e.target.value)}
                     value={filters.fromDate || ''}
                   />
                   <input 
                     type="date" 
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 bg-white"
                     onChange={(e) => handleDateFilter('to', e.target.value)}
                     value={filters.toDate || ''}
                   />
@@ -292,13 +337,13 @@ const ApiBillsComponent: React.FC = () => {
               <div className="pt-2 md:pt-4 space-y-2 md:space-y-3">
                 <button 
                   onClick={clearFilters}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 rounded-lg transition duration-200"
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2.5 transition duration-200"
                 >
                   Clear All Filters
                 </button>
                 <button 
                   onClick={() => refetch()}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition duration-200"
                 >
                   Apply Filters
                 </button>
@@ -310,7 +355,7 @@ const ApiBillsComponent: React.FC = () => {
         {/* Main Content Area */}
         <div className="lg:w-3/4">
           {/* Stats and Controls */}
-          <div className="bg-white rounded-xl shadow-sm p-2 md:p-6 mb-2 md:mb-6 border border-gray-200">
+          <div className="bg-white shadow-sm p-2 md:p-6 mb-2 md:mb-6 border border-gray-200">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 md:gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-gray-800">Bills Overview</h2>
@@ -324,12 +369,12 @@ const ApiBillsComponent: React.FC = () => {
               <div className="flex gap-2 md:gap-3 w-full sm:w-auto">
                 <button 
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
-                  className="lg:hidden flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-lg font-medium flex items-center justify-center gap-2"
+                  className="lg:hidden flex-1 sm:flex-none bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 font-medium flex items-center justify-center gap-2"
                 >
                   {isFilterOpen ? 'Hide Filters' : 'Show Filters'}
                 </button>
                 <select 
-                  className="rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500"
+                  className="border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 bg-white"
                   value={pagination.pageSize}
                   onChange={(e) => handlePageSizeChange(Number(e.target.value))}
                 >
@@ -343,7 +388,7 @@ const ApiBillsComponent: React.FC = () => {
           </div>
 
           {/* Bills Table */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+          <div className="bg-white shadow-sm overflow-hidden border border-gray-200">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -395,7 +440,7 @@ const ApiBillsComponent: React.FC = () => {
                         </td>
                         <td className="px-2 md:px-6 py-2 md:py-4">
                           <div className="flex items-center">
-                            <div className="h-10 w-10 flex-shrink-0 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                            <div className="h-10 w-10 flex-shrink-0 bg-blue-100 flex items-center justify-center mr-3">
                               <span className="text-blue-600 font-semibold">
                                 {bill.service.charAt(0)}
                               </span>
@@ -412,7 +457,7 @@ const ApiBillsComponent: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          <span className={`px-3 py-1 text-xs font-medium ${
                             bill.status === 'paid' 
                               ? 'bg-green-100 text-green-800'
                               : bill.status === 'pending'
@@ -449,7 +494,7 @@ const ApiBillsComponent: React.FC = () => {
                           </svg>
                         </div>
                         <h3 className="text-lg font-medium text-gray-900 mb-2">No bills found</h3>
-                        <p className="text-gray-600">Try adjusting your filters to find what youre looking for.</p>
+                        <p className="text-gray-600">Try adjusting your filters to find what you're looking for.</p>
                       </td>
                     </tr>
                   )}
@@ -472,7 +517,7 @@ const ApiBillsComponent: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage <= 1}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -492,7 +537,7 @@ const ApiBillsComponent: React.FC = () => {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-4 py-2 text-sm font-medium rounded-lg ${
+                          className={`px-4 py-2 text-sm font-medium ${
                             currentPage === pageNum
                               ? 'bg-blue-600 text-white'
                               : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
@@ -505,7 +550,7 @@ const ApiBillsComponent: React.FC = () => {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage >= totalPages}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>
