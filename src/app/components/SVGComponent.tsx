@@ -1,5 +1,4 @@
 import * as React from "react";
-
 const SVGComponent = (props:any) => (
   <svg
     width={120}
@@ -18,17 +17,17 @@ const SVGComponent = (props:any) => (
         repeatCount="indefinite"
       />
       <path
-        d="M12 4v10"
+        d="M12 4V14"
         stroke="#111827"
         strokeWidth={2}
-        strokeLinecap="round"
+        strokeLinecap="butt"
       />
       <path
-        d="M8.5 10.5L12 14l3.5-3.5"
+        d="M8 11 L12 15 L16 11"
         stroke="#111827"
         strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeLinecap="butt"
+        strokeLinejoin="miter"
       />
     </g>
     <line
@@ -38,25 +37,25 @@ const SVGComponent = (props:any) => (
       y2={18}
       stroke="#111827"
       strokeWidth={2}
-      strokeLinecap="round"
+      strokeLinecap="butt"
     />
     <line
       x1={18}
       y1={15}
       x2={18}
-      y2={18}
+      y2={19}
       stroke="#111827"
       strokeWidth={2}
-      strokeLinecap="round"
+      strokeLinecap="butt"
     />
     <line
       x1={6}
       y1={15}
       x2={6}
-      y2={18}
+      y2={19}
       stroke="#111827"
       strokeWidth={2}
-      strokeLinecap="round"
+      strokeLinecap="butt"
     />
   </svg>
 );
