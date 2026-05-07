@@ -8,6 +8,20 @@ const InstallPWAButton: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>('');
 console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
 
+useEffect(() => {
+  // Check if PWA criteria are met
+  console.log('Checking PWA criteria...');
+  console.log('HTTPS:', location.protocol === 'https:');
+  console.log('Manifest:', document.querySelector('link[rel="manifest"]') ? 'Found' : 'Missing');
+  
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      console.log('Service workers:', regs.length);
+    });
+  }
+}, []);
+
+  
   useEffect(() => {
     // Check if the event already fired and was stored globally
     if ((window as any).__deferredPrompt) {
