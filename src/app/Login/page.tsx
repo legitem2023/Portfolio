@@ -196,7 +196,7 @@ export default function LuxuryLogin() {
     try {
       const result = await signIn('google', {
         redirect: false,
-        callbackUrl: '/login'
+        callbackUrl: '/Login'
       });
       
       if (result?.error) {
