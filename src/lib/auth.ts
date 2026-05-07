@@ -1,9 +1,10 @@
 import FacebookProvider from "next-auth/providers/facebook";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import { gql, ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
 import { cookies } from "next/headers";
-import { FBLOGIN, LOGIN, LOGOUT_MUTATION } from "../app/components/graphql/mutation";
+import { FBLOGIN, LOGIN, LOGOUT_MUTATION, GOOGLE_LOGIN } from "../app/components/graphql/mutation";
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -39,6 +40,15 @@ declare module "next-auth" {
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+        },
+      },
+    }),
     FacebookProvider({
       clientId: process.env.FACEBOOK_CLIENT_ID!,
       clientSecret: process.env.FACEBOOK_CLIENT_SECRET!,
@@ -115,8 +125,40 @@ export const authOptions: NextAuthOptions = {
         }
       }
       
+      // Initial sign in with Google
+      if (account?.provider === "google") {
+        console.log("🔴 [JWT] Google account detected");
+        token.accessToken = account.access_token;
+        token.provider = account.provider;
+
+        // Get the ID token for Google
+        const idToken = account.id_token?.toString() || "";
+        
+        try {
+          const { data } = await client.mutate({
+            mutation: GOOGLE_LOGIN,
+            variables: {
+              input: {
+                idToken: idToken,
+              },
+            },
+          });
+          
+          if (data?.loginWithGoogle?.token) {
+            console.log("✅ [JWT] Server token received from Google");
+            token.serverToken = data.loginWithGoogle.token;
+            token.tokenUpdatedAt = Date.now();
+          } else {
+            console.log("❌ [JWT] No token received from Google");
+            token.error = "Authentication failed";
+          }
+        } catch (err) {
+          console.error("❌ [JWT] GraphQL login error:", err);
+          token.error = "Authentication failed";
+        }
+      }
       // Initial sign in with Facebook
-      if (account?.provider === "facebook") {
+      else if (account?.provider === "facebook") {
         console.log("📘 [JWT] Facebook account detected");
         token.accessToken = account.access_token;
         token.provider = account.provider;
