@@ -24,7 +24,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           margin: 2,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#4B0082', // Indigo color
+            dark: '#333399', // Indigo color
             light: '#FFFFFF'
           }
         });
