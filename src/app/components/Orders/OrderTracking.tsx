@@ -513,28 +513,27 @@ export default function OrderTracking({ userId }: { userId: string }) {
   };
 
   const handleCancelReturn = async (returnId: string) => {
-    if (confirm('Are you sure you want to cancel this return request?')) {
-      setCancelReturnLoading(returnId);
-      try {
-        await cancelReturn({
-          variables: {
-            input: {
-              returnId,
-              cancelledBy: userId
-            }
+  if (confirm('Are you sure you want to cancel this return request?')) {
+    setCancelReturnLoading(returnId);
+    try {
+      await cancelReturn({
+        variables: {
+          input: {
+            returnId,
+            reason: `Cancelled by user ${userId}` // Changed from cancelledBy to reason
           }
-        });
-        alert('Return request cancelled successfully!');
-        await refetchReturns();
-      } catch (err: any) {
-        console.error('Error cancelling return:', err);
-        alert(`Failed to cancel return: ${err.message}`);
-      } finally {
-        setCancelReturnLoading(null);
-      }
+        }
+      });
+      alert('Return request cancelled successfully!');
+      await refetchReturns();
+    } catch (err: any) {
+      console.error('Error cancelling return:', err);
+      alert(`Failed to cancel return: ${err.message}`);
+    } finally {
+      setCancelReturnLoading(null);
     }
-  };
-
+  }
+};
   const handleRefreshReturns = async () => {
     setRefetchLoading(true);
     try {
