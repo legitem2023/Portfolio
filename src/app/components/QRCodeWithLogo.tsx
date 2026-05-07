@@ -46,7 +46,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         // Step 3: Calculate font size and use NEGATIVE gap to overlap text into QR code
         const fontSize = Math.floor(qrCanvas.width * 0.08);
         const textHeight = fontSize;
-        const gapPx = -10; // Negative gap - text overlaps/embeds into QR code by 1.5 pixels
+        const gapPx = -30; // Negative gap - text overlaps/embeds into QR code by 1.5 pixels
         const whiteBorder = 15; // 15px white border
         
         // Total padding: top text height + top gap + bottom gap + bottom text height + white border top/bottom
