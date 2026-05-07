@@ -226,7 +226,7 @@ const InstallPWAButton: React.FC = () => {
           {/* <span className="icon">
             <Icon icon="logos:google-chrome"/>
           </span> */}
-          <SVGComponent/>
+          <SVGComponent className="w-24 h-24 text-gray-800 hover:text-blue-500 transition" />
           <span className="text">Open in Browser</span> 
         </button>
       )}
@@ -234,7 +234,7 @@ const InstallPWAButton: React.FC = () => {
       {/* Show normal install button only when not in in-app browser */}
       {!isInAppBrowser && deferredPrompt && (
         <button onClick={handleInstallClick} className="install_button">
-          <SVGComponent/>
+          <SVGComponent className="w-24 h-24 text-gray-800 hover:text-blue-500 transition" />
           <span className="text">Install App</span> 
         </button>
       )}
@@ -242,7 +242,7 @@ const InstallPWAButton: React.FC = () => {
       {/* Show manual install as fallback */}
       {!isInAppBrowser && showDebugButton && (
         <button onClick={handleManualInstall} className="install_button debug">
-          <SVGComponent/>
+          <SVGComponent className="w-24 h-24 text-gray-800 hover:text-blue-500 transition" />
           <span className="text">Install (Manual)</span> 
         </button>
       )}
