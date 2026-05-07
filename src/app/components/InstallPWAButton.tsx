@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
-
+import SVGcomponent from "./SVGcomponent";
 const InstallPWAButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
@@ -223,9 +223,10 @@ const InstallPWAButton: React.FC = () => {
       {/* Show for other in-app browsers (Messenger, etc.) */}
       {!isTelegram && isInAppBrowser && (
         <button onClick={handleOpenInBrowser} className="install_button chrome">
-          <span className="icon">
+          {/* <span className="icon">
             <Icon icon="logos:google-chrome"/>
-          </span>
+          </span> */}
+          <SVGcomponent/>
           <span className="text">Open in Browser</span> 
         </button>
       )}
