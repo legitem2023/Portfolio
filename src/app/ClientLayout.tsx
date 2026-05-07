@@ -32,7 +32,7 @@ export default function ClientLayout({
           </ApolloWrapper>
         </ReduxWrapper>
       </SessionProvider>
-      <InstallPWAButton />
+    
     </>
   );
 }
