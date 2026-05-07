@@ -240,7 +240,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     width: '100%',
     maxWidth: '450px',
     height: 'auto',
-    border: '1px solid #ddd',
+    border: '4px solid #ddd',
     borderRadius: '8px',
     display: 'block',
     boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
