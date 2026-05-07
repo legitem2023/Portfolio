@@ -1,5 +1,6 @@
 import * as React from "react";
-const SVGComponent = (props:any) => (
+
+const SVGComponent = (props: any) => (
   <svg
     width={120}
     height={120}
@@ -16,47 +17,53 @@ const SVGComponent = (props:any) => (
         dur="0.8s"
         repeatCount="indefinite"
       />
+
       <path
         d="M12 4V14"
-        stroke="#111827"
+        stroke="currentColor"
         strokeWidth={2}
         strokeLinecap="butt"
       />
+
       <path
         d="M8 11 L12 15 L16 11"
-        stroke="#111827"
+        stroke="currentColor"
         strokeWidth={2}
         strokeLinecap="butt"
         strokeLinejoin="miter"
       />
     </g>
+
     <line
       x1={6}
       y1={18}
       x2={18}
       y2={18}
-      stroke="#111827"
+      stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="butt"
     />
+
     <line
       x1={18}
       y1={15}
       x2={18}
       y2={19}
-      stroke="#111827"
+      stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="butt"
     />
+
     <line
       x1={6}
       y1={15}
       x2={6}
       y2={19}
-      stroke="#111827"
+      stroke="currentColor"
       strokeWidth={2}
       strokeLinecap="butt"
     />
   </svg>
 );
+
 export default SVGComponent;
