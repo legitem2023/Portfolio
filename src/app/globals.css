@@ -30,7 +30,19 @@
     conic-gradient(from  -60deg at 50% calc(100%/3),var(--c1) 120deg,var(--c2) 0 240deg,var(--c3) 0);
   background-size: calc(var(--s)*sqrt(3)) var(--s);
 }
+/* Ensure PWA button shows above everything */
+.install-pwa-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 999999 !important;
+  pointer-events: none;
+}
 
+.install-pwa-wrapper > * {
+  pointer-events: auto;
+}
 .purplegrad {
   width: 100%;
   height: auto; /* or specific height if needed */
