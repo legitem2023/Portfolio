@@ -1,6 +1,7 @@
-// lib/seo.ts
-import type { Metadata, Viewport } from 'next';
+// app/components/Seo/Seo.ts
+import type { Metadata } from 'next';
 
+// Remove the Viewport import and define it separately
 export const metadata: Metadata = {
   title: 'VC - VendorCity | Shop Smarter with VendorCity.net',
   description: 'Discover a smarter way to shop online with VendorCity — your trusted VendorCity. Explore top brands, unbeatable deals, and fast checkout on VendorCity.net',
@@ -32,23 +33,16 @@ export const metadata: Metadata = {
     
     // Telegram specific meta tags
     'telegram:domain': 'VendorCity.net',
-    'telegram:channel': '@VendorCity', // Replace with your actual channel if you have one
-    'telegram:bot': '@VendorCity_bot', // Replace with your bot if you have one
+    'telegram:channel': '@VendorCity',
+    'telegram:bot': '@VendorCity_bot',
+    'telegram:open-in-external': 'true',
     
-    // Additional social media meta tags
-    'og:type': 'website',
-    'og:site_name': 'VendorCity',
-    
-    // For better in-app browser handling
-    'fb:app_id': '', // Add your Facebook app ID if you have one
-    'twitter:site': '@VendorCity',
-    
-    // PWA related
+    // Additional meta for better in-app handling
     'apple-mobile-web-app-capable': 'yes',
     'apple-mobile-web-app-status-bar-style': 'black-translucent',
     'apple-mobile-web-app-title': 'VendorCity',
     
-    // Force link handling in external browser
+    // Force external links
     'referrer': 'no-referrer-when-downgrade',
   },
 
@@ -66,9 +60,8 @@ export const metadata: Metadata = {
         alt: 'VC - VendorCity | Shop Smarter with VendorCity.net',
       },
     ],
-    // Add these for better display
     locale: 'en_US',
-    alternateLocale: ['fil_PH'], // Adding Filipino locale if needed
+    alternateLocale: ['fil_PH'],
   },
 
   twitter: {
@@ -80,7 +73,6 @@ export const metadata: Metadata = {
     site: '@VendorCity',
   },
 
-  // Add robots meta
   robots: {
     index: true,
     follow: true,
@@ -93,32 +85,19 @@ export const metadata: Metadata = {
     },
   },
 
-  // Add alternates for multi-language
   alternates: {
     canonical: 'https://VendorCity.net',
-    languages: {
-      'en-US': 'https://VendorCity.net',
-      'fil': 'https://VendorCity.net/fil', // If you have Filipino version
-    },
   },
 
-  // Add verification codes if needed
-  verification: {
-    google: '', // Add your Google verification code
-    yandex: '', // Add your Yandex verification code
-  },
-
-  // Add category
   category: 'ecommerce',
 };
 
-// 👇 Define viewport object
-export const viewport: Viewport = {
+// Use a regular object instead of Viewport type
+export const viewport = {
   width: 'device-width',
   initialScale: 1,
   minimumScale: 1,
   maximumScale: 1,
   userScalable: false,
-  // Add viewport-fit for iOS notches
   viewportFit: 'cover',
 };
