@@ -1,25 +1,24 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from "react";
 
 export default function PWAInitializer() {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
   useEffect(() => {
-    const handler = (e: Event) => {
+    // Listen for normal PWA install event
+    window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
-      if (!(window as any).__deferredPrompt) {
-        console.log('PWA: Storing install prompt globally');
-        (window as any).__deferredPrompt = e;
-        // Notify any late-loading PWA buttons
-        window.dispatchEvent(new CustomEvent('pwa-ready'));
-      }
-    };
-    
-    window.addEventListener('beforeinstallprompt', handler);
-    
+      setDeferredPrompt(e);
+      // Store the event globally so InstallPWAButton can access it
+      (window as any).deferredPrompt = e;
+    });
+
+    // Cleanup
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener("beforeinstallprompt", () => {});
     };
   }, []);
 
-  return null; // This component doesn't render anything
+  return null;
 }
