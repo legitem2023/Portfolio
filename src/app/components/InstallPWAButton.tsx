@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
-import SVGcomponent from "./SVGcomponent";
+import SVGComponent from "./SVGComponent";
 const InstallPWAButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
@@ -226,7 +226,7 @@ const InstallPWAButton: React.FC = () => {
           {/* <span className="icon">
             <Icon icon="logos:google-chrome"/>
           </span> */}
-          <SVGcomponent/>
+          <SVGComponent/>
           <span className="text">Open in Browser</span> 
         </button>
       )}
