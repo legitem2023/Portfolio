@@ -4,10 +4,10 @@ import QRCode from 'qrcode';
 interface QRCodeWithLogoProps {}
 
 const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
-  const [url, setUrl] = useState<string>('');
+  const [url, setUrl] = useState<string>('https://vendorcity.net');
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>("/VendorCity.webp");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate QR code
@@ -224,7 +224,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: '1px solid #ddd',
     borderRadius: '4px',
     marginTop: '20px',
-    width: '100%',
+    width: '100%!important',
     height: 'auto'
   }
 };
