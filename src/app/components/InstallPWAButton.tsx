@@ -1,5 +1,5 @@
-console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
 'use client';
+console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 
