@@ -1,4 +1,5 @@
 import * as React from "react";
+
 const SVGComponent = (props:any) => (
   <svg
     width={120}
@@ -8,22 +9,28 @@ const SVGComponent = (props:any) => (
     xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
-    <path d="M12 4v10" stroke="#111827" strokeWidth={2} strokeLinecap="round" />
-    <path
-      d="M8.5 10.5L12 14l3.5-3.5"
-      stroke="#111827"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <g>
       <animateTransform
         attributeName="transform"
         type="translate"
-        values="0 0; 0 2; 0 -2; 0 0"
+        values="0 0; 0 -2; 0 1; 0 0"
         dur="0.8s"
         repeatCount="indefinite"
       />
-    </path>
+      <path
+        d="M12 4v10"
+        stroke="#111827"
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+      <path
+        d="M8.5 10.5L12 14l3.5-3.5"
+        stroke="#111827"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
     <line
       x1={6}
       y1={18}
