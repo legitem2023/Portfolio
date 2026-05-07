@@ -218,9 +218,6 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           <button onClick={downloadQR} style={styles.downloadButton}>
             Download QR Code as PNG
           </button>
-          <button onClick={copyUrlToClipboard} style={styles.copyButton}>
-            Copy URL
-          </button>
         </div>
       )}
     </div>
