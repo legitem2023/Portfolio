@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 
@@ -7,10 +9,22 @@ const InstallPWAButton: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>('');
 
   useEffect(() => {
+    // Check if the event already fired and was stored globally
+    if ((window as any).__deferredPrompt) {
+      console.log('Recovering stored prompt from global');
+      setDeferredPrompt((window as any).__deferredPrompt);
+      setIsInstallable(true);
+      setDebugInfo('Install prompt recovered');
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('beforeinstallprompt event fired');
       setDebugInfo('Install prompt available');
       e.preventDefault();
+      
+      // Store globally in case component remounts
+      (window as any).__deferredPrompt = e;
+      
       setDeferredPrompt(e);
       setIsInstallable(true);
     };
@@ -33,7 +47,19 @@ const InstallPWAButton: React.FC = () => {
       return false;
     };
 
+    // Also listen for a custom event that parent might dispatch
+    const handleCustomPWAEvent = () => {
+      if ((window as any).__deferredPrompt && !deferredPrompt) {
+        console.log('Recovering prompt from custom event');
+        setDeferredPrompt((window as any).__deferredPrompt);
+        setIsInstallable(true);
+        setDebugInfo('Install prompt recovered via custom event');
+      }
+    };
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-ready', handleCustomPWAEvent);
+    
     checkIfInstalled();
 
     if (!('BeforeInstallPromptEvent' in window)) {
@@ -41,10 +67,23 @@ const InstallPWAButton: React.FC = () => {
       setIsInstallable(false);
     }
 
+    // Re-check every few seconds in case event fired before mount
+    const interval = setInterval(() => {
+      if ((window as any).__deferredPrompt && !deferredPrompt) {
+        console.log('Recovering prompt from interval check');
+        setDeferredPrompt((window as any).__deferredPrompt);
+        setIsInstallable(true);
+        setDebugInfo('Install prompt recovered');
+        clearInterval(interval);
+      }
+    }, 500);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-ready', handleCustomPWAEvent);
+      clearInterval(interval);
     };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = () => {
     if (deferredPrompt) {
@@ -53,6 +92,8 @@ const InstallPWAButton: React.FC = () => {
         if (choiceResult.outcome === 'accepted') {
           console.log('User accepted the PWA installation');
           setDebugInfo('Installation accepted');
+          // Clear global storage on successful install
+          (window as any).__deferredPrompt = null;
         } else {
           console.log('User dismissed the PWA installation');
           setDebugInfo('Installation dismissed');
@@ -68,7 +109,7 @@ const InstallPWAButton: React.FC = () => {
     alert('To install this app:\n1. Click the three dots in your browser\n2. Select "Install App" or "Add to Home Screen"\n3. Follow the prompts');
   };
 
-  const showDebugButton = process.env.NODE_ENV === 'development' && !deferredPrompt;
+  const showDebugButton = process.env.NODE_ENV === 'development' && !deferredPrompt && !(window as any).__deferredPrompt;
 
   return (
     <>
