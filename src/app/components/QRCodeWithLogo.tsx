@@ -43,10 +43,10 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           console.error('Logo loading failed:', error);
         }
         
-        // Step 3: Calculate font size and text metrics
+        // Step 3: Calculate font size and use ZERO gap
         const fontSize = Math.floor(qrCanvas.width * 0.08);
         const textHeight = fontSize; // Approximate height of text (font size in pixels)
-        const gapPx = 2; // Extremely small gap - just 2 pixels between text and QR code
+        const gapPx = 0; // ZERO gap - text touches QR code directly
         
         // Total padding: top text height + top gap + bottom gap + bottom text height
         const padding = textHeight + gapPx + gapPx + textHeight;
@@ -64,7 +64,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
-        // Calculate Y offset for QR code (start after top text and its gap)
+        // Calculate Y offset for QR code (start directly after top text)
         const qrYOffset = textHeight + gapPx;
         ctx.drawImage(qrCanvas, 0, qrYOffset);
         
@@ -96,14 +96,15 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
         ctx.fillStyle = '#4B0082'; // Indigo color
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.textBaseline = 'bottom'; // Bottom alignment so text sits directly on top of QR code
         
-        // Add "Scan me" text at top - just 2px above QR code
-        const topTextY = textHeight / 2;
+        // Add "Scan me" text at top - directly touching QR code (no gap)
+        const topTextY = qrYOffset; // Text bottom exactly at QR code top edge
         ctx.fillText('Scan me', finalCanvas.width / 2, topTextY);
         
-        // Step 5: Add URL text at the bottom - just 2px below QR code
-        const bottomTextY = qrYOffset + qrCanvas.height + gapPx + (textHeight / 2);
+        // Step 5: Add URL text at the bottom - directly touching QR code
+        ctx.textBaseline = 'top'; // Top alignment so text sits directly below QR code
+        const bottomTextY = qrYOffset + qrCanvas.height + gapPx; // Text top exactly at QR code bottom edge
         ctx.fillText(url, finalCanvas.width / 2, bottomTextY);
         
         // Step 6: Convert final canvas to image URL
@@ -128,7 +129,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           
           const fontSize = Math.floor(fallbackCanvas.width * 0.08);
           const textHeight = fontSize;
-          const gapPx = 2; // Extremely small gap
+          const gapPx = 0;
           const padding = textHeight + gapPx + gapPx + textHeight;
           
           const finalCanvas = document.createElement('canvas');
@@ -146,9 +147,12 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
             ctx.fillStyle = '#4B0082';
             ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('Scan me', finalCanvas.width / 2, textHeight / 2);
-            ctx.fillText(url, finalCanvas.width / 2, qrYOffset + fallbackCanvas.height + gapPx + (textHeight / 2));
+            
+            ctx.textBaseline = 'bottom';
+            ctx.fillText('Scan me', finalCanvas.width / 2, qrYOffset);
+            
+            ctx.textBaseline = 'top';
+            ctx.fillText(url, finalCanvas.width / 2, qrYOffset + fallbackCanvas.height);
             
             setFinalImageUrl(finalCanvas.toDataURL('image/png'));
           } else {
