@@ -5,19 +5,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
 import Footer from '../components/Footer';
-import { useMutation } from '@apollo/client';
-import { CREATEUSER } from '../components/graphql/mutation';
+import QRCodeWithLogo from '../components/QRCodeWithLogo';
 import Header from '../components/Header';
-interface FormData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  agreeToTerms: boolean;
-  subscribe: boolean;
-}
-
 export default function QRcode() {
    
 
@@ -30,6 +19,7 @@ export default function QRcode() {
       
       <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
         <Header/> 
+        <QRCodeWithLogo/>
         <Footer />
       </div>
     </>
