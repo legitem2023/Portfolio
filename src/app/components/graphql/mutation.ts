@@ -475,6 +475,15 @@ export const FBLOGIN = gql`
   }
 `;
 
+export const GOOGLE_LOGIN = gql`
+  mutation LoginWithGoogle($input: GoogleLoginInput!) {
+    loginWithGoogle(input: $input) {
+      token
+      statusText
+    }
+  }
+`;
+
 export const INSERTPRODUCT = gql`
   mutation InsertProduct($id: String, $name: String, $description: String, $color: String, $stock: Int, $size: String, $price: Float, $salePrice: Float, $sku: String, $supplierId: String) {
     createProduct(id: $id, name: $name, description: $description, color: $color, stock: $stock, size: $size, price: $price, salePrice: $salePrice, sku: $sku, supplierId: $supplierId) {
