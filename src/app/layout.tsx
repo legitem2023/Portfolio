@@ -1,6 +1,7 @@
 "use client";
 import { metadata as baseMetadata, viewport as baseViewport } from './components/Seo/Seo';
 import ReduxWrapper from "./components/ApolloProvider/ReduxWrapper"; 
+import PWAInitializer from "./components/PWAInitializer";
 import { ApolloWrapper } from './components/ApolloWrapper';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -27,7 +28,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <LoadEruda/>
         <div className="BackGroundImage"></div>
-        
+        <PWAInitializer/>
         {/* ✅ Wrap with SessionProvider */}
         <SessionProvider>
           <ReduxWrapper>
