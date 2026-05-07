@@ -46,37 +46,38 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         // Step 3: Calculate font size and use NEGATIVE gap to overlap text into QR code
         const fontSize = Math.floor(qrCanvas.width * 0.08);
         const textHeight = fontSize;
-        const gapPx = -1.5; // Negative gap - text overlaps/embeds into QR code by 1.5 pixels
-        const transparentBorder = 5; // 5px transparent border
+        const gapPx = -10; // Negative gap - text overlaps/embeds into QR code by 1.5 pixels
+        const whiteBorder = 15; // 15px white border
         
-        // Total padding: top text height + top gap + bottom gap + bottom text height + transparent border top/bottom
+        // Total padding: top text height + top gap + bottom gap + bottom text height + white border top/bottom
         const padding = textHeight + gapPx + gapPx + textHeight;
         
         const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = qrCanvas.width + (transparentBorder * 2);
-        finalCanvas.height = qrCanvas.height + padding + (transparentBorder * 2);
+        finalCanvas.width = qrCanvas.width + (whiteBorder * 2);
+        finalCanvas.height = qrCanvas.height + padding + (whiteBorder * 2);
         const ctx = finalCanvas.getContext('2d');
         
         if (!ctx) {
           throw new Error('Could not get canvas context');
         }
         
-        // Fill background with TRANSPARENT (not white)
-        ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
-        
-        // Fill white background ONLY for the QR area and text area (not the border)
+        // Fill entire canvas with WHITE border
         ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(transparentBorder, transparentBorder, qrCanvas.width, qrCanvas.height + padding);
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // Fill white background for the content area (already white, but keeping for clarity)
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(whiteBorder, whiteBorder, qrCanvas.width, qrCanvas.height + padding);
         
         // Calculate Y offset for QR code (text will overlap into QR code because of negative gap)
-        const qrYOffset = transparentBorder + textHeight + gapPx;
-        ctx.drawImage(qrCanvas, transparentBorder, qrYOffset);
+        const qrYOffset = whiteBorder + textHeight + gapPx;
+        ctx.drawImage(qrCanvas, whiteBorder, qrYOffset);
         
         // Draw logo if loaded
         if (logoImg) {
           // Calculate logo size (20% of QR code)
           const logoSize = qrCanvas.width * 0.2;
-          const logoX = transparentBorder + (finalCanvas.width - (transparentBorder * 2) - logoSize) / 2;
+          const logoX = whiteBorder + (finalCanvas.width - (whiteBorder * 2) - logoSize) / 2;
           const logoY = qrYOffset + (qrCanvas.height - logoSize) / 2;
           
           // Draw white background circle for better logo visibility
@@ -104,12 +105,12 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         // Add "Scan me" text at top - overlapping into QR code by 1.5px
         ctx.textBaseline = 'bottom';
         const topTextY = qrYOffset + 1.5;
-        ctx.fillText('Scan me', transparentBorder + (qrCanvas.width / 2), topTextY);
+        ctx.fillText('Scan me', whiteBorder + (qrCanvas.width / 2), topTextY);
         
         // Step 5: Add URL text at the bottom - overlapping into QR code by 1.5px
         ctx.textBaseline = 'top';
         const bottomTextY = qrYOffset + qrCanvas.height - 1.5;
-        ctx.fillText(url, transparentBorder + (qrCanvas.width / 2), bottomTextY);
+        ctx.fillText(url, whiteBorder + (qrCanvas.width / 2), bottomTextY);
         
         // Step 6: Convert final canvas to image URL
         const imageUrl = finalCanvas.toDataURL('image/png');
@@ -134,34 +135,31 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           const fontSize = Math.floor(fallbackCanvas.width * 0.08);
           const textHeight = fontSize;
           const gapPx = -1.5;
-          const transparentBorder = 5;
+          const whiteBorder = 15;
           const padding = textHeight + gapPx + gapPx + textHeight;
           
           const finalCanvas = document.createElement('canvas');
-          finalCanvas.width = fallbackCanvas.width + (transparentBorder * 2);
-          finalCanvas.height = fallbackCanvas.height + padding + (transparentBorder * 2);
+          finalCanvas.width = fallbackCanvas.width + (whiteBorder * 2);
+          finalCanvas.height = fallbackCanvas.height + padding + (whiteBorder * 2);
           const ctx = finalCanvas.getContext('2d');
           
           if (ctx) {
-            // Clear with transparent
-            ctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
-            
-            // Fill white background for content area only
+            // Fill entire canvas with white border
             ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(transparentBorder, transparentBorder, fallbackCanvas.width, fallbackCanvas.height + padding);
+            ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
             
-            const qrYOffset = transparentBorder + textHeight + gapPx;
-            ctx.drawImage(fallbackCanvas, transparentBorder, qrYOffset);
+            const qrYOffset = whiteBorder + textHeight + gapPx;
+            ctx.drawImage(fallbackCanvas, whiteBorder, qrYOffset);
             
             ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
             ctx.fillStyle = '#4B0082';
             ctx.textAlign = 'center';
             
             ctx.textBaseline = 'bottom';
-            ctx.fillText('Scan me', transparentBorder + (fallbackCanvas.width / 2), qrYOffset + 1.5);
+            ctx.fillText('Scan me', whiteBorder + (fallbackCanvas.width / 2), qrYOffset + 1.5);
             
             ctx.textBaseline = 'top';
-            ctx.fillText(url, transparentBorder + (fallbackCanvas.width / 2), qrYOffset + fallbackCanvas.height - 1.5);
+            ctx.fillText(url, whiteBorder + (fallbackCanvas.width / 2), qrYOffset + fallbackCanvas.height - 1.5);
             
             setFinalImageUrl(finalCanvas.toDataURL('image/png'));
           } else {
