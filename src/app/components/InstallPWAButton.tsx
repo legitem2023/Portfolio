@@ -1,80 +1,57 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X, ExternalLink, Copy, Check, AlertCircle, Smartphone, Globe } from "lucide-react";
 
 export default function InstallPWAButton() {
-  const [isInstallable, setIsInstallable] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [copied, setCopied] = useState(false);
   const [browserType, setBrowserType] = useState<"ios" | "android" | "other">("other");
 
   useEffect(() => {
-    // Detect browser type and in-app browser
+    // Force show on all in-app browsers
     const userAgent = navigator.userAgent.toLowerCase();
+    console.log("User Agent:", userAgent); // Debug log
     
-    // Check for in-app browsers
-    const isInApp = /facebook|fbios|fban|messenger|telegram|instagram|line|kakaotalk|snapchat|twitter|weibo/.test(userAgent);
+    // Detect Messenger, Telegram, Instagram, etc.
+    const isMessenger = /fbios|fban|messenger/.test(userAgent);
+    const isTelegram = /telegram/.test(userAgent);
+    const isInstagram = /instagram/.test(userAgent);
+    const isFacebook = /facebook/.test(userAgent);
+    
+    const isInApp = isMessenger || isTelegram || isInstagram || isFacebook;
     setIsInAppBrowser(isInApp);
     
-    // Detect browser type
+    console.log("Is In-App Browser:", isInApp); // Debug log
+    
+    // Detect platform
     if (/iphone|ipad|ipod/.test(userAgent)) {
       setBrowserType("ios");
     } else if (/android/.test(userAgent)) {
       setBrowserType("android");
-    } else {
-      setBrowserType("other");
     }
-
-    // Check for install prompt availability
-    const checkInstallPrompt = () => {
-      if ((window as any).deferredPrompt) {
-        setIsInstallable(true);
+    
+    // Auto-hide after 15 seconds (optional)
+    const timer = setTimeout(() => {
+      if (isInApp) {
+        // Don't auto-hide, let user dismiss manually
       }
-    };
-
-    // Listen for install prompt
-    window.addEventListener("beforeinstallprompt", () => {
-      setIsInstallable(true);
-    });
-
-    checkInstallPrompt();
+    }, 15000);
     
-    // Check every second for the first 10 seconds (for delayed prompts)
-    const interval = setInterval(() => {
-      checkInstallPrompt();
-    }, 1000);
-    
-    setTimeout(() => clearInterval(interval), 10000);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("beforeinstallprompt", () => {});
-    };
+    return () => clearTimeout(timer);
   }, []);
-
-  const handleInstall = async () => {
-    const deferredPrompt = (window as any).deferredPrompt;
-    if (!deferredPrompt) return;
-    
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === "accepted") {
-      console.log("User accepted the install prompt");
-      setIsInstallable(false);
-    }
-    (window as any).deferredPrompt = null;
-  };
 
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      
+      // Also show an alert for Messenger users
+      alert("Link copied! Open Chrome/Safari and paste to install the app.");
     } catch (err) {
       console.error("Failed to copy:", err);
+      alert("Please manually copy this link: " + window.location.href);
     }
   };
 
@@ -82,132 +59,152 @@ export default function InstallPWAButton() {
     const currentUrl = window.location.href;
     
     if (browserType === "ios") {
-      // iOS: Show instructions
-      alert("Tap the Share button → 'Open in Safari'");
+      alert("Tap the Share button (⬆️) → 'Open in Safari'");
     } else if (browserType === "android") {
-      // Android: Try to open in Chrome
-      const chromeIntent = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
-      window.location.href = chromeIntent;
-      
-      // Fallback
-      setTimeout(() => {
-        alert("Tap the 3 dots menu → 'Open in Chrome Browser'");
-      }, 500);
+      alert("Tap the 3 dots menu (⋮) → 'Open in Chrome Browser'");
     } else {
-      alert("Copy the link and paste it into your browser");
+      alert("Copy the link and open it in your device's browser");
     }
   };
 
-  // Don't show if dismissed
-  if (!isVisible) return null;
+  // Don't show if dismissed OR not in an in-app browser
+  if (!isVisible || !isInAppBrowser) return null;
 
-  // Normal install button (for supported browsers)
-  if (isInstallable && !isInAppBrowser) {
-    return (
-      <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 animate-in slide-in-from-bottom-5 duration-300">
-        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-w-sm">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-white" />
-              <span className="text-white text-xs font-medium">Install App</span>
-            </div>
-            <button
-              onClick={() => setIsVisible(false)}
-              className="text-white/70 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+  return (
+    // Fixed to bottom with highest z-index
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      left: '20px',
+      right: '20px',
+      zIndex: 999999,
+      pointerEvents: 'auto',
+    }}>
+      <div style={{
+        backgroundColor: '#FF6B35',
+        borderRadius: '16px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+        padding: '16px',
+        border: '1px solid rgba(255,255,255,0.2)',
+        animation: 'slideUp 0.3s ease-out',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '12px',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}>
+            <span style={{ fontSize: '24px' }}>📱</span>
+            <h3 style={{
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              margin: 0,
+            }}>
+              Open in Browser
+            </h3>
           </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-700 mb-3">
-              Install our app for a better experience
-            </p>
-            <button
-              onClick={handleInstall}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
-            >
-              <Download className="w-4 h-4" />
-              Install Now
-            </button>
-          </div>
+          <button
+            onClick={() => setIsVisible(false)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              borderRadius: '20px',
+              width: '28px',
+              height: '28px',
+              cursor: 'pointer',
+              color: 'white',
+              fontSize: '18px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            ✕
+          </button>
+        </div>
+        
+        {/* Message */}
+        <p style={{
+          color: 'rgba(255,255,255,0.95)',
+          fontSize: '14px',
+          marginBottom: '16px',
+          lineHeight: '1.4',
+        }}>
+          {browserType === 'ios' 
+            ? "You're viewing in Messenger. Tap Share → Open in Safari to install our app."
+            : "You're viewing in Messenger. Open in Chrome for the best experience and to install our app."
+          }
+        </p>
+        
+        {/* Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '10px',
+        }}>
+          <button
+            onClick={handleCopyLink}
+            style={{
+              flex: 1,
+              background: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: '10px',
+              padding: '10px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            {copied ? '✓ Copied!' : '📋 Copy Link'}
+          </button>
+          
+          <button
+            onClick={handleOpenInBrowser}
+            style={{
+              flex: 1,
+              background: 'white',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '10px',
+              color: '#FF6B35',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+            }}
+          >
+            🌐 Open in Browser
+          </button>
         </div>
       </div>
-    );
-  }
-
-  // In-app browser warning with instructions
-  if (isInAppBrowser) {
-    return (
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:inset-x-auto sm:right-4 sm:left-auto z-50 animate-in slide-in-from-bottom-10 duration-300">
-        <div className="bg-amber-50 border-l-4 border-amber-500 rounded-t-xl sm:rounded-xl shadow-2xl max-w-md mx-4 sm:mx-0">
-          <div className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="bg-amber-100 rounded-full p-1.5">
-                  <AlertCircle className="w-4 h-4 text-amber-600" />
-                </div>
-                <h3 className="font-semibold text-amber-800 text-sm">
-                  In-App Browser Detected
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsVisible(false)}
-                className="text-amber-600 hover:text-amber-800 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-            
-            <p className="text-sm text-amber-700 mb-3">
-              For the best experience and to install our app, please open this in your browser.
-            </p>
-            
-            <div className="space-y-2">
-              <button
-                onClick={handleCopyLink}
-                className="w-full bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy Link
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={handleOpenInBrowser}
-                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Open in Browser
-              </button>
-            </div>
-            
-            <div className="mt-3 pt-2 border-t border-amber-200">
-              <p className="text-xs text-amber-600 text-center">
-                {browserType === "ios" && "💡 Tip: Tap Share → 'Open in Safari'"}
-                {browserType === "android" && "💡 Tip: Tap ⋮ → 'Open in Chrome'"}
-                {browserType === "other" && "💡 Tip: Copy link and paste in your browser"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+      
+      {/* Animation styles */}
+      <style jsx>{`
+        @keyframes slideUp {
+          from {
+            transform: translateY(100px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </div>
+  );
 }
-
-// Download icon component
-const Download = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
