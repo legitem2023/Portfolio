@@ -214,7 +214,7 @@ const InstallPWAButton: React.FC = () => {
           <div className="telegram-info">
             <span className="info-icon">ℹ️</span>
             <span className="info-text">
-              Telegram browser doesn't support app installation. Open in Chrome to install!
+              Telegram browser doesn&apos;t support app installation. Open in Chrome to install!
             </span>
           </div>
         </>
