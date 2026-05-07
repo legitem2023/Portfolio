@@ -6,7 +6,7 @@ import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
-import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2 } from 'lucide-react';
+import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2, RefreshCw, XCircle, Gift, Headphones, Heart } from 'lucide-react';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_NOTIFICATIONS } from '../../components/graphql/query';
 import { 
@@ -73,18 +73,35 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
         case NotificationType.ORDER_DELIVERED:
+        case NotificationType.SHIPMENT:
           return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
+        case NotificationType.RETURN_REQUEST_CREATED:
+        case NotificationType.RETURN_STATUS_UPDATED:
+        case NotificationType.RETURN_SHIPPED:
+        case NotificationType.RETURN_RECEIVED:
+          return 'https://cdn-icons-png.flaticon.com/512/1485/1485887.png';
+        case NotificationType.RETURN_APPROVED:
+        case NotificationType.REFUND_PROCESSED:
+        case NotificationType.RETURN_COMPLETED:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.RETURN_REJECTED:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
+        case NotificationType.PAYMENT_RECEIVED:
+        case NotificationType.PAYMENT_CONFIRMATION:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.PAYMENT_FAILED:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
         case NotificationType.PROMOTIONAL:
           return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
+        case NotificationType.SOCIAL:
+          return 'https://cdn-icons-png.flaticon.com/512/1077/1077035.png';
+        case NotificationType.SUPPORT:
+          return 'https://cdn-icons-png.flaticon.com/512/747/747376.png';
         case NotificationType.ACCOUNT_VERIFIED:
         case NotificationType.PASSWORD_CHANGED:
           return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
         case NotificationType.SYSTEM_ALERT:
           return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
-        case NotificationType.PAYMENT_RECEIVED:
-          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-        case NotificationType.PAYMENT_FAILED:
-          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
         default:
           return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
       }
@@ -390,17 +407,34 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      case NotificationType.SHIPMENT:
         return <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case NotificationType.PROMOTIONAL:
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
+        return <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        return <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.RETURN_REJECTED:
+        return <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_CONFIRMATION:
+        return <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.PAYMENT_FAILED:
         return <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.PROMOTIONAL:
+        return <Gift className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.SOCIAL:
+        return <Heart className="w-4 h-4 sm:w-5 sm:h-5" />;
+      case NotificationType.SUPPORT:
+        return <Headphones className="w-4 h-4 sm:w-5 sm:h-5" />;
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
       case NotificationType.SYSTEM_ALERT:
         return <Info className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case NotificationType.PAYMENT_RECEIVED:
-        return <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
-      case NotificationType.PAYMENT_FAILED:
-        return <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />;
       default:
         return <Bell className="w-4 h-4 sm:w-5 sm:h-5" />;
     }
@@ -413,18 +447,35 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      case NotificationType.SHIPMENT:
         return 'bg-green-100 text-green-600';
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
+        return 'bg-yellow-100 text-yellow-600';
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        return 'bg-emerald-100 text-emerald-600';
+      case NotificationType.RETURN_REJECTED:
+        return 'bg-red-100 text-red-600';
+      case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_CONFIRMATION:
+        return 'bg-emerald-100 text-emerald-600';
+      case NotificationType.PAYMENT_FAILED:
+        return 'bg-orange-100 text-orange-600';
       case NotificationType.PROMOTIONAL:
         return 'bg-purple-100 text-purple-600';
+      case NotificationType.SOCIAL:
+        return 'bg-pink-100 text-pink-600';
+      case NotificationType.SUPPORT:
+        return 'bg-cyan-100 text-cyan-600';
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
         return 'bg-teal-100 text-teal-600';
       case NotificationType.SYSTEM_ALERT:
         return 'bg-orange-100 text-orange-600';
-      case NotificationType.PAYMENT_RECEIVED:
-        return 'bg-emerald-100 text-emerald-600';
-      case NotificationType.PAYMENT_FAILED:
-        return 'bg-red-100 text-red-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
@@ -456,13 +507,54 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.NEW_MESSAGE:
         dispatch(setActiveIndex(12));
         dispatch(setSelectedUser(notification.link || ""));
+        router.push('/Messaging');
         break;
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      case NotificationType.SHIPMENT:
         dispatch(setActiveIndex(4));
+        router.push('/Management?index=4');
+        break;
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.RETURN_REJECTED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        dispatch(setActiveIndex(11));
+        router.push('/Management?index=11');
+        break;
+      case NotificationType.PAYMENT_CONFIRMATION:
+      case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_FAILED:
+        dispatch(setActiveIndex(4)); // Orders page
+        router.push('/Management?index=4');
+        break;
+      case NotificationType.SUPPORT:
+        router.push('/Support');
+        break;
+      case NotificationType.PROMOTIONAL:
+      case NotificationType.SOCIAL:
+        if (notification.link) {
+          router.push(notification.link);
+        }
+        break;
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
+        dispatch(setActiveIndex(10)); // Profile page
+        router.push('/Management?index=10');
+        break;
+      case NotificationType.SYSTEM_ALERT:
+        // Handle system alerts - could show a modal or redirect to system status page
+        console.log('System alert:', notification.message);
         break;
       default:
+        if (notification.link) {
+          router.push(notification.link);
+        }
         break;
     }
     setIsBellPopupOpen(false);
@@ -772,4 +864,4 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       </div>
     </nav>
   );
-                    }
+          }
