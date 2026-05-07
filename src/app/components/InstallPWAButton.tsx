@@ -1,231 +1,213 @@
-'use client';
-import { useEffect, useState } from 'react';
-import { Icon } from '@iconify/react';
+"use client";
 
-const InstallPWAButton: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
-  const [isInstallable, setIsInstallable] = useState<boolean>(false);
-  const [debugInfo, setDebugInfo] = useState<string>('');
-console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
+import { useEffect, useState } from "react";
+import { X, ExternalLink, Copy, Check, AlertCircle, Smartphone, Globe } from "lucide-react";
 
-useEffect(() => {
-  // Check if PWA criteria are met
-  console.log('Checking PWA criteria...');
-  console.log('HTTPS:', location.protocol === 'https:');
-  console.log('Manifest:', document.querySelector('link[rel="manifest"]') ? 'Found' : 'Missing');
-  
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      console.log('Service workers:', regs.length);
-    });
-  }
-}, []);
+export default function InstallPWAButton() {
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [browserType, setBrowserType] = useState<"ios" | "android" | "other">("other");
 
-  
   useEffect(() => {
-    // Check if the event already fired and was stored globally
-    if ((window as any).__deferredPrompt) {
-      console.log('Recovering stored prompt from global');
-      setDeferredPrompt((window as any).__deferredPrompt);
-      setIsInstallable(true);
-      setDebugInfo('Install prompt recovered');
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      console.log('beforeinstallprompt event fired');
-      setDebugInfo('Install prompt available');
-      e.preventDefault();
-      
-      // Store globally in case component remounts
-      (window as any).__deferredPrompt = e;
-      
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
-
-    const checkIfInstalled = () => {
-      if (window.matchMedia('(display-mode: standalone)').matches) {
-        setDebugInfo('Already installed as PWA');
-        setIsInstallable(false);
-        return true;
-      }
-
-      const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-      const isSafari = window.navigator.userAgent.includes('Safari') && !window.navigator.userAgent.includes('Chrome');
-
-      if (isIos || isSafari) {
-        setDebugInfo('iOS/Safari detected - use share menu → Add to Home Screen');
-        setIsInstallable(false);
-      }
-
-      return false;
-    };
-
-    // Also listen for a custom event that parent might dispatch
-    const handleCustomPWAEvent = () => {
-      if ((window as any).__deferredPrompt && !deferredPrompt) {
-        console.log('Recovering prompt from custom event');
-        setDeferredPrompt((window as any).__deferredPrompt);
-        setIsInstallable(true);
-        setDebugInfo('Install prompt recovered via custom event');
-      }
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    window.addEventListener('pwa-ready', handleCustomPWAEvent);
+    // Detect browser type and in-app browser
+    const userAgent = navigator.userAgent.toLowerCase();
     
-    checkIfInstalled();
-
-    if (!('BeforeInstallPromptEvent' in window)) {
-      setDebugInfo('PWA installation not supported in this browser');
-      setIsInstallable(false);
+    // Check for in-app browsers
+    const isInApp = /facebook|fbios|fban|messenger|telegram|instagram|line|kakaotalk|snapchat|twitter|weibo/.test(userAgent);
+    setIsInAppBrowser(isInApp);
+    
+    // Detect browser type
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      setBrowserType("ios");
+    } else if (/android/.test(userAgent)) {
+      setBrowserType("android");
+    } else {
+      setBrowserType("other");
     }
 
-    // Re-check every few seconds in case event fired before mount
-    const interval = setInterval(() => {
-      if ((window as any).__deferredPrompt && !deferredPrompt) {
-        console.log('Recovering prompt from interval check');
-        setDeferredPrompt((window as any).__deferredPrompt);
+    // Check for install prompt availability
+    const checkInstallPrompt = () => {
+      if ((window as any).deferredPrompt) {
         setIsInstallable(true);
-        setDebugInfo('Install prompt recovered');
-        clearInterval(interval);
       }
-    }, 500);
+    };
+
+    // Listen for install prompt
+    window.addEventListener("beforeinstallprompt", () => {
+      setIsInstallable(true);
+    });
+
+    checkInstallPrompt();
+    
+    // Check every second for the first 10 seconds (for delayed prompts)
+    const interval = setInterval(() => {
+      checkInstallPrompt();
+    }, 1000);
+    
+    setTimeout(() => clearInterval(interval), 10000);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('pwa-ready', handleCustomPWAEvent);
       clearInterval(interval);
+      window.removeEventListener("beforeinstallprompt", () => {});
     };
-  }, [deferredPrompt]);
+  }, []);
 
-  const handleInstallClick = () => {
-    if (deferredPrompt) {
-      (deferredPrompt as any).prompt();
-      (deferredPrompt as any).userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the PWA installation');
-          setDebugInfo('Installation accepted');
-          // Clear global storage on successful install
-          (window as any).__deferredPrompt = null;
-        } else {
-          console.log('User dismissed the PWA installation');
-          setDebugInfo('Installation dismissed');
-        }
-        setDeferredPrompt(null);
-        setIsInstallable(false);
-      });
+  const handleInstall = async () => {
+    const deferredPrompt = (window as any).deferredPrompt;
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === "accepted") {
+      console.log("User accepted the install prompt");
+      setIsInstallable(false);
+    }
+    (window as any).deferredPrompt = null;
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
     }
   };
 
-  const handleManualInstall = () => {
-    setDebugInfo('Manual installation: Use browser menu → Install App');
-    alert('To install this app:\n1. Click the three dots in your browser\n2. Select "Install App" or "Add to Home Screen"\n3. Follow the prompts');
+  const handleOpenInBrowser = () => {
+    const currentUrl = window.location.href;
+    
+    if (browserType === "ios") {
+      // iOS: Show instructions
+      alert("Tap the Share button → 'Open in Safari'");
+    } else if (browserType === "android") {
+      // Android: Try to open in Chrome
+      const chromeIntent = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = chromeIntent;
+      
+      // Fallback
+      setTimeout(() => {
+        alert("Tap the 3 dots menu → 'Open in Chrome Browser'");
+      }, 500);
+    } else {
+      alert("Copy the link and paste it into your browser");
+    }
   };
 
-  const showDebugButton = process.env.NODE_ENV === 'development' && !deferredPrompt && !(window as any).__deferredPrompt;
+  // Don't show if dismissed
+  if (!isVisible) return null;
 
-  return (
-    <>
-      {deferredPrompt && (
-        <button onClick={handleInstallClick} className="install_button">
-          <span className="icon">
-            <Icon icon="material-symbols:download-sharp"/>
-          </span>
-          <span className="text">Install App</span> 
-        </button>
-      )}
-
-      {showDebugButton && (
-        <button onClick={handleManualInstall} className="install_button debug">
-          <span className="icon">
-            <Icon icon="material-symbols:download-sharp"/>
-          </span>
-          <span className="text">Install (Manual)</span> 
-        </button>
-      )}
-
-      {process.env.NODE_ENV === 'development' && debugInfo && (
-        <div style={{
-          fontSize: '12px',
-          color: '#666',
-          margin: '5px',
-          padding: '5px',
-          background: '#f5f5f5',
-          borderRadius: '3px'
-        }}>
-          Debug: {debugInfo}
+  // Normal install button (for supported browsers)
+  if (isInstallable && !isInAppBrowser) {
+    return (
+      <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden max-w-sm">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-4 h-4 text-white" />
+              <span className="text-white text-xs font-medium">Install App</span>
+            </div>
+            <button
+              onClick={() => setIsVisible(false)}
+              className="text-white/70 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="p-4">
+            <p className="text-sm text-gray-700 mb-3">
+              Install our app for a better experience
+            </p>
+            <button
+              onClick={handleInstall}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] flex items-center justify-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Install Now
+            </button>
+          </div>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <style jsx>{`
-        .install_button {
-          position: relative;
-          display: inline-flex;
-          gap: 8px;
-          margin: 5px;
-          width: 150px;
-          padding: 0px;
-          height: 45px;
-          font-size: 18px;
-          font-weight: bold;
-          font-family: 'Segoe UI', sans-serif;
-          color: #fff;
-          background: linear-gradient(45deg, #b57edc, #d8b4fe);
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-          box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.2),
-                      inset -2px -2px 5px rgba(0, 0, 0, 0.4),
-                      0 4px 6px rgba(0, 0, 0, 0.2);
-          text-shadow: 1px 1px 0 #4a004a;
-          transition: transform 0.2s ease, background 0.3s ease;
-          overflow: hidden;
-        }
+  // In-app browser warning with instructions
+  if (isInAppBrowser) {
+    return (
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-4 sm:inset-x-auto sm:right-4 sm:left-auto z-50 animate-in slide-in-from-bottom-10 duration-300">
+        <div className="bg-amber-50 border-l-4 border-amber-500 rounded-t-xl sm:rounded-xl shadow-2xl max-w-md mx-4 sm:mx-0">
+          <div className="p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="bg-amber-100 rounded-full p-1.5">
+                  <AlertCircle className="w-4 h-4 text-amber-600" />
+                </div>
+                <h3 className="font-semibold text-amber-800 text-sm">
+                  In-App Browser Detected
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsVisible(false)}
+                className="text-amber-600 hover:text-amber-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <p className="text-sm text-amber-700 mb-3">
+              For the best experience and to install our app, please open this in your browser.
+            </p>
+            
+            <div className="space-y-2">
+              <button
+                onClick={handleCopyLink}
+                className="w-full bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Link
+                  </>
+                )}
+              </button>
+              
+              <button
+                onClick={handleOpenInBrowser}
+                className="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Open in Browser
+              </button>
+            </div>
+            
+            <div className="mt-3 pt-2 border-t border-amber-200">
+              <p className="text-xs text-amber-600 text-center">
+                {browserType === "ios" && "💡 Tip: Tap Share → 'Open in Safari'"}
+                {browserType === "android" && "💡 Tip: Tap ⋮ → 'Open in Chrome'"}
+                {browserType === "other" && "💡 Tip: Copy link and paste in your browser"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-        .install_button:hover {
-          background: linear-gradient(45deg, #c084fc, #e0b0ff);
-        }
+  return null;
+}
 
-        .install_button.debug {
-          background: linear-gradient(45deg, #8b5cf6, #a78bfa);
-        }
-
-        .install_button:active {
-          transform: scale(0.98);
-          box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.2),
-                      inset -1px -1px 3px rgba(0, 0, 0, 0.4),
-                      0 3px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .text {
-          border-radius: 0px 8px 8px 0px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          text-align: center;
-          width: 100%;
-          box-sizing: border-box;
-          height: 45px;
-        }
-
-        .icon {
-          color: #707070;
-          height: 45px;
-          background: linear-gradient(-45deg, #ffffff, #f1f1f1);
-          padding: 5px;
-          border-radius: 5px 0px 0px 5px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          box-shadow: inset 2px 2px 5px rgba(255, 255, 255, 0.2),
-                      inset -2px -2px 5px rgba(0, 0, 0, 0.4),
-                      0 4px 6px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
-    </>
-  );
-};
-
-export default InstallPWAButton;
+// Download icon component
+const Download = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+);
