@@ -14,6 +14,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import ParticleBackground from './ParticleBackground';
 import { CartItem } from '../../../types'; // Import CartItem type
 import NotificationsPage from "./NotificationsPage";
+import ReturnManagement from './Return/ReturnManagement';
+
+// In your OrderTracking component, you already have the create return functionality
+// Just add this to view existing returns:
+
 import {
   Home,
   ShoppingBag,
@@ -34,6 +39,7 @@ import {
   ShoppingCart,
   Users,
   Tags,
+  RotateCcw
 } from 'lucide-react';
 import ProductsTab from './ProductsTab';
 import MessagesTab from './MessagesTab';
@@ -175,7 +181,13 @@ const DeluxeNavTabs: React.FC = () => {
       icon: <ShoppingCart size={20} />,
       content:<NotificationsPage userId={userId || ""} />
 
-    }
+    },
+    {
+      id: 13,
+      label: 'Return',
+      icon: <RotateCcw size={20} />,
+      content:<ReturnManagement userId={userId || ""} onRefresh={()=>{console.log("Nothing")}} />
+    }  
   ];
 
   function getCategoryIcon(category: string): React.ReactNode {
