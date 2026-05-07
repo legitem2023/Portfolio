@@ -3,95 +3,51 @@
 import { useEffect, useState } from "react";
 
 export default function InstallPWAButton() {
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [browserType, setBrowserType] = useState<"ios" | "android" | "other">("other");
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    
     const userAgent = navigator.userAgent.toLowerCase();
-    console.log("User Agent:", userAgent);
     
-    // Method 1: Check for custom tabs or app wrappers
-    const isAndroid = /android/.test(userAgent);
-    const isChrome = /chrome/.test(userAgent) && !/edg|opr|samsungbrowser/.test(userAgent);
-    
-    // Method 2: Check if running in standalone mode (already installed)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone === true;
-    
-    // Method 3: Check for Telegram/other apps via JavaScript features
-    const isTelegramWebView = !!(window as any).TelegramWebView || 
-                              !!(window as any).TelegramGameProxy;
-    
-    // Method 4: Check referrer or opening source
-    const isCustomTab = document.referrer.includes('android-app://') ||
-                        document.referrer.includes('tg://');
-    
-    // Method 5: Check if beforeinstallprompt is available (will be false in custom tabs)
-    // We'll detect by trying to access it after a delay
-    
-    // Determine if in restrictive environment
-    const isRestrictive = isTelegramWebView || isCustomTab || 
-                          (isAndroid && isChrome && !window.matchMedia('(display-mode: browser)').matches);
-    
-    setIsInAppBrowser(isRestrictive || isTelegramWebView || isCustomTab);
-    
-    console.log("Is restrictive environment:", isRestrictive);
-    console.log("IsTelegramWebView:", isTelegramWebView);
-    console.log("IsCustomTab:", isCustomTab);
-    
-    // Detect platform
-    if (/iphone|ipad|ipod/.test(userAgent)) {
-      setBrowserType("ios");
-    } else if (isAndroid) {
-      setBrowserType("android");
-    }
-    
-    // Listen for PWA install prompt
+    // Detect in-app browsers (Messenger, Telegram, Instagram, Facebook)
+    const isMessenger = /fbios|fban|messenger/.test(userAgent);
+    const isTelegram = /telegram/.test(userAgent);
+    const isInstagram = /instagram/.test(userAgent);
+    const isFacebook = /facebook/.test(userAgent);
+    const isInApp = isMessenger || isTelegram || isInstagram || isFacebook;
+    setIsInAppBrowser(isInApp);
+
+    // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
-      console.log("PWA installable detected");
     };
-    
+
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    
-    // Check if already installable
-    if ((window as any).deferredPrompt) {
-      setIsInstallable(true);
-      setDeferredPrompt((window as any).deferredPrompt);
-    }
-    
-    // Fallback: If we're in Android Chrome but no prompt after 3 seconds,
-    // assume we're in a custom tab and show browser warning
-    const timeout = setTimeout(() => {
-      if (isAndroid && isChrome && !isInstallable && !isStandalone) {
-        console.log("No install prompt detected - likely in custom tab");
-        setIsInAppBrowser(true);
-      }
-    }, 3000);
-    
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      clearTimeout(timeout);
     };
   }, []);
 
-  const handleInstall = async () => {
-    if (!deferredPrompt) return;
-    
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === "accepted") {
-      console.log("User accepted install");
-      setIsInstallable(false);
+  const handleInstallClick = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: { outcome: string }) => {
+        if (choiceResult.outcome === "accepted") {
+          console.log("User accepted the install prompt");
+        }
+        setDeferredPrompt(null);
+        setIsInstallable(false);
+      });
     }
-    setDeferredPrompt(null);
   };
 
   const handleCopyLink = async () => {
@@ -100,147 +56,54 @@ export default function InstallPWAButton() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      alert("Please manually copy: " + window.location.href);
+      alert("Copy this link to open in browser: " + window.location.href);
     }
   };
 
   const handleOpenInBrowser = () => {
-    const currentUrl = window.location.href;
-    
-    if (browserType === "ios") {
-      alert("Tap Share → Open in Safari");
-    } else if (browserType === "android") {
-      // Try to open with Chrome intent
-      try {
-        window.location.href = `googlechrome://navigate?url=${encodeURIComponent(currentUrl)}`;
-        setTimeout(() => {
-          alert("If Chrome didn't open, tap the 3 dots → Open in Chrome Browser");
-        }, 500);
-      } catch (e) {
-        alert("Tap the 3 dots menu (⋮) → Open in Chrome Browser");
-      }
+    const userAgent = navigator.userAgent.toLowerCase();
+    if (/iphone|ipad|ipod/.test(userAgent)) {
+      alert("Tap the Share button (⬆️) → 'Open in Safari'");
+    } else {
+      alert("Tap the 3 dots menu (⋮) → 'Open in Chrome Browser'");
     }
   };
 
-  // Don't show if dismissed or already installed
+  if (!isMounted) return null;
   if (!isVisible) return null;
-  
-  // Check if app is already installed
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                       (window.navigator as any).standalone === true;
-  if (isStandalone) return null;
 
-  // Show install button (works in regular Chrome)
-  if (isInstallable && !isInAppBrowser) {
+  // Show for Messenger/Telegram/Instagram/Facebook in-app browsers
+  if (isInAppBrowser) {
     return (
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        zIndex: 999999,
-      }}>
-        <button
-          onClick={handleInstall}
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50px',
-            padding: '12px 24px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          📲 Install App
-        </button>
-      </div>
-    );
-  }
-
-  // Show browser warning for Telegram Custom Tabs
-  if (isInAppBrowser || (!isInstallable && !isStandalone && browserType === "android")) {
-    return (
-      <div style={{
-        position: 'fixed',
-        bottom: '20px',
-        left: '20px',
-        right: '20px',
-        zIndex: 999999,
-      }}>
-        <div style={{
-          backgroundColor: '#FF6B35',
-          borderRadius: '16px',
-          padding: '16px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.25)',
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '12px',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '24px' }}>📱</span>
-              <h3 style={{ color: 'white', fontSize: '16px', fontWeight: 'bold', margin: 0 }}>
-                Open in Chrome Browser
-              </h3>
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg shadow-xl p-4 max-w-sm border border-amber-300">
+          <div className="flex justify-between items-start mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📱</span>
+              <h3 className="text-white font-semibold text-sm">Open in Browser</h3>
             </div>
             <button
               onClick={() => setIsVisible(false)}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: 'none',
-                borderRadius: '20px',
-                width: '28px',
-                height: '28px',
-                cursor: 'pointer',
-                color: 'white',
-                fontSize: '18px',
-              }}
+              className="text-white/70 hover:text-white text-lg leading-none"
             >
-              ✕
+              ×
             </button>
           </div>
-          
-          <p style={{ color: 'white', fontSize: '14px', marginBottom: '16px' }}>
-            Tap the 3 dots menu (⋮) in the top right corner → Open in Chrome Browser to install our app
+          <p className="text-white/90 text-xs mb-3">
+            You're in an in-app browser. For the best experience and to install our app, please open this in Chrome or Safari.
           </p>
-          
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div className="flex gap-2">
             <button
               onClick={handleCopyLink}
-              style={{
-                flex: 1,
-                background: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                borderRadius: '10px',
-                padding: '10px',
-                color: 'white',
-                cursor: 'pointer',
-              }}
+              className="flex-1 bg-white/20 hover:bg-white/30 text-white text-xs font-medium py-2 px-3 rounded-lg transition-colors"
             >
-              {copied ? '✓ Copied!' : '📋 Copy Link'}
+              {copied ? "✓ Copied!" : "📋 Copy Link"}
             </button>
-            
             <button
               onClick={handleOpenInBrowser}
-              style={{
-                flex: 1,
-                background: 'white',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '10px',
-                color: '#FF6B35',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
+              className="flex-1 bg-white text-amber-600 hover:bg-gray-100 text-xs font-medium py-2 px-3 rounded-lg transition-colors"
             >
-              🌐 Open in Chrome
+              🌐 Open
             </button>
           </div>
         </div>
@@ -248,5 +111,23 @@ export default function InstallPWAButton() {
     );
   }
 
-  return null;
+  // Original install button (only shows when PWA is installable)
+  if (!isInstallable) {
+    return null;
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <button
+        onClick={handleInstallClick}
+        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 font-semibold flex items-center gap-2 animate-bounce"
+        style={{ boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Install App
+      </button>
+    </div>
+  );
 }
