@@ -62,7 +62,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         }
         
         // Fill entire canvas with WHITE border
-        ctx.fillStyle = '#FFFFFF';
+        ctx.fillStyle = '#4E4E71';
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
         // Fill white background for the content area (already white, but keeping for clarity)
