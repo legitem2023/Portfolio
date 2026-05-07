@@ -227,7 +227,7 @@ const InstallPWAButton: React.FC = () => {
             <Icon icon="logos:google-chrome"/>
           </span> */}
           <span className="icon">
-            <SVGComponent className="w-12 h-12 text-gray-500 hover:text-blue-500 transition" />
+            <SVGComponent className="w-8 h-8 text-gray-500 hover:text-blue-500 transition" />
           </span>
           <span className="text">Open in Browser</span> 
         </button>
@@ -237,7 +237,7 @@ const InstallPWAButton: React.FC = () => {
       {!isInAppBrowser && deferredPrompt && (
         <button onClick={handleInstallClick} className="install_button">
           <span className="icon">
-            <SVGComponent className="w-12 h-12 text-gray-500 hover:text-blue-500 transition" />
+            <SVGComponent className="w-8 h-8 text-gray-500 hover:text-blue-500 transition" />
           </span>
             <span className="text">Install App</span> 
         </button>
@@ -247,7 +247,7 @@ const InstallPWAButton: React.FC = () => {
       {!isInAppBrowser && showDebugButton && (
         <button onClick={handleManualInstall} className="install_button debug">
           <span className="icon">
-            <SVGComponent className="w-12 h-12 text-gray-500 hover:text-blue-500 transition" />
+            <SVGComponent className="w-8 h-8 text-gray-500 hover:text-blue-500 transition" />
           </span>
           <span className="text">Install (Manual)</span> 
         </button>
@@ -276,7 +276,6 @@ const InstallPWAButton: React.FC = () => {
           min-width: 200px;
           padding: 0px;
           height: 45px;
-          font-size: 16px;
           font-weight: bold;
           font-family: 'Segoe UI', sans-serif;
           color: #fff;
