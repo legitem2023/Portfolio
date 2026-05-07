@@ -271,7 +271,7 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
         <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
           <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
           <h3 className="text-lg font-semibold text-gray-500 mb-2">No Return Requests</h3>
-          <p className="text-sm text-gray-400">You haven't submitted any return requests yet.</p>
+          <p className="text-sm text-gray-400">You haven&apos;t submitted any return requests yet.</p>
           <p className="text-xs text-gray-400 mt-2">Go to your orders to request a return.</p>
         </div>
       ) : (
