@@ -246,6 +246,8 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
   const returns = returnsData?.getUserReturns || [];
   
   return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
     <div className="return-management-container">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
@@ -301,6 +303,8 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
           ))}
         </div>
       )}
+    </div>
+      </div>
     </div>
   );
 }
