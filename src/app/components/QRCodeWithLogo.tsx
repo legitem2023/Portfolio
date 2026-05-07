@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 
@@ -317,18 +319,20 @@ const styles: { [key: string]: React.CSSProperties } = {
   }
 };
 
-// Add keyframes animation for shimmer effect
-const styleSheet = document.createElement("style");
-styleSheet.textContent = `
-  @keyframes shimmer {
-    0% {
-      background-position: 200% 0;
+// Add keyframes animation for shimmer effect - safely on client side only
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
     }
-    100% {
-      background-position: -200% 0;
-    }
-  }
-`;
-document.head.appendChild(styleSheet);
+  `;
+  document.head.appendChild(styleSheet);
+}
 
 export default QRCodeWithLogo;
