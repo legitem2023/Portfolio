@@ -24,7 +24,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           margin: 2,
           errorCorrectionLevel: 'H',
           color: {
-            dark: '#333399', // Indigo color
+            dark: '#8080B0', // Indigo color
             light: '#FFFFFF'
           }
         });
@@ -87,7 +87,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           ctx.fill();
           
           // Draw indigo border
-          ctx.strokeStyle = '#4B0082';
+          ctx.strokeStyle = '#8080B0';
           ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.arc(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2 + 8, 0, 2 * Math.PI);
@@ -99,7 +99,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         
         // Step 4: Set font for text
         ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
-        ctx.fillStyle = '#4B0082'; // Indigo color
+        ctx.fillStyle = '#8080B0'; // Indigo color
         ctx.textAlign = 'center';
         
         // Add "Scan me" text at top - overlapping into QR code by 1.5px
@@ -127,7 +127,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             margin: 2,
             errorCorrectionLevel: 'H',
             color: {
-              dark: '#4B0082',
+              dark: '#8080B0',
               light: '#FFFFFF'
             }
           });
@@ -152,7 +152,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             ctx.drawImage(fallbackCanvas, whiteBorder, qrYOffset);
             
             ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
-            ctx.fillStyle = '#4B0082';
+            ctx.fillStyle = '#8080B0';
             ctx.textAlign = 'center';
             
             ctx.textBaseline = 'bottom';
@@ -250,7 +250,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
   },
   downloadButton: {
-    backgroundColor: '#4B0082', // Indigo color
+    backgroundColor: '#8080B0', // Indigo color
     color: 'white',
     padding: '12px 24px',
     fontSize: '16px',
