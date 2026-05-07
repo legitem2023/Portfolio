@@ -31,7 +31,6 @@ export default function RootLayout({
         <LoadEruda/>
         <div className="BackGroundImage"></div>
         <PWAInitializer/>
-        <InstallPWAButton/>
         {/* ✅ Wrap with SessionProvider */}
         <SessionProvider>
           <ReduxWrapper>
