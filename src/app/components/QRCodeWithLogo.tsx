@@ -1,33 +1,68 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import QRCode from 'qrcode';
 
 interface QRCodeWithLogoProps {}
 
 const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
-  const [url, setUrl] = useState<string>('https://vendorcity.net');
+  // Fixed URL and logo path - no user input needed
+  const url = 'https://vendorcity.net';
+  const logoUrl = '/VendorCity.webp';
+  
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string | null>("/VendorCity.webp");
+  const [logoLoaded, setLogoLoaded] = useState<boolean>(false);
+  const [logoImage, setLogoImage] = useState<HTMLImageElement | null>(null);
+  const [canvasSize, setCanvasSize] = useState<number>(400);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Generate QR code
+  // Load logo image once on mount
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => {
+      setLogoImage(img);
+      setLogoLoaded(true);
+    };
+    img.onerror = () => {
+      console.error('Failed to load logo from:', logoUrl);
+      // Still generate QR without logo
+      setLogoLoaded(true);
+    };
+    img.src = logoUrl;
+  }, []);
+
+  // Calculate canvas size based on parent container
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      if (containerRef.current) {
+        const parentWidth = containerRef.current.clientWidth;
+        // Make canvas responsive but not exceed parent width
+        // Max size 400px, min size 200px
+        const newSize = Math.min(Math.max(parentWidth - 40, 200), 400);
+        setCanvasSize(newSize);
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    
+    return () => {
+      window.removeEventListener('resize', updateCanvasSize);
+    };
+  }, []);
+
+  // Generate QR code (canvas size is now dynamic)
   const generateQR = async (): Promise<void> => {
-    if (!url) {
-      alert('Please enter a URL');
-      return;
-    }
-
     if (!canvasRef.current) {
       console.error('Canvas reference is null');
       return;
     }
 
     try {
-      // Generate QR code with high error correction (H level = 30% recovery)
+      // Generate QR code with current canvas dimensions
       const qrDataUrl = await QRCode.toDataURL(canvasRef.current, url, {
-        width: 800,
+        width: canvasSize,
         margin: 2,
-        errorCorrectionLevel: 'H', // High error correction for logo overlay
+        errorCorrectionLevel: 'H',
         color: {
           dark: '#000000',
           light: '#FFFFFF'
@@ -52,6 +87,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
     }
     
     const img = new Image();
+    img.crossOrigin = 'Anonymous';
 
     img.onload = () => {
       // Clear canvas
@@ -60,47 +96,41 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
       // Draw QR code
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       
-      // Draw logo if present
-      if (logoFile) {
-        const logoImg = new Image();
-        logoImg.onload = () => {
-          // Calculate logo size (20% of QR code)
-          const logoSize = canvas.width * 0.2;
-          const logoX = (canvas.width - logoSize) / 2;
-          const logoY = (canvas.height - logoSize) / 2;
-          
-          // Draw white background circle for logo
-          ctx.fillStyle = 'white';
-          ctx.beginPath();
-          ctx.arc(canvas.width / 2, canvas.height / 2, logoSize / 2 + 5, 0, 2 * Math.PI);
-          ctx.fill();
-          
-          // Draw logo
-          ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
-        };
-        logoImg.src = URL.createObjectURL(logoFile);
+      // Draw logo if loaded
+      if (logoImage) {
+        // Calculate logo size (20% of QR code)
+        const logoSize = canvas.width * 0.2;
+        const logoX = (canvas.width - logoSize) / 2;
+        const logoY = (canvas.height - logoSize) / 2;
+        
+        // Draw white background circle for logo
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, logoSize / 2 + 5, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Draw logo
+        ctx.drawImage(logoImage, logoX, logoY, logoSize, logoSize);
       }
     };
+    
+    img.onerror = () => {
+      console.error('Failed to load QR image');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+    
     img.src = qrImageUrl;
   };
 
-  // Handle logo upload
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const file = e.target.files?.[0];
-    if (file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
-      
-      // Regenerate QR with new logo
-      if (qrDataUrl) {
-        drawQRWithLogo(qrDataUrl);
-      }
-    } else {
-      alert('Please upload a PNG or JPG image');
+  // Auto-generate QR when logo loads or canvas size changes
+  useEffect(() => {
+    if (logoLoaded && canvasRef.current && canvasSize) {
+      generateQR();
     }
-  };
+  }, [logoLoaded, canvasSize]);
 
-  // Download QR code as PNG
+  // Download QR code as PNG (preserves original quality)
   const downloadQR = (): void => {
     if (canvasRef.current) {
       const link = document.createElement('a');
@@ -112,54 +142,38 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
 
   return (
     <div style={styles.container}>
-      <h2>Create Your Branded QR Code</h2>
+      <h2>VendorCity Branded QR Code</h2>
       
-      {/* URL Input */}
-      <div style={styles.inputGroup}>
-        <label>Your Website URL:</label>
-        <input
-          type="url"
-          placeholder="https://yourwebsite.com"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          style={styles.input}
-        />
+      {/* Display URL info */}
+      <div style={styles.urlInfo}>
+        <p><strong>Website:</strong> {url}</p>
       </div>
       
-      {/* Logo Upload */}
-      <div style={styles.inputGroup}>
-        <label>Your Logo (PNG or JPG):</label>
-        <input
-          type="file"
-          accept="image/png,image/jpeg"
-          onChange={handleLogoUpload}
-          style={styles.fileInput}
+      {/* Container that limits canvas size */}
+      <div ref={containerRef} style={styles.canvasContainer}>
+        <canvas
+          ref={canvasRef}
+          width={canvasSize}
+          height={canvasSize}
+          style={{
+            ...styles.canvas,
+            width: '100%',
+            height: 'auto',
+            maxWidth: `${canvasSize}px`
+          }}
         />
-        {logoPreview && (
-          <div style={styles.logoPreview}>
-            <img src={logoPreview} alt="Logo preview" style={styles.previewImage} />
-          </div>
-        )}
       </div>
-      
-      {/* Generate Button */}
-      <button onClick={generateQR} style={styles.button}>
-        Generate QR Code
-      </button>
-      
-      {/* QR Code Canvas */}
-      <canvas
-        ref={canvasRef}
-        width="400"
-        height="400"
-        style={styles.canvas}
-      />
       
       {/* Download Button */}
       {qrDataUrl && (
-        <button onClick={downloadQR} style={styles.downloadButton}>
-          Download QR Code as PNG
-        </button>
+        <>
+          <button onClick={downloadQR} style={styles.downloadButton}>
+            Download QR Code as PNG
+          </button>
+          <p style={styles.hint}>
+            Logo automatically loaded from: {logoUrl}
+          </p>
+        </>
       )}
     </div>
   );
@@ -173,41 +187,19 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontFamily: 'Arial, sans-serif',
     textAlign: 'center'
   },
-  inputGroup: {
+  urlInfo: {
     marginBottom: '20px',
-    textAlign: 'left'
-  },
-  input: {
-    width: '100%',
     padding: '10px',
-    fontSize: '16px',
-    border: '1px solid #ddd',
+    backgroundColor: '#f5f5f5',
     borderRadius: '4px',
-    marginTop: '5px'
+    textAlign: 'center'
   },
-  fileInput: {
-    marginTop: '5px'
-  },
-  logoPreview: {
-    marginTop: '10px'
-  },
-  previewImage: {
-    maxWidth: '100px',
-    maxHeight: '100px',
-    border: '1px solid #ddd',
-    borderRadius: '4px',
-    padding: '5px'
-  },
-  button: {
-    backgroundColor: '#4CAF50',
-    color: 'white',
-    padding: '12px 24px',
-    fontSize: '16px',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    marginBottom: '20px',
-    width: '100%'
+  canvasContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    marginTop: '20px'
   },
   downloadButton: {
     backgroundColor: '#2196F3',
@@ -223,9 +215,12 @@ const styles: { [key: string]: React.CSSProperties } = {
   canvas: {
     border: '1px solid #ddd',
     borderRadius: '4px',
-    marginTop: '20px',
-    width: '100%!important',
-    height: 'auto'
+    display: 'block'
+  },
+  hint: {
+    fontSize: '12px',
+    color: '#666',
+    marginTop: '10px'
   }
 };
 
