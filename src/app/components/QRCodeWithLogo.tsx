@@ -6,7 +6,7 @@ interface QRCodeWithLogoProps {}
 const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
   // Fixed URL and logo path
   const url = 'https://vendorcity.net';
-  const logoUrl = '/VendorCity.webp';
+  const logoUrl = '/VendorCity_Store.webp';
   
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(true);
