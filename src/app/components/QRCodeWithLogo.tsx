@@ -50,11 +50,12 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         }
         
         // Step 3: Create final canvas with extra space for text
-        // 3mm gap at both top (after "Scan me") and bottom (before URL)
-        const gapPx = mmToPx(3); // Approximately 11.34 pixels at 96 DPI
-        const topTextHeight = qrCanvas.width * 0.12; // Space for "Scan me" text
-        const bottomTextHeight = qrCanvas.width * 0.1; // Space for URL text
-        const padding = topTextHeight + gapPx + bottomTextHeight + gapPx;
+        // 1.5mm gap at both top (after "Scan me") and bottom (before URL)
+        const gapPx = mmToPx(1.5); // Approximately 5.67 pixels at 96 DPI
+        const textHeight = qrCanvas.width * 0.12; // Space for both "Scan me" and URL text (same font size)
+        
+        // Total padding: top text height + gap + bottom text height + gap
+        const padding = textHeight + gapPx + textHeight + gapPx;
         
         const finalCanvas = document.createElement('canvas');
         finalCanvas.width = qrCanvas.width;
@@ -70,7 +71,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
         
         // Calculate Y offset for QR code (start after top text and its gap)
-        const qrYOffset = topTextHeight + gapPx;
+        const qrYOffset = textHeight + gapPx;
         ctx.drawImage(qrCanvas, 0, qrYOffset);
         
         // Draw logo if loaded
@@ -97,22 +98,23 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
         }
         
-        // Step 4: Add text "Scan me" at the top
-        ctx.font = `bold ${Math.floor(qrCanvas.width * 0.08)}px "Arial", "Helvetica", sans-serif`;
-        ctx.fillStyle = '#4B0082'; // Indigo color
+        // Step 4: Set font for text (same size for both "Scan me" and URL)
+        const fontSize = Math.floor(qrCanvas.width * 0.08);
+        ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
+        ctx.fillStyle = '#4B0082'; // Indigo color for "Scan me"
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
         // Add "Scan me" text at top (centered in its allocated space)
-        const topTextY = topTextHeight / 2;
+        const topTextY = textHeight / 2;
         ctx.fillText('Scan me', finalCanvas.width / 2, topTextY);
         
-        // Step 5: Add URL text at the bottom, exactly 3mm below the QR code
-        const bottomTextStartY = qrYOffset + qrCanvas.height + gapPx;
-        const urlFontSize = Math.floor(qrCanvas.width * 0.05);
-        ctx.font = `${urlFontSize}px "Arial", "Helvetica", sans-serif`;
-        ctx.fillStyle = '#666666';
-        ctx.textBaseline = 'top';
+        // Step 5: Add URL text at the bottom, exactly 1.5mm below the QR code
+        // Use same font but different color for URL
+        ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
+        ctx.fillStyle = '#4B0082'; // Indigo color to match "Scan me"
+        ctx.textBaseline = 'middle';
+        const bottomTextStartY = qrYOffset + qrCanvas.height + gapPx + (textHeight / 2);
         ctx.fillText(url, finalCanvas.width / 2, bottomTextStartY);
         
         // Step 6: Convert final canvas to image URL
@@ -135,10 +137,9 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             }
           });
           
-          const gapPx = mmToPx(3);
-          const topTextHeight = fallbackCanvas.width * 0.12;
-          const bottomTextHeight = fallbackCanvas.width * 0.1;
-          const padding = topTextHeight + gapPx + bottomTextHeight + gapPx;
+          const gapPx = mmToPx(1.5);
+          const textHeight = fallbackCanvas.width * 0.12;
+          const padding = textHeight + gapPx + textHeight + gapPx;
           
           const finalCanvas = document.createElement('canvas');
           finalCanvas.width = fallbackCanvas.width;
@@ -149,19 +150,17 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
             
-            const qrYOffset = topTextHeight + gapPx;
+            const qrYOffset = textHeight + gapPx;
             ctx.drawImage(fallbackCanvas, 0, qrYOffset);
             
-            ctx.font = `bold ${Math.floor(fallbackCanvas.width * 0.08)}px "Arial", "Helvetica", sans-serif`;
+            const fontSize = Math.floor(fallbackCanvas.width * 0.08);
+            ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
             ctx.fillStyle = '#4B0082';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText('Scan me', finalCanvas.width / 2, topTextHeight / 2);
+            ctx.fillText('Scan me', finalCanvas.width / 2, textHeight / 2);
             
-            ctx.font = `${Math.floor(fallbackCanvas.width * 0.05)}px "Arial", "Helvetica", sans-serif`;
-            ctx.fillStyle = '#666666';
-            ctx.textBaseline = 'top';
-            ctx.fillText(url, finalCanvas.width / 2, qrYOffset + fallbackCanvas.height + gapPx);
+            ctx.fillText(url, finalCanvas.width / 2, qrYOffset + fallbackCanvas.height + gapPx + (textHeight / 2));
             
             setFinalImageUrl(finalCanvas.toDataURL('image/png'));
           } else {
@@ -188,6 +187,12 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
     }
   };
 
+  // Copy URL to clipboard
+  const copyUrlToClipboard = () => {
+    navigator.clipboard.writeText(url);
+    alert('URL copied to clipboard: ' + url);
+  };
+
   return (
     <div style={styles.container}>
       
@@ -210,11 +215,14 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
       
       {/* Download Button */}
       {finalImageUrl && !isGenerating && (
-        <>
+        <div style={styles.buttonGroup}>
           <button onClick={downloadQR} style={styles.downloadButton}>
             Download QR Code as PNG
           </button>
-        </>
+          <button onClick={copyUrlToClipboard} style={styles.copyButton}>
+            Copy URL
+          </button>
+        </div>
       )}
     </div>
   );
@@ -226,13 +234,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     margin: '0 auto',
     padding: '20px',
     fontFamily: 'Arial, sans-serif',
-    textAlign: 'center'
-  },
-  urlInfo: {
-    marginBottom: '20px',
-    padding: '10px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '4px',
     textAlign: 'center'
   },
   imageWrapper: {
@@ -260,19 +261,30 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
-    marginTop: '20px',
-    width: '100%',
+    flex: 1,
     transition: 'background-color 0.3s'
+  },
+  copyButton: {
+    backgroundColor: '#6A5ACD', // Slate blue for contrast
+    color: 'white',
+    padding: '12px 24px',
+    fontSize: '16px',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    flex: 1,
+    transition: 'background-color 0.3s'
+  },
+  buttonGroup: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '20px',
+    width: '100%'
   },
   loading: {
     padding: '40px',
     textAlign: 'center',
     color: '#666'
-  },
-  hint: {
-    fontSize: '12px',
-    color: '#666',
-    marginTop: '10px'
   }
 };
 
