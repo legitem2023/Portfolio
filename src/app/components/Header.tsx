@@ -672,8 +672,8 @@ const Header: React.FC = () => {
       case NotificationType.REFUND_PROCESSED:
       case NotificationType.RETURN_COMPLETED:
         // Navigate to returns/refunds page (index 11)
-        dispatch(setActiveIndex(11));
-        router.push(`?index=${11}`);
+        dispatch(setActiveIndex(13));
+        router.push(`?index=${13}`);
         break;
       case NotificationType.PAYMENT_CONFIRMATION:
       case NotificationType.PAYMENT_RECEIVED:
@@ -1158,7 +1158,7 @@ const Header: React.FC = () => {
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
-                      handleTabClick(11);
+                      handleTabClick(13);
                     }}
                   >
                     <RefreshCw className="mr-3 text-gray-400 w-5 h-5" />
