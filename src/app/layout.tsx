@@ -1,4 +1,4 @@
-//"use client";
+"use client";
 import { metadata as baseMetadata, viewport as baseViewport } from './components/Seo/Seo';
 import ReduxWrapper from "./components/ApolloProvider/ReduxWrapper"; 
 import PWAInitializer from "./components/PWAInitializer";
