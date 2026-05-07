@@ -93,7 +93,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         ctx.textBaseline = 'middle';
         
         // Add "Scan me" text at top
-        const topTextY = qrYOffset / 2;
+        const topTextY = qrYOffset / 2.50;
         ctx.fillText('Scan me', finalCanvas.width / 2, topTextY);
         
         // Add small decorative elements (optional)
@@ -101,7 +101,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
         ctx.fillStyle = '#666666';
         
         // Add URL text at bottom
-        const bottomTextY = qrYOffset + qrCanvas.height + (padding / 2);
+        const bottomTextY = qrYOffset + qrCanvas.height + (padding / 1.5);
         ctx.fillText(url, finalCanvas.width / 2, bottomTextY);
         
         // Step 5: Convert final canvas to image URL
@@ -144,7 +144,7 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             ctx.textBaseline = 'middle';
             ctx.fillText('Scan me', finalCanvas.width / 2, qrYOffset / 2);
             
-            ctx.font = `${Math.floor(finalCanvas.width * 0.03)}px "Arial", "Helvetica", sans-serif`;
+            ctx.font = `bold ${Math.floor(finalCanvas.width * 0.08)}px "Arial", "Helvetica", sans-serif`;
             ctx.fillStyle = '#666666';
             ctx.fillText(url, finalCanvas.width / 2, qrYOffset + fallbackCanvas.height + (padding / 2));
             
@@ -175,12 +175,6 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
 
   return (
     <div style={styles.container}>
-      <h2>VendorCity Branded QR Code</h2>
-      
-      {/* Display URL info */}
-      <div style={styles.urlInfo}>
-        <p><strong>Website:</strong> {url}</p>
-      </div>
       
       {/* Display generated QR code as image */}
       <div style={styles.imageWrapper}>
@@ -205,9 +199,6 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           <button onClick={downloadQR} style={styles.downloadButton}>
             Download QR Code as PNG
           </button>
-          <p style={styles.hint}>
-            Logo automatically loaded from: {logoUrl}
-          </p>
         </>
       )}
     </div>
