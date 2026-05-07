@@ -11,12 +11,6 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
   const [finalImageUrl, setFinalImageUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(true);
 
-  // Helper: Convert mm to pixels at 96 DPI (standard web resolution)
-  const mmToPx = (mm: number): number => {
-    // 1 inch = 25.4 mm, 96 DPI = 96 pixels per inch
-    return (mm / 25.4) * 96;
-  };
-
   // Generate QR code with logo and text entirely in script
   useEffect(() => {
     const generateQRWithLogo = async () => {
@@ -49,10 +43,10 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           console.error('Logo loading failed:', error);
         }
         
-        // Step 3: Create final canvas with extra space for text
-        // 0.5mm gap between text and QR code (both top and bottom)
-        const gapPx = mmToPx(0.5); // Approximately 1.89 pixels at 96 DPI
-        const textHeight = qrCanvas.width * 0.08; // Space for both "Scan me" and URL text (same font size)
+        // Step 3: Calculate font size and text metrics
+        const fontSize = Math.floor(qrCanvas.width * 0.08);
+        const textHeight = fontSize; // Approximate height of text (font size in pixels)
+        const gapPx = textHeight / 2; // Gap is half the height of the text itself
         
         // Total padding: top text height + top gap + bottom gap + bottom text height
         const padding = textHeight + gapPx + gapPx + textHeight;
@@ -98,20 +92,18 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
           ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
         }
         
-        // Step 4: Set font for text (same size for both "Scan me" and URL)
-        const fontSize = Math.floor(qrCanvas.width * 0.08);
+        // Step 4: Set font for text
         ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
         ctx.fillStyle = '#4B0082'; // Indigo color
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // Add "Scan me" text at top, positioned with 0.5mm gap above QR code
-        // Position it such that the bottom of the text has 0.5mm gap to the top of QR code
+        // Add "Scan me" text at top - positioned with gap = half text height above QR code
+        // The text center is at half of textHeight from top edge
         const topTextY = textHeight / 2;
         ctx.fillText('Scan me', finalCanvas.width / 2, topTextY);
         
-        // Step 5: Add URL text at the bottom, exactly 0.5mm below the QR code
-        // Position it such that the top of the text has 0.5mm gap to the bottom of QR code
+        // Step 5: Add URL text at the bottom - gap = half text height below QR code
         const bottomTextY = qrYOffset + qrCanvas.height + gapPx + (textHeight / 2);
         ctx.fillText(url, finalCanvas.width / 2, bottomTextY);
         
@@ -135,8 +127,9 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             }
           });
           
-          const gapPx = mmToPx(0.5);
-          const textHeight = fallbackCanvas.width * 0.08;
+          const fontSize = Math.floor(fallbackCanvas.width * 0.08);
+          const textHeight = fontSize;
+          const gapPx = textHeight / 2;
           const padding = textHeight + gapPx + gapPx + textHeight;
           
           const finalCanvas = document.createElement('canvas');
@@ -151,7 +144,6 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
             const qrYOffset = textHeight + gapPx;
             ctx.drawImage(fallbackCanvas, 0, qrYOffset);
             
-            const fontSize = Math.floor(fallbackCanvas.width * 0.08);
             ctx.font = `bold ${fontSize}px "Arial", "Helvetica", sans-serif`;
             ctx.fillStyle = '#4B0082';
             ctx.textAlign = 'center';
