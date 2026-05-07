@@ -1,17 +1,24 @@
 import React, { useState, useRef } from 'react';
 import QRCode from 'qrcode';
 
-const QRCodeWithLogo = () => {
-  const [url, setUrl] = useState('');
-  const [qrDataUrl, setQrDataUrl] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
-  const [logoPreview, setLogoPreview] = useState(null);
-  const canvasRef = useRef(null);
+interface QRCodeWithLogoProps {}
+
+const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
+  const [url, setUrl] = useState<string>('');
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate QR code
-  const generateQR = async () => {
+  const generateQR = async (): Promise<void> => {
     if (!url) {
       alert('Please enter a URL');
+      return;
+    }
+
+    if (!canvasRef.current) {
+      console.error('Canvas reference is null');
       return;
     }
 
@@ -35,9 +42,15 @@ const QRCodeWithLogo = () => {
   };
 
   // Draw QR code with logo overlay
-  const drawQRWithLogo = (qrImageUrl) => {
+  const drawQRWithLogo = (qrImageUrl: string): void => {
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas?.getContext('2d');
+    
+    if (!canvas || !ctx) {
+      console.error('Canvas or context is null');
+      return;
+    }
+    
     const img = new Image();
 
     img.onload = () => {
@@ -72,8 +85,8 @@ const QRCodeWithLogo = () => {
   };
 
   // Handle logo upload
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    const file = e.target.files?.[0];
     if (file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
       setLogoFile(file);
       setLogoPreview(URL.createObjectURL(file));
@@ -88,7 +101,7 @@ const QRCodeWithLogo = () => {
   };
 
   // Download QR code as PNG
-  const downloadQR = () => {
+  const downloadQR = (): void => {
     if (canvasRef.current) {
       const link = document.createElement('a');
       link.download = 'qr-code-with-logo.png';
@@ -152,7 +165,7 @@ const QRCodeWithLogo = () => {
   );
 };
 
-const styles = {
+const styles: { [key: string]: React.CSSProperties } = {
   container: {
     maxWidth: '500px',
     margin: '0 auto',
