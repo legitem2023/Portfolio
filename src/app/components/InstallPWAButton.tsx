@@ -234,9 +234,7 @@ const InstallPWAButton: React.FC = () => {
       {/* Show normal install button only when not in in-app browser */}
       {!isInAppBrowser && deferredPrompt && (
         <button onClick={handleInstallClick} className="install_button">
-          <span className="icon">
-            <Icon icon="material-symbols:download-sharp"/>
-          </span>
+          <SVGComponent/>
           <span className="text">Install App</span> 
         </button>
       )}
@@ -244,9 +242,7 @@ const InstallPWAButton: React.FC = () => {
       {/* Show manual install as fallback */}
       {!isInAppBrowser && showDebugButton && (
         <button onClick={handleManualInstall} className="install_button debug">
-          <span className="icon">
-            <Icon icon="material-symbols:download-sharp"/>
-          </span>
+          <SVGComponent/>
           <span className="text">Install (Manual)</span> 
         </button>
       )}
