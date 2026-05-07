@@ -1,10 +1,10 @@
-// components/Header.tsx (UI FIXED VERSION - NO LOGIC CHANGES)
+// components/Header.tsx (FULL UPDATED VERSION WITH ALL NOTIFICATION TYPES)
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { setActiveIndex , restorePreviousIndex } from '../../../Redux/activeIndexSlice';
+import { setActiveIndex, restorePreviousIndex } from '../../../Redux/activeIndexSlice';
 import { decryptToken } from '../../../utils/decryptToken';
 import { showNotification } from '../../../utils/notifications';
 import { useQuery, useMutation } from '@apollo/client';
@@ -23,7 +23,11 @@ import {
   Heart,
   MessageSquareQuote,
   Trash2,
-  Loader2
+  Loader2,
+  RefreshCw,
+  XCircle,
+  Gift,
+  Headphones
 } from 'lucide-react';
 import FBXViewer from './FBXViewer';
 // Import queries and mutations
@@ -87,7 +91,6 @@ const Header: React.FC = () => {
   const currentIndex = searchParams.get('index');
   const previousIndexRef = useRef(currentIndex);
 
-
   const drawer = useAdDrawer({ autoOpenDelay: 3000 });
   
   const dispatch = useDispatch();
@@ -133,18 +136,35 @@ const Header: React.FC = () => {
         case NotificationType.ORDER_CREATED:
         case NotificationType.ORDER_UPDATED:
         case NotificationType.ORDER_DELIVERED:
+        case NotificationType.SHIPMENT:
           return 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png';
+        case NotificationType.RETURN_REQUEST_CREATED:
+        case NotificationType.RETURN_STATUS_UPDATED:
+        case NotificationType.RETURN_SHIPPED:
+        case NotificationType.RETURN_RECEIVED:
+          return 'https://cdn-icons-png.flaticon.com/512/1485/1485887.png';
+        case NotificationType.RETURN_APPROVED:
+        case NotificationType.REFUND_PROCESSED:
+        case NotificationType.RETURN_COMPLETED:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.RETURN_REJECTED:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
+        case NotificationType.PAYMENT_RECEIVED:
+        case NotificationType.PAYMENT_CONFIRMATION:
+          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
+        case NotificationType.PAYMENT_FAILED:
+          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
         case NotificationType.PROMOTIONAL:
           return 'https://cdn-icons-png.flaticon.com/512/869/869869.png';
+        case NotificationType.SOCIAL:
+          return 'https://cdn-icons-png.flaticon.com/512/1077/1077035.png';
+        case NotificationType.SUPPORT:
+          return 'https://cdn-icons-png.flaticon.com/512/747/747376.png';
         case NotificationType.ACCOUNT_VERIFIED:
         case NotificationType.PASSWORD_CHANGED:
           return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
         case NotificationType.SYSTEM_ALERT:
           return 'https://cdn-icons-png.flaticon.com/512/1828/1828640.png';
-        case NotificationType.PAYMENT_RECEIVED:
-          return 'https://cdn-icons-png.flaticon.com/512/190/190411.png';
-        case NotificationType.PAYMENT_FAILED:
-          return 'https://cdn-icons-png.flaticon.com/512/1828/1828843.png';
         default:
           return 'https://cdn-icons-png.flaticon.com/512/1827/1827304.png';
       }
@@ -243,40 +263,40 @@ const Header: React.FC = () => {
   });
   
   // Store previous index before it changes
-useEffect(() => {
-  return () => {
-    // This cleanup runs before the next render
-    previousIndexRef.current = currentIndex;
-  };
-}, [currentIndex]);
+  useEffect(() => {
+    return () => {
+      // This cleanup runs before the next render
+      previousIndexRef.current = currentIndex;
+    };
+  }, [currentIndex]);
 
-useEffect(() => {
-  const handlePopState = () => {
-    // Default JS method - fastest
-    const urlParams = new URLSearchParams(window.location.search);
-    const indexToRestore = urlParams.get('index');
+  useEffect(() => {
+    const handlePopState = () => {
+      // Default JS method - fastest
+      const urlParams = new URLSearchParams(window.location.search);
+      const indexToRestore = urlParams.get('index');
+      
+      // Or even faster with regex (if you prefer)
+      // const indexToRestore = window.location.search.match(/index=([^&]*)/)?.[1];
+      
+      if (indexToRestore !== null) {
+        dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
+      }
+    };
     
-    // Or even faster with regex (if you prefer)
-    // const indexToRestore = window.location.search.match(/index=([^&]*)/)?.[1];
+    window.addEventListener('popstate', handlePopState);
     
-    if (indexToRestore !== null) {
-      dispatch(setActiveIndex(parseInt(indexToRestore, 10)));
+    // Optional: Also get initial index on mount
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialIndex = initialParams.get('index');
+    if (initialIndex !== null) {
+      dispatch(setActiveIndex(parseInt(initialIndex, 10)));
     }
-  };
-  
-  window.addEventListener('popstate', handlePopState);
-  
-  // Optional: Also get initial index on mount
-  const initialParams = new URLSearchParams(window.location.search);
-  const initialIndex = initialParams.get('index');
-  if (initialIndex !== null) {
-    dispatch(setActiveIndex(parseInt(initialIndex, 10)));
-  }
-  
-  return () => {
-    window.removeEventListener('popstate', handlePopState);
-  };
-}, [dispatch]);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [dispatch]);
   
   useEffect(() => {
     const getRole = async () => {
@@ -335,20 +355,20 @@ useEffect(() => {
     };
   }, []);
 
-useEffect(() => {
-  if (isLoading || !user) {
-    return;
-  }
+  useEffect(() => {
+    if (isLoading || !user) {
+      return;
+    }
 
-  const userRole = user?.role;
-  const currentPath = pathname;
-  
-  if (userRole === 'RIDER' && currentPath !== '/Rider') {
-    router.push('/Rider');
-  } else if (userRole === 'MANAGER' && currentPath !== '/Management') {
-    router.push('/Management');
-  }
-}, [user, isLoading, pathname, router]);
+    const userRole = user?.role;
+    const currentPath = pathname;
+    
+    if (userRole === 'RIDER' && currentPath !== '/Rider') {
+      router.push('/Rider');
+    } else if (userRole === 'MANAGER' && currentPath !== '/Management') {
+      router.push('/Management');
+    }
+  }, [user, isLoading, pathname, router]);
   
   useEffect(() => {
     if (userId) {
@@ -361,7 +381,7 @@ useEffect(() => {
       return;
     }
 
-    const protectedIndexes = [5, 6, 7, 10];
+    const protectedIndexes = [5, 6, 7, 10, 11];
     if (protectedIndexes.includes(activeIndex) && !hasCheckedAuth) {
       console.log('Redirecting to login: protected index without user');
       router.push('/Login');
@@ -533,17 +553,34 @@ useEffect(() => {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      case NotificationType.SHIPMENT:
         return <ShoppingBag className="w-4 h-4" />;
-      case NotificationType.PROMOTIONAL:
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
+        return <RefreshCw className="w-4 h-4" />;
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        return <CheckCircle className="w-4 h-4" />;
+      case NotificationType.RETURN_REJECTED:
+        return <XCircle className="w-4 h-4" />;
+      case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_CONFIRMATION:
+        return <CheckCircle className="w-4 h-4" />;
+      case NotificationType.PAYMENT_FAILED:
         return <AlertCircle className="w-4 h-4" />;
+      case NotificationType.PROMOTIONAL:
+        return <Gift className="w-4 h-4" />;
+      case NotificationType.SOCIAL:
+        return <Heart className="w-4 h-4" />;
+      case NotificationType.SUPPORT:
+        return <Headphones className="w-4 h-4" />;
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
       case NotificationType.SYSTEM_ALERT:
         return <Info className="w-4 h-4" />;
-      case NotificationType.PAYMENT_RECEIVED:
-        return <CheckCircle className="w-4 h-4" />;
-      case NotificationType.PAYMENT_FAILED:
-        return <AlertCircle className="w-4 h-4" />;
       default:
         return <Bell className="w-4 h-4" />;
     }
@@ -556,18 +593,35 @@ useEffect(() => {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      case NotificationType.SHIPMENT:
         return 'bg-green-100 text-green-600';
-      case NotificationType.PROMOTIONAL:
-        return 'bg-purple-100 text-purple-600';
-      case NotificationType.ACCOUNT_VERIFIED:
-      case NotificationType.PASSWORD_CHANGED:
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
         return 'bg-yellow-100 text-yellow-600';
-      case NotificationType.SYSTEM_ALERT:
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        return 'bg-emerald-100 text-emerald-600';
+      case NotificationType.RETURN_REJECTED:
         return 'bg-red-100 text-red-600';
       case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_CONFIRMATION:
         return 'bg-emerald-100 text-emerald-600';
       case NotificationType.PAYMENT_FAILED:
         return 'bg-orange-100 text-orange-600';
+      case NotificationType.PROMOTIONAL:
+        return 'bg-purple-100 text-purple-600';
+      case NotificationType.SOCIAL:
+        return 'bg-pink-100 text-pink-600';
+      case NotificationType.SUPPORT:
+        return 'bg-cyan-100 text-cyan-600';
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
+        return 'bg-indigo-100 text-indigo-600';
+      case NotificationType.SYSTEM_ALERT:
+        return 'bg-red-100 text-red-600';
       default:
         return 'bg-gray-100 text-gray-600';
     }
@@ -594,30 +648,70 @@ useEffect(() => {
     if (!notification.isRead) {
       await markAsRead(notification.id);
     }  
-      switch (notification.type) {
-        case NotificationType.NEW_MESSAGE:
-          router.push(`/Messaging?id=${notification.link}`);
-          break;
-        case NotificationType.ORDER_CREATED:
-          dispatch(setActiveIndex(10));
-          router.push(`?index=${10}`);
-          break;
-        case NotificationType.ORDER_UPDATED:
-          dispatch(setActiveIndex(10));
-          router.push(`?index=${10}`);
-          break;
-        case NotificationType.ORDER_DELIVERED:
-          dispatch(setActiveIndex(10));
-          router.push(`?index=${10}`);
-          break;
-        default:
-          break;
-      }    
+
+    switch (notification.type) {
+      case NotificationType.NEW_MESSAGE:
+        router.push(`/Messaging?id=${notification.link || ''}`);
+        break;
+      case NotificationType.ORDER_CREATED:
+      case NotificationType.ORDER_UPDATED:
+      case NotificationType.ORDER_DELIVERED:
+        dispatch(setActiveIndex(10));
+        router.push(`?index=${10}`);
+        break;
+      case NotificationType.SHIPMENT:
+        dispatch(setActiveIndex(10));
+        router.push(`?index=${10}`);
+        break;
+      case NotificationType.RETURN_REQUEST_CREATED:
+      case NotificationType.RETURN_STATUS_UPDATED:
+      case NotificationType.RETURN_APPROVED:
+      case NotificationType.RETURN_REJECTED:
+      case NotificationType.RETURN_SHIPPED:
+      case NotificationType.RETURN_RECEIVED:
+      case NotificationType.REFUND_PROCESSED:
+      case NotificationType.RETURN_COMPLETED:
+        // Navigate to returns/refunds page (index 11)
+        dispatch(setActiveIndex(11));
+        router.push(`?index=${11}`);
+        break;
+      case NotificationType.PAYMENT_CONFIRMATION:
+      case NotificationType.PAYMENT_RECEIVED:
+      case NotificationType.PAYMENT_FAILED:
+        dispatch(setActiveIndex(10)); // Orders page
+        router.push(`?index=${10}`);
+        break;
+      case NotificationType.SUPPORT:
+        router.push('/Support');
+        break;
+      case NotificationType.PROMOTIONAL:
+      case NotificationType.SOCIAL:
+        if (notification.link) {
+          router.push(notification.link);
+        }
+        break;
+      case NotificationType.ACCOUNT_VERIFIED:
+      case NotificationType.PASSWORD_CHANGED:
+        dispatch(setActiveIndex(7)); // Profile page
+        router.push(`?index=${7}`);
+        break;
+      case NotificationType.SYSTEM_ALERT:
+        // Handle system alerts - could show a modal or redirect to system status page
+        console.log('System alert:', notification.message);
+        break;
+      default:
+        if (notification.link) {
+          router.push(notification.link);
+        }
+        break;
+    }    
+    
     setIsBellPopupOpen(false);
-  }, [markAsRead, router]);
+  }, [markAsRead, router, dispatch]);
 
   const handleTabClick = useCallback((tabId: number) => {
-    if ([5, 6, 7, 10].includes(tabId) && !isUserLoggedIn) {
+    const protectedIndexes = [5, 6, 7, 10, 11];
+    if (protectedIndexes.includes(tabId) && !isUserLoggedIn) {
       router.push('/Login');
       return;
     }
@@ -863,7 +957,7 @@ useEffect(() => {
                           onClick={() => {
                             setIsBellPopupOpen(false);
                             dispatch(setActiveIndex(12));
-                            //router.push('/Notifications');
+                            // router.push('/Notifications');
                           }}
                           className="w-full py-2 text-center text-sm text-purple-600 hover:text-purple-800 font-medium transition-colors duration-200"
                         >
@@ -925,6 +1019,17 @@ useEffect(() => {
                     >
                       <ShoppingBag className="mr-2 text-gray-400 w-4 h-4" />
                       <span className="transition-all duration-200">Orders</span>
+                      <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </div>
+                    <div
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        handleTabClick(11);
+                      }}
+                    >
+                      <RefreshCw className="mr-2 text-gray-400 w-4 h-4" />
+                      <span className="transition-all duration-200">Returns</span>
                       <ChevronRight className="ml-auto text-gray-400 w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                     <div
@@ -1043,12 +1148,30 @@ useEffect(() => {
                     <span className="flex-1 transition-all duration-300">Orders</span>
                     <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
                   </button>
+                  
                   <button
                     className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
                     style={{
                       transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
                       opacity: isModalOpen ? 1 : 0,
-                      transitionDelay: '0.2s'
+                      transitionDelay: '0.22s'
+                    }}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      handleTabClick(11);
+                    }}
+                  >
+                    <RefreshCw className="mr-3 text-gray-400 w-5 h-5" />
+                    <span className="flex-1 transition-all duration-300">Returns</span>
+                    <ChevronRight className="text-gray-400 w-4 h-4 transform transition-transform duration-300 group-hover:translate-x-1" />
+                  </button>
+
+                  <button
+                    className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm"
+                    style={{
+                      transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
+                      opacity: isModalOpen ? 1 : 0,
+                      transitionDelay: '0.25s'
                     }}
                     onClick={() => {
                       setIsModalOpen(false);
@@ -1065,7 +1188,7 @@ useEffect(() => {
                     style={{
                       transform: isModalOpen ? 'scaleX(1)' : 'scaleX(0)',
                       opacity: isModalOpen ? 1 : 0,
-                      transitionDelay: '0.25s',
+                      transitionDelay: '0.3s',
                       transformOrigin: 'left'
                     }}
                   ></div>
@@ -1075,7 +1198,7 @@ useEffect(() => {
                     style={{
                       transform: isModalOpen ? 'translateX(0)' : 'translateX(-20px)',
                       opacity: isModalOpen ? 1 : 0,
-                      transitionDelay: '0.3s'
+                      transitionDelay: '0.35s'
                     }}
                   >
                     
