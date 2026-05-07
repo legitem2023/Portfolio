@@ -198,8 +198,11 @@ const QRCodeWithLogo: React.FC<QRCodeWithLogoProps> = () => {
       {/* Display generated QR code as image */}
       <div style={styles.imageWrapper}>
         {isGenerating ? (
-          <div style={styles.loading}>
-            <p>Generating QR Code...</p>
+          <div style={styles.loadingContainer}>
+            <div style={styles.shimmerCard}>
+              <div style={styles.shimmerEffect}></div>
+            </div>
+            <p style={styles.loadingText}>Generating QR Code...</p>
           </div>
         ) : (
           finalImageUrl && (
@@ -277,11 +280,55 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginTop: '20px',
     width: '100%'
   },
-  loading: {
-    padding: '40px',
-    textAlign: 'center',
-    color: '#666'
+  loadingContainer: {
+    width: '100%',
+    maxWidth: '450px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '20px'
+  },
+  shimmerCard: {
+    width: '100%',
+    maxWidth: '450px',
+    height: 'auto',
+    aspectRatio: '1/1',
+    backgroundColor: '#f0f0f0',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    position: 'relative',
+    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+  },
+  shimmerEffect: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, #f0f0f0 0%, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%, #f0f0f0 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 1.5s infinite',
+  },
+  loadingText: {
+    color: '#666',
+    fontSize: '14px',
+    margin: 0,
+    fontWeight: 500
   }
 };
+
+// Add keyframes animation for shimmer effect
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+`;
+document.head.appendChild(styleSheet);
 
 export default QRCodeWithLogo;
