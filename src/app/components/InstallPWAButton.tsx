@@ -90,7 +90,7 @@ export default function InstallPWAButton() {
             </button>
           </div>
           <p className="text-white/90 text-xs mb-3">
-            You're in an in-app browser. For the best experience and to install our app, please open this in Chrome or Safari.
+            You&apos;re in an in-app browser. For the best experience and to install our app, please open this in Chrome or Safari.
           </p>
           <div className="flex gap-2">
             <button
