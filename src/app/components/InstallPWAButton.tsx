@@ -1,5 +1,4 @@
 'use client';
-console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 
@@ -7,6 +6,7 @@ const InstallPWAButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
   const [debugInfo, setDebugInfo] = useState<string>('');
+console.log('🔥🔥🔥 INSTALL PWA BUTTON FILE IS LOADED 🔥🔥🔥');
 
   useEffect(() => {
     // Check if the event already fired and was stored globally
