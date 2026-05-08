@@ -800,7 +800,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
                       <button
                         onClick={() => {
                           setIsBellPopupOpen(false);
-                          router.push('/Notifications');
+                          dispatch(setActiveIndex(16));
                         }}
                         className="w-full py-2 text-center text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
                       >
