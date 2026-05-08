@@ -55,8 +55,8 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
     switch (notification.type) {
       case NotificationType.NEW_MESSAGE:
         dispatch(setActiveIndex(12));
-        dispatch(setSelectedUser(notification.link || ""));
-        router.push('/Messaging');
+       // dispatch(setSelectedUser(notification.link || ""));
+        //router.push('/Messaging');
         break;
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
