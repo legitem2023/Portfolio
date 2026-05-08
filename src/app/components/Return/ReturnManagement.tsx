@@ -233,77 +233,78 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
     return status === 'PENDING' || status === 'APPROVED';
   };
   
-  // Loading state
+  // ==================== LOADING STATE (FIRST) ====================
   if (loading) {
     return <ReturnShimmerLoading />;
   }
   
-  // Error state
+  // ==================== ERROR STATE (SECOND) ====================
   if (error) {
     return <ReturnErrorMessage error={error} onRetry={handleRefreshReturns} />;
   }
   
+  // ==================== DATA RENDERING (LAST - includes empty state) ====================
   const returns = returnsData?.getUserReturns || [];
   
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-    <div className="return-management-container">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Return Requests</h2>
-          <p className="text-sm text-gray-500">Track and manage your return requests</p>
-        </div>
-        <button
-          onClick={handleRefreshReturns}
-          disabled={refetchLoading}
-          className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
-        >
-          {refetchLoading ? (
-            <Loader2 size={20} className="animate-spin" />
+        <div className="return-management-container">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">Return Requests</h2>
+              <p className="text-sm text-gray-500">Track and manage your return requests</p>
+            </div>
+            <button
+              onClick={handleRefreshReturns}
+              disabled={refetchLoading}
+              className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors disabled:opacity-50"
+            >
+              {refetchLoading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <RotateCcw size={20} />
+              )}
+            </button>
+          </div>
+          
+          {/* Return List - Empty State is checked here (LAST) */}
+          {returns.length === 0 ? (
+            <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
+              <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-500 mb-2">No Return Requests</h3>
+              <p className="text-sm text-gray-400">You haven&apos;t submitted any return requests yet.</p>
+              <p className="text-xs text-gray-400 mt-2">Go to your orders to request a return.</p>
+            </div>
           ) : (
-            <RotateCcw size={20} />
+            <div className="space-y-4">
+              {returns.map((returnReq) => (
+                <ReturnCard
+                  key={returnReq.id}
+                  returnReq={returnReq}
+                  expanded={expandedReturn === returnReq.id}
+                  onToggleExpand={() => setExpandedReturn(expandedReturn === returnReq.id ? null : returnReq.id)}
+                  showTrackingInput={showTrackingInput === returnReq.id}
+                  trackingNumber={trackingNumber}
+                  onTrackingNumberChange={setTrackingNumber}
+                  onSubmitTracking={() => handleSubmitTracking(returnReq.id)}
+                  onCancelTracking={() => {
+                    setShowTrackingInput(null);
+                    setTrackingNumber('');
+                  }}
+                  onAddTrackingClick={() => setShowTrackingInput(returnReq.id)}
+                  onCancelReturn={() => handleCancelReturn(returnReq.id)}
+                  addTrackingLoading={addTrackingLoading}
+                  cancelReturnLoading={cancelReturnLoading === returnReq.id}
+                  canAddTracking={canAddTracking(returnReq.status)}
+                  canCancel={canCancel(returnReq.status)}
+                  getTotalRefund={getTotalRefund}
+                />
+              ))}
+            </div>
           )}
-        </button>
-      </div>
-      
-      {/* Return List */}
-      {returns.length === 0 ? (
-        <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
-          <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-500 mb-2">No Return Requests</h3>
-          <p className="text-sm text-gray-400">You haven&apos;t submitted any return requests yet.</p>
-          <p className="text-xs text-gray-400 mt-2">Go to your orders to request a return.</p>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {returns.map((returnReq) => (
-            <ReturnCard
-              key={returnReq.id}
-              returnReq={returnReq}
-              expanded={expandedReturn === returnReq.id}
-              onToggleExpand={() => setExpandedReturn(expandedReturn === returnReq.id ? null : returnReq.id)}
-              showTrackingInput={showTrackingInput === returnReq.id}
-              trackingNumber={trackingNumber}
-              onTrackingNumberChange={setTrackingNumber}
-              onSubmitTracking={() => handleSubmitTracking(returnReq.id)}
-              onCancelTracking={() => {
-                setShowTrackingInput(null);
-                setTrackingNumber('');
-              }}
-              onAddTrackingClick={() => setShowTrackingInput(returnReq.id)}
-              onCancelReturn={() => handleCancelReturn(returnReq.id)}
-              addTrackingLoading={addTrackingLoading}
-              cancelReturnLoading={cancelReturnLoading === returnReq.id}
-              canAddTracking={canAddTracking(returnReq.status)}
-              canCancel={canCancel(returnReq.status)}
-              getTotalRefund={getTotalRefund}
-            />
-          ))}
-        </div>
-      )}
-    </div>
       </div>
     </div>
   );
@@ -630,61 +631,44 @@ function ReturnCard({
   );
 }
 
-// ==================== Loading Component ====================
+// ==================== Loading Component (FIRST STATE) ====================
 
 function ReturnShimmerLoading() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <div className="h-7 w-32 bg-gray-200 rounded shimmer mb-2"></div>
-          <div className="h-4 w-48 bg-gray-200 rounded shimmer"></div>
-        </div>
-        <div className="h-9 w-9 bg-gray-200 rounded-lg shimmer"></div>
-      </div>
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-100 border-b">
-            <div className="flex justify-between">
-              <div className="h-6 w-40 bg-gray-200 rounded shimmer"></div>
-              <div className="h-6 w-24 bg-gray-200 rounded-full shimmer"></div>
+        <div className="space-y-4">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <div className="h-7 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
+              <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
             </div>
+            <div className="h-9 w-9 bg-gray-200 rounded-lg animate-pulse"></div>
           </div>
-          <div className="p-4">
-            <div className="space-y-2">
-              <div className="h-4 w-full bg-gray-200 rounded shimmer"></div>
-              <div className="h-4 w-3/4 bg-gray-200 rounded shimmer"></div>
-              <div className="h-4 w-1/2 bg-gray-200 rounded shimmer"></div>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
+              <div className="px-4 py-3 bg-gray-100 border-b">
+                <div className="flex justify-between">
+                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-6 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
-      
-      ))}
-      <style jsx>{`
-        .shimmer {
-          animation: shimmer 1.5s infinite;
-          background: linear-gradient(
-            to right,
-            #f3f4f6 0%,
-            #e5e7eb 50%,
-            #f3f4f6 100%
-          );
-          background-size: 200% 100%;
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-      `}</style>
-    </div>
       </div>
     </div>
   );
 }
 
-// ==================== Error Component ====================
+// ==================== Error Component (SECOND STATE) ====================
 
 interface ReturnErrorMessageProps {
   error: any;
@@ -693,16 +677,20 @@ interface ReturnErrorMessageProps {
 
 function ReturnErrorMessage({ error, onRetry }: ReturnErrorMessageProps) {
   return (
-    <div className="bg-white rounded-lg p-6 text-center border border-gray-200">
-      <div className="text-4xl mb-3">⚠️</div>
-      <h2 className="text-lg font-semibold text-red-600 mb-2">Failed to Load Returns</h2>
-      <p className="text-sm text-gray-500 mb-4">{error?.message || 'Please try again later'}</p>
-      <button
-        onClick={onRetry}
-        className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
-      >
-        Retry
-      </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
+        <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h2 className="text-lg font-semibold text-red-600 mb-2">Failed to Load Returns</h2>
+          <p className="text-sm text-gray-500 mb-4">{error?.message || 'Please try again later'}</p>
+          <button
+            onClick={onRetry}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
