@@ -33,7 +33,7 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
   const handleDelete = async (id: string) => {
     await deleteNotification({ variables: { id } });
   };
-    const handleNotificationClick = async (notification: Notification) => {
+    const handleNotificationClick = async (notification: NotificationType) => {
     
     
     switch (notification.type) {
