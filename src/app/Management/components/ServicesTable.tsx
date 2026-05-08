@@ -31,6 +31,23 @@ export default function ServicesTable() {
     return total;
   }, 0);
 
+ const totalAllCostEstimate = data.reduce((total, item) => {
+    const costMatch = item.cost.match(/\$(\d+(?:\.\d+)?)/);
+    if (costMatch) {
+      return total + parseFloat(costMatch[1]);
+    }
+    return total;
+  }, 0);
+
+const totalunuseCostEstimate = data.reduce((total, item) => {
+    const costMatch = item.cost.match(/\$(\d+(?:\.\d+)?)/);
+    if (costMatch && item.inuse === "No") {
+      return total + parseFloat(costMatch[1]);
+    }
+    return total;
+  }, 0);
+
+  
   return (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-6 bg-gray-50">
       {/* Header */}
@@ -62,9 +79,21 @@ export default function ServicesTable() {
           </p>
         </div>
         <div className="bg-white p-3 shadow-sm">
-          <p className="text-xs text-gray-500">Monthly Estimate</p>
+          <p className="text-xs text-gray-500">Used Monthly Estimate</p>
           <p className="text-xl font-bold text-purple-600">
             ~${totalCostEstimate}
+          </p>
+        </div>
+        <div className="bg-white p-3 shadow-sm">
+          <p className="text-xs text-gray-500">All Monthly Estimate</p>
+          <p className="text-xl font-bold text-purple-600">
+            ~${totalAllCostEstimate}
+          </p>
+        </div>
+        <div className="bg-white p-3 shadow-sm">
+          <p className="text-xs text-gray-500">Unused Monthly Estimate</p>
+          <p className="text-xl font-bold text-purple-600">
+            ~${totalunuseCostEstimate}
           </p>
         </div>
       </div>
