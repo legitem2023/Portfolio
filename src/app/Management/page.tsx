@@ -186,23 +186,23 @@ export default function ManagementDashboard() {
       case 7:
         return <ApiBillsTab />;
       case 8:
-        return <></>
+        return <></>;
       case 9:
-        return <VehicleTypeManager/>
+        return <VehicleTypeManager/>;
       case 10:
-        return <UserProfile userId={user?.userId?user?.userId:''}/>
+        return <UserProfile userId={user?.userId?user?.userId:''}/>;
       case 11:
-        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>
+        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>;
       case 12:
-        return <PMTab UserId={user?.userId?user?.userId:''}/>
+        return <PMTab UserId={user?.userId?user?.userId:''}/>;
       case 13:
-        return <SizeManager/>
+        return <SizeManager/>;
       case 14: 
-        return <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
+        return <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>;
       case 15:
-        return <ServicesTable/>
-      case 16
-        return <NotificationPage UserId={user?.userId?user?.userId:''}/>
+        return <ServicesTable/>;
+      case 16:
+        return <NotificationPage UserId={user?.userId?user?.userId:''}/>;
       default:
         return <></>;
     }
