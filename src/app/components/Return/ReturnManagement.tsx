@@ -4,6 +4,7 @@ import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { RotateCcw, FileText, Package, DollarSign, MessageCircle, AlertCircle, X, ChevronDown, ChevronUp, Loader2, MapPin, Truck } from "lucide-react";
+import { showToast } from '../../../../utils/toastify';
 
 // ==================== GraphQL Queries and Mutations ====================
 
@@ -161,6 +162,10 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
     try {
       await refetchReturns();
       onRefresh?.();
+      showToast("Returns refreshed successfully", "success");
+    } catch (err: any) {
+      console.error('Error refreshing returns:', err);
+      showToast("Failed to refresh returns", "error");
     } finally {
       setRefetchLoading(false);
     }
@@ -177,14 +182,14 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
           }
         }
       });
-      alert('Tracking number added successfully!');
+      showToast("Tracking number added successfully!", "success");
       setShowTrackingInput(null);
       setTrackingNumber('');
       await refetchReturns();
       onRefresh?.();
     } catch (err: any) {
       console.error('Error adding tracking:', err);
-      alert(`Failed to add tracking: ${err.message}`);
+      showToast(`Failed to add tracking: ${err.message}`, "error");
     } finally {
       setAddTrackingLoading(false);
     }
@@ -202,12 +207,12 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
             }
           }
         });
-        alert('Return request cancelled successfully!');
+        showToast("Return request cancelled successfully!", "success");
         await refetchReturns();
         onRefresh?.();
       } catch (err: any) {
         console.error('Error cancelling return:', err);
-        alert(`Failed to cancel return: ${err.message}`);
+        showToast(`Failed to cancel return: ${err.message}`, "error");
       } finally {
         setCancelReturnLoading(null);
       }
@@ -217,6 +222,8 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
   const handleSubmitTracking = (returnId: string) => {
     if (trackingNumber.trim()) {
       handleAddTracking(returnId, trackingNumber);
+    } else {
+      showToast("Please enter a tracking number", "warning");
     }
   };
   
@@ -233,19 +240,20 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
     return status === 'PENDING' || status === 'APPROVED';
   };
   
-  // ==================== LOADING STATE (FIRST) ====================
+  // ==================== LOADING STATE - FIRST ====================
   if (loading) {
     return <ReturnShimmerLoading />;
   }
   
-  // ==================== ERROR STATE (SECOND) ====================
+  // ==================== ERROR STATE - SECOND ====================
   if (error) {
     return <ReturnErrorMessage error={error} onRetry={handleRefreshReturns} />;
   }
   
-  // ==================== DATA RENDERING (LAST - includes empty state) ====================
+  // ==================== DATA PROCESSING ====================
   const returns = returnsData?.getUserReturns || [];
   
+  // ==================== MAIN RENDER ====================
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
@@ -269,7 +277,7 @@ export default function ReturnManagement({ userId, onRefresh }: ReturnManagement
             </button>
           </div>
           
-          {/* Return List - Empty State is checked here (LAST) */}
+          {/* Return List - Empty State is LAST */}
           {returns.length === 0 ? (
             <div className="bg-white rounded-lg p-12 text-center border border-gray-200">
               <RotateCcw size={48} className="mx-auto text-gray-300 mb-4" />
@@ -631,7 +639,7 @@ function ReturnCard({
   );
 }
 
-// ==================== Loading Component (FIRST STATE) ====================
+// ==================== Loading Component ====================
 
 function ReturnShimmerLoading() {
   return (
@@ -640,35 +648,51 @@ function ReturnShimmerLoading() {
         <div className="space-y-4">
           <div className="flex justify-between items-center mb-6">
             <div>
-              <div className="h-7 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-7 w-32 bg-gray-200 rounded shimmer mb-2"></div>
+              <div className="h-4 w-48 bg-gray-200 rounded shimmer"></div>
             </div>
-            <div className="h-9 w-9 bg-gray-200 rounded-lg animate-pulse"></div>
+            <div className="h-9 w-9 bg-gray-200 rounded-lg shimmer"></div>
           </div>
           {[1, 2, 3].map((i) => (
             <div key={i} className="bg-white rounded-lg shadow border border-gray-200 overflow-hidden">
               <div className="px-4 py-3 bg-gray-100 border-b">
                 <div className="flex justify-between">
-                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-6 w-24 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="h-6 w-40 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-6 w-24 bg-gray-200 rounded-full shimmer"></div>
                 </div>
               </div>
               <div className="p-4">
                 <div className="space-y-2">
-                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="h-4 w-full bg-gray-200 rounded shimmer"></div>
+                  <div className="h-4 w-3/4 bg-gray-200 rounded shimmer"></div>
+                  <div className="h-4 w-1/2 bg-gray-200 rounded shimmer"></div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+      <style jsx>{`
+        .shimmer {
+          animation: shimmer 1.5s infinite;
+          background: linear-gradient(
+            to right,
+            #f3f4f6 0%,
+            #e5e7eb 50%,
+            #f3f4f6 100%
+          );
+          background-size: 200% 100%;
+        }
+        @keyframes shimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ==================== Error Component (SECOND STATE) ====================
+// ==================== Error Component ====================
 
 interface ReturnErrorMessageProps {
   error: any;
@@ -685,7 +709,7 @@ function ReturnErrorMessage({ error, onRetry }: ReturnErrorMessageProps) {
           <p className="text-sm text-gray-500 mb-4">{error?.message || 'Please try again later'}</p>
           <button
             onClick={onRetry}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
           >
             Retry
           </button>
