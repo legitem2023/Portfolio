@@ -1,4 +1,4 @@
-import { NotificationList } from './components/NotificationList';
+import { NotificationList } from './NotificationList';
 import { useQuery, useMutation } from '@apollo/client';
 import { GET_NOTIFICATIONS } from '../../components/graphql/query';
 import { 
