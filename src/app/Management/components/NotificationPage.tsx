@@ -34,9 +34,7 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
     await deleteNotification({ variables: { id } });
   };
     const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.isRead) {
-      await markAsRead(notification.id);
-    }
+    
     
     switch (notification.type) {
       case NotificationType.NEW_MESSAGE:
