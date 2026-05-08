@@ -175,7 +175,7 @@ const InstallPWAButton: React.FC = () => {
           <div className="find-icon">🎉</div>
           <div className="find-content">
             <strong>App Installation Completed!</strong>
-            <p>Your app has been installed. Here's where to find it:</p>
+            <p>Your app has been installed. Here&apos;s where to find it:</p>
             <ul>
               <li>📱 <strong>Home Screen</strong> - Check all pages, especially the last page</li>
               <li>📂 <strong>App Drawer</strong> - Swipe up from bottom of screen</li>
