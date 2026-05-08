@@ -104,7 +104,7 @@ const getTimeAgo = (dateString: string): string => {
 };
 
 const getNotificationIcon = (type: NotificationType, className = "w-5 h-5") => {
-  const icons = {
+  const icons: Record<NotificationType, React.ReactElement> = {
     [NotificationType.NEW_MESSAGE]: <MessageCircle className={className} />,
     [NotificationType.ORDER_CREATED]: <Package className={className} />,
     [NotificationType.ORDER_UPDATED]: <Package className={className} />,
@@ -132,7 +132,7 @@ const getNotificationIcon = (type: NotificationType, className = "w-5 h-5") => {
 };
 
 const getNotificationColor = (type: NotificationType): string => {
-  const colors = {
+  const colors: Record<NotificationType, string> = {
     [NotificationType.NEW_MESSAGE]: 'bg-blue-100 text-blue-600',
     [NotificationType.ORDER_CREATED]: 'bg-green-100 text-green-600',
     [NotificationType.ORDER_UPDATED]: 'bg-green-100 text-green-600',
@@ -178,7 +178,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Filter notifications
   const filteredNotifications = notifications.filter(notification => {
@@ -200,23 +200,19 @@ export const NotificationList: React.FC<NotificationListProps> = ({
     setDeletingId(id);
     try {
       await onDelete(id);
-      setSelectedIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(id);
-        return newSet;
-      });
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
     } finally {
       setDeletingId(null);
     }
   };
 
-  // Handle bulk delete
+  // Handle bulk delete - FIXED: using array instead of Set
   const handleBulkDelete = async () => {
     if (!onDelete) return;
-    for (const id of selectedIds) {
-      await onDelete(id);
+    for (let i = 0; i < selectedIds.length; i++) {
+      await onDelete(selectedIds[i]);
     }
-    setSelectedIds(new Set());
+    setSelectedIds([]);
   };
 
   // Handle mark all as read
@@ -226,18 +222,31 @@ export const NotificationList: React.FC<NotificationListProps> = ({
     }
   };
 
-  // Handle select all
+  // Handle select all - FIXED: using array
   const handleSelectAll = () => {
-    if (selectedIds.size === paginatedNotifications.length) {
-      setSelectedIds(new Set());
+    if (selectedIds.length === paginatedNotifications.length) {
+      setSelectedIds([]);
     } else {
-      setSelectedIds(new Set(paginatedNotifications.map(n => n.id)));
+      const allIds = paginatedNotifications.map(n => n.id);
+      setSelectedIds(allIds);
     }
+  };
+
+  // Handle single select
+  const handleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(selectedId => selectedId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
   };
 
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedIds([]);
   }, [filter]);
 
   if (loading && notifications.length === 0) {
@@ -346,10 +355,10 @@ export const NotificationList: React.FC<NotificationListProps> = ({
       </div>
 
       {/* Bulk Actions Bar */}
-      {selectedIds.size > 0 && (
+      {selectedIds.length > 0 && (
         <div className="px-6 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
           <span className="text-sm text-blue-700">
-            {selectedIds.size} notification{selectedIds.size !== 1 ? 's' : ''} selected
+            {selectedIds.length} notification{selectedIds.length !== 1 ? 's' : ''} selected
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -359,7 +368,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
               Delete selected
             </button>
             <button
-              onClick={() => setSelectedIds(new Set())}
+              onClick={() => setSelectedIds([])}
               className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
               Cancel
@@ -394,16 +403,8 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                   <div className="flex-shrink-0 pt-1">
                     <input
                       type="checkbox"
-                      checked={selectedIds.has(notification.id)}
-                      onChange={(e) => {
-                        const newSet = new Set(selectedIds);
-                        if (e.target.checked) {
-                          newSet.add(notification.id);
-                        } else {
-                          newSet.delete(notification.id);
-                        }
-                        setSelectedIds(newSet);
-                      }}
+                      checked={selectedIds.includes(notification.id)}
+                      onChange={() => handleSelect(notification.id)}
                       className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                     />
                   </div>
