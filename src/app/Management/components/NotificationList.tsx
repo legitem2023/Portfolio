@@ -476,7 +476,7 @@ export const NotificationList: React.FC<NotificationListProps> = ({
                       )}
                       {onNotificationClick && (
                         <button
-                          onClick={() => onNotificationClick(notification.type)}
+                          onClick={() => onNotificationClick(notification)}
                           className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                         >
                           View details →
