@@ -18,6 +18,18 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
   
   const notifications = data?.notifications?.edges?.map((edge: any) => edge.node) || [];
   
+  const handleMarkAsRead = async (id: string) => {
+    await markAsRead({ variables: { id } });
+  };
+  
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead({ variables: { userId: UserId } });
+  };
+  
+  const handleDelete = async (id: string) => {
+    await deleteNotification({ variables: { id } });
+  };
+  
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <NotificationList
@@ -25,13 +37,11 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
         loading={loading}
         error={error?.message}
         onNotificationClick={(notification) => {
-          // Handle click
           console.log(notification);
-          //router.push(notification.link || '/');
         }}
-        onMarkAsRead={(id) => markAsRead({ variables: { id } })}
-        onMarkAllAsRead={() => markAllAsRead({ variables: { userId: 'user-id' } })}
-        onDelete={(id) => deleteNotification({ variables: { id } })}
+        onMarkAsRead={handleMarkAsRead}
+        onMarkAllAsRead={handleMarkAllAsRead}
+        onDelete={handleDelete}
         onRefresh={() => refetch()}
         showFilters={true}
         showActions={true}
