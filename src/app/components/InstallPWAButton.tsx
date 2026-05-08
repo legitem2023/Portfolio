@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import SVGComponent from "./SVGComponent";
+
 const InstallPWAButton: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<Event | null>(null);
   const [isInstallable, setIsInstallable] = useState<boolean>(false);
@@ -8,6 +9,7 @@ const InstallPWAButton: React.FC = () => {
   const [isInAppBrowser, setIsInAppBrowser] = useState<boolean>(false);
   const [isTelegram, setIsTelegram] = useState<boolean>(false);
   const [showButton, setShowButton] = useState<boolean>(true);
+  const [installState, setInstallState] = useState<'idle' | 'installing'>('idle');
 
   useEffect(() => {
     // Enhanced detection for Telegram and other in-app browsers
@@ -35,14 +37,12 @@ const InstallPWAButton: React.FC = () => {
         setIsInAppBrowser(true);
         setDebugInfo('Telegram browser detected - showing external link option');
         
-        // Telegram specifically blocks certain button handlers
-        // Force show the button using DOM manipulation if needed
         setTimeout(() => {
           setShowButton(true);
         }, 100);
       } else if (inApp) {
         setIsInAppBrowser(true);
-        setDebugInfo(`Detected in-app browser (${isMessenger ? 'Messenger' : 'Social App'}) - showing open in browser button`);
+        setDebugInfo(`Detected in-app browser - showing open in browser button`);
       }
       
       return inApp;
@@ -54,6 +54,14 @@ const InstallPWAButton: React.FC = () => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
+    };
+
+    // Listen for successful installation
+    const handleAppInstalled = () => {
+      console.log('App installed successfully');
+      setDebugInfo('App installed! Check your home screen');
+      setIsInstallable(false);
+      setDeferredPrompt(null);
     };
 
     const checkIfInstalled = () => {
@@ -75,6 +83,7 @@ const InstallPWAButton: React.FC = () => {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
     detectInAppBrowser();
     checkIfInstalled();
 
@@ -85,64 +94,61 @@ const InstallPWAButton: React.FC = () => {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
-  const handleInstallClick = () => {
+  const handleInstallClick = async () => {
     if (deferredPrompt) {
+      setInstallState('installing');
+      setDebugInfo('Showing install prompt...');
+      
       (deferredPrompt as any).prompt();
-      (deferredPrompt as any).userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the PWA installation');
-          setDebugInfo('Installation accepted');
-        } else {
-          console.log('User dismissed the PWA installation');
-          setDebugInfo('Installation dismissed');
-        }
-        setDeferredPrompt(null);
-        setIsInstallable(false);
-      });
+      const { outcome } = await (deferredPrompt as any).userChoice;
+      
+      if (outcome === 'accepted') {
+        console.log('User accepted the PWA installation');
+        setDebugInfo('Installation accepted - look for app on home screen');
+        // Don't clear immediately, wait for appinstalled event
+      } else {
+        console.log('User dismissed the PWA installation');
+        setDebugInfo('Installation dismissed');
+        setInstallState('idle');
+      }
+      setDeferredPrompt(null);
+      // Don't set isInstallable to false here - keep it true in case they want to try again
     }
   };
 
   const handleManualInstall = () => {
     setDebugInfo('Manual installation: Use browser menu → Install App');
-    alert('To install this app:\n1. Click the three dots in your browser\n2. Select "Install App" or "Add to Home Screen"\n3. Follow the prompts');
+    alert('To install this app:\n1. Click the three dots in your browser\n2. Select "Install App" or "Add to Home Screen"\n3. Follow the prompts\n\nIf you don\'t see "Install App", try:\n• Updating Chrome\n• Clearing Chrome cache\n• Checking if app meets PWA requirements');
   };
 
   // Special handler for Telegram
   const handleTelegramOpen = () => {
     const currentUrl = window.location.href;
     
-    // For Telegram on Android
     if (/android/i.test(navigator.userAgent)) {
-      // Try multiple methods for Telegram
       const chromeIntent = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;package=com.android.chrome;end`;
       const chromeUrl = `googlechrome://${window.location.host}${window.location.pathname}${window.location.search}`;
       
-      // First try to show instructions
       const shouldOpen = confirm(
         'Telegram browser doesn\'t support app installation.\n\n' +
         'Would you like to open in Chrome browser to install the app?'
       );
       
       if (shouldOpen) {
-        // Try Chrome intent first
         window.location.href = chromeIntent;
-        
-        // Fallback
         setTimeout(() => {
           window.location.href = chromeUrl;
         }, 100);
-        
-        // Final fallback - copy link
         setTimeout(() => {
           navigator.clipboard.writeText(currentUrl);
           alert('Link copied! Please paste into Chrome browser.');
         }, 500);
       }
     } 
-    // For Telegram on iOS
     else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
       navigator.clipboard.writeText(currentUrl);
       alert(
@@ -155,7 +161,6 @@ const InstallPWAButton: React.FC = () => {
       );
     }
     else {
-      // Desktop Telegram
       navigator.clipboard.writeText(currentUrl);
       alert(
         'Please open this link in Chrome or Edge browser:\n\n' +
@@ -168,7 +173,6 @@ const InstallPWAButton: React.FC = () => {
   const handleOpenInBrowser = () => {
     const currentUrl = window.location.href;
     
-    // For Android
     if (/android/i.test(navigator.userAgent)) {
       const chromeIntent = `intent://${window.location.host}${window.location.pathname}${window.location.search}#Intent;scheme=https;package=com.android.chrome;end`;
       window.location.href = chromeIntent;
@@ -178,7 +182,6 @@ const InstallPWAButton: React.FC = () => {
         window.location.href = chromeUrl;
       }, 100);
     } 
-    // For iOS
     else if (/iphone|ipad|ipod/i.test(navigator.userAgent)) {
       navigator.clipboard.writeText(currentUrl);
       alert(`Please open this link in Safari:\n\n${currentUrl}\n\nLink copied to clipboard!`);
@@ -210,7 +213,6 @@ const InstallPWAButton: React.FC = () => {
             <span className="text">Open in Chrome → Install</span> 
           </button>
           
-          {/* Additional helpful info for Telegram users */}
           <div className="telegram-info">
             <span className="info-icon">ℹ️</span>
             <span className="info-text">
@@ -223,9 +225,6 @@ const InstallPWAButton: React.FC = () => {
       {/* Show for other in-app browsers (Messenger, etc.) */}
       {!isTelegram && isInAppBrowser && (
         <button onClick={handleOpenInBrowser} className="install_button chrome">
-          {/* <span className="icon">
-            <Icon icon="logos:google-chrome"/>
-          </span> */}
           <span className="icon">
             <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
           </span>
@@ -233,13 +232,20 @@ const InstallPWAButton: React.FC = () => {
         </button>
       )}
 
-      {/* Show normal install button only when not in in-app browser */}
-      {!isInAppBrowser && deferredPrompt && (
-        <button onClick={handleInstallClick} className="install_button">
+      {/* Show normal install button - MODIFIED: Always show if in Chrome and not installed */}
+      {!isInAppBrowser && (deferredPrompt || installState === 'installing') && (
+        <button 
+          onClick={handleInstallClick} 
+          className="install_button"
+          disabled={installState === 'installing'}
+          style={{ opacity: installState === 'installing' ? 0.7 : 1 }}
+        >
           <span className="icon">
             <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
           </span>
-            <span className="text">Install App</span> 
+          <span className="text">
+            {installState === 'installing' ? 'Installing...' : 'Install App'}
+          </span> 
         </button>
       )}
 
@@ -294,6 +300,11 @@ const InstallPWAButton: React.FC = () => {
         .install_button:hover {
           background: linear-gradient(45deg, #c084fc, #e0b0ff);
           transform: translateY(-2px);
+        }
+
+        .install_button:disabled {
+          cursor: not-allowed;
+          transform: none;
         }
 
         .install_button.telegram {
