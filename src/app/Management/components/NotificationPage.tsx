@@ -37,7 +37,7 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
         loading={loading}
         error={error?.message}
         onNotificationClick={(notification) => {
-          console.log(notification);
+          console.log(notification.type);
         }}
         onMarkAsRead={handleMarkAsRead}
         onMarkAllAsRead={handleMarkAllAsRead}
