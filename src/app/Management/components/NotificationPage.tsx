@@ -10,6 +10,22 @@ import { NotificationType } from '../../../../types/notification';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { useRouter, usePathname } from 'next/navigation';
+interface Notification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  link?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  };
+}
 
 export default function NotificationPage({ UserId }: { UserId: string }) {
   const { data, loading, error, refetch } = useQuery(GET_NOTIFICATIONS, {
@@ -33,7 +49,7 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
   const handleDelete = async (id: string) => {
     await deleteNotification({ variables: { id } });
   };
-    const handleNotificationClick = async (notification: NotificationType) => {
+    const handleNotificationClick = async (notification: Notification) => {
     
     
     switch (notification.type) {
