@@ -115,7 +115,7 @@ export default function RiderDashboard() {
         pageSize: 10
       }
     },
-    pollInterval: 30000
+    pollInterval: 15000
   });
   
   // Function to send location with rate limiting
