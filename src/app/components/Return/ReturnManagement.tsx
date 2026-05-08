@@ -634,6 +634,8 @@ function ReturnCard({
 
 function ReturnShimmerLoading() {
   return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -658,6 +660,7 @@ function ReturnShimmerLoading() {
             </div>
           </div>
         </div>
+      
       ))}
       <style jsx>{`
         .shimmer {
@@ -675,6 +678,8 @@ function ReturnShimmerLoading() {
           100% { background-position: 200% 0; }
         }
       `}</style>
+    </div>
+      </div>
     </div>
   );
 }
