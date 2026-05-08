@@ -1025,7 +1025,8 @@ const Header: React.FC = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-all duration-200 ease-out hover:pl-5"
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        handleTabClick(11);
+                        handleTabClick(13);
+                        router.push(`?index=${13}`);
                       }}
                     >
                       <RefreshCw className="mr-2 text-gray-400 w-4 h-4" />
@@ -1159,6 +1160,7 @@ const Header: React.FC = () => {
                     onClick={() => {
                       setIsModalOpen(false);
                       handleTabClick(13);
+                      router.push(`?index=${13}`);
                     }}
                   >
                     <RefreshCw className="mr-3 text-gray-400 w-5 h-5" />
