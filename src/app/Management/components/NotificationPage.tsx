@@ -26,6 +26,7 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
         error={error?.message}
         onNotificationClick={(notification) => {
           // Handle click
+          console.log(notifocation);
           //router.push(notification.link || '/');
         }}
         onMarkAsRead={(id) => markAsRead({ variables: { id } })}
