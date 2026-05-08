@@ -1,25 +1,25 @@
 [
   {
     "name": "DOMAIN",
-    "service": "Domain name",
+    "service": "https://vendorcity.net",
     "payment_period": "Yearly",
-    "cost": "$14/year (e.g., .com, .net, .org)",
+    "cost": "$10-$20/year depending on TLD and registrar (.com, .net, .org)",
     "upgradable": "NO",
     "inuse": "Yes"
   },
   {
     "name": "VERCEL",
-    "service": "Deployment",
+    "service": "Deployment / Hosting",
     "payment_period": "Monthly",
-    "cost": "Pro: $20/seat + usage (Functions $0.18/GB-hr)",
+    "cost": "Pro: $20/seat/month + usage (Fluid Compute, bandwidth, image optimization, edge requests)",
     "upgradable": "Yes",
     "inuse": "Yes"
   },
   {
     "name": "SUPABASE",
-    "service": "Storage / Backend (PostgreSQL + Storage)",
+    "service": "Backend (PostgreSQL + Auth + Storage)",
     "payment_period": "Monthly",
-    "cost": "Pro: ~$10/month (includes 8GB disk, 250GB egress)",
+    "cost": "Pro: $25/month (includes 8GB DB disk, 250GB egress, 100GB storage)",
     "upgradable": "Yes",
     "inuse": "Yes"
   },
@@ -27,39 +27,39 @@
     "name": "MONGODB",
     "service": "Database (NoSQL)",
     "payment_period": "Monthly / Pay as you go",
-    "cost": "M0 (Shared): Free (512MB storage) | M2: $9/month | M5: $25/month | M10: ~$50/month",
+    "cost": "M0 Shared: Free (512MB storage) | M2: ~$9/month | M5: ~$25/month | M10 Dedicated: ~$57-$65/month depending on region",
     "upgradable": "Yes",
     "inuse": "Yes"
   },
   {
     "name": "GCASH",
-    "service": "Payment method",
+    "service": "Payment Gateway / E-Wallet",
     "payment_period": "Per transaction",
-    "cost": "Merchant fee: 1.0%-2.0% per transaction",
+    "cost": "Merchant fee: ~1.5%-3.5% per transaction depending on provider/integration",
     "upgradable": "NO",
     "inuse": "No"
   },
   {
     "name": "MAYA",
-    "service": "Payment method",
+    "service": "Payment Gateway / E-Wallet",
     "payment_period": "Per transaction",
-    "cost": "Merchant fee: 1.5%-3.5% per transaction",
+    "cost": "Merchant fee: ~1.5%-3.5% per transaction depending on agreement and payment method",
     "upgradable": "NO",
     "inuse": "No"
   },
   {
     "name": "BPI",
-    "service": "Payment method",
+    "service": "Bank Transfer / Payment",
     "payment_period": "Per transaction",
-    "cost": "Bank transfer fees vary",
+    "cost": "Transfer and merchant fees vary depending on API/integration partner",
     "upgradable": "NO",
     "inuse": "No"
   },
   {
     "name": "GOOGLE",
-    "service": "Login API",
+    "service": "OAuth Login API",
     "payment_period": "Free",
-    "cost": "$0 (included with Google Cloud account)",
+    "cost": "$0 (requires Google Cloud project)",
     "upgradable": "NO",
     "inuse": "Yes"
   },
@@ -67,23 +67,31 @@
     "name": "GOOGLE",
     "service": "Geocoding API",
     "payment_period": "Pay as you go",
-    "cost": "$5 per 1,000 requests (First $200 monthly free)",
+    "cost": "~$5 per 1,000 requests (pricing varies by SKU and usage tier)",
     "upgradable": "Yes",
     "inuse": "Yes"
   },
   {
     "name": "GOOGLE",
-    "service": "Maps API",
+    "service": "Maps JavaScript / Maps SDK API",
     "payment_period": "Pay as you go",
-    "cost": "$2-$7 per 1,000 loads (First $200 monthly free)",
+    "cost": "~$2-$7 per 1,000 map loads depending on API type (Dynamic Maps, Static Maps, SDK, Places)",
+    "upgradable": "Yes",
+    "inuse": "Yes"
+  },
+  {
+    "name": "GOOGLE",
+    "service": "Places API",
+    "payment_period": "Pay as you go",
+    "cost": "Autocomplete and Places Details pricing varies by request type and session usage",
     "upgradable": "Yes",
     "inuse": "Yes"
   },
   {
     "name": "GOOGLE WORKSPACE",
-    "service": "Company Email (Business Email)",
+    "service": "Business Email / Company Email",
     "payment_period": "Monthly / Yearly",
-    "cost": "Business Starter: $6/user/month | Business Standard: $12/user/month | Business Plus: $18/user/month",
+    "cost": "Business Starter: ~$7/user/month | Business Standard: ~$14/user/month | Business Plus: ~$22/user/month",
     "upgradable": "Yes",
     "inuse": "No"
   }
