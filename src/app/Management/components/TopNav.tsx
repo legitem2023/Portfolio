@@ -524,8 +524,8 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.RETURN_RECEIVED:
       case NotificationType.REFUND_PROCESSED:
       case NotificationType.RETURN_COMPLETED:
-        dispatch(setActiveIndex(11));
-        router.push('/Management?index=11');
+        dispatch(setActiveIndex(14));
+        router.push('/Management?index=14');
         break;
       case NotificationType.PAYMENT_CONFIRMATION:
       case NotificationType.PAYMENT_RECEIVED:
