@@ -21,7 +21,7 @@
     "payment_period": "Monthly",
     "cost": "Pro: ~$10/month (includes 8GB disk, 250GB egress)",
     "upgradable": "Yes",
-    "inuse": "No"
+    "inuse": "Yes"
   },
   {
     "name": "MONGODB",
@@ -37,7 +37,7 @@
     "payment_period": "Per transaction",
     "cost": "Merchant fee: 1.0%-2.0% per transaction",
     "upgradable": "NO",
-    "inuse": "Yes"
+    "inuse": "No"
   },
   {
     "name": "MAYA",
@@ -53,7 +53,7 @@
     "payment_period": "Per transaction",
     "cost": "Bank transfer fees vary",
     "upgradable": "NO",
-    "inuse": "Yes"
+    "inuse": "No"
   },
   {
     "name": "GOOGLE",
@@ -85,6 +85,6 @@
     "payment_period": "Monthly / Yearly",
     "cost": "Business Starter: $6/user/month | Business Standard: $12/user/month | Business Plus: $18/user/month",
     "upgradable": "Yes",
-    "inuse": "Yes"
+    "inuse": "No"
   }
 ]
