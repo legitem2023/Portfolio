@@ -9,19 +9,18 @@ const InstallPWAButton: React.FC = () => {
   const [isInAppBrowser, setIsInAppBrowser] = useState<boolean>(false);
   const [isTelegram, setIsTelegram] = useState<boolean>(false);
   const [showButton, setShowButton] = useState<boolean>(true);
-  const [installState, setInstallState] = useState<'idle' | 'installing'>('idle');
+  const [installAttempted, setInstallAttempted] = useState<boolean>(false);
+  const [showWhereToFind, setShowWhereToFind] = useState<boolean>(false);
 
   useEffect(() => {
     // Enhanced detection for Telegram and other in-app browsers
     const detectInAppBrowser = () => {
       const userAgent = navigator.userAgent.toLowerCase();
       
-      // Telegram specific detection
       const isTelegramWeb = userAgent.includes('telegram');
       const isTelegramDesktop = userAgent.includes('tdesktop');
       const isTelegramIOS = userAgent.includes('telegram') && /iphone|ipad|ipod/.test(userAgent);
       
-      // Detect other in-app browsers
       const isMessenger = userAgent.includes('messenger');
       const isFB = userAgent.includes('fbav') || userAgent.includes('fban');
       const isInstagram = userAgent.includes('instagram');
@@ -50,25 +49,42 @@ const InstallPWAButton: React.FC = () => {
 
     const handleBeforeInstallPrompt = (e: Event) => {
       console.log('beforeinstallprompt event fired');
-      setDebugInfo('Install prompt available');
+      setDebugInfo('✓ Install prompt available - Click install button');
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
+      setInstallAttempted(false);
+      setShowWhereToFind(false);
     };
 
     // Listen for successful installation
     const handleAppInstalled = () => {
-      console.log('App installed successfully');
-      setDebugInfo('App installed! Check your home screen');
+      console.log('✅ App installed successfully!');
+      setDebugInfo('✅ Installation complete! The app is now on your device');
       setIsInstallable(false);
       setDeferredPrompt(null);
+      setShowWhereToFind(true);
+      
+      // Show alert with location info
+      setTimeout(() => {
+        alert('✅ App Installed Successfully!\n\n📍 Where to find it:\n• On your HOME SCREEN (swipe left/right)\n• In your APP DRAWER\n• Search for the app name\n\nIf you still can\'t find it, Chrome may have installed it in a folder called "Apps" or "Web Apps"');
+      }, 1000);
     };
 
     const checkIfInstalled = () => {
+      // Check if already installed and running standalone
       if (window.matchMedia('(display-mode: standalone)').matches) {
-        setDebugInfo('Already installed as PWA');
+        setDebugInfo('✓ App is already installed and running');
         setIsInstallable(false);
         return true;
+      }
+
+      // Check if app is installed but opened in browser
+      // Some browsers store this in localStorage
+      const wasInstalled = localStorage.getItem('pwa_installed');
+      if (wasInstalled === 'true') {
+        setDebugInfo('✓ App appears to be installed (detected from previous session)');
+        setShowWhereToFind(true);
       }
 
       const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
@@ -100,32 +116,165 @@ const InstallPWAButton: React.FC = () => {
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      setInstallState('installing');
-      setDebugInfo('Showing install prompt...');
+      setDebugInfo('📲 Opening Chrome install dialog...');
       
       (deferredPrompt as any).prompt();
       const { outcome } = await (deferredPrompt as any).userChoice;
       
       if (outcome === 'accepted') {
         console.log('User accepted the PWA installation');
-        setDebugInfo('Installation accepted - look for app on home screen');
-        // Don't clear immediately, wait for appinstalled event
+        setDebugInfo('✓ Installation started! Look for Chrome confirmation dialog');
+        setInstallAttempted(true);
+        
+        // Store that installation was attempted
+        localStorage.setItem('pwa_install_attempted', 'true');
+        
+        // Add a reminder to check home screen after 5 seconds
+        setTimeout(() => {
+          if (!window.matchMedia('(display-mode: standalone)').matches) {
+            setShowWhereToFind(true);
+            setDebugInfo('⏳ Installation may be complete. Check your home screen and app drawer!');
+          }
+        }, 5000);
+        
+        // Show helpful message
+        alert('📲 Installation Started!\n\nCheck for:\n1. Chrome\'s installation confirmation dialog\n2. Progress indicator in notification bar\n3. App icon appearing on your home screen\n\nIf nothing happens, the app may already be installed!');
+        
       } else {
         console.log('User dismissed the PWA installation');
-        setDebugInfo('Installation dismissed');
-        setInstallState('idle');
+        setDebugInfo('Installation cancelled - click button again to retry');
       }
       setDeferredPrompt(null);
-      // Don't set isInstallable to false here - keep it true in case they want to try again
     }
   };
 
   const handleManualInstall = () => {
-    setDebugInfo('Manual installation: Use browser menu → Install App');
-    alert('To install this app:\n1. Click the three dots in your browser\n2. Select "Install App" or "Add to Home Screen"\n3. Follow the prompts\n\nIf you don\'t see "Install App", try:\n• Updating Chrome\n• Clearing Chrome cache\n• Checking if app meets PWA requirements');
+    setDebugInfo('Showing manual installation instructions');
+    alert('📱 Manual Installation Steps:\n\nMETHOD 1 - Chrome Menu:\n• Tap the three dots (⋮) in Chrome\n• Select "Install App" or "Add to Home Screen"\n• Follow prompts\n\nMETHOD 2 - Check if already installed:\n• Look for app icon on home screen\n• Check app drawer\n• Search phone for app name\n\nMETHOD 3 - Force Chrome to show install:\n• Clear Chrome cache\n• Reload this page 3 times\n• Chrome menu → Install App');
   };
 
-  // Special handler for Telegram
+  const handleFindInstalledApp = () => {
+    alert('🔍 Where to find your installed app:\n\n📱 ANDROID:\n• Home screen (swipe left/right - check all pages)\n• App drawer (swipe up from bottom)\n• Chrome menu → Apps\n• Settings → Apps → Look for your app\n• Search your phone for "' + window.location.hostname + '"\n\n📱 IPHONE:\n• Home screen (swipe to last page)\n• App Library (swipe left past all pages)\n• Search by swiping down on home screen\n\n💡 TIP: Sometimes Chrome installs the app in a folder called "Web Apps" or "Chrome Apps"');
+  };
+
+  const handleCheckIfInstalled = () => {
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      alert('✅ App IS installed and currently running in standalone mode!');
+      setDebugInfo('✓ App is installed and running standalone');
+    } else {
+      alert('❌ App does not appear to be installed yet.\n\nTry:\n1. Click the Install button again\n2. Or use Chrome menu (⋮) → "Install App"\n3. Or check if Chrome completed the installation');
+      setDebugInfo('❌ App not detected as installed');
+    }
+  };
+
+  // Help users find the app after installation attempt
+  if (showWhereToFind && !isInstallable) {
+    return (
+      <>
+        <div className="find-app-panel">
+          <div className="find-icon">🎉</div>
+          <div className="find-content">
+            <strong>App Installation Completed!</strong>
+            <p>Your app has been installed. Here's where to find it:</p>
+            <ul>
+              <li>📱 <strong>Home Screen</strong> - Check all pages, especially the last page</li>
+              <li>📂 <strong>App Drawer</strong> - Swipe up from bottom of screen</li>
+              <li>🔍 <strong>Search</strong> - Use phone search for app name</li>
+              <li>🌐 <strong>Chrome Apps</strong> - Chrome menu → Apps</li>
+            </ul>
+            <div className="find-buttons">
+              <button onClick={handleFindInstalledApp} className="help-button">
+                🔍 More Help Finding It
+              </button>
+              <button onClick={handleCheckIfInstalled} className="check-button">
+                ✓ Verify Installation
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <style jsx>{`
+          .find-app-panel {
+            display: flex;
+            gap: 12px;
+            margin: 10px 5px;
+            padding: 15px;
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-left: 4px solid #4caf50;
+            border-radius: 8px;
+            max-width: 350px;
+            animation: slideIn 0.5s ease;
+          }
+          
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .find-icon {
+            font-size: 32px;
+          }
+          
+          .find-content {
+            flex: 1;
+            font-size: 13px;
+            line-height: 1.5;
+          }
+          
+          .find-content p {
+            margin: 5px 0;
+            color: #2e7d32;
+          }
+          
+          .find-content ul {
+            margin: 5px 0;
+            padding-left: 20px;
+          }
+          
+          .find-content li {
+            margin: 3px 0;
+            color: #1b5e20;
+          }
+          
+          .find-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+          }
+          
+          .help-button, .check-button {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+          }
+          
+          .help-button {
+            background: #ff9800;
+            color: white;
+          }
+          
+          .check-button {
+            background: #2196f3;
+            color: white;
+          }
+          
+          .help-button:hover, .check-button:hover {
+            transform: translateY(-1px);
+          }
+        `}</style>
+      </>
+    );
+  }
+
   const handleTelegramOpen = () => {
     const currentUrl = window.location.href;
     
@@ -194,12 +343,10 @@ const InstallPWAButton: React.FC = () => {
 
   const showDebugButton = process.env.NODE_ENV === 'development' && !deferredPrompt;
 
-  // Force render for Telegram
   if (!showButton && !isTelegram) return null;
 
   return (
     <>
-      {/* Special Telegram button */}
       {isTelegram && (
         <>
           <button 
@@ -222,7 +369,6 @@ const InstallPWAButton: React.FC = () => {
         </>
       )}
 
-      {/* Show for other in-app browsers (Messenger, etc.) */}
       {!isTelegram && isInAppBrowser && (
         <button onClick={handleOpenInBrowser} className="install_button chrome">
           <span className="icon">
@@ -232,31 +378,35 @@ const InstallPWAButton: React.FC = () => {
         </button>
       )}
 
-      {/* Show normal install button - MODIFIED: Always show if in Chrome and not installed */}
-      {!isInAppBrowser && (deferredPrompt || installState === 'installing') && (
-        <button 
-          onClick={handleInstallClick} 
-          className="install_button"
-          disabled={installState === 'installing'}
-          style={{ opacity: installState === 'installing' ? 0.7 : 1 }}
-        >
+      {!isInAppBrowser && deferredPrompt && (
+        <button onClick={handleInstallClick} className="install_button">
           <span className="icon">
             <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
           </span>
-          <span className="text">
-            {installState === 'installing' ? 'Installing...' : 'Install App'}
-          </span> 
+          <span className="text">Install App</span> 
         </button>
       )}
 
-      {/* Show manual install as fallback */}
       {!isInAppBrowser && showDebugButton && (
-        <button onClick={handleManualInstall} className="install_button debug">
-          <span className="icon">
-            <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
-          </span>
-          <span className="text">Install (Manual)</span> 
-        </button>
+        <>
+          <button onClick={handleManualInstall} className="install_button debug">
+            <span className="icon">
+              <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
+            </span>
+            <span className="text">Install (Manual)</span> 
+          </button>
+          
+          <button onClick={handleCheckIfInstalled} className="install_button debug" style={{background: 'linear-gradient(45deg, #4caf50, #8bc34a)'}}>
+            <span className="text">Check if Installed</span> 
+          </button>
+        </>
+      )}
+
+      {installAttempted && !showWhereToFind && !isInAppBrowser && (
+        <div className="reminder">
+          <span>💡</span>
+          <span>Installation started! Check your home screen and app drawer for the app icon.</span>
+        </div>
       )}
 
       {process.env.NODE_ENV === 'development' && debugInfo && (
@@ -300,11 +450,6 @@ const InstallPWAButton: React.FC = () => {
         .install_button:hover {
           background: linear-gradient(45deg, #c084fc, #e0b0ff);
           transform: translateY(-2px);
-        }
-
-        .install_button:disabled {
-          cursor: not-allowed;
-          transform: none;
         }
 
         .install_button.telegram {
@@ -385,6 +530,20 @@ const InstallPWAButton: React.FC = () => {
         .info-text {
           flex: 1;
           line-height: 1.4;
+        }
+        
+        .reminder {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin: 10px 5px;
+          padding: 10px;
+          background: #fff3cd;
+          border-left: 4px solid #ffc107;
+          border-radius: 5px;
+          font-size: 12px;
+          color: #856404;
+          max-width: 350px;
         }
 
         @keyframes pulse {
