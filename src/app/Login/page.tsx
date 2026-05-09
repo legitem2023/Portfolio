@@ -51,6 +51,7 @@ export default function LuxuryLogin() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [popupWindow, setPopupWindow] = useState<Window | null>(null);
 
   // Check session after login
   useEffect(() => {
@@ -77,6 +78,43 @@ export default function LuxuryLogin() {
 
     checkSession();
   }, []);
+
+  // Listen for messages from the popup window
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      // Make sure the message is from our popup
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data?.type === 'GOOGLE_SIGNIN_SUCCESS') {
+        console.log('✅ Received success message from popup');
+        
+        // Close the popup if it's still open
+        if (popupWindow && !popupWindow.closed) {
+          popupWindow.close();
+          setPopupWindow(null);
+        }
+        
+        // Get the session and decrypt token
+        const session = await getSession();
+        if (session?.serverToken) {
+          await decryptUserToken(session.serverToken);
+        } else {
+          setError('Session established but no token found');
+        }
+        setIsGoogleLoading(false);
+      } else if (event.data?.type === 'GOOGLE_SIGNIN_ERROR') {
+        setError(event.data.error || 'Google sign-in failed');
+        setIsGoogleLoading(false);
+        if (popupWindow && !popupWindow.closed) {
+          popupWindow.close();
+          setPopupWindow(null);
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [popupWindow]);
 
   const decryptUserToken = async (serverToken: string) => {
     // Decrypt the token
@@ -189,43 +227,65 @@ export default function LuxuryLogin() {
     }
   };
 
+  // ✅ FIXED: Google Sign-In using Popup (keeps PWA context)
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError(null);
     
-    try {
-      const result = await signIn('google', {
-        redirect: false,
-        callbackUrl: '/Login'
-      });
-      
-      if (result?.error) {
-        setError('Google sign-in failed. Please try again.');
-        console.error('Google sign-in error:', result.error);
-        setIsGoogleLoading(false);
-      } else if (result?.ok && result?.url) {
-        // Successful sign-in, wait for session
-        setTimeout(async () => {
-          try {
+    // Check if popup is already open
+    if (popupWindow && !popupWindow.closed) {
+      popupWindow.focus();
+      return;
+    }
+    
+    // Calculate popup position (centered)
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    
+    // Open popup with Google sign-in URL
+    const googleAuthUrl = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(window.location.origin + '/Login')}`;
+    
+    const popup = window.open(
+      googleAuthUrl,
+      'GoogleSignIn',
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+    
+    setPopupWindow(popup);
+    
+    // Check popup status every 500ms
+    const popupInterval = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(popupInterval);
+        
+        // If popup closed and still loading, check session anyway
+        if (isGoogleLoading) {
+          setTimeout(async () => {
             const session = await getSession();
             if (session?.serverToken) {
               await decryptUserToken(session.serverToken);
             } else {
-              setError('Session established but no token found');
+              setError('Sign-in popup was closed before completion');
               setIsGoogleLoading(false);
             }
-          } catch (sessionError) {
-            console.error('Session error:', sessionError);
-            setError('Failed to establish session');
-            setIsGoogleLoading(false);
-          }
-        }, 1000);
+            setPopupWindow(null);
+          }, 500);
+        }
       }
-    } catch (err: any) {
-      console.error('Google sign-in failed:', err);
-      setError(err.message || 'Google sign-in failed. Please try again.');
-      setIsGoogleLoading(false);
-    }
+    }, 500);
+    
+    // Auto-cleanup after 5 minutes
+    setTimeout(() => {
+      clearInterval(popupInterval);
+      if (popup && !popup.closed && isGoogleLoading) {
+        popup.close();
+        setError('Sign-in timed out. Please try again.');
+        setIsGoogleLoading(false);
+        setPopupWindow(null);
+      }
+    }, 300000);
   };
 
   const redirectBasedOnRole = (role: string) => {
@@ -296,6 +356,11 @@ export default function LuxuryLogin() {
       <Head>
         <title>Login | VendorCity</title>
         <meta name="description" content="Login to VendorCity Account" />
+        {/* ✅ CRITICAL: Force mobile viewport */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
+        {/* ✅ PWA display override */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </Head>
       
       <div className="bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
@@ -488,4 +553,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-                    }
+                                                  }
