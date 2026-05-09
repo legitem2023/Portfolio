@@ -1,9 +1,12 @@
+// lib/firebase-client.ts (Updated)
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup,
-  getIdToken as firebaseGetIdToken
+  getIdToken as firebaseGetIdToken,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 
 // Your Firebase config
@@ -17,10 +20,27 @@ const firebaseConfig = {
   measurementId: "G-RCRTG9EQM9"
 };
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const googleProvider = new GoogleAuthProvider();
+// Initialize Firebase only once
+let authInstance: any = null;
+let googleProviderInstance: any = null;
+
+// Singleton pattern to prevent double initialization
+if (!getApps().length) {
+  const app = initializeApp(firebaseConfig);
+  authInstance = getAuth(app);
+  googleProviderInstance = new GoogleAuthProvider();
+  
+  // Set persistence to LOCAL to stay logged in
+  setPersistence(authInstance, browserLocalPersistence);
+  
+  // Add scopes for better user data
+  googleProviderInstance.addScope('email');
+  googleProviderInstance.addScope('profile');
+} else {
+  const app = getApp();
+  authInstance = getAuth(app);
+  googleProviderInstance = new GoogleAuthProvider();
+}
 
 // Export getIdToken function
 const getIdToken = async (user: any): Promise<string> => {
@@ -28,4 +48,9 @@ const getIdToken = async (user: any): Promise<string> => {
   return await firebaseGetIdToken(user);
 };
 
-export { auth, googleProvider, signInWithPopup, getIdToken };
+export { 
+  authInstance as auth, 
+  googleProviderInstance as googleProvider, 
+  signInWithPopup, 
+  getIdToken 
+};
