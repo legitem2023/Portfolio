@@ -1,6 +1,6 @@
 // pages/login.tsx
 "use client";
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -54,6 +54,28 @@ export default function LuxuryLogin() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
+  
+  // Prevent double submission
+  const googleLoginInProgress = useRef(false);
+
+  // Detect if running as PWA (standalone mode)
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+                          (window.navigator as any).standalone === true;
+      setIsPWA(isStandalone);
+    };
+    
+    checkPWA();
+    
+    // Listen for display mode changes
+    window.matchMedia('(display-mode: standalone)').addEventListener('change', checkPWA);
+    
+    return () => {
+      window.matchMedia('(display-mode: standalone)').removeEventListener('change', checkPWA);
+    };
+  }, []);
 
   // Check session after login
   useEffect(() => {
@@ -178,13 +200,37 @@ export default function LuxuryLogin() {
     }
   };
 
-  // ✅ FIREBASE POPUP GOOGLE SIGN IN - NO DESKTOP VIEW!
+  // ✅ FIREBASE POPUP GOOGLE SIGN IN - WITH PWA SUPPORT
   const handleFirebaseGoogleSignIn = async () => {
+    // Prevent double submission
+    if (isGoogleLoading || googleLoginInProgress.current) {
+      console.log('Google login already in progress');
+      return;
+    }
+    
     setIsGoogleLoading(true);
     setError(null);
+    googleLoginInProgress.current = true;
     
     try {
-      // Open popup - PWA stays in standalone mode!
+      // For PWA, open popup with custom dimensions
+      let popupOptions = 'width=500,height=600';
+      
+      if (isPWA) {
+        // Center the popup for PWA mode
+        const width = 500;
+        const height = 600;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+        popupOptions = `width=${width},height=${height},left=${left},top=${top}`;
+      }
+      
+      // Set custom parameters for popup
+      googleProvider.setCustomParameters({
+        display: 'popup'
+      });
+      
+      // Open popup - stays in PWA mode
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
       
@@ -217,6 +263,7 @@ export default function LuxuryLogin() {
           setError('Failed to establish session');
         }
         setIsGoogleLoading(false);
+        googleLoginInProgress.current = false;
       }, 1500);
       
     } catch (error: any) {
@@ -233,6 +280,7 @@ export default function LuxuryLogin() {
       
       setError(errorMessage);
       setIsGoogleLoading(false);
+      googleLoginInProgress.current = false;
     }
   };
 
@@ -273,6 +321,36 @@ export default function LuxuryLogin() {
     }
   };
 
+  // Add PWA-specific CSS styles
+  useEffect(() => {
+    if (isPWA) {
+      const style = document.createElement('style');
+      style.textContent = `
+        /* PWA specific styles */
+        body {
+          background: linear-gradient(to bottom, #eef2ff, #f3e8ff);
+        }
+        
+        .login-card {
+          margin: 0 auto;
+          width: 100%;
+          max-width: 28rem;
+        }
+        
+        @media (display-mode: standalone) {
+          .login-card {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      return () => {
+        document.head.removeChild(style);
+      };
+    }
+  }, [isPWA]);
+
   return (
     <>
       <Head>
@@ -281,12 +359,13 @@ export default function LuxuryLogin() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </Head>
       
-      <div className="bg-gradient-to-b from-indigo-50 to-violet-50 p-0">
+      <div className="bg-gradient-to-b from-indigo-50 to-violet-50 min-h-screen p-0">
         <Header/>
         <div className="flex items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
+          <div className="login-card max-w-2xl w-full space-y-8 bg-white p-6 sm:p-10 rounded-xl shadow-2xl border border-indigo-100">
             {/* Logo and Header */}
             <div>
               <div className="flex justify-center">
@@ -437,10 +516,10 @@ export default function LuxuryLogin() {
                 type="button"
                 onClick={handleFirebaseGoogleSignIn}
                 disabled={isLoading || !!userData || isGoogleLoading}
-                className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
+                className={`w-full inline-flex justify-center items-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-all duration-200 ${
                   isLoading || !!userData || isGoogleLoading
                     ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:shadow-md active:transform active:scale-95"
                 }`}
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" width="24" height="24">
@@ -466,6 +545,13 @@ export default function LuxuryLogin() {
                 </span>
               </button>
             </div>
+            
+            {/* PWA hint */}
+            {isPWA && !userData && (
+              <p className="text-xs text-center text-gray-500 mt-4">
+                Sign in securely using Google
+              </p>
+            )}
           </div>
         </div>
         
@@ -473,4 +559,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-                      }
+                    }
