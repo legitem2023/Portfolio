@@ -1,15 +1,14 @@
-// lib/firebase-client.ts
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   GoogleAuthProvider, 
-  signInWithPopup, 
-  signOut,
-  type User 
+  signInWithPopup,
+  getIdToken as firebaseGetIdToken  // Import the Firebase function
 } from 'firebase/auth';
 
-// Firebase configuration - Replace with your values from Firebase Console
+// Your Firebase config
 const firebaseConfig = {
+  // Your Firebase configuration here
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -18,15 +17,15 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase (prevents duplicate initialization in development)
+// Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 
-// Configure Google Provider for better PWA experience
-googleProvider.setCustomParameters({
-  prompt: 'select_account',
-});
+// Export getIdToken function
+const getIdToken = async (user: any): Promise<string> => {
+  if (!user) throw new Error('No user provided');
+  return await firebaseGetIdToken(user);
+};
 
-export { auth, googleProvider, signInWithPopup, signOut };
-export type { User };
+export { auth, googleProvider, signInWithPopup, getIdToken };
