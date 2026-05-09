@@ -46,6 +46,7 @@ export default async function handler(
           image: image || null,
           role: 'USER',
           phone: '', // Add default values for required fields
+         // @ts-ignore
           addresses: [], // Add default addresses if needed
         },
       });
