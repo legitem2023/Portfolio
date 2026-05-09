@@ -107,7 +107,7 @@ const Header: React.FC = () => {
   }, [user, userData]);
 
   const isProtectedIndex = useMemo(() => {
-    return [5, 6, 7, 10].includes(activeIndex);
+    return [5, 6, 7, 10, 12, 13].includes(activeIndex);
   }, [activeIndex]);
   
   const userId = user?.userId;
