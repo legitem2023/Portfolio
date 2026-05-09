@@ -1,17 +1,21 @@
 // components/FirebaseGoogleButton.tsx
 "use client";
 import { useState } from 'react';
-import { auth, googleProvider, signInWithPopup } from '@/lib/firebase-client';
+import { signIn } from 'next-auth/react';
+import { auth, googleProvider, signInWithPopup, getIdToken } from '@/lib/firebase-client';
 
 interface FirebaseGoogleButtonProps {
-  onSuccess?: (token: string) => void;
+  callbackUrl?: string;
   onError?: (error: string) => void;
 }
 
-export default function FirebaseGoogleButton({ onSuccess, onError }: FirebaseGoogleButtonProps) {
+export default function FirebaseGoogleButton({ 
+  callbackUrl = '/',
+  onError 
+}: FirebaseGoogleButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleGoogleSignIn = async () => {
+  const handleFirebaseGoogleSignIn = async () => {
     setIsLoading(true);
     
     try {
@@ -19,60 +23,41 @@ export default function FirebaseGoogleButton({ onSuccess, onError }: FirebaseGoo
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       
-      // Create a credential object that matches your existing Google login mutation
-      const credential = {
-        googleId: user.uid,
-        email: user.email,
-        name: user.displayName,
-        image: user.photoURL,
-      };
+      // Get the Firebase ID token
+      const idToken = await getIdToken(user);
       
-      // Call your existing GraphQL mutation
-      // You'll need to implement this mutation call based on your GraphQL client setup
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            mutation GoogleLogin($input: GoogleLoginInput!) {
-              googleLogin(input: $input) {
-                token
-                user {
-                  id
-                  email
-                  name
-                  role
-                }
-              }
-            }
-          `,
-          variables: {
-            input: credential
-          }
-        }),
+      // Call NextAuth's signIn with the Firebase token
+      // This will use your existing GoogleProvider but with the token from Firebase
+      const signInResult = await signIn('google', {
+        idToken: idToken,
+        redirect: false,
+        callbackUrl: callbackUrl,
       });
       
-      const data = await response.json();
+      if (signInResult?.error) {
+        throw new Error(signInResult.error);
+      }
       
-      if (data.data?.googleLogin?.token) {
-        // Return the token to your Login component
-        onSuccess?.(data.data.googleLogin.token);
+      // Success! Redirect or reload
+      if (signInResult?.url) {
+        window.location.href = signInResult.url;
       } else {
-        throw new Error(data.errors?.[0]?.message || 'Google login failed');
+        window.location.href = callbackUrl;
       }
       
     } catch (error: any) {
-      console.error('Google popup error:', error);
+      console.error('Firebase Google popup error:', error);
       
       let errorMessage = 'Google sign-in failed. Please try again.';
       if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = 'Sign-in cancelled - popup was closed';
       } else if (error.code === 'auth/popup-blocked') {
         errorMessage = 'Popup blocked! Please allow popups for this website';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
       
       onError?.(errorMessage);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -80,7 +65,7 @@ export default function FirebaseGoogleButton({ onSuccess, onError }: FirebaseGoo
   return (
     <button
       type="button"
-      onClick={handleGoogleSignIn}
+      onClick={handleFirebaseGoogleSignIn}
       disabled={isLoading}
       className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
         isLoading
@@ -94,7 +79,7 @@ export default function FirebaseGoogleButton({ onSuccess, onError }: FirebaseGoo
         <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
       </svg>
-      <span>{isLoading ? "Signing in..." : "Sign in with Google"}</span>
+      <span>{isLoading ? "Signing in..." : "Sign in with Google (PWA)"}</span>
     </button>
   );
 }
