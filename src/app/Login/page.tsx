@@ -9,8 +9,11 @@ import { signIn, getSession } from 'next-auth/react';
 import Header from '../components/Header';
 import { useAuth } from '../components/hooks/useAuth';
 import { decryptToken } from '../../../utils/decryptToken';
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+
+// Firebase imports
+import { auth, googleProvider, signInWithPopup, getIdToken } from '../lib/firebase-client';
 
 // Your user interface from decrypted token
 interface UserData {
@@ -51,21 +54,18 @@ export default function LuxuryLogin() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [popupWindow, setPopupWindow] = useState<Window | null>(null);
 
   // Check session after login
   useEffect(() => {
     const checkSession = async () => {
-      // Only run on client side
       if (typeof window === 'undefined') return;
       
       try {
         const session: any = await getSession();
-        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-      
+        
         if (session?.serverToken) {
           console.log('✅ Session found with token');
-          await decryptUserToken(session?.serverToken);
+          await decryptUserToken(session.serverToken);
         } else {
           console.log('No session token found');
           setSessionChecked(true);
@@ -79,62 +79,20 @@ export default function LuxuryLogin() {
     checkSession();
   }, []);
 
-  // Listen for messages from the popup window
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      // Make sure the message is from our popup
-      if (event.origin !== window.location.origin) return;
-      
-      if (event.data?.type === 'GOOGLE_SIGNIN_SUCCESS') {
-        console.log('✅ Received success message from popup');
-        
-        // Close the popup if it's still open
-        if (popupWindow && !popupWindow.closed) {
-          popupWindow.close();
-          setPopupWindow(null);
-        }
-        
-        // Get the session and decrypt token
-        const session = await getSession();
-        if (session?.serverToken) {
-          await decryptUserToken(session.serverToken);
-        } else {
-          setError('Session established but no token found');
-        }
-        setIsGoogleLoading(false);
-      } else if (event.data?.type === 'GOOGLE_SIGNIN_ERROR') {
-        setError(event.data.error || 'Google sign-in failed');
-        setIsGoogleLoading(false);
-        if (popupWindow && !popupWindow.closed) {
-          popupWindow.close();
-          setPopupWindow(null);
-        }
-      }
-    };
-    
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [popupWindow]);
-
   const decryptUserToken = async (serverToken: string) => {
-    // Decrypt the token
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
     
     try {
-      // Check if decryptToken is available
       if (typeof decryptToken !== 'function') {
         throw new Error('decryptToken function not found');
       }
       
-      // Await the decryptToken function since it returns a Promise
       const decrypted = await decryptToken(serverToken, secret);
       
-      // Validate the decrypted data matches UserData interface
       if (!decrypted || typeof decrypted !== 'object') {
         throw new Error('Invalid decrypted data');
       }
       
-      // Ensure required fields exist
       const userDataValid: UserData = {
         userId: decrypted.userId || '',
         role: decrypted.role || 'USER',
@@ -149,14 +107,12 @@ export default function LuxuryLogin() {
       setError(null);
       setSessionChecked(true);
       
-      // Redirect based on role
       redirectBasedOnRole(userDataValid.role);    
       
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
       setError(error.message || 'Failed to decrypt token');
       setSessionChecked(true);
-      // Still proceed but with default role
       redirectBasedOnRole("USER");    
     }
   };
@@ -187,16 +143,12 @@ export default function LuxuryLogin() {
         redirect: false,
       }) as SignInResponse;
     
-      // Check if login was successful - must have statusText === 'success' AND no error
-
       if (result?.error) {
         setError(result.error);
         setIsLoading(false);
       } else if (result?.status === 200) {
-        // Only proceed if statusText is exactly 'success'
-        console.log('✅ Login successful with statusText: success');
+        console.log('✅ Login successful');
         
-        // Wait a moment for session to be established
         setTimeout(async () => {
           try {
             const session = await getSession();
@@ -215,8 +167,7 @@ export default function LuxuryLogin() {
           }
         }, 1000);
       } else {
-        // Handle case where there's no error but statusText isn't 'success'
-        console.error('Login failed: statusText is', result?.statusText);
+        console.error('Login failed:', result);
         setError('Login failed: Unexpected response from server');
         setIsLoading(false);
       }
@@ -227,69 +178,65 @@ export default function LuxuryLogin() {
     }
   };
 
-  // ✅ FIXED: Google Sign-In using Popup (keeps PWA context)
-  const handleGoogleSignIn = async () => {
+  // ✅ FIREBASE POPUP GOOGLE SIGN IN - NO DESKTOP VIEW!
+  const handleFirebaseGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError(null);
     
-    // Check if popup is already open
-    if (popupWindow && !popupWindow.closed) {
-      popupWindow.focus();
-      return;
-    }
-    
-    // Calculate popup position (centered)
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    
-    // Open popup with Google sign-in URL
-    const googleAuthUrl = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(window.location.origin + '/Login')}`;
-    
-    const popup = window.open(
-      googleAuthUrl,
-      'GoogleSignIn',
-      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
-    );
-    
-    setPopupWindow(popup);
-    
-    // Check popup status every 500ms
-    const popupInterval = setInterval(() => {
-      if (popup && popup.closed) {
-        clearInterval(popupInterval);
-        
-        // If popup closed and still loading, check session anyway
-        if (isGoogleLoading) {
-          setTimeout(async () => {
-            const session = await getSession();
-            if (session?.serverToken) {
-              await decryptUserToken(session.serverToken);
-            } else {
-              setError('Sign-in popup was closed before completion');
-              setIsGoogleLoading(false);
-            }
-            setPopupWindow(null);
-          }, 500);
+    try {
+      // Open popup - PWA stays in standalone mode!
+      const result = await signInWithPopup(auth, googleProvider);
+      const firebaseUser = result.user;
+      
+      // Get the Firebase ID token
+      const idToken = await getIdToken(firebaseUser);
+      
+      // Use NextAuth signIn with the idToken from Firebase
+      const signInResult = await signIn('google', {
+        idToken: idToken,
+        redirect: false,
+      });
+      
+      if (signInResult?.error) {
+        throw new Error(signInResult.error);
+      }
+      
+      console.log('✅ Firebase Google login successful');
+      
+      // Wait for session to be established
+      setTimeout(async () => {
+        try {
+          const session = await getSession();
+          if (session?.serverToken) {
+            await decryptUserToken(session.serverToken);
+          } else {
+            setError('Session established but no token found');
+          }
+        } catch (sessionError) {
+          console.error('Session error:', sessionError);
+          setError('Failed to establish session');
         }
-      }
-    }, 500);
-    
-    // Auto-cleanup after 5 minutes
-    setTimeout(() => {
-      clearInterval(popupInterval);
-      if (popup && !popup.closed && isGoogleLoading) {
-        popup.close();
-        setError('Sign-in timed out. Please try again.');
         setIsGoogleLoading(false);
-        setPopupWindow(null);
+      }, 1500);
+      
+    } catch (error: any) {
+      console.error('Firebase Google error:', error);
+      
+      let errorMessage = 'Google sign-in failed. Please try again.';
+      if (error.code === 'auth/popup-closed-by-user') {
+        errorMessage = 'Sign-in cancelled - popup was closed';
+      } else if (error.code === 'auth/popup-blocked') {
+        errorMessage = 'Popup blocked! Please allow popups for this website';
+      } else if (error.message) {
+        errorMessage = error.message;
       }
-    }, 300000);
+      
+      setError(errorMessage);
+      setIsGoogleLoading(false);
+    }
   };
 
   const redirectBasedOnRole = (role: string) => {
-    // Redirect based on user role
     switch(role) {
       case 'ADMINISTRATOR':
         dispatch(setActiveIndex(0));
@@ -311,31 +258,6 @@ export default function LuxuryLogin() {
     }
   };
 
-  const handleContinue = () => {
-    if (userData) {
-      redirectBasedOnRole(userData.role);
-    } else {
-      router.push('/');
-    }
-  };
-
-  // Get role badge color
-  const getRoleBadgeColor = (role: string) => {
-    switch(role) {
-      case 'ADMINISTRATOR':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'MANAGER':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'RIDER':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'USER':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
-  // Get redirect path display
   const getRedirectPath = (role: string) => {
     switch(role) {
       case 'ADMINISTRATOR':
@@ -356,9 +278,7 @@ export default function LuxuryLogin() {
       <Head>
         <title>Login | VendorCity</title>
         <meta name="description" content="Login to VendorCity Account" />
-        {/* ✅ CRITICAL: Force mobile viewport */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
-        {/* ✅ PWA display override */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </Head>
@@ -511,11 +431,11 @@ export default function LuxuryLogin() {
               </div>
             </div>
 
-            {/* Social Login */}
+            {/* Social Login - FIREBASE POPUP BUTTON ONLY */}
             <div className="grid gap-3">
               <button
                 type="button"
-                onClick={handleGoogleSignIn}
+                onClick={handleFirebaseGoogleSignIn}
                 disabled={isLoading || !!userData || isGoogleLoading}
                 className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
                   isLoading || !!userData || isGoogleLoading
@@ -523,7 +443,7 @@ export default function LuxuryLogin() {
                     : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 }`}
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24" width="24" height="24">
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" width="24" height="24">
                   <path
                     fill={isLoading || !!userData || isGoogleLoading ? "#9CA3AF" : "#4285F4"}
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -542,7 +462,7 @@ export default function LuxuryLogin() {
                   />
                 </svg>
                 <span className="ml-2">
-                  {isGoogleLoading ? "Signing in..." : (userData ? "Signed in" : "Sign in with Google")}
+                  {isGoogleLoading ? "Signing in..." : (userData ? "Signed in" : "Continue with Google")}
                 </span>
               </button>
             </div>
@@ -553,4 +473,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-                                                  }
+                      }
