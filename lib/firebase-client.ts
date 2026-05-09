@@ -3,18 +3,18 @@ import {
   getAuth, 
   GoogleAuthProvider, 
   signInWithPopup,
-  getIdToken as firebaseGetIdToken  // Import the Firebase function
+  getIdToken as firebaseGetIdToken
 } from 'firebase/auth';
 
 // Your Firebase config
 const firebaseConfig = {
-  // Your Firebase configuration here
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey: "AIzaSyB0NdjufGB1TOg7bEfVRA1rLTj-2QAAy0I",
+  authDomain: "vendorcity-83cb8.firebaseapp.com",
+  projectId: "vendorcity-83cb8",
+  storageBucket: "vendorcity-83cb8.firebasestorage.app",
+  messagingSenderId: "771013737949",
+  appId: "1:771013737949:web:7f47550098810c7e2a4a34",
+  measurementId: "G-RCRTG9EQM9"
 };
 
 // Initialize Firebase
