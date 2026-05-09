@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 // Firebase imports
-import { auth, googleProvider, signInWithPopup, getIdToken } from '../lib/firebase-client';
+import { auth, googleProvider, signInWithPopup, getIdToken } from '../../../lib/firebase-client';
 
 // Your user interface from decrypted token
 interface UserData {
