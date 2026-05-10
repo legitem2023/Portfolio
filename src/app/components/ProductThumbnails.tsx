@@ -10,7 +10,7 @@ import { Pagination, Autoplay } from 'swiper/modules';
 import { useAuth } from './hooks/useAuth';
 import 'swiper/css';
 import 'swiper/css/pagination';
-
+import { useGetReviewById } from './hooks/useGetReviewById';
 interface ProductThumbnailsProps {
   products: Product[];
 }
