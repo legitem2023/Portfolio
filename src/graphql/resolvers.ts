@@ -1114,8 +1114,8 @@ getReturnReasons: async (_: any, { category }: any) => {
     // Get single review by ID
     getReviewById: async (_: any, { id }: { id: string }) => {
       try {
-        const review = await prisma.review.findUnique({
-          where: { id },
+        const review = await prisma.review.findMany({
+          where: { productId:id },
           include: {
             user: true,
             product: true,
