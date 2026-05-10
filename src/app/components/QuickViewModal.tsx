@@ -398,7 +398,52 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   };
 
   if (!isVisible && !isOpen) return null;
-console.log(product?.reviews || "error");
+  // Calculate average rating from variant reviews
+  const calculateAverageRating = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews || variant.reviews.length === 0) return 0;
+    
+    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = totalRating / variant.reviews.length;
+    
+    return Math.round(averageRating * 10) / 10;
+  }, []);
+
+  // Calculate total review count for a variant
+  const calculateTotalReviews = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews) return 0;
+    return variant.reviews.length;
+  }, []);
+
+  // Get overall product rating from all variants
+  const getOverallProductRating = useCallback((variants: Product['variants']): { averageRating: number; totalReviews: number } => {
+    if (!variants || variants.length === 0) return { averageRating: 0, totalReviews: 0 };
+    
+    let allRatings: number[] = [];
+    let totalReviews = 0;
+    
+    variants.forEach(variant => {
+      if (variant.reviews && variant.reviews.length > 0) {
+        variant.reviews.forEach(review => {
+          if (review.rating) {
+            allRatings.push(review.rating);
+          }
+        });
+        totalReviews += variant.reviews.length;
+      }
+    });
+    
+    if (allRatings.length === 0) return { averageRating: 0, totalReviews: 0 };
+    
+    const totalRating = allRatings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = totalRating / allRatings.length;
+    
+    return {
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews
+    };
+  }, []);
+
+  
   return (
     <div 
       className={`fixed h-[100vh] top-0 bottom-0 m-[auto] inset-0 z-50 flex items-end justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
