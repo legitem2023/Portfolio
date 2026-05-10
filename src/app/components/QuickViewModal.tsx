@@ -446,7 +446,18 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
   if (!isVisible && !isOpen) return null;
   
-
+          // Calculate rating for display
+    let displayRating = 0;
+    let displayReviewCount = 0;
+          
+   if (currentVariant) {
+      displayRating = calculateAverageRating(currentVariant);
+      displayReviewCount = calculateTotalReviews(currentVariant);
+   } else {
+    const overallRating = getOverallProductRating(product.variants || []);
+      displayRating = overallRating.averageRating;
+      displayReviewCount = overallRating.totalReviews;
+    }
   
   return (
     <div 
@@ -509,7 +520,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   <Star
                     key={star}
                     className={`w-4 h-4 md:w-5 md:h-5 ${
-                      star <= Math.round(product?.rating || 0) 
+                      star <= Math.round(displayRating || 0) 
                         ? 'fill-amber-400 text-amber-400' 
                         : 'text-gray-300'
                     }`}
@@ -517,7 +528,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   />
                 ))}
               </div>
-              <span className="ml-2 text-xs md:text-sm text-gray-600">({product?.reviewCount || 0} reviews)</span>
+              <span className="ml-2 text-xs md:text-sm text-gray-600">({displayReviewCount || 0} reviews)</span>
             </div>
 
             {/* Price - Use variant price if available */}
