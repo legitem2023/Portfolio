@@ -398,7 +398,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   };
 
   if (!isVisible && !isOpen) return null;
-
+console.log(product.reviews);
   return (
     <div 
       className={`fixed h-[100vh] top-0 bottom-0 m-[auto] inset-0 z-50 flex items-end justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
