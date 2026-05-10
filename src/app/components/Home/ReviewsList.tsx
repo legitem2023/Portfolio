@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { gql } from '@apollo/client';
+import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { Star, StarHalf, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 // ============ TYPES ============
@@ -15,11 +15,11 @@ interface ReviewImage {
 
 interface ReviewUser {
   id: string;
-  name?: string;  // Made optional
-  firstName?: string;  // Alternative field
-  lastName?: string;   // Alternative field
-  email?: string;      // Made optional
-  username?: string;   // Alternative field
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  username?: string;
 }
 
 interface ReviewProduct {
@@ -90,7 +90,6 @@ interface ReviewsListProps {
 
 // ============ GRAPHQL QUERY ============
 
-// FIXED QUERY - Removed 'name' field if it doesn't exist on User
 export const GET_REVIEWS = gql`
   query GetReviews($filters: GetReviewsInput) {
     getReviews(filters: $filters) {
@@ -107,52 +106,8 @@ export const GET_REVIEWS = gql`
         user {
           id
           email
-          # Remove 'name' if it doesn't exist, or use alternative fields:
           firstName
           lastName
-          # username
-        }
-        product {
-          id
-          name
-        }
-        images {
-          id
-          url
-          publicId
-          position
-          createdAt
-        }
-      }
-      meta {
-        total
-        page
-        limit
-        totalPages
-      }
-    }
-  }
-`;
-
-// Alternative query if you have firstName and lastName:
-export const GET_REVIEWS_ALTERNATIVE = gql`
-  query GetReviews($filters: GetReviewsInput) {
-    getReviews(filters: $filters) {
-      data {
-        id
-        userId
-        productId
-        variantId
-        rating
-        title
-        comment
-        isApproved
-        createdAt
-        user {
-          id
-          firstName
-          lastName
-          email
         }
         product {
           id
@@ -215,7 +170,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
     ? review.comment
     : `${review.comment?.slice(0, maxCommentLength)}...`;
 
-  // Helper function to get user display name
   const getUserDisplayName = (user: ReviewUser): string => {
     if (user.name) return user.name;
     if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
@@ -269,7 +223,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         <div className="flex gap-2 mt-3">
           {review.images.slice(0, 3).map((image, index) => (
             <div key={image.id} className="relative group">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image.url}
                 alt={`Review image ${image.position}`}
@@ -542,21 +495,6 @@ const ReviewsList: React.FC<ReviewsListProps> = ({ initialFilters = { page: 1, l
 
   return (
     <div className="max-w-7xl mx-auto p-0">
-      {/*  <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Customer Reviews</h1>
-        {meta && (
-          <p className="text-gray-600 mt-1">
-            Showing {reviews.length} of {meta.total} reviews
-          </p>
-        )}
-      </div>
-
-      <ReviewFilters
-        filters={filters}
-        onFilterChange={setFilters}
-        onApplyFilters={handleFilterChange}
-      />*/}
-
       {loading ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
