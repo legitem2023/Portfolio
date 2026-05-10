@@ -8,9 +8,8 @@ import {
   AlertCircle,
   User,
   Calendar,
-  ShoppingBag,
   Clock,
-  ExternalLink,
+  Edit2,
   MessageCircle
 } from 'lucide-react';
 
@@ -32,11 +31,6 @@ interface ReviewUser {
   avatar?: string;
 }
 
-interface ReviewProduct {
-  id: string;
-  name: string;
-}
-
 interface Review {
   id: string;
   userId: string;
@@ -49,19 +43,18 @@ interface Review {
   createdAt: string;
   updatedAt?: string;
   user: ReviewUser;
-  product?: ReviewProduct;
   images: ReviewImage[];
 }
 
 interface GetProductReviewsResponse {
-  getProductReviews: Review[];  // Simply an array of reviews, no distribution
+  getProductReviews: Review[];
 }
 
 // ============ GRAPHQL QUERY ============
 
 export const GET_PRODUCT_REVIEWS = gql`
-  query GetProductReviews($productId: String!) {
-    getProductReviews(productId: $productId) {
+  query GetProductReviews($id: String!) {
+    getProductReviews(id: $id) {
       id
       userId
       productId
@@ -71,14 +64,11 @@ export const GET_PRODUCT_REVIEWS = gql`
       comment
       isApproved
       createdAt
+      updatedAt
       user {
         id
         name
         email
-      }
-      product {
-        id
-        name
       }
       images {
         id
@@ -276,7 +266,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
   const { loading, error, data, refetch } = useQuery<GetProductReviewsResponse>(
     GET_PRODUCT_REVIEWS,
     {
-      variables: { productId },
+      variables: { id: productId },
       fetchPolicy: 'network-only',
     }
   );
