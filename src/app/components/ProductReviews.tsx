@@ -46,8 +46,9 @@ interface Review {
   images: ReviewImage[];
 }
 
-interface GetProductReviewsResponse {
-  getProductReviews: Review[];
+// Updated to match the query name
+interface GetReviewByIdResponse {
+  getReviewById: Review[];
 }
 
 // ============ GRAPHQL QUERY ============
@@ -263,7 +264,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
   productId,
   className = ''
 }) => {
-  const { loading, error, data, refetch } = useQuery<GetProductReviewsResponse>(
+  const { loading, error, data, refetch } = useQuery<GetReviewByIdResponse>(
     GET_PRODUCT_REVIEWS,
     {
       variables: { id: productId },
