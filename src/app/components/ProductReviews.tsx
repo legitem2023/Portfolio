@@ -54,7 +54,7 @@ interface GetProductReviewsResponse {
 
 export const GET_PRODUCT_REVIEWS = gql`
   query GetProductReviews($id: String!) {
-    getProductReviews(id: $id) {
+    getReviewById(id: $id) {
       id
       userId
       productId
@@ -314,7 +314,7 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
     );
   }
 
-  const reviews = data?.getProductReviews || [];
+  const reviews = data?.getReviewById || [];
   const approvedReviews = reviews.filter(review => review.isApproved);
 
   if (approvedReviews.length === 0) {
