@@ -454,7 +454,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       displayRating = calculateAverageRating(selectedVariant);
       displayReviewCount = calculateTotalReviews(selectedVariant);
    } else {
-    const overallRating = getOverallProductRating(product.variants || []);
+    const overallRating = getOverallProductRating(product?.variants || []);
       displayRating = overallRating.averageRating;
       displayReviewCount = overallRating.totalReviews;
     }
