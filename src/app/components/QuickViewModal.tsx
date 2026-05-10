@@ -1,4 +1,6 @@
 // components/QuickViewModal.tsx
+import ProductReviews from './ProductReviews';
+
 import { showToast } from '../../../utils/toastify';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
@@ -686,10 +688,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </div>
               </div>
             </div>
+            <ProductReviews productId={selectedVariant?.id || ""}/>
           </div>
         </div>
       </div>
-
+      
       <style jsx>{`
         .no-scrollbar {
           -ms-overflow-style: none;
