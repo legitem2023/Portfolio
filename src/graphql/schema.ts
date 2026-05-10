@@ -1243,7 +1243,7 @@ export const typeDefs = gql`
   # ================= Queries =================
   type Query {
     getReviews(filters: GetReviewsInput): ReviewsResponse
-    getReviewById(id: String): Review
+    getReviewById(id: String): [Review]
     getProductReviewStats(productId: String): ReviewStats
     getReviewImages(reviewId: String): [ReviewImage]
 
