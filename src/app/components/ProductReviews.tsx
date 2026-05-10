@@ -47,7 +47,7 @@ interface GetReviewByIdResponse {
 
 // ============ GRAPHQL QUERY ============
 export const GET_PRODUCT_REVIEWS = gql`
-  query GetProductReviews($id: String!) {
+  query GetProductReviews($id: String) {
     getReviewById(id: $id) {
       id
       userId
