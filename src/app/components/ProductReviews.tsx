@@ -4,12 +4,8 @@ import { gql } from '@apollo/client';
 import { 
   Star, 
   StarHalf, 
-  CheckCircle,
   AlertCircle,
   User,
-  Calendar,
-  Clock,
-  Edit2,
   MessageCircle
 } from 'lucide-react';
 
@@ -26,7 +22,7 @@ interface ReviewImage {
 
 interface ReviewUser {
   id: string;
-  name?: string;
+  firstName?: string;
   email?: string;
   avatar?: string;
 }
@@ -41,18 +37,15 @@ interface Review {
   comment: string;
   isApproved: boolean;
   createdAt: string;
-  updatedAt?: string;
   user: ReviewUser;
   images: ReviewImage[];
 }
 
-// Updated to match the query name
 interface GetReviewByIdResponse {
   getReviewById: Review[];
 }
 
 // ============ GRAPHQL QUERY ============
-
 export const GET_PRODUCT_REVIEWS = gql`
   query GetProductReviews($id: String!) {
     getReviewById(id: $id) {
@@ -65,10 +58,9 @@ export const GET_PRODUCT_REVIEWS = gql`
       comment
       isApproved
       createdAt
-      updatedAt
       user {
         id
-        name
+        firstName
         email
       }
       images {
@@ -105,7 +97,7 @@ const formatRelativeDate = (dateString: string): string => {
 };
 
 const getUserDisplayName = (user: ReviewUser): string => {
-  if (user.name) return user.name;
+  if (user.firstName) return user.firstName;
   if (user.email) return user.email.split('@')[0];
   return 'Anonymous User';
 };
@@ -243,12 +235,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
       </p>
       
       <ImageGallery images={review.images} />
-      
-      {review.updatedAt && review.updatedAt !== review.createdAt && (
-        <div className="mt-2 text-xs text-gray-400">
-          Edited {formatRelativeDate(review.updatedAt)}
-        </div>
-      )}
     </div>
   );
 };
