@@ -1115,7 +1115,10 @@ getReturnReasons: async (_: any, { category }: any) => {
 getReviewById: async (_: any, { id }: { id: string }) => {
   try {
     const reviews = await prisma.review.findMany({
-      where: { productId: id },
+      where: { 
+        productId: id,
+        isApproved: true  // ✅ Filter approved reviews at database level
+      },
       include: {
         user: true,
         product: true,
@@ -1125,15 +1128,10 @@ getReviewById: async (_: any, { id }: { id: string }) => {
       },
     });
 
-    // findMany returns an array, so check if it's empty
-    if (reviews.length === 0) {
-      throw new Error('Review not found');
-    }
-
-    return reviews;
+    return reviews; // Return empty array if none found
   } catch (error: any) {
-    if (error.message === 'Review not found') throw error;
-    throw new Error('Failed to fetch review');
+    console.error('Error fetching reviews:', error);
+    throw new Error('Failed to fetch reviews');
   }
 },
 
