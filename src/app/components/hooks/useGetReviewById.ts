@@ -1,6 +1,6 @@
 // hooks/useGetReviewById.ts
 import { useQuery } from '@apollo/client';
-import { GET_REVIEW_BY_ID } from '../components/graphql/query';
+import { GET_REVIEW_BY_ID } from '../graphql/query';
 
 interface ReviewImage {
   id: string;
