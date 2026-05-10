@@ -65,6 +65,53 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     }
   });
 
+// Calculate average rating from variant reviews
+  const calculateAverageRating = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews || variant.reviews.length === 0) return 0;
+    
+    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = totalRating / variant.reviews.length;
+    
+    return Math.round(averageRating * 10) / 10;
+  }, []);
+
+  // Calculate total review count for a variant
+  const calculateTotalReviews = useCallback((variant: Product['variants'][0]): number => {
+    if (!variant?.reviews) return 0;
+    return variant.reviews.length;
+  }, []);
+
+  // Get overall product rating from all variants
+  const getOverallProductRating = useCallback((variants: Product['variants']): { averageRating: number; totalReviews: number } => {
+    if (!variants || variants.length === 0) return { averageRating: 0, totalReviews: 0 };
+    
+    let allRatings: number[] = [];
+    let totalReviews = 0;
+    
+    variants.forEach(variant => {
+      if (variant.reviews && variant.reviews.length > 0) {
+        variant.reviews.forEach(review => {
+          if (review.rating) {
+            allRatings.push(review.rating);
+          }
+        });
+        totalReviews += variant.reviews.length;
+      }
+    });
+    
+    if (allRatings.length === 0) return { averageRating: 0, totalReviews: 0 };
+    
+    const totalRating = allRatings.reduce((sum, rating) => sum + rating, 0);
+    const averageRating = totalRating / allRatings.length;
+    
+    return {
+      averageRating: Math.round(averageRating * 10) / 10,
+      totalReviews
+    };
+  }, []);
+
+
+  
   // Memoize variants to prevent unnecessary recalculations
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
 
@@ -398,50 +445,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   };
 
   if (!isVisible && !isOpen) return null;
-  // Calculate average rating from variant reviews
-  const calculateAverageRating = useCallback((variant: Product['variants'][0]): number => {
-    if (!variant?.reviews || variant.reviews.length === 0) return 0;
-    
-    const totalRating = variant.reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
-    const averageRating = totalRating / variant.reviews.length;
-    
-    return Math.round(averageRating * 10) / 10;
-  }, []);
-
-  // Calculate total review count for a variant
-  const calculateTotalReviews = useCallback((variant: Product['variants'][0]): number => {
-    if (!variant?.reviews) return 0;
-    return variant.reviews.length;
-  }, []);
-
-  // Get overall product rating from all variants
-  const getOverallProductRating = useCallback((variants: Product['variants']): { averageRating: number; totalReviews: number } => {
-    if (!variants || variants.length === 0) return { averageRating: 0, totalReviews: 0 };
-    
-    let allRatings: number[] = [];
-    let totalReviews = 0;
-    
-    variants.forEach(variant => {
-      if (variant.reviews && variant.reviews.length > 0) {
-        variant.reviews.forEach(review => {
-          if (review.rating) {
-            allRatings.push(review.rating);
-          }
-        });
-        totalReviews += variant.reviews.length;
-      }
-    });
-    
-    if (allRatings.length === 0) return { averageRating: 0, totalReviews: 0 };
-    
-    const totalRating = allRatings.reduce((sum, rating) => sum + rating, 0);
-    const averageRating = totalRating / allRatings.length;
-    
-    return {
-      averageRating: Math.round(averageRating * 10) / 10,
-      totalReviews
-    };
-  }, []);
+  
 
   
   return (
