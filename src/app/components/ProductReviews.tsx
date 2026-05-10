@@ -30,19 +30,11 @@ interface ReviewUser {
   name?: string;
   email?: string;
   avatar?: string;
-  location?: string;
-  memberSince?: string;
-  totalReviews?: number;
-  helpfulVotes?: number;
 }
 
 interface ReviewProduct {
   id: string;
   name: string;
-  sku?: string;
-  price?: number;
-  image?: string;
-  category?: string;
 }
 
 interface Review {
@@ -59,76 +51,41 @@ interface Review {
   user: ReviewUser;
   product?: ReviewProduct;
   images: ReviewImage[];
-  helpfulCount?: number;
-  notHelpfulCount?: number;
-  isVerifiedPurchase?: boolean;
-  reply?: {
-    id: string;
-    comment: string;
-    createdAt: string;
-    user: ReviewUser;
-  };
 }
 
 interface GetProductReviewsResponse {
-  getProductReviews: {
-    reviews: Review[];
-    totalCount: number;
-    averageRating: number;
-    ratingDistribution: {
-      1: number;
-      2: number;
-      3: number;
-      4: number;
-      5: number;
-    };
-  };
+  getProductReviews: Review[];  // Simply an array of reviews, no distribution
 }
 
 // ============ GRAPHQL QUERY ============
 
 export const GET_PRODUCT_REVIEWS = gql`
-  query GetProductReviews($productId: String!, $limit: Int, $offset: Int) {
-    getProductReviews(productId: $productId, limit: $limit, offset: $offset) {
-      reviews {
+  query GetProductReviews($productId: String!) {
+    getProductReviews(productId: $productId) {
+      id
+      userId
+      productId
+      variantId
+      rating
+      title
+      comment
+      isApproved
+      createdAt
+      user {
         id
-        userId
-        productId
-        variantId
-        rating
-        title
-        comment
-        isApproved
-        createdAt
-        updatedAt
-        user {
-          id
-          name
-          email
-        }
-        product {
-          id
-          name
-        }
-        images {
-          id
-          url
-          publicId
-          position
-          createdAt
-        }
-        helpfulCount
-        notHelpfulCount
-        isVerifiedPurchase
+        name
+        email
       }
-      totalCount
-      averageRating
-      ratingDistribution {
-        1
-        2
-        3
-        4
-        5
+      product {
+        id
+        name
+      }
+      images {
+        id
+        url
+        publicId
+        position
+        createdAt
       }
     }
   }
@@ -168,16 +125,12 @@ interface RatingStarsProps {
   rating: number;
   size?: number;
   showLabel?: boolean;
-  showCount?: boolean;
-  count?: number;
 }
 
 const RatingStars: React.FC<RatingStarsProps> = ({ 
   rating, 
   size = 20, 
-  showLabel = false,
-  showCount = false,
-  count
+  showLabel = false
 }) => {
   const fullStars = Math.floor(rating);
   const hasHalfStar = rating % 1 >= 0.5;
@@ -199,11 +152,6 @@ const RatingStars: React.FC<RatingStarsProps> = ({
       {showLabel && (
         <span className="ml-2 text-sm font-medium text-gray-700">
           {rating.toFixed(1)}
-        </span>
-      )}
-      {showCount && count !== undefined && (
-        <span className="ml-1 text-sm text-gray-500">
-          ({count})
         </span>
       )}
     </div>
@@ -240,7 +188,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
         ))}
       </div>
 
-      {/* Lightbox Modal */}
       {selectedImage && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center"
@@ -252,7 +199,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
           >
             ✕
           </button>
-          
           <img 
             src={selectedImage} 
             alt="Full size review" 
@@ -265,48 +211,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
   );
 };
 
-// ============ RATING DISTRIBUTION COMPONENT ============
-
-interface RatingDistributionProps {
-  distribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
-  totalCount: number;
-}
-
-const RatingDistribution: React.FC<RatingDistributionProps> = ({ distribution, totalCount }) => {
-  const getPercentage = (count: number) => {
-    if (totalCount === 0) return 0;
-    return (count / totalCount) * 100;
-  };
-
-  return (
-    <div className="space-y-2">
-      {[5, 4, 3, 2, 1].map((star) => {
-        const count = distribution[star as keyof typeof distribution];
-        const percentage = getPercentage(count);
-        
-        return (
-          <div key={star} className="flex items-center gap-2">
-            <div className="w-12 text-sm text-gray-600">{star} star</div>
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-amber-400 rounded-full"
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-            <div className="w-12 text-sm text-gray-500">{count}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
 // ============ SINGLE REVIEW CARD ============
 
 interface ReviewCardProps {
@@ -316,10 +220,8 @@ interface ReviewCardProps {
 const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      {/* Review Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-3">
-          {/* Avatar */}
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
             <User size={20} className="text-white" />
           </div>
@@ -329,12 +231,6 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
               <span className="font-medium text-gray-900">
                 {getUserDisplayName(review.user)}
               </span>
-              {review.isVerifiedPurchase && (
-                <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                  <CheckCircle size={12} />
-                  Verified
-                </span>
-              )}
             </div>
             
             <div className="flex items-center gap-2 mt-1">
@@ -347,28 +243,16 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
         </div>
       </div>
 
-      {/* Review Title */}
       <h3 className="text-lg font-semibold text-gray-900 mb-2">
         {review.title}
       </h3>
       
-      {/* Review Comment */}
-      <p className="text-gray-700 leading-relaxed mb-3">
+      <p className="text-gray-700 leading-relaxed">
         {review.comment}
       </p>
       
-      {/* Images */}
       <ImageGallery images={review.images} />
       
-      {/* Helpful Count */}
-      {review.helpfulCount !== undefined && review.helpfulCount > 0 && (
-        <div className="flex items-center gap-1 mt-3 text-xs text-gray-500">
-          <MessageCircle size={12} />
-          <span>{review.helpfulCount} people found this helpful</span>
-        </div>
-      )}
-      
-      {/* Edited Badge */}
       {review.updatedAt && review.updatedAt !== review.createdAt && (
         <div className="mt-2 text-xs text-gray-400">
           Edited {formatRelativeDate(review.updatedAt)}
@@ -378,84 +262,26 @@ const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
   );
 };
 
-// ============ REVIEW SUMMARY COMPONENT ============
-
-interface ReviewSummaryProps {
-  averageRating: number;
-  totalCount: number;
-  distribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
-}
-
-const ReviewSummary: React.FC<ReviewSummaryProps> = ({ 
-  averageRating, 
-  totalCount, 
-  distribution 
-}) => {
-  return (
-    <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-200 p-6 mb-6">
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Left Side - Average Rating */}
-        <div className="text-center md:text-left">
-          <div className="flex flex-col items-center md:items-start">
-            <div className="text-5xl font-bold text-gray-900 mb-2">
-              {averageRating.toFixed(1)}
-            </div>
-            <RatingStars rating={averageRating} size={24} showLabel={false} />
-            <div className="text-sm text-gray-500 mt-2">
-              Based on {totalCount} {totalCount === 1 ? 'review' : 'reviews'}
-            </div>
-          </div>
-        </div>
-        
-        {/* Right Side - Rating Distribution */}
-        <div>
-          <RatingDistribution distribution={distribution} totalCount={totalCount} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // ============ MAIN PRODUCT REVIEWS COMPONENT ============
 
 interface ProductReviewsProps {
   productId: string;
-  limit?: number;
-  showSummary?: boolean;
   className?: string;
 }
 
 const ProductReviews: React.FC<ProductReviewsProps> = ({ 
   productId,
-  limit = 10,
-  showSummary = true,
   className = ''
 }) => {
-  const [visibleCount, setVisibleCount] = useState<number>(limit);
-
   const { loading, error, data, refetch } = useQuery<GetProductReviewsResponse>(
     GET_PRODUCT_REVIEWS,
     {
-      variables: { 
-        productId, 
-        limit: visibleCount,
-        offset: 0 
-      },
+      variables: { productId },
       fetchPolicy: 'network-only',
     }
   );
 
-  const loadMore = () => {
-    setVisibleCount(prev => prev + limit);
-  };
-
-  if (loading && !data) {
+  if (loading) {
     return (
       <div className={`max-w-4xl mx-auto ${className}`}>
         <div className="space-y-4">
@@ -498,26 +324,12 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
     );
   }
 
-  const reviews = data?.getProductReviews.reviews || [];
-  const totalCount = data?.getProductReviews.totalCount || 0;
-  const averageRating = data?.getProductReviews.averageRating || 0;
-  const ratingDistribution = data?.getProductReviews.ratingDistribution || {
-    1: 0, 2: 0, 3: 0, 4: 0, 5: 0
-  };
-
+  const reviews = data?.getProductReviews || [];
   const approvedReviews = reviews.filter(review => review.isApproved);
-  const hasMore = approvedReviews.length < totalCount;
 
   if (approvedReviews.length === 0) {
     return (
       <div className={`max-w-4xl mx-auto ${className}`}>
-        {showSummary && (
-          <ReviewSummary 
-            averageRating={averageRating}
-            totalCount={totalCount}
-            distribution={ratingDistribution}
-          />
-        )}
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center">
           <MessageCircle size={48} className="mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h3>
@@ -529,33 +341,11 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({
 
   return (
     <div className={`max-w-4xl mx-auto ${className}`}>
-      {/* Review Summary */}
-      {showSummary && (
-        <ReviewSummary 
-          averageRating={averageRating}
-          totalCount={totalCount}
-          distribution={ratingDistribution}
-        />
-      )}
-      
-      {/* Reviews List */}
       <div className="space-y-4">
         {approvedReviews.map((review) => (
           <ReviewCard key={review.id} review={review} />
         ))}
       </div>
-      
-      {/* Load More Button */}
-      {hasMore && (
-        <div className="text-center mt-6">
-          <button
-            onClick={loadMore}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Load More Reviews
-          </button>
-        </div>
-      )}
     </div>
   );
 };
