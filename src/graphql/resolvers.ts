@@ -1112,33 +1112,30 @@ getReturnReasons: async (_: any, { category }: any) => {
     },
 
     // Get single review by ID
-    getReviewById: async (_: any, { id }: { id: string }) => {
-      try {
-        const review = await prisma.review.findMany({
-          where: { productId:id },
-          include: {
-            user: true,
-            product: true,
-            images: {
-              orderBy: { position: 'asc' },
-            },
-          },
-        });
+getReviewById: async (_: any, { id }: { id: string }) => {
+  try {
+    const reviews = await prisma.review.findMany({
+      where: { productId: id },
+      include: {
+        user: true,
+        product: true,
+        images: {
+          orderBy: { position: 'asc' },
+        },
+      },
+    });
 
-        if (!review) {
-          throw new Error('Review not found');//,{
-          //  extensions: { code: 'NOT_FOUND' },
-          //});
-        }
+    // findMany returns an array, so check if it's empty
+    if (reviews.length === 0) {
+      throw new Error('Review not found');
+    }
 
-        return review;
-      } catch (error:any) {
-        //if (error instanceof GraphQLError) throw error;
-        throw new Error('Failed to fetch review');//, {
-        //  extensions: { code: 'INTERNAL_SERVER_ERROR', error },
-       // });
-      }
-    },
+    return reviews;
+  } catch (error: any) {
+    if (error.message === 'Review not found') throw error;
+    throw new Error('Failed to fetch review');
+  }
+},
 
     // Get product review statistics
     getProductReviewStats: async (_: any, { productId }: { productId: string }) => {
