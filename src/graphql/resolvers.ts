@@ -4385,6 +4385,8 @@ products: async (
             model: true,
             reviews: {
               select: {
+                title:true,
+                comment:true,
                 productId: true,
                 rating: true,
                 images: true,
