@@ -688,7 +688,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </div>
               </div>
             </div>
-            <ProductReviews productId={selectedVariant?.id || ""}/>
+            <ProductReviews product={selectedVariant || ""}/>
           </div>
         </div>
       </div>
