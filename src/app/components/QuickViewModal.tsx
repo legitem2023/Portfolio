@@ -384,7 +384,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     
     try {
       // Create cart item with variant-specific data and proper error handling
-      console.log(selectedVariant?.images?.[0]);
+      
       const cartItem = {
         id: selectedVariant.id?.toString(),
         productId: selectedVariant.id?.toString(), //product.id?.toString() || 'unknown',
@@ -460,7 +460,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       displayRating = overallRating.averageRating;
       displayReviewCount = overallRating.totalReviews;
     }
-  console.log(selectedVariant,"<<<<&");
+  
   return (
     <div 
       className={`fixed h-[100vh] top-0 bottom-0 m-[auto] inset-0 z-50 flex items-end justify-center p-0 bg-black bg-opacity-70 backdrop-blur-sm transition-opacity duration-300 ${
