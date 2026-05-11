@@ -7,7 +7,7 @@ interface ReviewImage {
   [key: string]: any;
 }
 
-// Updated Review interface to match the global type
+// Updated Review interface to include title
 interface Review {
   id?: string;
   productId?: string;
@@ -16,7 +16,8 @@ interface Review {
   rating: number;
   images?: ReviewImage[];
   comment?: string;
-  createdAt?: string | Date; // Allow both string and Date
+  title?: string; // Added title field
+  createdAt?: string | Date;
 }
 
 // Make ProductVariant flexible
@@ -94,13 +95,6 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
 
   const reviewImages = review.images?.filter(img => getImageUrl(img)) || [];
 
-  // Helper to safely get date for sorting
-  const getReviewDate = (date?: string | Date): number => {
-    if (!date) return 0;
-    if (date instanceof Date) return date.getTime();
-    return new Date(date).getTime();
-  };
-
   return (
     <div key={review.id || index} className="border-b border-gray-200 pb-6 last:border-b-0">
       <div className="flex items-start justify-between">
@@ -127,8 +121,15 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
         </div>
       </div>
       
-      {review.comment && (
+      {/* Display Review Title */}
+      {review.title && (
         <div className="mt-3 ml-13">
+          <h3 className="text-lg font-semibold text-gray-900">{review.title}</h3>
+        </div>
+      )}
+      
+      {review.comment && (
+        <div className="mt-2 ml-13">
           <p className="text-gray-700 leading-relaxed">{review.comment}</p>
         </div>
       )}
