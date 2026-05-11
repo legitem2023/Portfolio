@@ -1,330 +1,312 @@
 import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { gql } from '@apollo/client';
-import { 
-  Star, 
-  StarHalf, 
-  AlertCircle,
-  User,
-  MessageCircle
-} from 'lucide-react';
-
-// ============ TYPES ============
+import { Star, StarHalf, User, Calendar, Camera } from 'lucide-react';
 
 interface ReviewImage {
-  id: string;
-  url: string;
-  thumbnailUrl?: string;
-  publicId: string;
-  position: number;
-  createdAt: string;
-}
-
-interface ReviewUser {
-  id: string;
-  firstName?: string;
-  email?: string;
-  avatar?: string;
+  // Adjust this interface based on your actual image structure
+  url?: string;
+  src?: string;
+  [key: string]: any;
 }
 
 interface Review {
+  id?: string;
+  productId?: string;
+  userId?: string;
+  variantId?: string | null;
+  rating: number;
+  images?: ReviewImage[];
+  comment?: string; // Add if you have comment field
+  createdAt?: string;
+  __typename?: string;
+}
+
+interface ProductVariant {
   id: string;
-  userId: string;
-  productId: string;
-  variantId?: string;
-  rating: number;
-  title: string;
-  comment: string;
-  isApproved: boolean;
+  name: string;
+  sku: string;
+  price: number;
+  salePrice: number;
+  stock: number;
+  size: string;
+  color: string;
+  model: string;
+  images: any[];
+  reviews: Review[];
   createdAt: string;
-  user: ReviewUser;
-  images: ReviewImage[];
+  __typename: string;
 }
-
-interface GetReviewByIdResponse {
-  getReviewById: Review[];
-}
-
-// ============ GRAPHQL QUERY ============
-export const GET_PRODUCT_REVIEWS = gql`
-  query GetProductReviews($id: String) {
-    getReviewById(id: $id) {
-      id
-      userId
-      productId
-      variantId
-      rating
-      title
-      comment
-      isApproved
-      createdAt
-      user {
-        id
-        firstName
-        email
-      }
-      images {
-        id
-        url
-        publicId
-        position
-        createdAt
-      }
-    }
-  }
-`;
-
-// ============ UTILITY FUNCTIONS ============
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
-
-const formatRelativeDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-  
-  if (diffInHours < 1) return 'Just now';
-  if (diffInHours < 24) return `${diffInHours} hours ago`;
-  if (diffInHours < 48) return 'Yesterday';
-  if (diffInHours < 168) return `${Math.floor(diffInHours / 24)} days ago`;
-  return formatDate(dateString);
-};
-
-const getUserDisplayName = (user: ReviewUser): string => {
-  if (user.firstName) return user.firstName;
-  if (user.email) return user.email.split('@')[0];
-  return 'Anonymous User';
-};
-
-// ============ RATING STARS COMPONENT ============
-
-interface RatingStarsProps {
-  rating: number;
-  size?: number;
-  showLabel?: boolean;
-}
-
-const RatingStars: React.FC<RatingStarsProps> = ({ 
-  rating, 
-  size = 20, 
-  showLabel = false
-}) => {
-  const fullStars = Math.floor(rating);
-  const hasHalfStar = rating % 1 >= 0.5;
-  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-  return (
-    <div className="flex items-center gap-1">
-      <div className="flex items-center gap-0.5">
-        {[...Array(fullStars)].map((_, i) => (
-          <Star key={`full-${i}`} size={size} fill="#fbbf24" className="text-amber-400" />
-        ))}
-        {hasHalfStar && (
-          <StarHalf key="half" size={size} fill="#fbbf24" className="text-amber-400" />
-        )}
-        {[...Array(emptyStars)].map((_, i) => (
-          <Star key={`empty-${i}`} size={size} className="text-gray-300" />
-        ))}
-      </div>
-      {showLabel && (
-        <span className="ml-2 text-sm font-medium text-gray-700">
-          {rating.toFixed(1)}
-        </span>
-      )}
-    </div>
-  );
-};
-
-// ============ IMAGE GALLERY COMPONENT ============
-
-interface ImageGalleryProps {
-  images: ReviewImage[];
-}
-
-const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  if (!images || images.length === 0) return null;
-
-  return (
-    <>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
-        {images.map((image, index) => (
-          <div
-            key={image.id}
-            className="relative group cursor-pointer overflow-hidden rounded-lg"
-            onClick={() => setSelectedImage(image.url)}
-          >
-            <img
-              src={image.url}
-              alt={`Review image ${index + 1}`}
-              className="w-full h-32 object-cover rounded-lg transition-transform duration-300 group-hover:scale-105"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300" />
-          </div>
-        ))}
-      </div>
-
-      {selectedImage && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center"
-          onClick={() => setSelectedImage(null)}
-        >
-          <button
-            onClick={() => setSelectedImage(null)}
-            className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 transition-colors z-10"
-          >
-            ✕
-          </button>
-          <img 
-            src={selectedImage} 
-            alt="Full size review" 
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      )}
-    </>
-  );
-};
-
-// ============ SINGLE REVIEW CARD ============
-
-interface ReviewCardProps {
-  review: Review;
-}
-
-const ReviewCard: React.FC<ReviewCardProps> = ({ review }) => {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0">
-            <User size={20} className="text-white" />
-          </div>
-          
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-gray-900">
-                {getUserDisplayName(review.user)}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2 mt-1">
-              <RatingStars rating={review.rating} size={16} />
-              <span className="text-xs text-gray-500">
-                {formatRelativeDate(review.createdAt)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-        {review.title}
-      </h3>
-      
-      <p className="text-gray-700 leading-relaxed">
-        {review.comment}
-      </p>
-      
-      <ImageGallery images={review.images} />
-    </div>
-  );
-};
-
-// ============ MAIN PRODUCT REVIEWS COMPONENT ============
 
 interface ProductReviewsProps {
-  productId: string;
-  className?: string;
+  product: ProductVariant;
 }
 
-const ProductReviews: React.FC<ProductReviewsProps> = ({ 
-  productId,
-  className = ''
-}) => {
-  const { loading, error, data, refetch } = useQuery<GetReviewByIdResponse>(
-    GET_PRODUCT_REVIEWS,
-    {
-      variables: { id: productId },
-      fetchPolicy: 'network-only',
-    }
-  );
+// Helper function to render star ratings
+const renderStars = (rating: number) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 !== 0;
 
-  if (loading) {
-    return (
-      <div className={`max-w-4xl mx-auto ${className}`}>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-              <div className="flex items-start gap-4 mb-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  for (let i = 0; i < fullStars; i++) {
+    stars.push(<Star key={`star-${i}`} className="w-5 h-5 fill-yellow-400 text-yellow-400" />);
   }
-
-  if (error) {
-    return (
-      <div className={`max-w-4xl mx-auto ${className}`}>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
-          <AlertCircle size={48} className="mx-auto text-red-400 mb-4" />
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Error Loading Reviews</h3>
-          <p className="text-red-600 mb-4">{error.message}</p>
-          <button
-            onClick={() => refetch()}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
+  
+  if (hasHalfStar) {
+    stars.push(<StarHalf key="half-star" className="w-5 h-5 fill-yellow-400 text-yellow-400" />);
   }
-
-  const reviews = data?.getReviewById || [];
-  const approvedReviews = reviews.filter(review => review.isApproved);
-
-  if (approvedReviews.length === 0) {
-    return (
-      <div className={`max-w-4xl mx-auto ${className}`}>
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-12 text-center">
-          <MessageCircle size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Reviews Yet</h3>
-          <p className="text-gray-600">Be the first to review this product!</p>
-        </div>
-      </div>
-    );
+  
+  const emptyStars = 5 - stars.length;
+  for (let i = 0; i < emptyStars; i++) {
+    stars.push(<Star key={`empty-${i}`} className="w-5 h-5 text-gray-300" />);
   }
+  
+  return stars;
+};
+
+// Format date to readable string
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'Recent';
+  try {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch {
+    return 'Recent';
+  }
+};
+
+// Individual Review Card Component
+const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index }) => {
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+
+  const handleImageError = (imgIndex: number) => {
+    setImageErrors(prev => new Set(prev).add(imgIndex));
+  };
+
+  // Extract image URL safely
+  const getImageUrl = (image: ReviewImage): string | null => {
+    if (!image) return null;
+    if (typeof image === 'string') return image;
+    if (image.url) return image.url;
+    if (image.src) return image.src;
+    return null;
+  };
+
+  const reviewImages = review.images?.filter(img => getImageUrl(img)) || [];
 
   return (
-    <div className={`max-w-4xl mx-auto ${className}`}>
-      <div className="space-y-4">
-        {approvedReviews.map((review) => (
-          <ReviewCard key={review.id} review={review} />
-        ))}
+    <div key={review.id || index} className="border-b border-gray-200 pb-6 last:border-b-0">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <User className="w-5 h-5 text-gray-500" />
+          </div>
+          <div>
+            <p className="font-medium text-gray-900">Customer {review.userId?.slice(-6) || 'Anonymous'}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex gap-0.5">
+                {renderStars(review.rating)}
+              </div>
+              <span className="text-sm text-gray-500">
+                {formatDate(review.createdAt)}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            Verified Purchase
+          </span>
+        </div>
+      </div>
+      
+      {review.comment && (
+        <div className="mt-3 ml-13">
+          <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+        </div>
+      )}
+      
+      {/* Review Images Section */}
+      {reviewImages.length > 0 && (
+        <div className="mt-4 ml-13">
+          <div className="flex items-center gap-2 mb-2">
+            <Camera className="w-4 h-4 text-gray-400" />
+            <span className="text-sm text-gray-500">Customer Photos ({reviewImages.length})</span>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            {reviewImages.map((img, imgIdx) => {
+              const imgUrl = getImageUrl(img);
+              if (!imgUrl || imageErrors.has(imgIdx)) return null;
+              
+              return (
+                <div 
+                  key={imgIdx} 
+                  className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(imgUrl, '_blank')}
+                >
+                  <img 
+                    src={imgUrl} 
+                    alt={`Review image ${imgIdx + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(imgIdx)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Main Reviews Component
+const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
+  const [filterRating, setFilterRating] = useState<number | null>(null);
+  
+  const reviews = product?.reviews || [];
+  
+  // Calculate average rating
+  const averageRating = reviews.length > 0 
+    ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
+    : 0;
+  
+  // Rating distribution
+  const ratingDistribution = [5, 4, 3, 2, 1].map(rating => ({
+    rating,
+    count: reviews.filter(r => Math.floor(r.rating) === rating).length
+  }));
+  
+  // Sort and filter reviews
+  const filteredReviews = reviews.filter(review => {
+    if (filterRating === null) return true;
+    return Math.floor(review.rating) === filterRating;
+  });
+  
+  const sortedReviews = [...filteredReviews].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+      case 'oldest':
+        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+      case 'highest':
+        return b.rating - a.rating;
+      case 'lowest':
+        return a.rating - b.rating;
+      default:
+        return 0;
+    }
+  });
+  
+  if (reviews.length === 0) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <Star className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900">No Reviews Yet</h3>
+          <p className="text-gray-500 mt-2">Be the first to review this product!</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">Customer Reviews</h2>
+            <div className="flex items-center gap-3 mt-1">
+              <div className="flex items-center gap-1">
+                <div className="flex">{renderStars(averageRating)}</div>
+                <span className="font-medium text-gray-900 ml-1">{averageRating.toFixed(1)}</span>
+              </div>
+              <span className="text-gray-500 text-sm">Based on {reviews.length} reviews</span>
+            </div>
+          </div>
+          
+          <div className="flex gap-3">
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="highest">Highest Rated</option>
+              <option value="lowest">Lowest Rated</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex flex-col md:flex-row">
+        {/* Rating Summary Sidebar */}
+        <div className="md:w-64 border-r border-gray-200 p-6 bg-gray-50/30">
+          <div className="text-center mb-6">
+            <div className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</div>
+            <div className="flex justify-center mt-2">{renderStars(averageRating)}</div>
+          </div>
+          
+          <div className="space-y-2">
+            {ratingDistribution.map(({ rating, count }) => (
+              <button
+                key={rating}
+                onClick={() => setFilterRating(filterRating === rating ? null : rating)}
+                className={`w-full flex items-center gap-2 text-sm py-1 px-2 rounded transition-colors ${
+                  filterRating === rating ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                <span className="w-8 text-gray-600">{rating} ★</span>
+                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-yellow-400 rounded-full"
+                    style={{ width: `${reviews.length ? (count / reviews.length) * 100 : 0}%` }}
+                  />
+                </div>
+                <span className="text-gray-500 text-xs w-8">{count}</span>
+              </button>
+            ))}
+          </div>
+          
+          {filterRating && (
+            <button
+              onClick={() => setFilterRating(null)}
+              className="mt-4 text-sm text-blue-600 hover:text-blue-700 w-full text-center"
+            >
+              Clear Filter
+            </button>
+          )}
+        </div>
+        
+        {/* Reviews List */}
+        <div className="flex-1 p-6">
+          <div className="space-y-6">
+            {sortedReviews.map((review, idx) => (
+              <ReviewCard key={review.id || idx} review={review} index={idx} />
+            ))}
+          </div>
+          
+          {sortedReviews.length === 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No reviews match the selected filter.</p>
+              <button
+                onClick={() => setFilterRating(null)}
+                className="mt-2 text-blue-600 hover:text-blue-700"
+              >
+                Clear filter
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default ProductReviews;
+export default  ProductReviews;
