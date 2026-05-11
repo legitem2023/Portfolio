@@ -33,33 +33,7 @@ const DeluxeHomePage: React.FC = () => {
 
   const { data: userData, loading: userLoading } = useQuery(USERS);
 
- /* useEffect(() => {
-    if (categoryData?.categories) {
-      const categoriesData = categoryData.categories.map((data: any) => ({
-        id: data.id,
-        name: data.name,
-        image: data.image ? data.image : '/NoImage.webp',
-        items: data.items,
-      }));
-      setCategories(categoriesData);
-    }
-    const products = productData?.products?.items || [];
-    if (productData?.products?.items) {
-      // Transform API response to match your Product type
-    // console.log("->",productData?.products?.items);
-      const productsData = productData.products.items.map((data: any) => ({
-        id: data.id,
-        name: data.name,
-        originalPrice: data.price,
-        price: data.salePrice || data.price,
-        image: data.images?.[0]?.imageUrl || data.avatar || '/NoImage.webp',
-        rating: data.rating || 0,
-        reviews: data.reviewCount || 0,
-        isNew: data.isNew || false
-      }));
-      setFeaturedProducts(productsData);
-    }
-  }, [categoryData, productData]);*/
+
 const products = productData?.products?.items || [];
   // Complete Hero carousel data
   const heroSlides = [
@@ -146,53 +120,10 @@ const products = productData?.products?.items || [];
   ];
 
   // Complete Testimonials data
-  const testimonials = [
-    {
-      id: 1,
-      name: "Emma Johnson",
-      role: "Fashion Influencer",
-      comment: "The quality of their products is exceptional. Every piece feels luxurious and lasts for years.",
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face",
-      rating: 5
-    },
-    {
-      id: 2,
-      name: "Michael Reynolds",
-      role: "Lifestyle Blogger",
-      comment: "Their customer service is as premium as their products. Always a pleasure to shop here.",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face",
-      rating: 5
-    },
-    {
-      id: 3,
-      name: "Sophia Williams",
-      role: "Interior Designer",
-      comment: "I always find unique, high-quality pieces that become conversation starters.",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop&crop=face",
-      rating: 4
-    },
-    {
-      id: 4,
-      name: "David Chen",
-      role: "Tech Entrepreneur",
-      comment: "The attention to detail in their products is unmatched. Worth every penny.",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face",
-      rating: 5
-    },
-    {
-      id: 5,
-      name: "Olivia Martinez",
-      role: "Art Director",
-      comment: "Their collections always inspire me. Beautiful craftsmanship and timeless design.",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=face",
-      rating: 5
-    }
-  ];
 
   return (
     <div className="bg-white">
       <MobileMenu isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
-
       <main>
         <div className="text-left m-2">
           <h2 className="text-1xl font-bold text-gray-500">Visits</h2>
@@ -220,54 +151,6 @@ const products = productData?.products?.items || [];
         <div className="text-left m-2">
           <h2 className="text-1xl font-bold text-gray-500">Testimonials</h2>
         </div>
-        <ReviewsList/>
-        {/* 
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-gray-900 mb-3">
-                What Our Customers Say
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Join thousands of satisfied customers worldwide
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {testimonials.map((testimonial) => (
-                <div key={testimonial.id} className="bg-white p-6 rounded-lg shadow-md">
-                  <div className="flex items-center mb-4">
-                    <img 
-                      src={testimonial.avatar} 
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full mr-4"
-                    />
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                      <p className="text-sm text-gray-600">{testimonial.role}</p>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4">{testimonial.comment}</p>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <svg
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'
-                        }`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        */}
       </main>
     </div>
   );
