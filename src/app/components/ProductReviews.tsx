@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Star, StarHalf, User, Calendar, Camera } from 'lucide-react';
 
 interface ReviewImage {
-  // Adjust this interface based on your actual image structure
   url?: string;
   src?: string;
   [key: string]: any;
@@ -15,23 +14,24 @@ interface Review {
   variantId?: string | null;
   rating: number;
   images?: ReviewImage[];
-  comment?: string; // Add if you have comment field
+  comment?: string;
   createdAt?: string;
 }
 
+// Make ProductVariant more flexible - all fields optional except what we need
 interface ProductVariant {
-  id: string;
-  name: string;
-  sku: string;
-  price: number;
-  salePrice: number;
-  stock: number;
-  size: string;
-  color: string;
-  model: string;
-  images: any[];
-  reviews: Review[];
-  createdAt: string;
+  id?: string;
+  name?: string; // Made optional to handle the Variant type
+  sku?: string;
+  price?: number;
+  salePrice?: number;
+  stock?: number;
+  size?: string;
+  color?: string;
+  model?: string;
+  images?: any[];
+  reviews?: Review[];
+  createdAt?: string;
 }
 
 interface ProductReviewsProps {
@@ -82,7 +82,6 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
     setImageErrors(prev => new Set(prev).add(imgIndex));
   };
 
-  // Extract image URL safely
   const getImageUrl = (image: ReviewImage): string | null => {
     if (!image) return null;
     if (typeof image === 'string') return image;
@@ -125,7 +124,6 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
         </div>
       )}
       
-      {/* Review Images Section */}
       {reviewImages.length > 0 && (
         <div className="mt-4 ml-13">
           <div className="flex items-center gap-2 mb-2">
@@ -164,20 +162,22 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'highest' | 'lowest'>('newest');
   const [filterRating, setFilterRating] = useState<number | null>(null);
   
+  // Add safety check for product
+  if (!product || typeof product !== 'object') {
+    return null;
+  }
+  
   const reviews = product?.reviews || [];
   
-  // Calculate average rating
   const averageRating = reviews.length > 0 
     ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length 
     : 0;
   
-  // Rating distribution
   const ratingDistribution = [5, 4, 3, 2, 1].map(rating => ({
     rating,
     count: reviews.filter(r => Math.floor(r.rating) === rating).length
   }));
   
-  // Sort and filter reviews
   const filteredReviews = reviews.filter(review => {
     if (filterRating === null) return true;
     return Math.floor(review.rating) === filterRating;
@@ -214,7 +214,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
   
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Header */}
       <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -244,7 +243,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
       </div>
       
       <div className="flex flex-col md:flex-row">
-        {/* Rating Summary Sidebar */}
         <div className="md:w-64 border-r border-gray-200 p-6 bg-gray-50/30">
           <div className="text-center mb-6">
             <div className="text-4xl font-bold text-gray-900">{averageRating.toFixed(1)}</div>
@@ -282,7 +280,6 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
           )}
         </div>
         
-        {/* Reviews List */}
         <div className="flex-1 p-6">
           <div className="space-y-6">
             {sortedReviews.map((review, idx) => (
@@ -307,4 +304,4 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
   );
 };
 
-export default  ProductReviews;
+export default ProductReviews;
