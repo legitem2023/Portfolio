@@ -1117,7 +1117,6 @@ getReviewById: async (_: any, { id }: { id: string }) => {
     const reviews = await prisma.review.findMany({
       where: { 
         productId: id,
-        isApproved: true  // ✅ Filter approved reviews at database level
       },
       include: {
         user: true,
