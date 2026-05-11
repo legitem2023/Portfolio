@@ -688,10 +688,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 </div>
               </div>
             </div>
-            {selectedVariant && typeof selectedVariant !== 'string' && (
-              <ProductReviews product={selectedVariant} />
-            )}
+            
           </div>
+          {selectedVariant && typeof selectedVariant !== 'string' && (
+              <ProductReviews product={selectedVariant} />
+          )}
         </div>
       </div>
       
