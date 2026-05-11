@@ -17,7 +17,6 @@ interface Review {
   images?: ReviewImage[];
   comment?: string; // Add if you have comment field
   createdAt?: string;
-  __typename?: string;
 }
 
 interface ProductVariant {
@@ -33,7 +32,6 @@ interface ProductVariant {
   images: any[];
   reviews: Review[];
   createdAt: string;
-  __typename: string;
 }
 
 interface ProductReviewsProps {
