@@ -7,6 +7,7 @@ interface ReviewImage {
   [key: string]: any;
 }
 
+// Updated Review interface to match the global type
 interface Review {
   id?: string;
   productId?: string;
@@ -15,13 +16,13 @@ interface Review {
   rating: number;
   images?: ReviewImage[];
   comment?: string;
-  createdAt?: string;
+  createdAt?: string | Date; // Allow both string and Date
 }
 
-// Make ProductVariant more flexible - all fields optional except what we need
+// Make ProductVariant flexible
 interface ProductVariant {
   id?: string;
-  name?: string; // Made optional to handle the Variant type
+  name?: string;
   sku?: string;
   price?: number;
   salePrice?: number;
@@ -31,7 +32,7 @@ interface ProductVariant {
   model?: string;
   images?: any[];
   reviews?: Review[];
-  createdAt?: string;
+  createdAt?: string | Date;
 }
 
 interface ProductReviewsProps {
@@ -60,11 +61,12 @@ const renderStars = (rating: number) => {
   return stars;
 };
 
-// Format date to readable string
-const formatDate = (dateString?: string) => {
+// Format date to readable string - now handles Date objects
+const formatDate = (dateString?: string | Date) => {
   if (!dateString) return 'Recent';
   try {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -91,6 +93,13 @@ const ReviewCard: React.FC<{ review: Review; index: number }> = ({ review, index
   };
 
   const reviewImages = review.images?.filter(img => getImageUrl(img)) || [];
+
+  // Helper to safely get date for sorting
+  const getReviewDate = (date?: string | Date): number => {
+    if (!date) return 0;
+    if (date instanceof Date) return date.getTime();
+    return new Date(date).getTime();
+  };
 
   return (
     <div key={review.id || index} className="border-b border-gray-200 pb-6 last:border-b-0">
@@ -183,12 +192,19 @@ const ProductReviews: React.FC<ProductReviewsProps> = ({ product }) => {
     return Math.floor(review.rating) === filterRating;
   });
   
+  // Helper to safely get timestamp from Date or string
+  const getTimestamp = (date?: string | Date): number => {
+    if (!date) return 0;
+    if (date instanceof Date) return date.getTime();
+    return new Date(date).getTime();
+  };
+  
   const sortedReviews = [...filteredReviews].sort((a, b) => {
     switch (sortBy) {
       case 'newest':
-        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+        return getTimestamp(b.createdAt) - getTimestamp(a.createdAt);
       case 'oldest':
-        return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+        return getTimestamp(a.createdAt) - getTimestamp(b.createdAt);
       case 'highest':
         return b.rating - a.rating;
       case 'lowest':
