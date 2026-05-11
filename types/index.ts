@@ -112,6 +112,7 @@ export interface Review {
   productId: string;
   userId:string;
   variantId:string;
+  title:string;
   comment: string;
   product: Product;
   user: User;
