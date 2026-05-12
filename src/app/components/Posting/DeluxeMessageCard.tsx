@@ -172,7 +172,7 @@ const DeluxeMessageCard: React.FC<DeluxeMessageCardProps> = ({
   const handleRedirectToUser = () => {
     const userId = user?.id;
     dispatch(setActiveIndex(11));
-    router.push(`?index=${8}&id=${userId}`);
+    router.push(`?index=${11}&id=${userId}`);
     setDropdownOpen(false);
   };
 
