@@ -9,6 +9,8 @@ interface VideoCallProps {
   targetUserId: string;
   targetUserName: string;
   onClose: () => void;
+  isInitiator?: boolean; // Add this prop to determine if user initiates or receives call
+  incomingCallData?: any; // Add this prop for pre-loaded incoming call data
 }
 
 // Logger utility
@@ -27,19 +29,27 @@ const logger = {
   }
 };
 
-export default function VideoCall({ userId, targetUserId, targetUserName, onClose }: VideoCallProps) {
+export default function VideoCall({ 
+  userId, 
+  targetUserId, 
+  targetUserName, 
+  onClose,
+  isInitiator = true,
+  incomingCallData = null
+}: VideoCallProps) {
   const [callState, setCallState] = useState<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>('idle');
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<any>(null);
+  const [incomingCall, setIncomingCall] = useState<any>(incomingCallData);
+  const [hasInitialized, setHasInitialized] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const pusherRef = useRef<Pusher | null>(null);
-  const callIdRef = useRef<string>(`${userId}-${targetUserId}-${Date.now()}`);
+  const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
 
   const configuration: RTCConfiguration = {
     iceServers: [
@@ -49,9 +59,17 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
     ],
   };
 
-  // Log component mount
+  // Log component mount and props
   useEffect(() => {
-    logger.info('VideoCall component mounted', { userId, targetUserId, targetUserName });
+    logger.info('VideoCall component mounted', { 
+      userId, 
+      targetUserId, 
+      targetUserName,
+      isInitiator,
+      hasIncomingData: !!incomingCallData,
+      callId: callIdRef.current
+    });
+    
     return () => {
       logger.info('VideoCall component unmounting', { userId, targetUserId, callState });
     };
@@ -60,6 +78,11 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   // Initialize Pusher and listen for calls
   useEffect(() => {
     logger.info('Initializing Pusher connection', { userId });
+    
+    if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
+      logger.error('Pusher key is missing!');
+      return;
+    }
     
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
@@ -72,7 +95,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
     
     logger.info('Subscribed to Pusher channel', { channelName });
 
-    // Handler for incoming calls
+    // Handler for incoming calls (only listen if we're not the initiator)
     channel.bind('incoming-call', (data: any) => {
       logger.info('🔔 INCOMING CALL DETECTED via Pusher!', {
         fromUserId: data.fromUserId,
@@ -80,11 +103,12 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         callId: data.callId,
         targetUserId,
         isTargetUser: data.fromUserId === targetUserId,
-        timestamp: new Date().toISOString(),
-        fullData: data
+        isInitiator,
+        timestamp: new Date().toISOString()
       });
 
-      if (data.fromUserId === targetUserId) {
+      // Only handle incoming calls if we're not the initiator and it's from our target
+      if (!isInitiator && data.fromUserId === targetUserId && callState === 'idle') {
         logger.info('✅ Valid incoming call from target user', { 
           targetUserId, 
           callId: data.callId,
@@ -92,7 +116,9 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         });
         setIncomingCall(data);
         setCallState('ringing');
-      } else {
+      } else if (isInitiator) {
+        logger.info('Ignoring incoming call - component is in initiator mode');
+      } else if (data.fromUserId !== targetUserId) {
         logger.warn('❌ Incoming call ignored - not from target user', {
           receivedFrom: data.fromUserId,
           expectedFrom: targetUserId
@@ -108,14 +134,9 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         fromUserId: data.fromUserId
       });
 
-      if (data.callId === callIdRef.current) {
+      if (data.callId === callIdRef.current && isInitiator) {
         logger.info('Processing call answer', { callId: data.callId });
         await handleRemoteAnswer(data.answer);
-      } else {
-        logger.warn('Call answer ignored - call ID mismatch', {
-          receivedCallId: data.callId,
-          expectedCallId: callIdRef.current
-        });
       }
     });
 
@@ -124,10 +145,10 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       logger.debug('ICE candidate received', {
         callId: data.callId,
         hasCandidate: !!data.candidate,
-        candidateType: data.candidate?.type
+        callIdMatches: data.callId === callIdRef.current
       });
 
-      if (peerConnectionRef.current && data.candidate) {
+      if (peerConnectionRef.current && data.candidate && data.callId === callIdRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
           logger.debug('ICE candidate added successfully');
@@ -169,14 +190,25 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       pusher.unsubscribe(channelName);
       pusher.disconnect();
     };
-  }, [userId, targetUserId]);
+  }, [userId, targetUserId, isInitiator]);
 
-  // Auto-start call when component mounts (initiator)
+  // Handle call initiation or acceptance based on role
   useEffect(() => {
-    logger.info('Auto-starting call as initiator');
-    startCall();
+    if (hasInitialized) return;
+    
+    if (isInitiator && callState === 'idle') {
+      logger.info('Starting call as initiator');
+      startCall();
+      setHasInitialized(true);
+    } else if (!isInitiator && incomingCall && callState === 'ringing') {
+      logger.info('Waiting for user to accept incoming call');
+      setHasInitialized(true);
+    }
+  }, [isInitiator, incomingCall, callState]);
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      logger.info('Cleaning up call resources');
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
       }
@@ -194,12 +226,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-      logger.info('Local media stream obtained successfully', {
-        videoTracks: stream.getVideoTracks().length,
-        audioTracks: stream.getAudioTracks().length,
-        videoEnabled: stream.getVideoTracks()[0]?.enabled,
-        audioEnabled: stream.getAudioTracks()[0]?.enabled
-      });
+      logger.info('Local media stream obtained successfully');
       return stream;
     } catch (error) {
       logger.error('Error accessing media devices:', error);
@@ -213,7 +240,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
     
     stream.getTracks().forEach(track => {
       pc.addTrack(track, stream);
-      logger.debug('Added track to peer connection', { trackKind: track.kind, trackId: track.id });
+      logger.debug('Added track to peer connection', { trackKind: track.kind });
     });
     
     pc.ontrack = (event) => {
@@ -231,35 +258,23 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
     
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        logger.debug('ICE candidate generated', {
-          candidateType: event.candidate.type,
-          protocol: event.candidate.protocol
-        });
+        logger.debug('ICE candidate generated');
         sendICECandidate(event.candidate);
       }
     };
     
     pc.oniceconnectionstatechange = () => {
-      logger.info('ICE connection state changed', { 
-        state: pc.iceConnectionState,
-        callState 
-      });
+      logger.info('ICE connection state changed', { state: pc.iceConnectionState });
     };
     
     pc.onconnectionstatechange = () => {
-      logger.info('Peer connection state changed', { 
-        state: pc.connectionState,
-        previousCallState: callState
-      });
+      logger.info('Peer connection state changed', { state: pc.connectionState });
       
       if (pc.connectionState === 'connected') {
         logger.info('✅ Call connected successfully!');
         setCallState('connected');
-      } else if (pc.connectionState === 'disconnected') {
-        logger.warn('Peer connection disconnected');
-        endCall();
-      } else if (pc.connectionState === 'failed') {
-        logger.error('Peer connection failed');
+      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+        logger.warn('Call disconnected or failed');
         endCall();
       }
     };
@@ -268,11 +283,6 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   };
 
   const sendICECandidate = async (candidate: RTCIceCandidate) => {
-    logger.debug('Sending ICE candidate to remote peer', {
-      toUserId: targetUserId,
-      callId: callIdRef.current
-    });
-    
     try {
       await fetch('/api/call/ice-candidate', {
         method: 'POST',
@@ -290,6 +300,11 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   };
 
   const startCall = async () => {
+    if (callState !== 'idle') {
+      logger.warn('Cannot start call - invalid state', { callState });
+      return;
+    }
+    
     logger.info('Starting outbound call', {
       fromUserId: userId,
       toUserId: targetUserId,
@@ -304,8 +319,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       
-      logger.info('Created WebRTC offer', { callId: callIdRef.current });
-      
+      logger.info('Created WebRTC offer');
       setCallState('calling');
       
       const response = await fetch('/api/call/initiate', {
@@ -323,6 +337,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         logger.info('Call initiation request sent successfully');
       } else {
         logger.error('Call initiation request failed', { status: response.status });
+        endCall();
       }
     } catch (error) {
       logger.error('Error starting call:', error);
@@ -354,8 +369,6 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       
       logger.info('Created and set local answer');
       
-      setCallState('connected');
-      
       const response = await fetch('/api/call/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -368,8 +381,11 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       
       if (response.ok) {
         logger.info('Call answer sent successfully');
+        setCallState('connected');
       } else {
         logger.error('Failed to send call answer', { status: response.status });
+        endCall();
+        return;
       }
       
       setIncomingCall(null);
@@ -378,6 +394,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       logger.info('Call accepted, connection established');
     } catch (error) {
       logger.error('Error accepting call:', error);
+      endCall();
     }
   };
 
@@ -392,34 +409,21 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   };
 
   const rejectCall = () => {
-    logger.info('Rejecting incoming call', {
-      fromUserId: incomingCall?.fromUserId,
-      callId: incomingCall?.callId
-    });
+    logger.info('Rejecting incoming call');
     setIncomingCall(null);
-    setCallState('ended');
-    onClose();
+    endCall();
   };
 
   const endCall = () => {
-    logger.info('Ending call', { 
-      callId: callIdRef.current,
-      callState,
-      hasLocalStream: !!localStream,
-      hasPeerConnection: !!peerConnectionRef.current
-    });
+    logger.info('Ending call', { callId: callIdRef.current, callState });
     
     if (localStream) {
-      localStream.getTracks().forEach(track => {
-        track.stop();
-        logger.debug('Stopped track', { kind: track.kind, label: track.label });
-      });
+      localStream.getTracks().forEach(track => track.stop());
     }
     
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
-      logger.debug('Closed peer connection');
     }
     
     fetch('/api/call/end', {
@@ -429,9 +433,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         toUserId: targetUserId,
         callId: callIdRef.current,
       }),
-    })
-      .then(() => logger.info('Call end notification sent'))
-      .catch(error => logger.error('Failed to send call end notification', error));
+    }).catch(error => logger.error('Failed to send call end notification', error));
     
     setCallState('ended');
     onClose();
@@ -442,7 +444,6 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const audioTrack = localStream.getAudioTracks()[0];
       audioTrack.enabled = !audioTrack.enabled;
       setIsMuted(!audioTrack.enabled);
-      logger.info('Toggled microphone', { muted: !audioTrack.enabled });
     }
   };
 
@@ -451,16 +452,15 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const videoTrack = localStream.getVideoTracks()[0];
       videoTrack.enabled = !videoTrack.enabled;
       setIsVideoOff(!videoTrack.enabled);
-      logger.info('Toggled video', { videoOff: !videoTrack.enabled });
     }
   };
 
   return (
     <>
       {/* Incoming Call Modal */}
-      {incomingCall && callState === 'ringing' && (
+      {incomingCall && callState === 'ringing' && !isInitiator && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 transform animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="text-center mb-6">
               <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Phone className="w-10 h-10 text-white" />
@@ -471,13 +471,13 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
             <div className="flex gap-4">
               <button
                 onClick={acceptCall}
-                className="flex-1 bg-green-500 text-white py-3 rounded-xl hover:bg-green-600 transition-all duration-300 flex items-center justify-center gap-2"
+                className="flex-1 bg-green-500 text-white py-3 rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
               >
                 <Phone className="w-5 h-5" /> Accept
               </button>
               <button
                 onClick={rejectCall}
-                className="flex-1 bg-red-500 text-white py-3 rounded-xl hover:bg-red-600 transition-all duration-300 flex items-center justify-center gap-2"
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2"
               >
                 <PhoneOff className="w-5 h-5" /> Reject
               </button>
@@ -489,15 +489,13 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       {/* Video Call Modal */}
       {callState !== 'idle' && callState !== 'ended' && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
-          {/* Close button */}
           <button
             onClick={endCall}
-            className="absolute top-4 right-4 z-10 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-300"
+            className="absolute top-4 right-4 z-10 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all"
           >
             <X className="w-6 h-6" />
           </button>
 
-          {/* Remote Video (Full screen) */}
           <div className="flex-1 relative bg-gray-900">
             <video
               ref={remoteVideoRef}
@@ -506,31 +504,20 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
               className="w-full h-full object-cover"
             />
             
-            {/* Call status overlay */}
-            {callState === 'calling' && (
+            {(callState === 'calling' || (callState === 'ringing' && isInitiator)) && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="text-white text-center">
                   <div className="animate-pulse mb-4">
                     <Phone className="w-16 h-16 mx-auto animate-bounce" />
                   </div>
-                  <p className="text-xl font-semibold">Calling {targetUserName}...</p>
-                </div>
-              </div>
-            )}
-
-            {callState === 'ringing' && !incomingCall && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                <div className="text-white text-center">
-                  <div className="animate-pulse mb-4">
-                    <Phone className="w-16 h-16 mx-auto animate-bounce" />
-                  </div>
-                  <p className="text-xl font-semibold">Ringing...</p>
+                  <p className="text-xl font-semibold">
+                    {callState === 'calling' ? `Calling ${targetUserName}...` : 'Ringing...'}
+                  </p>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Local Video (Picture-in-Picture) */}
           <div className="absolute bottom-24 right-4 w-32 h-48 md:w-48 md:h-64 bg-gray-800 rounded-xl overflow-hidden shadow-2xl border-2 border-white">
             <video
               ref={localVideoRef}
@@ -546,12 +533,11 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
             )}
           </div>
 
-          {/* Call Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
             <div className="flex justify-center gap-4">
               <button
                 onClick={toggleMute}
-                className={`p-4 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                className={`p-4 rounded-full transition-all transform hover:scale-110 ${
                   isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
                 }`}
               >
@@ -560,14 +546,14 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
               
               <button
                 onClick={endCall}
-                className="p-4 bg-red-500 rounded-full hover:bg-red-600 transition-all duration-300 transform hover:scale-110"
+                className="p-4 bg-red-500 rounded-full hover:bg-red-600 transition-all transform hover:scale-110"
               >
                 <PhoneOff className="w-6 h-6 text-white" />
               </button>
               
               <button
                 onClick={toggleVideo}
-                className={`p-4 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                className={`p-4 rounded-full transition-all transform hover:scale-110 ${
                   isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
                 }`}
               >
@@ -582,4 +568,4 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       )}
     </>
   );
-                                           }
+  }
