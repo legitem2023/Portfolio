@@ -9,25 +9,9 @@ interface VideoCallProps {
   targetUserId: string;
   targetUserName: string;
   onClose: () => void;
-  isInitiator?: boolean; // Add this prop to determine if user initiates or receives call
-  incomingCallData?: any; // Add this prop for pre-loaded incoming call data
+  isInitiator?: boolean;
+  incomingCallData?: any;
 }
-
-// Logger utility
-const logger = {
-  info: (message: string, data?: any) => {
-    console.log(`[${new Date().toISOString()}] [INFO] ${message}`, data || '');
-  },
-  error: (message: string, error?: any) => {
-    console.error(`[${new Date().toISOString()}] [ERROR] ${message}`, error || '');
-  },
-  warn: (message: string, data?: any) => {
-    console.warn(`[${new Date().toISOString()}] [WARN] ${message}`, data || '');
-  },
-  debug: (message: string, data?: any) => {
-    console.debug(`[${new Date().toISOString()}] [DEBUG] ${message}`, data || '');
-  }
-};
 
 export default function VideoCall({ 
   userId, 
@@ -43,7 +27,6 @@ export default function VideoCall({
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(incomingCallData);
-  const [hasInitialized, setHasInitialized] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -59,222 +42,111 @@ export default function VideoCall({
     ],
   };
 
-  // Log component mount and props
-  useEffect(() => {
-    logger.info('VideoCall component mounted', { 
-      userId, 
-      targetUserId, 
-      targetUserName,
-      isInitiator,
-      hasIncomingData: !!incomingCallData,
-      callId: callIdRef.current
-    });
-    
-    return () => {
-      logger.info('VideoCall component unmounting', { userId, targetUserId, callState });
-    };
-  }, []);
-
   // Initialize Pusher and listen for calls
   useEffect(() => {
-    logger.info('Initializing Pusher connection', { userId });
-    
-    if (!process.env.NEXT_PUBLIC_PUSHER_KEY) {
-      logger.error('Pusher key is missing!');
-      return;
-    }
-    
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
       authEndpoint: '/api/pusher/auth',
     });
 
     pusherRef.current = pusher;
-    const channelName = `private-user-${userId}`;
-    const channel = pusher.subscribe(channelName);
-    
-    logger.info('Subscribed to Pusher channel', { channelName });
+    const channel = pusher.subscribe(`private-user-${userId}`);
 
-    // Handler for incoming calls (only listen if we're not the initiator)
-    channel.bind('incoming-call', (data: any) => {
-      logger.info('🔔 INCOMING CALL DETECTED via Pusher!', {
-        fromUserId: data.fromUserId,
-        toUserId: data.toUserId,
-        callId: data.callId,
-        targetUserId,
-        isTargetUser: data.fromUserId === targetUserId,
-        isInitiator,
-        timestamp: new Date().toISOString()
+    // Listen for incoming calls (only if not initiator)
+    if (!isInitiator) {
+      channel.bind('incoming-call', (data: any) => {
+        if (data.fromUserId === targetUserId && callState === 'idle') {
+          setIncomingCall(data);
+          setCallState('ringing');
+        }
       });
+    }
 
-      // Only handle incoming calls if we're not the initiator and it's from our target
-      if (!isInitiator && data.fromUserId === targetUserId && callState === 'idle') {
-        logger.info('✅ Valid incoming call from target user', { 
-          targetUserId, 
-          callId: data.callId,
-          offerPresent: !!data.offer 
-        });
-        setIncomingCall(data);
-        setCallState('ringing');
-      } else if (isInitiator) {
-        logger.info('Ignoring incoming call - component is in initiator mode');
-      } else if (data.fromUserId !== targetUserId) {
-        logger.warn('❌ Incoming call ignored - not from target user', {
-          receivedFrom: data.fromUserId,
-          expectedFrom: targetUserId
-        });
-      }
-    });
-
-    // Handler for call answered
+    // Listen for call answer
     channel.bind('call-answered', async (data: any) => {
-      logger.info('Call answered event received', {
-        callId: data.callId,
-        currentCallId: callIdRef.current,
-        fromUserId: data.fromUserId
-      });
-
-      if (data.callId === callIdRef.current && isInitiator) {
-        logger.info('Processing call answer', { callId: data.callId });
-        await handleRemoteAnswer(data.answer);
+      if (data.callId === callIdRef.current && peerConnectionRef.current) {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
       }
     });
 
-    // Handler for ICE candidates
+    // Listen for ICE candidates
     channel.bind('ice-candidate', async (data: any) => {
-      logger.debug('ICE candidate received', {
-        callId: data.callId,
-        hasCandidate: !!data.candidate,
-        callIdMatches: data.callId === callIdRef.current
-      });
-
       if (peerConnectionRef.current && data.candidate && data.callId === callIdRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
-          logger.debug('ICE candidate added successfully');
         } catch (error) {
-          logger.error('Error adding ICE candidate:', error);
+          console.error('Error adding ICE candidate:', error);
         }
       }
     });
 
-    // Handler for call ended
+    // Listen for call end
     channel.bind('call-ended', (data: any) => {
-      logger.info('Call ended event received', {
-        callId: data.callId,
-        currentCallId: callIdRef.current
-      });
-
       if (data.callId === callIdRef.current) {
-        logger.info('Ending current call due to remote end signal');
         endCall();
       }
     });
 
-    // Log Pusher connection events
-    pusher.connection.bind('connected', () => {
-      logger.info('✅ Pusher connected successfully', { userId });
-    });
-
-    pusher.connection.bind('disconnected', () => {
-      logger.warn('Pusher disconnected', { userId });
-    });
-
-    pusher.connection.bind('error', (error: any) => {
-      logger.error('Pusher connection error', error);
-    });
-
     return () => {
-      logger.info('Cleaning up Pusher connection', { userId, channelName });
       channel.unbind_all();
-      pusher.unsubscribe(channelName);
+      pusher.unsubscribe(`private-user-${userId}`);
       pusher.disconnect();
     };
   }, [userId, targetUserId, isInitiator]);
 
-  // Handle call initiation or acceptance based on role
+  // Auto-start call if initiator
   useEffect(() => {
-    if (hasInitialized) return;
-    
     if (isInitiator && callState === 'idle') {
-      logger.info('Starting call as initiator');
       startCall();
-      setHasInitialized(true);
-    } else if (!isInitiator && incomingCall && callState === 'ringing') {
-      logger.info('Waiting for user to accept incoming call');
-      setHasInitialized(true);
     }
-  }, [isInitiator, incomingCall, callState]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-      }
-    };
-  }, []);
+  }, [isInitiator]);
 
   const setupLocalStream = async () => {
-    logger.info('Setting up local media stream');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-      logger.info('Local media stream obtained successfully');
       return stream;
     } catch (error) {
-      logger.error('Error accessing media devices:', error);
+      console.error('Error accessing media devices:', error);
       throw error;
     }
   };
 
   const createPeerConnection = (stream: MediaStream) => {
-    logger.info('Creating RTCPeerConnection');
     const pc = new RTCPeerConnection(configuration);
     
     stream.getTracks().forEach(track => {
       pc.addTrack(track, stream);
-      logger.debug('Added track to peer connection', { trackKind: track.kind });
     });
     
     pc.ontrack = (event) => {
-      logger.info('Received remote track', {
-        trackKind: event.track.kind,
-        streamCount: event.streams.length
-      });
-      const [remoteStream] = event.streams;
-      setRemoteStream(remoteStream);
+      setRemoteStream(event.streams[0]);
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = remoteStream;
-        logger.info('Remote video element updated with stream');
+        remoteVideoRef.current.srcObject = event.streams[0];
       }
     };
     
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        logger.debug('ICE candidate generated');
-        sendICECandidate(event.candidate);
+        fetch('/api/call/ice-candidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            toUserId: targetUserId,
+            callId: callIdRef.current,
+            candidate: event.candidate,
+          }),
+        });
       }
     };
     
-    pc.oniceconnectionstatechange = () => {
-      logger.info('ICE connection state changed', { state: pc.iceConnectionState });
-    };
-    
     pc.onconnectionstatechange = () => {
-      logger.info('Peer connection state changed', { state: pc.connectionState });
-      
       if (pc.connectionState === 'connected') {
-        logger.info('✅ Call connected successfully!');
         setCallState('connected');
       } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
-        logger.warn('Call disconnected or failed');
         endCall();
       }
     };
@@ -282,35 +154,7 @@ export default function VideoCall({
     return pc;
   };
 
-  const sendICECandidate = async (candidate: RTCIceCandidate) => {
-    try {
-      await fetch('/api/call/ice-candidate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toUserId: targetUserId,
-          callId: callIdRef.current,
-          candidate,
-        }),
-      });
-      logger.debug('ICE candidate sent successfully');
-    } catch (error) {
-      logger.error('Failed to send ICE candidate', error);
-    }
-  };
-
   const startCall = async () => {
-    if (callState !== 'idle') {
-      logger.warn('Cannot start call - invalid state', { callState });
-      return;
-    }
-    
-    logger.info('Starting outbound call', {
-      fromUserId: userId,
-      toUserId: targetUserId,
-      callId: callIdRef.current
-    });
-    
     try {
       const stream = await setupLocalStream();
       const pc = createPeerConnection(stream);
@@ -319,10 +163,9 @@ export default function VideoCall({
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       
-      logger.info('Created WebRTC offer');
       setCallState('calling');
       
-      const response = await fetch('/api/call/initiate', {
+      await fetch('/api/call/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -332,44 +175,25 @@ export default function VideoCall({
           offer,
         }),
       });
-      
-      if (response.ok) {
-        logger.info('Call initiation request sent successfully');
-      } else {
-        logger.error('Call initiation request failed', { status: response.status });
-        endCall();
-      }
     } catch (error) {
-      logger.error('Error starting call:', error);
+      console.error('Error starting call:', error);
       endCall();
     }
   };
 
   const acceptCall = async () => {
-    logger.info('Accepting incoming call', {
-      fromUserId: incomingCall?.fromUserId,
-      callId: incomingCall?.callId
-    });
-    
-    if (!incomingCall) {
-      logger.error('Cannot accept call - no incoming call data');
-      return;
-    }
+    if (!incomingCall) return;
     
     try {
       const stream = await setupLocalStream();
       const pc = createPeerConnection(stream);
       peerConnectionRef.current = pc;
       
-      logger.info('Setting remote description from offer');
       await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
-      
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       
-      logger.info('Created and set local answer');
-      
-      const response = await fetch('/api/call/answer', {
+      await fetch('/api/call/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -379,44 +203,21 @@ export default function VideoCall({
         }),
       });
       
-      if (response.ok) {
-        logger.info('Call answer sent successfully');
-        setCallState('connected');
-      } else {
-        logger.error('Failed to send call answer', { status: response.status });
-        endCall();
-        return;
-      }
-      
+      setCallState('connected');
       setIncomingCall(null);
       callIdRef.current = incomingCall.callId;
-      
-      logger.info('Call accepted, connection established');
     } catch (error) {
-      logger.error('Error accepting call:', error);
+      console.error('Error accepting call:', error);
       endCall();
     }
   };
 
-  const handleRemoteAnswer = async (answer: RTCSessionDescriptionInit) => {
-    logger.info('Handling remote answer');
-    if (peerConnectionRef.current) {
-      await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-      logger.info('Remote description set successfully');
-    } else {
-      logger.error('No peer connection available for remote answer');
-    }
-  };
-
   const rejectCall = () => {
-    logger.info('Rejecting incoming call');
     setIncomingCall(null);
     endCall();
   };
 
   const endCall = () => {
-    logger.info('Ending call', { callId: callIdRef.current, callState });
-    
     if (localStream) {
       localStream.getTracks().forEach(track => track.stop());
     }
@@ -433,7 +234,7 @@ export default function VideoCall({
         toUserId: targetUserId,
         callId: callIdRef.current,
       }),
-    }).catch(error => logger.error('Failed to send call end notification', error));
+    }).catch(console.error);
     
     setCallState('ended');
     onClose();
@@ -486,12 +287,12 @@ export default function VideoCall({
         </div>
       )}
 
-      {/* Video Call Modal */}
+      {/* Video Call UI */}
       {callState !== 'idle' && callState !== 'ended' && (
         <div className="fixed inset-0 bg-black z-50 flex flex-col">
           <button
             onClick={endCall}
-            className="absolute top-4 right-4 z-10 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all"
+            className="absolute top-4 right-4 z-10 bg-red-500 text-white p-2 rounded-full hover:bg-red-600"
           >
             <X className="w-6 h-6" />
           </button>
@@ -504,12 +305,10 @@ export default function VideoCall({
               className="w-full h-full object-cover"
             />
             
-            {(callState === 'calling' || (callState === 'ringing' && isInitiator)) && (
+            {(callState === 'calling' || callState === 'ringing') && (
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
                 <div className="text-white text-center">
-                  <div className="animate-pulse mb-4">
-                    <Phone className="w-16 h-16 mx-auto animate-bounce" />
-                  </div>
+                  <Phone className="w-16 h-16 mx-auto animate-bounce mb-4" />
                   <p className="text-xl font-semibold">
                     {callState === 'calling' ? `Calling ${targetUserName}...` : 'Ringing...'}
                   </p>
@@ -518,7 +317,8 @@ export default function VideoCall({
             )}
           </div>
 
-          <div className="absolute bottom-24 right-4 w-32 h-48 md:w-48 md:h-64 bg-gray-800 rounded-xl overflow-hidden shadow-2xl border-2 border-white">
+          {/* Local Video PIP */}
+          <div className="absolute bottom-24 right-4 w-32 h-48 bg-gray-800 rounded-xl overflow-hidden border-2 border-white">
             <video
               ref={localVideoRef}
               autoPlay
@@ -533,12 +333,13 @@ export default function VideoCall({
             )}
           </div>
 
+          {/* Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
             <div className="flex justify-center gap-4">
               <button
                 onClick={toggleMute}
-                className={`p-4 rounded-full transition-all transform hover:scale-110 ${
-                  isMuted ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+                className={`p-4 rounded-full transition-all hover:scale-110 ${
+                  isMuted ? 'bg-red-500' : 'bg-gray-700'
                 }`}
               >
                 {isMuted ? <MicOff className="w-6 h-6 text-white" /> : <Mic className="w-6 h-6 text-white" />}
@@ -546,15 +347,15 @@ export default function VideoCall({
               
               <button
                 onClick={endCall}
-                className="p-4 bg-red-500 rounded-full hover:bg-red-600 transition-all transform hover:scale-110"
+                className="p-4 bg-red-500 rounded-full hover:bg-red-600 transition-all hover:scale-110"
               >
                 <PhoneOff className="w-6 h-6 text-white" />
               </button>
               
               <button
                 onClick={toggleVideo}
-                className={`p-4 rounded-full transition-all transform hover:scale-110 ${
-                  isVideoOff ? 'bg-red-500 hover:bg-red-600' : 'bg-gray-700 hover:bg-gray-600'
+                className={`p-4 rounded-full transition-all hover:scale-110 ${
+                  isVideoOff ? 'bg-red-500' : 'bg-gray-700'
                 }`}
               >
                 {isVideoOff ? <VideoOff className="w-6 h-6 text-white" /> : <Video className="w-6 h-6 text-white" />}
@@ -568,4 +369,4 @@ export default function VideoCall({
       )}
     </>
   );
-  }
+          }
