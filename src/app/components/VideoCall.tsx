@@ -11,6 +11,22 @@ interface VideoCallProps {
   onClose: () => void;
 }
 
+// Logger utility
+const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[${new Date().toISOString()}] [INFO] ${message}`, data || '');
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[${new Date().toISOString()}] [ERROR] ${message}`, error || '');
+  },
+  warn: (message: string, data?: any) => {
+    console.warn(`[${new Date().toISOString()}] [WARN] ${message}`, data || '');
+  },
+  debug: (message: string, data?: any) => {
+    console.debug(`[${new Date().toISOString()}] [DEBUG] ${message}`, data || '');
+  }
+};
+
 export default function VideoCall({ userId, targetUserId, targetUserName, onClose }: VideoCallProps) {
   const [callState, setCallState] = useState<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>('idle');
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -33,56 +49,134 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
     ],
   };
 
+  // Log component mount
+  useEffect(() => {
+    logger.info('VideoCall component mounted', { userId, targetUserId, targetUserName });
+    return () => {
+      logger.info('VideoCall component unmounting', { userId, targetUserId, callState });
+    };
+  }, []);
+
   // Initialize Pusher and listen for calls
   useEffect(() => {
+    logger.info('Initializing Pusher connection', { userId });
+    
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
       cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
       authEndpoint: '/api/pusher/auth',
     });
 
     pusherRef.current = pusher;
-    const channel = pusher.subscribe(`private-user-${userId}`);
+    const channelName = `private-user-${userId}`;
+    const channel = pusher.subscribe(channelName);
+    
+    logger.info('Subscribed to Pusher channel', { channelName });
 
+    // Handler for incoming calls
     channel.bind('incoming-call', (data: any) => {
+      logger.info('🔔 INCOMING CALL DETECTED via Pusher!', {
+        fromUserId: data.fromUserId,
+        toUserId: data.toUserId,
+        callId: data.callId,
+        targetUserId,
+        isTargetUser: data.fromUserId === targetUserId,
+        timestamp: new Date().toISOString(),
+        fullData: data
+      });
+
       if (data.fromUserId === targetUserId) {
+        logger.info('✅ Valid incoming call from target user', { 
+          targetUserId, 
+          callId: data.callId,
+          offerPresent: !!data.offer 
+        });
         setIncomingCall(data);
         setCallState('ringing');
+      } else {
+        logger.warn('❌ Incoming call ignored - not from target user', {
+          receivedFrom: data.fromUserId,
+          expectedFrom: targetUserId
+        });
       }
     });
 
+    // Handler for call answered
     channel.bind('call-answered', async (data: any) => {
+      logger.info('Call answered event received', {
+        callId: data.callId,
+        currentCallId: callIdRef.current,
+        fromUserId: data.fromUserId
+      });
+
       if (data.callId === callIdRef.current) {
+        logger.info('Processing call answer', { callId: data.callId });
         await handleRemoteAnswer(data.answer);
+      } else {
+        logger.warn('Call answer ignored - call ID mismatch', {
+          receivedCallId: data.callId,
+          expectedCallId: callIdRef.current
+        });
       }
     });
 
+    // Handler for ICE candidates
     channel.bind('ice-candidate', async (data: any) => {
+      logger.debug('ICE candidate received', {
+        callId: data.callId,
+        hasCandidate: !!data.candidate,
+        candidateType: data.candidate?.type
+      });
+
       if (peerConnectionRef.current && data.candidate) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          logger.debug('ICE candidate added successfully');
         } catch (error) {
-          console.error('Error adding ICE candidate:', error);
+          logger.error('Error adding ICE candidate:', error);
         }
       }
     });
 
+    // Handler for call ended
     channel.bind('call-ended', (data: any) => {
+      logger.info('Call ended event received', {
+        callId: data.callId,
+        currentCallId: callIdRef.current
+      });
+
       if (data.callId === callIdRef.current) {
+        logger.info('Ending current call due to remote end signal');
         endCall();
       }
     });
 
+    // Log Pusher connection events
+    pusher.connection.bind('connected', () => {
+      logger.info('✅ Pusher connected successfully', { userId });
+    });
+
+    pusher.connection.bind('disconnected', () => {
+      logger.warn('Pusher disconnected', { userId });
+    });
+
+    pusher.connection.bind('error', (error: any) => {
+      logger.error('Pusher connection error', error);
+    });
+
     return () => {
+      logger.info('Cleaning up Pusher connection', { userId, channelName });
       channel.unbind_all();
-      pusher.unsubscribe(`private-user-${userId}`);
+      pusher.unsubscribe(channelName);
       pusher.disconnect();
     };
   }, [userId, targetUserId]);
 
   // Auto-start call when component mounts (initiator)
   useEffect(() => {
+    logger.info('Auto-starting call as initiator');
     startCall();
     return () => {
+      logger.info('Cleaning up call resources');
       if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
       }
@@ -93,44 +187,79 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   }, []);
 
   const setupLocalStream = async () => {
+    logger.info('Setting up local media stream');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
+      logger.info('Local media stream obtained successfully', {
+        videoTracks: stream.getVideoTracks().length,
+        audioTracks: stream.getAudioTracks().length,
+        videoEnabled: stream.getVideoTracks()[0]?.enabled,
+        audioEnabled: stream.getAudioTracks()[0]?.enabled
+      });
       return stream;
     } catch (error) {
-      console.error('Error accessing media devices:', error);
+      logger.error('Error accessing media devices:', error);
       throw error;
     }
   };
 
   const createPeerConnection = (stream: MediaStream) => {
+    logger.info('Creating RTCPeerConnection');
     const pc = new RTCPeerConnection(configuration);
     
     stream.getTracks().forEach(track => {
       pc.addTrack(track, stream);
+      logger.debug('Added track to peer connection', { trackKind: track.kind, trackId: track.id });
     });
     
     pc.ontrack = (event) => {
+      logger.info('Received remote track', {
+        trackKind: event.track.kind,
+        streamCount: event.streams.length
+      });
       const [remoteStream] = event.streams;
       setRemoteStream(remoteStream);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = remoteStream;
+        logger.info('Remote video element updated with stream');
       }
     };
     
     pc.onicecandidate = (event) => {
       if (event.candidate) {
+        logger.debug('ICE candidate generated', {
+          candidateType: event.candidate.type,
+          protocol: event.candidate.protocol
+        });
         sendICECandidate(event.candidate);
       }
     };
     
+    pc.oniceconnectionstatechange = () => {
+      logger.info('ICE connection state changed', { 
+        state: pc.iceConnectionState,
+        callState 
+      });
+    };
+    
     pc.onconnectionstatechange = () => {
+      logger.info('Peer connection state changed', { 
+        state: pc.connectionState,
+        previousCallState: callState
+      });
+      
       if (pc.connectionState === 'connected') {
+        logger.info('✅ Call connected successfully!');
         setCallState('connected');
-      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      } else if (pc.connectionState === 'disconnected') {
+        logger.warn('Peer connection disconnected');
+        endCall();
+      } else if (pc.connectionState === 'failed') {
+        logger.error('Peer connection failed');
         endCall();
       }
     };
@@ -139,18 +268,34 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
   };
 
   const sendICECandidate = async (candidate: RTCIceCandidate) => {
-    await fetch('/api/call/ice-candidate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        toUserId: targetUserId,
-        callId: callIdRef.current,
-        candidate,
-      }),
+    logger.debug('Sending ICE candidate to remote peer', {
+      toUserId: targetUserId,
+      callId: callIdRef.current
     });
+    
+    try {
+      await fetch('/api/call/ice-candidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toUserId: targetUserId,
+          callId: callIdRef.current,
+          candidate,
+        }),
+      });
+      logger.debug('ICE candidate sent successfully');
+    } catch (error) {
+      logger.error('Failed to send ICE candidate', error);
+    }
   };
 
   const startCall = async () => {
+    logger.info('Starting outbound call', {
+      fromUserId: userId,
+      toUserId: targetUserId,
+      callId: callIdRef.current
+    });
+    
     try {
       const stream = await setupLocalStream();
       const pc = createPeerConnection(stream);
@@ -159,9 +304,11 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
       
+      logger.info('Created WebRTC offer', { callId: callIdRef.current });
+      
       setCallState('calling');
       
-      await fetch('/api/call/initiate', {
+      const response = await fetch('/api/call/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -171,27 +318,45 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
           offer,
         }),
       });
+      
+      if (response.ok) {
+        logger.info('Call initiation request sent successfully');
+      } else {
+        logger.error('Call initiation request failed', { status: response.status });
+      }
     } catch (error) {
-      console.error('Error starting call:', error);
+      logger.error('Error starting call:', error);
       endCall();
     }
   };
 
   const acceptCall = async () => {
-    if (!incomingCall) return;
+    logger.info('Accepting incoming call', {
+      fromUserId: incomingCall?.fromUserId,
+      callId: incomingCall?.callId
+    });
+    
+    if (!incomingCall) {
+      logger.error('Cannot accept call - no incoming call data');
+      return;
+    }
     
     try {
       const stream = await setupLocalStream();
       const pc = createPeerConnection(stream);
       peerConnectionRef.current = pc;
       
+      logger.info('Setting remote description from offer');
       await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
+      
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       
+      logger.info('Created and set local answer');
+      
       setCallState('connected');
       
-      await fetch('/api/call/answer', {
+      const response = await fetch('/api/call/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -201,33 +366,60 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         }),
       });
       
+      if (response.ok) {
+        logger.info('Call answer sent successfully');
+      } else {
+        logger.error('Failed to send call answer', { status: response.status });
+      }
+      
       setIncomingCall(null);
       callIdRef.current = incomingCall.callId;
+      
+      logger.info('Call accepted, connection established');
     } catch (error) {
-      console.error('Error accepting call:', error);
+      logger.error('Error accepting call:', error);
     }
   };
 
   const handleRemoteAnswer = async (answer: RTCSessionDescriptionInit) => {
+    logger.info('Handling remote answer');
     if (peerConnectionRef.current) {
       await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+      logger.info('Remote description set successfully');
+    } else {
+      logger.error('No peer connection available for remote answer');
     }
   };
 
   const rejectCall = () => {
+    logger.info('Rejecting incoming call', {
+      fromUserId: incomingCall?.fromUserId,
+      callId: incomingCall?.callId
+    });
     setIncomingCall(null);
     setCallState('ended');
     onClose();
   };
 
   const endCall = () => {
+    logger.info('Ending call', { 
+      callId: callIdRef.current,
+      callState,
+      hasLocalStream: !!localStream,
+      hasPeerConnection: !!peerConnectionRef.current
+    });
+    
     if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
+      localStream.getTracks().forEach(track => {
+        track.stop();
+        logger.debug('Stopped track', { kind: track.kind, label: track.label });
+      });
     }
     
     if (peerConnectionRef.current) {
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
+      logger.debug('Closed peer connection');
     }
     
     fetch('/api/call/end', {
@@ -237,7 +429,9 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
         toUserId: targetUserId,
         callId: callIdRef.current,
       }),
-    }).catch(console.error);
+    })
+      .then(() => logger.info('Call end notification sent'))
+      .catch(error => logger.error('Failed to send call end notification', error));
     
     setCallState('ended');
     onClose();
@@ -248,6 +442,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const audioTrack = localStream.getAudioTracks()[0];
       audioTrack.enabled = !audioTrack.enabled;
       setIsMuted(!audioTrack.enabled);
+      logger.info('Toggled microphone', { muted: !audioTrack.enabled });
     }
   };
 
@@ -256,6 +451,7 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       const videoTrack = localStream.getVideoTracks()[0];
       videoTrack.enabled = !videoTrack.enabled;
       setIsVideoOff(!videoTrack.enabled);
+      logger.info('Toggled video', { videoOff: !videoTrack.enabled });
     }
   };
 
@@ -386,4 +582,4 @@ export default function VideoCall({ userId, targetUserId, targetUserName, onClos
       )}
     </>
   );
-}
+                                           }
