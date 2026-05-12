@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-  //  console.log('Pusher auth request for user:', session.user?.id || session.user?.email);
+    console.log('Pusher auth request for user:', session.user?.userId || session.user?.email);
     
     // Get the request body - Pusher sends it as URL-encoded form data
     const contentType = req.headers.get('content-type') || '';
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       );
     }
     
-    console.log('Authorizing channel:', { socket_id, channel_name, userId: session.user?.id });
+    console.log('Authorizing channel:', { socket_id, channel_name, userId: session.user?.userId });
     
     // For private channels, include user authentication
     const authResponse = pusher.authorizeChannel(socket_id, channel_name, {
