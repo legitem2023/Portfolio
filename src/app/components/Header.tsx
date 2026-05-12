@@ -729,9 +729,8 @@ const Header: React.FC = () => {
   }, [isUserLoggedIn, pathname, router, dispatch]);
 
   const handleLogoClick = useCallback(() => {
-    router.push('/');  
     dispatch(setActiveIndex(1));
-    router.push(`?index=${1}`);
+    router.push(`/?index=${1}`);
   }, [router, dispatch]);
 
   useEffect(() => {
