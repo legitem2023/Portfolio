@@ -17,6 +17,7 @@ import { CartItem } from '../../../types'; // Import CartItem type
 import {
   Home,
   ShoppingBag,
+  Building,
   Target,
   Star,
   Store,
@@ -130,7 +131,7 @@ const OutFolderTabs: React.FC = () => {
     {
       id:4,
       label: 'Merchants',
-      icon: <Store size={20} />,
+      icon: <Building size={20} />,
       content: (
         <MerchantsPage/>
       ),
