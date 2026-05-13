@@ -151,11 +151,11 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       }
       
       onReject(delivery.id);
-      alert('All items have been rejected successfully');
+      showToast('All items have been rejected successfully','success');
       refetch();
     } catch (error: any) {
       console.error('Error rejecting delivery:', error);
-      alert(`Failed to reject delivery: ${error.message}`);
+      showToast(`Failed to reject delivery: ${error.message}`,'error')
     }
   };
 
