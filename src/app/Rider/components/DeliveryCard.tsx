@@ -93,6 +93,9 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
         onAccept(delivery.id);
         refetch();
+      } else {
+        showtoast(data?.acceptByRider?.statusText,"warning");
+        refetch();
       }
     } catch (error) {
       console.error('Error accepting delivery:', error);
