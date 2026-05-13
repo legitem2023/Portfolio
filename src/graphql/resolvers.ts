@@ -7342,7 +7342,7 @@ rejectByRider: async (_: any, { itemId, riderId }: any) => {
     throw new Error(`Failed to reject item: ${error.message}`);
   }
 },
-acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
+/*acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   try {  
     const rider = await prisma.user.findUnique({
       where: { id: riderId },
@@ -7401,7 +7401,85 @@ acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
       statusText: 'Failed to accept order'
     };
   }
-},
+},*/
+    acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
+  try {  
+    // Check if rider has more than 3 active deliveries (PROCESSING or SHIPPED)
+    const activeDeliveriesCount = await prisma.orderItem.count({
+      where: {
+        riderId: riderId,
+        status: {
+          in: ['PROCESSING', 'SHIPPED']
+        }
+      }
+    });
+
+    if (activeDeliveriesCount > 3) {
+      return {
+        statusText: "You should complete the active delivery first"
+      };
+    }
+
+    const rider = await prisma.user.findUnique({
+      where: { id: riderId },
+      select: { 
+        firstName: true, 
+        email:true 
+      }
+    });
+    
+    const trackingNumber = await generateTrackingNumber(supplierId);
+    const updatedOrder = await prisma.orderItem.updateMany({
+        where: { 
+          orderId: itemId,
+          supplierId: supplierId
+        },
+        data:{
+          status: 'PROCESSING',
+          riderId: riderId,
+          trackingNumber: trackingNumber
+        }
+    });
+
+    await prisma.payment.updateMany({
+        where:{
+          supplierId,
+          orderId: itemId
+        },
+        data:{
+          riderId
+        }
+      })
+    
+     await prisma.notification.create({
+        data: { 
+          type: NotificationType.ORDER_UPDATED,
+          userId: supplierId,
+          title: 'Rider Accepted',
+          message: 'Rider accepted the order'
+        }
+      });
+    
+      // Create delivery record
+    await prisma.notification.create({
+        data: { 
+          type: NotificationType.ORDER_UPDATED,
+          userId: userId,
+          title: 'Rider Accepted',
+          message: 'Rider accepted your order'
+        }
+      });
+      
+      return {
+        statusText: "Successfully Accepted!"
+      }
+  } catch (error) {
+    console.error('Error accepting order:', error);
+    return {
+      statusText: 'Failed to accept order'
+    };
+  }
+    },
   createApiBill: async (parent: any, args:any) => {
     try {
       const { input } = args;
