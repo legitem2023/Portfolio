@@ -94,7 +94,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
         onAccept(delivery.id);
         refetch();
       } else {
-        showtoast(data?.acceptByRider?.statusText,"warning");
+        showToast(data?.acceptByRider?.statusText,"warning");
         refetch();
       }
     } catch (error) {
