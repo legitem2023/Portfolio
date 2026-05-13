@@ -50,7 +50,7 @@ export const mapOrdersToDeliveriesBySupplier = (order: Order) => {
   const dropoffAddress = order.address;
   const proofOfDelivery = order.proofOfDelivery;
   
-  const customerContact = order.user?.phone;
+  const customerContact = order.address.phone;
   // Group items by supplier
   const itemsBySupplier: Record<string, {
     supplierId: string;
