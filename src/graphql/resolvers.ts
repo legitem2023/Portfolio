@@ -1311,6 +1311,7 @@ const orders = await prisma.order.findMany({
         id: true,
         street: true,
         receiver:true,
+        phone:true,
         city: true,
         state: true,
         zipCode: true,
@@ -1504,6 +1505,7 @@ const orders = await prisma.order.findMany({
             zipCode: true,
             country: true,
             receiver:true,
+            phone:true,
             lat: true,
             lng: true
           }
@@ -1683,6 +1685,7 @@ const orders = await prisma.order.findMany({
             zipCode: true,
             country: true,
             receiver:true,
+            phone:true,
             lat: true,
             lng: true
           }
@@ -1857,6 +1860,7 @@ const orders = await prisma.order.findMany({
             zipCode: true,
             country: true,
             receiver:true,
+            phone:true,
             lat: true,
             lng: true
           }
@@ -2046,6 +2050,8 @@ const orders = await prisma.order.findMany({
             state: true,
             zipCode: true,
             country: true,
+            phone:true,
+            receiver:true,
             lat: true,
             lng: true
           }
@@ -2233,6 +2239,8 @@ const orders = await prisma.order.findMany({
             state: true,
             zipCode: true,
             country: true,
+            phone:true,
+            receiver:true,
             lat: true,
             lng: true
           }
@@ -2423,6 +2431,8 @@ const orders = await prisma.order.findMany({
             state: true,
             zipCode: true,
             country: true,
+            phone:true,
+            receiver:true,
             lat: true,
             lng: true
           }
@@ -2604,6 +2614,8 @@ salesorder: async(parent: any, args: any) => {
             state: true,
             zipCode: true,
             country: true,
+            phone:true,
+            receiver:true,
             lat: true,
             lng: true
           }
