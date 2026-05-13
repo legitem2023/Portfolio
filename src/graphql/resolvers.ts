@@ -7289,7 +7289,12 @@ updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) =>
        return {
         statusText: "Parcel Successfully Delivered!",
        };
-     } else {
+     }else if(status ==='CANCELLED') {
+       return {
+        statusText: "Delivery Cancelled!",
+       };
+     } 
+    else {
        return {
         statusText: "Parcel successfully Pickup!",
        };
