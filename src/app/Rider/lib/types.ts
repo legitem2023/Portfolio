@@ -92,6 +92,7 @@ export const ACTIVE_ORDER_LIST = gql`
         address {
           id
           street
+          receiver
           city
           state
           zipCode
@@ -182,6 +183,7 @@ export const ORDER_LIST_QUERY = gql`
           city
           state
           zipCode
+          receiver
           country
           lat
           lng
@@ -241,6 +243,7 @@ export interface Address {
   state: string;
   zipCode: string;
   country: string;
+  receiver:string;
   lat: number | null;
   lng: number | null;
 }
