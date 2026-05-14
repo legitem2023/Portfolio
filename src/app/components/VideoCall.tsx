@@ -58,7 +58,7 @@ export default function VideoCall({
         if (data.fromUserId === targetUserId && callState === 'idle') {
           setIncomingCall(data);
           setCallState('ringing');
-          console.log('ringing);
+          console.log('ringing');
         }
       });
     }
