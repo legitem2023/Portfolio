@@ -255,7 +255,7 @@ export default function VideoCall({
       setIsVideoOff(!videoTrack.enabled);
     }
   };
-
+ console.log(incomingCall,callState === 'ringing',isInitiator);
   return (
     <>
       {/* Incoming Call Modal */}
