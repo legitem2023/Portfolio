@@ -55,6 +55,7 @@ export default function VideoCall({
     // Listen for incoming calls (only if not initiator)
     if (!isInitiator) {
       channel.bind('incoming-call', (data: any) => {
+       console.log(data.fromUserId,"<<<>>>",targetUserId);
         if (data.fromUserId === targetUserId && callState === 'idle') {
           setIncomingCall(data);
           setCallState('ringing');
