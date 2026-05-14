@@ -403,7 +403,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
 
         // Listen for incoming calls
         channel.bind('incoming-call', (data: any) => {
-          console.log('Incoming call received:', data);
+          //console.log('Incoming call received:', data);
           
           // Don't show if already in a call
           if (showVideoCall) return;
