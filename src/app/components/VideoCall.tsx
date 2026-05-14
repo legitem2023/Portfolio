@@ -27,7 +27,6 @@ export default function VideoCall({
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(incomingCallData);
-  const [pendingOffer, setPendingOffer] = useState<any>(null);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -64,51 +63,24 @@ export default function VideoCall({
       channel.bind('incoming-call', (data: any) => {
         console.log('Incoming call metadata:', data);
         
-        // Use ref instead of the stale closure variable
         if (data.fromUserId === targetUserId && callStateRef.current === 'idle') {
-          // Store the metadata
           setIncomingCall(data);
           setCallState('ringing');
-          console.log('ringing'); // Line 69 - this should now work
-          
-          // Also listen for the offer on a separate event or fetch it
-          // For now, we'll need to get the offer from somewhere
-          fetchOfferForCall(data.callId);
+          console.log('ringing');
         }
       });
     }
 
-    // Listen for call offer separately
-    channel.bind('call-offer', (data: any) => {
-      console.log('Received call offer:', data);
-      if (data.callId === callIdRef.current || data.callId === incomingCall?.callId) {
-        setPendingOffer(data.offer);
-        // If we're already in ringing state and have the call metadata, auto-accept might be triggered
-        if (callState === 'ringing' && incomingCall) {
-          // You could auto-accept here or wait for user action
-          console.log('Offer received for ringing call');
-        }
-      }
-    });
-
     // Listen for call answer
     channel.bind('call-answered', async (data: any) => {
-      console.log('Call answered data:', data);
       if (data.callId === callIdRef.current && peerConnectionRef.current) {
         try {
-          let answer = data.answer || data;
-          let sdpObject = null;
-          
-          if (answer.type && answer.sdp) {
-            sdpObject = answer;
-          } else if (answer.sdp && !answer.type) {
-            sdpObject = { type: 'answer', sdp: answer.sdp };
-          } else if (typeof answer === 'string') {
-            sdpObject = { type: 'answer', sdp: answer };
+          let answer = data.answer;
+          if (answer && !answer.type && answer.sdp) {
+            answer = { type: 'answer', sdp: answer.sdp };
           }
-          
-          if (sdpObject) {
-            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(sdpObject));
+          if (answer && answer.type && answer.sdp) {
+            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
           } else {
             console.error('Invalid answer format:', answer);
           }
@@ -142,20 +114,6 @@ export default function VideoCall({
       pusher.disconnect();
     };
   }, [userId, targetUserId, isInitiator]);
-
-  // Function to fetch the offer for a call
-  const fetchOfferForCall = async (callId: string) => {
-    try {
-      const response = await fetch(`/api/call/get-offer?callId=${callId}`);
-      const data = await response.json();
-      if (data.offer) {
-        console.log('Fetched offer:', data.offer);
-        setPendingOffer(data.offer);
-      }
-    } catch (error) {
-      console.error('Error fetching offer:', error);
-    }
-  };
 
   // Auto-start call if initiator
   useEffect(() => {
@@ -228,40 +186,11 @@ export default function VideoCall({
       
       setCallState('calling');
       
-      // First, store the offer in your backend
-      const storeOfferResponse = await fetch('/api/call/store-offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          callId: callIdRef.current,
-          offer: {
-            type: offer.type,
-            sdp: offer.sdp
-          },
-        }),
-      });
-      
-      // Then send the call notification with metadata only
-      const callData = {
-        fromUserId: userId,
-        toUserId: targetUserId,
-        callId: callIdRef.current,
-        timestamp: Date.now(),
-      };
-      
-      console.log('Sending call initiation (metadata only):', callData);
-      
       await fetch('/api/call/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(callData),
-      });
-      
-      // Also send the offer separately
-      await fetch('/api/call/send-offer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          fromUserId: userId,
           toUserId: targetUserId,
           callId: callIdRef.current,
           offer: {
@@ -270,7 +199,6 @@ export default function VideoCall({
           },
         }),
       });
-      
     } catch (error) {
       console.error('Error starting call:', error);
       endCall();
@@ -278,53 +206,35 @@ export default function VideoCall({
   };
 
   const acceptCall = async () => {
-    console.log('Accepting call with metadata:', incomingCall);
-    
-    if (!incomingCall) {
-      console.error('No incoming call metadata');
-      return;
-    }
-    
-    // Wait for the offer if not already received
-    if (!pendingOffer) {
-      console.log('Waiting for offer...');
-      // Wait up to 5 seconds for the offer
-      for (let i = 0; i < 50; i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        if (pendingOffer) break;
-      }
-      
-      if (!pendingOffer) {
-        console.error('No offer received after waiting');
-        // Try to fetch it
-        await fetchOfferForCall(incomingCall.callId);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        if (!pendingOffer) {
-          alert('Unable to get call offer. Please try again.');
-          endCall();
-          return;
-        }
-      }
-    }
+    if (!incomingCall) return;
     
     try {
       const stream = await setupLocalStream();
       const pc = createPeerConnection(stream);
       peerConnectionRef.current = pc;
       
-      console.log('Using offer:', pendingOffer);
+      let offer = incomingCall.offer;
       
-      // Validate and fix the offer object
+      console.log('Accepting call with data:', incomingCall);
+      console.log('Offer object:', offer);
+      
+      if (!offer) {
+        console.error('No offer found in incoming call data');
+        throw new Error('Missing offer in call data');
+      }
+      
       let validOffer;
-      if (pendingOffer.type === 'offer' && pendingOffer.sdp) {
-        validOffer = pendingOffer;
-      } else if (pendingOffer.sdp && !pendingOffer.type) {
-        validOffer = { type: 'offer', sdp: pendingOffer.sdp };
-      } else if (typeof pendingOffer === 'string') {
-        validOffer = { type: 'offer', sdp: pendingOffer };
+      if (offer.type === 'offer' && offer.sdp) {
+        validOffer = offer;
+      } else if (offer.sdp && !offer.type) {
+        validOffer = { type: 'offer', sdp: offer.sdp };
+      } else if (typeof offer === 'string') {
+        validOffer = { type: 'offer', sdp: offer };
+      } else if (offer.sdp && offer.type === null) {
+        validOffer = { type: 'offer', sdp: offer.sdp };
       } else {
-        console.error('Invalid offer format:', pendingOffer);
-        throw new Error('Invalid offer format');
+        console.error('Invalid offer format:', offer);
+        throw new Error('Invalid offer format in call data');
       }
       
       await pc.setRemoteDescription(new RTCSessionDescription(validOffer));
@@ -332,26 +242,21 @@ export default function VideoCall({
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       
-      const answerData = {
-        toUserId: incomingCall.fromUserId,
-        callId: incomingCall.callId,
-        answer: {
-          type: answer.type,
-          sdp: answer.sdp
-        },
-      };
-      
-      console.log('Sending answer:', answerData);
-      
       await fetch('/api/call/answer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(answerData),
+        body: JSON.stringify({
+          toUserId: incomingCall.fromUserId,
+          callId: incomingCall.callId,
+          answer: {
+            type: answer.type,
+            sdp: answer.sdp
+          },
+        }),
       });
       
       setCallState('connected');
       setIncomingCall(null);
-      setPendingOffer(null);
       callIdRef.current = incomingCall.callId;
     } catch (error) {
       console.error('Error accepting call:', error);
@@ -361,7 +266,6 @@ export default function VideoCall({
 
   const rejectCall = () => {
     setIncomingCall(null);
-    setPendingOffer(null);
     endCall();
   };
 
@@ -421,9 +325,8 @@ export default function VideoCall({
               <button
                 onClick={acceptCall}
                 className="flex-1 bg-green-500 text-white py-3 rounded-xl hover:bg-green-600 transition-all flex items-center justify-center gap-2"
-                disabled={!pendingOffer}
               >
-                <Phone className="w-5 h-5" /> Accept {!pendingOffer && '(Loading...)'}
+                <Phone className="w-5 h-5" /> Accept
               </button>
               <button
                 onClick={rejectCall}
@@ -432,11 +335,6 @@ export default function VideoCall({
                 <PhoneOff className="w-5 h-5" /> Reject
               </button>
             </div>
-            {!pendingOffer && (
-              <p className="text-xs text-gray-500 text-center mt-3">
-                Loading call details...
-              </p>
-            )}
           </div>
         </div>
       )}
@@ -523,4 +421,4 @@ export default function VideoCall({
       )}
     </>
   );
-  }
+}
