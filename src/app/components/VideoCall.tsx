@@ -35,7 +35,6 @@ export default function VideoCall({
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
   const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>(callState);
-  const reconnectAttemptsRef = useRef(0);
 
   useEffect(() => {
     callStateRef.current = callState;
@@ -123,8 +122,11 @@ export default function VideoCall({
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        // Don't autoplay, just set srcObject
       }
+      
+      // Log the tracks
+      console.log('Local stream tracks:', stream.getTracks().map(t => `${t.kind} (${t.enabled ? 'enabled' : 'disabled'})`));
+      
       return stream;
     } catch (error) {
       console.error('Error accessing media devices:', error);
@@ -136,40 +138,30 @@ export default function VideoCall({
   const createPeerConnection = (stream: MediaStream) => {
     const pc = new RTCPeerConnection(configuration);
     
-    // Add local tracks
+    // Add ALL local tracks to the peer connection
     stream.getTracks().forEach(track => {
       pc.addTrack(track, stream);
-      console.log(`Added ${track.kind} track to peer connection`);
+      console.log(`✅ Added ${track.kind} track to peer connection`);
     });
     
-    // Handle remote tracks
+    // Handle remote tracks - THIS RECEIVES THE OTHER PERSON'S VIDEO
     pc.ontrack = (event) => {
-      console.log('ONTRACK CALLBACK - Remote stream received!');
+      console.log(`📹 ONTRACK: Received ${event.track.kind} track from remote`);
       const receivedStream = event.streams[0];
+      console.log('Remote stream tracks:', receivedStream.getTracks().map(t => `${t.kind} (${t.enabled ? 'enabled' : 'disabled'})`));
+      
       setRemoteStream(receivedStream);
       
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = receivedStream;
-        // Try to play with error handling
-        const playPromise = remoteVideoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.log('Play error (non-critical):', error.name);
-            // Retry playing after a short delay
-            setTimeout(() => {
-              if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
-                remoteVideoRef.current.play().catch(e => console.log('Retry play failed:', e.name));
-              }
-            }, 100);
-          });
-        }
+        remoteVideoRef.current.play().catch(e => console.log('Play error:', e));
       }
     };
     
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log('Sending ICE candidate');
+        console.log(`Sending ICE candidate for ${event.candidate.candidate.substring(0, 50)}...`);
         fetch('/api/call/ice-candidate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -182,25 +174,14 @@ export default function VideoCall({
       }
     };
     
-    // Monitor connection state with reconnection logic
+    // Monitor connection state
     pc.oniceconnectionstatechange = () => {
       console.log('ICE connection state:', pc.iceConnectionState);
-      
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
         setCallState('connected');
         setConnectionError(null);
-        reconnectAttemptsRef.current = 0;
-      } else if (pc.iceConnectionState === 'disconnected') {
-        console.log('ICE disconnected, attempting to recover...');
-        // Don't end call immediately, wait for recovery
-        setTimeout(() => {
-          if (peerConnectionRef.current?.iceConnectionState === 'disconnected') {
-            console.log('ICE still disconnected, ending call');
-            endCall();
-          }
-        }, 5000);
       } else if (pc.iceConnectionState === 'failed') {
-        setConnectionError('Connection failed. Please try again.');
+        setConnectionError('Connection failed');
         endCall();
       }
     };
@@ -209,12 +190,14 @@ export default function VideoCall({
       console.log('Connection state:', pc.connectionState);
       if (pc.connectionState === 'connected') {
         setCallState('connected');
-      } else if (pc.connectionState === 'disconnected') {
-        console.log('Connection disconnected');
       } else if (pc.connectionState === 'failed') {
-        setConnectionError('Connection failed');
         endCall();
       }
+    };
+    
+    // Log when negotiation is needed
+    pc.onnegotiationneeded = () => {
+      console.log('Negotiation needed - this should trigger renegotiation');
     };
     
     return pc;
@@ -227,9 +210,13 @@ export default function VideoCall({
       const pc = createPeerConnection(stream);
       peerConnectionRef.current = pc;
       
-      const offer = await pc.createOffer();
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
       await pc.setLocalDescription(offer);
-      console.log('Offer created and set');
+      console.log('Offer created:', offer.type);
+      console.log('Offer SDP includes video?', offer.sdp.includes('m=video'));
       
       setCallState('calling');
       
@@ -247,7 +234,7 @@ export default function VideoCall({
         }),
       });
       
-      console.log('Initiate response: 200');
+      console.log('Call initiated');
     } catch (error) {
       console.error('Error starting call:', error);
       setConnectionError('Failed to start call');
@@ -270,12 +257,17 @@ export default function VideoCall({
       }
       
       console.log('Setting remote description with offer');
+      console.log('Offer SDP includes video?', offer.sdp.includes('m=video'));
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
-      console.log('Creating answer');
-      const answer = await pc.createAnswer();
+      console.log('Creating answer with video enabled');
+      const answer = await pc.createAnswer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
       await pc.setLocalDescription(answer);
-      console.log('Answer created and set');
+      console.log('Answer created:', answer.type);
+      console.log('Answer SDP includes video?', answer.sdp.includes('m=video'));
       
       await fetch('/api/call/answer', {
         method: 'POST',
@@ -387,7 +379,7 @@ export default function VideoCall({
             <X className="w-6 h-6" />
           </button>
 
-          {/* Remote Video (Full screen) */}
+          {/* Remote Video (Full screen) - This should show the OTHER person */}
           <div className="flex-1 relative bg-gray-900">
             <video
               ref={remoteVideoRef}
@@ -400,7 +392,7 @@ export default function VideoCall({
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                 <div className="text-white text-center">
                   <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-xl">Waiting for video...</p>
+                  <p className="text-xl">Waiting for other person's video...</p>
                   {connectionError && (
                     <p className="text-red-400 text-sm mt-2">{connectionError}</p>
                   )}
@@ -409,7 +401,7 @@ export default function VideoCall({
             )}
           </div>
 
-          {/* Local Video PIP */}
+          {/* Local Video PIP - This shows YOUR video */}
           {localStream && (
             <div className="absolute bottom-24 right-4 w-32 h-48 bg-gray-800 rounded-xl overflow-hidden border-2 border-white shadow-lg">
               <video
