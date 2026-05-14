@@ -10,13 +10,14 @@ const pusher = new Pusher({
 });
 
 export async function POST(request: Request) {
-  const { fromUserId, toUserId, callId, roomId } = await request.json();
+  const { fromUserId, toUserId, callId, roomId, offer } = await request.json();
 
-  // Notify the recipient about incoming call
+  // Notify the recipient about incoming call with the offer
   await pusher.trigger(`private-user-${toUserId}`, 'incoming-call', {
     fromUserId,
     callId,
     roomId,
+    offer, // <-- THIS WAS MISSING
     timestamp: Date.now(),
   });
 
