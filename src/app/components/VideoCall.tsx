@@ -55,7 +55,7 @@ export default function VideoCall({
     // Listen for incoming calls (only if not initiator)
     if (!isInitiator) {
       channel.bind('incoming-call', (data: any) => {
-       console.log(data.fromUserId,"<<<>>>",targetUserId);
+        console.log(data.fromUserId,"<<<>>>",targetUserId);
         if (data.fromUserId === targetUserId && callState === 'idle') {
           setIncomingCall(data);
           setCallState('ringing');
@@ -67,7 +67,20 @@ export default function VideoCall({
     // Listen for call answer
     channel.bind('call-answered', async (data: any) => {
       if (data.callId === callIdRef.current && peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+        try {
+          // Validate and set remote description for answer
+          let answer = data.answer;
+          if (answer && !answer.type && answer.sdp) {
+            answer = { type: 'answer', sdp: answer.sdp };
+          }
+          if (answer && answer.type && answer.sdp) {
+            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
+          } else {
+            console.error('Invalid answer format:', answer);
+          }
+        } catch (error) {
+          console.error('Error setting remote description for answer:', error);
+        }
       }
     });
 
@@ -174,7 +187,10 @@ export default function VideoCall({
           fromUserId: userId,
           toUserId: targetUserId,
           callId: callIdRef.current,
-          offer,
+          offer: {
+            type: offer.type,
+            sdp: offer.sdp
+          },
         }),
       });
     } catch (error) {
@@ -191,7 +207,40 @@ export default function VideoCall({
       const pc = createPeerConnection(stream);
       peerConnectionRef.current = pc;
       
-      await pc.setRemoteDescription(new RTCSessionDescription(incomingCall.offer));
+      // Validate and fix the offer object
+      let offer = incomingCall.offer;
+      
+      console.log('Accepting call with data:', incomingCall);
+      console.log('Offer object:', offer);
+      
+      // Check if offer exists
+      if (!offer) {
+        console.error('No offer found in incoming call data');
+        throw new Error('Missing offer in call data');
+      }
+      
+      // Ensure the offer has a valid structure
+      let validOffer;
+      if (offer.type === 'offer' && offer.sdp) {
+        // Already valid
+        validOffer = offer;
+      } else if (offer.sdp && !offer.type) {
+        // Missing type, assume it's an offer
+        validOffer = { type: 'offer', sdp: offer.sdp };
+      } else if (typeof offer === 'string') {
+        // Offer is just an SDP string
+        validOffer = { type: 'offer', sdp: offer };
+      } else if (offer.sdp && offer.type === null) {
+        // Type is null but sdp exists
+        validOffer = { type: 'offer', sdp: offer.sdp };
+      } else {
+        console.error('Invalid offer format:', offer);
+        throw new Error('Invalid offer format in call data');
+      }
+      
+      // Set remote description with validated offer
+      await pc.setRemoteDescription(new RTCSessionDescription(validOffer));
+      
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
       
@@ -201,7 +250,10 @@ export default function VideoCall({
         body: JSON.stringify({
           toUserId: incomingCall.fromUserId,
           callId: incomingCall.callId,
-          answer,
+          answer: {
+            type: answer.type,
+            sdp: answer.sdp
+          },
         }),
       });
       
@@ -257,7 +309,9 @@ export default function VideoCall({
       setIsVideoOff(!videoTrack.enabled);
     }
   };
- console.log(incomingCall,callState === 'ringing',isInitiator);
+
+  console.log(incomingCall, callState === 'ringing', isInitiator);
+
   return (
     <>
       {/* Incoming Call Modal */}
@@ -371,4 +425,4 @@ export default function VideoCall({
       )}
     </>
   );
-          }
+            }
