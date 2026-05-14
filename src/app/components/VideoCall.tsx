@@ -33,6 +33,7 @@ export default function VideoCall({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
+  const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>('idle');
 
   const configuration: RTCConfiguration = {
     iceServers: [
@@ -41,6 +42,11 @@ export default function VideoCall({
       { urls: 'stun:stun2.l.google.com:19302' },
     ],
   };
+
+  // Update ref whenever callState changes
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
 
   // Initialize Pusher and listen for calls
   useEffect(() => {
@@ -55,11 +61,18 @@ export default function VideoCall({
     // Listen for incoming calls (only if not initiator)
     if (!isInitiator) {
       channel.bind('incoming-call', (data: any) => {
+        console.log('Incoming call event received:', data);
         console.log(data.fromUserId,"<<<>>>",targetUserId);
-        if (data.fromUserId === targetUserId && callState === 'idle') {
+        console.log('Current callState:', callStateRef.current);
+        
+        // Use ref to get current state instead of closure value
+        if (data.fromUserId === targetUserId && callStateRef.current === 'idle') {
+          console.log('Setting ringing state');
           setIncomingCall(data);
           setCallState('ringing');
           console.log('ringing');
+        } else {
+          console.log('Not setting ringing - condition not met');
         }
       });
     }
@@ -107,14 +120,14 @@ export default function VideoCall({
       pusher.unsubscribe(`private-user-${userId}`);
       pusher.disconnect();
     };
-  }, [userId, targetUserId, isInitiator]);
+  }, [userId, targetUserId, isInitiator]); // Remove callState from dependencies
 
   // Auto-start call if initiator
   useEffect(() => {
     if (isInitiator && callState === 'idle') {
       startCall();
     }
-  }, [isInitiator]);
+  }, [isInitiator, callState]);
 
   const setupLocalStream = async () => {
     try {
@@ -310,12 +323,10 @@ export default function VideoCall({
     }
   };
 
-  console.log(incomingCall, callState === 'ringing', isInitiator);
-
   return (
     <>
       {/* Incoming Call Modal */}
-      {incomingCall && !isInitiator && (
+      {incomingCall && !isInitiator && callState === 'ringing' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="text-center mb-6">
@@ -425,4 +436,4 @@ export default function VideoCall({
       )}
     </>
   );
-            }
+              }
