@@ -34,6 +34,7 @@ export default function VideoCall({
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
   const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>(callState);
+  const pendingCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
 
   // Update ref when callState changes
   useEffect(() => {
@@ -45,7 +46,10 @@ export default function VideoCall({
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:stun3.l.google.com:19302' },
+      { urls: 'stun:stun4.l.google.com:19302' },
     ],
+    iceCandidatePoolSize: 10,
   };
 
   // Initialize Pusher and listen for calls
@@ -73,6 +77,7 @@ export default function VideoCall({
 
     // Listen for call answer
     channel.bind('call-answered', async (data: any) => {
+      console.log('Call answer received:', data);
       if (data.callId === callIdRef.current && peerConnectionRef.current) {
         try {
           let answer = data.answer;
@@ -81,22 +86,45 @@ export default function VideoCall({
           }
           if (answer && answer.type && answer.sdp) {
             await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-          } else {
-            console.error('Invalid answer format:', answer);
+            console.log('Remote description set successfully');
+            
+            // Process any pending ICE candidates
+            if (pendingCandidatesRef.current.length > 0) {
+              for (const candidate of pendingCandidatesRef.current) {
+                try {
+                  await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
+                } catch (err) {
+                  console.warn('Error adding pending candidate:', err);
+                }
+              }
+              pendingCandidatesRef.current = [];
+            }
           }
         } catch (error) {
-          console.error('Error setting remote description for answer:', error);
+          console.error('Error setting remote description:', error);
         }
       }
     });
 
     // Listen for ICE candidates
     channel.bind('ice-candidate', async (data: any) => {
-      if (peerConnectionRef.current && data.candidate && data.callId === callIdRef.current) {
+      if (data.callId === callIdRef.current && data.candidate) {
+        const pc = peerConnectionRef.current;
+        
+        if (!pc) {
+          pendingCandidatesRef.current.push(data.candidate);
+          return;
+        }
+        
         try {
-          await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+          if (pc.remoteDescription && pc.remoteDescription.type) {
+            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            console.log('ICE candidate added');
+          } else {
+            pendingCandidatesRef.current.push(data.candidate);
+          }
         } catch (error) {
-          console.error('Error adding ICE candidate:', error);
+          console.warn('Error adding ICE candidate:', error);
         }
       }
     });
@@ -144,6 +172,7 @@ export default function VideoCall({
     });
     
     pc.ontrack = (event) => {
+      console.log('Track received, setting remote stream');
       setRemoteStream(event.streams[0]);
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = event.streams[0];
@@ -164,10 +193,27 @@ export default function VideoCall({
       }
     };
     
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', pc.iceConnectionState);
+      if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+        setCallState('connected');
+      } else if (pc.iceConnectionState === 'failed') {
+        console.log('ICE failed, restarting...');
+        // Try to restart ICE
+        pc.restartIce();
+        setTimeout(() => {
+          if (pc.iceConnectionState === 'failed') {
+            endCall();
+          }
+        }, 5000);
+      }
+    };
+    
     pc.onconnectionstatechange = () => {
+      console.log('Connection state:', pc.connectionState);
       if (pc.connectionState === 'connected') {
         setCallState('connected');
-      } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
+      } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
         endCall();
       }
     };
@@ -215,9 +261,6 @@ export default function VideoCall({
       
       let offer = incomingCall.offer;
       
-      console.log('Accepting call with data:', incomingCall);
-      console.log('Offer object:', offer);
-      
       if (!offer) {
         console.error('No offer found in incoming call data');
         throw new Error('Missing offer in call data');
@@ -230,10 +273,7 @@ export default function VideoCall({
         validOffer = { type: 'offer', sdp: offer.sdp };
       } else if (typeof offer === 'string') {
         validOffer = { type: 'offer', sdp: offer };
-      } else if (offer.sdp && offer.type === null) {
-        validOffer = { type: 'offer', sdp: offer.sdp };
       } else {
-        console.error('Invalid offer format:', offer);
         throw new Error('Invalid offer format in call data');
       }
       
@@ -255,9 +295,20 @@ export default function VideoCall({
         }),
       });
       
-      setCallState('connected');
       setIncomingCall(null);
       callIdRef.current = incomingCall.callId;
+      
+      // Process queued candidates
+      if (pendingCandidatesRef.current.length > 0) {
+        for (const candidate of pendingCandidatesRef.current) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(candidate));
+          } catch (err) {
+            console.warn('Error adding queued candidate:', err);
+          }
+        }
+        pendingCandidatesRef.current = [];
+      }
     } catch (error) {
       console.error('Error accepting call:', error);
       endCall();
@@ -278,6 +329,8 @@ export default function VideoCall({
       peerConnectionRef.current.close();
       peerConnectionRef.current = null;
     }
+    
+    pendingCandidatesRef.current = [];
     
     fetch('/api/call/end', {
       method: 'POST',
@@ -421,4 +474,4 @@ export default function VideoCall({
       )}
     </>
   );
-}
+  }
