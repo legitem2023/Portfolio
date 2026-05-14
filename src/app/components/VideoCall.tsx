@@ -28,6 +28,7 @@ export default function VideoCall({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(incomingCallData);
   const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [videoQuality, setVideoQuality] = useState<'low' | 'medium' | 'high'>('low');
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -35,6 +36,7 @@ export default function VideoCall({
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
   const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>(callState);
+  const senderRef = useRef<RTCRtpSender | null>(null);
 
   useEffect(() => {
     callStateRef.current = callState;
@@ -49,6 +51,44 @@ export default function VideoCall({
       { urls: 'stun:stun4.l.google.com:19302' },
     ],
     iceCandidatePoolSize: 10,
+  };
+
+  // Quality settings based on selection
+  const getVideoConstraints = () => {
+    switch(videoQuality) {
+      case 'low':
+        return {
+          video: {
+            width: { ideal: 320 },
+            height: { ideal: 240 },
+            frameRate: { ideal: 15 },
+            aspectRatio: 4/3
+          },
+          audio: true
+        };
+      case 'medium':
+        return {
+          video: {
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            frameRate: { ideal: 24 },
+            aspectRatio: 4/3
+          },
+          audio: true
+        };
+      case 'high':
+        return {
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 30 },
+            aspectRatio: 16/9
+          },
+          audio: true
+        };
+      default:
+        return { video: true, audio: true };
+    }
   };
 
   // Initialize Pusher
@@ -115,17 +155,16 @@ export default function VideoCall({
 
   const setupLocalStream = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
-        audio: true 
-      });
+      const constraints = getVideoConstraints();
+      console.log(`Using ${videoQuality} quality video:`, constraints);
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
       
-      // Log the tracks
-      console.log('Local stream tracks:', stream.getTracks().map(t => `${t.kind} (${t.enabled ? 'enabled' : 'disabled'})`));
+      console.log('Local stream tracks:', stream.getTracks().map(t => `${t.kind} - ${t.getSettings().width}x${t.getSettings().height || 'N/A'}`));
       
       return stream;
     } catch (error) {
@@ -138,18 +177,26 @@ export default function VideoCall({
   const createPeerConnection = (stream: MediaStream) => {
     const pc = new RTCPeerConnection(configuration);
     
-    // Add ALL local tracks to the peer connection
+    // Add local tracks and save sender for bitrate control
     stream.getTracks().forEach(track => {
-      pc.addTrack(track, stream);
-      console.log(`✅ Added ${track.kind} track to peer connection`);
+      const sender = pc.addTrack(track, stream);
+      if (track.kind === 'video') {
+        senderRef.current = sender;
+        // Set low bitrate for better connection
+        const params = sender.getParameters();
+        if (params.encodings) {
+          params.encodings[0].maxBitrate = videoQuality === 'low' ? 300000 : 
+                                           videoQuality === 'medium' ? 500000 : 1000000;
+          sender.setParameters(params);
+        }
+      }
+      console.log(`Added ${track.kind} track to peer connection`);
     });
     
-    // Handle remote tracks - THIS RECEIVES THE OTHER PERSON'S VIDEO
+    // Handle remote tracks
     pc.ontrack = (event) => {
-      console.log(`📹 ONTRACK: Received ${event.track.kind} track from remote`);
+      console.log(`ONTRACK: Received ${event.track.kind} track from remote`);
       const receivedStream = event.streams[0];
-      console.log('Remote stream tracks:', receivedStream.getTracks().map(t => `${t.kind} (${t.enabled ? 'enabled' : 'disabled'})`));
-      
       setRemoteStream(receivedStream);
       
       if (remoteVideoRef.current) {
@@ -161,7 +208,7 @@ export default function VideoCall({
     // Handle ICE candidates
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        console.log(`Sending ICE candidate for ${event.candidate.candidate.substring(0, 50)}...`);
+        console.log('Sending ICE candidate');
         fetch('/api/call/ice-candidate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -195,11 +242,6 @@ export default function VideoCall({
       }
     };
     
-    // Log when negotiation is needed
-    pc.onnegotiationneeded = () => {
-      console.log('Negotiation needed - this should trigger renegotiation');
-    };
-    
     return pc;
   };
 
@@ -215,9 +257,8 @@ export default function VideoCall({
         offerToReceiveVideo: true,
       });
       await pc.setLocalDescription(offer);
-      console.log('Offer created:', offer.type);
-      console.log('Offer SDP includes video?', offer.sdp.includes('m=video'));
       
+      console.log('Offer created with quality:', videoQuality);
       setCallState('calling');
       
       await fetch('/api/call/initiate', {
@@ -233,8 +274,6 @@ export default function VideoCall({
           },
         }),
       });
-      
-      console.log('Call initiated');
     } catch (error) {
       console.error('Error starting call:', error);
       setConnectionError('Failed to start call');
@@ -256,18 +295,13 @@ export default function VideoCall({
         throw new Error('Invalid call offer');
       }
       
-      console.log('Setting remote description with offer');
-      console.log('Offer SDP includes video?', offer.sdp.includes('m=video'));
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
-      console.log('Creating answer with video enabled');
       const answer = await pc.createAnswer({
         offerToReceiveAudio: true,
         offerToReceiveVideo: true,
       });
       await pc.setLocalDescription(answer);
-      console.log('Answer created:', answer.type);
-      console.log('Answer SDP includes video?', answer.sdp.includes('m=video'));
       
       await fetch('/api/call/answer', {
         method: 'POST',
@@ -284,7 +318,6 @@ export default function VideoCall({
       
       setIncomingCall(null);
       callIdRef.current = incomingCall.callId;
-      console.log('Answer sent to caller');
     } catch (error) {
       console.error('Error accepting call:', error);
       setConnectionError('Failed to accept call');
@@ -338,10 +371,19 @@ export default function VideoCall({
     }
   };
 
+  const changeQuality = (quality: 'low' | 'medium' | 'high') => {
+    setVideoQuality(quality);
+    // Restart stream with new quality
+    if (localStream) {
+      localStream.getTracks().forEach(track => track.stop());
+      setupLocalStream();
+    }
+  };
+
   return (
     <>
       {/* Incoming Call Modal */}
-      {incomingCall && !isInitiator && (
+      {incomingCall && !isInitiator && callState === 'ringing' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="text-center mb-6">
@@ -379,7 +421,7 @@ export default function VideoCall({
             <X className="w-6 h-6" />
           </button>
 
-          {/* Remote Video (Full screen) - This should show the OTHER person */}
+          {/* Remote Video */}
           <div className="flex-1 relative bg-gray-900">
             <video
               ref={remoteVideoRef}
@@ -391,8 +433,8 @@ export default function VideoCall({
             {!remoteStream && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                 <div className="text-white text-center">
-                  <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p className="text-xl">Waiting for other person's video...</p>
+                  <Phone className="w-16 h-16 mx-auto animate-bounce mb-4" />
+                  <p className="text-xl">Connecting...</p>
                   {connectionError && (
                     <p className="text-red-400 text-sm mt-2">{connectionError}</p>
                   )}
@@ -401,7 +443,7 @@ export default function VideoCall({
             )}
           </div>
 
-          {/* Local Video PIP - This shows YOUR video */}
+          {/* Local Video PIP */}
           {localStream && (
             <div className="absolute bottom-24 right-4 w-32 h-48 bg-gray-800 rounded-xl overflow-hidden border-2 border-white shadow-lg">
               <video
@@ -418,6 +460,28 @@ export default function VideoCall({
               )}
             </div>
           )}
+
+          {/* Quality Selector */}
+          <div className="absolute bottom-24 left-4 flex gap-2">
+            <button
+              onClick={() => changeQuality('low')}
+              className={`px-3 py-1 rounded text-xs ${videoQuality === 'low' ? 'bg-blue-500' : 'bg-gray-700'} text-white`}
+            >
+              Low (320p)
+            </button>
+            <button
+              onClick={() => changeQuality('medium')}
+              className={`px-3 py-1 rounded text-xs ${videoQuality === 'medium' ? 'bg-blue-500' : 'bg-gray-700'} text-white`}
+            >
+              Medium (480p)
+            </button>
+            <button
+              onClick={() => changeQuality('high')}
+              className={`px-3 py-1 rounded text-xs ${videoQuality === 'high' ? 'bg-blue-500' : 'bg-gray-700'} text-white`}
+            >
+              High (720p)
+            </button>
+          </div>
 
           {/* Controls */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-6">
@@ -455,4 +519,4 @@ export default function VideoCall({
       )}
     </>
   );
-}
+      }
