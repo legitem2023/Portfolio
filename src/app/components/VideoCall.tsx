@@ -261,7 +261,7 @@ export default function VideoCall({
   return (
     <>
       {/* Incoming Call Modal */}
-      {incomingCall && callState === 'ringing' && !isInitiator && (
+      {incomingCall && !isInitiator && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="text-center mb-6">
