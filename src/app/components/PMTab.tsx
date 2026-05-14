@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, gql } from '@apollo/client';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
 import { decryptToken } from '../../../utils/decryptToken';
@@ -75,8 +75,8 @@ const GET_MY_MESSAGES = gql`
 `;
 
 const GET_CONVERSATION = gql`
-  query GetConversation($currentUser: ID,$userId: ID!, $page: Int, $limit: Int) {
-    conversation(currentUser:$currentUser,userId: $userId, page: $page, limit: $limit) {
+  query GetConversation($currentUser: ID, $userId: ID!, $page: Int, $limit: Int) {
+    conversation(currentUser: $currentUser, userId: $userId, page: $page, limit: $limit) {
       messages {
         id
         subject
@@ -123,7 +123,7 @@ const GET_CONVERSATION = gql`
 `;
 
 const GET_MESSAGE_THREADS = gql`
-  query GetMessageThreads($page: Int, $limit: Int, $userId:ID) {
+  query GetMessageThreads($page: Int, $limit: Int, $userId: ID) {
     messageThreads(page: $page, limit: $limit, userId: $userId) {
       threads {
         user {
@@ -246,7 +246,7 @@ interface Message {
   graphQLData?: GraphQLMessage;
 }
 
-// Shimmer Components with proper shimmer effect
+// Shimmer Components
 const Shimmer = ({ className, children }: { className?: string; children?: React.ReactNode }) => (
   <div className={`relative overflow-hidden bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 ${className}`}>
     {children}
@@ -289,7 +289,9 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const router = useRouter();
   const userIdFromUrl = searchParams.get('id');
   const dispatch = useDispatch();
-  const [userId, setUserId] = useState("");
+  
+  // State
+  const [currentUserId, setCurrentUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -307,10 +309,15 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   // Video Call States
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [videoCallTarget, setVideoCallTarget] = useState<User | null>(null);
+  const [isInitiator, setIsInitiator] = useState(true);
+  const [incomingCallData, setIncomingCallData] = useState<any>(null);
   
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pusherRef = useRef<any>(null);
+  const channelRef = useRef<any>(null);
 
   // GraphQL Queries
   const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
@@ -319,16 +326,16 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
     pollInterval: 10000,
   });
 
-  const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS);
+  const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(GET_ALL_USERS);
 
   const { data: conversationData, loading: conversationLoading, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
-      currentUser:UserId,
+      currentUser: UserId,
       userId: selectedUser?.id,
       page: 1,
       limit: 50
     },
-   skip: !selectedUser?.id || !UserId,
+    skip: !selectedUser?.id || !UserId,
     pollInterval: 10000,
   });
 
@@ -356,13 +363,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  // Handle Video Call
-  const handleVideoCall = useCallback((user: User) => {
-    setVideoCallTarget(user);
-    setShowVideoCall(true);
-  }, []);
-
-  // Scroll to bottom
+  // Scroll functions
   const scrollToBottom = useCallback(() => {
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -378,9 +379,106 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
     }
   }, []);
 
-  // Get user data
+  // Initialize Pusher for incoming calls
   useEffect(() => {
-    const getRole = async () => {
+    if (!currentUserId) return;
+
+    const initPusher = async () => {
+      try {
+        const Pusher = (await import('pusher-js')).default;
+        
+        if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+          console.error('Pusher configuration missing');
+          return;
+        }
+
+        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+          authEndpoint: '/api/pusher/auth',
+        });
+
+        pusherRef.current = pusher;
+        const channel = pusher.subscribe(`private-user-${currentUserId}`);
+        channelRef.current = channel;
+
+        // Listen for incoming calls
+        channel.bind('incoming-call', (data: any) => {
+          console.log('Incoming call received:', data);
+          
+          // Don't show if already in a call
+          if (showVideoCall) return;
+          
+          // Find the caller in users list
+          const caller = usersData?.users?.find((u: User) => u.id === data.fromUserId);
+          
+          if (caller) {
+            setVideoCallTarget(caller);
+            setIncomingCallData(data);
+            setIsInitiator(false);
+            setShowVideoCall(true);
+          } else {
+            // If caller not in list, create temporary user object
+            setVideoCallTarget({
+              id: data.fromUserId,
+              firstName: 'Unknown',
+              lastName: 'Caller',
+              avatar: '/NoImage.webp',
+              email: 'unknown@user.com'
+            });
+            setIncomingCallData(data);
+            setIsInitiator(false);
+            setShowVideoCall(true);
+          }
+        });
+
+        // Listen for call acceptance
+        channel.bind('call-accepted', (data: any) => {
+          console.log('Call accepted:', data);
+        });
+
+        // Listen for call rejection
+        channel.bind('call-rejected', (data: any) => {
+          console.log('Call rejected:', data);
+        });
+
+      } catch (error) {
+        console.error('Error initializing Pusher:', error);
+      }
+    };
+
+    initPusher();
+
+    // Cleanup
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unbind_all();
+        channelRef.current.unsubscribe();
+      }
+      if (pusherRef.current) {
+        pusherRef.current.disconnect();
+      }
+    };
+  }, [currentUserId, usersData?.users, showVideoCall]);
+
+  // Handle outgoing video call
+  const handleVideoCall = useCallback((user: User) => {
+    if (showVideoCall) return;
+    setVideoCallTarget(user);
+    setIsInitiator(true);
+    setIncomingCallData(null);
+    setShowVideoCall(true);
+  }, [showVideoCall]);
+
+  const handleCallClose = useCallback(() => {
+    setShowVideoCall(false);
+    setVideoCallTarget(null);
+    setIsInitiator(true);
+    setIncomingCallData(null);
+  }, []);
+
+  // Get current user data
+  useEffect(() => {
+    const getCurrentUser = async () => {
       try {
         setIsInitialLoading(true);
         const response = await fetch('/api/protected', { credentials: 'include' });
@@ -391,33 +489,37 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
         const payload = await decryptToken(token, secret.toString());
         
-        setUserId(payload.userId);
+        setCurrentUserId(payload.userId);
         setName(payload.name);
         setAvatar(payload.image || "/NoImage.webp");
       } catch (err) {
-        console.error('Error getting role:', err);
+        console.error('Error getting user:', err);
       } finally {
         setIsInitialLoading(false);
       }
     };
-    getRole();
+    getCurrentUser();
   }, []);
 
   // Handle URL parameter to auto-select user
   useEffect(() => {
-    if (userIdFromUrl && usersData?.users && !hasAttemptedUrlSelection && !selectedUser && !usersLoading) {
+    if (userIdFromUrl && usersData?.users && !hasAttemptedUrlSelection && !selectedUser && !usersLoading && currentUserId) {
       const userFromUrl = usersData.users.find((user: User) => user.id === userIdFromUrl);
-      if (userFromUrl) {
+      if (userFromUrl && userFromUrl.id !== currentUserId) {
         handleUserSelect(userFromUrl);
         setHasAttemptedUrlSelection(true);
         
-        // Optional: Remove the ID from URL after selection to prevent re-selection
+        // Remove ID from URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('id');
+        router.replace(newUrl.pathname + newUrl.search);
+      } else if (userFromUrl && userFromUrl.id === currentUserId) {
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('id');
         router.replace(newUrl.pathname + newUrl.search);
       }
     }
-  }, [userIdFromUrl, usersData?.users, selectedUser, hasAttemptedUrlSelection, router, usersLoading]);
+  }, [userIdFromUrl, usersData?.users, selectedUser, hasAttemptedUrlSelection, router, usersLoading, currentUserId]);
 
   // Update message threads
   useEffect(() => {
@@ -431,7 +533,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
 
   // Convert and set messages
   useEffect(() => {
-    if (conversationData?.conversation?.messages && userId) {
+    if (conversationData?.conversation?.messages && currentUserId) {
       const sortedMessages = [...conversationData.conversation.messages].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -446,7 +548,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
         comments: msg.replies.length,
         isLikedByMe: false,
         images: [],
-        isOwnMessage: msg.sender.id === userId,
+        isOwnMessage: msg.sender.id === currentUserId,
         isRead: msg.isRead,
         graphQLData: msg
       }));
@@ -458,10 +560,11 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
-        markMultipleAsReadMutation({ variables: { messageIds: unreadIds } });
+        markMultipleAsReadMutation({ variables: { messageIds: unreadIds } })
+          .catch(err => console.error('Error marking messages as read:', err));
       }
     }
-  }, [conversationData, userId, markMultipleAsReadMutation, scrollToBottom]);
+  }, [conversationData, currentUserId, markMultipleAsReadMutation, scrollToBottom]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -479,7 +582,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
       const { data } = await sendMessageMutation({
         variables: {
           input: {
-            senderId: UserId || userId,
+            senderId: UserId || currentUserId,
             recipientId: selectedUser.id,
             body: newMessage.trim()
           }
@@ -509,8 +612,8 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
           textareaRef.current.style.height = 'auto';
         }
         
-        refetchThreads();
-        refetchConversation();
+        await refetchThreads();
+        await refetchConversation();
         setTimeout(scrollToBottom, 50);
       }
     } catch (error) {
@@ -536,13 +639,17 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   };
 
   const handleUserSelect = useCallback(async (user: User) => {
+    if (user.id === currentUserId) {
+      return;
+    }
+    
     setSelectedUser(user);
     if (isMobile) setIsSidebarOpen(false);
     await refetchConversation({ userId: user.id });
     setTimeout(scrollToBottom, 100);
-  }, [isMobile, refetchConversation, scrollToBottom]);
+  }, [isMobile, refetchConversation, scrollToBottom, currentUserId]);
 
-  const handleLogoClick = () =>{
+  const handleLogoClick = () => {
     router.push('/');  
     dispatch(setActiveIndex(1));
   }
@@ -562,10 +669,10 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
   const allContacts = useMemo(() => {
     const threadUsers = messageThreads.map(t => t.user);
     const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId && !threadUsers.some(tu => tu.id === user.id)
+      user.id !== currentUserId && !threadUsers.some(tu => tu.id === user.id)
     ) || [];
     return [...threadUsers, ...otherUsers];
-  }, [messageThreads, usersData?.users, userId]);
+  }, [messageThreads, usersData?.users, currentUserId]);
 
   const filteredContacts = useMemo(() => {
     if (!searchTerm.trim()) return allContacts;
@@ -619,7 +726,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
             flex flex-col
             h-full
           `}>
-            {/* Sidebar Header - Original Gradient Design */}
+            {/* Sidebar Header */}
             <div className="flex-shrink-0">
               <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)] flex-shrink-0">
                 <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
@@ -630,7 +737,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                       height={100} 
                       width={100} 
                       className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
-                      onClick={()=>handleLogoClick()}
+                      onClick={handleLogoClick}
                     />
                   </div>
                   {isMobile && (
@@ -685,10 +792,9 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
               </div>
             </div>
 
-            {/* Contacts List - Scrollable with Shimmer */}
+            {/* Contacts List */}
             <div className="flex-1 overflow-y-auto px-2 pb-4">
               {isSidebarLoading ? (
-                // Show shimmer while loading
                 <>
                   <ContactShimmer />
                   <ContactShimmer />
@@ -738,7 +844,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                           <ChevronRight className="w-4 h-4 text-purple-300 flex-shrink-0" />
                         </button>
                         
-                        {/* Video Call Button for each contact */}
+                        {/* Video Call Button */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -769,7 +875,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
           {/* Chat Area */}
           {shouldShowChat && (
             <div className="flex-1 flex flex-col h-full bg-white">
-              {/* Chat Header - Fixed truncation */}
+              {/* Chat Header */}
               {selectedUser ? (
                 <div className="flex-shrink-0">
                   <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-[linear-gradient(135deg,rgba(255,255,255,0.9)_0%,rgba(200,180,255,0.5)_100%)]">
@@ -784,10 +890,6 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                           </button>
                         )}
                         <Image 
-                          onClick={() => {
-                            setSelectedUser(null);
-                            if (isMobile) setIsSidebarOpen(true);
-                          }}
                           src="/VendorCity_Store.webp" 
                           alt="Logo" 
                           height={100} 
@@ -833,7 +935,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                           height={100} 
                           width={100} 
                           className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
-                          onClick={()=>handleLogoClick()}
+                          onClick={handleLogoClick}
                         />
                         <div className="ml-3 min-w-0">
                           <h2 className="font-bold text-gray-800 text-sm md:text-base truncate">Messages</h2>
@@ -853,7 +955,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                 </div>
               )}
 
-              {/* Messages Container - Scrollable with Shimmer */}
+              {/* Messages Container */}
               <div className="flex-1 relative overflow-hidden">
                 <div 
                   ref={messagesContainerRef}
@@ -861,7 +963,6 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                 >
                   {selectedUser ? (
                     isChatLoading ? (
-                      // Show shimmer while loading messages
                       <div className="p-4">
                         <div className="flex justify-center my-4">
                           <Shimmer className="h-6 w-20 rounded-full" />
@@ -871,6 +972,14 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                         <MessageShimmer />
                         <MessageShimmer isOwnMessage={true} />
                         <MessageShimmer />
+                      </div>
+                    ) : messages.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center text-purple-400">
+                          <MessageCircle className="w-16 h-16 mx-auto mb-4" />
+                          <p className="text-lg font-medium">No messages yet</p>
+                          <p className="text-sm mt-2">Send a message to start the conversation</p>
+                        </div>
                       </div>
                     ) : (
                       <div className="p-4">
@@ -942,7 +1051,7 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
                 </div>
               </div>
 
-              {/* Input Area - Fixed at bottom */}
+              {/* Input Area */}
               {selectedUser && !isChatLoading && (
                 <div className="border-t border-purple-100 bg-white flex-shrink-0">
                   <div className="p-4">
@@ -992,16 +1101,15 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
         </div>
       </div>
 
-      {/* Video Call Component */}
-      {showVideoCall && videoCallTarget && (
+      {/* Video Call Component - Supports both outgoing and incoming calls */}
+      {showVideoCall && videoCallTarget && currentUserId && (
         <VideoCall
-          userId={UserId || userId}
+          userId={currentUserId}
           targetUserId={videoCallTarget.id}
           targetUserName={getUserFullName(videoCallTarget)}
-          onClose={() => {
-            setShowVideoCall(false);
-            setVideoCallTarget(null);
-          }}
+          onClose={handleCallClose}
+          isInitiator={isInitiator}
+          incomingCallData={incomingCallData}
         />
       )}
     </div>
