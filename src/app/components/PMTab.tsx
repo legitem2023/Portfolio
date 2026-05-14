@@ -1102,6 +1102,9 @@ const PMTab = ({ UserId }: { UserId?: string }) => {
       </div>
 
       {/* Video Call Component - Supports both outgoing and incoming calls */}
+      {
+        console.log(showVideoCall,videoCallTarget,currentUserId);
+      }
       {showVideoCall && videoCallTarget && currentUserId && (
         <VideoCall
           userId={currentUserId}
