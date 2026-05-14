@@ -34,6 +34,12 @@ export default function VideoCall({
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
+  const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>(callState);
+
+  // Update ref when callState changes
+  useEffect(() => {
+    callStateRef.current = callState;
+  }, [callState]);
 
   const configuration: RTCConfiguration = {
     iceServers: [
@@ -58,10 +64,12 @@ export default function VideoCall({
       channel.bind('incoming-call', (data: any) => {
         console.log('Incoming call metadata:', data);
         
-        if (data.fromUserId === targetUserId && callState === 'idle') {
+        // Use ref instead of the stale closure variable
+        if (data.fromUserId === targetUserId && callStateRef.current === 'idle') {
           // Store the metadata
           setIncomingCall(data);
           setCallState('ringing');
+          console.log('ringing'); // Line 69 - this should now work
           
           // Also listen for the offer on a separate event or fetch it
           // For now, we'll need to get the offer from somewhere
@@ -515,4 +523,4 @@ export default function VideoCall({
       )}
     </>
   );
-                 }
+  }
