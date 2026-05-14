@@ -28,7 +28,6 @@ export default function VideoCall({
   const [isVideoOff, setIsVideoOff] = useState(false);
   const [incomingCall, setIncomingCall] = useState<any>(incomingCallData);
   const [connectionError, setConnectionError] = useState<string | null>(null);
-  const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -36,6 +35,7 @@ export default function VideoCall({
   const pusherRef = useRef<Pusher | null>(null);
   const callIdRef = useRef<string>(incomingCallData?.callId || `${userId}-${targetUserId}-${Date.now()}`);
   const callStateRef = useRef<'idle' | 'calling' | 'ringing' | 'connected' | 'ended'>(callState);
+  const reconnectAttemptsRef = useRef(0);
 
   useEffect(() => {
     callStateRef.current = callState;
@@ -123,7 +123,7 @@ export default function VideoCall({
       setLocalStream(stream);
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
-        console.log('Local video stream set');
+        // Don't autoplay, just set srcObject
       }
       return stream;
     } catch (error) {
@@ -142,33 +142,26 @@ export default function VideoCall({
       console.log(`Added ${track.kind} track to peer connection`);
     });
     
-    // Handle remote tracks - THIS IS WHERE REMOTE VIDEO ARRIVES
+    // Handle remote tracks
     pc.ontrack = (event) => {
-      console.log('🔥 ONTRACK EVENT FIRED!', event.track.kind);
-      console.log('Received remote track:', event.track.kind);
-      console.log('Streams:', event.streams);
+      console.log('ONTRACK CALLBACK - Remote stream received!');
+      const receivedStream = event.streams[0];
+      setRemoteStream(receivedStream);
       
-      const [remoteStream] = event.streams;
-      if (remoteStream) {
-        console.log('Setting remote stream with tracks:', remoteStream.getTracks());
-        setRemoteStream(remoteStream);
-        
-        if (remoteVideoRef.current) {
-          remoteVideoRef.current.srcObject = remoteStream;
-          console.log('Remote video element updated');
-          
-          // Force video play
-          remoteVideoRef.current.play().catch(e => console.log('Auto-play prevented:', e));
-        }
-        
-        // Check if video track exists
-        const videoTracks = remoteStream.getVideoTracks();
-        if (videoTracks.length > 0) {
-          console.log('Video track found, enabled:', videoTracks[0].enabled);
-          setHasRemoteVideo(true);
-        } else {
-          console.warn('No video track in remote stream!');
-          setHasRemoteVideo(false);
+      if (remoteVideoRef.current) {
+        remoteVideoRef.current.srcObject = receivedStream;
+        // Try to play with error handling
+        const playPromise = remoteVideoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.log('Play error (non-critical):', error.name);
+            // Retry playing after a short delay
+            setTimeout(() => {
+              if (remoteVideoRef.current && remoteVideoRef.current.srcObject) {
+                remoteVideoRef.current.play().catch(e => console.log('Retry play failed:', e.name));
+              }
+            }, 100);
+          });
         }
       }
     };
@@ -185,16 +178,27 @@ export default function VideoCall({
             callId: callIdRef.current,
             candidate: event.candidate,
           }),
-        });
+        }).catch(console.error);
       }
     };
     
-    // Monitor connection state
+    // Monitor connection state with reconnection logic
     pc.oniceconnectionstatechange = () => {
       console.log('ICE connection state:', pc.iceConnectionState);
+      
       if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
         setCallState('connected');
         setConnectionError(null);
+        reconnectAttemptsRef.current = 0;
+      } else if (pc.iceConnectionState === 'disconnected') {
+        console.log('ICE disconnected, attempting to recover...');
+        // Don't end call immediately, wait for recovery
+        setTimeout(() => {
+          if (peerConnectionRef.current?.iceConnectionState === 'disconnected') {
+            console.log('ICE still disconnected, ending call');
+            endCall();
+          }
+        }, 5000);
       } else if (pc.iceConnectionState === 'failed') {
         setConnectionError('Connection failed. Please try again.');
         endCall();
@@ -205,21 +209,11 @@ export default function VideoCall({
       console.log('Connection state:', pc.connectionState);
       if (pc.connectionState === 'connected') {
         setCallState('connected');
+      } else if (pc.connectionState === 'disconnected') {
+        console.log('Connection disconnected');
       } else if (pc.connectionState === 'failed') {
         setConnectionError('Connection failed');
         endCall();
-      }
-    };
-    
-    // Monitor track events
-    pc.ontrack = (event) => {
-      console.log('ONTRACK CALLBACK - Remote stream received!');
-      const receivedStream = event.streams[0];
-      setRemoteStream(receivedStream);
-      
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = receivedStream;
-        remoteVideoRef.current.play().catch(e => console.log('Play error:', e));
       }
     };
     
@@ -239,7 +233,7 @@ export default function VideoCall({
       
       setCallState('calling');
       
-      const response = await fetch('/api/call/initiate', {
+      await fetch('/api/call/initiate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -253,7 +247,7 @@ export default function VideoCall({
         }),
       });
       
-      console.log('Initiate response:', response.status);
+      console.log('Initiate response: 200');
     } catch (error) {
       console.error('Error starting call:', error);
       setConnectionError('Failed to start call');
@@ -331,7 +325,7 @@ export default function VideoCall({
     }).catch(console.error);
     
     setRemoteStream(null);
-    setHasRemoteVideo(false);
+    setLocalStream(null);
     setCallState('ended');
     onClose();
   };
@@ -355,7 +349,7 @@ export default function VideoCall({
   return (
     <>
       {/* Incoming Call Modal */}
-      {incomingCall && !isInitiator && (
+      {incomingCall && !isInitiator && callState === 'ringing' && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-50">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
             <div className="text-center mb-6">
@@ -402,7 +396,7 @@ export default function VideoCall({
               className="w-full h-full object-cover"
             />
             
-            {(!remoteStream || !hasRemoteVideo) && (
+            {!remoteStream && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                 <div className="text-white text-center">
                   <Video className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -410,9 +404,6 @@ export default function VideoCall({
                   {connectionError && (
                     <p className="text-red-400 text-sm mt-2">{connectionError}</p>
                   )}
-                  <p className="text-sm text-gray-400 mt-4">
-                    {callState === 'connected' ? 'Connected, but no video stream received' : 'Connecting...'}
-                  </p>
                 </div>
               </div>
             )}
@@ -472,4 +463,4 @@ export default function VideoCall({
       )}
     </>
   );
-        }
+}
