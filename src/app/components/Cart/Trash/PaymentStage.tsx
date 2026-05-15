@@ -1,5 +1,5 @@
 import { ChangeEvent, FormEvent, useState } from 'react';
-import { PaymentInfo } from './DeluxeCart';
+import { PaymentInfo } from '../DeluxeCart';
 
 interface PaymentStageProps {
   paymentInfo: PaymentInfo;
