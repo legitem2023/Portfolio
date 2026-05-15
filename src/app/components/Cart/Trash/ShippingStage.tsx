@@ -1,8 +1,8 @@
 import { ChangeEvent, FormEvent, useState, useEffect } from 'react';
-import { ShippingInfo } from './DeluxeCart';
+import { ShippingInfo } from '../DeluxeCart';
 import { useQuery } from '@apollo/client';
-import { GET_USER_PROFILE } from '../graphql/query';
-import ShippingStageShimmer from './ShippingStageShimmer';
+import { GET_USER_PROFILE } from '../../graphql/query';
+import ShippingStageShimmer from '../ShippingStageShimmer';
 
 interface Address {
   id: string;
