@@ -694,7 +694,7 @@ const ConfirmationStage = ({
 }: ConfirmationStageProps) => {
   const getPaymentMethodDisplay = () => {
     switch (paymentInfo.method) {
-      case 'gcash':
+      /*case 'gcash':
         return {
           method: 'GCash',
           details: `Mobile: ${paymentInfo.gcashNumber || 'Not provided'}`,
@@ -705,7 +705,7 @@ const ConfirmationStage = ({
           method: 'Bank Transfer',
           details: `${paymentInfo.bankName || 'No bank selected'} - ${paymentInfo.accountNumber || 'No account number'}`,
           icon: '🏦'
-        };
+        };*/
       case 'cod':
         return {
           method: 'Cash on Delivery',
