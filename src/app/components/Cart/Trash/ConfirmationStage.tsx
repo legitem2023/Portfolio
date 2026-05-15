@@ -1,6 +1,6 @@
 'use client';
 import { useMutation } from '@apollo/client';
-import { ShippingInfo, PaymentInfo } from './DeluxeCart';
+import { ShippingInfo, PaymentInfo } from '../DeluxeCart';
 import { CREATE_ORDER } from '../../graphql/mutation'; 
 import { CartItem } from '../../../../../types';
 interface ConfirmationStageProps {
