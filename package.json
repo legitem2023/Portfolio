@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.8.0",
+    "@davstack/sound": "^1.0.0",
     "@graphql-tools/schema": "^10.0.0",
     "@jeardev/ph-address": "^1.0.0",
     "@leenguyen/react-flip-clock-countdown": "^1.0.5",
