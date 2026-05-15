@@ -1,10 +1,12 @@
 'use client';
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
-import { decryptToken } from '../../../../utils/decryptToken';
+import Image from 'next/image';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from "react-redux";
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
-import VideoCall from '../../components/VideoCall'; // Import the VideoCall component
+import { decryptToken } from '../../../../utils/decryptToken';
+import VideoCall from '../../components/VideoCall';
 
 import { 
   Search, 
@@ -16,14 +18,13 @@ import {
   MessageCircle, 
   Send, 
   Paperclip, 
-  Image,
+  Image as ImageIcon,
   MessageSquare,
   Loader2,
-  Video,
-  VideoOff as VideoOffIcon
+  ArrowLeft
 } from 'lucide-react';
 
-// Shimmer Components ONLY - added at the top
+// Shimmer Components
 const Shimmer = ({ className, children }: { className?: string; children?: React.ReactNode }) => (
   <div className={`relative overflow-hidden bg-gradient-to-r from-zinc-100 via-zinc-200 to-zinc-100 ${className}`}>
     {children}
@@ -60,55 +61,7 @@ const MessageShimmer = ({ isOwnMessage = false }: { isOwnMessage?: boolean }) =>
   </div>
 );
 
-// GraphQL Queries & Mutations (unchanged)
-const GET_MY_MESSAGES = gql`
-  query GetMyMessages($page: Int, $limit: Int, $isRead: Boolean) {
-    myMessages(page: $page, limit: $limit, isRead: $isRead) {
-      messages {
-        id
-        subject
-        body
-        isRead
-        createdAt
-        sender {
-          id
-          firstName
-          lastName
-          avatar
-          email
-        }
-        recipient {
-          id
-          firstName
-          lastName
-          avatar
-          email
-        }
-        parent {
-          id
-          body
-          sender {
-            firstName
-            lastName
-          }
-        }
-        replies {
-          id
-          body
-          createdAt
-          sender {
-            firstName
-            lastName
-          }
-        }
-      }
-      totalCount
-      hasNextPage
-      page
-    }
-  }
-`;
-
+// GraphQL Queries & Mutations
 const GET_CONVERSATION = gql`
   query GetConversation($currentUser:ID, $userId: ID!, $page: Int, $limit: Int) {
     conversation(currentUser:$currentUser, userId: $userId, page: $page, limit: $limit) {
@@ -248,49 +201,9 @@ const SEND_MESSAGE = gql`
   }
 `;
 
-const MARK_AS_READ = gql`
-  mutation MarkAsRead($messageId: ID!) {
-    markAsRead(messageId: $messageId) {
-      id
-      isRead
-    }
-  }
-`;
-
 const MARK_MULTIPLE_AS_READ = gql`
   mutation MarkMultipleAsRead($messageIds: [ID!]!) {
     markMultipleAsRead(messageIds: $messageIds)
-  }
-`;
-
-const REPLY_MESSAGE = gql`
-  mutation ReplyMessage($input: ReplyMessageInput!) {
-    replyMessage(input: $input) {
-      id
-      body
-      isRead
-      createdAt
-      sender {
-        id
-        firstName
-        lastName
-        avatar
-      }
-      recipient {
-        id
-        firstName
-        lastName
-        avatar
-      }
-      parent {
-        id
-        body
-        sender {
-          firstName
-          lastName
-        }
-      }
-    }
   }
 `;
 
@@ -339,247 +252,275 @@ interface Message {
 }
 
 const PMTab = ({ UserId }: { UserId: string }) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const userIdFromUrl = searchParams.get('id');
+  const dispatch = useDispatch();
+  const reduxSelectedUserId = useSelector((state: any) => state.selectedUser.value);
+  
+  // State
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [avatar, setAvatar] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  
-  // Video call states
-  const [isVideoCallActive, setIsVideoCallActive] = useState(false);
-  const [isInitiator, setIsInitiator] = useState(true);
-  const [incomingCallData, setIncomingCallData] = useState<any>(null);
-  
-  // Use Redux for selectedUser (this is the ID)
-  const dispatch = useDispatch();
-  const selectedUserId = useSelector((state: any) => state.selectedUser.value);
   const [selectedUser, setSelectedUserState] = useState<User | null>(null);
-  
-  const [selectedThread, setSelectedThread] = useState<MessageThread | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [messageThreads, setMessageThreads] = useState<MessageThread[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"threads" | "allUsers">("threads");
   const [isSending, setIsSending] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [hasAttemptedUrlSelection, setHasAttemptedUrlSelection] = useState(false);
+  
+  // Video Call States
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [videoCallTarget, setVideoCallTarget] = useState<User | null>(null);
+  const [isInitiator, setIsInitiator] = useState(true);
+  const [incomingCallData, setIncomingCallData] = useState<any>(null);
+  
+  // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [isInputFocused, setIsInputFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pusherRef = useRef<any>(null);
+  const channelRef = useRef<any>(null);
 
   // GraphQL Queries
   const { data: threadsData, loading: threadsLoading, refetch: refetchThreads } = useQuery(GET_MESSAGE_THREADS, {
     variables: { page: 1, limit: 50, userId: UserId },
-    pollInterval: 30000,
+    skip: !UserId,
+    pollInterval: 10000,
   });
 
-  const { data: usersData, loading: usersLoading } = useQuery(GET_ALL_USERS, {
-    skip: !userId
-  });
-
-  // Fetch user details when selectedUserId changes
-  const { data: selectedUserData } = useQuery(GET_USER_BY_ID, {
-    variables: { userId: selectedUserId },
-    skip: !selectedUserId
-  });
+  const { data: usersData, loading: usersLoading, refetch: refetchUsers } = useQuery(GET_ALL_USERS);
 
   const { data: conversationData, loading: conversationLoading, refetch: refetchConversation } = useQuery(GET_CONVERSATION, {
     variables: { 
       currentUser: UserId,
-      userId: selectedUserId,
+      userId: selectedUser?.id,
       page: 1,
       limit: 50
     },
-    skip: !selectedUserId || !userId
+    skip: !selectedUser?.id || !UserId,
+    pollInterval: 10000,
   });
 
   const { data: unreadCountData } = useQuery(GET_UNREAD_MESSAGE_COUNT, {
-    skip: !userId,
-    pollInterval: 30000,
+    skip: !UserId,
+    pollInterval: 10000,
+  });
+
+  const { data: selectedUserData } = useQuery(GET_USER_BY_ID, {
+    variables: { userId: reduxSelectedUserId },
+    skip: !reduxSelectedUserId
   });
 
   // GraphQL Mutations
   const [sendMessageMutation] = useMutation(SEND_MESSAGE);
-  const [markAsReadMutation] = useMutation(MARK_AS_READ);
   const [markMultipleAsReadMutation] = useMutation(MARK_MULTIPLE_AS_READ);
-  const [replyMessageMutation] = useMutation(REPLY_MESSAGE);
 
-  // Update selectedUser state when data is fetched
+  // Helper functions
+  const getUserFullName = (user: User) => `${user.firstName} ${user.lastName}`;
+  const getUserAvatar = (user: User) => user.avatar || "/NoImage.webp";
+  const formatTime = (timestamp: string) => new Date(timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Scroll functions
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  }, []);
+
+  const smoothScrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, []);
+
+  // Initialize Pusher for incoming calls
+  useEffect(() => {
+    if (!userId) return;
+
+    const initPusher = async () => {
+      try {
+        const Pusher = (await import('pusher-js')).default;
+        
+        if (!process.env.NEXT_PUBLIC_PUSHER_KEY || !process.env.NEXT_PUBLIC_PUSHER_CLUSTER) {
+          console.error('Pusher configuration missing');
+          return;
+        }
+
+        const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY!, {
+          cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!,
+          authEndpoint: '/api/pusher/auth',
+        });
+
+        pusherRef.current = pusher;
+        const channel = pusher.subscribe(`private-user-${userId}`);
+        channelRef.current = channel;
+
+        // Listen for incoming calls
+        channel.bind('incoming-call', (data: any) => {
+          console.log('Incoming call received:', data);
+          
+          // Don't show if already in a call
+          if (showVideoCall) return;
+          
+          // Find the caller in users list
+          const caller = usersData?.users?.find((u: User) => u.id === data.fromUserId);
+          
+          if (caller) {
+            setVideoCallTarget(caller);
+            setIncomingCallData(data);
+            setIsInitiator(false);
+            setShowVideoCall(true);
+          } else {
+            // If caller not in list, create temporary user object
+            setVideoCallTarget({
+              id: data.fromUserId,
+              firstName: 'Unknown',
+              lastName: 'Caller',
+              avatar: '/NoImage.webp',
+              email: ''
+            });
+            setIncomingCallData(data);
+            setIsInitiator(false);
+            setShowVideoCall(true);
+          }
+        });
+
+        // Listen for call acceptance
+        channel.bind('call-accepted', (data: any) => {
+          console.log('Call accepted:', data);
+        });
+
+        // Listen for call rejection
+        channel.bind('call-rejected', (data: any) => {
+          console.log('Call rejected:', data);
+        });
+
+      } catch (error) {
+        console.error('Error initializing Pusher:', error);
+      }
+    };
+
+    initPusher();
+
+    // Cleanup
+    return () => {
+      if (channelRef.current) {
+        channelRef.current.unbind_all();
+        channelRef.current.unsubscribe();
+      }
+      if (pusherRef.current) {
+        pusherRef.current.disconnect();
+      }
+    };
+  }, [userId, usersData?.users, showVideoCall]);
+
+  // Handle outgoing video call
+  const handleVideoCall = useCallback((user: User) => {
+    if (showVideoCall) return;
+    setVideoCallTarget(user);
+    setIsInitiator(true);
+    setIncomingCallData(null);
+    setShowVideoCall(true);
+  }, [showVideoCall]);
+
+  const handleCallClose = useCallback(() => {
+    setShowVideoCall(false);
+    setVideoCallTarget(null);
+    setIsInitiator(true);
+    setIncomingCallData(null);
+  }, []);
+
+  // Update selectedUser from Redux
   useEffect(() => {
     if (selectedUserData?.user) {
       setSelectedUserState(selectedUserData.user);
-    } else if (!selectedUserId) {
+    } else if (!reduxSelectedUserId) {
       setSelectedUserState(null);
     }
-  }, [selectedUserData, selectedUserId]);
+  }, [selectedUserData, reduxSelectedUserId]);
 
-  // Combine and filter contacts
-  const allContacts = useMemo(() => {
-    const threadUsers = messageThreads.map((thread: MessageThread) => thread.user);
-    const otherUsers = usersData?.users?.filter((user: User) => 
-      user.id !== userId &&
-      !threadUsers.some(threadUser => threadUser.id === user.id)
-    ) || [];
-    
-    return [...threadUsers, ...otherUsers];
-  }, [messageThreads, usersData?.users, userId]);
-
-  // Filter contacts based on search term
-  const filteredContacts = useMemo(() => {
-    if (!searchTerm.trim()) return allContacts;
-    
-    const searchLower = searchTerm.toLowerCase();
-    return allContacts.filter(user => 
-      `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchLower) ||
-      user.email?.toLowerCase().includes(searchLower)
-    );
-  }, [allContacts, searchTerm]);
-
-  // Filter contacts by tab
-  const displayContacts = useMemo(() => {
-    if (activeTab === "threads") {
-      return filteredContacts.filter(user => 
-        messageThreads.some(thread => thread.user.id === user.id)
-      );
-    } else {
-      return filteredContacts;
-    }
-  }, [filteredContacts, activeTab, messageThreads]);
-
-  // Check if mobile on mount and resize
+  // Get current user data
   useEffect(() => {
-    const checkMobile = () => {
-      const mobile = window.innerWidth < 768;
-      setIsMobile(mobile);
-      if (mobile) {
-        setIsSidebarOpen(false);
-      } else {
-        setIsSidebarOpen(true);
-      }
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Enhanced keyboard detection for mobile
-  useEffect(() => {
-    if (!isMobile || !window.visualViewport) return;
-    
-    const visualViewport = window.visualViewport;
-    
-    const handleResize = () => {
-      const windowHeight = window.innerHeight;
-      const viewportHeight = visualViewport.height;
-      const newKeyboardHeight = windowHeight - viewportHeight;
-      
-      if (newKeyboardHeight > 100 && isInputFocused) {
-        setIsKeyboardVisible(true);
-        setKeyboardHeight(newKeyboardHeight);
-        
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-      } else {
-        setIsKeyboardVisible(false);
-        setKeyboardHeight(0);
-      }
-    };
-
-    const handleFocusIn = (e: FocusEvent) => {
-      if (textareaRef.current && textareaRef.current.contains(e.target as Node)) {
-        setIsInputFocused(true);
-        setTimeout(() => {
-          handleResize();
-        }, 200);
-      }
-    };
-
-    const handleFocusOut = (e: FocusEvent) => {
-      if (!textareaRef.current?.contains(e.target as Node)) {
-        setIsInputFocused(false);
-        setTimeout(() => {
-          setIsKeyboardVisible(false);
-          setKeyboardHeight(0);
-        }, 100);
-      }
-    };
-
-    visualViewport.addEventListener('resize', handleResize);
-    document.addEventListener('focusin', handleFocusIn);
-    document.addEventListener('focusout', handleFocusOut);
-    
-    handleResize();
-
-    return () => {
-      visualViewport.removeEventListener('resize', handleResize);
-      document.removeEventListener('focusin', handleFocusIn);
-      document.removeEventListener('focusout', handleFocusOut);
-    };
-  }, [isMobile, isInputFocused]);
-
-  // Adjust messages container padding when keyboard is visible
-  useEffect(() => {
-    if (messagesContainerRef.current && isMobile) {
-      if (isKeyboardVisible) {
-        messagesContainerRef.current.style.bottom = `${keyboardHeight}px`;
-      } else {
-        messagesContainerRef.current.style.bottom = '0px';
-      }
-    }
-  }, [isKeyboardVisible, keyboardHeight, isMobile]);
-
-  useEffect(() => {
-    const getRole = async () => {
+    const getCurrentUser = async () => {
       try {
         setIsInitialLoading(true);
-        const response = await fetch('/api/protected', {
-          credentials: 'include'
-        });
-        
-        if (response.status === 401) {
-          throw new Error('Unauthorized');
-        }
+        const response = await fetch('/api/protected', { credentials: 'include' });
+        if (response.status === 401) throw new Error('Unauthorized');
         
         const data = await response.json();
         const token = data?.user;
         const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
-
         const payload = await decryptToken(token, secret.toString());
+        
         setUserId(payload.userId);
         setName(payload.name);
-        setAvatar(payload.image?payload.image:"/NoImage_1.webp");
+        setAvatar(payload.image || "/NoImage.webp");
       } catch (err) {
-        console.error('Error getting role:', err);
+        console.error('Error getting user:', err);
       } finally {
         setIsInitialLoading(false);
       }
     };
-    getRole();
+    getCurrentUser();
   }, []);
 
-  // Update message threads when data loads
+  // Handle URL parameter to auto-select user
+  useEffect(() => {
+    if (userIdFromUrl && usersData?.users && !hasAttemptedUrlSelection && !selectedUser && !usersLoading && userId) {
+      const userFromUrl = usersData.users.find((user: User) => user.id === userIdFromUrl);
+      if (userFromUrl && userFromUrl.id !== userId) {
+        handleUserSelect(userFromUrl);
+        setHasAttemptedUrlSelection(true);
+        
+        // Remove ID from URL
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('id');
+        router.replace(newUrl.pathname + newUrl.search);
+      } else if (userFromUrl && userFromUrl.id === userId) {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.delete('id');
+        router.replace(newUrl.pathname + newUrl.search);
+      }
+    }
+  }, [userIdFromUrl, usersData?.users, selectedUser, hasAttemptedUrlSelection, router, usersLoading, userId]);
+
+  // Update message threads
   useEffect(() => {
     if (threadsData?.messageThreads?.threads) {
-      const sortedThreads = [...threadsData.messageThreads.threads].sort((a, b) => 
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      const sortedThreads = [...threadsData.messageThreads.threads].sort(
+        (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       );
       setMessageThreads(sortedThreads);
     }
   }, [threadsData]);
 
-  // Convert GraphQL messages to UI messages - SORT BY LATEST FIRST
+  // Convert and set messages
   useEffect(() => {
     if (conversationData?.conversation?.messages && userId) {
-      const sortedMessages = [...conversationData.conversation.messages].sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      const sortedMessages = [...conversationData.conversation.messages].sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
-
+      
       const uiMessages: Message[] = sortedMessages.map((msg: GraphQLMessage) => ({
         id: msg.id,
         sender: `${msg.sender.firstName} ${msg.sender.lastName}`,
@@ -594,43 +535,43 @@ const PMTab = ({ UserId }: { UserId: string }) => {
         isRead: msg.isRead,
         graphQLData: msg
       }));
-
+      
       setMessages(uiMessages);
-
+      setTimeout(scrollToBottom, 100);
+      
+      // Mark unread messages as read
       const unreadMessages = uiMessages.filter(msg => !msg.isRead && !msg.isOwnMessage);
       if (unreadMessages.length > 0) {
         const unreadIds = unreadMessages.map(msg => msg.id);
-        markMultipleAsReadMutation({
-          variables: { messageIds: unreadIds }
-        });
+        markMultipleAsReadMutation({ variables: { messageIds: unreadIds } })
+          .catch(err => console.error('Error marking messages as read:', err));
       }
     }
-  }, [conversationData, userId, markMultipleAsReadMutation]);
+  }, [conversationData, userId, markMultipleAsReadMutation, scrollToBottom]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Scroll to bottom when messages change
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (messages.length > 0) {
+      smoothScrollToBottom();
+    }
+  }, [messages, smoothScrollToBottom]);
 
+  // Send message
   const handleSendMessage = async () => {
-    if (newMessage.trim() === "" || !selectedUserId || isSending) return;
-
+    if (newMessage.trim() === "" || !selectedUser || isSending) return;
+    
     setIsSending(true);
-
     try {
       const { data } = await sendMessageMutation({
         variables: {
           input: {
-            senderId: userId,
-            recipientId: selectedUserId,
+            senderId: UserId || userId,
+            recipientId: selectedUser.id,
             body: newMessage.trim()
           }
         }
       });
-
+      
       if (data?.sendMessage) {
         const newMsg: Message = {
           id: data.sendMessage.id,
@@ -646,11 +587,17 @@ const PMTab = ({ UserId }: { UserId: string }) => {
           isRead: data.sendMessage.isRead,
           graphQLData: data.sendMessage
         };
-
+        
         setMessages(prev => [...prev, newMsg]);
         setNewMessage("");
-        refetchThreads();
-        refetchConversation();
+        
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+        
+        await refetchThreads();
+        await refetchConversation();
+        setTimeout(scrollToBottom, 50);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -666,122 +613,92 @@ const PMTab = ({ UserId }: { UserId: string }) => {
     }
   };
 
-  const handleUserSelect = async (user: User) => {
-    dispatch(setSelectedUser(user.id)); // Store only the ID in Redux
-    setSelectedThread(messageThreads.find(thread => thread.user.id === user.id) || null);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewMessage(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 100)}px`;
+    }
+  };
+
+  const handleUserSelect = useCallback(async (user: User) => {
+    if (user.id === userId) return;
     
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
-    
-    try {
-      await refetchConversation({ userId: user.id });
-    } catch (error) {
-      console.error('Error fetching conversation:', error);
-    }
-  };
+    dispatch(setSelectedUser(user.id));
+    setSelectedUserState(user);
+    if (isMobile) setIsSidebarOpen(false);
+    await refetchConversation({ userId: user.id });
+    setTimeout(scrollToBottom, 100);
+  }, [isMobile, refetchConversation, scrollToBottom, userId, dispatch]);
 
-  const handleBackToContacts = () => {
-    dispatch(setSelectedUser("")); // Clear the ID from Redux
-    setSelectedThread(null);
-    if (isMobile) {
-      setIsSidebarOpen(true);
-    }
-  };
-
-  const handleToggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleTextareaFocus = () => {
-    setIsInputFocused(true);
-  };
-
-  const handleTextareaBlur = () => {
-    setIsInputFocused(false);
-  };
-
-  // Video Call Handlers
-  const handleStartVideoCall = () => {
-    setIsInitiator(true);
-    setIsVideoCallActive(true);
-    setIncomingCallData(null);
-  };
-
-  const handleCloseVideoCall = () => {
-    setIsVideoCallActive(false);
-    setIncomingCallData(null);
-  };
-
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatDate = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (date.toDateString() === today.toDateString()) {
-      return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-    }
-  };
-
-  const getThreadInfo = (user: User) => {
-    return messageThreads.find(thread => thread.user.id === user.id);
-  };
-
-  const groupMessagesByDate = () => {
+  // Group messages by date
+  const messageGroups = useMemo(() => {
     const groups: { [key: string]: Message[] } = {};
-    
     messages.forEach(message => {
       const date = formatDate(message.timestamp);
-      if (!groups[date]) {
-        groups[date] = [];
-      }
+      if (!groups[date]) groups[date] = [];
       groups[date].push(message);
     });
-    
     return groups;
-  };
+  }, [messages]);
 
-  const messageGroups = groupMessagesByDate();
+  // Filter contacts
+  const allContacts = useMemo(() => {
+    const threadUsers = messageThreads.map(t => t.user);
+    const otherUsers = usersData?.users?.filter((user: User) => 
+      user.id !== userId && !threadUsers.some(tu => tu.id === user.id)
+    ) || [];
+    return [...threadUsers, ...otherUsers];
+  }, [messageThreads, usersData?.users, userId]);
 
-  const getUserFullName = (user: User) => {
-    return `${user.firstName} ${user.lastName}`;
-  };
+  const filteredContacts = useMemo(() => {
+    if (!searchTerm.trim()) return allContacts;
+    const searchLower = searchTerm.toLowerCase();
+    return allContacts.filter(user => 
+      getUserFullName(user).toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower)
+    );
+  }, [allContacts, searchTerm]);
 
-  const getUserAvatar = (user: User) => {
-    return user.avatar || "/NoImage_1.webp";
-  };
+  const displayContacts = useMemo(() => {
+    if (activeTab === "threads") {
+      return filteredContacts.filter(user => 
+        messageThreads.some(thread => thread.user.id === user.id)
+      );
+    }
+    return filteredContacts;
+  }, [filteredContacts, activeTab, messageThreads]);
+
+  const getThreadInfo = (user: User) => messageThreads.find(thread => thread.user.id === user.id);
+
+  // Check mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      setIsSidebarOpen(!mobile);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const shouldShowSidebar = isMobile ? isSidebarOpen : true;
   const shouldShowChat = isMobile ? !isSidebarOpen : true;
-  
-  // Loading state for shimmer
+
+  // Loading states
   const isSidebarLoading = isInitialLoading || threadsLoading || usersLoading;
   const isChatLoading = conversationLoading && selectedUser;
  
   return (
     <>
-      {/* Video Call Component */}
-      {isVideoCallActive && selectedUser && (
+      {/* Video Call Component - Supports both outgoing and incoming calls */}
+      {showVideoCall && videoCallTarget && userId && (
         <VideoCall
           userId={userId}
-          targetUserId={selectedUser.id}
-          targetUserName={getUserFullName(selectedUser)}
-          onClose={handleCloseVideoCall}
+          targetUserId={videoCallTarget.id}
+          targetUserName={getUserFullName(videoCallTarget)}
+          onClose={handleCallClose}
           isInitiator={isInitiator}
           incomingCallData={incomingCallData}
         />
@@ -793,18 +710,27 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             <div className="flex h-full relative">
               {/* Sidebar/Contacts List */}
               <div className={`
-                ${isMobile ? 'relative inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
+                ${isMobile ? 'absolute inset-0 z-30 w-full' : 'relative z-20 w-1/3 lg:w-1/4 flex-shrink-0'}
                 bg-gradient-to-b from-zinc-50 to-zinc-100 border-r border-zinc-200
                 transform transition-transform duration-300 ease-in-out h-full
                 ${shouldShowSidebar ? 'translate-x-0' : '-translate-x-full'}
                 flex flex-col
               `}>
-                {/* Fixed Sidebar Header */}
+                {/* Sidebar Header */}
                 <div className="flex-shrink-0">
-                  <div className="p-4 md:p-6 bg-gradient-to-r from-zinc-700 to-zinc-800 text-white">
-                    <div className="flex items-center justify-between">
+                  <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-gradient-to-r from-zinc-700 to-zinc-800 flex-shrink-0">
+                    <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                      <div className="z-20 h-[100%] flex items-center">
+                        <Image 
+                          src="/VendorCity_Store.webp" 
+                          alt="Logo" 
+                          height={100} 
+                          width={100} 
+                          className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer"
+                        />
+                      </div>
                       <div>
-                        <h1 className="text-xl md:text-2xl font-bold">Messages</h1>
+                        <h1 className="text-xl md:text-2xl font-bold text-white">Messages</h1>
                         <p className="text-zinc-300 text-sm hidden md:block">
                           {unreadCountData?.unreadMessageCount > 0 
                             ? `${unreadCountData.unreadMessageCount} unread messages`
@@ -814,58 +740,57 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       </div>
                       {isMobile && (
                         <button 
-                          onClick={handleToggleSidebar}
-                          className="p-2 rounded-lg bg-zinc-600 hover:bg-zinc-700"
+                          onClick={() => setIsSidebarOpen(false)}
+                          className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300"
                         >
-                          <X className="w-5 h-5" />
+                          <X className="w-5 h-5 text-white" />
                         </button>
                       )}
                     </div>
                   </div>
-                  
-                  {/* Search and Tabs */}
-                  <div className="p-3 md:p-4 bg-white border-b border-zinc-200">
-                    <div className="relative mb-3">
-                      <input
-                        type="text"
-                        placeholder="Search conversations..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-transparent bg-white"
-                      />
-                      <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-zinc-400" />
-                    </div>
+                </div>
 
-                    {/* Tabs */}
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => setActiveTab("threads")}
-                        className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                          activeTab === "threads"
-                            ? "bg-zinc-700 text-white"
-                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                        }`}
-                      >
-                        Conversations
-                      </button>
-                      <button
-                        onClick={() => setActiveTab("allUsers")}
-                        className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
-                          activeTab === "allUsers"
-                            ? "bg-zinc-700 text-white"
-                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                        }`}
-                      >
-                        All Users
-                      </button>
-                    </div>
+                {/* Search and Tabs */}
+                <div className="p-3 md:p-4 bg-white border-b border-zinc-200 flex-shrink-0">
+                  <div className="relative mb-3">
+                    <input
+                      type="text"
+                      placeholder="Search conversations..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-4 py-2 md:py-3 text-sm md:text-base rounded-xl md:rounded-2xl border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:border-transparent bg-white"
+                    />
+                    <Search className="absolute left-2.5 top-2.5 md:left-3 md:top-3 h-4 w-4 md:h-5 md:w-5 text-zinc-400" />
+                  </div>
+
+                  {/* Tabs */}
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => setActiveTab("threads")}
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                        activeTab === "threads"
+                          ? "bg-zinc-700 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      Conversations
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("allUsers")}
+                      className={`flex-1 py-2 px-3 text-xs md:text-sm rounded-lg font-medium transition-colors ${
+                        activeTab === "allUsers"
+                          ? "bg-zinc-700 text-white"
+                          : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      }`}
+                    >
+                      All Users
+                    </button>
                   </div>
                 </div>
 
-                {/* Scrollable Contacts List - WITH SHIMMER */}
+                {/* Scrollable Contacts List */}
                 <div className="flex-1 overflow-y-auto messages-scrollbar">
                   {isSidebarLoading ? (
-                    // Show shimmer while loading
                     <>
                       <ContactShimmer />
                       <ContactShimmer />
@@ -878,45 +803,58 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                       {displayContacts.map((user) => {
                         const thread = getThreadInfo(user);
                         return (
-                          <div
-                            key={user.id}
-                            className={`flex items-center p-3 border-b border-zinc-100 cursor-pointer transition-all duration-200 ${
-                              selectedUserId === user.id ? 'bg-zinc-50 border-l-4 border-l-zinc-500' : 'hover:bg-zinc-50'
-                            }`}
-                            onClick={() => handleUserSelect(user)}
-                          >
-                            <div className="relative flex-shrink-0">
-                              <img
-                                src={getUserAvatar(user)}
-                                alt={getUserFullName(user)}
-                                className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
-                              />
-                              {thread && thread.unreadCount > 0 && (
-                                <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                                  {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+                          <div key={user.id} className="relative group">
+                            <div
+                              className={`flex items-center p-3 border-b border-zinc-100 cursor-pointer transition-all duration-200 ${
+                                selectedUser?.id === user.id ? 'bg-zinc-50 border-l-4 border-l-zinc-500' : 'hover:bg-zinc-50'
+                              }`}
+                              onClick={() => handleUserSelect(user)}
+                            >
+                              <div className="relative flex-shrink-0">
+                                <img
+                                  src={getUserAvatar(user)}
+                                  alt={getUserFullName(user)}
+                                  className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
+                                />
+                                {thread && thread.unreadCount > 0 && (
+                                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                                    {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="ml-3 flex-1 min-w-0">
+                                <div className="flex justify-between items-center">
+                                  <h3 className="font-semibold text-zinc-800 text-sm md:text-base truncate">
+                                    {getUserFullName(user)}
+                                  </h3>
+                                  {thread?.lastMessage && (
+                                    <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
+                                      {formatTime(thread.lastMessage.createdAt)}
+                                    </span>
+                                  )}
                                 </div>
-                              )}
-                            </div>
-                            <div className="ml-3 flex-1 min-w-0">
-                              <div className="flex justify-between items-center">
-                                <h3 className="font-semibold text-zinc-800 text-sm md:text-base truncate">
-                                  {getUserFullName(user)}
-                                </h3>
-                                {thread?.lastMessage && (
-                                  <span className="text-xs text-zinc-400 whitespace-nowrap ml-2">
-                                    {formatTime(thread.lastMessage.createdAt)}
+                                <p className="text-xs md:text-sm text-zinc-500 truncate">
+                                  {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
+                                </p>
+                                {!thread && (
+                                  <span className="inline-block mt-1 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
+                                    New
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs md:text-sm text-zinc-500 truncate">
-                                {thread?.lastMessage?.body || user?.email || 'Start a conversation'}
-                              </p>
-                              {!thread && (
-                                <span className="inline-block mt-1 px-2 py-0.5 bg-zinc-100 text-zinc-600 text-xs rounded-full">
-                                  New
-                                </span>
-                              )}
                             </div>
+                            
+                            {/* Video Call Button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleVideoCall(user);
+                              }}
+                              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-purple-100 text-purple-600 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-purple-200"
+                              title="Start video call"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
                           </div>
                         );
                       })}
@@ -938,85 +876,95 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                 </div>
               </div>
 
-              {/* Chat Area - Only show when not in sidebar mode on mobile */}
+              {/* Chat Area */}
               {shouldShowChat && (
-                <div className={`
-                  ${isMobile ? 'absolute inset-0 z-20' : 'relative z-10 flex-1'}
-                  flex flex-col h-full bg-white
-                  transform transition-transform duration-300 ease-in-out
-                `}>
-                  {/* Fixed Chat Header */}
+                <div className="flex-1 flex flex-col h-full bg-white">
+                  {/* Chat Header */}
                   {selectedUser ? (
-                    <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
-                      <div className="flex items-center">
-                        {isMobile && (
-                          <button 
-                            onClick={handleBackToContacts}
-                            className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
-                          >
-                            <ChevronLeft className="w-5 h-5" />
-                          </button>
-                        )}
-                        <img
-                          src={getUserAvatar(selectedUser)}
-                          alt={getUserFullName(selectedUser)}
-                          className="w-8 h-8 md:w-10 md:h-10 rounded-xl md:rounded-2xl object-cover border-2 border-zinc-200"
-                        />
-                        <div className="ml-3 flex-1 min-w-0">
-                          <h2 className="font-bold text-zinc-800 text-sm md:text-base truncate">
-                            {getUserFullName(selectedUser)}
-                          </h2>
-                          <p className="text-xs md:text-sm text-zinc-500 truncate">
-                            {selectedUser.email}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          {/* Video Call Button */}
-                          <button 
-                            onClick={handleStartVideoCall}
-                            className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors"
-                            title="Start Video Call"
-                          >
-                            <Video className="w-5 h-5" />
-                          </button>
-                          <button 
-                            onClick={handleToggleSidebar}
-                            className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors md:hidden"
-                          >
-                            <Menu className="w-5 h-5" />
-                          </button>
+                    <div className="flex-shrink-0">
+                      <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-gradient-to-r from-zinc-700 to-zinc-800">
+                        <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                          <div className="z-20 h-[100%] flex items-center gap-3 min-w-0 flex-1">
+                            {isMobile && (
+                              <button 
+                                onClick={() => setIsSidebarOpen(true)}
+                                className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 flex-shrink-0"
+                              >
+                                <ArrowLeft className="w-5 h-5 text-white" />
+                              </button>
+                            )}
+                            <Image 
+                              src="/VendorCity_Store.webp" 
+                              alt="Logo" 
+                              height={100} 
+                              width={100} 
+                              className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
+                            />
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <h2 className="font-bold text-white text-sm md:text-base truncate">
+                                {getUserFullName(selectedUser)}
+                              </h2>
+                              <p className="text-xs text-zinc-300 truncate">
+                                {selectedUser.email}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2 flex-shrink-0">
+                            {/* Video Call Button in Chat Header */}
+                            <button 
+                              onClick={() => handleVideoCall(selectedUser)}
+                              className="p-2 text-white hover:text-zinc-200 transition-all duration-300 hover:scale-110 bg-white bg-opacity-20 rounded-full hover:bg-opacity-30"
+                              title="Start video call"
+                            >
+                              <Phone className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => setIsSidebarOpen(true)}
+                              className="p-2 text-white hover:text-zinc-200 transition-all duration-300 hover:scale-110 md:hidden"
+                            >
+                              <Menu className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gradient-to-r from-zinc-50 to-zinc-100 border-b border-zinc-200 p-4 safe-area-inset-top flex-shrink-0">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <div className="relative p-0 aspect-[4/1] sm:aspect-[9/1] bg-gradient-to-r from-zinc-700 to-zinc-800">
+                        <div className="z-20 flex items-center justify-between p-2 h-[100%] w-[100%]">
+                          <div className="z-20 h-[100%] flex items-center min-w-0 flex-1">
+                            <Image 
+                              src="/VendorCity_Store.webp" 
+                              alt="Logo" 
+                              height={100} 
+                              width={100} 
+                              className="h-[100%] w-[auto] rounded transform transition-all duration-300 hover:scale-105 cursor-pointer flex-shrink-0"
+                            />
+                            <div className="ml-3 min-w-0">
+                              <h2 className="font-bold text-white text-sm md:text-base truncate">Messages</h2>
+                              <p className="text-xs text-zinc-300 truncate">Select a conversation</p>
+                            </div>
+                          </div>
                           {isMobile && (
                             <button 
-                              onClick={handleToggleSidebar}
-                              className="mr-3 p-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-600"
+                              onClick={() => setIsSidebarOpen(true)}
+                              className="p-2 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 transition-all duration-300 flex-shrink-0"
                             >
-                              <Menu className="w-5 h-5" />
+                              <Menu className="w-5 h-5 text-white" />
                             </button>
                           )}
-                          <div>
-                            <h2 className="font-bold text-zinc-800 text-sm md:text-base">Messages</h2>
-                            <p className="text-xs md:text-sm text-zinc-500">Select a conversation</p>
-                          </div>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Messages Container - WITH SHIMMER */}
+                  {/* Messages Container */}
                   <div 
                     ref={messagesContainerRef}
-                    className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-zinc-50 messages-scrollbar safe-area-inset-bottom transition-all duration-300"
+                    className="flex-1 overflow-y-auto p-4 bg-gradient-to-b from-white to-zinc-50 messages-scrollbar"
                   >
                     {selectedUser ? (
                       isChatLoading ? (
-                        // Show shimmer while loading messages
                         <div className="space-y-4">
                           <div className="flex justify-center my-4">
                             <Shimmer className="h-6 w-20 rounded-full" />
@@ -1027,6 +975,14 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                           <MessageShimmer isOwnMessage={true} />
                           <MessageShimmer />
                         </div>
+                      ) : messages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-center text-zinc-400">
+                            <MessageCircle className="w-16 h-16 mx-auto mb-4" />
+                            <p className="text-lg font-medium">No messages yet</p>
+                            <p className="text-sm mt-2">Send a message to start the conversation</p>
+                          </div>
+                        </div>
                       ) : (
                         <div className="space-y-4">
                           {Object.entries(messageGroups).map(([date, dateMessages]) => (
@@ -1036,20 +992,20 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                   {date}
                                 </span>
                               </div>
-                              {dateMessages.map((message) => (
-                                <div
-                                  key={message.id}
-                                  className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
-                                >
-                                  <div className={`flex max-w-[85%] md:max-w-xs lg:max-w-md ${
-                                    message.isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                                  }`}>
-                                    <img
-                                      src={message.avatar}
-                                      alt={message.sender}
-                                      className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 flex-shrink-0"
-                                    />
-                                    <div className={`mx-2 ${message.isOwnMessage ? 'text-right' : 'text-left'}`}>
+                              <div className="space-y-3">
+                                {dateMessages.map((message) => (
+                                  <div
+                                    key={message.id}
+                                    className={`flex ${message.isOwnMessage ? 'justify-end' : 'justify-start'}`}
+                                  >
+                                    {!message.isOwnMessage && (
+                                      <img
+                                        src={message.avatar}
+                                        alt={message.sender}
+                                        className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 mr-2 self-end mb-1 flex-shrink-0"
+                                      />
+                                    )}
+                                    <div className={`max-w-[85%] md:max-w-xs lg:max-w-md ${message.isOwnMessage ? 'items-end' : 'items-start'}`}>
                                       <div className={`inline-block rounded-2xl md:rounded-3xl p-3 md:p-4 ${
                                         message.isOwnMessage
                                           ? 'bg-gradient-to-r from-zinc-600 to-zinc-700 text-white rounded-br-none'
@@ -1060,7 +1016,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                       <div className={`flex items-center mt-1 space-x-2 text-xs ${
                                         message.isOwnMessage ? 'justify-end' : 'justify-start'
                                       }`}>
-                                        <span className={`${message.isOwnMessage ? 'text-zinc-400' : 'text-zinc-400'}`}>
+                                        <span className={message.isOwnMessage ? 'text-zinc-400' : 'text-zinc-400'}>
                                           {formatTime(message.timestamp)}
                                         </span>
                                         {message.isOwnMessage && (
@@ -1068,9 +1024,16 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                                         )}
                                       </div>
                                     </div>
+                                    {message.isOwnMessage && (
+                                      <img
+                                        src={message.avatar}
+                                        alt={message.sender}
+                                        className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border-2 border-zinc-200 ml-2 self-end mb-1 flex-shrink-0"
+                                      />
+                                    )}
                                   </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
                           ))}
                           <div ref={messagesEndRef} />
@@ -1088,39 +1051,21 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                   </div>
 
                   {/* Message Input */}
-                  {selectedUser && (
-                    <div 
-                      className="border-t border-zinc-200 bg-white transition-all duration-300 flex-shrink-0"
-                      style={{
-                        position: isKeyboardVisible && isMobile ? 'fixed' : 'static',
-                        bottom: isKeyboardVisible && isMobile ? '0px' : '0px',
-                        left: isKeyboardVisible && isMobile ? '0' : '0',
-                        right: isKeyboardVisible && isMobile ? '0' : '0',
-                        width: isKeyboardVisible && isMobile ? '100%' : '100%',
-                        zIndex: isKeyboardVisible && isMobile ? 1000 : 'auto',
-                      }}
-                    >
-                      <div 
-                        className="p-4 mx-auto w-full"
-                        style={{
-                          maxWidth: isKeyboardVisible && isMobile ? '100%' : 'none',
-                          paddingLeft: isKeyboardVisible && isMobile ? '1rem' : '1rem',
-                          paddingRight: isKeyboardVisible && isMobile ? '1rem' : '1rem',
-                        }}
-                      >
+                  {selectedUser && !isChatLoading && (
+                    <div className="border-t border-zinc-200 bg-white flex-shrink-0">
+                      <div className="p-4">
                         <div className="flex space-x-3">
                           <div className="flex-1 bg-zinc-50 rounded-2xl border border-zinc-200 focus-within:ring-2 focus-within:ring-zinc-400 focus-within:border-zinc-300">
                             <textarea
                               ref={textareaRef}
                               value={newMessage}
-                              onChange={(e) => setNewMessage(e.target.value)}
+                              onChange={handleTextareaChange}
                               onKeyPress={handleKeyPress}
-                              onFocus={handleTextareaFocus}
-                              onBlur={handleTextareaBlur}
                               placeholder={isSending ? "Sending..." : "Type your message..."}
                               disabled={isSending}
                               className="w-full px-4 py-3 text-base bg-transparent focus:outline-none resize-none rounded-2xl min-h-[44px] max-h-[120px] disabled:opacity-60 disabled:cursor-not-allowed"
                               rows={1}
+                              style={{ height: 'auto' }}
                             />
                           </div>
                           <button
@@ -1149,7 +1094,7 @@ const PMTab = ({ UserId }: { UserId: string }) => {
                               className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               disabled={isSending}
                             >
-                              <Image className="w-5 h-5" />
+                              <ImageIcon className="w-5 h-5" />
                             </button>
                           </div>
                           <div className="text-xs text-zinc-400 hidden md:block">
@@ -1173,7 +1118,6 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             }
           }
           
-          /* Custom scrollbar */
           .messages-scrollbar::-webkit-scrollbar {
             width: 4px;
           }
@@ -1192,14 +1136,12 @@ const PMTab = ({ UserId }: { UserId: string }) => {
             background: #71717a;
           }
 
-          /* Mobile optimizations */
           @media (max-width: 768px) {
             .messages-scrollbar::-webkit-scrollbar {
               width: 3px;
             }
           }
 
-          /* Loading animation */
           @keyframes spin {
             from {
               transform: rotate(0deg);
