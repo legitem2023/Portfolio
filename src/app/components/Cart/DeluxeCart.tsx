@@ -473,7 +473,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
         <h3 className="text-sm sm:text-base font-semibold text-indigo-800 mb-2 sm:mb-3">Choose Payment Method</h3>
         
         <div className="space-y-2 sm:space-y-3 mb-4">
-          <div
+          {/* <div
             className={`border rounded-lg p-3 cursor-pointer transition-all duration-200 ${
               selectedMethod === 'gcash'
                 ? 'border-indigo-500 bg-indigo-50'
@@ -519,7 +519,7 @@ const PaymentStage = ({ paymentInfo, setPaymentInfo }: PaymentStageProps) => {
                 Transfer via online banking
               </div>
             )}
-          </div>
+          </div>*/}
 
           <div
             className={`border rounded-lg p-3 cursor-pointer transition-all duration-200 ${
