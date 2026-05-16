@@ -1,8 +1,5 @@
-// app/api/location/[userId]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-
-const locationStore = new Map<string, LocationData>(); // Same store
+import { locationStore, pusherServer } from '../../../../../locationTypes';
 
 export async function GET(
   request: NextRequest,
@@ -10,13 +7,6 @@ export async function GET(
 ) {
   try {
     const { userId } = params;
-    
-    // Verify authentication
-    const session = await getServerSession();
-    // if (!session?.user) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
     const location = locationStore.get(userId);
     
     if (!location) {
@@ -25,10 +15,10 @@ export async function GET(
 
     return NextResponse.json({ location });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
   }
 }
-// app/api/location/[userId]/route.ts (add DELETE method)
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { userId: string } }
@@ -36,28 +26,16 @@ export async function DELETE(
   try {
     const { userId } = params;
     
-    // Verify authentication (admin only)
-    const session = await getServerSession();
-    // if (!session?.user?.isAdmin) {
-    //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // }
-
-    const location = locationStore.get(userId);
-    if (!location) {
+    if (!locationStore.has(userId)) {
       return NextResponse.json({ error: 'Location not found' }, { status: 404 });
     }
 
     locationStore.delete(userId);
     
-    // Notify that user is offline
     await pusherServer.trigger('admin-locations', 'user-offline', { userID: userId });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Location deleted successfully' 
-    });
+    return NextResponse.json({ success: true, message: 'Location deleted' });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
   }
 }
-
