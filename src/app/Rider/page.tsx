@@ -41,24 +41,13 @@ const MapTab = dynamic(() => import('./components/MapTab'), {
   )
 });
 
-// ONLY the mutation - no type definitions here!
-const LOCATION_TRACKING_MUTATION = gql`
-  mutation LocationTracking($input: LocationTrackingInput) {
-    locationTracking(input: $input) {
-      userID
-      latitude
-      longitude
-    }
-  }
-`;
-
 // Define valid tabs for validation
 const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", "user"];
 
 export default function RiderDashboard() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { addLocation } = useRealtimeLocation();
+  const { addLocation, updateLocation, getLocation, connectionStatus } = useRealtimeLocation();
   const { user, loading: authLoading } = useAuth();
   const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
 
@@ -101,10 +90,8 @@ export default function RiderDashboard() {
   // Refs for tracking optimization
   const watchIdRef = useRef<number | null>(null);
   const lastSendTimeRef = useRef(0);
+  const isFirstLocationRef = useRef(true);
 
-  // Location tracking mutation
-  const [locationTracking] = useMutation(LOCATION_TRACKING_MUTATION);
-  
   // GraphQL query for orders
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
     variables: {
@@ -118,7 +105,7 @@ export default function RiderDashboard() {
       }
     },
     pollInterval: 15000,
-    fetchPolicy: 'network-only'  // Add this line
+    fetchPolicy: 'network-only'
   });
   
   // Function to send location with rate limiting
@@ -129,38 +116,43 @@ export default function RiderDashboard() {
     }
     
     if (!isOnline) {
-   //   console.log("📍 Tracking paused (offline mode)");
+      console.log("📍 Tracking paused (offline mode)");
       return;
     }
 
-    // Rate limiting: Minimum 5 seconds between sends
+    // Rate limiting: Minimum 3 seconds between sends for better tracking
     const now = Date.now();
-    if (now - lastSendTimeRef.current < 5000) {
-   //   console.log("⏸️ Rate limited - skipping location send");
+    if (now - lastSendTimeRef.current < 3000) {
       return;
     }
 
     const { latitude, longitude, accuracy } = position.coords;
-   // console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
+    console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
     
     try {
-      await addLocation(
-        user.userId,
-        latitude,
-        longitude,
-        'available'
-      )    
-     /* const result = await locationTracking({
-        variables: {
-          input: {
-            userID: user.userId,
-            latitude: latitude,
-            longitude: longitude
-          }
-        }
-      });*/
+      // Check if location already exists for this user
+      const existingLocation = getLocation(user.userId);
       
-     
+      if (!existingLocation || isFirstLocationRef.current) {
+        // First time - ADD location
+        await addLocation(
+          user.userId,
+          latitude,
+          longitude,
+          'available'
+        );
+        console.log("✅ Location added for first time");
+        isFirstLocationRef.current = false;
+      } else {
+        // Already exists - UPDATE location
+        await updateLocation(
+          user.userId,
+          latitude,
+          longitude,
+          'available'
+        );
+        console.log("🔄 Location updated");
+      }
       
       lastSendTimeRef.current = now;
     } catch (error) {
@@ -168,7 +160,7 @@ export default function RiderDashboard() {
     }
   };
 
-  // Start location tracking using watchPosition instead of setInterval
+  // Start location tracking using watchPosition
   useEffect(() => {
     // Clean up previous watch if exists
     if (watchIdRef.current !== null) {
@@ -176,6 +168,15 @@ export default function RiderDashboard() {
     }
 
     if (isOnline && user?.userId && navigator.geolocation) {
+      // Reset first location flag when starting new tracking session
+      isFirstLocationRef.current = true;
+      
+      // Get initial location immediately
+      navigator.geolocation.getCurrentPosition(
+        sendCurrentLocation,
+        (error) => console.error("Error getting initial location:", error),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
       
       // Use watchPosition for continuous tracking
       watchIdRef.current = navigator.geolocation.watchPosition(
@@ -205,7 +206,7 @@ export default function RiderDashboard() {
         }
       );
       
-    //  console.log("📍 Location watch started");
+      console.log("📍 Location watch started for user:", user.userId);
     } else {
       if (watchIdRef.current !== null) {
         console.log("🔴 Location tracking stopped - Offline mode or no user");
@@ -286,34 +287,23 @@ export default function RiderDashboard() {
   const handleAcceptDelivery = (deliveryId: string) => {
     const delivery = newDeliveries.find(d => d.id === deliveryId);
     if (delivery) {
-const truncate = (str:any, maxLen:number) => {
-  if (!str) return '';
-  return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
-};
+      const truncate = (str:any, maxLen:number) => {
+        if (!str) return '';
+        return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
+      };
 
-// Get max content length
-const contents = [
-  `🏪 ${delivery.restaurant}`,
-  `🆔 ${delivery.orderId}`,
-  `💰 $${delivery.payout}`,
-  `📦 ${delivery.items}`,
-  `📍 ${delivery.pickup}`,
-  `🎯 ${delivery.dropoff}`
-];
+      const contents = [
+        `🏪 ${delivery.restaurant}`,
+        `🆔 ${delivery.orderId}`,
+        `💰 $${delivery.payout}`,
+        `📦 ${delivery.items}`,
+        `📍 ${delivery.pickup}`,
+        `🎯 ${delivery.dropoff}`
+      ];
 
-const maxLen = Math.min(Math.max(...contents.map(c => c.length)), 28); // Cap at 28 chars
-
-const formatRow = (icon: any, value: any) => {
-  // Convert to string and handle null/undefined
-  const stringValue = value === null || value === undefined ? '' : String(value);
-  const truncated = truncate(stringValue, maxLen - 3);
-  const padded = truncated.padEnd(maxLen - 3);
-  return `${icon} ${padded}`;
-};
+      const maxLen = Math.min(Math.max(...contents.map(c => c.length)), 28);
       
-const border = '─'.repeat(maxLen + 2);
-
-showToast('Delivery Accepted!','success');
+      showToast('Delivery Accepted!','success');
     }
   };
 
@@ -372,13 +362,6 @@ showToast('Delivery Accepted!','success');
 
       {/* TopNav */}
       <Header user={user}/>
-      {/*<TopNav
-        isMobile={isMobile}
-        isOnline={isOnline}
-        setIsOnline={setIsOnline}
-        activeTab={activeTab}
-        newDeliveriesCount={newDeliveriesCount}
-      />*/}
 
       {/* Desktop Navigation Tabs */}
       {!isMobile && (
@@ -404,6 +387,9 @@ showToast('Delivery Accepted!','success');
               <div className="flex items-center gap-4">
                 <div className={`w-3 h-3 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
                 <span className="font-medium">{isOnline ? "Live GPS Tracking Active" : "Tracking Paused"}</span>
+                {connectionStatus && (
+                  <span className="text-xs text-gray-500">({connectionStatus})</span>
+                )}
               </div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 <Bell size={16} />
@@ -425,4 +411,4 @@ showToast('Delivery Accepted!','success');
       )}
     </div>
   );
-      }
+}
