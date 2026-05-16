@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { LocationData, locationStore, pusherServer, getNearbyUsers } from '../../../../../locationTypes';
+import { LocationData, locationStore, pusherServer, getNearbyUsers } from '../../../../../types/locationTypes';
 
 export async function POST(request: NextRequest) {
   try {
