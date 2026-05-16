@@ -1,4 +1,4 @@
-// app/Admin/LocationTracking/page.tsx
+// componemts/LocationTracking.tsx
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -155,7 +155,7 @@ export default function AdminLocationTracking() {
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-          <p className="text-gray-600">You don't have permission to access this page.</p>
+          <p className="text-gray-600">You don&apos;t have permission to access this page.</p>
         </div>
       </div>
     );
