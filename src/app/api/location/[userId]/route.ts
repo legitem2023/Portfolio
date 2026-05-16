@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { locationStore, pusherServer } from '../../../../../locationTypes';
+import { locationStore, pusherServer } from '../../../../../types/locationTypes';
 
 export async function GET(
   request: NextRequest,
