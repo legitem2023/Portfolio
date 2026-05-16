@@ -656,26 +656,26 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             </p>
             
             {/* Additional Info */}
-            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
+            {/* <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
               <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
                 <div className="flex items-start">
                   <Truck className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-gray-900">Free Shipping</h4>
-                    <p className="text-gray-600">On orders over ₱100</p>
+                    <h4 className="font-medium text-gray-900">Fast Delivery</h4>
+                    <p className="text-gray-600"></p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <RefreshCw className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
                     <h4 className="font-medium text-gray-900">Returns</h4>
-                    <p className="text-gray-600">30-day money back guarantee</p>
+                    <p className="text-gray-600">Quick money back guarantee</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Shield className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
                   <div>
-                    <h4 className="font-medium text-gray-900">Care</h4>
+                    <h4 className="font-medium text-gray-900">Secure</h4>
                     <p className="text-gray-600">Machine wash cold</p>
                   </div>
                 </div>
@@ -687,7 +687,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
+            </div>*/}
             
           </div>
           {selectedVariant && typeof selectedVariant !== 'string' && (
