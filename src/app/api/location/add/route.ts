@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     locationStore.set(userID, locationData);
 
-    // Trigger to user's private channel
+    // Trigger to user's private channel 
     await pusherServer.trigger(`private-user-${userID}`, 'user-location-update', locationData);
     
     // Trigger to admin channel
