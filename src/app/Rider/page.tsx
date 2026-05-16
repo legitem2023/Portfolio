@@ -10,7 +10,7 @@ import Header from './components/Header';
 import TopNav from './components/TopNav';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-import { useRealtimeLocation } from '../compoments/hooks/useRealtimeLocation';
+import { useRealtimeLocation } from '../components/hooks/useRealtimeLocation';
 
 import NavigationTabs from './components/NavigationTabs';
 import NewDeliveriesTab from './components/NewDeliveriesTab';
