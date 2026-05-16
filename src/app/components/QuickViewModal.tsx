@@ -552,11 +552,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
               </div>
             </div>
 
-            {/* Description */}
-            <p className="text-gray-700 text-sm md:text-base mb-4 md:mb-6">
-              {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
-            </p>
-
             {/* Color Selection */}
             {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
@@ -654,7 +649,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                 }`} />
               </button>
             </div>
-
+            
+            {/* Description */}
+            <p className="text-gray-700 text-sm md:text-base mb-4 md:mb-6">
+              {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
+            </p>
+            
             {/* Additional Info */}
             <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
               <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
