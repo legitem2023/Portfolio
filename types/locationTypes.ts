@@ -1,4 +1,4 @@
-// types/locationTypes.ts
+// lib/locationTypes.ts
 import Pusher from 'pusher';
 
 // ============ TYPES ============
@@ -27,7 +27,9 @@ export const pusherServer = new Pusher({
 // ============ HELPER FUNCTIONS ============
 export function getNearbyUsers(lat: number, lng: number, radiusKm: number = 5): string[] {
   const nearby: string[] = [];
-  for (const [userId, location] of locationStore.entries()) {
+  // Convert Map to array first to avoid iteration issue
+  const locationsArray = Array.from(locationStore.entries());
+  for (const [userId, location] of locationsArray) {
     const distance = calculateDistance(lat, lng, location.latitude, location.longitude);
     if (distance <= radiusKm) {
       nearby.push(userId);
