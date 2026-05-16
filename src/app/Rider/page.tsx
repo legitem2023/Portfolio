@@ -10,6 +10,7 @@ import Header from './components/Header';
 import TopNav from './components/TopNav';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+import { useRealtimeLocation } from '../compoments/hooks/useRealtimeLocation';
 
 import NavigationTabs from './components/NavigationTabs';
 import NewDeliveriesTab from './components/NewDeliveriesTab';
@@ -56,9 +57,10 @@ const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", 
 
 export default function RiderDashboard() {
   const router = useRouter();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
+  const { addLocation } = useRealtimeLocation();
   const { user, loading: authLoading } = useAuth();
-    const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
+  const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
 
   // State to manage active tab with persistence from localStorage
   const [activeTab, setActiveTab] = useState(() => {
@@ -142,9 +144,13 @@ export default function RiderDashboard() {
    // console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
     
     try {
-     
-      
-      const result = await locationTracking({
+      await addLocation(
+        user.userId,
+        latitude,
+        longitude,
+        'available'
+      )    
+     /* const result = await locationTracking({
         variables: {
           input: {
             userID: user.userId,
@@ -152,7 +158,7 @@ export default function RiderDashboard() {
             longitude: longitude
           }
         }
-      });
+      });*/
       
      
       
