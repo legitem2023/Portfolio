@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRealtimeLocation } from '../../components/hooks/useRealtimeLocation';
 import { useAuth } from '../../components/hooks/useAuth';
 import { showToast } from '../../../../utils/toastify';
+import { LocationData } from '../../../../types/locationTypes';
+
 import {
   MapPin,
   Car,
