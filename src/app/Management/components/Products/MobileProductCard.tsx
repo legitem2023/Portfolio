@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product,Category, Variant } from '../../../../../types';
+import { Product,category, Variant } from '../../../../../types';
 import PriceDisplay from './PriceDisplay';
 import StatusBadge from './StatusBadge';
 import ActionButtons from './ActionButtons';
@@ -8,7 +8,7 @@ import AddVariantForm from './AddVariantForm';
 
 interface MobileProductCardProps {
   product: Product;
-  categories:Category;
+  categories:category[];
   onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
   onDeleteProduct: (productId: string) => void;
