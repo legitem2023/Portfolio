@@ -60,7 +60,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const dispatch = useDispatch();
 
   const getReturnCategory = (id:any) => {
-   const filteredCategoryNames:any = categories
+   const filteredCategoryNames:any = categories?
   .filter((category:any) => category.id === id)
   .map((category:any) => category.name).toString();
 return filteredCategoryNames;
