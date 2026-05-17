@@ -1,4 +1,4 @@
-'use client'
+/*'use client'
 // app/product/[id]/page.tsx
 import React, { useState } from 'react';
 import { useQuery } from '@apollo/client';
@@ -70,4 +70,4 @@ const ProductPage: React.FC = () => {
   );
 };
 
-export default ProductPage;
+export default ProductPage;*/
