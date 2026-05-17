@@ -4,7 +4,7 @@ import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 import { showToast } from '../../../utils/toastify';
-import { Product } from '../../../types';
+import { Product,category } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import { useAuth } from './hooks/useAuth';
@@ -13,6 +13,7 @@ import 'swiper/css/pagination';
 import { useGetReviewById } from './hooks/useGetReviewById';
 interface ProductThumbnailsProps {
   products: Product[];
+  categories:category[];
 }
 
 interface SelectedVariant {
