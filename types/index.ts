@@ -185,6 +185,7 @@ export interface Product {
   brand: string;
   productCode?: string;
   category: Category[];
+  categoryId: string;
   createdAt: string;
   isActive: boolean;
   color: string;
