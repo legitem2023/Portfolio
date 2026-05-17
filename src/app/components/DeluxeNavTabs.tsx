@@ -7,7 +7,7 @@ import UserProfile from './UserProfile';
 import { decryptToken } from '../../../utils/decryptToken';
 import PostDetail from './Posting/PostDetail';
 import PMTab from './PMTab';
-import FlashSale from './FlashSale';
+//import FlashSale from './FlashSale';
 import OrderTracking from './Orders/OrderTracking';
 import MerchantDetails from './Merchants/MerchantDetails';
 import { useRouter, usePathname } from 'next/navigation';
