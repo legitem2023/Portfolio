@@ -4,7 +4,8 @@ import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
 import { useState, useRef, useEffect } from 'react';
 import { Pipette, Copy, Check } from 'lucide-react';
-import sizeData from "./Json/sizes.json"
+import sizeData from "./Json/sizes.json";
+import flavorData from "./Json/flavors.json";
 
 interface ProductFormProps {
   supplierId: String;
@@ -36,6 +37,11 @@ export default function ProductForm({
   const [copySuccess, setCopySuccess] = useState('');
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
+  
+  // Dynamic flavor states
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState('');
+  const [selectedFoodItem, setSelectedFoodItem] = useState('');
+  const [availableFlavors, setAvailableFlavors] = useState<string[]>([]);
   
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -104,6 +110,15 @@ export default function ProductForm({
     }
   };
 
+  // Reset flavor selection when category changes
+  useEffect(() => {
+    if (!isFoodsAndDrinks()) {
+      setSelectedFoodCategory('');
+      setSelectedFoodItem('');
+      setAvailableFlavors([]);
+    }
+  }, [newProduct.categoryId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -154,6 +169,9 @@ export default function ProductForm({
         setCopySuccess('');
         setIsPickingColor(false);
         setSkuOption('blank');
+        setSelectedFoodCategory('');
+        setSelectedFoodItem('');
+        setAvailableFlavors([]);
         
         onProductAdded();
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -236,9 +254,12 @@ export default function ProductForm({
           value={newProduct.categoryId}
           onChange={(e) => {
             setNewProduct({...newProduct, categoryId: e.target.value});
-            // Reset size selection when category changes
+            // Reset size and flavor selection when category changes
             setSelectedSizeParent('');
             setShowCustomInput(false);
+            setSelectedFoodCategory('');
+            setSelectedFoodItem('');
+            setAvailableFlavors([]);
           }}
           required
         >
@@ -349,79 +370,167 @@ export default function ProductForm({
           <label className="block text-sm font-medium text-gray-700 mb-1">
             {getColorLabel()}
           </label>
-          <div className="flex items-center space-x-2">
-            {/* Only show color picker for non-Foods & Drinks categories */}
-            {!isFoodsAndDrinks() && (
-              <input
-                type="color"
-                className="border border-gray-300 rounded-md cursor-pointer w-10 h-10"
-                value={newProduct.color || '#000000'}
-                onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-              />
-            )}
-            <input
-              type="text"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-              placeholder={getColorPlaceholder()}
-              value={newProduct.color || ''}
-              onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-            />
-          </div>
           
-          {/* Only show color tools for non-Foods & Drinks categories */}
-          {!isFoodsAndDrinks() && (
-            <div className="flex items-center space-x-2 mt-2">
-              <button
-                type="button"
-                onClick={activateEyedropper}
-                disabled={isPickingColor}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isPickingColor ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
-                    <span>Picking...</span>
-                  </>
-                ) : (
-                  <>
-                    <Pipette className="w-4 h-4" />
-                    <span>Pick Color</span>
-                  </>
-                )}
-              </button>
+          {/* Dynamic Flavor Selection for Foods & Drinks */}
+          {isFoodsAndDrinks() ? (
+            <div className="space-y-3">
+              {/* Food Category Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Food Category
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={selectedFoodCategory}
+                  onChange={(e) => {
+                    const category = e.target.value;
+                    setSelectedFoodCategory(category);
+                    setSelectedFoodItem('');
+                    setAvailableFlavors([]);
+                    setNewProduct({...newProduct, color: ''});
+                  }}
+                >
+                  <option value="">Select food category</option>
+                  {flavorData.food_categories.map((cat, idx) => (
+                    <option key={idx} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Food Item Selection */}
+              {selectedFoodCategory && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Food Item
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={selectedFoodItem}
+                    onChange={(e) => {
+                      const itemName = e.target.value;
+                      setSelectedFoodItem(itemName);
+                      const category = flavorData.food_categories.find(
+                        cat => cat.name === selectedFoodCategory
+                      );
+                      const item = category?.items.find(item => item.name === itemName);
+                      setAvailableFlavors(item?.flavors || []);
+                      setNewProduct({...newProduct, color: ''});
+                    }}
+                  >
+                    <option value="">Select food item</option>
+                    {flavorData.food_categories
+                      .find(cat => cat.name === selectedFoodCategory)
+                      ?.items.map((item, idx) => (
+                        <option key={idx} value={item.name}>{item.name}</option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Flavor Selection Dropdown */}
+              {availableFlavors.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Select Flavor
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={newProduct.color || ''}
+                    onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                  >
+                    <option value="">Choose a flavor</option>
+                    {availableFlavors.map((flavor, idx) => (
+                      <option key={idx} value={flavor}>{flavor}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Manual Flavor Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Or Enter Custom Flavor
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder={getColorPlaceholder()}
+                  value={newProduct.color || ''}
+                  onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                />
+              </div>
               
-              <button
-                type="button"
-                onClick={copyColorToClipboard}
-                disabled={!newProduct.color}
-                className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {copySuccess === 'Copied!' ? (
-                  <>
-                    <Check className="w-4 h-4 text-green-600" />
-                    <span className="text-green-600">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    <span>Copy</span>
-                  </>
-                )}
-              </button>
+              <p className="text-xs text-gray-500">
+                {availableFlavors.length > 0 
+                  ? "Select a flavor from the dropdown above or type your own"
+                  : "Type a custom flavor for this product"}
+              </p>
+            </div>
+          ) : (
+            /* Normal Color Selection for non-Foods & Drinks */
+            <div>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="color"
+                  className="border border-gray-300 rounded-md cursor-pointer w-10 h-10"
+                  value={newProduct.color || '#000000'}
+                  onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                />
+                <input
+                  type="text"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                  placeholder={getColorPlaceholder()}
+                  value={newProduct.color || ''}
+                  onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2 mt-2">
+                <button
+                  type="button"
+                  onClick={activateEyedropper}
+                  disabled={isPickingColor}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isPickingColor ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Picking...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pipette className="w-4 h-4" />
+                      <span>Pick Color</span>
+                    </>
+                  )}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={copyColorToClipboard}
+                  disabled={!newProduct.color}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {copySuccess === 'Copied!' ? (
+                    <>
+                      <Check className="w-4 h-4 text-green-600" />
+                      <span className="text-green-600">Copied!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
               
               {typeof window !== 'undefined' && !window.EyeDropper && (
-                <span className="text-xs text-amber-600">
+                <span className="text-xs text-amber-600 mt-1 inline-block">
                   Eye Dropper: Chrome 95+, Edge 96+, Opera 81+
                 </span>
               )}
             </div>
-          )}
-          
-          {/* Show flavor hint for Foods & Drinks */}
-          {isFoodsAndDrinks() && (
-            <p className="text-xs text-gray-500 mt-1">
-              Enter the flavor variant (e.g., Strawberry, Chocolate, Vanilla, Mint)
-            </p>
           )}
         </div>
         
@@ -565,4 +674,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-          }
+              }
