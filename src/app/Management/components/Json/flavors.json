@@ -1,51 +1,32 @@
 {
-  "flavors_master": [
-    "Savory", "Sweet", "Spicy", "Tangy", "Creamy", "Smoky", 
-    "Buttery", "Salty", "Umami", "Sour", "Herby", "Garlicky", 
-    "Crunchy", "Juicy", "Rich", "Mild", "Peppery", "Citrusy"
-  ],
-  "categories": [
+  "foods_and_drinks_flavors": [
     {
-      "id": "pizza",
-      "name": "Pizza",
-      "items": [
-        {
-          "id": "pizza_hawaiian",
-          "name": "Hawaiian Pizza",
-          "flavors": ["Sweet", "Savory", "Tangy", "Smoky"]
-        },
-        {
-          "id": "pizza_pepperoni",
-          "name": "Pepperoni Pizza",
-          "flavors": ["Salty", "Spicy", "Savory", "Smoky"]
-        }
-      ]
+      "productName": "Hawaiian Pizza",
+      "flavors": ["Sweet", "Savory", "Tangy", "Smoky"]
     },
     {
-      "id": "chicken",
-      "name": "Fried Chicken",
-      "items": [
-        {
-          "id": "chicken_jollibee",
-          "name": "Jollibee Chickenjoy",
-          "flavors": ["Juicy", "Savory", "Buttery", "Crunchy"]
-        },
-        {
-          "id": "chicken_mcdo",
-          "name": "McDonald's Chicken McDo",
-          "flavors": ["Crunchy", "Salty", "Savory", "Peppery"]
-        },
-        {
-          "id": "chicken_chooks",
-          "name": "Chooks-to-Go",
-          "flavors": ["Garlicky", "Savory", "Herby", "Smoky"]
-        },
-        {
-          "id": "chicken_srpedro",
-          "name": "Sr. Pedro Roasted Chicken",
-          "flavors": ["Citrusy", "Savory", "Garlicky", "Juicy"]
-        }
-      ]
+      "productName": "Pepperoni Pizza",
+      "flavors": ["Salty", "Spicy", "Savory", "Smoky"]
+    },
+    {
+      "productName": "Cheese Pizza",
+      "flavors": ["Creamy", "Savory", "Mild", "Buttery"]
+    },
+    {
+      "productName": "Jollibee Chickenjoy",
+      "flavors": ["Juicy", "Savory", "Buttery", "Crunchy"]
+    },
+    {
+      "productName": "McDonald's Chicken McDo",
+      "flavors": ["Crunchy", "Salty", "Savory", "Peppery"]
+    },
+    {
+      "productName": "Chooks-to-Go",
+      "flavors": ["Garlicky", "Savory", "Herby", "Smoky"]
+    },
+    {
+      "productName": "Sr. Pedro Roasted Chicken",
+      "flavors": ["Citrusy", "Savory", "Garlicky", "Juicy"]
     }
   ]
 }
