@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import Image from 'next/image';
 import { showToast } from '../../../../utils/toastify';
-import { Product } from '../../../../types';
+import { GETCATEGORY, GETPRODUCTS, USERS } from '../graphql/query';
+import { useQuery } from '@apollo/client';
+import { category, Product } from '../../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -40,7 +42,8 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const dispatch = useDispatch();
   const { user } = useAuth(); // Get current user (if needed)
-
+  const { data: categoryData, loading: categoryLoading } = useQuery(GETCATEGORY);
+  
   // Helper function to get unique colors from variants
   const getUniqueColors = (variants: Product['variants']) => {
     const colors = variants.map(variant => variant.color).filter(Boolean);
@@ -281,6 +284,7 @@ const FeaturedProducts: React.FC<FeaturedProductsProps> = ({
       {/* Quick View Modal */}
       <QuickViewModal 
         product={selectedProduct} 
+        categories={categoryLoading?"":categoryData}
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={handleAddToCart}
