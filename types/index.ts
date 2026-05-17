@@ -153,6 +153,17 @@ export interface CartItem {
   lng?:number;
 }
 
+export interface Category {
+    id: string;
+    name: string
+    description: string
+    image: string
+    isActive: boolean
+    createdAt: string
+  }
+
+
+
 export interface Product {
   id: string;
   sku: string;
@@ -173,7 +184,7 @@ export interface Product {
   colors?: string[];
   brand: string;
   productCode?: string;
-  category: string;
+  category: Category[];
   createdAt: string;
   isActive: boolean;
   color: string;
