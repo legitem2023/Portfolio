@@ -215,7 +215,7 @@ export default function ManagementDashboard() {
   if (isLoading || categoryLoading || productLoading) {
     return <LoadingShimmer />;
   }
-
+console.log(products);
 
   return (
     <div className="min-h-screen bg-gray-100">
