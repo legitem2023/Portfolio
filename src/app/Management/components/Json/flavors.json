@@ -1,32 +1,42 @@
 {
-  "foods_and_drinks_flavors": [
+  "food_categories": [
     {
-      "productName": "Hawaiian Pizza",
-      "flavors": ["Sweet", "Savory", "Tangy", "Smoky"]
+      "name": "Pizza",
+      "items": [
+        {
+          "name": "Hawaiian Pizza",
+          "flavors": ["Sweet", "Savory", "Tangy", "Smoky"]
+        },
+        {
+          "name": "Pepperoni Pizza",
+          "flavors": ["Salty", "Spicy", "Savory", "Smoky"]
+        },
+        {
+          "name": "Cheese Pizza",
+          "flavors": ["Creamy", "Savory", "Mild", "Buttery"]
+        }
+      ]
     },
     {
-      "productName": "Pepperoni Pizza",
-      "flavors": ["Salty", "Spicy", "Savory", "Smoky"]
-    },
-    {
-      "productName": "Cheese Pizza",
-      "flavors": ["Creamy", "Savory", "Mild", "Buttery"]
-    },
-    {
-      "productName": "Jollibee Chickenjoy",
-      "flavors": ["Juicy", "Savory", "Buttery", "Crunchy"]
-    },
-    {
-      "productName": "McDonald's Chicken McDo",
-      "flavors": ["Crunchy", "Salty", "Savory", "Peppery"]
-    },
-    {
-      "productName": "Chooks-to-Go",
-      "flavors": ["Garlicky", "Savory", "Herby", "Smoky"]
-    },
-    {
-      "productName": "Sr. Pedro Roasted Chicken",
-      "flavors": ["Citrusy", "Savory", "Garlicky", "Juicy"]
+      "name": "Fried Chicken",
+      "items": [
+        {
+          "name": "Jollibee Chickenjoy",
+          "flavors": ["Juicy", "Savory", "Buttery", "Crunchy"]
+        },
+        {
+          "name": "McDonald's Chicken McDo",
+          "flavors": ["Crunchy", "Salty", "Savory", "Peppery"]
+        },
+        {
+          "name": "Chooks-to-Go",
+          "flavors": ["Garlicky", "Savory", "Herby", "Smoky"]
+        },
+        {
+          "name": "Sr. Pedro Roasted Chicken",
+          "flavors": ["Citrusy", "Savory", "Garlicky", "Juicy"]
+        }
+      ]
     }
   ]
 }
