@@ -33,7 +33,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
-  
+  console.log(categories);
   // Refs for cleanup
   const quickViewTimeoutRef = useRef<NodeJS.Timeout>();
   const swiperInstancesRef = useRef<Map<string, any>>(new Map());
