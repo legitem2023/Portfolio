@@ -134,6 +134,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
     });
   }, []);
 
+
+ const getReturnCategory = (id:any) => {
+   const filteredCategoryNames:any = categories
+  .filter((category:any) => category.id === id)
+  .map((category:any) => category.name).toString();
+return filteredCategoryNames;
+ }
+  
   const handleQuickView = useCallback((product: Product, variant: Product['variants'][0]) => {
     setSelectedVariant({ product, variant });
     setIsQuickViewOpen(true);
@@ -220,7 +228,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
-          
+          const categoryName = getReturnCategory(product.category.id);
+          console.log(categoryName);
           // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
