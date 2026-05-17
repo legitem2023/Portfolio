@@ -5,7 +5,7 @@ import { NewProduct, category } from '../../../../types';
 import { useState, useRef } from 'react';
 // ✅ CORRECTED LUCIDE-REACT IMPORTS
 import { Pipette, Copy, Check } from 'lucide-react';
-
+import sizeData from "./Json/sizes.json"
 interface ProductFormProps {
   supplierId: String;
   newProduct: NewProduct;
@@ -38,7 +38,7 @@ export default function ProductForm({
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank'); // State for SKU option
   
   const colorInputRef = useRef<HTMLInputElement>(null);
-
+/*
   const sizeData = [
     // Clothing & Apparel
     { parent: "Letter Sizes", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
@@ -82,7 +82,7 @@ export default function ProductForm({
     { parent: "One Size", values: ["One Size Fits All"] },
     { parent: "Custom", values: [] }
 ];
-
+*/
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
       try {
