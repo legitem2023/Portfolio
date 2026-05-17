@@ -375,7 +375,7 @@ export default function ProductForm({
                     const cat = e.target.value;
                     setSelectedCategory(cat);
                     setSelectedItem('');
-                    setNewProduct({...newProduct, name: '', color: ''});
+                    //setNewProduct({...newProduct, name: '', color: ''});
                   }}
                 >
                   <option value="">Select category</option>
@@ -396,7 +396,7 @@ export default function ProductForm({
                     onChange={(e) => {
                       const item = e.target.value;
                       setSelectedItem(item);
-                      setNewProduct({...newProduct, name: item, color: item});
+                      setNewProduct({...newProduct, color: item});
                     }}
                   >
                     <option value="">Select item</option>
