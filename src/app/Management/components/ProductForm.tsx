@@ -216,6 +216,16 @@ export default function ProductForm({
           ))}
         </select>
       </div>
+            
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
+        <input
+          type="text"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          value={newProduct.brand}
+          onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
+        />
+      </div>
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
@@ -476,18 +486,6 @@ export default function ProductForm({
           )}
           </div>
         </div>
-      </div>
-      
-
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Brand</label>
-        <input
-          type="text"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          value={newProduct.brand}
-          onChange={(e) => setNewProduct({...newProduct, brand: e.target.value})}
-        />
       </div>
       
       <div className="flex items-center mb-4">
