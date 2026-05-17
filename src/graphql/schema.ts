@@ -411,6 +411,7 @@ export const typeDefs = gql`
     stock: Int
     images: [String]
     model: String
+    categoryId: String
     category: Category
     brand: String
     weight: Float
