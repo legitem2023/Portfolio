@@ -141,7 +141,7 @@ const products = productData?.products?.items || [];
           {productLoading ? (
             <ProductThumbnailsShimmer count={8} />
             ) : products.length > 0 ? (
-            <ProductThumbnails products={products} />
+            <ProductThumbnails products={products} categories={categoryData}/>
             ) : (
                 <div className="text-center py-12 text-gray-500">
                   No products found
