@@ -4,16 +4,13 @@
       "name": "Pizza",
       "items": [
         {
-          "name": "Hawaiian Pizza",
-          "flavors": ["Sweet", "Savory", "Tangy", "Smoky"]
+          "name": "Hawaiian Pizza"
         },
         {
-          "name": "Pepperoni Pizza",
-          "flavors": ["Salty", "Spicy", "Savory", "Smoky"]
+          "name": "Pepperoni Pizza"
         },
         {
-          "name": "Cheese Pizza",
-          "flavors": ["Creamy", "Savory", "Mild", "Buttery"]
+          "name": "Cheese Pizza"
         }
       ]
     },
@@ -21,20 +18,16 @@
       "name": "Fried Chicken",
       "items": [
         {
-          "name": "Jollibee Chickenjoy",
-          "flavors": ["Juicy", "Savory", "Buttery", "Crunchy"]
+          "name": "Jollibee Chickenjoy"
         },
         {
-          "name": "McDonald's Chicken McDo",
-          "flavors": ["Crunchy", "Salty", "Savory", "Peppery"]
+          "name": "McDonald's Chicken McDo"
         },
         {
-          "name": "Chooks-to-Go",
-          "flavors": ["Garlicky", "Savory", "Herby", "Smoky"]
+          "name": "Chooks-to-Go"
         },
         {
-          "name": "Sr. Pedro Roasted Chicken",
-          "flavors": ["Citrusy", "Savory", "Garlicky", "Juicy"]
+          "name": "Sr. Pedro Roasted Chicken"
         }
       ]
     }
