@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation } from '@apollo/client'; 
-import { Product, Category } from '../../../../types';
+import { Product, category } from '../../../../types';
 import { DELETE_PRODUCT } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
 import SearchSortBar from './UI/SearchSortBar';
@@ -11,7 +11,7 @@ import MobileProductCard from './Products/MobileProductCard';
 import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
-  categories:Category[];
+  categories:category[];
   refetch: any;
   onProductDeleted?: () => void;
 } 
