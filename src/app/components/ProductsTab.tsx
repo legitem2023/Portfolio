@@ -498,7 +498,7 @@ const ProductsTab: React.FC = () => {
                   {showLoadingShimmer ? (
                     <ProductThumbnailsShimmer count={queryVariables.limit} />
                   ) : products.length > 0 ? (
-                    <ProductThumbnails products={products} />
+                    <ProductThumbnails products={products} categories={categories}/>
                   ) : (
                     <div className="text-center py-12 text-gray-500">
                       No products found for {debouncedSearch}
