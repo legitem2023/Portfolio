@@ -28,7 +28,7 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
-const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
+const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categories }) => {
   const { user, loading: userloading } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
@@ -212,7 +212,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products }) => {
   if (userloading) return null;
 
   const userId = user?.userId;
-console.log(memoizedProducts);
+  console.log(categories);
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
