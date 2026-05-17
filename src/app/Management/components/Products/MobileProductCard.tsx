@@ -103,7 +103,7 @@ export default function MobileProductCard({
 
 const filteredCategoryNames:any = categories
   .filter((category:any) => category.id === product.category)
-  .map((category:any) => category.name);
+  .map((category:any) => category.name).toString();
 console.log(filteredCategoryNames);
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
