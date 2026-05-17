@@ -101,8 +101,8 @@ export default function MobileProductCard({
   const totalStock = safeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
   const hasSale = product.salePrice && product.salePrice < product.price;
 
-const filteredCategoryNames = categories
-  .filter((category:any) => product.category.includes(category.id))
+const filteredCategoryNames:any = categories
+  .filter((category:any) => category.id === product.category)
   .map((category:any) => category.name);
 
   return (
