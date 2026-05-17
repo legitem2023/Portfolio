@@ -449,22 +449,7 @@ export default function AddVariantForm({
                 )}
               </div>
 
-              <div>
-                <label htmlFor="stock" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Stock Quantity <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  required
-                  value={formData.stock}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
+              
             </div>
 
             {/* Right Column - Pricing */}
@@ -705,6 +690,22 @@ export default function AddVariantForm({
               </>
             )}
           </div>
+          <div>
+              <label htmlFor="stock" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Stock Quantity <span className="text-red-500">*</span>
+              </label>
+                <input
+                  type="number"
+                  id="stock"
+                  name="stock"
+                  required
+                  value={formData.stock}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
+                  placeholder="0"
+                  min="0"
+                />
+              </div>
         </div>
 
         {/* Action Buttons */}
