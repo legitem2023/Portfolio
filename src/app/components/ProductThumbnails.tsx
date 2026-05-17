@@ -135,12 +135,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   }, []);
 
 
- const getReturnCategory = (id:any) => {
-   const filteredCategoryNames:any = categories
-  .filter((category:any) => category.id === id)
-  .map((category:any) => category.name).toString();
-return filteredCategoryNames;
- }
+ 
   
   const handleQuickView = useCallback((product: Product, variant: Product['variants'][0]) => {
     setSelectedVariant({ product, variant });
@@ -224,12 +219,10 @@ return filteredCategoryNames;
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {memoizedProducts.map((product:Product) => {
+        {memoizedProducts.map((product:any) => {
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
-          const categoryName = getReturnCategory(product.category?.id);
-          console.log(product.category?.id,categoryName);
           // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
@@ -449,6 +442,7 @@ return filteredCategoryNames;
       
       <QuickViewModal 
         product={selectedVariant?.product || null}
+        categories={categories}
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={(product) => handleAddToCart(product, selectedVariant?.variant)}
