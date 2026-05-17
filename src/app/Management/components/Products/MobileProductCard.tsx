@@ -30,7 +30,7 @@ export default function MobileProductCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
-
+  console.log(product,"<&");
   const safeVariants = (product.variants || []).map((variant) => ({
     ...variant,
     name: variant.name || '',
@@ -238,6 +238,7 @@ export default function MobileProductCard({
                   onCancel={handleFormCancel}
                   editingVariant={editingVariant}
                   setEditingVariant={setEditingVariant}
+                  productCategoryName="Foods and Drink"
                 />
               </div>
             )}
