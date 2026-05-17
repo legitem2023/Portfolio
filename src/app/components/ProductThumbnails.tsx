@@ -220,7 +220,7 @@ return filteredCategoryNames;
   if (userloading) return null;
 
   const userId = user?.userId;
-  console.log(categories);
+  //console.log(categories);
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
@@ -228,8 +228,8 @@ return filteredCategoryNames;
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
-          const categoryName = getReturnCategory(product.category.id);
-          console.log(categoryName);
+         // const categoryName = getReturnCategory(product.category.id);
+          console.log(product.category);
           // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
