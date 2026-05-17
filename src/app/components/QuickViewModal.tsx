@@ -21,12 +21,13 @@ import {
   Shield
 } from 'lucide-react';
 import { addToCart } from '../../../Redux/cartSlice';
-import { Product, Variant } from '../../../types';
+import { Product,category, Variant } from '../../../types';
 import LuxuryTabs from './ui/LuxuryTabs';
 import ModelViewer from "./ModelViewer";
 
 interface QuickViewModalProps {
   product: Product | null;
+  categories: category | null;
   isOpen: boolean;
   onClose: () => void;
   userId?: string; // Add userId prop
@@ -42,7 +43,8 @@ const formatPesoPrice = (price: number): string => {
 };
 
 const QuickViewModal: React.FC<QuickViewModalProps> = ({ 
-  product, 
+  product,
+  categories,
   isOpen, 
   onClose, 
   userId, // Add userId
@@ -57,6 +59,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const dispatch = useDispatch();
 
+  const getReturnCategory = (id:any) => {
+   const filteredCategoryNames:any = categories
+  .filter((category:any) => category.id === id)
+  .map((category:any) => category.name).toString();
+return filteredCategoryNames;
+ }
+  const categoryName = getReturnCategory(product.category.id);
+  console.log(categoryName);
   // Add to wishlist mutation
   const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
     onCompleted: (data) => {
