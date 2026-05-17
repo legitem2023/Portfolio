@@ -37,6 +37,10 @@ export default function ProductForm({
   const [copySuccess, setCopySuccess] = useState('');
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
+  
+  // 2-level flavor states
+  const [selectedFoodCategory, setSelectedFoodCategory] = useState('');
+  const [selectedFoodItem, setSelectedFoodItem] = useState('');
   const [availableFlavors, setAvailableFlavors] = useState<string[]>([]);
   
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -73,13 +77,6 @@ export default function ProductForm({
     return 'Enter custom size';
   };
 
-  const suggestFlavorsForProduct = (productName: string) => {
-    const match = flavorData.foods_and_drinks_flavors.find(
-      item => item.productName.toLowerCase() === productName.toLowerCase()
-    );
-    setAvailableFlavors(match?.flavors || []);
-  };
-
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
       try {
@@ -112,8 +109,11 @@ export default function ProductForm({
     }
   };
 
+  // Reset flavor selection when category changes
   useEffect(() => {
     if (!isFoodsAndDrinks()) {
+      setSelectedFoodCategory('');
+      setSelectedFoodItem('');
       setAvailableFlavors([]);
     }
   }, [newProduct.categoryId]);
@@ -168,6 +168,8 @@ export default function ProductForm({
         setCopySuccess('');
         setIsPickingColor(false);
         setSkuOption('blank');
+        setSelectedFoodCategory('');
+        setSelectedFoodItem('');
         setAvailableFlavors([]);
         
         onProductAdded();
@@ -226,9 +228,6 @@ export default function ProductForm({
           value={newProduct.name}
           onChange={(e) => {
             setNewProduct({...newProduct, name: e.target.value});
-            if (isFoodsAndDrinks()) {
-              suggestFlavorsForProduct(e.target.value);
-            }
             setErrorMessage('');
           }}
           required
@@ -255,6 +254,8 @@ export default function ProductForm({
             setNewProduct({...newProduct, categoryId: e.target.value});
             setSelectedSizeParent('');
             setShowCustomInput(false);
+            setSelectedFoodCategory('');
+            setSelectedFoodItem('');
             setAvailableFlavors([]);
           }}
           required
@@ -369,6 +370,61 @@ export default function ProductForm({
           
           {isFoodsAndDrinks() ? (
             <div className="space-y-3">
+              {/* Level 1: Food Category */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Food Category
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={selectedFoodCategory}
+                  onChange={(e) => {
+                    const category = e.target.value;
+                    setSelectedFoodCategory(category);
+                    setSelectedFoodItem('');
+                    setAvailableFlavors([]);
+                    setNewProduct({...newProduct, name: '', color: ''});
+                  }}
+                >
+                  <option value="">Select food category</option>
+                  {flavorData.food_categories.map((cat, idx) => (
+                    <option key={idx} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Level 2: Food Item */}
+              {selectedFoodCategory && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Food Item
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={selectedFoodItem}
+                    onChange={(e) => {
+                      const itemName = e.target.value;
+                      setSelectedFoodItem(itemName);
+                      setNewProduct({...newProduct, name: itemName});
+                      const category = flavorData.food_categories.find(
+                        cat => cat.name === selectedFoodCategory
+                      );
+                      const item = category?.items.find(item => item.name === itemName);
+                      setAvailableFlavors(item?.flavors || []);
+                      setNewProduct({...newProduct, color: ''});
+                    }}
+                  >
+                    <option value="">Select food item</option>
+                    {flavorData.food_categories
+                      .find(cat => cat.name === selectedFoodCategory)
+                      ?.items.map((item, idx) => (
+                        <option key={idx} value={item.name}>{item.name}</option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Level 3: Flavor Selection */}
               {availableFlavors.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -387,6 +443,7 @@ export default function ProductForm({
                 </div>
               )}
 
+              {/* Manual Flavor Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {availableFlavors.length > 0 ? 'Or Custom Flavor' : 'Flavor'}
@@ -613,4 +670,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-                  }
+                }
