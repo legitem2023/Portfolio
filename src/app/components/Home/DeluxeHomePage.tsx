@@ -138,7 +138,7 @@ const products = productData?.products?.items || [];
           <h2 className="text-1xl font-bold text-gray-500">Featured Products</h2>
         </div>
         {/* Featured Products Section */}
-          {productLoading ? (
+          {productLoading && categoryLoading ? (
             <ProductThumbnailsShimmer count={8} />
             ) : products.length > 0 ? (
             <ProductThumbnails products={products} categories={categoryData}/>
