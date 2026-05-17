@@ -228,8 +228,8 @@ return filteredCategoryNames;
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
-          const categoryName = getReturnCategory(product.category[0]?.id);
-          console.log(product.category);
+          const categoryName = getReturnCategory(product.category?.id);
+          console.log(product.category?.id,categoryName);
           // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
