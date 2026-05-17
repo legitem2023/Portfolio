@@ -224,7 +224,7 @@ return filteredCategoryNames;
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {memoizedProducts.map((product:any) => {
+        {memoizedProducts.map((product:Product) => {
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
