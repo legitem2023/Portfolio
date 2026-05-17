@@ -60,12 +60,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const dispatch = useDispatch();
 
   const getReturnCategory = (id:any) => {
-   const filteredCategoryNames:any = categories || []
-  .filter((category:any) => category.id === id)
-  .map((category:any) => category.name).toString();
-return filteredCategoryNames;
- }
-  const categoryName = getReturnCategory(product.category.id);
+  if (!categories || !id) return '';
+  const filteredCategoryNames:any = categories
+    .filter((category:any) => category.id === id)
+    .map((category:any) => category.name).toString();
+  return filteredCategoryNames;
+}
+const categoryName = product?.category?.id ? getReturnCategory(product.category.id) : '';  
   console.log(categoryName);
   // Add to wishlist mutation
   const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
