@@ -238,7 +238,7 @@ export default function MobileProductCard({
                   onCancel={handleFormCancel}
                   editingVariant={editingVariant}
                   setEditingVariant={setEditingVariant}
-                  productCategoryName="Foods and Drink"
+                  productCategoryName="Foods and Drinks"
                 />
               </div>
             )}
