@@ -2,7 +2,7 @@
 import { useMutation } from "@apollo/client";
 import { INSERTPRODUCT } from "../../components/graphql/mutation";
 import { NewProduct, category } from '../../../../types';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Pipette, Copy, Check } from 'lucide-react';
 import sizeData from "./Json/sizes.json"
 
@@ -56,6 +56,22 @@ export default function ProductForm({
     return "Color name or hex code (e.g., #FF0000)";
   };
 
+  const getSizeLabel = () => {
+    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategory?.name === "Foods and Drinks") {
+      return "Size/Portion";
+    }
+    return "Size";
+  };
+
+  const getSizePlaceholder = () => {
+    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategory?.name === "Foods and Drinks") {
+      return "Enter size or portion (e.g., 12oz, 500ml, Large)";
+    }
+    return "Enter custom size";
+  };
+
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
       try {
@@ -87,18 +103,6 @@ export default function ProductForm({
       setIsPickingColor(false);
     }
   };
-
-  const handleColorChange = (color: string) => {
-    setNewProduct({...newProduct, color});
-    setShowColorPicker(false);
-  };
-
-  const colorOptions = [
-    '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF', 
-    '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080', 
-    '#A52A2A', '#808080', '#FFC0CB', '#008000', '#000080',
-    '#FF4500', '#32CD32', '#8A2BE2', '#FF69B4', '#DAA520'
-  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -174,6 +178,12 @@ export default function ProductForm({
 
   const commonSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
+  // Check if current category is Foods and Drinks
+  const isFoodsAndDrinks = () => {
+    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
+    return selectedCategory?.name === "Foods and Drinks";
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       {error && (
@@ -226,8 +236,9 @@ export default function ProductForm({
           value={newProduct.categoryId}
           onChange={(e) => {
             setNewProduct({...newProduct, categoryId: e.target.value});
-            // Reset color field when category changes to avoid confusion
-            //setNewProduct({...newProduct, color: ''});
+            // Reset size selection when category changes
+            setSelectedSizeParent('');
+            setShowCustomInput(false);
           }}
           required
         >
@@ -340,7 +351,7 @@ export default function ProductForm({
           </label>
           <div className="flex items-center space-x-2">
             {/* Only show color picker for non-Foods & Drinks categories */}
-            {getColorLabel() === "Color" && (
+            {!isFoodsAndDrinks() && (
               <input
                 type="color"
                 className="border border-gray-300 rounded-md cursor-pointer w-10 h-10"
@@ -358,7 +369,7 @@ export default function ProductForm({
           </div>
           
           {/* Only show color tools for non-Foods & Drinks categories */}
-          {getColorLabel() === "Color" && (
+          {!isFoodsAndDrinks() && (
             <div className="flex items-center space-x-2 mt-2">
               <button
                 type="button"
@@ -407,7 +418,7 @@ export default function ProductForm({
           )}
           
           {/* Show flavor hint for Foods & Drinks */}
-          {getColorLabel() === "Flavor" && (
+          {isFoodsAndDrinks() && (
             <p className="text-xs text-gray-500 mt-1">
               Enter the flavor variant (e.g., Strawberry, Chocolate, Vanilla, Mint)
             </p>
@@ -415,77 +426,99 @@ export default function ProductForm({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Size</label>
-          <div className="flex flex-row gap-2">
-            <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-              value={selectedSizeParent}
-              onChange={(e) => {
-                const parent = e.target.value;
-                setSelectedSizeParent(parent);
-                setShowCustomInput(parent === 'Custom');
-                if (parent !== 'Custom') {
-                  setNewProduct({...newProduct, size: ''});
-                }
-              }}
-            >
-              <option value="">Select size category</option>
-              {sizeData.map((category) => (
-                <option key={category.parent} value={category.parent}>
-                  {category.parent}
-                </option>
-              ))}
-            </select>
-
-            {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {getSizeLabel()}
+          </label>
+          
+          {/* Show custom size input for Foods & Drinks */}
+          {isFoodsAndDrinks() ? (
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              placeholder={getSizePlaceholder()}
+              value={newProduct.size || ''}
+              onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+            />
+          ) : (
+            // Normal size selector for other categories
+            <div className="flex flex-row gap-2">
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-                value={newProduct.size || ''}
-                onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+                value={selectedSizeParent}
+                onChange={(e) => {
+                  const parent = e.target.value;
+                  setSelectedSizeParent(parent);
+                  setShowCustomInput(parent === 'Custom');
+                  if (parent !== 'Custom') {
+                    setNewProduct({...newProduct, size: ''});
+                  }
+                }}
               >
-                <option value="">Select {selectedSizeParent} size</option>
-                {sizeData
-                  .find(cat => cat.parent === selectedSizeParent)
-                  ?.values.map(size => (
+                <option value="">Select size category</option>
+                {sizeData.map((category) => (
+                  <option key={category.parent} value={category.parent}>
+                    {category.parent}
+                  </option>
+                ))}
+              </select>
+
+              {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                  value={newProduct.size || ''}
+                  onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+                >
+                  <option value="">Select {selectedSizeParent} size</option>
+                  {sizeData
+                    .find(cat => cat.parent === selectedSizeParent)
+                    ?.values.map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                </select>
+              )}
+
+              {showCustomInput && (
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                  placeholder="Enter custom size"
+                  value={newProduct.size || ''}
+                  onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+                />
+              )}
+
+              {!selectedSizeParent && (
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                  value={newProduct.size || ''}
+                  onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+                >
+                  <option value="">Select size</option>
+                  {commonSizes.map(size => (
                     <option key={size} value={size}>{size}</option>
                   ))}
-              </select>
-            )}
-
-            {showCustomInput && (
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-                placeholder="Enter custom size"
-                value={newProduct.size || ''}
-                onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
-              />
-            )}
-
-            {!selectedSizeParent && (
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-                value={newProduct.size || ''}
-                onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
-              >
-                <option value="">Select size</option>
-                {commonSizes.map(size => (
-                  <option key={size} value={size}>{size}</option>
-                ))}
-                <option value="Custom">Custom</option>
-              </select>
-            )}
-            
-            {!selectedSizeParent && newProduct.size === 'Custom' && (
-              <input
-                type="text"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
-                placeholder="Enter custom size"
-                value={newProduct.size || ''}
-                onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
-              />
-            )}
-          </div>
+                  <option value="Custom">Custom</option>
+                </select>
+              )}
+              
+              {!selectedSizeParent && newProduct.size === 'Custom' && (
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
+                  placeholder="Enter custom size"
+                  value={newProduct.size || ''}
+                  onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
+                />
+              )}
+            </div>
+          )}
+          
+          {/* Hint text for Foods & Drinks size */}
+          {isFoodsAndDrinks() && (
+            <p className="text-xs text-gray-500 mt-1">
+              Enter portion size (e.g., 12oz, 500ml, Large, Family Size)
+            </p>
+          )}
         </div>
         
         <div>
@@ -532,4 +565,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+          }
