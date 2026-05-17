@@ -411,7 +411,7 @@ export default function ProductForm({
               
               {availableFlavors.length === 0 && newProduct.name && (
                 <p className="text-xs text-blue-500">
-                  No predefined flavors for "{newProduct.name}". You can add a custom flavor above.
+                  No predefined flavors for <b>{newProduct.name}.</b> You can add a custom flavor above.
                 </p>
               )}
             </div>
