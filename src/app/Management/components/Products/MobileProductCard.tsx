@@ -101,6 +101,10 @@ export default function MobileProductCard({
   const totalStock = safeVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
   const hasSale = product.salePrice && product.salePrice < product.price;
 
+const filteredCategoryNames = categories
+  .filter((category:any) => product.category.includes(category.id))
+  .map((category:any) => category.name);
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
       
@@ -240,7 +244,7 @@ export default function MobileProductCard({
                   onCancel={handleFormCancel}
                   editingVariant={editingVariant}
                   setEditingVariant={setEditingVariant}
-                  productCategoryName="Foods and Drinks"
+                  productCategoryName={filteredCategoryNames}
                 />
               </div>
             )}
