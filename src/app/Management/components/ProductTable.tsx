@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useMutation } from '@apollo/client'; 
-import { Product } from '../../../../types';
+import { Product, Category } from '../../../../types';
 import { DELETE_PRODUCT } from '../../components/graphql/mutation';
 import { SINGLE_UPLOAD_MUTATION } from '../../components/graphql/mutation';
 import SearchSortBar from './UI/SearchSortBar';
@@ -11,6 +11,7 @@ import MobileProductCard from './Products/MobileProductCard';
 import EmptyState from './Products/EmptyState';
 interface ProductTableProps {
   products: Product[];
+  categories:Category[];
   refetch: any;
   onProductDeleted?: () => void;
 } 
@@ -26,7 +27,7 @@ const sortOptions: SortOption[] = [
   { value: 'createdAt-asc', label: 'Oldest First', direction: 'asc' },
 ];
 
-export default function ProductTable({ products,refetch, onProductDeleted }: ProductTableProps) {
+export default function ProductTable({ products,refetch,categories, onProductDeleted }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
