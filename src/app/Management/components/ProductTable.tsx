@@ -242,6 +242,7 @@ export default function ProductTable({ products,refetch,categories, onProductDel
           <MobileProductCard 
             key={product.id} 
             product={product}
+            categories={categories}
             onViewVariants={openVariantsModal}
             onImageUpload={handleProductImageUpload}
             onDeleteProduct={handleDelete}
