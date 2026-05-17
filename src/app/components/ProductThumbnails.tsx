@@ -442,7 +442,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
       
       <QuickViewModal 
         product={selectedVariant?.product || null}
-        categories={categories}
+        categories={categories[0]}
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={(product) => handleAddToCart(product, selectedVariant?.variant)}
