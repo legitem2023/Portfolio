@@ -54,7 +54,7 @@ export default function ProductForm({
   const getColorPlaceholder = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
     if (selectedCategoryObj?.name === 'Foods and Drinks') {
-      return 'Flavor name (e.g., Strawberry, Chocolate, Vanilla)';
+      return 'Select an item above for flavor';
     }
     return 'Color name or hex code (e.g., #FF0000)';
   };
@@ -388,7 +388,7 @@ export default function ProductForm({
               {selectedCategory && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Food Item
+                    Food Item (Flavor)
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
@@ -396,7 +396,7 @@ export default function ProductForm({
                     onChange={(e) => {
                       const item = e.target.value;
                       setSelectedItem(item);
-                      setNewProduct({...newProduct, name: item});
+                      setNewProduct({...newProduct, name: item, color: item});
                     }}
                   >
                     <option value="">Select item</option>
@@ -406,21 +406,11 @@ export default function ProductForm({
                         <option key={idx} value={item.name}>{item.name}</option>
                       ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Selected item will be used as both Product Name and Flavor
+                  </p>
                 </div>
               )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Flavor
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  placeholder={getColorPlaceholder()}
-                  value={newProduct.color || ''}
-                  onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-                />
-              </div>
             </div>
           ) : (
             <div>
@@ -635,4 +625,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+                                                  }
