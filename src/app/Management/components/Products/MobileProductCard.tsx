@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Product, Variant } from '../../../../../types';
+import { Product,Category, Variant } from '../../../../../types';
 import PriceDisplay from './PriceDisplay';
 import StatusBadge from './StatusBadge';
 import ActionButtons from './ActionButtons';
@@ -8,6 +8,7 @@ import AddVariantForm from './AddVariantForm';
 
 interface MobileProductCardProps {
   product: Product;
+  categories:Category;
   onViewVariants: (product: Product) => void;
   onImageUpload: (productId: string, file: File) => void;
   onDeleteProduct: (productId: string) => void;
@@ -19,6 +20,7 @@ interface MobileProductCardProps {
 
 export default function MobileProductCard({
   product,
+  categories,
   onViewVariants,
   onImageUpload,
   onDeleteProduct,
@@ -30,7 +32,7 @@ export default function MobileProductCard({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingVariant, setEditingVariant] = useState<Variant | null>(null);
-  console.log(product,"<&");
+  console.log(categories,"<&",product);
   const safeVariants = (product.variants || []).map((variant) => ({
     ...variant,
     name: variant.name || '',
