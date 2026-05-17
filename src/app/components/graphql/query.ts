@@ -826,6 +826,7 @@ export const MANAGEMENTPRODUCTS = gql`
       stock
       images
       model
+      categoryId
       category {
         id
         name
