@@ -39,8 +39,6 @@ export default function ProductForm({
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
   
   // Dynamic flavor states
-  const [selectedFoodCategory, setSelectedFoodCategory] = useState('');
-  const [selectedFoodItem, setSelectedFoodItem] = useState('');
   const [availableFlavors, setAvailableFlavors] = useState<string[]>([]);
   
   const colorInputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +76,14 @@ export default function ProductForm({
     return "Enter custom size";
   };
 
+  // Function to suggest flavors based on product name
+  const suggestFlavorsForProduct = (productName: string) => {
+    const match = flavorData.foods_and_drinks_flavors.find(
+      item => item.productName.toLowerCase() === productName.toLowerCase()
+    );
+    setAvailableFlavors(match?.flavors || []);
+  };
+
   const copyColorToClipboard = async () => {
     if (newProduct.color) {
       try {
@@ -113,8 +119,6 @@ export default function ProductForm({
   // Reset flavor selection when category changes
   useEffect(() => {
     if (!isFoodsAndDrinks()) {
-      setSelectedFoodCategory('');
-      setSelectedFoodItem('');
       setAvailableFlavors([]);
     }
   }, [newProduct.categoryId]);
@@ -169,8 +173,6 @@ export default function ProductForm({
         setCopySuccess('');
         setIsPickingColor(false);
         setSkuOption('blank');
-        setSelectedFoodCategory('');
-        setSelectedFoodItem('');
         setAvailableFlavors([]);
         
         onProductAdded();
@@ -230,6 +232,9 @@ export default function ProductForm({
           value={newProduct.name}
           onChange={(e) => {
             setNewProduct({...newProduct, name: e.target.value});
+            if (isFoodsAndDrinks()) {
+              suggestFlavorsForProduct(e.target.value);
+            }
             setErrorMessage('');
           }}
           required
@@ -254,11 +259,8 @@ export default function ProductForm({
           value={newProduct.categoryId}
           onChange={(e) => {
             setNewProduct({...newProduct, categoryId: e.target.value});
-            // Reset size and flavor selection when category changes
             setSelectedSizeParent('');
             setShowCustomInput(false);
-            setSelectedFoodCategory('');
-            setSelectedFoodItem('');
             setAvailableFlavors([]);
           }}
           required
@@ -371,85 +373,32 @@ export default function ProductForm({
             {getColorLabel()}
           </label>
           
-          {/* Dynamic Flavor Selection for Foods & Drinks */}
           {isFoodsAndDrinks() ? (
             <div className="space-y-3">
-              {/* Food Category Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Food Category
-                </label>
-                <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  value={selectedFoodCategory}
-                  onChange={(e) => {
-                    const category = e.target.value;
-                    setSelectedFoodCategory(category);
-                    setSelectedFoodItem('');
-                    setAvailableFlavors([]);
-                    setNewProduct({...newProduct, color: ''});
-                  }}
-                >
-                  <option value="">Select food category</option>
-                  {flavorData.food_categories.map((cat, idx) => (
-                    <option key={idx} value={cat.name}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Food Item Selection */}
-              {selectedFoodCategory && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Food Item
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={selectedFoodItem}
-                    onChange={(e) => {
-                      const itemName = e.target.value;
-                      setSelectedFoodItem(itemName);
-                      const category = flavorData.food_categories.find(
-                        cat => cat.name === selectedFoodCategory
-                      );
-                      const item = category?.items.find(item => item.name === itemName);
-                      setAvailableFlavors(item?.flavors || []);
-                      setNewProduct({...newProduct, color: ''});
-                    }}
-                  >
-                    <option value="">Select food item</option>
-                    {flavorData.food_categories
-                      .find(cat => cat.name === selectedFoodCategory)
-                      ?.items.map((item, idx) => (
-                        <option key={idx} value={item.name}>{item.name}</option>
-                      ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Flavor Selection Dropdown */}
               {availableFlavors.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Flavor
+                    Suggested Flavors
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
                     value={newProduct.color || ''}
                     onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
                   >
-                    <option value="">Choose a flavor</option>
+                    <option value="">Select a flavor</option>
                     {availableFlavors.map((flavor, idx) => (
                       <option key={idx} value={flavor}>{flavor}</option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Or type a custom flavor below
+                  </p>
                 </div>
               )}
 
-              {/* Manual Flavor Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Or Enter Custom Flavor
+                  {availableFlavors.length > 0 ? "Custom Flavor" : "Flavor"}
                 </label>
                 <input
                   type="text"
@@ -460,14 +409,13 @@ export default function ProductForm({
                 />
               </div>
               
-              <p className="text-xs text-gray-500">
-                {availableFlavors.length > 0 
-                  ? "Select a flavor from the dropdown above or type your own"
-                  : "Type a custom flavor for this product"}
-              </p>
+              {availableFlavors.length === 0 && newProduct.name && (
+                <p className="text-xs text-blue-500">
+                  No predefined flavors for "{newProduct.name}". You can add a custom flavor above.
+                </p>
+              )}
             </div>
           ) : (
-            /* Normal Color Selection for non-Foods & Drinks */
             <div>
               <div className="flex items-center space-x-2">
                 <input
@@ -539,7 +487,6 @@ export default function ProductForm({
             {getSizeLabel()}
           </label>
           
-          {/* Show custom size input for Foods & Drinks */}
           {isFoodsAndDrinks() ? (
             <input
               type="text"
@@ -549,7 +496,6 @@ export default function ProductForm({
               onChange={(e) => setNewProduct({...newProduct, size: e.target.value})}
             />
           ) : (
-            // Normal size selector for other categories
             <div className="flex flex-row gap-2">
               <select
                 className="w-full px-3 py-2 border border-gray-300 rounded-md mb-2"
@@ -622,7 +568,6 @@ export default function ProductForm({
             </div>
           )}
           
-          {/* Hint text for Foods & Drinks size */}
           {isFoodsAndDrinks() && (
             <p className="text-xs text-gray-500 mt-1">
               Enter portion size (e.g., 12oz, 500ml, Large, Family Size)
