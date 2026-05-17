@@ -38,40 +38,38 @@ export default function ProductForm({
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
   
-  // 2-level flavor states
-  const [selectedFoodCategory, setSelectedFoodCategory] = useState('');
-  const [selectedFoodItem, setSelectedFoodItem] = useState('');
-  const [availableFlavors, setAvailableFlavors] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedItem, setSelectedItem] = useState('');
   
   const colorInputRef = useRef<HTMLInputElement>(null);
 
   const getColorLabel = () => {
-    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
-    if (selectedCategory?.name === 'Foods and Drinks') {
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategoryObj?.name === 'Foods and Drinks') {
       return 'Flavor';
     }
     return 'Color';
   };
 
   const getColorPlaceholder = () => {
-    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
-    if (selectedCategory?.name === 'Foods and Drinks') {
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategoryObj?.name === 'Foods and Drinks') {
       return 'Flavor name (e.g., Strawberry, Chocolate, Vanilla)';
     }
     return 'Color name or hex code (e.g., #FF0000)';
   };
 
   const getSizeLabel = () => {
-    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
-    if (selectedCategory?.name === 'Foods and Drinks') {
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategoryObj?.name === 'Foods and Drinks') {
       return 'Size/Portion';
     }
     return 'Size';
   };
 
   const getSizePlaceholder = () => {
-    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
-    if (selectedCategory?.name === 'Foods and Drinks') {
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    if (selectedCategoryObj?.name === 'Foods and Drinks') {
       return 'Enter size or portion (e.g., 12oz, 500ml, Large)';
     }
     return 'Enter custom size';
@@ -109,12 +107,10 @@ export default function ProductForm({
     }
   };
 
-  // Reset flavor selection when category changes
   useEffect(() => {
     if (!isFoodsAndDrinks()) {
-      setSelectedFoodCategory('');
-      setSelectedFoodItem('');
-      setAvailableFlavors([]);
+      setSelectedCategory('');
+      setSelectedItem('');
     }
   }, [newProduct.categoryId]);
 
@@ -168,9 +164,8 @@ export default function ProductForm({
         setCopySuccess('');
         setIsPickingColor(false);
         setSkuOption('blank');
-        setSelectedFoodCategory('');
-        setSelectedFoodItem('');
-        setAvailableFlavors([]);
+        setSelectedCategory('');
+        setSelectedItem('');
         
         onProductAdded();
         setTimeout(() => setSuccessMessage(''), 3000);
@@ -196,8 +191,8 @@ export default function ProductForm({
   const commonSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
   const isFoodsAndDrinks = () => {
-    const selectedCategory = categories.find(cat => cat.id === newProduct.categoryId);
-    return selectedCategory?.name === 'Foods and Drinks';
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    return selectedCategoryObj?.name === 'Foods and Drinks';
   };
 
   return (
@@ -254,9 +249,8 @@ export default function ProductForm({
             setNewProduct({...newProduct, categoryId: e.target.value});
             setSelectedSizeParent('');
             setShowCustomInput(false);
-            setSelectedFoodCategory('');
-            setSelectedFoodItem('');
-            setAvailableFlavors([]);
+            setSelectedCategory('');
+            setSelectedItem('');
           }}
           required
         >
@@ -370,53 +364,44 @@ export default function ProductForm({
           
           {isFoodsAndDrinks() ? (
             <div className="space-y-3">
-              {/* Level 1: Food Category */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Food Category
                 </label>
                 <select
                   className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  value={selectedFoodCategory}
+                  value={selectedCategory}
                   onChange={(e) => {
-                    const category = e.target.value;
-                    setSelectedFoodCategory(category);
-                    setSelectedFoodItem('');
-                    setAvailableFlavors([]);
+                    const cat = e.target.value;
+                    setSelectedCategory(cat);
+                    setSelectedItem('');
                     setNewProduct({...newProduct, name: '', color: ''});
                   }}
                 >
-                  <option value="">Select food category</option>
+                  <option value="">Select category</option>
                   {flavorData.food_categories.map((cat, idx) => (
                     <option key={idx} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Level 2: Food Item */}
-              {selectedFoodCategory && (
+              {selectedCategory && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Food Item
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={selectedFoodItem}
+                    value={selectedItem}
                     onChange={(e) => {
-                      const itemName = e.target.value;
-                      setSelectedFoodItem(itemName);
-                      setNewProduct({...newProduct, name: itemName});
-                      const category = flavorData.food_categories.find(
-                        cat => cat.name === selectedFoodCategory
-                      );
-                      const item = category?.items.find(item => item.name === itemName);
-                      setAvailableFlavors(item?.flavors || []);
-                      setNewProduct({...newProduct, color: ''});
+                      const item = e.target.value;
+                      setSelectedItem(item);
+                      setNewProduct({...newProduct, name: item});
                     }}
                   >
-                    <option value="">Select food item</option>
+                    <option value="">Select item</option>
                     {flavorData.food_categories
-                      .find(cat => cat.name === selectedFoodCategory)
+                      .find(cat => cat.name === selectedCategory)
                       ?.items.map((item, idx) => (
                         <option key={idx} value={item.name}>{item.name}</option>
                       ))}
@@ -424,29 +409,9 @@ export default function ProductForm({
                 </div>
               )}
 
-              {/* Level 3: Flavor Selection */}
-              {availableFlavors.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Select Flavor
-                  </label>
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    value={newProduct.color || ''}
-                    onChange={(e) => setNewProduct({...newProduct, color: e.target.value})}
-                  >
-                    <option value="">Choose a flavor</option>
-                    {availableFlavors.map((flavor, idx) => (
-                      <option key={idx} value={flavor}>{flavor}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Manual Flavor Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {availableFlavors.length > 0 ? 'Or Custom Flavor' : 'Flavor'}
+                  Flavor
                 </label>
                 <input
                   type="text"
@@ -670,4 +635,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-                }
+}
