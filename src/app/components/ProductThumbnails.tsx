@@ -33,7 +33,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
-  console.log(categories);
+  //console.log(categories);
   // Refs for cleanup
   const quickViewTimeoutRef = useRef<NodeJS.Timeout>();
   const swiperInstancesRef = useRef<Map<string, any>>(new Map());
@@ -215,7 +215,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   if (userloading) return null;
 
   const userId = user?.userId;
-  console.log(categories, typeof categories);
+  //console.log(categories, typeof categories);
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
@@ -442,7 +442,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
       
       <QuickViewModal 
         product={selectedVariant?.product || null}
-        categories={categories[0]}
+        categories={categories}
         isOpen={isQuickViewOpen} 
         onClose={handleCloseQuickView} 
         onAddToCart={(product) => handleAddToCart(product, selectedVariant?.variant)}
