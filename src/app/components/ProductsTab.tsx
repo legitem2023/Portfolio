@@ -626,7 +626,7 @@ const ProductsTab: React.FC = () => {
           <ProductThumbnailsShimmer count={queryVariables.limit} />
         ) : products.length > 0 ? (  
           <>  
-            <ProductThumbnails products={products} />  
+            <ProductThumbnails products={products} categories={categories}/>  
               
             {/* Sentinel element for infinite scroll */}
             <div ref={sentinelRef} className="h-2" />
