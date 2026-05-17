@@ -313,17 +313,6 @@ export default function ProductForm({
           </p>
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-          <input
-            type="number"
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            value={newProduct.stock}
-            onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
-            required
-          />
-        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 mb-4">
@@ -485,6 +474,21 @@ export default function ProductForm({
             />
           )}
           </div>
+
+          
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+          <input
+            type="number"
+            min="0"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            value={newProduct.stock}
+            onChange={(e) => setNewProduct({...newProduct, stock: e.target.value})}
+            required
+          />
+        </div>
+
+          
         </div>
       </div>
       
