@@ -476,7 +476,7 @@ const getReturnCategory = (id: string | number) => {
 }
 
 const categoryName = getReturnCategory(product.category[0]?.id);
-console.log('Category name:', categoryName);  // Add to wishlist mutation
+console.log('Category', categories,'product',product);  // Add to wishlist mutation
 
 
   
