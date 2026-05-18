@@ -42,9 +42,11 @@ export default function ProductForm({
   
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
-  
+  const { loading, error, foodCategories } = useFoodCategories(supplierId);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
+
+  console.log(foodCategories,"---",sizeData);
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
     if (selectedCategoryObj?.name === 'Foods and Drinks') {
