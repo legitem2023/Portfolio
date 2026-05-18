@@ -7,6 +7,8 @@ import { useQuery } from '@apollo/client';
 import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import NotificationPage from './components/NotificationPage';
+import FoodManagement from './components/FoodManagement';
+
 import ProductsTab from './components/ProductsTab';
 import OrderListComponent from './components/OrderListComponent';
 import RemittancePage from './components/RemittancePage';
@@ -203,6 +205,8 @@ export default function ManagementDashboard() {
         return <ServicesTable/>;
       case 16:
         return <NotificationPage UserId={user?.userId?user?.userId:''}/>;
+      case 17:
+        return <FoodManagement/>
       default:
         return <></>;
     }
