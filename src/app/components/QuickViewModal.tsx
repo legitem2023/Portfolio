@@ -70,7 +70,7 @@ const getReturnCategory = (id: string | number) => {
   return category?.name || '';
 }
 
-const categoryName = getReturnCategory(product.category?.id);
+const categoryName = getReturnCategory(product.category[0]?.id);
 console.log('Category name:', categoryName);  // Add to wishlist mutation
 
   const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
