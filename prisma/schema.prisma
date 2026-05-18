@@ -142,7 +142,11 @@ model User {
   supplierReturns ReturnRequest[] @relation("SupplierReturns")
   returnImages    ReturnImage[]
   returnResolutions  ReturnResolution[]
-  
+
+  // Add these two fields:
+  foodCategories  FoodCategories[]
+  items           Item[]
+
   @@index([createdAt])
   @@map("users")
 }
