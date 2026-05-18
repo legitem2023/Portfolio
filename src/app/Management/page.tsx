@@ -206,7 +206,7 @@ export default function ManagementDashboard() {
       case 16:
         return <NotificationPage UserId={user?.userId?user?.userId:''}/>;
       case 17:
-        return <FoodManagement/>
+        return <FoodManagement  accountId={user?.userId?user?.userId:''} />
       default:
         return <></>;
     }
