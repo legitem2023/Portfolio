@@ -6,7 +6,7 @@ import { useQuery, useMutation, gql } from '@apollo/client';
 
 interface Account {
   id: string;
-  name?: string;
+ // name?: string;
 }
 
 interface FoodCategories {
