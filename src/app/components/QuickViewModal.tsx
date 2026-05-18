@@ -1,6 +1,5 @@
 // components/QuickViewModal.tsx
 import ProductReviews from './ProductReviews';
-
 import { showToast } from '../../../utils/toastify';
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
@@ -21,7 +20,7 @@ import {
   Shield
 } from 'lucide-react';
 import { addToCart } from '../../../Redux/cartSlice';
-import { Product,category, Variant } from '../../../types';
+import { Product, category, Variant } from '../../../types';
 import LuxuryTabs from './ui/LuxuryTabs';
 import ModelViewer from "./ModelViewer";
 
@@ -30,7 +29,7 @@ interface QuickViewModalProps {
   categories: any;
   isOpen: boolean;
   onClose: () => void;
-  userId?: string; // Add userId prop
+  userId?: string;
   onAddToCart?: (product: Product, options: { color: string; size: string; quantity: number }) => void;
 }
 
@@ -47,7 +46,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   categories,
   isOpen, 
   onClose, 
-  userId, // Add userId
+  userId,
   onAddToCart 
 }) => {
   const [selectedImage, setSelectedImage] = useState(0);
@@ -59,8 +58,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const dispatch = useDispatch();
 
-  // At the beginning of the component, after all hooks:
-
   const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
     onCompleted: (data) => {
       showToast(data.addToWishList.statusText, 'success');
@@ -70,7 +67,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     }
   });
 
-// Calculate average rating from variant reviews
+  // Reset all modal state
+  const resetModalState = useCallback(() => {
+    setSelectedImage(0);
+    setQuantity(1);
+    setSelectedColor('');
+    setSelectedSize('');
+  }, []);
+
+  // Calculate average rating from variant reviews
   const calculateAverageRating = useCallback((variant: Product['variants'][0]): number => {
     if (!variant?.reviews || variant.reviews.length === 0) return 0;
     
@@ -114,8 +119,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
       totalReviews
     };
   }, []);
-
-
   
   // Memoize variants to prevent unnecessary recalculations
   const variants = useMemo(() => product?.variants || [], [product?.variants]);
@@ -265,7 +268,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         label: '3D View',
         icon: <Package className="w-4 h-4" />,
         content: <ModelViewer3D />
-      }] : [])  // Empty array if no model
+      }] : [])
     ];
 
     return tabs;
@@ -291,21 +294,39 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     return Array.from(new Set(colors));
   }, [variants]);
 
-  // Initialize selections when product changes
+  // Initialize selections when product changes and modal is visible
   useEffect(() => {
     if (product && isVisible) {
+      // Reset selections first
       setSelectedImage(0);
       setQuantity(1);
+      setSelectedColor('');
+      setSelectedSize('');
       
-      // Set default selections from available options
-      if (uniqueColors.length > 0 && !selectedColor) {
+      // Then set defaults from available options
+      if (uniqueColors.length > 0) {
         setSelectedColor(uniqueColors[0]);
       }
-      if (uniqueSizes.length > 0 && !selectedSize) {
+      if (uniqueSizes.length > 0) {
         setSelectedSize(uniqueSizes[0]);
       }
     }
-  }, [product, isVisible, uniqueColors, uniqueSizes, selectedColor, selectedSize]);
+  }, [product, isVisible, uniqueColors, uniqueSizes]);
+
+  // Handle modal open/close with reset
+  useEffect(() => {
+    if (isOpen) {
+      // Reset state when opening fresh
+      resetModalState();
+      setIsVisible(true);
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+      // Reset state when closing to ensure clean state for next open
+      resetModalState();
+      setTimeout(() => setIsVisible(false), 300);
+    }
+  }, [isOpen, resetModalState]);
 
   // Check if device is mobile
   useEffect(() => {
@@ -321,17 +342,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     };
   }, []);
 
-  // Handle animation states
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      setTimeout(() => setIsAnimating(true), 10);
-    } else {
-      setIsAnimating(false);
-      setTimeout(() => setIsVisible(false), 300);
-    }
-  }, [isOpen]);
-
+  // Handle body scroll lock
   useEffect(() => {
     if (isVisible) {
       document.body.style.overflow = 'hidden';
@@ -344,6 +355,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     };
   }, [isVisible]);
 
+  // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -387,12 +399,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     
     try {
       // Create cart item with variant-specific data and proper error handling
-      
       const cartItem = {
         id: selectedVariant.id?.toString(),
-        productId: selectedVariant.id?.toString(), //product.id?.toString() || 'unknown',
+        productId: selectedVariant.id?.toString(),
         userId: 'current-user-id',
-        supplierId:product.supplierId,
+        supplierId: product.supplierId,
         sku: selectedVariant.sku?.toString(),
         name: product.name || 'Unknown Product',
         price: selectedVariant.price || product.price || 0,
@@ -401,8 +412,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
         color: selectedColor || 'Unknown',
         size: selectedSize || 'Unknown',
         variant: selectedVariant,
-        lat:product.supplier.addresses[0].lat,
-        lng:product.supplier.addresses[0].lng,
+        lat: product.supplier?.addresses?.[0]?.lat,
+        lng: product.supplier?.addresses?.[0]?.lng,
       };
 
       // Validate required fields before dispatching
@@ -451,35 +462,34 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
   if (!isVisible && !isOpen) return null;
   
-          // Calculate rating for display
-    let displayRating = 0;
-    let displayReviewCount = 0;
+  // Calculate rating for display
+  let displayRating = 0;
+  let displayReviewCount = 0;
           
-   if (selectedVariant) {
-      displayRating = calculateAverageRating(selectedVariant);
-      displayReviewCount = calculateTotalReviews(selectedVariant);
-   } else {
+  if (selectedVariant) {
+    displayRating = calculateAverageRating(selectedVariant);
+    displayReviewCount = calculateTotalReviews(selectedVariant);
+  } else {
     const overallRating = getOverallProductRating(product?.variants || []);
-      displayRating = overallRating.averageRating;
-      displayReviewCount = overallRating.totalReviews;
-    }
+    displayRating = overallRating.averageRating;
+    displayReviewCount = overallRating.totalReviews;
+  }
 
+  if (!product || !categories || !Array.isArray(categories)) {
+    return null;
+  }
 
-if (!product || !categories || !Array.isArray(categories)) {
-  return null;
-}
+  // Safely get category name
+  const getReturnCategory = (id: string | number) => {
+    const category = categories.find((cat) => cat.id === id);
+    return category?.name || '';
+  }
 
-// Safely get category name - FIXED VERSION
-const getReturnCategory = (id: string | number) => {
-  const category = categories.find((cat) => cat.id === id);
-  return category?.name || '';
-}
+  // Make sure product.category exists and has an item
+  const categoryId = product.category?.id;
+  const categoryName = categoryId ? getReturnCategory(categoryId) : '';
 
-// Make sure product.category exists and has an item
-const categoryId = product.category?.id;
-const categoryName = categoryId ? getReturnCategory(categoryId) : '';
-
-console.log('Category name:', categoryName); // Should output string like "Office Supply"
+  console.log('Category name:', categoryName);
   
   return (
     <div 
@@ -572,73 +582,49 @@ console.log('Category name:', categoryName); // Should output string like "Offic
               </div>
             </div>
 
-            {/* Color Selection */}
-            {/*uniqueColors.length > 0 && (
+            {/* Color/Flavor Selection */}
+            {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  Color: <span className="font-normal">{selectedColor}</span>
+                  {categoryName === "Foods and Drinks" ? "Flavor:" : "Color:"} 
+                  <span className="font-normal ml-1">{selectedColor}</span>
                 </h3>
-                <div className="flex space-x-2 flex-wrap">
+                <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((color, index) => (
-                    <span
-                       key={index}
-                       onClick={() => handleColorSelect(color)}
-                       className={`px-5 py-5 text-sm border rounded-full transition-all ${
+                    <button
+                      key={index}
+                      onClick={() => handleColorSelect(color)}
+                      className={`flex flex-col items-center gap-1 transition-all ${
                         selectedColor === color 
-                        ? 'border-amber-600 text-amber-700 font-semibold' 
-                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                        ? 'scale-105' 
+                        : 'hover:scale-105'
+                      }`}
+                    >
+                      {/* Round color swatch */}
+                      <div 
+                        className={`w-10 h-10 rounded-full border-2 transition-all ${
+                          selectedColor === color 
+                            ? 'border-amber-500 shadow-md ring-2 ring-amber-200' 
+                            : 'border-gray-300 hover:border-gray-400'
                         }`}
-                       style={{ backgroundColor: color }}>
-                    </span>
+                        style={{ 
+                          backgroundColor: color,
+                          boxShadow: selectedColor === color ? '0 0 0 2px #f59e0b' : 'none'
+                        }}
+                      />
+                      {/* Color/Flavor name */}
+                      <span className={`text-xs font-medium ${
+                        selectedColor === color 
+                          ? 'text-amber-600' 
+                          : 'text-gray-600'
+                      }`}>
+                        {color}
+                      </span>
+                    </button>
                   ))}
                 </div>
               </div>
-            )*/}
-{/* Color/Flavor Selection */}
-{uniqueColors.length > 0 && (
-  <div className="mb-4 md:mb-6">
-    <h3 className="text-sm font-medium text-gray-900 mb-2">
-      {categoryName === "Foods and Drinks" ? "Flavor:" : "Color:"} 
-      <span className="font-normal ml-1">{selectedColor}</span>
-    </h3>
-    <div className="flex flex-wrap gap-3">
-      {uniqueColors.map((color, index) => (
-        <button
-          key={index}
-          onClick={() => handleColorSelect(color)}
-          className={`flex flex-col items-center gap-1 transition-all ${
-            selectedColor === color 
-            ? 'scale-105' 
-            : 'hover:scale-105'
-          }`}
-        >
-          {/* Round color swatch */}
-          <div 
-            className={`w-10 h-10 rounded-full border-2 transition-all ${
-              selectedColor === color 
-                ? 'border-amber-500 shadow-md ring-2 ring-amber-200' 
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            style={{ 
-              backgroundColor: color,
-              boxShadow: selectedColor === color ? '0 0 0 2px #f59e0b' : 'none'
-            }}
-          />
-          {/* Color/Flavor name */}
-          <span className={`text-xs font-medium ${
-            selectedColor === color 
-              ? 'text-amber-600' 
-              : 'text-gray-600'
-          }`}>
-            {color}
-          </span>
-        </button>
-      ))}
-    </div>
-  </div>
-)}
-
-
+            )}
             
             {/* Size Selection */}
             {uniqueSizes.length > 0 && (
@@ -719,44 +705,9 @@ console.log('Category name:', categoryName); // Should output string like "Offic
             <p className="text-gray-700 text-sm md:text-base mb-4 md:mb-6">
               {product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
             </p>
-            
-            {/* Additional Info */}
-            {/* <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
-              <div className="grid grid-cols-2 gap-3 md:gap-4 text-xs md:text-sm">
-                <div className="flex items-start">
-                  <Truck className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Fast Delivery</h4>
-                    <p className="text-gray-600"></p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <RefreshCw className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Returns</h4>
-                    <p className="text-gray-600">Quick money back guarantee</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Shield className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Secure</h4>
-                    <p className="text-gray-600">Machine wash cold</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Package className="w-4 h-4 text-gray-500 mt-0.5 mr-2 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">Delivery</h4>
-                    <p className="text-gray-600">Within 2-3 business days</p>
-                  </div>
-                </div>
-              </div>
-            </div>*/}
-            
           </div>
           {selectedVariant && typeof selectedVariant !== 'string' && (
-              <ProductReviews product={selectedVariant} />
+            <ProductReviews product={selectedVariant} />
           )}
         </div>
       </div>
