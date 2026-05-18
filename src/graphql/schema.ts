@@ -383,6 +383,23 @@ export const typeDefs = gql`
     supplierReturns: [ReturnRequest]
   }
 
+type FoodCategories {
+  id: ID
+  name: String
+  accountId: ID
+  account: User
+  items: [Item]  # Items can be fetched in the same query
+}
+
+type Item {
+  id: ID
+  name: String
+  categoryId: ID
+  accountId: ID
+  category: FoodCategories
+  account: User
+}
+
   type Address {
     id: ID
     type: AddressType
