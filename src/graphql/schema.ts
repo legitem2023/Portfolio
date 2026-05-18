@@ -1497,6 +1497,32 @@ type Item {
     isAnonymous: Boolean
     userId: ID
   }
+
+# Input types
+input CreateFoodCategoryInput {
+  name: String!
+  accountId: ID!
+}
+
+input UpdateFoodCategoryInput {
+  id: ID!
+  name: String
+  accountId: ID
+}
+
+input CreateItemInput {
+  name: String!
+  categoryId: ID
+  accountId: ID!
+}
+
+input UpdateItemInput {
+  id: ID!
+  name: String
+  categoryId: ID
+  accountId: ID
+}
+
   
   # ================= Mutations =================
   type Mutation {
