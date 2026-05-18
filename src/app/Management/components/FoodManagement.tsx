@@ -623,7 +623,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    No items in this category. Click "Add Item" to add one.
+                    No items in this category. Click Add Item to add one.
                   </div>
                 )}
               </div>
@@ -634,7 +634,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
 
       {filteredCategories.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          No food categories found. Click "Add Category" to create one.
+          No food categories found. Click Add Category to create one.
         </div>
       )}
 
