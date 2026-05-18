@@ -466,19 +466,20 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
 
 
 if (!product || !categories || !Array.isArray(categories)) {
-  return null; // or return a loading spinner
+  return null;
 }
 
-// Safely get category name
+// Safely get category name - FIXED VERSION
 const getReturnCategory = (id: string | number) => {
   const category = categories.find((cat) => cat.id === id);
   return category?.name || '';
 }
 
-const categoryName = getReturnCategory(product.category[0]?.id);
-console.log('Category', categories,'product',product);  // Add to wishlist mutation
+// Make sure product.category exists and has an item
+const categoryId = product.category?.[0]?.id;
+const categoryName = categoryId ? getReturnCategory(categoryId) : '';
 
-
+console.log('Category name:', categoryName); // Should output string like "Office Supply"
   
   return (
     <div 
