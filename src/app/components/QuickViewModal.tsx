@@ -60,18 +60,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const dispatch = useDispatch();
 
   // At the beginning of the component, after all hooks:
-if (!product || !categories || !Array.isArray(categories)) {
-  return null; // or return a loading spinner
-}
-
-// Safely get category name
-const getReturnCategory = (id: string | number) => {
-  const category = categories.find((cat) => cat.id === id);
-  return category?.name || '';
-}
-
-const categoryName = getReturnCategory(product.category[0]?.id);
-console.log('Category name:', categoryName);  // Add to wishlist mutation
 
   const [addToWishlist, { loading: wishlistLoading }] = useMutation(ADD_TO_WISHLIST, {
     onCompleted: (data) => {
@@ -475,6 +463,22 @@ console.log('Category name:', categoryName);  // Add to wishlist mutation
       displayRating = overallRating.averageRating;
       displayReviewCount = overallRating.totalReviews;
     }
+
+
+if (!product || !categories || !Array.isArray(categories)) {
+  return null; // or return a loading spinner
+}
+
+// Safely get category name
+const getReturnCategory = (id: string | number) => {
+  const category = categories.find((cat) => cat.id === id);
+  return category?.name || '';
+}
+
+const categoryName = getReturnCategory(product.category[0]?.id);
+console.log('Category name:', categoryName);  // Add to wishlist mutation
+
+
   
   return (
     <div 
