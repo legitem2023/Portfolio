@@ -476,7 +476,7 @@ const getReturnCategory = (id: string | number) => {
 }
 
 // Make sure product.category exists and has an item
-const categoryId = product.category;
+const categoryId = product.category?.id;
 //const categoryName = categoryId ? getReturnCategory(categoryId) : '';
 
 console.log('Category name:', categoryId); // Should output string like "Office Supply"
