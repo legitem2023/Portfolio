@@ -294,6 +294,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
     return Array.from(new Set(colors));
   }, [variants]);
 
+  // Get variant image for a specific color (for Foods and Drinks category)
+  const getVariantImageForColor = useCallback((colorName: string) => {
+    const variant = variants.find(v => v?.color === colorName);
+    return variant?.images?.[0] || '/NoImage.webp';
+  }, [variants]);
+
   // Initialize selections when product changes and modal is visible
   useEffect(() => {
     if (product && isVisible) {
@@ -488,6 +494,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   // Make sure product.category exists and has an item
   const categoryId = product.category?.id;
   const categoryName = categoryId ? getReturnCategory(categoryId) : '';
+  const isFoodsAndDrinks = categoryName === "Foods and Drinks";
 
   console.log('Category name:', categoryName);
   
@@ -539,7 +546,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             {/* Variant-specific details */}
             {selectedVariant && (
               <div className="mb-3 text-sm text-gray-600">
-                {selectedColor && <span>Color: {selectedColor}</span>}
+                {selectedColor && <span>Flavor: {selectedColor}</span>}
                 {selectedSize && <span className="ml-2">Size: {selectedSize}</span>}
                 {selectedVariant.sku && <div className="mt-1">SKU: {selectedVariant.sku}</div>}
               </div>
@@ -582,36 +589,52 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
               </div>
             </div>
 
-            {/* Color/Flavor Selection */}
+            {/* Color/Flavor Selection - Conditional rendering based on category */}
             {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  {categoryName === "Foods and Drinks" ? "Flavor:" : "Color:"} 
-                  <span className="font-normal ml-1">{selectedColor}</span>
+                  {isFoodsAndDrinks ? "Select Flavor:" : "Select Color:"}
                 </h3>
                 <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((color, index) => (
                     <button
                       key={index}
                       onClick={() => handleColorSelect(color)}
-                      className={`flex flex-col items-center gap-1 transition-all ${
+                      className={`flex flex-col items-center gap-2 transition-all ${
                         selectedColor === color 
                         ? 'scale-105' 
                         : 'hover:scale-105'
                       }`}
                     >
-                      {/* Round color swatch */}
-                      <div 
-                        className={`w-10 h-10 rounded-full border-2 transition-all ${
+                      {isFoodsAndDrinks ? (
+                        // Show product image for Foods and Drinks
+                        <div className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                           selectedColor === color 
                             ? 'border-amber-500 shadow-md ring-2 ring-amber-200' 
                             : 'border-gray-300 hover:border-gray-400'
-                        }`}
-                        style={{ 
-                          backgroundColor: color,
-                          boxShadow: selectedColor === color ? '0 0 0 2px #f59e0b' : 'none'
-                        }}
-                      />
+                        }`}>
+                          <Image
+                            src={getVariantImageForColor(color)}
+                            alt={color}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 64px, 64px"
+                          />
+                        </div>
+                      ) : (
+                        // Show color swatch for other categories
+                        <div 
+                          className={`w-12 h-12 rounded-full border-2 transition-all ${
+                            selectedColor === color 
+                              ? 'border-amber-500 shadow-md ring-2 ring-amber-200' 
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                          style={{ 
+                            backgroundColor: color,
+                            boxShadow: selectedColor === color ? '0 0 0 2px #f59e0b' : 'none'
+                          }}
+                        />
+                      )}
                       {/* Color/Flavor name */}
                       <span className={`text-xs font-medium ${
                         selectedColor === color 
