@@ -619,6 +619,46 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
+    getFoodCategories: async (_: any, { accountId }: any) => {
+  try {
+    const where = accountId ? { accountId } : {};
+    
+    const foodCategories = await prisma.foodCategories.findMany({
+      where,
+      include: {
+        account: true,
+        items: true
+      }
+    });
+    
+    return foodCategories;
+  } catch (error: any) {
+    console.error('Error in getFoodCategories resolver:', error);
+    throw new Error(`Failed to fetch food categories: ${error.message}`);
+  }
+},
+
+getFoodCategory: async (_: any, { id }: any) => {
+  try {
+    const foodCategory = await prisma.foodCategories.findUnique({
+      where: { id },
+      include: {
+        account: true,
+        items: true
+      }
+    });
+    
+    if (!foodCategory) {
+      throw new Error('Food category not found');
+    }
+    
+    return foodCategory;
+  } catch (error: any) {
+    console.error('Error in getFoodCategory resolver:', error);
+    throw new Error(`Failed to fetch food category: ${error.message}`);
+  }
+},
+
    /* getReturn: async (_: any, { id }: any) => {
   try {
     const returnRequest = await prisma.returnRequest.findUnique({
