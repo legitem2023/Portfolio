@@ -577,6 +577,7 @@ query GetUser($id: ID) {
           id
         }
         variants {
+          id
           name
           createdAt
           sku
@@ -587,6 +588,17 @@ query GetUser($id: ID) {
           stock
           images
           model
+          reviews { 
+            productId
+            rating
+            title
+            comment
+            images {
+             url
+            }
+            userId
+            variantId
+          }
         }
         brand
         weight
