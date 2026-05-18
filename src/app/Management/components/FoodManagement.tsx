@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
+import { useAuth } from '../hooks/useAuth';
 
 // GraphQL Queries
 const GET_FOOD_CATEGORIES = gql`
@@ -131,6 +132,8 @@ interface ItemsData {
 
 // Component
 const FoodManagement: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
+
   const [selectedCategory, setSelectedCategory] = useState<FoodCategory | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
@@ -140,11 +143,13 @@ const FoodManagement: React.FC = () => {
 
   // Queries
   const { loading: categoriesLoading, error: categoriesError, data: categoriesData, refetch: refetchCategories } = useQuery<FoodCategoriesData>(GET_FOOD_CATEGORIES, {
-    variables: { accountId }
+    variables: { accountId:user?.userId },
+    skip:!user?.userId
   });
   
   const { loading: itemsLoading, error: itemsError, data: itemsData, refetch: refetchItems } = useQuery<ItemsData>(GET_ITEMS, {
-    variables: { accountId }
+    variables: { accountId:user?.userId },
+    skip:!user?.userId
   });
 
   // Mutations
