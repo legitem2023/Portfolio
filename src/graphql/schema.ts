@@ -1260,6 +1260,10 @@ type Item {
   
   # ================= Queries =================
   type Query {
+
+    foodCategory(id: ID!): FoodCategories
+    foodCategories(accountId: ID!): [FoodCategories]
+    
     getReviews(filters: GetReviewsInput): ReviewsResponse
     getReviewById(id: String): [Review]
     getProductReviewStats(productId: String): ReviewStats
