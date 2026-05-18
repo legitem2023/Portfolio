@@ -3356,6 +3356,19 @@ unreadNotificationCount: async (_:any, { userId }:any, context:any) => {
           },
           products: {
             include: {
+               supplier: {
+                 select: {
+                   addresses: {
+                     where: {
+                       isDefault: true
+                     },
+                    select: {
+                     lat: true,
+                     lng: true
+                    }
+                  }
+                }
+              },
               category: {
                 include: {
                   parent: true
