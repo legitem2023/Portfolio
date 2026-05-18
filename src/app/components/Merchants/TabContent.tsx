@@ -75,14 +75,17 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
   };
   
   const renderProductTab = () => (
-      <div className="max-w-4xl mx-auto p-4">
-        {
-          user?.products.length > 0?(
-            <ProductThumbnails products={user?.products} categories={categoryData.categories}/>
-          ):'No Products'
-        }    
-       </div>
-      );
+  <div className="max-w-4xl mx-auto p-4">
+    {user?.products.length > 0 ? (
+      <ProductThumbnails 
+        products={user?.products} 
+        categories={categoryLoading ? [] : categoryData?.categories || []} 
+      />
+    ) : (
+      'No Products'
+    )}
+  </div>
+);
 
   switch (activeTab) {
     case 'posts':
