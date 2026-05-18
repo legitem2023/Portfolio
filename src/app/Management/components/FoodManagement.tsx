@@ -43,8 +43,8 @@ const GET_FOOD_CATEGORIES = gql`
 // ==================== GRAPHQL MUTATIONS ====================
 
 const CREATE_FOOD_CATEGORY = gql`
-  mutation CreateFoodCategory($name: String!, $accountId: ID!) {
-    createFoodCategory(name: $name, accountId: $accountId) {
+  mutation CreateFoodCategory($input: CreateFoodCategoryInput!) {
+    createFoodCategory(input: $input) {
       id
       name
       accountId
@@ -53,8 +53,8 @@ const CREATE_FOOD_CATEGORY = gql`
 `;
 
 const UPDATE_FOOD_CATEGORY = gql`
-  mutation UpdateFoodCategory($id: ID!, $name: String, $accountId: ID) {
-    updateFoodCategory(id: $id, name: $name, accountId: $accountId) {
+  mutation UpdateFoodCategory($input: UpdateFoodCategoryInput!) {
+    updateFoodCategory(input: $input) {
       id
       name
       accountId
@@ -72,8 +72,8 @@ const DELETE_FOOD_CATEGORY = gql`
 `;
 
 const CREATE_ITEM = gql`
-  mutation CreateItem($name: String!, $categoryId: ID!, $accountId: ID!) {
-    createItem(name: $name, categoryId: $categoryId, accountId: $accountId) {
+  mutation CreateItem($input: CreateItemInput!) {
+    createItem(input: $input) {
       id
       name
       categoryId
@@ -83,8 +83,8 @@ const CREATE_ITEM = gql`
 `;
 
 const UPDATE_ITEM = gql`
-  mutation UpdateItem($id: ID!, $name: String, $categoryId: ID, $accountId: ID) {
-    updateItem(id: $id, name: $name, categoryId: $categoryId, accountId: $accountId) {
+  mutation UpdateItem($input: UpdateItemInput!) {
+    updateItem(input: $input) {
       id
       name
       categoryId
@@ -161,16 +161,19 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createFoodCategory({
+      const result = await createFoodCategory({
         variables: {
-          name: categoryName,
-          accountId: accountId
+          input: {
+            name: categoryName,
+            accountId: accountId
+          }
         }
       });
+      console.log('Create result:', result);
       setShowCategoryModal(false);
       refetch();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error creating category:', err);
     }
   };
 
@@ -180,16 +183,18 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
     try {
       await updateFoodCategory({
         variables: {
-          id: editingCategory.id,
-          name: categoryName,
-          accountId: accountId
+          input: {
+            id: editingCategory.id,
+            name: categoryName,
+            accountId: accountId
+          }
         }
       });
       setShowCategoryModal(false);
       setEditingCategory(null);
       refetch();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error updating category:', err);
     }
   };
 
@@ -199,7 +204,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
         await deleteFoodCategory({ variables: { id: categoryId } });
         refetch();
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error deleting category:', err);
       }
     }
   };
@@ -223,15 +228,17 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
     try {
       await createItem({
         variables: {
-          name: itemName,
-          categoryId: itemCategoryId,
-          accountId: accountId
+          input: {
+            name: itemName,
+            categoryId: itemCategoryId,
+            accountId: accountId
+          }
         }
       });
       setShowItemModal(false);
       refetch();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error creating item:', err);
     }
   };
 
@@ -241,17 +248,19 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
     try {
       await updateItem({
         variables: {
-          id: editingItem.id,
-          name: itemName,
-          categoryId: itemCategoryId,
-          accountId: accountId
+          input: {
+            id: editingItem.id,
+            name: itemName,
+            categoryId: itemCategoryId,
+            accountId: accountId
+          }
         }
       });
       setShowItemModal(false);
       setEditingItem(null);
       refetch();
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error updating item:', err);
     }
   };
 
@@ -261,7 +270,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
         await deleteItem({ variables: { id: itemId } });
         refetch();
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error deleting item:', err);
       }
     }
   };
@@ -269,6 +278,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
   if (loading) return <div className="p-5">Loading...</div>;
   
   if (error) {
+    console.error('GraphQL Error:', error);
     return <div className="p-5 text-red-600">Error: {error.message}</div>;
   }
 
@@ -393,14 +403,17 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
               {editingCategory ? 'Edit Category' : 'Add New Category'}
             </h2>
             <form onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}>
-              <input
-                type="text"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Category Name"
-                className="w-full p-2 border rounded mb-4"
-                required
-              />
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Category Name</label>
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter category name"
+                  required
+                />
+              </div>
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={() => setShowCategoryModal(false)} className="px-4 py-2 bg-gray-300 rounded">
                   Cancel
@@ -422,14 +435,17 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
               {editingItem ? 'Edit Item' : 'Add New Item'}
             </h2>
             <form onSubmit={editingItem ? handleUpdateItem : handleCreateItem}>
-              <input
-                type="text"
-                value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder="Item Name"
-                className="w-full p-2 border rounded mb-4"
-                required
-              />
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Item Name</label>
+                <input
+                  type="text"
+                  value={itemName}
+                  onChange={(e) => setItemName(e.target.value)}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter item name"
+                  required
+                />
+              </div>
               <div className="flex gap-2 justify-end">
                 <button type="button" onClick={() => setShowItemModal(false)} className="px-4 py-2 bg-gray-300 rounded">
                   Cancel
