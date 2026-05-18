@@ -42,7 +42,7 @@ export default function ProductForm({
   
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
-  const { loading:foodCatLoading, error:foodCatError, foodCategories } = useFoodCategories(supplierId);
+  const { loading:foodCatLoading, error:foodCatError, foodCategories } = useFoodCategories(supplierId as string);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
 
