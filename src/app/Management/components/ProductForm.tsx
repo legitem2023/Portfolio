@@ -6,8 +6,10 @@ import { useState, useRef, useEffect } from 'react';
 import { Pipette, Copy, Check } from 'lucide-react';
 import sizeData from './Json/sizes.json';
 import flavorData from './Json/flavors.json';
+import { useFoodCategories } from '../../components/hooks/useFoodCategories';
 
-interface ProductFormProps {
+
+  interface ProductFormProps {
   supplierId: String;
   newProduct: NewProduct;
   setNewProduct: (product: NewProduct) => void;
