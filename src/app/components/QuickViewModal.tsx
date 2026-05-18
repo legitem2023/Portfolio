@@ -573,7 +573,7 @@ console.log('Category name:', categoryName); // Should output string like "Offic
             </div>
 
             {/* Color Selection */}
-            {uniqueColors.length > 0 && (
+            {/*uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
                   Color: <span className="font-normal">{selectedColor}</span>
@@ -593,8 +593,53 @@ console.log('Category name:', categoryName); // Should output string like "Offic
                   ))}
                 </div>
               </div>
-            )}
+            )*/}
+{/* Color/Flavor Selection */}
+{uniqueColors.length > 0 && (
+  <div className="mb-4 md:mb-6">
+    <h3 className="text-sm font-medium text-gray-900 mb-2">
+      {categoryName === "Foods and Drinks" ? "Flavor:" : "Color:"} 
+      <span className="font-normal ml-1">{selectedColor}</span>
+    </h3>
+    <div className="flex flex-wrap gap-3">
+      {uniqueColors.map((color, index) => (
+        <button
+          key={index}
+          onClick={() => handleColorSelect(color)}
+          className={`flex flex-col items-center gap-1 transition-all ${
+            selectedColor === color 
+            ? 'scale-105' 
+            : 'hover:scale-105'
+          }`}
+        >
+          {/* Round color swatch */}
+          <div 
+            className={`w-10 h-10 rounded-full border-2 transition-all ${
+              selectedColor === color 
+                ? 'border-amber-500 shadow-md ring-2 ring-amber-200' 
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+            style={{ 
+              backgroundColor: color,
+              boxShadow: selectedColor === color ? '0 0 0 2px #f59e0b' : 'none'
+            }}
+          />
+          {/* Color/Flavor name */}
+          <span className={`text-xs font-medium ${
+            selectedColor === color 
+              ? 'text-amber-600' 
+              : 'text-gray-600'
+          }`}>
+            {color}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
 
+
+            
             {/* Size Selection */}
             {uniqueSizes.length > 0 && (
               <div className="mb-4 md:mb-6">
