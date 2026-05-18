@@ -184,7 +184,7 @@ export interface Product {
   colors?: string[];
   brand: string;
   productCode?: string;
-  category: category[];
+  category: category;
   categoryId: string;
   createdAt: string;
   isActive: boolean;
