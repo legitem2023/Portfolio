@@ -479,7 +479,7 @@ const getReturnCategory = (id: string | number) => {
 const categoryId = product.category?.[0]?.id;
 const categoryName = categoryId ? getReturnCategory(categoryId) : '';
 
-console.log('Category name:', categoryName); // Should output string like "Office Supply"
+console.log('Category name:', categoryName,categoryId); // Should output string like "Office Supply"
   
   return (
     <div 
