@@ -147,6 +147,25 @@ model User {
   @@map("users")
 }
 
+
+model FoodCategories {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String  
+  account   User @relation(fields: [accountId], references: [id])
+  accountId String @db.ObjectId
+  items Item[]
+}
+
+model Item {
+  id   String @id @default(auto()) @map("_id") @db.ObjectId
+  name String
+  category   FoodCategories? @relation(fields: [categoryId], references: [id])
+  categoryId String?         @db.ObjectId
+  account   User @relation(fields: [accountId], references: [id])
+  accountId String @db.ObjectId
+}
+
+
 model Suggestion {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   text        String
