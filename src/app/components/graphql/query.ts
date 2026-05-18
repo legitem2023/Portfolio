@@ -569,6 +569,12 @@ query GetUser($id: ID) {
         price
         salePrice
         supplierId
+        supplier {
+          addresses {
+            lat
+            lng
+          }
+        }
         sku
         stock
         images
