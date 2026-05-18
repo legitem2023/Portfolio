@@ -619,7 +619,7 @@ export async function apiBillsResolver(
 
 export const resolvers = {
   Query: {
-    getFoodCategories: async (_: any, { accountId }: any) => {
+    foodCategories: async (_: any, { accountId }: any) => {
   try {
     const where = accountId ? { accountId } : {};
     
@@ -638,7 +638,7 @@ export const resolvers = {
   }
 },
 
-getFoodCategory: async (_: any, { id }: any) => {
+foodCategory: async (_: any, { id }: any) => {
   try {
     const foodCategory = await prisma.foodCategories.findUnique({
       where: { id },
