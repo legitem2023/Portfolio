@@ -5257,6 +5257,134 @@ salesList: async (
   },
 
   Mutation: {
+ createFoodCategory: async (_: any, { input }: any) => {
+    try {
+      const { name, accountId } = input;
+      
+      const foodCategory = await prisma.foodCategories.create({
+        data: {
+          name,
+          accountId
+        },
+        include: {
+          account: true,
+          items: true
+        }
+      });
+      
+      return foodCategory;
+    } catch (error: any) {
+      console.error('Error in createFoodCategory resolver:', error);
+      throw new Error(`Failed to create food category: ${error.message}`);
+    }
+  },
+  
+  updateFoodCategory: async (_: any, { input }: any) => {
+    try {
+      const { id, name, accountId } = input;
+      
+      const foodCategory = await prisma.foodCategories.update({
+        where: { id },
+        data: {
+          ...(name && { name }),
+          ...(accountId && { accountId })
+        },
+        include: {
+          account: true,
+          items: true
+        }
+      });
+      
+      return foodCategory;
+    } catch (error: any) {
+      console.error('Error in updateFoodCategory resolver:', error);
+      throw new Error(`Failed to update food category: ${error.message}`);
+    }
+  },
+  
+  deleteFoodCategory: async (_: any, { id }: any) => {
+    try {
+      const foodCategory = await prisma.foodCategories.delete({
+        where: { id },
+        include: {
+          account: true,
+          items: true
+        }
+      });
+      
+      return foodCategory;
+    } catch (error: any) {
+      console.error('Error in deleteFoodCategory resolver:', error);
+      throw new Error(`Failed to delete food category: ${error.message}`);
+    }
+  },
+  
+  createItem: async (_: any, { input }: any) => {
+    try {
+      const { name, categoryId, accountId } = input;
+      
+      const item = await prisma.item.create({
+        data: {
+          name,
+          categoryId,
+          accountId
+        },
+        include: {
+          category: true,
+          account: true
+        }
+      });
+      
+      return item;
+    } catch (error: any) {
+      console.error('Error in createItem resolver:', error);
+      throw new Error(`Failed to create item: ${error.message}`);
+    }
+  },
+  
+  updateItem: async (_: any, { input }: any) => {
+    try {
+      const { id, name, categoryId, accountId } = input;
+      
+      const item = await prisma.item.update({
+        where: { id },
+        data: {
+          ...(name && { name }),
+          ...(categoryId !== undefined && { categoryId }),
+          ...(accountId && { accountId })
+        },
+        include: {
+          category: true,
+          account: true
+        }
+      });
+      
+      return item;
+    } catch (error: any) {
+      console.error('Error in updateItem resolver:', error);
+      throw new Error(`Failed to update item: ${error.message}`);
+    }
+  },
+  
+  deleteItem: async (_: any, { id }: any) => {
+    try {
+      const item = await prisma.item.delete({
+        where: { id },
+        include: {
+          category: true,
+          account: true
+        }
+      });
+      
+      return item;
+    } catch (error: any) {
+      console.error('Error in deleteItem resolver:', error);
+      throw new Error(`Failed to delete item: ${error.message}`);
+    }
+  },
+
+
+    
     createReturn: async (_: any, { input }: any) => {
   try {
     const { orderId, userId, supplierId, reason, description, items, images } = input;
