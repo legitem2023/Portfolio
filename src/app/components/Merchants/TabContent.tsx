@@ -78,7 +78,7 @@ const TabContent = ({ activeTab, user, userId, refetch }: TabContentProps) => {
       <div className="max-w-4xl mx-auto p-4">
         {
           user?.products.length > 0?(
-            <ProductThumbnails products={user?.products} categories={categoryData}/>
+            <ProductThumbnails products={user?.products} categories={categoryData.categories}/>
           ):'No Products'
         }    
        </div>
