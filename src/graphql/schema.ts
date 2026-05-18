@@ -1526,6 +1526,17 @@ input UpdateItemInput {
   
   # ================= Mutations =================
   type Mutation {
+
+  # FoodCategories CRUD mutations
+    createFoodCategory(input: CreateFoodCategoryInput!): FoodCategories
+    updateFoodCategory(input: UpdateFoodCategoryInput!): FoodCategories
+    deleteFoodCategory(id: ID!): FoodCategories
+  
+  # Item CRUD mutations
+    createItem(input: CreateItemInput!): Item
+    updateItem(input: UpdateItemInput!): Item
+    deleteItem(id: ID!): Item
+  
     createSuggestion(input: CreateSuggestionInput): Result
     deleteSuggestion(id: ID): Boolean
     locationTracking(input: LocationTrackingInput): LocationTrackingData
