@@ -336,7 +336,7 @@ const FoodManagement: React.FC = () => {
               
               {categories.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No categories yet. Click "Add Category" to create one.
+                  No categories yet. Click &qoute;Add Category&qoute; to create one.
                 </div>
               )}
             </div>
@@ -388,7 +388,7 @@ const FoodManagement: React.FC = () => {
               
               {(selectedCategory ? selectedCategory.items : items).length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                  No items yet. Click "Add Item" to create one.
+                  No items yet. Click &qoute;Add Item.&qoute; to create one.
                 </div>
               )}
             </div>
