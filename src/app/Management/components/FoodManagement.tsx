@@ -2,7 +2,93 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, gql } from '@apollo/client';
 
-// QUERIES
+// ==================== TYPES ====================
+
+interface Account {
+  id: string;
+  name?: string;
+}
+
+interface FoodCategories {
+  id: string;
+  name: string;
+  accountId: string;
+  account?: Account;
+  items?: Item[];
+}
+
+interface Item {
+  id: string;
+  name: string;
+  categoryId: string;
+  accountId: string;
+  category?: FoodCategories;
+  account?: Account;
+}
+
+interface FoodCategoryInput {
+  name: string;
+  accountId: string;
+}
+
+interface ItemInput {
+  name: string;
+  categoryId: string;
+  accountId: string;
+}
+
+interface GetFoodCategoriesResponse {
+  foodCategories: FoodCategories[];
+}
+
+interface GetFoodCategoryByIdResponse {
+  foodCategory: FoodCategories;
+}
+
+interface GetItemByIdResponse {
+  item: Item;
+}
+
+interface GetItemsByCategoryResponse {
+  itemsByCategory: Item[];
+}
+
+interface CreateFoodCategoryResponse {
+  createFoodCategory: FoodCategories;
+}
+
+interface UpdateFoodCategoryResponse {
+  updateFoodCategory: FoodCategories;
+}
+
+interface DeleteFoodCategoryResponse {
+  deleteFoodCategory: {
+    id: string;
+    name: string;
+  };
+}
+
+interface CreateItemResponse {
+  createItem: Item;
+}
+
+interface UpdateItemResponse {
+  updateItem: Item;
+}
+
+interface DeleteItemResponse {
+  deleteItem: {
+    id: string;
+    name: string;
+  };
+}
+
+interface FoodManagementProps {
+  accountId?: string;
+}
+
+// ==================== GRAPHQL QUERIES ====================
+
 const GET_FOOD_CATEGORIES = gql`
   query GetFoodCategories {
     foodCategories {
@@ -97,7 +183,8 @@ const GET_ITEMS_BY_CATEGORY = gql`
   }
 `;
 
-// MUTATIONS
+// ==================== GRAPHQL MUTATIONS ====================
+
 const CREATE_FOOD_CATEGORY = gql`
   mutation CreateFoodCategory($input: FoodCategoryInput!) {
     createFoodCategory(input: $input) {
@@ -182,48 +269,50 @@ const DELETE_ITEM = gql`
   }
 `;
 
-const FoodManagement = ({ accountId }) => {
+// ==================== COMPONENT ====================
+
+const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
   // Queries
-  const { loading, error, data, refetch } = useQuery(GET_FOOD_CATEGORIES);
+  const { loading, error, data, refetch } = useQuery<GetFoodCategoriesResponse>(GET_FOOD_CATEGORIES);
   
   // Mutations
-  const [createFoodCategory] = useMutation(CREATE_FOOD_CATEGORY);
-  const [updateFoodCategory] = useMutation(UPDATE_FOOD_CATEGORY);
-  const [deleteFoodCategory] = useMutation(DELETE_FOOD_CATEGORY);
-  const [createItem] = useMutation(CREATE_ITEM);
-  const [updateItem] = useMutation(UPDATE_ITEM);
-  const [deleteItem] = useMutation(DELETE_ITEM);
+  const [createFoodCategory] = useMutation<CreateFoodCategoryResponse>(CREATE_FOOD_CATEGORY);
+  const [updateFoodCategory] = useMutation<UpdateFoodCategoryResponse>(UPDATE_FOOD_CATEGORY);
+  const [deleteFoodCategory] = useMutation<DeleteFoodCategoryResponse>(DELETE_FOOD_CATEGORY);
+  const [createItem] = useMutation<CreateItemResponse>(CREATE_ITEM);
+  const [updateItem] = useMutation<UpdateItemResponse>(UPDATE_ITEM);
+  const [deleteItem] = useMutation<DeleteItemResponse>(DELETE_ITEM);
   
   // State
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [expandedCategories, setExpandedCategories] = useState({});
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showItemModal, setShowItemModal] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const [editingItem, setEditingItem] = useState(null);
-  const [selectedCategoryForItem, setSelectedCategoryForItem] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [showCategoryModal, setShowCategoryModal] = useState<boolean>(false);
+  const [showItemModal, setShowItemModal] = useState<boolean>(false);
+  const [editingCategory, setEditingCategory] = useState<FoodCategories | null>(null);
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [selectedCategoryForItem, setSelectedCategoryForItem] = useState<string | null>(null);
   
   // Form states
-  const [categoryForm, setCategoryForm] = useState({
+  const [categoryForm, setCategoryForm] = useState<FoodCategoryInput>({
     name: '',
     accountId: accountId || ''
   });
   
-  const [itemForm, setItemForm] = useState({
+  const [itemForm, setItemForm] = useState<ItemInput>({
     name: '',
     categoryId: '',
     accountId: accountId || ''
   });
 
   // Handlers for Categories
-  const handleCategoryClick = (categoryId) => {
-    setExpandedCategories(prev => ({
+  const handleCategoryClick = (categoryId: string): void => {
+    setExpandedCategories((prev: Record<string, boolean>) => ({
       ...prev,
       [categoryId]: !prev[categoryId]
     }));
   };
 
-  const handleCategoryFilter = (categoryId) => {
+  const handleCategoryFilter = (categoryId: string): void => {
     if (selectedCategoryId === categoryId) {
       setSelectedCategoryId(null);
     } else {
@@ -231,7 +320,7 @@ const FoodManagement = ({ accountId }) => {
     }
   };
 
-  const openCreateCategoryModal = () => {
+  const openCreateCategoryModal = (): void => {
     setEditingCategory(null);
     setCategoryForm({
       name: '',
@@ -240,7 +329,7 @@ const FoodManagement = ({ accountId }) => {
     setShowCategoryModal(true);
   };
 
-  const openEditCategoryModal = (category) => {
+  const openEditCategoryModal = (category: FoodCategories): void => {
     setEditingCategory(category);
     setCategoryForm({
       name: category.name,
@@ -249,7 +338,7 @@ const FoodManagement = ({ accountId }) => {
     setShowCategoryModal(true);
   };
 
-  const handleCreateCategory = async (e) => {
+  const handleCreateCategory = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     try {
       await createFoodCategory({
@@ -267,8 +356,9 @@ const FoodManagement = ({ accountId }) => {
     }
   };
 
-  const handleUpdateCategory = async (e) => {
+  const handleUpdateCategory = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (!editingCategory) return;
     try {
       await updateFoodCategory({
         variables: {
@@ -287,7 +377,7 @@ const FoodManagement = ({ accountId }) => {
     }
   };
 
-  const handleDeleteCategory = async (categoryId) => {
+  const handleDeleteCategory = async (categoryId: string): Promise<void> => {
     if (confirm('Are you sure you want to delete this category?')) {
       try {
         await deleteFoodCategory({
@@ -301,7 +391,7 @@ const FoodManagement = ({ accountId }) => {
   };
 
   // Handlers for Items
-  const openCreateItemModal = (categoryId) => {
+  const openCreateItemModal = (categoryId: string): void => {
     setEditingItem(null);
     setSelectedCategoryForItem(categoryId);
     setItemForm({
@@ -312,7 +402,7 @@ const FoodManagement = ({ accountId }) => {
     setShowItemModal(true);
   };
 
-  const openEditItemModal = (item) => {
+  const openEditItemModal = (item: Item): void => {
     setEditingItem(item);
     setSelectedCategoryForItem(item.categoryId);
     setItemForm({
@@ -323,7 +413,7 @@ const FoodManagement = ({ accountId }) => {
     setShowItemModal(true);
   };
 
-  const handleCreateItem = async (e) => {
+  const handleCreateItem = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     try {
       await createItem({
@@ -342,8 +432,9 @@ const FoodManagement = ({ accountId }) => {
     }
   };
 
-  const handleUpdateItem = async (e) => {
+  const handleUpdateItem = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
+    if (!editingItem) return;
     try {
       await updateItem({
         variables: {
@@ -363,7 +454,7 @@ const FoodManagement = ({ accountId }) => {
     }
   };
 
-  const handleDeleteItem = async (itemId) => {
+  const handleDeleteItem = async (itemId: string): Promise<void> => {
     if (confirm('Are you sure you want to delete this item?')) {
       try {
         await deleteItem({
@@ -399,9 +490,9 @@ const FoodManagement = ({ accountId }) => {
     );
   }
 
-  const foodCategories = data?.foodCategories || [];
-  const filteredCategories = selectedCategoryId 
-    ? foodCategories.filter(category => category.id === selectedCategoryId)
+  const foodCategories: FoodCategories[] = data?.foodCategories || [];
+  const filteredCategories: FoodCategories[] = selectedCategoryId 
+    ? foodCategories.filter((category: FoodCategories) => category.id === selectedCategoryId)
     : foodCategories;
 
   return (
@@ -428,7 +519,7 @@ const FoodManagement = ({ accountId }) => {
         >
           All Categories ({foodCategories.length})
         </button>
-        {foodCategories.map(category => (
+        {foodCategories.map((category: FoodCategories) => (
           <button
             key={category.id}
             onClick={() => handleCategoryFilter(category.id)}
@@ -445,7 +536,7 @@ const FoodManagement = ({ accountId }) => {
 
       {/* Categories and Items Display */}
       <div className="space-y-4">
-        {filteredCategories.map(category => (
+        {filteredCategories.map((category: FoodCategories) => (
           <div key={category.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             {/* Category Header */}
             <div className="bg-gray-50 p-4 border-b border-gray-200">
@@ -497,7 +588,7 @@ const FoodManagement = ({ accountId }) => {
               <div className="p-4">
                 {category.items && category.items.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {category.items.map(item => (
+                    {category.items.map((item: Item) => (
                       <div key={item.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow">
                         <div className="flex justify-between items-start mb-2">
                           <h3 className="font-semibold text-gray-800 text-lg">{item.name}</h3>
