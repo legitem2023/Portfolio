@@ -496,7 +496,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
   const categoryName = categoryId ? getReturnCategory(categoryId) : '';
   const isFoodsAndDrinks = categoryName === "Foods and Drinks";
 
-  console.log('Category name:', categoryName);
+  console.log('product:', product);
   
   return (
     <div 
