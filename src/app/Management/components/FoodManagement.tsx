@@ -341,7 +341,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
       {/* Mobile Header */}
       <div className="md:hidden bg-white shadow-sm sticky top-0 z-40">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-gray-900">Food and Drinks Management</h1>
+          <h1 className="text-xl font-bold text-gray-900">Food Category Management</h1>
           <div className="flex gap-2">
             <button
               onClick={openCreateCategoryModal}
