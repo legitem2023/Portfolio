@@ -46,26 +46,13 @@ export default function ProductForm({
   // Extract the food_categories array from the response
   const foodCategoriesArray = foodCategories?.food_categories || [];
 
-  // Show loading screen while food categories are loading
-  if (foodCatLoading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading food categories...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error if food categories failed to load
-  if (foodCatError) {
-    return (
-      <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
-        Error loading food categories: {foodCatError.message}
-      </div>
-    );
-  }
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  useEffect(() => {
+    if (!isFoodsAndDrinks()) {
+      setSelectedCategory('');
+      setSelectedItem('');
+    }
+  }, [newProduct.categoryId]);
 
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
@@ -130,13 +117,6 @@ export default function ProductForm({
       setIsPickingColor(false);
     }
   };
-
-  useEffect(() => {
-    if (!isFoodsAndDrinks()) {
-      setSelectedCategory('');
-      setSelectedItem('');
-    }
-  }, [newProduct.categoryId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,6 +198,27 @@ export default function ProductForm({
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
     return selectedCategoryObj?.name === 'Foods and Drinks';
   };
+
+  // Show loading screen while food categories are loading (after all hooks)
+  if (foodCatLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading food categories...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if food categories failed to load
+  if (foodCatError) {
+    return (
+      <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
+        Error loading food categories: {foodCatError.message}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -662,4 +663,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-                    }
+            }
