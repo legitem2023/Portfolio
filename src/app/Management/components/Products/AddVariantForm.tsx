@@ -4,7 +4,7 @@ import { useMutation } from '@apollo/client';
 import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT } from '../../../components/graphql/mutation';
 import { Pipette, Copy, Check, Edit, Trash2, X } from 'lucide-react';
 import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
-
+import { useAuth } from '../../hooks/useAuth';
 interface AddVariantFormProps {
   productId: string;
   refetch: any;
@@ -51,7 +51,8 @@ export default function AddVariantForm({
     salePrice: '',
     stock: ''
   });
-
+  const { user, loading: authLoading } = useAuth();
+ 
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -67,7 +68,7 @@ export default function AddVariantForm({
   const [selectedItem, setSelectedItem] = useState('');
 
   // Use the food categories hook
-  const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(supplierId as string);
+  const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(user?.userId as string);
   
   // Extract the food_categories array from the response - handle both possible structures
   const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
@@ -298,7 +299,7 @@ export default function AddVariantForm({
   const loading = creating || updating || isSubmitting;
 
   // Show loading screen while food categories are loading
-  if (foodCatLoading && isFoodsAndDrinks()) {
+  if (authLoading && foodCatLoading && isFoodsAndDrinks()) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="text-center">
