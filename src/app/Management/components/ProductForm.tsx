@@ -43,16 +43,8 @@ export default function ProductForm({
   const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(supplierId as string);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
-  // Extract the food_categories array from the response
-  const foodCategoriesArray = foodCategories?.food_categories || [];
-
-  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  useEffect(() => {
-    if (!isFoodsAndDrinks()) {
-      setSelectedCategory('');
-      setSelectedItem('');
-    }
-  }, [newProduct.categoryId]);
+  // Extract the food_categories array from the response - handle both possible structures
+  const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
 
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
@@ -117,6 +109,13 @@ export default function ProductForm({
       setIsPickingColor(false);
     }
   };
+
+  useEffect(() => {
+    if (!isFoodsAndDrinks()) {
+      setSelectedCategory('');
+      setSelectedItem('');
+    }
+  }, [newProduct.categoryId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +198,7 @@ export default function ProductForm({
     return selectedCategoryObj?.name === 'Foods and Drinks';
   };
 
-  // Show loading screen while food categories are loading (after all hooks)
+  // Show loading screen while food categories are loading
   if (foodCatLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -219,7 +218,7 @@ export default function ProductForm({
       </div>
     );
   }
-console.log(foodCategoriesArray);
+
   return (
     <form onSubmit={handleSubmit}>
       {error && (
@@ -663,4 +662,4 @@ console.log(foodCategoriesArray);
       </button>
     </form>
   );
-            }
+                  }
