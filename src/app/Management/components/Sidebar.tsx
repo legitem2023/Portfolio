@@ -38,7 +38,7 @@ export default function Sidebar({ activeTab, setActiveTab, isOpen = false, onClo
     { id: 0, label: 'Dashboard', icon: LayoutDashboard, roles: ['ADMINISTRATOR', 'MANAGER'] },
     { id: 1, label: 'Users', icon: Users, roles: ['ADMINISTRATOR'] },
     { id: 2, label: 'Products', icon: Package, roles: ['ADMINISTRATOR', 'MANAGER'] },
-    { id: 17, label: 'Foods Settigs', icon: LeafyGreen, roles: ['ADMINISTRATOR', 'MANAGER'] },
+    { id: 17, label: 'Food Flavor Settings', icon: LeafyGreen, roles: ['ADMINISTRATOR', 'MANAGER'] },
     
     { id: 3, label: 'Categories', icon: FolderOpen, roles: ['ADMINISTRATOR'] }, // Admin only
     { id: 4, label: 'Orders', icon: ShoppingCart, roles: ['ADMINISTRATOR', 'MANAGER'] },
