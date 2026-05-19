@@ -219,7 +219,7 @@ export default function ProductForm({
       </div>
     );
   }
-
+console.log(foodCategoriesArray);
   return (
     <form onSubmit={handleSubmit}>
       {error && (
