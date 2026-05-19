@@ -90,6 +90,7 @@ export default function ProductTable({ products,refetch,categories, onProductDel
     onCompleted: () => {
       setUploadingProductId(null);
       setUploadingVariantId(null);
+      refetch();
     },
     onError: (error) => {
       console.error('Upload failed:', error);
