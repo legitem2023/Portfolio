@@ -199,7 +199,7 @@ export default function ProductForm({
     return selectedCategoryObj?.name === 'Foods and Drinks';
   };
 
-console.log(foodCategories,"---",sizeData);
+ console.log(foodCategories,"---",flavorData);
   
   return (
     <form onSubmit={handleSubmit}>
