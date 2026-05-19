@@ -46,6 +46,27 @@ export default function ProductForm({
   // Extract the food_categories array from the response
   const foodCategoriesArray = foodCategories?.food_categories || [];
 
+  // Show loading screen while food categories are loading
+  if (foodCatLoading) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading food categories...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if food categories failed to load
+  if (foodCatError) {
+    return (
+      <div className="text-red-500 mb-4 p-2 bg-red-100 rounded-md">
+        Error loading food categories: {foodCatError.message}
+      </div>
+    );
+  }
+
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
     if (selectedCategoryObj?.name === 'Foods and Drinks') {
@@ -367,87 +388,64 @@ export default function ProductForm({
           
           {isFoodsAndDrinks() ? (
             <div className="space-y-3">
-              {/* Show loading state */}
-              {foodCatLoading && (
-                <div className="text-sm text-gray-500">Loading food categories...</div>
-              )}
-              
-              {/* Show error state */}
-              {foodCatError && (
-                <div className="text-sm text-red-500">Error loading categories: {foodCatError.message}</div>
-              )}
-              
-              {/* Show categories when loaded */}
-              {!foodCatLoading && !foodCatError && foodCategoriesArray.length > 0 && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Food Category
-                    </label>
-                    <select
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      value={selectedCategory}
-                      onChange={(e) => {
-                        const catId = e.target.value;
-                        setSelectedCategory(catId);
-                        setSelectedItem('');
-                        // Reset flavor when category changes
-                        setNewProduct({...newProduct, color: ''});
-                      }}
-                    >
-                      <option value="">Select category</option>
-                      {foodCategoriesArray.map((category: any) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Food Category
+                </label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  value={selectedCategory}
+                  onChange={(e) => {
+                    const catId = e.target.value;
+                    setSelectedCategory(catId);
+                    setSelectedItem('');
+                    setNewProduct({...newProduct, color: ''});
+                  }}
+                >
+                  <option value="">Select category</option>
+                  {foodCategoriesArray.map((category: any) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedCategory && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Food Item (Flavor)
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    value={selectedItem}
+                    onChange={(e) => {
+                      const itemId = e.target.value;
+                      const selectedCategoryObj = foodCategoriesArray.find(
+                        (cat: any) => cat.id === selectedCategory
+                      );
+                      const selectedItemObj = selectedCategoryObj?.items.find(
+                        (item: any) => item.id === itemId
+                      );
+                      setSelectedItem(itemId);
+                      setNewProduct({
+                        ...newProduct, 
+                        color: selectedItemObj?.name || itemId
+                      });
+                    }}
+                  >
+                    <option value="">Select item</option>
+                    {foodCategoriesArray
+                      .find((cat: any) => cat.id === selectedCategory)
+                      ?.items.map((item: any) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
                         </option>
                       ))}
-                    </select>
-                  </div>
-
-                  {selectedCategory && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Food Item (Flavor)
-                      </label>
-                      <select
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        value={selectedItem}
-                        onChange={(e) => {
-                          const itemId = e.target.value;
-                          const selectedCategoryObj = foodCategoriesArray.find(
-                            (cat: any) => cat.id === selectedCategory
-                          );
-                          const selectedItemObj = selectedCategoryObj?.items.find(
-                            (item: any) => item.id === itemId
-                          );
-                          setSelectedItem(itemId);
-                          setNewProduct({
-                            ...newProduct, 
-                            color: selectedItemObj?.name || itemId
-                          });
-                        }}
-                      >
-                        <option value="">Select item</option>
-                        {foodCategoriesArray
-                          .find((cat: any) => cat.id === selectedCategory)
-                          ?.items.map((item: any) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                      </select>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Selected item will be used as flavor
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-              
-              {/* Show message when no categories exist */}
-              {!foodCatLoading && !foodCatError && foodCategoriesArray.length === 0 && (
-                <div className="text-sm text-amber-600">
-                  No food categories available. Please add food categories first.
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Selected item will be used as flavor
+                  </p>
                 </div>
               )}
             </div>
@@ -664,4 +662,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+                    }
