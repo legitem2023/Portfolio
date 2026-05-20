@@ -28,6 +28,21 @@ const formatPesoPrice = (price: number): string => {
   })}`;
 };
 
+// Helper function to check if a color is a valid hex color
+const isValidHexColor = (color: string): boolean => {
+  // Check if color starts with # and is a valid hex color (3 or 6 digits)
+  const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  return hexRegex.test(color);
+};
+
+// Helper function to get display type for color
+const getColorDisplayType = (color: string): 'swatch' | 'label' => {
+  if (!color || !color.startsWith('#')) {
+    return 'label';
+  }
+  return isValidHexColor(color) ? 'swatch' : 'label';
+};
+
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categories }) => {
   const { user, loading: userloading } = useAuth();
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
@@ -134,9 +149,6 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
     });
   }, []);
 
-
- 
-  
   const handleQuickView = useCallback((product: Product, variant: Product['variants'][0]) => {
     setSelectedVariant({ product, variant });
     setIsQuickViewOpen(true);
@@ -210,6 +222,14 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
       return foundVariant || product.variants[0];
     }
     return product.variants[0];
+  }, []);
+
+  // Get the image for a specific variant
+  const getVariantImage = useCallback((variant: Product['variants'][0]): string => {
+    if (variant?.images && variant.images.length > 0) {
+      return variant.images[0];
+    }
+    return '/NoImage.webp';
   }, []);
 
   if (userloading) return null;
@@ -390,25 +410,50 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                   </div>
                 </div>
                 
-                {/* Color selection */}
+                {/* Color selection - Now using variant images instead of color swatches */}
                 {uniqueColors.length > 0 && (
                   <div className="mt-1 sm:mt-2">
                     <div className="flex items-center space-x-1">
                       <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
                       <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleColorSelect(product.id, color)}
-                            className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 rounded-full border transition-all ${
-                              selectedColor[product.id] === color 
-                                ? 'border-2 border-amber-500 scale-110' 
-                                : 'border-gray-200 hover:scale-110'
-                            }`}
-                            style={{ backgroundColor: color }}
-                            title={color}
-                          />
-                        ))}
+                        {uniqueColors.slice(0, 4).map((color, index) => {
+                          // Find the variant for this color to get its image
+                          const variantForColor = product.variants?.find((v: any) => v.color === color);
+                          const variantImage = variantForColor ? getVariantImage(variantForColor) : '/NoImage.webp';
+                          const displayType = getColorDisplayType(color);
+                          
+                          return (
+                            <button
+                              key={index}
+                              onClick={() => handleColorSelect(product.id, color)}
+                              className={`relative transition-all duration-200 ${
+                                selectedColor[product.id] === color 
+                                  ? 'ring-2 ring-amber-500 ring-offset-1 scale-110' 
+                                  : 'hover:scale-110'
+                              }`}
+                              title={color}
+                            >
+                              {displayType === 'swatch' ? (
+                                // Show color swatch for valid hex colors
+                                <div 
+                                  className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-full border border-gray-300"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ) : (
+                                // Show variant image for non-hex colors or invalid hex
+                                <div className="relative w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-md overflow-hidden border border-gray-300">
+                                  <Image
+                                    src={variantImage}
+                                    alt={color}
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 640px) 24px, (max-width: 768px) 28px, 32px"
+                                  />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                         {uniqueColors.length > 4 && (
                           <span className="text-[10px] xs:text-xs text-gray-500">+{uniqueColors.length - 4}</span>
                         )}
