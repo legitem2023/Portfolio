@@ -17,6 +17,7 @@ interface VariantCardProps {
   onImageDelete: (variantId: string, imageIndex: number) => void;
   refetch: any;
   isUploading: boolean;
+  productCategoryName?: string;
 }
 
 // Helper function to check if a color is a valid hex color
@@ -66,7 +67,8 @@ export default function VariantCard({
   onImageUpload,
   onImageDelete,
   refetch,
-  isUploading
+  isUploading,
+  productCategoryName
 }: VariantCardProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
