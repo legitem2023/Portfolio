@@ -36,6 +36,15 @@ const shouldShowColorSwatch = (color: string): boolean => {
   return isValidHexColor(color);
 };
 
+// Helper function to check if category is Foods and Drinks
+const isFoodsAndDrinksCategory = (categoryName?: string): boolean => {
+  if (!categoryName) return false;
+  const foodsAndDrinksKeywords = ['Foods and Drinks', 'Food & Drinks', 'Foods & Drinks', 'Food and Drinks', 'Food', 'Drinks', 'Beverages'];
+  return foodsAndDrinksKeywords.some(keyword => 
+    categoryName.toLowerCase().includes(keyword.toLowerCase())
+  );
+};
+
 export default function VariantCard({ 
   variant, 
   onImageUpload,
@@ -56,6 +65,9 @@ export default function VariantCard({
   // Determine if this variant should show as Flavor or Color
   const showAsFlavor = !shouldShowColorSwatch(variant.color || '');
   const displayLabel = showAsFlavor ? 'Flavor' : 'Color';
+  
+  // Check if this is a Foods and Drinks category
+  const isFoodDrinks = isFoodsAndDrinksCategory(productCategoryName);
   
   const [editData, setEditData] = useState({
     name: variant.name,
@@ -81,9 +93,9 @@ export default function VariantCard({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Detect size category when editing starts
+  // Detect size category when editing starts (only for non-food products)
   useEffect(() => {
-    if (isEditing && variant.size) {
+    if (!isFoodDrinks && isEditing && variant.size) {
       const detectedParent = sizeData.find(category => 
         category.values.includes(variant.size)
       )?.parent || '';
@@ -91,7 +103,7 @@ export default function VariantCard({
       setSelectedSizeParent(detectedParent);
       setShowCustomSize(!detectedParent && variant.size !== '');
     }
-  }, [isEditing, variant.size]);
+  }, [isEditing, variant.size, isFoodDrinks]);
 
   // Reset edit data when variant changes
   useEffect(() => {
@@ -501,51 +513,65 @@ export default function VariantCard({
               </div>
             </div>
 
-            {/* Size with Dropdown */}
+            {/* Size - Conditional rendering based on category */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                 Size
               </label>
-              <div className="space-y-2">
-                <select
+              
+              {isFoodDrinks ? (
+                // Simple text input for Foods and Drinks category
+                <input
+                  type="text"
+                  name="size"
+                  value={editData.size}
+                  onChange={handleEditChange}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  value={selectedSizeParent}
-                  onChange={(e) => handleSizeCategoryChange(e.target.value)}
-                >
-                  <option value="">Select size category</option>
-                  {sizeData.map((category) => (
-                    <option key={category.parent} value={category.parent}>
-                      {category.parent}
-                    </option>
-                  ))}
-                </select>
-
-                {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+                  placeholder="Enter size (e.g., Regular, Large, 12oz, 500ml)"
+                />
+              ) : (
+                // Dropdown selection for other categories
+                <div className="space-y-2">
                   <select
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    value={editData.size}
-                    onChange={(e) => handleSizeSelect(e.target.value)}
+                    value={selectedSizeParent}
+                    onChange={(e) => handleSizeCategoryChange(e.target.value)}
                   >
-                    <option value="">Select a size</option>
-                    {sizeData
-                      .find(cat => cat.parent === selectedSizeParent)
-                      ?.values.map(size => (
-                        <option key={size} value={size}>{size}</option>
-                      ))}
+                    <option value="">Select size category</option>
+                    {sizeData.map((category) => (
+                      <option key={category.parent} value={category.parent}>
+                        {category.parent}
+                      </option>
+                    ))}
                   </select>
-                )}
 
-                {(showCustomSize || selectedSizeParent === 'Custom') && (
-                  <input
-                    type="text"
-                    name="size"
-                    value={editData.size}
-                    onChange={handleEditChange}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="Enter custom size"
-                  />
-                )}
-              </div>
+                  {selectedSizeParent && selectedSizeParent !== 'Custom' && (
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      value={editData.size}
+                      onChange={(e) => handleSizeSelect(e.target.value)}
+                    >
+                      <option value="">Select a size</option>
+                      {sizeData
+                        .find(cat => cat.parent === selectedSizeParent)
+                        ?.values.map(size => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                    </select>
+                  )}
+
+                  {(showCustomSize || selectedSizeParent === 'Custom') && (
+                    <input
+                      type="text"
+                      name="size"
+                      value={editData.size}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Enter custom size"
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Price */}
@@ -730,4 +756,4 @@ export default function VariantCard({
       />
     </div>
   );
-                    }
+}
