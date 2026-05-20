@@ -24,6 +24,35 @@ interface CategoriesResponse {
   categories: GraphQLCategory[];
 }
 
+// Inject global styles for the pulse animation (only once)
+if (typeof document !== 'undefined' && !document.getElementById('pulse-green-styles')) {
+  const style = document.createElement('style');
+  style.id = 'pulse-green-styles';
+  style.textContent = `
+    @keyframes pulse-green-custom {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.4;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      }
+      50% {
+        transform: scale(1.4);
+        opacity: 1;
+        box-shadow: 0 0 0 10px rgba(34, 197, 94, 0);
+      }
+      100% {
+        transform: scale(0.8);
+        opacity: 0.4;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+      }
+    }
+    .animate-pulse-green-custom {
+      animation: pulse-green-custom 1s ease-in-out infinite !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
   const isMounted = useRef(true);
@@ -87,6 +116,7 @@ const CategoryPage: React.FC = () => {
     (category: category, index: number) => {
       const isActiveFilter = categoryFilter === category.id;
       const hasVariants = category.variantCount > 0;
+      const shouldPulse = hasVariants && isActiveFilter;
 
       return (
         <div
@@ -115,19 +145,42 @@ const CategoryPage: React.FC = () => {
                 onError={handleImageError}
               />
             </div>
-            {/* Enhanced visible pulsing indicator */}
+            {/* Enhanced visible pulsing indicator - using both scale and glow */}
             <div className="absolute top-1 right-1 z-10">
+              {shouldPulse && (
+                <>
+                  {/* Outer pulsing ring */}
+                  <div
+                    className="absolute rounded-full bg-green-400 animate-ping"
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      top: '-6px',
+                      left: '-6px',
+                      opacity: 0.6,
+                    }}
+                  />
+                  {/* Middle pulsing ring */}
+                  <div
+                    className="absolute rounded-full bg-green-300"
+                    style={{
+                      width: '14px',
+                      height: '14px',
+                      top: '-3px',
+                      left: '-3px',
+                      animation: 'pulse-green-custom 1s ease-in-out infinite',
+                    }}
+                  />
+                </>
+              )}
+              {/* Core dot (green or red) */}
               <div
-                className={`
-                  w-3 h-3 rounded-full
-                  ${hasVariants ? 'bg-green-500' : 'bg-red-500'}
-                  ${hasVariants && isActiveFilter ? 'animate-pulse-green' : ''}
-                `}
+                className={`w-3 h-3 rounded-full relative z-10 ${
+                  hasVariants ? 'bg-green-500' : 'bg-red-500'
+                }`}
                 style={{
-                  boxShadow:
-                    hasVariants && isActiveFilter
-                      ? '0 0 10px 2px #22c55e'
-                      : 'none',
+                  boxShadow: shouldPulse ? '0 0 8px 2px #22c55e' : 'none',
+                  animation: shouldPulse ? 'pulse-green-custom 1s ease-in-out infinite' : 'none',
                 }}
               />
             </div>
@@ -145,15 +198,6 @@ const CategoryPage: React.FC = () => {
     },
     [handleCategoryClick, handleImageError, categoryFilter]
   );
-
-  // Prevent memory leaks by clearing any pending state updates
-  useEffect(() => {
-    return () => {
-      if (!isMounted.current) {
-        // Additional cleanup if needed
-      }
-    };
-  }, []);
 
   if (loading) {
     return <ShimmerLoader />;
@@ -187,44 +231,20 @@ const CategoryPage: React.FC = () => {
   }
 
   return (
-    <>
-      <style jsx>{`
-        @keyframes pulse-green {
-          0% {
-            transform: scale(0.8);
-            opacity: 0.5;
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-          }
-          70% {
-            transform: scale(1.3);
-            opacity: 1;
-            box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-          }
-          100% {
-            transform: scale(0.8);
-            opacity: 0.5;
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-          }
-        }
-        .animate-pulse-green {
-          animation: pulse-green 1.2s ease-in-out infinite;
-        }
-      `}</style>
-      <div className="container mx-auto p-0">
-        <SwiperComponent
-          initialCategories={categories}
-          slidesPerView={4}
-          spaceBetween={8}
-          navigation={false}
-          pagination={false}
-          loop={true}
-          renderSlide={renderCompactCard}
-          showStatusBadge={false}
-          showProductCount={false}
-          className="compact-swiper"
-        />
-      </div>
-    </>
+    <div className="container mx-auto p-0">
+      <SwiperComponent
+        initialCategories={categories}
+        slidesPerView={4}
+        spaceBetween={8}
+        navigation={false}
+        pagination={false}
+        loop={true}
+        renderSlide={renderCompactCard}
+        showStatusBadge={false}
+        showProductCount={false}
+        className="compact-swiper"
+      />
+    </div>
   );
 };
 
@@ -234,9 +254,8 @@ const ShimmerLoader = () => {
 
   useEffect(() => {
     return () => {
-      // Cleanup any potential animation frames or timeouts
       if (shimmerRef.current) {
-        // Cancel any pending animations if needed
+        // cleanup
       }
     };
   }, []);
