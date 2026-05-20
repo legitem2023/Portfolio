@@ -118,7 +118,7 @@ const CategoryPage: React.FC = () => {
                 !hasVariants
                   ? 'bg-red-500'
                   : isActiveFilter
-                  ? 'bg-green-200 animate-pulse'
+                  ? 'bg-lime-400 animate-pulse'
                   : 'bg-green-500'
               }`} 
             />
