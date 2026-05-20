@@ -111,14 +111,14 @@ const CategoryPage: React.FC = () => {
               onError={handleImageError}
             />
           </div>
-          {/* Pulsing indicator – uses bg-green-200 when active, otherwise green-500 or red-500 */}
+          {/* Pulsing indicator – pure green, only opacity changes */}
           <div className="absolute top-1 right-1">
             <div 
               className={`w-2 h-2 rounded-full ${
                 !hasVariants
                   ? 'bg-red-500'
                   : isActiveFilter
-                  ? 'bg-lime-400 animate-pulse'
+                  ? 'bg-green-500 animate-pulse-green'
                   : 'bg-green-500'
               }`} 
             />
@@ -178,20 +178,35 @@ const CategoryPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-0">
-      <SwiperComponent
-        initialCategories={categories}
-        slidesPerView={4}
-        spaceBetween={8}
-        navigation={false}
-        pagination={false}
-        loop={true}
-        renderSlide={renderCompactCard}
-        showStatusBadge={false}
-        showProductCount={false}
-        className="compact-swiper"
-      />
-    </div>
+    <>
+      <style>{`
+        @keyframes pulseGreenOpacity {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.4;
+          }
+        }
+        .animate-pulse-green {
+          animation: pulseGreenOpacity 1s ease-in-out infinite;
+        }
+      `}</style>
+      <div className="container mx-auto p-0">
+        <SwiperComponent
+          initialCategories={categories}
+          slidesPerView={4}
+          spaceBetween={8}
+          navigation={false}
+          pagination={false}
+          loop={true}
+          renderSlide={renderCompactCard}
+          showStatusBadge={false}
+          showProductCount={false}
+          className="compact-swiper"
+        />
+      </div>
+    </>
   );
 };
 
