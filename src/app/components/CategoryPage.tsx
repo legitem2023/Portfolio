@@ -4,6 +4,8 @@ import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
 import { useDispatch } from 'react-redux';
+import { setActiveIndex } from '../../../Redux/activeIndexSlice';
+
 import { setCategoryFilter } from '../../../Redux/searchSlice';
 import { GETCATEGORY } from './graphql/query';
 import { showToast } from '../../../utils/toastify';
@@ -66,6 +68,7 @@ const CategoryPage: React.FC = () => {
     
     if (isMounted.current) {
       dispatch(setCategoryFilter(categoryId));
+      dispatch(setActiveIndex(2));
     }
   }, [dispatch]);
 
