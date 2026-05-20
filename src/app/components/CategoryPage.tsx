@@ -27,10 +27,10 @@ interface CategoriesResponse {
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
   const isMounted = useRef(true);
-  
+
   // Get current category filter from Redux
   const categoryFilter = useSelector((state: any) => state.search.categoryFilter);
-  
+
   const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY, {
     fetchPolicy: 'cache-first',
     notifyOnNetworkStatusChange: false,
@@ -46,7 +46,7 @@ const CategoryPage: React.FC = () => {
 
   const categories = useMemo(() => {
     if (!data?.categories) return [];
-    
+
     return data.categories.map((cat: GraphQLCategory) => ({
       id: cat.id,
       name: cat.name,
@@ -57,22 +57,25 @@ const CategoryPage: React.FC = () => {
       items: '0 items',
       productCount: 0,
       variantCount: cat.variantCount,
-      status: cat.isActive ? "Active" as const : "Inactive" as const,
+      status: cat.isActive ? 'Active' as const : 'Inactive' as const,
       parentId: undefined,
     }));
   }, [data]);
 
-  const handleCategoryClick = useCallback((categoryId: string, variantCount: number) => {
-    if (variantCount < 1) {
-      showToast('This category has no items available', 'error');
-      return;
-    }
-    
-    if (isMounted.current) {
-      dispatch(setCategoryFilter(categoryId));
-      dispatch(setActiveIndex(2));
-    }
-  }, [dispatch]);
+  const handleCategoryClick = useCallback(
+    (categoryId: string, variantCount: number) => {
+      if (variantCount < 1) {
+        showToast('This category has no items available', 'error');
+        return;
+      }
+
+      if (isMounted.current) {
+        dispatch(setCategoryFilter(categoryId));
+        dispatch(setActiveIndex(2));
+      }
+    },
+    [dispatch]
+  );
 
   const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     if (isMounted.current) {
@@ -80,64 +83,72 @@ const CategoryPage: React.FC = () => {
     }
   }, []);
 
-  const renderCompactCard = useCallback((category: category, index: number) => {
-    // Check if this category matches the current filter
-    const isActiveFilter = categoryFilter === category.id;
-    const hasVariants = category.variantCount > 0;
+  const renderCompactCard = useCallback(
+    (category: category, index: number) => {
+      const isActiveFilter = categoryFilter === category.id;
+      const hasVariants = category.variantCount > 0;
 
-    return (
-      <div 
-        className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
-        style={{
-          border:'solid 1px transparent',
-          borderRadius:'1px',
-          background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
-          backdropFilter: 'blur(3px)',
-          WebkitBackdropFilter: 'blur(3px)'
-        }}
-        onClick={() => handleCategoryClick(category.id, category.variantCount)}
-      >
-        <div className="relative aspect-[1/1] bg-gray-50">
-          <div className="relative h-full w-full">
-            <Image
-              src={category.image}
-              alt={category.name}
-              fill
-              quality={25}
-              className={`object-cover ${!hasVariants ? 'grayscale' : ''}`}
-              loading="lazy"
-              priority={index < 4}
-              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-              onError={handleImageError}
-            />
+      return (
+        <div
+          className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full relative"
+          style={{
+            border: 'solid 1px transparent',
+            borderRadius: '1px',
+            background:
+              'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+          }}
+          onClick={() => handleCategoryClick(category.id, category.variantCount)}
+        >
+          <div className="relative aspect-[1/1] bg-gray-50">
+            <div className="relative h-full w-full">
+              <Image
+                src={category.image}
+                alt={category.name}
+                fill
+                quality={25}
+                className={`object-cover ${!hasVariants ? 'grayscale' : ''}`}
+                loading="lazy"
+                priority={index < 4}
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                onError={handleImageError}
+              />
+            </div>
+            {/* Enhanced visible pulsing indicator */}
+            <div className="absolute top-1 right-1 z-10">
+              <div
+                className={`
+                  w-3 h-3 rounded-full
+                  ${hasVariants ? 'bg-green-500' : 'bg-red-500'}
+                  ${hasVariants && isActiveFilter ? 'animate-pulse-green' : ''}
+                `}
+                style={{
+                  boxShadow:
+                    hasVariants && isActiveFilter
+                      ? '0 0 10px 2px #22c55e'
+                      : 'none',
+                }}
+              />
+            </div>
           </div>
-          {/* Existing dot – pulses green when filter matches AND has variants */}
-          <div className="absolute top-1 right-1">
-            <div 
-              className={`w-2 h-2 rounded-full ${
-                hasVariants ? 'bg-green-500' : 'bg-red-500'
-              } ${
-                hasVariants && isActiveFilter ? 'animate-pulse' : ''
-              }`} 
-            />
+
+          <div className="p-1.5">
+            <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
+            <div className="flex justify-between items-center mt-0.5">
+              <span className="text-xs text-gray-500">{category.variantCount} items</span>
+              <span className="text-xs text-blue-600 font-medium">→</span>
+            </div>
           </div>
         </div>
-        
-        <div className="p-1.5">
-          <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
-          <div className="flex justify-between items-center mt-0.5">
-            <span className="text-xs text-gray-500">{category.variantCount} items</span>
-            <span className="text-xs text-blue-600 font-medium">→</span>
-          </div>
-        </div>
-      </div>
-    );
-  }, [handleCategoryClick, handleImageError, categoryFilter]);
+      );
+    },
+    [handleCategoryClick, handleImageError, categoryFilter]
+  );
 
   // Prevent memory leaks by clearing any pending state updates
   useEffect(() => {
     return () => {
-      // Cleanup function to prevent state updates after unmount
       if (!isMounted.current) {
         // Additional cleanup if needed
       }
@@ -164,7 +175,7 @@ const CategoryPage: React.FC = () => {
       <div className="container mx-auto p-0">
         <div className="text-center p-4">
           <div className="text-gray-500 mb-2">No categories found</div>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="text-blue-600 hover:text-blue-800 text-sm font-medium"
           >
@@ -176,20 +187,44 @@ const CategoryPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-0">
-      <SwiperComponent
-        initialCategories={categories}
-        slidesPerView={4}
-        spaceBetween={8}
-        navigation={false}
-        pagination={false}
-        loop={true}
-        renderSlide={renderCompactCard}
-        showStatusBadge={false}
-        showProductCount={false}
-        className="compact-swiper"
-      />
-    </div>
+    <>
+      <style jsx>{`
+        @keyframes pulse-green {
+          0% {
+            transform: scale(0.8);
+            opacity: 0.5;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+          }
+          70% {
+            transform: scale(1.3);
+            opacity: 1;
+            box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+          }
+          100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+          }
+        }
+        .animate-pulse-green {
+          animation: pulse-green 1.2s ease-in-out infinite;
+        }
+      `}</style>
+      <div className="container mx-auto p-0">
+        <SwiperComponent
+          initialCategories={categories}
+          slidesPerView={4}
+          spaceBetween={8}
+          navigation={false}
+          pagination={false}
+          loop={true}
+          renderSlide={renderCompactCard}
+          showStatusBadge={false}
+          showProductCount={false}
+          className="compact-swiper"
+        />
+      </div>
+    </>
   );
 };
 
@@ -210,8 +245,8 @@ const ShimmerLoader = () => {
     <div className="container mx-auto p-0" ref={shimmerRef}>
       <div className="grid grid-cols-4 gap-2 p-0">
         {[...Array(4)].map((_, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="bg-white shadow-sm border border-gray-100 overflow-hidden"
           >
             <div className="relative aspect-[1/1] bg-gray-200">
