@@ -17,7 +17,22 @@ interface VariantCardProps {
   onImageDelete: (variantId: string, imageIndex: number) => void;
   refetch: any;
   isUploading: boolean;
+  isFlavorProduct?: boolean; // New prop to determine if this is a flavor product
 }
+
+// Helper function to check if a color is a valid hex color
+const isValidHexColor = (color: string): boolean => {
+  const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+  return hexRegex.test(color);
+};
+
+// Helper function to get display type for color
+const getColorDisplayType = (color: string): 'swatch' | 'flavor' => {
+  if (!color || !color.startsWith('#')) {
+    return 'flavor';
+  }
+  return isValidHexColor(color) ? 'swatch' : 'flavor';
+};
 
 const sizeData = [
   { parent: "Letter Sizes", values: ["XS", "S", "M", "L", "XL", "XXL", "3XL", "4XL"] },
@@ -53,7 +68,8 @@ export default function VariantCard({
   onImageUpload,
   onImageDelete,
   refetch,
-  isUploading
+  isUploading,
+  isFlavorProduct = false
 }: VariantCardProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
@@ -63,6 +79,10 @@ export default function VariantCard({
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomSize, setShowCustomSize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Determine display labels based on product type
+  const colorLabel = isFlavorProduct ? 'Flavor' : 'Color';
+  const colorLabelLower = isFlavorProduct ? 'flavor' : 'color';
   
   const [editData, setEditData] = useState({
     name: variant.name,
@@ -248,6 +268,10 @@ export default function VariantCard({
     if (window.innerWidth < 768) return 4;
     return 5;
   };
+
+  // Get display type for the current color
+  const displayType = getColorDisplayType(variant.color || '');
+  const showColorSwatch = displayType === 'swatch';
 
   return (
     <div className="group bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 overflow-hidden relative">
@@ -477,30 +501,33 @@ export default function VariantCard({
         </div>
       </div>
       
-      {/* Variant Details - Vertical Layout */}
+      {/* Variant Details - Vertical Layout with Dynamic Labels */}
       <div className="px-4 sm:px-5 py-4 bg-gray-50/50 border-y border-gray-100">
         {isEditing ? (
           // Edit Mode - Vertical Form Layout
           <div className="space-y-4">
-            {/* Color */}
+            {/* Color/Flavor with dynamic label */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                Color
+                {colorLabel}
               </label>
               <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={editData.color || '#000000'}
-                  onChange={(e) => setEditData(prev => ({ ...prev, color: e.target.value }))}
-                  className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
-                />
+                {/* Only show color picker for actual colors, not flavors */}
+                {!isFlavorProduct && (
+                  <input
+                    type="color"
+                    value={editData.color && editData.color.startsWith('#') ? editData.color : '#000000'}
+                    onChange={(e) => setEditData(prev => ({ ...prev, color: e.target.value }))}
+                    className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
+                  />
+                )}
                 <input
                   type="text"
                   name="color"
                   value={editData.color}
                   onChange={handleEditChange}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Color name or hex code"
+                  className={`${!isFlavorProduct ? 'flex-1' : 'w-full'} px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder={isFlavorProduct ? "Flavor name" : "Color name or hex code"}
                 />
               </div>
             </div>
@@ -609,16 +636,27 @@ export default function VariantCard({
             </div>
           </div>
         ) : (
-          // Display Mode - Vertical Layout
+          // Display Mode - Vertical Layout with Dynamic Labels
           <div className="space-y-3">
             <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Color</span>
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{colorLabel}</span>
               <div className="flex items-center gap-2">
-                {variant.color && (
+                {/* Show color swatch only for valid hex colors and non-flavor products */}
+                {!isFlavorProduct && showColorSwatch && variant.color && (
                   <div 
                     className="w-4 h-4 rounded-full border border-gray-300"
                     style={{ backgroundColor: variant.color }}
                   />
+                )}
+                {/* Show image thumbnail for flavors */}
+                {isFlavorProduct && hasImages && (
+                  <div className="w-6 h-6 rounded overflow-hidden border border-gray-200">
+                    <img 
+                      src={variant.images![0]} 
+                      alt={variant.color || variant.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 )}
                 <span className="text-sm font-semibold text-gray-900">{variant.color || '—'}</span>
               </div>
@@ -722,4 +760,4 @@ export default function VariantCard({
       />
     </div>
   );
-              }
+        }
