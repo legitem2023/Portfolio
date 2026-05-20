@@ -111,13 +111,15 @@ const CategoryPage: React.FC = () => {
               onError={handleImageError}
             />
           </div>
-          {/* Existing dot – pulses green when filter matches AND has variants */}
+          {/* Pulsing indicator – uses bg-green-200 when active, otherwise green-500 or red-500 */}
           <div className="absolute top-1 right-1">
             <div 
               className={`w-2 h-2 rounded-full ${
-                hasVariants ? 'bg-green-500' : 'bg-red-500'
-              } ${
-                hasVariants && isActiveFilter ? 'animate-pulse' : ''
+                !hasVariants
+                  ? 'bg-red-500'
+                  : isActiveFilter
+                  ? 'bg-green-200 animate-pulse'
+                  : 'bg-green-500'
               }`} 
             />
           </div>
