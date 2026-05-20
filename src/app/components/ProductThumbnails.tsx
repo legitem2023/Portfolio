@@ -445,7 +445,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                               {displayType === 'swatch' ? (
                                 // Show color swatch for valid hex colors
                                 <div 
-                                  className="w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7 rounded-full border border-gray-300 shadow-sm"
+                                  className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 rounded-full border border-gray-300 shadow-sm"
                                   style={{ backgroundColor: color }}
                                 />
                               ) : (
@@ -455,7 +455,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                                     ? 'border-amber-500 bg-amber-50' 
                                     : 'border-gray-300 bg-white hover:border-gray-400'
                                 }`}>
-                                  <div className="relative w-4 h-4 xs:w-5 xs:h-5 rounded-sm overflow-hidden">
+                                  <div className="relative w-3 h-3 xs:w-4 xs:h-4 rounded-full overflow-hidden">
                                     <Image
                                       src={variantImage}
                                       alt={color}
@@ -464,9 +464,6 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                                       sizes="(max-width: 640px) 16px, (max-width: 768px) 20px, 20px"
                                     />
                                   </div>
-                                  <span className="text-[10px] xs:text-xs text-gray-700 font-medium">
-                                    {color}
-                                  </span>
                                 </div>
                               )}
                             </button>
