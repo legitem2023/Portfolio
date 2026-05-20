@@ -450,7 +450,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                                 />
                               ) : (
                                 // Show flavor with variant image for non-hex colors
-                                <div className={`flex items-center space-x-1 px-1.5 py-0.5 xs:px-2 xs:py-1 rounded-md border ${
+                                <div className={`flex items-center space-x-1 rounded-md border ${
                                   isSelected 
                                     ? 'border-amber-500 bg-amber-50' 
                                     : 'border-gray-300 bg-white hover:border-gray-400'
