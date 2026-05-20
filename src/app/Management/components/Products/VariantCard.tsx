@@ -17,7 +17,6 @@ interface VariantCardProps {
   onImageDelete: (variantId: string, imageIndex: number) => void;
   refetch: any;
   isUploading: boolean;
-  isFlavorProduct?: boolean; // New prop to determine if this is a flavor product
 }
 
 // Helper function to check if a color is a valid hex color
@@ -26,12 +25,11 @@ const isValidHexColor = (color: string): boolean => {
   return hexRegex.test(color);
 };
 
-// Helper function to get display type for color
-const getColorDisplayType = (color: string): 'swatch' | 'flavor' => {
-  if (!color || !color.startsWith('#')) {
-    return 'flavor';
-  }
-  return isValidHexColor(color) ? 'swatch' : 'flavor';
+// Helper function to check if should show color swatch or image
+const shouldShowColorSwatch = (color: string): boolean => {
+  if (!color) return false;
+  if (!color.startsWith('#')) return false;
+  return isValidHexColor(color);
 };
 
 const sizeData = [
@@ -68,8 +66,7 @@ export default function VariantCard({
   onImageUpload,
   onImageDelete,
   refetch,
-  isUploading,
-  isFlavorProduct = false
+  isUploading
 }: VariantCardProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
@@ -80,9 +77,9 @@ export default function VariantCard({
   const [showCustomSize, setShowCustomSize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Determine display labels based on product type
-  const colorLabel = isFlavorProduct ? 'Flavor' : 'Color';
-  const colorLabelLower = isFlavorProduct ? 'flavor' : 'color';
+  // Determine if this variant should show as Flavor or Color
+  const showAsFlavor = !shouldShowColorSwatch(variant.color || '');
+  const displayLabel = showAsFlavor ? 'Flavor' : 'Color';
   
   const [editData, setEditData] = useState({
     name: variant.name,
@@ -268,10 +265,6 @@ export default function VariantCard({
     if (window.innerWidth < 768) return 4;
     return 5;
   };
-
-  // Get display type for the current color
-  const displayType = getColorDisplayType(variant.color || '');
-  const showColorSwatch = displayType === 'swatch';
 
   return (
     <div className="group bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg sm:hover:shadow-xl transition-all duration-300 overflow-hidden relative">
@@ -501,7 +494,7 @@ export default function VariantCard({
         </div>
       </div>
       
-      {/* Variant Details - Vertical Layout with Dynamic Labels */}
+      {/* Variant Details - Vertical Layout */}
       <div className="px-4 sm:px-5 py-4 bg-gray-50/50 border-y border-gray-100">
         {isEditing ? (
           // Edit Mode - Vertical Form Layout
@@ -509,11 +502,11 @@ export default function VariantCard({
             {/* Color/Flavor with dynamic label */}
             <div>
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-                {colorLabel}
+                {displayLabel}
               </label>
               <div className="flex gap-2">
-                {/* Only show color picker for actual colors, not flavors */}
-                {!isFlavorProduct && (
+                {/* Only show color picker for hex colors */}
+                {!showAsFlavor && (
                   <input
                     type="color"
                     value={editData.color && editData.color.startsWith('#') ? editData.color : '#000000'}
@@ -526,8 +519,8 @@ export default function VariantCard({
                   name="color"
                   value={editData.color}
                   onChange={handleEditChange}
-                  className={`${!isFlavorProduct ? 'flex-1' : 'w-full'} px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
-                  placeholder={isFlavorProduct ? "Flavor name" : "Color name or hex code"}
+                  className={`${!showAsFlavor ? 'flex-1' : 'w-full'} px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
+                  placeholder={showAsFlavor ? "Flavor name" : "Color name or hex code"}
                 />
               </div>
             </div>
@@ -636,21 +629,22 @@ export default function VariantCard({
             </div>
           </div>
         ) : (
-          // Display Mode - Vertical Layout with Dynamic Labels
+          // Display Mode - Vertical Layout
           <div className="space-y-3">
+            {/* Color/Flavor row - shows image for flavors, swatch for colors */}
             <div className="flex justify-between items-start">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{colorLabel}</span>
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{displayLabel}</span>
               <div className="flex items-center gap-2">
-                {/* Show color swatch only for valid hex colors and non-flavor products */}
-                {!isFlavorProduct && showColorSwatch && variant.color && (
+                {/* Show color swatch only for valid hex colors */}
+                {!showAsFlavor && shouldShowColorSwatch(variant.color || '') && variant.color && (
                   <div 
-                    className="w-4 h-4 rounded-full border border-gray-300"
+                    className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
                     style={{ backgroundColor: variant.color }}
                   />
                 )}
-                {/* Show image thumbnail for flavors */}
-                {isFlavorProduct && hasImages && (
-                  <div className="w-6 h-6 rounded overflow-hidden border border-gray-200">
+                {/* Show variant image for flavors (non-hex colors) */}
+                {showAsFlavor && hasImages && (
+                  <div className="w-6 h-6 rounded-md overflow-hidden border border-gray-200 shadow-sm">
                     <img 
                       src={variant.images![0]} 
                       alt={variant.color || variant.name}
@@ -760,4 +754,4 @@ export default function VariantCard({
       />
     </div>
   );
-        }
+                    }
