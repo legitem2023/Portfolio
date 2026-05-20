@@ -262,6 +262,7 @@ console.log(filteredCategoryNames);
                       onImageUpload={handleVariantImageUploadWithLogging}
                       refetch={refetch}
                       isUploading={uploadingVariantId === variant.id}
+                      productCategoryName={filteredCategoryNames}
                       //onEdit={handleEditVariant}
                     />
                   );
