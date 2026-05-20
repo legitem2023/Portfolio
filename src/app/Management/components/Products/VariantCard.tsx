@@ -3,6 +3,7 @@ import { Variant } from '../../../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 import { useMutation } from '@apollo/client';
+import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 
 // Import Swiper styles
