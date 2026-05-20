@@ -36,11 +36,11 @@ const isValidHexColor = (color: string): boolean => {
 };
 
 // Helper function to get display type for color
-const getColorDisplayType = (color: string): 'swatch' | 'label' => {
+const getColorDisplayType = (color: string): 'swatch' | 'flavor' => {
   if (!color || !color.startsWith('#')) {
-    return 'label';
+    return 'flavor';
   }
-  return isValidHexColor(color) ? 'swatch' : 'label';
+  return isValidHexColor(color) ? 'swatch' : 'flavor';
 };
 
 const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categories }) => {
@@ -243,6 +243,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
+          
+          // Determine if this product uses flavors or colors
+          const isFlavorProduct = uniqueColors.some(color => getColorDisplayType(color) === 'flavor');
+          const labelText = isFlavorProduct ? 'Flavors:' : 'Colors:';
+          
           // Calculate rating for display
           let displayRating = 0;
           let displayReviewCount = 0;
@@ -410,52 +415,67 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                   </div>
                 </div>
                 
-                {/* Color selection - Now using variant images instead of color swatches */}
+                {/* Dynamic Label: "Flavors:" or "Colors:" based on color type */}
                 {uniqueColors.length > 0 && (
                   <div className="mt-1 sm:mt-2">
-                    <div className="flex items-center space-x-1">
-                      <span className="text-[10px] xs:text-xs text-gray-500">Colors:</span>
-                      <div className="flex space-x-0.5 xs:space-x-1">
-                        {uniqueColors.slice(0, 4).map((color, index) => {
-                          // Find the variant for this color to get its image
+                    <div className="flex flex-col space-y-1">
+                      <span className="text-[10px] xs:text-xs text-gray-500">
+                        {labelText}
+                      </span>
+                      
+                      {/* Selection buttons */}
+                      <div className="flex flex-wrap items-center gap-1 xs:gap-1.5">
+                        {uniqueColors.slice(0, 6).map((color, index) => {
                           const variantForColor = product.variants?.find((v: any) => v.color === color);
                           const variantImage = variantForColor ? getVariantImage(variantForColor) : '/NoImage.webp';
                           const displayType = getColorDisplayType(color);
+                          const isSelected = selectedColor[product.id] === color;
                           
                           return (
                             <button
                               key={index}
                               onClick={() => handleColorSelect(product.id, color)}
-                              className={`relative transition-all duration-200 ${
-                                selectedColor[product.id] === color 
-                                  ? 'ring-2 ring-amber-500 ring-offset-1 scale-110' 
-                                  : 'hover:scale-110'
+                              className={`transition-all duration-200 ${
+                                isSelected 
+                                  ? 'ring-2 ring-amber-500 ring-offset-1 scale-105' 
+                                  : 'hover:scale-105'
                               }`}
                               title={color}
                             >
                               {displayType === 'swatch' ? (
                                 // Show color swatch for valid hex colors
                                 <div 
-                                  className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6 rounded-full border border-gray-300"
+                                  className="w-5 h-5 xs:w-6 xs:h-6 sm:w-7 sm:h-7 rounded-full border border-gray-300 shadow-sm"
                                   style={{ backgroundColor: color }}
                                 />
                               ) : (
-                                // Show variant image for non-hex colors or invalid hex
-                                <div className="relative w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 rounded-md overflow-hidden border border-gray-300">
-                                  <Image
-                                    src={variantImage}
-                                    alt={color}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 640px) 24px, (max-width: 768px) 28px, 32px"
-                                  />
+                                // Show flavor with variant image for non-hex colors
+                                <div className={`flex items-center space-x-1 px-1.5 py-0.5 xs:px-2 xs:py-1 rounded-md border ${
+                                  isSelected 
+                                    ? 'border-amber-500 bg-amber-50' 
+                                    : 'border-gray-300 bg-white hover:border-gray-400'
+                                }`}>
+                                  <div className="relative w-4 h-4 xs:w-5 xs:h-5 rounded-sm overflow-hidden">
+                                    <Image
+                                      src={variantImage}
+                                      alt={color}
+                                      fill
+                                      className="object-cover"
+                                      sizes="(max-width: 640px) 16px, (max-width: 768px) 20px, 20px"
+                                    />
+                                  </div>
+                                  <span className="text-[10px] xs:text-xs text-gray-700 font-medium">
+                                    {color}
+                                  </span>
                                 </div>
                               )}
                             </button>
                           );
                         })}
-                        {uniqueColors.length > 4 && (
-                          <span className="text-[10px] xs:text-xs text-gray-500">+{uniqueColors.length - 4}</span>
+                        {uniqueColors.length > 6 && (
+                          <span className="text-[10px] xs:text-xs text-gray-500 ml-1">
+                            +{uniqueColors.length - 6} more
+                          </span>
                         )}
                       </div>
                     </div>
