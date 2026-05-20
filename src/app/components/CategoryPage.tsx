@@ -4,8 +4,8 @@ import React, { useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@apollo/client';
 import SwiperComponent, { category } from './SwiperComponent';
 import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-
 import { setCategoryFilter } from '../../../Redux/searchSlice';
 import { GETCATEGORY } from './graphql/query';
 import { showToast } from '../../../utils/toastify';
@@ -28,6 +28,9 @@ interface CategoriesResponse {
 const CategoryPage: React.FC = () => {
   const dispatch = useDispatch();
   const isMounted = useRef(true);
+  
+  // Get current category filter from Redux store
+  const categoryFilter = useSelector((state: any) => state.search.categoryFilter);
   
   const { loading, error, data } = useQuery<CategoriesResponse>(GETCATEGORY, {
     fetchPolicy: 'cache-first',
@@ -78,46 +81,68 @@ const CategoryPage: React.FC = () => {
     }
   }, []);
 
-  const renderCompactCard = useCallback((category: category, index: number) => (
-    <div 
-      className="group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full"
-      style={{
-        border:'solid 1px transparent',
-        borderRadius:'1px',
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
-        backdropFilter: 'blur(3px)',
-        WebkitBackdropFilter: 'blur(3px)'
-      }}
-      onClick={() => handleCategoryClick(category.id, category.variantCount)}
-    >
-      <div className="relative aspect-[1/1] bg-gray-50">
-        <div className="relative h-full w-full">
-          <Image
-            src={category.image}
-            alt={category.name}
-            fill
-            quality={25}
-            className={`object-cover ${category.variantCount < 1 ? 'grayscale' : ''}`}
-            loading="lazy"
-            priority={index < 4}
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-            onError={handleImageError}
-          />
+  const renderCompactCard = useCallback((category: category, index: number) => {
+    // Check if this category matches the current filter
+    const isActiveFilter = categoryFilter === category.id;
+    
+    return (
+      <div 
+        className={`group backdrop-blur-md shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100/50 flex flex-col h-full relative overflow-hidden ${
+          isActiveFilter ? 'ring-2 ring-green-500 ring-offset-2' : ''
+        }`}
+        style={{
+          border:'solid 1px transparent',
+          borderRadius:'1px',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(200,180,255,0.5) 100%)',
+          backdropFilter: 'blur(3px)',
+          WebkitBackdropFilter: 'blur(3px)'
+        }}
+        onClick={() => handleCategoryClick(category.id, category.variantCount)}
+      >
+        {/* Pulsing green indicator overlay when category matches filter */}
+        {isActiveFilter && (
+          <>
+            <div className="absolute inset-0 pointer-events-none z-10">
+              <div className="absolute inset-0 bg-green-500 opacity-20 animate-pulse" />
+            </div>
+            <div className="absolute top-2 right-2 z-20">
+              <div className="relative">
+                <div className="w-3 h-3 bg-green-500 rounded-full animate-ping" />
+                <div className="w-3 h-3 bg-green-500 rounded-full absolute top-0 animate-pulse" />
+              </div>
+            </div>
+          </>
+        )}
+        
+        <div className="relative aspect-[1/1] bg-gray-50">
+          <div className="relative h-full w-full">
+            <Image
+              src={category.image}
+              alt={category.name}
+              fill
+              quality={25}
+              className={`object-cover ${category.variantCount < 1 ? 'grayscale' : ''}`}
+              loading="lazy"
+              priority={index < 4}
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+              onError={handleImageError}
+            />
+          </div>
+          <div className="absolute top-1 right-1">
+            <div className={`w-2 h-2 rounded-full ${category.variantCount > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+          </div>
         </div>
-        <div className="absolute top-1 right-1">
-          <div className={`w-2 h-2 rounded-full ${category.variantCount > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+        
+        <div className="p-1.5">
+          <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
+          <div className="flex justify-between items-center mt-0.5">
+            <span className="text-xs text-gray-500">{category.variantCount} items</span>
+            <span className="text-xs text-blue-600 font-medium">→</span>
+          </div>
         </div>
       </div>
-      
-      <div className="p-1.5">
-        <h4 className="font-medium text-gray-800 text-xs truncate">{category.name}</h4>
-        <div className="flex justify-between items-center mt-0.5">
-          <span className="text-xs text-gray-500">{category.variantCount} items</span>
-          <span className="text-xs text-blue-600 font-medium">→</span>
-        </div>
-      </div>
-    </div>
-  ), [handleCategoryClick, handleImageError]);
+    );
+  }, [handleCategoryClick, handleImageError, categoryFilter]);
 
   // Prevent memory leaks by clearing any pending state updates
   useEffect(() => {
