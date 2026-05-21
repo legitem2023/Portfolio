@@ -16,7 +16,7 @@ interface MobileProductCardProps {
   uploadingVariantId?: string | null;
   refetch?: any;
   isUploading: boolean;
-  supplierId:String;
+  supplierId:string;
 }
 
 export default function MobileProductCard({
