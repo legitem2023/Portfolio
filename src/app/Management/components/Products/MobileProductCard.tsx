@@ -16,6 +16,7 @@ interface MobileProductCardProps {
   uploadingVariantId?: string | null;
   refetch?: any;
   isUploading: boolean;
+  supplierId:string;
 }
 
 export default function MobileProductCard({
@@ -27,7 +28,8 @@ export default function MobileProductCard({
   onVariantImageUpload,
   uploadingVariantId,
   refetch,
-  isUploading
+  isUploading,
+  supplierId
 }: MobileProductCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -263,6 +265,7 @@ console.log(filteredCategoryNames);
                       refetch={refetch}
                       isUploading={uploadingVariantId === variant.id}
                       productCategoryName={filteredCategoryNames}
+                      supplierId={supplierId}
                       //onEdit={handleEditVariant}
                     />
                   );
