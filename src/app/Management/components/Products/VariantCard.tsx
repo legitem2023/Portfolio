@@ -451,21 +451,6 @@ export default function VariantCard({
                     </button>
                   </>
                 )}
-
-                {/* Upload Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 hover:opacity-100 active:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 w-[calc(100%-1rem)] sm:w-auto">
-                    <button
-                      onClick={handleAddImageClick}
-                      className="w-full sm:w-auto bg-white text-gray-900 px-3 py-2 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
-                    >
-                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                      </svg>
-                      <span>Add Image</span>
-                    </button>
-                  </div>
-                </div>
               </div>
 
               {/* Thumbnails */}
@@ -504,6 +489,20 @@ export default function VariantCard({
                   </Swiper>
                 </div>
               )}
+
+              {/* Upload Button - Always visible when images exist */}
+              <div className="flex justify-center">
+                <button
+                  onClick={handleAddImageClick}
+                  disabled={isUploading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span>{isUploading ? 'Uploading...' : 'Add Another Image'}</span>
+                </button>
+              </div>
             </div>
           ) : (
             /* Empty State */
@@ -517,12 +516,13 @@ export default function VariantCard({
                 <p className="text-gray-500 text-xs sm:text-sm mb-3">No images yet</p>
                 <button
                   onClick={handleAddImageClick}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-all duration-200"
+                  disabled={isUploading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center space-x-2 hover:bg-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  <span>Upload Image</span>
+                  <span>{isUploading ? 'Uploading...' : 'Upload Image'}</span>
                 </button>
               </div>
             </div>
@@ -852,4 +852,4 @@ export default function VariantCard({
       />
     </div>
   );
-      }
+                                            }
