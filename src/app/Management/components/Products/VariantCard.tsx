@@ -5,6 +5,7 @@ import { Navigation, Pagination, Thumbs } from 'swiper/modules';
 import { useMutation } from '@apollo/client';
 import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
 import sizeData from '../Json/sizes.json';
+import { useAuth } from '../../hooks/useAuth';
 
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 
@@ -61,6 +62,17 @@ export default function VariantCard({
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomSize, setShowCustomSize] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, loading: authLoading } = useAuth();
+
+  // Get food categories data
+  const { foodCategories, loading: categoriesLoading } = useFoodCategories(user?.userId);
+  
+  // State for flavor selection
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedItem, setSelectedItem] = useState('');
+  
+  // Extract food categories array
+  const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
   
   // Determine if this variant should show as Flavor or Color
   const showAsFlavor = !shouldShowColorSwatch(variant.color || '');
@@ -105,6 +117,21 @@ export default function VariantCard({
     }
   }, [isEditing, variant.size, isFoodDrinks]);
 
+  // Initialize flavor selection when editing a food product
+  useEffect(() => {
+    if (isFoodDrinks && isEditing && variant.color && foodCategoriesArray.length > 0) {
+      // Find which category and item matches the current flavor
+      for (const category of foodCategoriesArray) {
+        const foundItem = category.items?.find((item: any) => item.name === variant.color);
+        if (foundItem) {
+          setSelectedCategory(category.id);
+          setSelectedItem(foundItem.id);
+          break;
+        }
+      }
+    }
+  }, [isEditing, variant.color, isFoodDrinks, foodCategoriesArray]);
+
   // Reset edit data when variant changes
   useEffect(() => {
     if (!isEditing) {
@@ -117,6 +144,8 @@ export default function VariantCard({
         salePrice: variant.salePrice?.toString() || '',
         stock: variant.stock?.toString() || ''
       });
+      setSelectedCategory('');
+      setSelectedItem('');
     }
   }, [variant, isEditing]);
 
@@ -163,6 +192,8 @@ export default function VariantCard({
     setIsEditing(false);
     setSelectedSizeParent('');
     setShowCustomSize(false);
+    setSelectedCategory('');
+    setSelectedItem('');
     setEditData({
       name: variant.name,
       sku: variant.sku || '',
@@ -197,6 +228,8 @@ export default function VariantCard({
       setIsEditing(false);
       setSelectedSizeParent('');
       setShowCustomSize(false);
+      setSelectedCategory('');
+      setSelectedItem('');
       refetch();
     } catch (error) {
       console.error('Error updating variant:', error);
@@ -206,7 +239,7 @@ export default function VariantCard({
     }
   };
 
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditData(prev => ({ ...prev, [name]: value }));
   };
@@ -221,6 +254,19 @@ export default function VariantCard({
 
   const handleSizeSelect = (size: string) => {
     setEditData(prev => ({ ...prev, size }));
+  };
+
+  const handleCategoryChange = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setSelectedItem('');
+    setEditData(prev => ({ ...prev, color: '' }));
+  };
+
+  const handleItemChange = (itemId: string) => {
+    const selectedCategoryObj = foodCategoriesArray.find((cat: any) => cat.id === selectedCategory);
+    const selectedItemObj = selectedCategoryObj?.items.find((item: any) => item.id === itemId);
+    setSelectedItem(itemId);
+    setEditData(prev => ({ ...prev, color: selectedItemObj?.name || itemId }));
   };
 
   const hasImages = variant.images && variant.images.length > 0;
@@ -492,25 +538,73 @@ export default function VariantCard({
               <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
                 {displayLabel}
               </label>
-              <div className="flex gap-2">
-                {/* Only show color picker for hex colors */}
-                {!showAsFlavor && (
+              
+              {isFoodDrinks ? (
+                // Dropdown selection for Foods and Drinks category
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Food Category
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      value={selectedCategory}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      disabled={categoriesLoading}
+                    >
+                      <option value="">Select category</option>
+                      {foodCategoriesArray.map((category: any) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {selectedCategory && (
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Food Item (Flavor)
+                      </label>
+                      <select
+                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        value={selectedItem}
+                        onChange={(e) => handleItemChange(e.target.value)}
+                      >
+                        <option value="">Select item</option>
+                        {foodCategoriesArray
+                          .find((cat: any) => cat.id === selectedCategory)
+                          ?.items.map((item: any) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name}
+                            </option>
+                          ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Selected item will be used as flavor
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Color picker for non-food categories
+                <div className="flex gap-2">
                   <input
                     type="color"
                     value={editData.color && editData.color.startsWith('#') ? editData.color : '#000000'}
                     onChange={(e) => setEditData(prev => ({ ...prev, color: e.target.value }))}
                     className="w-10 h-10 rounded border border-gray-300 cursor-pointer"
                   />
-                )}
-                <input
-                  type="text"
-                  name="color"
-                  value={editData.color}
-                  onChange={handleEditChange}
-                  className={`${!showAsFlavor ? 'flex-1' : 'w-full'} px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`}
-                  placeholder={showAsFlavor ? "Flavor name" : "Color name or hex code"}
-                />
-              </div>
+                  <input
+                    type="text"
+                    name="color"
+                    value={editData.color}
+                    onChange={handleEditChange}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    placeholder="Color name or hex code"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Size - Conditional rendering based on category */}
@@ -756,4 +850,4 @@ export default function VariantCard({
       />
     </div>
   );
-}
+      }
