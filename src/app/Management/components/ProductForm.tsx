@@ -414,7 +414,7 @@ export default function ProductForm({
               {selectedCategory && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Food Item (Flavor)
+                    Food Item (Choices)
                   </label>
                   <select
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
