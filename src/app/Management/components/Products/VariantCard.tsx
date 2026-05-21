@@ -78,7 +78,7 @@ export default function VariantCard({
   
   // Determine if this variant should show as Flavor or Color
   const showAsFlavor = !shouldShowColorSwatch(variant.color || '');
-  const displayLabel = showAsFlavor ? 'Flavor' : 'Color';
+  const displayLabel = showAsFlavor ? 'Choices' : 'Color';
   
   // Check if this is a Foods and Drinks category
   const isFoodDrinks = isFoodsAndDrinksCategory(productCategoryName);
