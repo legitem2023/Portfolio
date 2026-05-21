@@ -14,7 +14,7 @@ interface ProductTableProps {
   categories:category[];
   refetch: any;
   onProductDeleted?: () => void;
-  supplierId: String;
+  supplierId: string;
 } 
 
 const sortOptions: SortOption[] = [
