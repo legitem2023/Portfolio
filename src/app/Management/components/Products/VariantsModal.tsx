@@ -1,4 +1,4 @@
-import { useState } from 'react';
+/*import { useState } from 'react';
 import { Product, Variant } from '../../../../../types';
 import VariantCard from './VariantCard';
 import AddVariantForm from './AddVariantForm';
@@ -96,7 +96,7 @@ export default function VariantsModal({
       <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
         <div className="relative w-full max-w-4xl max-h-[90vh] sm:max-h-[80vh] bg-white shadow-xl rounded-t-2xl sm:rounded-2xl transform transition-all duration-300 ease-out">
           
-          {/* Header - Responsive padding */}
+          
           <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl z-10">
             <div className="flex-1 min-w-0 pr-2">
               <h2 className="text-base sm:text-xl font-semibold text-gray-900 truncate">{product.name}</h2>
@@ -116,7 +116,7 @@ export default function VariantsModal({
             </button>
           </div>
 
-          {/* Add Variant Button - Responsive padding and sizing */}
+          
           <div className="p-3 sm:p-6 border-b border-gray-200 bg-gray-50">
             <button
               onClick={toggleAddForm}
@@ -132,7 +132,7 @@ export default function VariantsModal({
             </button>
           </div>
 
-          {/* Add Form Container */}
+          
           {showAddForm && (
             <div className="border-b border-gray-200 max-h-[50vh] sm:max-h-none overflow-y-auto">
               <AddVariantForm 
@@ -146,7 +146,7 @@ export default function VariantsModal({
             </div>
           )}
 
-          {/* Variants List - Responsive grid */}
+          
           <div className="overflow-y-auto max-h-[calc(90vh-250px)] sm:max-h-[calc(80vh-250px)]">
             {safeVariants.length > 0 ? (
               <div className="p-3 sm:p-6">
@@ -196,3 +196,4 @@ function EmptyVariantsState() {
     </div>
   );
                 }
+*/
