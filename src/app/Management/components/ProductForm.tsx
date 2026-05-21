@@ -49,7 +49,7 @@ export default function ProductForm({
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
     if (selectedCategoryObj?.name === 'Foods and Drinks') {
-      return 'Flavor';
+      return 'Choices';
     }
     return 'Color';
   };
