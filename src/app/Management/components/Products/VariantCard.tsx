@@ -393,62 +393,64 @@ export default function VariantCard({
         <div className="relative">
           {hasImages ? (
             <div className="space-y-3 sm:space-y-4">
-              {/* Main Image Container */}
+              {/* Main Image Container - Fixed 1/1 Aspect Ratio */}
               <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl overflow-hidden">
-                <Swiper
-                  modules={[Navigation, Pagination, Thumbs]}
-                  navigation={{
-                    nextEl: '.swiper-button-next',
-                    prevEl: '.swiper-button-prev',
-                  }}
-                  pagination={{
-                    clickable: true,
-                    type: imageCount > 1 ? 'bullets' : 'fraction',
-                    dynamicBullets: isMobile,
-                  }}
-                  thumbs={{ swiper: thumbsSwiper }}
-                  spaceBetween={0}
-                  slidesPerView={1}
-                  className="h-full w-full aspect-ratio[1/1]"
-                >
-                  {variant.images!.map((image, index) => (
-                    <SwiperSlide key={index}>
-                      <div className="relative w-full h-full bg-gray-100">
-                        <img 
-                          src={image} 
-                          alt={`${variant.name} - Image ${index + 1}`}
-                          className="w-full h-48 sm:h-64 object-cover"
-                          loading="lazy"
-                        />
-                        
-                        <button
-                          onClick={() => handleDeleteClick(index)}
-                          className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-red-600 p-1.5 sm:p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 shadow-lg z-20"
-                        >
-                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
+                <div className="relative w-full aspect-square">
+                  <Swiper
+                    modules={[Navigation, Pagination, Thumbs]}
+                    navigation={{
+                      nextEl: '.swiper-button-next',
+                      prevEl: '.swiper-button-prev',
+                    }}
+                    pagination={{
+                      clickable: true,
+                      type: imageCount > 1 ? 'bullets' : 'fraction',
+                      dynamicBullets: isMobile,
+                    }}
+                    thumbs={{ swiper: thumbsSwiper }}
+                    spaceBetween={0}
+                    slidesPerView={1}
+                    className="w-full h-full"
+                  >
+                    {variant.images!.map((image, index) => (
+                      <SwiperSlide key={index}>
+                        <div className="relative w-full h-full bg-gray-100">
+                          <img 
+                            src={image} 
+                            alt={`${variant.name} - Image ${index + 1}`}
+                            className="w-full h-full object-contain"
+                            loading="lazy"
+                          />
+                          
+                          <button
+                            onClick={() => handleDeleteClick(index)}
+                            className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-red-600 p-1.5 sm:p-2 rounded-lg hover:bg-red-600 hover:text-white transition-all duration-200 shadow-lg z-20"
+                          >
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
 
-                {/* Navigation Buttons */}
-                {imageCount > 1 && !isMobile && (
-                  <>
-                    <button className="swiper-button-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                      </svg>
-                    </button>
-                    <button className="swiper-button-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </>
-                )}
+                  {/* Navigation Buttons */}
+                  {imageCount > 1 && !isMobile && (
+                    <>
+                      <button className="swiper-button-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button className="swiper-button-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-800 w-7 h-7 rounded-full hover:bg-white shadow-lg transition-all duration-200 flex items-center justify-center z-20">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Thumbnails */}
@@ -850,4 +852,4 @@ export default function VariantCard({
       />
     </div>
   );
-                                            }
+                    }
