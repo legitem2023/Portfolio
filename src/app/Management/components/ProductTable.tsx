@@ -14,6 +14,7 @@ interface ProductTableProps {
   categories:category[];
   refetch: any;
   onProductDeleted?: () => void;
+  supplierId: string;
 } 
 
 const sortOptions: SortOption[] = [
@@ -27,7 +28,7 @@ const sortOptions: SortOption[] = [
   { value: 'createdAt-asc', label: 'Oldest First', direction: 'asc' },
 ];
 
-export default function ProductTable({ products,refetch,categories, onProductDeleted }: ProductTableProps) {
+export default function ProductTable({ products,refetch,categories, onProductDeleted,supplierId }: ProductTableProps) {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null);
@@ -251,6 +252,7 @@ export default function ProductTable({ products,refetch,categories, onProductDel
             uploadingVariantId={uploadingVariantId}
             refetch={refetch}
             isUploading={uploadingProductId === product.id}
+            supplierId={supplierId}
           />
         ))}
       </div>
