@@ -566,7 +566,7 @@ export default function VariantCard({
                   {selectedCategory && (
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Food Item (Flavor)
+                        Food Item (Choices)
                       </label>
                       <select
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
