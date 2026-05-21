@@ -363,7 +363,7 @@ export default function AddVariantForm({
               {/* Variant Name - Changes for Foods and Drinks */}
               <div>
                 <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
-                  {isFoodsAndDrinks() ? 'Flavor / Item Name' : 'Variant Name'} <span className="text-red-500">*</span>
+                  {isFoodsAndDrinks() ? 'Choices / Item Name' : 'Variant Name'} <span className="text-red-500">*</span>
                 </label>
                 
                 {isFoodsAndDrinks() ? (
