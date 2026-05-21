@@ -409,9 +409,7 @@ export default function VariantCard({
                   thumbs={{ swiper: thumbsSwiper }}
                   spaceBetween={0}
                   slidesPerView={1}
-                  className="h-full w-full"
-                  touchRatio={1.5}
-                  resistanceRatio={0.85}
+                  className="h-full w-full aspect-ratio[1/1]"
                 >
                   {variant.images!.map((image, index) => (
                     <SwiperSlide key={index}>
