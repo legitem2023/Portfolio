@@ -22,6 +22,7 @@ interface VariantCardProps {
   refetch: any;
   isUploading: boolean;
   productCategoryName?: string;
+  supplierId:string;
 }
 
 // Helper function to check if a color is a valid hex color
@@ -52,7 +53,8 @@ export default function VariantCard({
   onImageDelete,
   refetch,
   isUploading,
-  productCategoryName
+  productCategoryName,
+  supplierId
 }: VariantCardProps) {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
@@ -65,7 +67,7 @@ export default function VariantCard({
   const { user, loading: authLoading } = useAuth();
 
   // Get food categories data
-  const { foodCategories, loading: categoriesLoading } = useFoodCategories(user?.userId);
+  const { foodCategories, loading: categoriesLoading } = useFoodCategories(supplierId);
   
   // State for flavor selection
   const [selectedCategory, setSelectedCategory] = useState('');
