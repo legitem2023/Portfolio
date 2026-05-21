@@ -3,7 +3,7 @@ import ProductTable from './ProductTable';
 import ProductForm from './ProductForm';
 import Tabs from './Tabs';
 interface ProductsTabProps {
-  supplierId: String;
+  supplierId: string;
   products: Product[];
   refetch:any;
   categories: category[];
