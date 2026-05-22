@@ -1,35 +1,32 @@
-name: Mirror Repository Incremental
+name: Mirror Repository
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - main  # change if your default branch is different
+      - main
 
 jobs:
   mirror:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the source repository
+      # Step 1: Checkout source with full history
       - name: Checkout source repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.MIRROR_DVN }}  # PAT of legitem2023
+          token: ${{ secrets.MIRROR_DVN }}
 
-      # Step 2: Add mirror remote
-      - name: Add mirror remote
+      # Step 2: Configure git
+      - name: Configure git
+        run: |
+          git config --global user.name "legitem2023"
+          git config --global user.email "your-email@example.com"
+
+      # Step 3: Push using mirror (THIS IS THE KEY CHANGE)
+      - name: Mirror to destination
         env:
           MIRROR_TOKEN: ${{ secrets.MIRROR_DVN }}
         run: |
-          git remote add mirror https://legitem2023:${MIRROR_TOKEN}@github.com/vendorcity2026-source/VendorCity.git
-
-      # Step 3: Push only branches and tags
-      - name: Push branches
-        run: |
-          git push mirror --all
-
-      - name: Push tags
-        run: |
-          git push mirror --tags
+          git push --mirror https://legitem2023:${MIRROR_TOKEN}@github.com/vendorcity2026-source/VendorCity.git
