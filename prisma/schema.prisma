@@ -391,7 +391,7 @@ model ProductVariant {
   isActive    Boolean? @default(true)
   options     String[]
   createdAt   DateTime? @default(now())
-
+  description String?
   product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
   orders      OrderItem[]
   reviews     Review[]
