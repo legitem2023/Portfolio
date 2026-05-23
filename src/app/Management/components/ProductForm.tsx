@@ -2,7 +2,7 @@
 import { useMutation } from '@apollo/client';
 import { INSERTPRODUCT } from '../../components/graphql/mutation';
 import { NewProduct, category } from '../../../../types';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Pipette, Copy, Check } from 'lucide-react';
 import sizeData from './Json/sizes.json';
 import { useFoodCategories } from '../../components/hooks/useFoodCategories';
@@ -46,8 +46,20 @@ export default function ProductForm({
   const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(supplierId as string);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
-  // Extract the food_categories array from the response - handle both possible structures
+  // Extract the food_categories array from the response
   const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
+
+  const isFoodsAndDrinks = useCallback(() => {
+    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
+    return selectedCategoryObj?.name === 'Foods and Drinks';
+  }, [newProduct.categoryId, categories]);
+
+  useEffect(() => {
+    if (!isFoodsAndDrinks()) {
+      setSelectedCategory('');
+      setSelectedItem('');
+    }
+  }, [newProduct.categoryId, isFoodsAndDrinks]);
 
   const getColorLabel = () => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
@@ -112,13 +124,6 @@ export default function ProductForm({
       setIsPickingColor(false);
     }
   };
-
-  useEffect(() => {
-    if (!isFoodsAndDrinks()) {
-      setSelectedCategory('');
-      setSelectedItem('');
-    }
-  }, [newProduct.categoryId, isFoodsAndDrinks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,11 +200,6 @@ export default function ProductForm({
   };
 
   const commonSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-
-  const isFoodsAndDrinks = () => {
-    const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
-    return selectedCategoryObj?.name === 'Foods and Drinks';
-  };
 
   // Show loading screen while food categories are loading
   if (foodCatLoading) {
@@ -698,4 +698,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-      }
+            }
