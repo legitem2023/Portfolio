@@ -548,9 +548,13 @@ export default function VariantCard({
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Description
               {variant.description && !isEditing && !isDescriptionExpanded && (
-                <span className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline">
-                  {variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
-                </span>
+              <ConditionalContent 
+                content={variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
+                className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline"
+                textClassName="text-gray-700 text-sm md:text-base"
+                htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
+              />
+                
               )}
             </span>
           </div>
