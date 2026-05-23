@@ -8769,6 +8769,7 @@ loginWithGoogle: async (_: any, args: any) => {
             create: {
               name,
               sku:generatedSKU,
+              description,
               color,
               size,
               price,
