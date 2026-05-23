@@ -246,7 +246,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
           
           // Determine if this product uses flavors or colors
           const isFlavorProduct = uniqueColors.some(color => getColorDisplayType(color) === 'flavor');
-          const labelText = isFlavorProduct ? 'Flavors:' : 'Colors:';
+          const labelText = isFlavorProduct ? 'Choices:' : 'Colors:';
           
           // Calculate rating for display
           let displayRating = 0;
