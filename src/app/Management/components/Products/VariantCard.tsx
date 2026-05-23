@@ -582,9 +582,12 @@ export default function VariantCard({
           onChange={handleEditChange}
           />
           ) : (
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {variant.description || 'No description provided.'}
-            </p>
+            <ConditionalContent 
+                content={variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
+                className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline"
+                textClassName="text-gray-700 text-sm md:text-base"
+                htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
+              />           
           )}
         </div>
       </div>
