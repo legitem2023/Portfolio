@@ -6,9 +6,17 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Pipette, Copy, Check } from 'lucide-react';
 import sizeData from './Json/sizes.json';
 import { useFoodCategories } from '../../components/hooks/useFoodCategories';
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import type { Editor } from '@ckeditor/ckeditor5-core';
+import dynamic from 'next/dynamic';
+
+// Dynamically import CKEditor with no SSR
+const CKEditor = dynamic(
+  () => import('@ckeditor/ckeditor5-react').then(mod => mod.CKEditor),
+  { ssr: false }
+);
+const ClassicEditor = dynamic(
+  () => import('@ckeditor/ckeditor5-build-classic'),
+  { ssr: false }
+);
 
 interface ProductFormProps {
   supplierId: String;
@@ -40,6 +48,7 @@ export default function ProductForm({
   const [copySuccess, setCopySuccess] = useState('');
   const [isPickingColor, setIsPickingColor] = useState(false);
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
+  const [isMounted, setIsMounted] = useState(false);
   
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItem, setSelectedItem] = useState('');
@@ -48,6 +57,10 @@ export default function ProductForm({
 
   // Extract the food_categories array from the response
   const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const isFoodsAndDrinks = useCallback(() => {
     const selectedCategoryObj = categories.find(cat => cat.id === newProduct.categoryId);
@@ -258,43 +271,54 @@ export default function ProductForm({
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-        <CKEditor
-          editor={ClassicEditor}
-          data={newProduct.description}
-          onChange={(_event: any, editor: Editor) => {
-            const data = editor.getData();
-            setNewProduct({...newProduct, description: data});
-            setErrorMessage('');
-          }}
-          config={{
-            toolbar: [
-              'heading',
-              '|',
-              'bold',
-              'italic',
-              'underline',
-              'strikethrough',
-              '|',
-              'bulletedList',
-              'numberedList',
-              '|',
-              'link',
-              'blockQuote',
-              'insertTable',
-              '|',
-              'undo',
-              'redo'
-            ],
-            heading: {
-              options: [
-                { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
-                { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
-                { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
-                { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
-              ]
-            }
-          }}
-        />
+        {isMounted ? (
+          <CKEditor
+            editor={ClassicEditor}
+            data={newProduct.description}
+            onChange={(_event: any, editor: any) => {
+              const data = editor.getData();
+              setNewProduct({...newProduct, description: data});
+              setErrorMessage('');
+            }}
+            config={{
+              toolbar: [
+                'heading',
+                '|',
+                'bold',
+                'italic',
+                'underline',
+                'strikethrough',
+                '|',
+                'bulletedList',
+                'numberedList',
+                '|',
+                'link',
+                'blockQuote',
+                'insertTable',
+                '|',
+                'undo',
+                'redo'
+              ],
+              heading: {
+                options: [
+                  { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+                  { model: 'heading1', view: 'h1', title: 'Heading 1', class: 'ck-heading_heading1' },
+                  { model: 'heading2', view: 'h2', title: 'Heading 2', class: 'ck-heading_heading2' },
+                  { model: 'heading3', view: 'h3', title: 'Heading 3', class: 'ck-heading_heading3' }
+                ]
+              }
+            }}
+          />
+        ) : (
+          <textarea
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            rows={5}
+            value={newProduct.description}
+            onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
+            placeholder="Enter product description..."
+            required
+          />
+        )}
         <p className="text-xs text-gray-500 mt-1">
           Rich text formatting supported (bold, lists, links, tables, etc.)
         </p>
@@ -698,4 +722,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-            }
+              }
