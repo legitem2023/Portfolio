@@ -556,6 +556,7 @@ query GetUser($id: ID) {
              size
              price
              salePrice
+             description
              stock
              images
              model
@@ -754,6 +755,7 @@ export const GETPRODUCTS = gql`
           size
           price
           salePrice
+          description
           stock
           images
           model
@@ -810,6 +812,7 @@ export const GETPRODUCT = gql`
           size
           price
           salePrice
+          description
           stock
           images
           model
@@ -862,6 +865,7 @@ export const MANAGEMENTPRODUCTS = gql`
         size
         price
         salePrice
+        description
         stock
         images
         model
