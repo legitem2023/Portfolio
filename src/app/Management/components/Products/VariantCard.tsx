@@ -8,6 +8,8 @@ import sizeData from '../Json/sizes.json';
 import { useAuth } from '../../hooks/useAuth';
 import ConditionalContent from "../../../components/ConditionalContent";
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
+import dynamic from 'next/dynamic';
+
 const RichTextEditor = dynamic(
   () => import('../../../components/RichTextEditor'),
   { ssr: false }
