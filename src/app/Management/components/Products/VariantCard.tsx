@@ -6,7 +6,7 @@ import { useMutation } from '@apollo/client';
 import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
 import sizeData from '../Json/sizes.json';
 import { useAuth } from '../../hooks/useAuth';
-import ConditionalContent "../../../components/ConditionalContent";
+import ConditionalContent from "../../../components/ConditionalContent";
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 
 // Import Swiper styles
