@@ -459,6 +459,7 @@ type Item {
     color: String
     size: String
     price: Float
+    description: String
     salePrice: Float
     stock: Int
     images: [String]
