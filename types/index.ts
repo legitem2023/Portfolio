@@ -206,6 +206,7 @@ export interface Variant {
   color: string;
   price?: number;
   salePrice?: number;
+  description: string;
   images?: string[];
   model?: string;
   stock?: number;
