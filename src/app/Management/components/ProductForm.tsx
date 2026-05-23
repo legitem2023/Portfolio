@@ -8,6 +8,7 @@ import sizeData from './Json/sizes.json';
 import { useFoodCategories } from '../../components/hooks/useFoodCategories';
 import { CKEditor } from '@ckeditor/ckeditor5-react';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import type { Editor } from '@ckeditor/ckeditor5-core';
 
 interface ProductFormProps {
   supplierId: String;
@@ -117,7 +118,7 @@ export default function ProductForm({
       setSelectedCategory('');
       setSelectedItem('');
     }
-  }, [newProduct.categoryId]);
+  }, [newProduct.categoryId, isFoodsAndDrinks]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -260,7 +261,7 @@ export default function ProductForm({
         <CKEditor
           editor={ClassicEditor}
           data={newProduct.description}
-          onChange={(event, editor) => {
+          onChange={(_event: any, editor: Editor) => {
             const data = editor.getData();
             setNewProduct({...newProduct, description: data});
             setErrorMessage('');
@@ -697,4 +698,4 @@ export default function ProductForm({
       </button>
     </form>
   );
-}
+      }
