@@ -581,7 +581,7 @@ export default function VariantCard({
           {isEditing ? (
           <RichTextEditor
           value={editData.description}
-          onChange={handleEditChange}
+          onChange={(e:any)=>handleEditChange(e)}
           />
           ) : (
             <ConditionalContent 
