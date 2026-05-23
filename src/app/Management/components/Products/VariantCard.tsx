@@ -10,15 +10,20 @@ import ConditionalContent from "../../../components/ConditionalContent";
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
 import dynamic from 'next/dynamic';
 
-const RichTextEditor = dynamic(
-  () => import('../../../components/RichTextEditor'),
-  { ssr: false }
-);
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/thumbs';
+
+// Move RichTextEditor dynamic import inside component or ensure it's properly loaded
+const RichTextEditor = dynamic(
+  () => import('../../../components/RichTextEditor').then(mod => mod.default || mod),
+  { 
+    ssr: false,
+    loading: () => <div className="min-h-[200px] bg-gray-50 rounded-lg animate-pulse" />
+  }
+);
 
 interface VariantCardProps {
   variant: Variant;
@@ -69,6 +74,7 @@ export default function VariantCard({
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomSize, setShowCustomSize] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isClient, setIsClient] = useState(false); // Add client-side check
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, loading: authLoading } = useAuth();
 
@@ -103,6 +109,11 @@ export default function VariantCard({
   const [updateVariant] = useMutation(UPDATE_VARIANT_MUTATION, {
     refetchQueries: ['GetProducts']
   });
+
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Check if device is mobile
   useEffect(() => {
@@ -256,6 +267,11 @@ export default function VariantCard({
     setEditData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle RichTextEditor change properly
+  const handleDescriptionChange = (value: string) => {
+    setEditData(prev => ({ ...prev, description: value }));
+  };
+
   const handleSizeCategoryChange = (parent: string) => {
     setSelectedSizeParent(parent);
     setShowCustomSize(parent === 'Custom');
@@ -308,7 +324,7 @@ export default function VariantCard({
   // Responsive thumbnail count
   const getThumbnailSlidesPerView = () => {
     if (isMobile) return 3;
-    if (window.innerWidth < 768) return 4;
+    if (typeof window !== 'undefined' && window.innerWidth < 768) return 4;
     return 5;
   };
 
@@ -464,7 +480,7 @@ export default function VariantCard({
               </div>
 
               {/* Thumbnails */}
-              {imageCount > 1 && (
+              {imageCount > 1 && isClient && (
                 <div className="relative px-4">
                   <Swiper
                     modules={[Thumbs]}
@@ -553,13 +569,12 @@ export default function VariantCard({
             <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
               Description
               {variant.description && !isEditing && !isDescriptionExpanded && (
-              <ConditionalContent 
-                content={variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
-                className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline"
-                textClassName="text-gray-700 text-sm md:text-base"
-                htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
-              />
-                
+                <ConditionalContent 
+                  content={variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
+                  className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline"
+                  textClassName="text-gray-700 text-sm md:text-base"
+                  htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
+                />
               )}
             </span>
           </div>
@@ -578,18 +593,20 @@ export default function VariantCard({
             isDescriptionExpanded ? 'max-h-96 pb-3' : 'max-h-0'
           }`}
         >
-          {isEditing ? (
-          <RichTextEditor
-          value={editData.description}
-          onChange={(e:any)=>handleEditChange(e)}
-          />
+          {isEditing && isClient ? (
+            <RichTextEditor
+              value={editData.description}
+              onChange={handleDescriptionChange}
+            />
           ) : (
-            <ConditionalContent 
-                content={variant.description.length > 60 ? `${variant.description.substring(0, 60)}...` : variant.description.substring(0, 60)}
-                className="ml-2 text-[10px] text-gray-400 font-normal hidden sm:inline"
+            variant.description && (
+              <ConditionalContent 
+                content={variant.description}
+                className="mt-2"
                 textClassName="text-gray-700 text-sm md:text-base"
                 htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
-              />           
+              />
+            )
           )}
         </div>
       </div>
@@ -916,4 +933,4 @@ export default function VariantCard({
       />
     </div>
   );
-}
+        }
