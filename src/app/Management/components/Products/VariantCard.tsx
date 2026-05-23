@@ -8,7 +8,10 @@ import sizeData from '../Json/sizes.json';
 import { useAuth } from '../../hooks/useAuth';
 import ConditionalContent from "../../../components/ConditionalContent";
 import { UPDATE_VARIANT_MUTATION } from '../../../components/graphql/mutation';
-
+const RichTextEditor = dynamic(
+  () => import('../../../components/RichTextEditor'),
+  { ssr: false }
+);
 // Import Swiper styles
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -574,14 +577,10 @@ export default function VariantCard({
           }`}
         >
           {isEditing ? (
-            <textarea
-              name="description"
-              value={editData.description}
-              onChange={handleEditChange}
-              rows={4}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
-              placeholder="Add a description for this variant (e.g., ingredients, specifications, features, care instructions...)"
-            />
+          <RichTextEditor
+          value={editData.description}
+          onChange={handleEditChange}
+          />
           ) : (
             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
               {variant.description || 'No description provided.'}
