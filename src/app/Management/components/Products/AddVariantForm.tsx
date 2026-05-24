@@ -4,7 +4,7 @@ import { useMutation } from '@apollo/client';
 import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT } from '../../../components/graphql/mutation';
 import { Pipette, Copy, Check, Edit, Trash2, X } from 'lucide-react';
 import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../../components/hooks/useAuth';
 interface AddVariantFormProps {
   productId: string;
   refetch: any;
