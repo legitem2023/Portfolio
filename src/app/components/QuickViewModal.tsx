@@ -728,7 +728,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             {/* Description - Using your reusable ConditionalContent component */}
             <div className="mb-4 md:mb-6">
               <ConditionalContent 
-                content={product?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
+                content={selectedVariant?.description || 'This premium product features high-quality materials and exquisite craftsmanship. Designed for those who appreciate luxury and attention to detail.'}
                 className="text-gray-700 text-sm md:text-base"
                 textClassName="text-gray-700 text-sm md:text-base"
                 htmlClassName="text-gray-700 text-sm md:text-base prose prose-sm max-w-none"
