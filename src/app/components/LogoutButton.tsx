@@ -70,7 +70,7 @@ export default function LogoutButton() {
       <span className="flex-1 transition-all duration-300">
         {animationState === 'idle' && 'Logout'}
         {animationState === 'loading' && 'Logging out...'}
-        {animationState === 'success' && 'Logged out!'}
+        {animationState === 'success' && 'Exiting..!'}
       </span>
       
       <ChevronRight className={`text-gray-400 w-4 h-4 transform transition-all duration-300 group-hover:translate-x-1 ${
