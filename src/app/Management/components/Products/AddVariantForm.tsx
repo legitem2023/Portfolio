@@ -4,7 +4,18 @@ import { useMutation } from '@apollo/client';
 import { CREATE_VARIANT_MUTATION, UPDATE_VARIANT_MUTATION, DELETE_VARIANT } from '../../../components/graphql/mutation';
 import { Pipette, Copy, Check, Edit, Trash2, X } from 'lucide-react';
 import { useFoodCategories } from '../../../components/hooks/useFoodCategories';
-import { useAuth } from '../../../components/hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
+import dynamic from 'next/dynamic';
+
+// Dynamic import for RichTextEditor with SSR disabled
+const RichTextEditor = dynamic(
+  () => import('../../../components/RichTextEditor').then(mod => mod.default || mod),
+  { 
+    ssr: false,
+    loading: () => <div className="min-h-[200px] bg-gray-50 rounded-lg animate-pulse" />
+  }
+);
+
 interface AddVariantFormProps {
   productId: string;
   refetch: any;
@@ -24,6 +35,7 @@ interface FormData {
   price: string;
   salePrice: string;
   stock: string;
+  description: string; // Added description field
 }
 
 declare global {
@@ -49,7 +61,8 @@ export default function AddVariantForm({
     size: '',
     price: '',
     salePrice: '',
-    stock: ''
+    stock: '',
+    description: '' // Initialize description
   });
   const { user, loading: authLoading } = useAuth();
  
@@ -62,6 +75,7 @@ export default function AddVariantForm({
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [skuOption, setSkuOption] = useState<'blank' | 'manual'>('blank');
+  const [isClient, setIsClient] = useState(false); // Add client-side check
   
   // Food selection states
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -74,6 +88,11 @@ export default function AddVariantForm({
   const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
 
   const colorInputRef = useRef<HTMLInputElement>(null);
+
+  // Set client-side flag
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const isFoodsAndDrinks = () => {
     return productCategoryName === 'Foods and Drinks';
@@ -137,7 +156,8 @@ export default function AddVariantForm({
         size: editingVariant.size || '',
         price: editingVariant.price?.toString() || '',
         salePrice: editingVariant.salePrice?.toString() || '',
-        stock: editingVariant.stock?.toString() || ''
+        stock: editingVariant.stock?.toString() || '',
+        description: editingVariant.description || '' // Include description when editing
       });
       
       if (editingVariant.sku) {
@@ -187,6 +207,11 @@ export default function AddVariantForm({
     }
   };
 
+  // Handle RichTextEditor change
+  const handleDescriptionChange = (value: string) => {
+    setFormData(prev => ({ ...prev, description: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
@@ -203,7 +228,8 @@ export default function AddVariantForm({
       size: formData.size || undefined,
       price: formData.price ? parseFloat(formData.price) : undefined,
       salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-      stock: parseInt(formData.stock) || 0
+      stock: parseInt(formData.stock) || 0,
+      description: formData.description || undefined // Include description in mutation
     };
 
     try {
@@ -275,7 +301,8 @@ export default function AddVariantForm({
       size: '',
       price: '',
       salePrice: '',
-      stock: ''
+      stock: '',
+      description: '' // Reset description
     });
     setSelectedSizeParent('');
     setShowCustomInput(false);
@@ -492,8 +519,6 @@ export default function AddVariantForm({
                   </div>
                 )}
               </div>
-
-              
             </div>
 
             {/* Right Column - Pricing */}
@@ -542,6 +567,26 @@ export default function AddVariantForm({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Description Section - Rich Text Editor */}
+        <div className="pt-2 border-t border-gray-100">
+          <label className="block text-sm font-semibold text-gray-700 mb-4">
+            Description
+          </label>
+          <div className="space-y-2">
+            {isClient ? (
+              <RichTextEditor
+                value={formData.description}
+                onChange={handleDescriptionChange}
+              />
+            ) : (
+              <div className="min-h-[200px] bg-gray-50 rounded-lg animate-pulse" />
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Add detailed description, ingredients, specifications, or care instructions.
+            </p>
           </div>
         </div>
 
@@ -734,22 +779,22 @@ export default function AddVariantForm({
               </>
             )}
           </div>
-          <div>
-              <label htmlFor="stock" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Stock Quantity <span className="text-red-500">*</span>
-              </label>
-                <input
-                  type="number"
-                  id="stock"
-                  name="stock"
-                  required
-                  value={formData.stock}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
-                  placeholder="0"
-                  min="0"
-                />
-              </div>
+          <div className="mt-4">
+            <label htmlFor="stock" className="block text-sm font-semibold text-gray-700 mb-2">
+              Stock Quantity <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              id="stock"
+              name="stock"
+              required
+              value={formData.stock}
+              onChange={handleChange}
+              className="w-full px-4 py-2.5 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 hover:border-gray-400"
+              placeholder="0"
+              min="0"
+            />
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -784,4 +829,4 @@ export default function AddVariantForm({
       </form>
     </div>
   );
-}
+                         }
