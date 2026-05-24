@@ -8921,6 +8921,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     if (input.price !== undefined) updateData.price = input.price;
     if (input.salePrice !== undefined) updateData.salePrice = input.salePrice;
     if (input.stock !== undefined) updateData.stock = input.stock;
+    if (input.description !== undefined) updateData.description = input.description;
 
     // Update the variant
     const variant = await prisma.productVariant.update({
