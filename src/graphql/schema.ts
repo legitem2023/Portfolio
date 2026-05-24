@@ -1772,6 +1772,7 @@ input UpdateItemInput {
     size: String
     price: Float
     salePrice: Float
+    description: String
     stock: Int
   }
   
