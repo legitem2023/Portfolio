@@ -547,7 +547,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
             {/* Variant-specific details */}
             {selectedVariant && (
               <div className="mb-3 text-sm text-gray-600">
-                {selectedColor && <span>Flavor: {selectedColor}</span>}
+                {selectedColor && <span>Option: {selectedColor}</span>}
                 {selectedSize && <span className="ml-2">Size: {selectedSize}</span>}
                 {selectedVariant.sku && <div className="mt-1">SKU: {selectedVariant.sku}</div>}
               </div>
@@ -590,11 +590,11 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
               </div>
             </div>
 
-            {/* Color/Flavor Selection - Conditional rendering based on category */}
+            {/* Option Selection - Universal label */}
             {uniqueColors.length > 0 && (
               <div className="mb-4 md:mb-6">
                 <h3 className="text-sm font-medium text-gray-900 mb-2">
-                  {isFoodsAndDrinks ? "Select Flavor:" : "Select Color:"}
+                  Select Option:
                 </h3>
                 <div className="flex flex-wrap gap-3">
                   {uniqueColors.map((color, index) => (
@@ -636,7 +636,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                           }}
                         />
                       )}
-                      {/* Color/Flavor name */}
+                      {/* Option name */}
                       <span className={`text-xs font-medium ${
                         selectedColor === color 
                           ? 'text-amber-600' 
