@@ -323,11 +323,11 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
-                            {variant?.color && (
+                            {/*variant?.color && (
                               <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
                                 {variant.color}
                               </div>
-                            )}
+                            )*/}
                           </div>
                         </SwiperSlide>
                       ))}
