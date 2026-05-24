@@ -247,6 +247,7 @@ console.log(filteredCategoryNames);
                   editingVariant={editingVariant}
                   setEditingVariant={setEditingVariant}
                   productCategoryName={filteredCategoryNames}
+                  supplierId={supplierId}
                 />
               </div>
             )}
