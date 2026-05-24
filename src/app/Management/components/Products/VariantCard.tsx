@@ -74,7 +74,7 @@ export default function VariantCard({
   const [selectedSizeParent, setSelectedSizeParent] = useState('');
   const [showCustomSize, setShowCustomSize] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [isClient, setIsClient] = useState(false); // Add client-side check
+  const [isClient, setIsClient] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, loading: authLoading } = useAuth();
 
@@ -140,7 +140,6 @@ export default function VariantCard({
   // Initialize flavor selection when editing a food product
   useEffect(() => {
     if (isFoodDrinks && isEditing && variant.color && foodCategoriesArray.length > 0) {
-      // Find which category and item matches the current flavor
       for (const category of foodCategoriesArray) {
         const foundItem = category.items?.find((item: any) => item.name === variant.color);
         if (foundItem) {
@@ -267,7 +266,6 @@ export default function VariantCard({
     setEditData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle RichTextEditor change properly
   const handleDescriptionChange = (value: string) => {
     setEditData(prev => ({ ...prev, description: value }));
   };
@@ -371,32 +369,8 @@ export default function VariantCard({
               )}
             </div>
             
-            {/* Edit/Save/Cancel Buttons */}
-            {isEditing ? (
-              <div className="flex gap-2 flex-shrink-0">
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={isSaving}
-                  className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEdit}
-                  disabled={isSaving}
-                  className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <span>Save</span>
-                  )}
-                </button>
-              </div>
-            ) : (
+            {/* Only show edit button in header when NOT editing */}
+            {!isEditing && (
               <button
                 onClick={handleEditClick}
                 className="flex-shrink-0 p-2 sm:p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg sm:rounded-xl transition-all duration-200 active:bg-blue-100"
@@ -859,7 +833,7 @@ export default function VariantCard({
         )}
       </div>
       
-      {/* Footer */}
+      {/* Footer with Action Buttons */}
       <div className="px-4 sm:px-5 py-3 bg-white">
         <div className="flex flex-col gap-2">
           <div className="text-[10px] text-gray-400">
@@ -867,12 +841,46 @@ export default function VariantCard({
             <div className="font-mono text-[9px] mt-0.5">ID: {variant.id.slice(-8)}</div>
           </div>
           
-          {!isEditing && (
+          {isEditing ? (
+            /* Save and Cancel buttons at the bottom when editing */
+            <div className="flex gap-3">
+              <button
+                onClick={handleCancelEdit}
+                disabled={isSaving}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200 disabled:opacity-50"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={isSaving}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            /* Edit Details button when not editing */
             <button
               onClick={handleEditClick}
-              className="w-full inline-flex items-center justify-center px-3 py-2 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200"
+              className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-all duration-200"
             >
-              <svg className="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               Edit Details
@@ -930,4 +938,4 @@ export default function VariantCard({
       />
     </div>
   );
-                          }
+}
