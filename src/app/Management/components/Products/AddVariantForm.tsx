@@ -82,7 +82,7 @@ export default function AddVariantForm({
   const [selectedItem, setSelectedItem] = useState('');
 
   // Use the food categories hook
-  const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(user?.userId as string);
+  const { loading: foodCatLoading, error: foodCatError, foodCategories } = useFoodCategories(supplierId as string);
   
   // Extract the food_categories array from the response - handle both possible structures
   const foodCategoriesArray = foodCategories?.food_categories || (Array.isArray(foodCategories) ? foodCategories : []);
