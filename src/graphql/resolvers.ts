@@ -4448,6 +4448,7 @@ products: async (
             color: true,
             size: true,
             price: true,
+            description:true,
             salePrice: true,
             stock: true,
             images: true,
