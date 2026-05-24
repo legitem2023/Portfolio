@@ -8840,6 +8840,7 @@ loginWithGoogle: async (_: any, args: any) => {
             price: input.price,
             salePrice: input.salePrice,
             stock: input.stock,
+            description: input.description,
             images: [], // Default empty array
             options: [], // Default empty array
             isActive: true
