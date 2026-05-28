@@ -319,7 +319,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                               onClick={() => variant && handleQuickView(product, variant)}
                               src={image || '/NoImage.webp'}
                               alt={`${product.name}${variant?.color ? ` - ${variant.color}` : ''}`}
-                              quality={25}
+                              quality={100}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                             />
