@@ -45,7 +45,7 @@ export default function LogoutButton() {
   
   return (  
     <button
-      className="w-full flex items-center px-4 py-3 text-left text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm relative overflow-hidden"
+      className="w-full flex items-center px-4 py-3 text-left text-gray-700 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm relative overflow-hidden"
       disabled={isLoggingOut}
       onClick={handleLogout}
     >
@@ -70,7 +70,7 @@ export default function LogoutButton() {
       <span className="flex-1 transition-all duration-300">
         {animationState === 'idle' && 'Logout'}
         {animationState === 'loading' && 'Logging out...'}
-        {animationState === 'success' && 'Exiting..!'}
+        {animationState === 'success' && 'Logging out...'}
       </span>
       
       <ChevronRight className={`text-gray-400 w-4 h-4 transform transition-all duration-300 group-hover:translate-x-1 ${
