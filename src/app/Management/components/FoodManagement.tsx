@@ -470,7 +470,7 @@ const FoodManagement: React.FC<FoodManagementProps> = ({ accountId }) => {
                         onClick={() => openCreateItemModal(category.id)}
                         className="px-3 py-1.5 md:px-4 md:py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 active:bg-green-800 transition-colors"
                       >
-                        + Add Item
+                        + Add Option
                       </button>
                       <button
                         onClick={() => openEditCategoryModal(category)}
