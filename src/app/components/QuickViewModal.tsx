@@ -637,13 +637,13 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({
                         />
                       )}
                       {/* Option name */}
-                      <span className={`text-xs font-medium ${
-                        selectedColor === color 
-                          ? 'text-amber-600' 
-                          : 'text-gray-600'
-                      }`}>
-                        {color}
-                      </span>
+<span className={`text-xs font-medium ${
+    selectedColor === color 
+      ? 'text-amber-600' 
+      : 'text-gray-600'
+  }`}>
+    {color.length > 10 ? `${color.slice(0, 10)}...` : color}
+</span>
                     </button>
                   ))}
                 </div>
