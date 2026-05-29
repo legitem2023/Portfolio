@@ -7605,6 +7605,84 @@ rejectByRider: async (_: any, { itemId, riderId }: any) => {
     };
   }
 },*/
+assignNewRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
+  try {  
+    // Check if rider has more than 3 active deliveries (PROCESSING or SHIPPED)
+    const activeDeliveriesCount = await prisma.orderItem.count({
+      where: {
+        riderId: riderId,
+        status: {
+          in: ['PROCESSING', 'SHIPPED']
+        }
+      }
+    });
+
+    if (activeDeliveriesCount > 3) {
+      return {
+        statusText: "You should complete the active delivery first"
+      };
+    }
+
+    const rider = await prisma.user.findUnique({
+      where: { id: riderId },
+      select: { 
+        firstName: true, 
+        email:true 
+      }
+    });
+    
+    const trackingNumber = await generateTrackingNumber(supplierId);
+    const updatedOrder = await prisma.orderItem.updateMany({
+        where: { 
+          orderId: itemId,
+          supplierId: supplierId
+        },
+        data:{
+          status: 'PROCESSING',
+          riderId: riderId,
+          trackingNumber: trackingNumber
+        }
+    });
+
+    await prisma.payment.updateMany({
+        where:{
+          supplierId,
+          orderId: itemId
+        },
+        data:{
+          riderId
+        }
+      })
+    
+     await prisma.notification.create({
+        data: { 
+          type: NotificationType.ORDER_UPDATED,
+          userId: supplierId,
+          title: 'Successfully assigned',
+          message: 'You have successfully assigned rider'
+        }
+      });
+    
+      // Create delivery record
+    await prisma.notification.create({
+        data: { 
+          type: NotificationType.ORDER_UPDATED,
+          userId: userId,
+          title: 'Rider assigned',
+          message: 'Rider assigned to your order delivery'
+        }
+      });
+      
+      return {
+        statusText: "Successfully Assigned!"
+      }
+  } catch (error) {
+    console.error('Error accepting order:', error);
+    return {
+      statusText: 'Failed to accept order'
+    };
+  }
+    },
     acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
   try {  
     // Check if rider has more than 3 active deliveries (PROCESSING or SHIPPED)
