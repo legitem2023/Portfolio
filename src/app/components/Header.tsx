@@ -1,4 +1,4 @@
-// components/Header.tsx (FULL UPDATED VERSION WITH ALL NOTIFICATION TYPES)
+// components/Header.tsx (UPDATED - Menu button becomes Login icon when no user)
 "use client";
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import Image from 'next/image';
@@ -27,7 +27,8 @@ import {
   RefreshCw,
   XCircle,
   Gift,
-  Headphones
+  Headphones,
+  LogIn
 } from 'lucide-react';
 import FBXViewer from './FBXViewer';
 // Import queries and mutations
@@ -456,12 +457,18 @@ const Header: React.FC = () => {
   const handleUserButtonClick = useCallback(() => {
     if (isAuthPage) return;
     
+    // If no user is logged in, redirect to login
+    if (!isUserLoggedIn) {
+      router.push('/Login');
+      return;
+    }
+    
     if (isMobile()) {
       setIsModalOpen(true);
     } else {
       setIsDropdownOpen(!isDropdownOpen);
     }
-  }, [isAuthPage, isMobile]);
+  }, [isAuthPage, isMobile, isUserLoggedIn, router]);
 
   const handleBellButtonClick = useCallback(() => {
     if (isAuthPage) return;
@@ -976,11 +983,16 @@ const Header: React.FC = () => {
                   className="flex items-center text-sm focus:outline-none group"
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
-                    <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
+                    {/* Show Login icon when no user, Menu icon when user is logged in */}
+                    {!isUserLoggedIn ? (
+                      <LogIn className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
+                    )}
                   </div>
                 </button>
                 
-                {isDropdownOpen && !isMobile() && hasCheckedAuth && (
+                {isDropdownOpen && !isMobile() && hasCheckedAuth && isUserLoggedIn && (
                   <div className="absolute right-0 mt-2 w-48 bg-white bg-opacity-95 backdrop-blur-md rounded-md shadow-lg py-1 customZIndex border border-gray-200 transform transition-all duration-300 ease-out origin-top-right"
                     style={{
                       transform: isDropdownOpen ? 'scale(1) translateY(0)' : 'scale(0.95) translateY(-10px)',
@@ -1056,7 +1068,7 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {isModalOpen && isMobile() && !isAuthPage && hasCheckedAuth && (
+      {isModalOpen && isMobile() && !isAuthPage && hasCheckedAuth && isUserLoggedIn && (
         <>
           <div 
             className="fixed inset-0 bg-black z-40 md:hidden transition-all duration-300 ease-out"
