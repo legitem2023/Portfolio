@@ -169,7 +169,7 @@ export default function ManagementDashboard() {
         return (
           <ParentTab
              title="Category Management"
-             description="Easily add, edit, update, and delete categories. Used for."
+             description="Easily add, edit, update, and delete product categories. Organize them with parent-child relationships for nested menus."
              showRefresh={false}>
           <CategoriesTab
             categories={categories}
