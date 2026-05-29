@@ -164,17 +164,9 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-3 sm:px-4 md:px-6 py-4 sm:py-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-4 sm:mb-6 md:mb-8">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
-            User Management
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
-            Manage user roles and permissions
-          </p>
-        </div>
+    <div>
+      <div>
+
 
         {/* Mobile Tabs Dropdown */}
         <div className="block sm:hidden mb-4">
