@@ -149,7 +149,7 @@ export default function ManagementDashboard() {
         return (
           <ParentTab
              title="Users Management"
-             description=""
+             description="Manage user roles and permissions"
              showRefresh={false}>
                <UsersTab />
           </ParentTab>
