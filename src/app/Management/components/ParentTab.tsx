@@ -9,6 +9,8 @@ interface ParentTabProps {
   showRefresh?: boolean;
   children?: ReactNode;
   className?: string;
+  spacing?: 'none' | 'sm' | 'md' | 'lg';
+  noPadding?: boolean;
 }
 
 const ParentTab: React.FC<ParentTabProps> = ({
@@ -19,11 +21,20 @@ const ParentTab: React.FC<ParentTabProps> = ({
   showRefresh = true,
   children,
   className = '',
+  spacing = 'md',
+  noPadding = false,
 }) => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
 
+  const spacingClasses = {
+    none: '',
+    sm: 'px-4 py-2',
+    md: 'px-4 sm:px-6 py-4 sm:py-6',
+    lg: 'px-6 sm:px-8 py-6 sm:py-8',
+  };
+
   return (
-    <div className={className}>
+    <div className={`${!noPadding ? spacingClasses[spacing] : ''} ${className}`}>
       {/* Header Section */}
       <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
         <div>
@@ -49,7 +60,7 @@ const ParentTab: React.FC<ParentTabProps> = ({
 
       {/* Tab Section */}
       {children && (
-        <div className="mb-6 border-b border-gray-200">
+        <div className="border-b border-gray-200">
           {children}
         </div>
       )}
