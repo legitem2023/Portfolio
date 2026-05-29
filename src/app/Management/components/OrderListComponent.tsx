@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState,useEffect, useMemo, useRef } from 'react';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import { useUsers } from '../../components/hooks/useUsers';
 
@@ -435,7 +435,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   }, [riders, selectedRiderId]);
 
   // Close dropdown when clicking outside
-  React.useEffect(() => {
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
