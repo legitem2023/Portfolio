@@ -396,7 +396,7 @@ const calculateOrderTotals = (supplierTotals: SupplierTotal[]): OrderTotals => {
 
 // Searchable Dropdown Component
 interface SearchableDropdownProps {
-  riders: User[];
+  riders: any;
   selectedRiderId: string | null;
   onSelect: (riderId: string, riderName: string) => void;
   placeholder?: string;
