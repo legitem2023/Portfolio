@@ -1,5 +1,24 @@
 import { gql } from "@apollo/client";
 
+
+export const ASSIGN_NEW_RIDER = gql`
+  mutation AssignNewRider(
+    $itemId: ID!
+    $riderId: ID!
+    $supplierId: ID!
+    $userId: ID!
+  ) {
+    assignNewRider(
+      itemId: $itemId
+      riderId: $riderId
+      supplierId: $supplierId
+      userId: $userId
+    ) {
+      statusText
+    }
+  }
+`;
+
 // In your mutation.ts file - add these mutations
 export const REQUESTPASSWORDRESET = gql`
   mutation RequestPasswordReset($email: String!) {
