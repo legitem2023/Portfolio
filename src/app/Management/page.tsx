@@ -144,7 +144,14 @@ export default function ManagementDashboard() {
     
     switch (activeIndex) {
       case 0:
-        return <SalesDashboard />;
+        return (
+          <ParentTab
+             title="Sales Analytics"
+             description="Monitor your business performance and growth"
+             showRefresh={false}>
+             <SalesDashboard />
+          </ParentTab>        
+        );
       case 1:
         return (
           <ParentTab
