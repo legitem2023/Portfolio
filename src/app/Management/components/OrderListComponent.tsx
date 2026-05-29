@@ -510,7 +510,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
                 No riders found
               </div>
             ) : (
-              filteredRiders.map((rider) => (
+              filteredRiders.map((rider:any) => (
                 <button
                   key={rider.id}
                   onClick={() => handleSelect(rider)}
