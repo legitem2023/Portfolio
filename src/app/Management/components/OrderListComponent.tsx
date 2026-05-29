@@ -420,7 +420,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   const filteredRiders = useMemo(() => {
     if (!searchTerm.trim()) return riders;
     const term = searchTerm.toLowerCase();
-    return riders.filter(rider => 
+    return riders.filter((rider:any) => 
       rider.firstName.toLowerCase().includes(term) ||
       (rider.lastName && rider.lastName.toLowerCase().includes(term)) ||
       (rider.email && rider.email.toLowerCase().includes(term)) ||
