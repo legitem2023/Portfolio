@@ -7653,26 +7653,26 @@ assignNewRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
           riderId
         }
       })
-    
-     await prisma.notification.create({
-        data: { 
-          type: NotificationType.ORDER_UPDATED,
-          userId: supplierId,
-          title: 'Successfully assigned',
-          message: 'You have successfully assigned rider'
-        }
-      });
-    
-      // Create delivery record
-    await prisma.notification.create({
-        data: { 
-          type: NotificationType.ORDER_UPDATED,
-          userId: userId,
-          title: 'Rider assigned',
-          message: 'Rider assigned to your order delivery'
-        }
-      });
-      
+
+await prisma.notification.create({
+  data: { 
+    type: NotificationType.ORDER_UPDATED,
+    userId: supplierId,
+    title: 'Rider Assignment Confirmed',
+    message: 'A rider has been successfully assigned to this order.'
+  }
+});
+
+// Create delivery record
+await prisma.notification.create({
+  data: { 
+    type: NotificationType.ORDER_UPDATED,
+    userId: userId,
+    title: 'Rider Assigned to Your Order',
+    message: 'A rider has been assigned to your order and will handle the delivery.'
+  }
+});
+   
       return {
         statusText: "Successfully Assigned!"
       }
