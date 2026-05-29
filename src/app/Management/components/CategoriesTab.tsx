@@ -45,19 +45,13 @@ export default function CategoriesTab({
     ]
 
   return (
-    <div className="p-4 m:p-0">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Category Management</h2>
-      </div>
-
+    <div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Tabs 
         tabs={tabs} 
         defaultTab="Form"
         className="max-w-4xl"
       />
-
-
       </div>
     </div>
   );
