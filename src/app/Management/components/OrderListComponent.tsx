@@ -431,7 +431,7 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   // Get selected rider name
   const selectedRider = useMemo(() => {
     if (!selectedRiderId) return null;
-    return riders.find(r => r.id === selectedRiderId);
+    return riders.find((r:any) => r.id === selectedRiderId);
   }, [riders, selectedRiderId]);
 
   // Close dropdown when clicking outside
