@@ -8,7 +8,7 @@ import TopNav from './components/TopNav';
 import Sidebar from './components/Sidebar';
 import NotificationPage from './components/NotificationPage';
 import FoodManagement from './components/FoodManagement';
-
+import ParentTab from './components/ParentTab';
 import ProductsTab from './components/ProductsTab';
 import OrderListComponent from './components/OrderListComponent';
 import RemittancePage from './components/RemittancePage';
@@ -149,6 +149,10 @@ export default function ManagementDashboard() {
         return <UsersTab />;
       case 2:
         return (
+          <ParentTab
+             title="Products"
+             description="List of Products"
+             showRefresh={false}>
           <ProductsTab
             // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
             supplierId={user?.userId || ''}
@@ -159,6 +163,7 @@ export default function ManagementDashboard() {
             setNewProduct={setNewProduct}
             handleProductSubmit={handleProductSubmit}
           />
+          </ParentTab>
         );
       case 3:
         return (
