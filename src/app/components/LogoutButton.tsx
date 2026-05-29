@@ -45,17 +45,21 @@ export default function LogoutButton() {
   
   return (  
     <button
-      className="w-full flex items-center px-4 py-3 text-left text-gray-700 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm relative overflow-hidden"
+      className="w-full flex items-center px-4 py-3 text-left text-gray-700 rounded-lg transition-all duration-300 ease-out hover:pl-5 hover:shadow-sm relative bg-white"
       disabled={isLoggingOut}
       onClick={handleLogout}
     >
-      {/* Loading overlay with animation */}
+      {/* Fixed background color - no overlay that changes background */}
+      
+      {/* Subtle loading indicator instead of overlay */}
       {animationState === 'loading' && (
-        <div className="absolute inset-0 bg-blue-50 animate-pulse" />
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-0 h-0.5 bg-blue-500 animate-[loadingBar_1s_ease-in-out_infinite]" />
+        </div>
       )}
       
       {/* Animated Icon */}
-      <div className="relative">
+      <div className="relative z-10">
         {animationState === 'idle' && (
           <LogOut className="mr-3 text-gray-400 w-5 h-5 transition-all duration-300" />
         )}
@@ -67,13 +71,24 @@ export default function LogoutButton() {
         )}
       </div>
       
-      <span className="flex-1 transition-all duration-300">
+      <span className="flex-1 transition-all duration-300 relative z-10 font-medium">
         {animationState === 'idle' && 'Logout'}
-        {animationState === 'loading' && 'Logging out...'}
-        {animationState === 'success' && 'Logging out...'}
+        {animationState === 'loading' && (
+          <span className="flex items-center gap-2">
+            Logging out
+            <span className="inline-flex gap-1">
+              <span className="animate-bounce" style={{ animationDelay: '0s' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>.</span>
+              <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>.</span>
+            </span>
+          </span>
+        )}
+        {animationState === 'success' && (
+          <span className="text-green-600">Logged out!</span>
+        )}
       </span>
       
-      <ChevronRight className={`text-gray-400 w-4 h-4 transform transition-all duration-300 group-hover:translate-x-1 ${
+      <ChevronRight className={`text-gray-400 w-4 h-4 transform transition-all duration-300 group-hover:translate-x-1 relative z-10 ${
         animationState !== 'idle' ? 'opacity-0' : ''
       }`} />
     </button>
