@@ -34,12 +34,13 @@ interface UsersData {
 
 export const useUsers = () => {
   const { loading, error, data, refetch } = useQuery<UsersData>(USERS);
-
+ // Filter only users with role "RIDER"
+  const riders = data?.users?.filter(user => user.role === 'RIDER') || [];
   return {
-    users: data?.users || [],
+    users: riders || [],
     loading,
     error,
     refetch,
-    isEmpty: !data?.users || data.users.length === 0,
+    isEmpty: !riders || riders.length === 0,
   };
 };
