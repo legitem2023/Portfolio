@@ -538,21 +538,11 @@ export default function VendorReturnManagement({ supplierId }: { supplierId: str
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6 md:py-8">
+    <div>
+      <div>
         {/* Header - Responsive */}
         <div className="mb-6 md:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-                  <RotateCcw size={18} className="text-white" />
-                </div>
-                Return Management
-              </h1>
-              <p className="text-sm text-gray-500">Manage customer return requests and process refunds</p>
-            </div>
-            
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">          
             {/* Refresh Button and View Toggle */}
             <div className="flex gap-2">
               <button
