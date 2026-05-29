@@ -146,7 +146,14 @@ export default function ManagementDashboard() {
       case 0:
         return <SalesDashboard />;
       case 1:
-        return <UsersTab />;
+        return (
+          <ParentTab
+             title="Users Management"
+             description=""
+             showRefresh={false}>
+               <UsersTab />
+          </ParentTab>
+        );
       case 2:
         return (
           <ParentTab
