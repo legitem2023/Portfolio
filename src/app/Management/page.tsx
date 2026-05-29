@@ -223,7 +223,14 @@ export default function ManagementDashboard() {
       case 16:
         return <NotificationPage UserId={user?.userId?user?.userId:''}/>;
       case 17:
-        return <FoodManagement  accountId={user?.userId?user?.userId:''} />
+        return (
+          <ParentTab
+             title="Food Option Management"
+             description="Manage and control Options"
+             showRefresh={false}>
+            <FoodManagement  accountId={user?.userId?user?.userId:''} />
+          </ParentTab>
+            )
       default:
         return <></>;
     }
