@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useQuery, gql, useMutation } from '@apollo/client';
+import { useUsers } from '../../components/hooks/useUsers';
+
 import { 
   Package, 
   MapPin, 
@@ -20,7 +22,14 @@ import {
   TrendingUp,
   Receipt,
   QrCode,
-  Printer
+  Printer,
+  ChevronDown,
+  ChevronUp,
+  Camera,
+  Signature,
+  UserCheck,
+  Search,
+  X
 } from "lucide-react";
 
 // GraphQL Query
@@ -124,8 +133,36 @@ const ORDER_LIST_QUERY = gql`
   }
 `;
 
+// Assign Rider Mutation
+const ASSIGN_NEW_RIDER = gql`
+  mutation AssignNewRider(
+    $itemId: ID!
+    $riderId: ID!
+    $supplierId: ID!
+    $userId: ID!
+  ) {
+    assignNewRider(
+      itemId: $itemId
+      riderId: $riderId
+      supplierId: $supplierId
+      userId: $userId
+    ) {
+      statusText
+    }
+  }
+`;
+
 // Types
 type OrderStatus = 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+
+interface ProofOfDelivery {
+  id: string;
+  photoUrl?: string;
+  signatureData?: string;
+  receivedBy?: string;
+  receivedAt?: string;
+  trackingNumber?: string;
+}
 
 interface Address {
   id: string;
@@ -187,6 +224,7 @@ interface Order {
     method: string;
     status: string;
   }>;
+  proofOfDelivery?: ProofOfDelivery[];
 }
 
 interface PaginationInfo {
@@ -227,6 +265,17 @@ const formatCurrency = (amount: number): string => {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+};
+
+// Format date
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 // Status color mapping
@@ -345,6 +394,148 @@ const calculateOrderTotals = (supplierTotals: SupplierTotal[]): OrderTotals => {
   };
 };
 
+// Searchable Dropdown Component
+interface SearchableDropdownProps {
+  riders: User[];
+  selectedRiderId: string | null;
+  onSelect: (riderId: string, riderName: string) => void;
+  placeholder?: string;
+  isLoading?: boolean;
+  disabled?: boolean;
+}
+
+const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
+  riders,
+  selectedRiderId,
+  onSelect,
+  placeholder = "Select a rider...",
+  isLoading = false,
+  disabled = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter riders based on search term
+  const filteredRiders = useMemo(() => {
+    if (!searchTerm.trim()) return riders;
+    const term = searchTerm.toLowerCase();
+    return riders.filter(rider => 
+      rider.firstName.toLowerCase().includes(term) ||
+      (rider.lastName && rider.lastName.toLowerCase().includes(term)) ||
+      (rider.email && rider.email.toLowerCase().includes(term)) ||
+      (rider.phone && rider.phone.includes(term))
+    );
+  }, [riders, searchTerm]);
+
+  // Get selected rider name
+  const selectedRider = useMemo(() => {
+    if (!selectedRiderId) return null;
+    return riders.find(r => r.id === selectedRiderId);
+  }, [riders, selectedRiderId]);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (rider: User) => {
+    onSelect(rider.id, `${rider.firstName} ${rider.lastName || ''}`);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled || isLoading}
+        className={`
+          w-full px-3 py-2 text-left text-sm rounded-lg border 
+          focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+          transition-colors duration-200
+          ${disabled 
+            ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' 
+            : 'bg-white border-gray-300 hover:border-orange-300 cursor-pointer'
+          }
+        `}
+      >
+        <div className="flex items-center justify-between">
+          <span className={selectedRider ? 'text-gray-900' : 'text-gray-400'}>
+            {isLoading ? 'Loading riders...' : (selectedRider ? `${selectedRider.firstName} ${selectedRider.lastName || ''}` : placeholder)}
+          </span>
+          {!disabled && !isLoading && (
+            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          )}
+        </div>
+      </button>
+
+      {isOpen && !disabled && !isLoading && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+          {/* Search Input */}
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by name, email, or phone..."
+                className="w-full pl-8 pr-8 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 transform translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Riders List */}
+          <div className="max-h-60 overflow-y-auto">
+            {filteredRiders.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                No riders found
+              </div>
+            ) : (
+              filteredRiders.map((rider) => (
+                <button
+                  key={rider.id}
+                  onClick={() => handleSelect(rider)}
+                  className={`
+                    w-full px-3 py-2 text-left text-sm hover:bg-orange-50 transition-colors duration-150
+                    ${selectedRiderId === rider.id ? 'bg-orange-100 text-orange-700' : 'text-gray-700'}
+                  `}
+                >
+                  <div className="font-medium">{rider.firstName} {rider.lastName || ''}</div>
+                  {rider.email && (
+                    <div className="text-xs text-gray-500">{rider.email}</div>
+                  )}
+                  {rider.phone && (
+                    <div className="text-xs text-gray-400">{rider.phone}</div>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Shimmer loading component
 const OrderCardShimmer = () => {
   return (
@@ -429,6 +620,239 @@ const OrderCardShimmer = () => {
   );
 };
 
+// Collapsible Proof of Delivery Component
+const ProofOfDeliverySection = ({ 
+  proofOfDeliveries, 
+  trackingNumber 
+}: { 
+  proofOfDeliveries?: ProofOfDelivery[];
+  trackingNumber?: string;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Filter proof of deliveries by tracking number
+  const filteredProofs = useMemo(() => {
+    if (!proofOfDeliveries || proofOfDeliveries.length === 0) return [];
+    if (!trackingNumber) return proofOfDeliveries;
+    return proofOfDeliveries.filter(pod => pod.trackingNumber === trackingNumber);
+  }, [proofOfDeliveries, trackingNumber]);
+
+  if (!filteredProofs || filteredProofs.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-purple-50 rounded-lg mb-4 lg:mb-6 overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 lg:px-4 py-2 lg:py-3 flex items-center justify-between hover:bg-purple-100 transition-colors duration-200"
+      >
+        <div className="flex items-center gap-2">
+          <Shield size={18} className="text-purple-600" />
+          <h4 className="font-semibold text-sm lg:text-base text-purple-700">
+            Proof of Delivery ({filteredProofs.length})
+          </h4>
+        </div>
+        {isOpen ? (
+          <ChevronUp size={18} className="text-purple-600" />
+        ) : (
+          <ChevronDown size={18} className="text-purple-600" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="px-3 lg:px-4 pb-3 lg:pb-4 space-y-3">
+          {filteredProofs.map((pod) => (
+            <div key={pod.id} className="bg-white rounded-lg p-3 space-y-2 border border-purple-200">
+              {pod.receivedBy && (
+                <div className="flex items-center gap-2">
+                  <UserCheck size={14} className="text-green-600" />
+                  <div>
+                    <span className="text-xs text-gray-500">Received by:</span>
+                    <p className="text-sm font-medium text-gray-800">{pod.receivedBy}</p>
+                  </div>
+                </div>
+              )}
+
+              {pod.receivedAt && (
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-blue-600" />
+                  <div>
+                    <span className="text-xs text-gray-500">Received at:</span>
+                    <p className="text-sm text-gray-700">{formatDate(pod.receivedAt)}</p>
+                  </div>
+                </div>
+              )}
+
+              {pod.photoUrl && (
+                <div className="flex items-start gap-2">
+                  <Camera size={14} className="text-purple-600 mt-1" />
+                  <div className="flex-1">
+                    <span className="text-xs text-gray-500">Photo Evidence:</span>
+                    <div className="mt-1">
+                      <img 
+                        src={pod.photoUrl} 
+                        alt="Proof of Delivery"
+                        className="max-w-full h-auto rounded-lg border border-gray-200 max-h-48 object-contain"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {pod.signatureData && (
+                <div className="flex items-start gap-2">
+                  <Signature size={14} className="text-indigo-600 mt-1" />
+                  <div className="flex-1">
+                    <span className="text-xs text-gray-500">Signature:</span>
+                    <div className="mt-1 p-2 bg-gray-50 rounded border border-gray-200">
+                      <img 
+                        src={pod.signatureData} 
+                        alt="Customer Signature"
+                        className="max-w-full h-auto max-h-24"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {pod.trackingNumber && (
+                <div className="flex items-center gap-2 pt-1 border-t border-gray-100 mt-1">
+                  <Package size={12} className="text-gray-400" />
+                  <span className="text-xs text-gray-500">
+                    Tracking: {pod.trackingNumber}
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Rider Assignment Component for each order
+interface RiderAssignmentProps {
+  orderId: string;
+  userId: string;
+  supplierId: string;
+  currentRiderId?: string;
+  currentRiderName?: string;
+  onAssignSuccess: () => void;
+  disabled?: boolean;
+}
+
+const RiderAssignment: React.FC<RiderAssignmentProps> = ({
+  orderId,
+  userId,
+  supplierId,
+  currentRiderId,
+  currentRiderName,
+  onAssignSuccess,
+  disabled = false
+}) => {
+  const { users: riders, loading: ridersLoading } = useUsers();
+  const [selectedRiderId, setSelectedRiderId] = useState<string | null>(currentRiderId || null);
+  const [assignNewRider, { loading: assigning }] = useMutation(ASSIGN_NEW_RIDER);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleAssignRider = async () => {
+    if (!selectedRiderId) {
+      setMessage({ type: 'error', text: 'Please select a rider' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    try {
+      const result = await assignNewRider({
+        variables: {
+          itemId: orderId, // Using orderId as itemId based on your mutation structure
+          riderId: selectedRiderId,
+          supplierId: supplierId,
+          userId: userId,
+        },
+      });
+
+      if (result.data?.assignNewRider?.statusText) {
+        setMessage({ type: 'success', text: `Rider assigned successfully! ${result.data.assignNewRider.statusText}` });
+        setTimeout(() => setMessage(null), 3000);
+        onAssignSuccess();
+      }
+    } catch (error) {
+      console.error('Error assigning rider:', error);
+      setMessage({ type: 'error', text: 'Failed to assign rider. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleSelectRider = (riderId: string, riderName: string) => {
+    setSelectedRiderId(riderId);
+    setMessage(null);
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Bike size={18} className="text-orange-600" />
+        <h4 className="font-semibold text-sm text-gray-800">Assign Rider</h4>
+      </div>
+      
+      <div className="space-y-3">
+        <SearchableDropdown
+          riders={riders || []}
+          selectedRiderId={selectedRiderId}
+          onSelect={handleSelectRider}
+          placeholder="Search and select a rider..."
+          isLoading={ridersLoading}
+          disabled={disabled || assigning}
+        />
+
+        {message && (
+          <div className={`text-sm px-3 py-2 rounded-lg ${
+            message.type === 'success' 
+              ? 'bg-green-50 text-green-700 border border-green-200' 
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}>
+            {message.text}
+          </div>
+        )}
+
+        <button
+          onClick={handleAssignRider}
+          disabled={!selectedRiderId || assigning || disabled}
+          className={`
+            w-full px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+            flex items-center justify-center gap-2
+            ${!selectedRiderId || assigning || disabled
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700'
+            }
+          `}
+        >
+          {assigning ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Assigning...
+            </>
+          ) : (
+            <>
+              <UserCheck size={16} />
+              {currentRiderId ? 'Reassign Rider' : 'Assign Rider'}
+            </>
+          )}
+        </button>
+
+        {currentRiderName && !selectedRiderId && (
+          <p className="text-xs text-gray-500 text-center">
+            Currently assigned to: <span className="font-medium">{currentRiderName}</span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function OrderListComponent({ 
   initialSupplierId,
   initialStatus,
@@ -442,7 +866,10 @@ export default function OrderListComponent({
     page: 1,
     pageSize: 10
   });
-
+  
+  // State to trigger refetch after rider assignment
+  const [refreshKey, setRefreshKey] = useState(0);
+  
   // Ref for print container
   const printContainerRef = useRef<HTMLDivElement>(null);
 
@@ -451,7 +878,7 @@ export default function OrderListComponent({
     variables: {
       filter: {
         status: activeTab === 'ALL' ? undefined : activeTab,
-        supplierId:initialSupplierId
+        supplierId: initialSupplierId
       },
       pagination
     },
@@ -461,6 +888,7 @@ export default function OrderListComponent({
   // Get orders
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
+  console.log(allOrders);
   
   // Filter orders with items
   const ordersWithItems = useMemo(() => {
@@ -469,19 +897,9 @@ export default function OrderListComponent({
   
   const paginationInfo = orderData?.pagination;
 
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const handleRefresh = () => {
     refetch();
+    setRefreshKey(prev => prev + 1);
   };
 
   // Handle page change
@@ -504,6 +922,18 @@ export default function OrderListComponent({
       }
     });
     return Array.from(ridersMap.values());
+  };
+
+  // Get supplier ID from order items
+  const getSupplierId = (items: OrderItem[]): string => {
+    const firstItem = items[0];
+    const supplier = getUserFromItem(firstItem?.supplier);
+    return firstItem?.supplierId || supplier?.id || '';
+  };
+
+  // Get user ID from order
+  const getUserId = (order: Order): string => {
+    return order.user?.id || '';
   };
 
   // Generate HTML for printing
@@ -778,7 +1208,7 @@ export default function OrderListComponent({
 
         <div class="order-section">
           <div class="section-title">Items</div>
-           <table>
+          <table>
             <thead>
               <tr>
                 <th>SKU</th>
@@ -976,6 +1406,10 @@ export default function OrderListComponent({
               const supplierTotals = calculateSupplierTotals(order.items);
               const orderTotals = calculateOrderTotals(supplierTotals);
               const orderRiders = getOrderRiders(order.items);
+              const trackingNumber = order.items[0]?.trackingNumber;
+              const currentRider = orderRiders[0];
+              const supplierId = getSupplierId(order.items);
+              const userId = getUserId(order);
               
               return (
                 <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
@@ -1007,7 +1441,7 @@ export default function OrderListComponent({
                       <div>
                         <div className="flex items-start gap-2">
                           <QrCode size={isMobile ? 16 : 18} className="text-blue-500" />
-                          <h3 className="font-bold text-base break-words">{order.items[0]?.trackingNumber}</h3> 
+                          <h3 className="font-bold text-base break-words">{trackingNumber || 'N/A'}</h3> 
                         </div>      
                         <div className="flex items-center gap-1 lg:gap-2 mb-1 lg:mb-2">
                           <Shield size={isMobile ? 16 : 18} className="text-blue-500" />
@@ -1023,6 +1457,12 @@ export default function OrderListComponent({
                         </div>
                       </div>
                     </div>
+
+                    {/* Proof of Delivery Section - Collapsible and filtered by tracking number */}
+                    <ProofOfDeliverySection 
+                      proofOfDeliveries={order.proofOfDelivery}
+                      trackingNumber={trackingNumber}
+                    />
 
                     {order.address && (
                       <div className="bg-green-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
@@ -1041,32 +1481,6 @@ export default function OrderListComponent({
 
                     {supplierTotals.length > 0 && (
                       <div className="bg-blue-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
-                        {/*<div className="flex items-center gap-2 mb-3">
-                          <Building size={isMobile ? 16 : 18} className="text-blue-600" />
-                          <h4 className="font-semibold text-sm lg:text-base text-blue-700">
-                            Suppliers Breakdown ({supplierTotals.length})
-                          </h4>
-                        </div>
-                        <div className="space-y-4">
-                          {supplierTotals.map((supplier) => (
-                            <div key={supplier.supplierId} className="border-l-2 border-blue-200 pl-3">
-                              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                                <div className="flex-1">
-                                  <p className="text-sm font-medium text-gray-800">
-                                    {supplier.supplierName}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-0.5">
-                                    Supplier ID: {supplier.supplierId}
-                                  </p>
-                                  <p className="text-xs text-gray-500 mt-0.5">
-                                    Items: {supplier.items.length}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>*/}
-                        
                         <div className="mt-4 pt-4 border-t-2 border-blue-300">
                           <div className="bg-white rounded-lg p-3">
                             <h5 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
@@ -1102,7 +1516,7 @@ export default function OrderListComponent({
                       <div className="bg-orange-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
                         <div className="flex items-center gap-2 mb-3">
                           <Bike size={isMobile ? 16 : 18} className="text-orange-600" />
-                          <h4 className="font-semibold text-sm lg:text-base text-orange-700">Rider</h4>
+                          <h4 className="font-semibold text-sm lg:text-base text-orange-700">Current Rider</h4>
                         </div>
                         <div className="space-y-3">
                           {orderRiders.map((rider) => (
@@ -1110,7 +1524,7 @@ export default function OrderListComponent({
                               <p className="text-sm font-medium text-gray-800">
                                 {rider.firstName} {rider.lastName || ''}
                               </p>
-                              <p className="text-sm font-medium text-gray-800">
+                              <p className="text-sm text-gray-600">
                                 {rider.phone}
                               </p>
                               {rider.addresses && rider.addresses.length > 0 && (
@@ -1127,7 +1541,17 @@ export default function OrderListComponent({
                       </div>
                     )}
 
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                    {/* Rider Assignment Component */}
+                    <RiderAssignment
+                      orderId={order.id}
+                      userId={userId}
+                      supplierId={supplierId}
+                      currentRiderId={currentRider?.id}
+                      currentRiderName={currentRider ? `${currentRider.firstName} ${currentRider.lastName || ''}` : undefined}
+                      onAssignSuccess={handleRefresh}
+                    />
+
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                       <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                         <Package size={isMobile ? 16 : 18} className="text-blue-500" />
                         Items ({order.items.length})
@@ -1199,25 +1623,8 @@ export default function OrderListComponent({
                                           </span>
                                         </div>
                                       )}
-                                      {/*item.trackingNumber && (
-                                        <div className="flex items-center gap-1">
-                                          <Receipt size={10} className="text-gray-500" />
-                                          <span className="text-xs text-gray-600">
-                                            Tracking: {item.trackingNumber}
-                                          </span>
-                                        </div>
-                                      )*/}
                                     </div>
                                   )}
-
-                                  {/*item.supplierId && (
-                                    <div className="flex items-center gap-1 mt-1">
-                                      <Building size={10} className="text-gray-400" />
-                                      <span className="text-xs text-gray-500">
-                                        Supplier: {getUserFromItem(item.supplier)?.firstName || item.supplierId}
-                                      </span>
-                                    </div>
-                                  )*/}
                                 </div>
                               </div>
                               
