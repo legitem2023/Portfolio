@@ -582,7 +582,7 @@ export default function OrderListComponent({
     page: 1,
     pageSize: 10
   });
-
+  const { users:listOfRiders, loading:listOfRidersloading, error, refetch, isEmpty } = useUsers();
   // Ref for print container
   const printContainerRef = useRef<HTMLDivElement>(null);
 
