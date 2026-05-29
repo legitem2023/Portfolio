@@ -158,7 +158,7 @@ export default function ManagementDashboard() {
         return (
           <ParentTab
              title="Product Management"
-             description="Easily add, edit, update, and delete products. Track stock levels with low-stock alerts and manage variants like size, color, and material."
+             description="Manage and track stock levels"
              showRefresh={false}>
           <ProductsTab
             // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
@@ -176,7 +176,7 @@ export default function ManagementDashboard() {
         return (
           <ParentTab
              title="Category Management"
-             description="Easily add, edit, update, and delete product categories. Organize them with parent-child relationships for nested menus."
+             description="Manage to control sorting of products"
              showRefresh={false}>
           <CategoriesTab
             categories={categories}
