@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useRef } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import { useUsers } from '../../components/hooks/useUsers';
+
 import { 
   Package, 
   MapPin, 
