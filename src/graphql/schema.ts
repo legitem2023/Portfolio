@@ -1584,6 +1584,9 @@ input UpdateItemInput {
     updateOrderStatus(itemId: ID, riderId: ID, supplierId: ID, userId: ID, status: String, title: String, message: String): Result
     rejectByRider(itemId: ID, riderId: ID): Result
     acceptByRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
+
+    assignNewRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
+
     createNotification(input: CreateNotificationInput): Notification
     markNotificationAsRead(id: ID): Notification
     markAllNotificationsAsRead(userId: ID): Boolean
