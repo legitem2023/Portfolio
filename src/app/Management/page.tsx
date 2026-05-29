@@ -224,7 +224,14 @@ export default function ManagementDashboard() {
       case 13:
         return <SizeManager/>;
       case 14: 
-        return <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>;
+        return (
+          <ParentTab
+             title="Return Management"
+             description="Manage customer return requests and process refunds"
+             showRefresh={false}>
+                <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
+          </ParentTab> 
+            );
       case 15:
         return <ServicesTable/>;
       case 16:
