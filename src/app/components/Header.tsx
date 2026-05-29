@@ -458,7 +458,7 @@ const Header: React.FC = () => {
     if (isAuthPage) return;
     
     // If no user is logged in, redirect to login
-    if (!isUserLoggedIn) {
+    if (!userId) {
       router.push('/Login');
       return;
     }
@@ -984,7 +984,7 @@ const Header: React.FC = () => {
                 >
                   <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center border border-indigo-200 group-hover:bg-purple-200 group-hover:border-indigo-300 transition-all duration-300 ease-out">
                     {/* Show Login icon when no user, Menu icon when user is logged in */}
-                    {!isUserLoggedIn ? (
+                    {!userId ? (
                       <LogIn className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
                     ) : (
                       <Menu className="w-5 h-5 text-indigo-600 group-hover:scale-110 transition-transform duration-300" />
