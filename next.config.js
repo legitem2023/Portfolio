@@ -47,6 +47,24 @@ const nextConfig = {
           }
         ],
       },
+      // Service worker headers - CRITICAL for push notifications
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+        ],
+      },
       // Add CORS headers specifically for API routes (including Pusher auth)
       {
         source: '/api/:path*',
