@@ -9655,6 +9655,16 @@ for (const supplierId of uniqueSupplierIds) {
           const message = itemCount === 1 
             ? `Order #${response.orderNumber}: ${totalQuantity} item(s) (${itemList})`
             : `Order #${response.orderNumber}: ${totalQuantity} item(s) from ${itemCount} product(s) (${itemList})`;
+await sendPushNotification({
+  userId: supplierId,
+  type: NotificationType.ORDER_CREATED,
+  title: "New Order Received",
+  message: message,
+  link: `${response.id}`,
+  orderId: response.orderNumber,
+  orderNumber: response.orderNumber
+});
+
           
           return createNotification({
             userId: supplierId,
@@ -9664,6 +9674,8 @@ for (const supplierId of uniqueSupplierIds) {
             link: `${response.id}`,
             isRead: false
           });
+        
+        
         });
         
         // Fire all supplier notifications in parallel (don't await to avoid timeout)
@@ -9690,19 +9702,7 @@ await sendPushNotification({
   orderId: response.orderNumber,
   orderNumber: response.orderNumber
 });
-        
-await sendPushNotification({
-  userId: supplierId,
-  type: NotificationType.ORDER_CREATED,
-  title: "New Order Received",
-  message: message,
-  link: `${response.id}`,
-  orderId: response.orderNumber,
-  orderNumber: response.orderNumber
-});
-
-        
-        
+             
         return {
           success: true,
           statusText: 'Order Successful!',
