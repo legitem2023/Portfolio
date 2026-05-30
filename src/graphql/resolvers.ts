@@ -9690,7 +9690,18 @@ await sendPushNotification({
   orderId: response.orderNumber,
   orderNumber: response.orderNumber
 });
+        
+await sendPushNotification({
+  userId: supplierId,
+  type: NotificationType.ORDER_CREATED,
+  title: "New Order Received",
+  message: message,
+  link: `${response.id}`,
+  orderId: response.orderNumber,
+  orderNumber: response.orderNumber
+});
 
+        
         
         return {
           success: true,
