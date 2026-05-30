@@ -22,7 +22,7 @@ export async function sendPushNotification({
   image
 }: PushNotificationData) {
   try {
-    const response = await fetch(`https://portfolio-xi-eight-92.vercel.app/api/push/send`, {
+    const response = await fetch(`/api/push/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
