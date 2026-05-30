@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from "../../../../lib/auth";
 import PushNotifications from '@pusher/push-notifications-server';
-import { decryptToken } from '../../../../../utils/decryptToken'; // Add this
+import { decryptToken } from '../../../../../utils/decryptToken';
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized - No token' }, { status: 401 });
     }
     
-    // Decrypt the token to get real userId (same as useAuth)
+    // Decrypt the token to get real userId
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
     const decrypted = await decryptToken(serverToken, secret);
     const userId = decrypted.userId;
@@ -30,7 +30,8 @@ export async function POST(req: NextRequest) {
       secretKey: process.env.PUSHER_BEAMS_SECRET_KEY!,
     });
     
-    const beamsToken = await beamsClient.authenticateUser(userId, {
+    // ✅ CORRECT METHOD: generateToken (not authenticateUser)
+    const beamsToken = beamsClient.generateToken(userId, {
       interests: [`user-${userId}`, 'all-users']
     });
     
