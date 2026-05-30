@@ -61,3 +61,33 @@ export async function sendPushNotification({
     return false;
   }
 }
+
+
+// Add this function inside your component (after decryptUserToken or near other functions)
+export const setupPushNotifications = async (userId: string) => {
+  try {
+    // Check if Pusher Beams is available
+    if (typeof window === 'undefined' || !window.PusherPushNotifications) {
+      console.log('Pusher Beams not loaded yet');
+      return;
+    }
+    
+    const beams = new window.PusherPushNotifications.Client({
+      instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+    });
+    
+    await beams.start();
+    
+    // This will call your /api/push/beams-auth endpoint
+    await beams.setUserId(userId, {
+      url: '/api/push/beams-auth',
+    });
+    
+    // Add personal interest
+    await beams.addDeviceInterest(`user-${userId}`);
+    
+    console.log('✅ Push notifications enabled for user:', userId);
+  } catch (error) {
+    console.error('Failed to setup push notifications:', error);
+  }
+};
