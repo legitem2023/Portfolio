@@ -9655,7 +9655,7 @@ for (const supplierId of uniqueSupplierIds) {
           const message = itemCount === 1 
             ? `Order #${response.orderNumber}: ${totalQuantity} item(s) (${itemList})`
             : `Order #${response.orderNumber}: ${totalQuantity} item(s) from ${itemCount} product(s) (${itemList})`;
-await sendPushNotification({
+sendPushNotification({
   userId: supplierId,
   type: NotificationType.ORDER_CREATED,
   title: "New Order Received",
