@@ -192,11 +192,16 @@ const renderContent = () => {
         </ParentTab>
       );
     case 4:
-      return (
+      return ( 
+        <ParentTab
+           title="Order Management"
+           description="Manage and track all orders"
+           showRefresh={false}>
         <OrderListComponent
           initialSupplierId={user?.userId}
           initialStatus="PENDING"
         />
+        </ParentTab>
       );
       
     case 5:
