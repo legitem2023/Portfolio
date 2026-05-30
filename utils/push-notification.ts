@@ -28,7 +28,8 @@ export async function sendPushNotification({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: userId,
+        userId: userId,           // Keep if your API uses this
+        interest: "all-users",    // ADD THIS - your API likely needs it
         title: title,
         body: message,
         url: link ? `/${link}` : '/',
