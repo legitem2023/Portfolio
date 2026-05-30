@@ -22,19 +22,24 @@ export async function sendPushNotification({
   image
 }: PushNotificationData) {
   try {
-    const response = await fetch(`/api/push/send`, {
+    // Use absolute URL for server-side fetch
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                    'https://portfolio-xi-eight-92.vercel.app';
+    const url = `${baseUrl}/api/push/send`;
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId: userId,           // Keep if your API uses this
-        interest: "all-users",    // ADD THIS - your API likely needs it
+        interest: "all-users",
         title: title,
         body: message,
         url: link ? `/${link}` : '/',
         data: {
           type: type,
+          userId: userId,
           orderId: orderId,
           orderNumber: orderNumber,
           timestamp: new Date().toISOString()
