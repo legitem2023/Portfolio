@@ -1,6 +1,8 @@
 // hooks/useAuth.ts
 import { useState, useEffect } from 'react';
 import { decryptToken } from '../../../../utils/decryptToken';
+import { setupPushNotifications } from '../../../../utils/push-notification'; // Adjust path as needed
+
 interface User {
   userId: string;
   role: string;
@@ -34,6 +36,11 @@ export const useAuth = () => {
           // Import your decryptToken function
           const payload = await decryptToken(token, secret);
           setUser(payload);
+          
+          // ✅ Setup push notifications when user is successfully fetched
+          if (payload?.userId) {
+            await setupPushNotifications(payload.userId);
+          }
         } else {
           setUser(null);
         }
