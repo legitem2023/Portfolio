@@ -218,7 +218,7 @@ export default function ManagementDashboard() {
         return (
           <ParentTab
              title="API Bills Management"
-             description="Manage API services bills"
+             description="Track API service costs and usage metrics"
              showRefresh={false}>
              <ApiBillsTab />
           </ParentTab>
