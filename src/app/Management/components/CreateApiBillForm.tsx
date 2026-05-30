@@ -275,10 +275,6 @@ const CreateApiBillForm: React.FC<CreateApiBillFormProps> = ({
 
   return (
     <div className="bg-white shadow-lg p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Add New API Bill</h2>
-        <p className="text-gray-600 mt-1">Track API service costs and usage metrics</p>
-      </div>
 
       {/* Success Message */}
       {successMessage && (
