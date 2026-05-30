@@ -7,6 +7,9 @@ export function NotificationManager() {
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
+    // DEBUG: Check if env var is loaded
+    console.log('Beams Instance ID:', process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID);
+    
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       registerAndSubscribe();
     }
@@ -14,27 +17,31 @@ export function NotificationManager() {
 
   const registerAndSubscribe = async () => {
     try {
-      // Register service worker
+      console.log('Step 1: Registering service worker...');
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('Service Worker registered');
+      console.log('✅ Service Worker registered');
       
-      // Request permission
+      console.log('Step 2: Requesting permission...');
       const result = await Notification.requestPermission();
       setPermission(result);
+      console.log('Permission result:', result);
       
       if (result === 'granted') {
-        // Initialize Beams
+        console.log('Step 3: Initializing Beams...');
         const beamsClient = new PusherPushNotifications.Client({
           instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
           serviceWorkerRegistration: registration,
         });
         
+        console.log('Step 4: Starting Beams...');
         await beamsClient.start();
+        
+        console.log('Step 5: Adding device interest...');
         await beamsClient.addDeviceInterest('all-users');
-        console.log('Subscribed to all-users interest');
+        console.log('✅ Subscribed to all-users interest!');
       }
     } catch (error) {
-      console.error('Push setup error:', error);
+      console.error('❌ Push setup error:', error);
     }
   };
 
