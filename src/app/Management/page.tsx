@@ -139,6 +139,7 @@ export default function ManagementDashboard() {
   const handleCategorySubmit = (e: React.FormEvent) => {
     // Your existing category submit logic
   };
+
 const renderContent = () => {
   
   switch (activeIndex) {
@@ -146,7 +147,7 @@ const renderContent = () => {
       return (
         <ParentTab
            title="Sales Performance Analytics"
-           description="Comprehensive metrics and insights to track business growth, revenue trends, and operational performance"
+           description="Track revenue trends and business growth metrics"
            showRefresh={false}>
            <SalesDashboard />
         </ParentTab>        
@@ -155,7 +156,7 @@ const renderContent = () => {
       return (
         <ParentTab
            title="User Access Management"
-           description="Configure user roles, permissions, and access controls for system security"
+           description="Configure roles, permissions, and system access"
            showRefresh={false}>
              <UsersTab />
         </ParentTab>
@@ -164,7 +165,7 @@ const renderContent = () => {
       return (
         <ParentTab
            title="Product Inventory Management"
-           description="Centralized control over product catalog, stock levels, and inventory tracking"
+           description="Manage product catalog and stock levels"
            showRefresh={false}>
         <ProductsTab
           supplierId={user?.userId || ''}
@@ -181,7 +182,7 @@ const renderContent = () => {
       return (
         <ParentTab
            title="Product Category Management"
-           description="Organize and structure product categories for efficient browsing and sorting"
+           description="Organize categories for product sorting"
            showRefresh={false}>
         <CategoriesTab
           categories={categories}
@@ -192,23 +193,18 @@ const renderContent = () => {
         </ParentTab>
       );
     case 4:
-      return ( 
-        <ParentTab
-           title="Order Management"
-           description="Manage and track all orders"
-           showRefresh={false}>
+      return (
         <OrderListComponent
           initialSupplierId={user?.userId}
           initialStatus="PENDING"
         />
-        </ParentTab>
       );
       
     case 5:
       return (
         <ParentTab
-           title="Remittance & Settlement Management"
-           description="Financial reconciliation dashboard tracking rider earnings, vendor fees, and remittance amounts by supplier"
+           title="Remittance & Settlement"
+           description="Track rider earnings, vendor fees, and remittances"
            showRefresh={false}>
         <RemittancePage
           initialSupplierId={user?.userId}
@@ -220,8 +216,8 @@ const renderContent = () => {
     case 7:
       return (
         <ParentTab
-           title="API Billing & Usage Analytics"
-           description="Monitor API service consumption, cost allocation, and usage patterns"
+           title="API Billing Management"
+           description="Monitor API usage and service costs"
            showRefresh={false}>
            <ApiBillsTab />
         </ParentTab>
@@ -231,8 +227,8 @@ const renderContent = () => {
     case 9:
       return (
         <ParentTab
-           title="Vehicle Type Configuration"
-           description="Define and manage vehicle categories, specifications, and fleet parameters"
+           title="Vehicle Type Manager"
+           description="Define vehicle categories and specifications"
            showRefresh={false}>
             <VehicleTypeManager/>
         </ParentTab>
@@ -246,8 +242,8 @@ const renderContent = () => {
     case 13:
       return (
         <ParentTab
-           title="Product Size Configuration"
-           description="Manage size variants, dimensions, and规格 options for product listings"
+           title="Size Manager"
+           description="Manage product size variants and options"
            showRefresh={false}>
            <SizeManager/>
         </ParentTab>
@@ -255,8 +251,8 @@ const renderContent = () => {
     case 14: 
       return (
         <ParentTab
-           title="Return & Refund Processing"
-           description="Handle customer return requests, approve refunds, and track reverse logistics"
+           title="Return Management"
+           description="Process customer returns and refunds"
            showRefresh={false}>
               <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
         </ParentTab> 
@@ -268,8 +264,8 @@ const renderContent = () => {
     case 17:
       return (
         <ParentTab
-           title="Food Option Configuration"
-           description="Manage customizable food options, add-ons, and modifiers for menu items"
+           title="Food Option Management"
+           description="Manage customizable food add-ons and modifiers"
            showRefresh={false}>
           <FoodManagement  accountId={user?.userId?user?.userId:''} />
         </ParentTab>
@@ -279,142 +275,6 @@ const renderContent = () => {
   }
 };
   
-/*  const renderContent = () => {
-    
-    switch (activeIndex) {
-      case 0:
-        return (
-          <ParentTab
-             title="Sales Analytics"
-             description="Monitor your business performance and growth"
-             showRefresh={false}>
-             <SalesDashboard />
-          </ParentTab>        
-        );
-      case 1:
-        return (
-          <ParentTab
-             title="Users Management"
-             description="Manage user roles and permissions"
-             showRefresh={false}>
-               <UsersTab />
-          </ParentTab>
-        );
-      case 2:
-        return (
-          <ParentTab
-             title="Product Management"
-             description="Manage and track stock levels"
-             showRefresh={false}>
-          <ProductsTab
-            // Only pass supplierId if it exists, otherwise pass an empty string or handle accordingly
-            supplierId={user?.userId || ''}
-            products={products}
-            refetch={refetch}
-            categories={categories}
-            newProduct={newProduct}
-            setNewProduct={setNewProduct}
-            handleProductSubmit={handleProductSubmit}
-          />
-          </ParentTab>
-        );
-      case 3:
-        return (
-          <ParentTab
-             title="Category Management"
-             description="Manage to control sorting of products"
-             showRefresh={false}>
-          <CategoriesTab
-            categories={categories}
-            newCategory={newCategory}
-            setNewCategory={setNewCategory}
-            handleCategorySubmit={handleCategorySubmit}
-          />
-          </ParentTab>
-        );
-      case 4:
-        return (
-          <OrderListComponent
-            initialSupplierId={user?.userId}
-            initialStatus="PENDING"
-          />
-        );
-        
-      case 5:
-        return (
-          <ParentTab
-             title="Remittance Management"
-             description="Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts (filtered by supplier)"
-             showRefresh={false}>
-          <RemittancePage
-            initialSupplierId={user?.userId}
-          />
-          </ParentTab>
-        );
-      case 6:
-        return (<SalesList filter={filter} pageSize={20}/>);
-      case 7:
-        return (
-          <ParentTab
-             title="API Bills Management"
-             description="Track API service costs and usage metrics"
-             showRefresh={false}>
-             <ApiBillsTab />
-          </ParentTab>
-            );
-      case 8:
-        return <></>;
-      case 9:
-        return (
-          <ParentTab
-             title="Vehicle Type Manager"
-             description="Manage Vehicle types"
-             showRefresh={false}>
-              <VehicleTypeManager/>
-          </ParentTab>
-            );
-      case 10:
-        return <UserProfile userId={user?.userId?user?.userId:''}/>;
-      case 11:
-        return <UserProfile userId={activeselectedUser?activeselectedUser:''}/>;
-      case 12:
-        return <PMTab UserId={user?.userId?user?.userId:''}/>;
-      case 13:
-        return (
-          <ParentTab
-             title="Size Manager"
-             description="Manage product sizes"
-             showRefresh={false}>
-             <SizeManager/>
-          </ParentTab>
-            );
-      case 14: 
-        return (
-          <ParentTab
-             title="Return Management"
-             description="Manage customer return requests and process refunds"
-             showRefresh={false}>
-                <VendorReturnManagement supplierId={user?.userId?user?.userId:''}/>
-          </ParentTab> 
-            );
-      case 15:
-        return <ServicesTable/>;
-      case 16:
-        return <NotificationPage UserId={user?.userId?user?.userId:''}/>;
-      case 17:
-        return (
-          <ParentTab
-             title="Food Option Management"
-             description="Manage and control Options"
-             showRefresh={false}>
-            <FoodManagement  accountId={user?.userId?user?.userId:''} />
-          </ParentTab>
-            )
-      default:
-        return <></>;
-    }
-  };
-  */
   // Now we can have conditional returns after all hooks are called
   if (authLoading) { 
     return <LoadingShimmer />;
@@ -423,7 +283,6 @@ const renderContent = () => {
   if (isLoading || categoryLoading || productLoading) {
     return <LoadingShimmer />;
   }
-console.log(products);
 
   return (
     <div className="min-h-screen bg-gray-100">
