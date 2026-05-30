@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
         notification: {
           title: title,
           body: body,
-          icon: 'https://yourdomain.com/icon-192.png',
-          deep_link: url || 'https://yourdomain.com',
+          icon: 'https://portfolio-xi-eight-92.vercel.app/VendorCity.webp',
+          deep_link: url || 'https://portfolio-xi-eight-92.vercel.app',
         },
       },
     };
