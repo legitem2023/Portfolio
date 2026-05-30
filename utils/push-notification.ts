@@ -33,7 +33,7 @@ export async function sendPushNotification({
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        interest: "all-users",
+        userId: userId,
         title: title,
         body: message,
         url: link ? `/${link}` : '/',
