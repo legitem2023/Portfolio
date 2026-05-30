@@ -1329,18 +1329,6 @@ export default function OrderListComponent({
           animation: shimmer 1.8s infinite;
         }
       `}</style>
-
-      <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
-        
-        <button 
-          onClick={handleRefresh}
-          className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
-          title="Refresh"
-        >
-          <RefreshCw size={18} />
-        </button>
-      </div>
-
       {/* Status Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
