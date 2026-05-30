@@ -213,9 +213,16 @@ export default function ManagementDashboard() {
           </ParentTab>
         );
       case 6:
-        return <SalesList filter={filter} pageSize={20}/>;
+        return (<SalesList filter={filter} pageSize={20}/>);
       case 7:
-        return <ApiBillsTab />;
+        return (
+          <ParentTab
+             title="API Bills Management"
+             description="Manage API services bills"
+             showRefresh={false}>
+             <ApiBillsTab />
+          </ParentTab>
+            );
       case 8:
         return <></>;
       case 9:
