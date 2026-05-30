@@ -2,15 +2,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from "../../../../lib/auth";
-import PushNotifications from '@pusher/push-notifications-server';  // ✅ Fixed import
+import PushNotifications from '@pusher/push-notifications-server';
+import { decryptToken } from '../../../../../utils/decryptToken'; // Add this
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    const userId = session?.user?.id;
+    
+    // Get the serverToken from session
+    const serverToken = session?.serverToken;
+    
+    if (!serverToken) {
+      return NextResponse.json({ error: 'Unauthorized - No token' }, { status: 401 });
+    }
+    
+    // Decrypt the token to get real userId (same as useAuth)
+    const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+    const decrypted = await decryptToken(serverToken, secret);
+    const userId = decrypted.userId;
     
     if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
     }
     
     const beamsClient = new PushNotifications({
