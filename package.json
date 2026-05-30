@@ -19,7 +19,7 @@
     "@jeardev/ph-address": "^1.0.0",
     "@leenguyen/react-flip-clock-countdown": "^1.0.5",
     "@prisma/client": "^5.16.2",
-    "@pusher/push-notifications-web": "^1.4.0",
+    "@pusher/push-notifications-web": "^1.1.0",
     "@react-google-maps/api": "^2.19.3",
     "@reduxjs/toolkit": "^2.8.2",
     "@supabase/supabase-js": "2.38.0",
