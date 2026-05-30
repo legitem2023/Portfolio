@@ -5,6 +5,7 @@ import PWAInitializer from "./components/PWAInitializer";
 import InstallPWAButton from './components/InstallPWAButton';
 import { ApolloWrapper } from './components/ApolloWrapper';
 import { ToastContainer } from 'react-toastify';
+import NotificationManager from './components/NotificationManager';
 import 'react-toastify/dist/ReactToastify.css';
 import LoadEruda from "./LoadEruda";
 import { SessionProvider } from "next-auth/react";
@@ -19,6 +20,7 @@ export default function ClientLayout({
       <LoadEruda />
       <div className="BackGroundImage"></div>
       <PWAInitializer />
+      <NotificationManager/>
       <SessionProvider>
         <ReduxWrapper>
           <ToastContainer 
@@ -27,6 +29,7 @@ export default function ClientLayout({
             hideProgressBar={false} 
             newestOnTop 
           />
+          
           <ApolloWrapper>
             {children}
           </ApolloWrapper>
