@@ -65,7 +65,7 @@ export async function sendPushNotification({
   }
 }
 
-// ✅ Export the setup function for use in login page
+
 export const setupPushNotifications = async (userId: string) => {
   try {
     // Check if Pusher Beams is available (browser only)
@@ -74,36 +74,29 @@ export const setupPushNotifications = async (userId: string) => {
       return;
     }
     
-    // Check if Pusher Beams client is loaded
-    if (!window.PusherPushNotifications) {
-      console.log('Pusher Beams not loaded yet, waiting...');
-      // Wait a bit for the script to load
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      if (!window.PusherPushNotifications) {
-        console.error('Pusher Beams still not loaded');
-        return;
-      }
+    // ✅ Use type assertion to avoid TypeScript error
+    const PusherPushNotifications = (window as any).PusherPushNotifications;
+    
+    if (!PusherPushNotifications) {
+      console.log('Pusher Beams not loaded yet');
+      return;
     }
     
-    const beams = new window.PusherPushNotifications.Client({
+    const beams = new PusherPushNotifications.Client({
       instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
     });
     
     await beams.start();
     
-    // This will call your /api/push/beams-auth endpoint
     await beams.setUserId(userId, {
       url: '/api/push/beams-auth',
     });
     
-    // Add personal interest for this user
     await beams.addDeviceInterest(`user-${userId}`);
-    await beams.addDeviceInterest('all-users'); // Optional: keep for broadcast
+    await beams.addDeviceInterest('all-users');
     
     console.log('✅ Push notifications enabled for user:', userId);
-    return true;
   } catch (error) {
     console.error('Failed to setup push notifications:', error);
-    return false;
   }
 };
