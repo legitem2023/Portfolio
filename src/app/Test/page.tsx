@@ -1,6 +1,6 @@
 'use client';
 
-export function TestPushButton() {
+export default function TestPushButton() {
   const sendPush = async () => {
     const response = await fetch('/api/push/send', {
       method: 'POST',
