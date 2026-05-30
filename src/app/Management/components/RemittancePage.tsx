@@ -426,21 +426,12 @@ export default function RemittancePage({ initialSupplierId }: RemittancePageProp
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+    <div className="container">
       {/* Card wrapper */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className="overflow-hidden">
         {/* Header section */}
-        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200 flex flex-wrap justify-between items-center gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 flex items-center gap-2">
-              <Receipt className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-              <span>Remittances</span>
-            </h1>
-            <p className="text-sm text-gray-600">
-              Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts
-              {initialSupplierId && ' (filtered by supplier)'}
-            </p>
-          </div>
+        <div>
+
           <button 
             onClick={handleRefresh}
             className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
