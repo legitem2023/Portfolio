@@ -248,9 +248,7 @@ export default function VehicleTypeManager() {
   if (error) return <div className="p-4 text-red-500">Error: {error.message}</div>;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Vehicle Type Manager</h1>
-
+    <div className="container">  
       {/* Message Display */}
       {message && (
         <div className={`mb-4 p-3 rounded ${
