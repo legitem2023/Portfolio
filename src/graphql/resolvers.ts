@@ -9655,17 +9655,17 @@ for (const supplierId of uniqueSupplierIds) {
           const message = itemCount === 1 
             ? `Order #${response.orderNumber}: ${totalQuantity} item(s) (${itemList})`
             : `Order #${response.orderNumber}: ${totalQuantity} item(s) from ${itemCount} product(s) (${itemList})`;
-sendPushNotification({
-  userId: supplierId,
-  type: NotificationType.ORDER_CREATED,
-  title: "New Order Received",
-  message: message,
-  link: `${response.id}`,
-  orderId: response.orderNumber,
-  orderNumber: response.orderNumber
-});
-
           
+          sendPushNotification({
+             userId: supplierId,
+             type: NotificationType.ORDER_CREATED,
+             title: "New Order Received",
+             message: message,
+             link: `${response.id}`,
+             orderId: response.orderNumber,
+             orderNumber: response.orderNumber
+          });
+     
           return createNotification({
             userId: supplierId,
             type: NotificationType.ORDER_CREATED,
@@ -9674,8 +9674,6 @@ sendPushNotification({
             link: `${response.id}`,
             isRead: false
           });
-        
-        
         });
         
         // Fire all supplier notifications in parallel (don't await to avoid timeout)
@@ -9692,16 +9690,6 @@ sendPushNotification({
           link: `${response.id}`,
           isRead: false
         }).catch(err => console.error('User notification failed:', err));
-
-await sendPushNotification({
-  userId: userId,
-  type: NotificationType.ORDER_CREATED,
-  title: "Order Created Successfully",
-  message: `Your order #${response.orderNumber} has been created and is being processed.`,
-  link: `${response.id}`,
-  orderId: response.orderNumber,
-  orderNumber: response.orderNumber
-});
              
         return {
           success: true,
