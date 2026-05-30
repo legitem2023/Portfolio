@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createNotification } from '../../utils/notificationService';
 import { NotificationType } from '../../utils/notificationService'; // Import the enum
 import { emailMutations } from '../../lib/email/emailService';
+import { sendNotification } from '../../utils/push-notification';
 // import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server';
 import { LogoutResponse, Context } from './Types/graphql.js';
 import { pusherServer } from '../app/lib/pusher/server';
@@ -9679,6 +9680,17 @@ for (const supplierId of uniqueSupplierIds) {
           link: `${response.id}`,
           isRead: false
         }).catch(err => console.error('User notification failed:', err));
+
+await sendNotification({
+  userId: userId,
+  type: NotificationType.ORDER_CREATED,
+  title: "Order Created Successfully",
+  message: `Your order #${response.orderNumber} has been created and is being processed.`,
+  link: `${response.id}`,
+  orderId: orderId,
+  orderNumber: orderNumber
+});
+
         
         return {
           success: true,
