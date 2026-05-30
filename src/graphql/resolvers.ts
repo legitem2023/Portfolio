@@ -9687,8 +9687,8 @@ await sendPushNotification({
   title: "Order Created Successfully",
   message: `Your order #${response.orderNumber} has been created and is being processed.`,
   link: `${response.id}`,
-  orderId: orderId,
-  orderNumber: orderNumber
+  orderId: response.orderNumber,
+  orderNumber: response.orderNumber
 });
 
         
