@@ -1298,7 +1298,7 @@ export default function OrderListComponent({
   const hasNoData = !loading && ordersWithItems.length === 0;
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+    <div className="container">
       <style jsx global>{`
         @keyframes shimmer {
           0% {
@@ -1331,13 +1331,7 @@ export default function OrderListComponent({
       `}</style>
 
       <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2">
-            <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
-            <span>Orders</span>
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage and track all orders</p>
-        </div>
+        
         <button 
           onClick={handleRefresh}
           className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
