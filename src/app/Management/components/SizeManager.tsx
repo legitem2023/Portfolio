@@ -173,7 +173,6 @@ export default function SizeManager() {
             <div className="px-4 py-4 md:px-8 md:py-6 max-w-7xl mx-auto">
                 {/* Header - Stack on mobile, row on desktop */}
                 <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-6">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Size Manager</h1>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <button
                             onClick={exportToJson}
