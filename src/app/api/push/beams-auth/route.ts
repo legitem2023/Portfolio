@@ -8,21 +8,19 @@ import { decryptToken } from '../../../../../utils/decryptToken';
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    // Get the serverToken from session
     const serverToken = session?.serverToken;
     
     if (!serverToken) {
-      return NextResponse.json({ error: 'Unauthorized - No token' }, { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    // Decrypt the token to get real userId
+    // Decrypt token to get real userId
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
     const decrypted = await decryptToken(serverToken, secret);
     const userId = decrypted.userId;
     
     if (!userId) {
-      return NextResponse.json({ error: 'Invalid user data' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
     
     const beamsClient = new PushNotifications({
@@ -30,10 +28,8 @@ export async function POST(req: NextRequest) {
       secretKey: process.env.PUSHER_BEAMS_SECRET_KEY!,
     });
     
-    // ✅ CORRECT METHOD: generateToken (not authenticateUser)
-    const beamsToken = beamsClient.generateToken(userId, {
-      interests: [`user-${userId}`, 'all-users']
-    });
+    // ✅ Only generate token for the userId (no interests here)
+    const beamsToken = beamsClient.generateToken(userId);
     
     return NextResponse.json(beamsToken);
   } catch (error) {
