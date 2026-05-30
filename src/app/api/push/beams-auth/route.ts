@@ -1,7 +1,7 @@
 // app/api/push/beams-auth/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from "../../../../lib/auth";
 import PusherPushNotifications from 'pusher-push-notifications-server';
 
 export async function POST(req: NextRequest) {
