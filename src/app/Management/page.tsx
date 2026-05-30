@@ -203,9 +203,14 @@ export default function ManagementDashboard() {
         
       case 5:
         return (
+          <ParentTab
+             title="Remittance Management"
+             description="Financial summary for delivered orders – rider earnings, vendor city fees, and remittance amounts (filtered by supplier)"
+             showRefresh={false}>
           <RemittancePage
             initialSupplierId={user?.userId}
           />
+          </ParentTab>
         );
       case 6:
         return <SalesList filter={filter} pageSize={20}/>;
@@ -214,7 +219,14 @@ export default function ManagementDashboard() {
       case 8:
         return <></>;
       case 9:
-        return <VehicleTypeManager/>;
+        return (
+          <ParentTab
+             title="Vehicle Type Manager"
+             description="Manage Vehicle types"
+             showRefresh={false}>
+              <VehicleTypeManager/>
+          </ParentTab>
+            );
       case 10:
         return <UserProfile userId={user?.userId?user?.userId:''}/>;
       case 11:
@@ -222,7 +234,14 @@ export default function ManagementDashboard() {
       case 12:
         return <PMTab UserId={user?.userId?user?.userId:''}/>;
       case 13:
-        return <SizeManager/>;
+        return (
+          <ParentTab
+             title="Size Manager"
+             description="Manage product sizes"
+             showRefresh={false}>
+             <SizeManager/>
+          </ParentTab>
+            );
       case 14: 
         return (
           <ParentTab
