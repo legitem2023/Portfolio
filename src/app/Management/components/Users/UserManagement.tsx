@@ -91,6 +91,119 @@ const UPDATE_ROLE = gql`
   }
 `;
 
+// Shimmer Loading Component
+const ShimmerLoading = () => {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Tabs Shimmer */}
+      <div className="hidden sm:block bg-white rounded-lg shadow mb-4 sm:mb-6">
+        <div className="border-b border-gray-200 px-4 sm:px-6">
+          <div className="flex gap-2 sm:gap-4 py-3 sm:py-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-8 w-20 sm:w-24 bg-gray-200 rounded-md"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Tabs Shimmer */}
+      <div className="block sm:hidden mb-4">
+        <div className="animate-pulse">
+          <div className="h-12 bg-white rounded-lg shadow"></div>
+        </div>
+      </div>
+
+      {/* Cards Grid Shimmer */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="bg-white rounded-lg shadow overflow-hidden">
+            {/* Colored top bar shimmer */}
+            <div className="h-1.5 sm:h-2 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%]"></div>
+            
+            <div className="p-3 sm:p-4 md:p-6">
+              {/* User Header Shimmer */}
+              <div className="flex items-start space-x-2 sm:space-x-3 md:space-x-4">
+                {/* Avatar Shimmer */}
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%]"></div>
+                </div>
+                
+                {/* User Info Shimmer */}
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 sm:h-5 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded w-3/4"></div>
+                  <div className="h-3 sm:h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded w-5/6"></div>
+                  <div className="h-3 sm:h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded w-2/3"></div>
+                </div>
+              </div>
+
+              {/* Select User Button Shimmer */}
+              <div className="mt-3 sm:mt-4">
+                <div className="h-9 sm:h-10 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded-md"></div>
+              </div>
+
+              {/* Current Role Badge Shimmer */}
+              <div className="mt-3 sm:mt-4 space-y-1 sm:space-y-2">
+                <div className="h-3 w-20 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                <div className="h-6 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded-full"></div>
+              </div>
+
+              {/* Role Selector Shimmer */}
+              <div className="mt-2 sm:mt-3 md:mt-4 space-y-1 sm:space-y-2">
+                <div className="h-3 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                <div className="h-8 sm:h-9 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded-md"></div>
+              </div>
+
+              {/* Addresses Section Shimmer */}
+              <div className="mt-2 sm:mt-3 md:mt-4">
+                <div className="flex items-center justify-between">
+                  <div className="h-3 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                  <div className="w-4 h-4 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                </div>
+              </div>
+
+              {/* Additional Info Shimmer */}
+              <div className="mt-2 sm:mt-3 md:mt-4 pt-2 sm:pt-3 md:pt-4 border-t border-gray-100">
+                <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                  <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded col-span-2 sm:col-span-1"></div>
+                  <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded col-span-2 sm:col-span-1"></div>
+                </div>
+              </div>
+
+              {/* Email Verification Status Bar Shimmer */}
+              <div className="mt-2 sm:mt-3 md:mt-4 -mx-3 sm:-mx-4 md:-mx-6 -mb-3 sm:-mb-4 md:-mb-6 px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 bg-gray-50">
+                <div className="flex items-center">
+                  <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 animate-shimmer bg-[length:200%_100%] mr-1.5 sm:mr-2"></div>
+                  <div className="h-3 w-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Summary Footer Shimmer */}
+      <div className="mt-4 sm:mt-6 md:mt-8 bg-white rounded-lg shadow p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+            <div className="h-4 w-24 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex items-center gap-1">
+                  <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-gradient-to-r from-gray-300 via-gray-200 to-gray-300 animate-shimmer bg-[length:200%_100%]"></div>
+                  <div className="h-3 w-16 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-3 w-32 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-shimmer bg-[length:200%_100%] rounded"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState<TabType>('ALL');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -101,11 +214,7 @@ const UserManagement = () => {
     refetchQueries: [{ query: USERS }]
   });
 
-  if (loading) return (
-    <div className="flex justify-center items-center min-h-[50vh] sm:min-h-[70vh]">
-      <div className="text-gray-500 text-sm sm:text-base">Loading users...</div>
-    </div>
-  );
+  if (loading) return <ShimmerLoading />;
   
   if (error) return (
     <div className="p-3 sm:p-4 bg-red-50 border border-red-200 rounded-md m-3 sm:m-6">
