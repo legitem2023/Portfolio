@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
 
-    const { title, body, userId, url, interest } = await req.json();
+    const { title, body, userId, url, interest, data } = await req.json();
 
     if (!title || !body) {
       return NextResponse.json(
@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
       deepLink = `${baseUrl}${deepLink}`;
     }
 
+    // ✅ FIXED: Add interests array (required by Beams)
     const publishPayload: any = {
       web: {
         notification: {
@@ -47,11 +48,18 @@ export async function POST(req: NextRequest) {
           deep_link: deepLink,
         },
       },
+      interests: [], // ✅ ADD THIS - Beams requires interests field
     };
 
-    // Send to specific user or interest
+    // ✅ Add data if provided
+    if (data) {
+      publishPayload.web.data = data;
+    }
+
+    // ✅ FIXED: Send to specific user or interest
     if (userId) {
       publishPayload.users = [userId];
+      publishPayload.interests = [`user-${userId}`]; // ✅ ADD THIS - personal interest for user
     } else if (interest) {
       publishPayload.interests = [interest];
     } else {
