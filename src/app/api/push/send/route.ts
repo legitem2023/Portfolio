@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from "../../../../lib/auth"; // Facebook and Google are already inside this
+import { authOptions } from "../../../../lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    // Optional: Protect the endpoint with authentication
     const session = await getServerSession(authOptions);
     
-    // Uncomment this if you want to require authentication
+    // Uncomment to require auth
     // if (!session) {
     //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     // }
@@ -21,7 +20,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if Beams credentials are configured
     const instanceId = process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID;
     const secretKey = process.env.PUSHER_BEAMS_SECRET_KEY;
 
@@ -33,14 +31,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Prepare the payload for Pusher Beams
+    // FIX: Ensure deep_link is absolute URL
+    const baseUrl = 'https://portfolio-xi-eight-92.vercel.app';
+    let deepLink = url || baseUrl;
+    if (deepLink.startsWith('/')) {
+      deepLink = `${baseUrl}${deepLink}`;
+    }
+
     const publishPayload: any = {
       web: {
         notification: {
           title: title,
           body: body,
           icon: 'https://portfolio-xi-eight-92.vercel.app/VendorCity.webp',
-          deep_link: url || 'https://portfolio-xi-eight-92.vercel.app',
+          deep_link: deepLink,
         },
       },
     };
@@ -51,10 +55,11 @@ export async function POST(req: NextRequest) {
     } else if (interest) {
       publishPayload.interests = [interest];
     } else {
-      publishPayload.interests = ['all-users']; // Default interest
+      publishPayload.interests = ['all-users'];
     }
 
-    // Call Pusher Beams API
+    console.log('Sending to Beams:', JSON.stringify(publishPayload, null, 2));
+
     const response = await fetch(
       `https://${instanceId}.pushnotifications.pusher.com/publish_api/v1/instances/${instanceId}/publishes`,
       {
@@ -94,7 +99,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Optional: Handle GET requests to test the endpoint
 export async function GET() {
   return NextResponse.json({ 
     message: 'Push notification API endpoint', 
@@ -107,4 +111,4 @@ export async function GET() {
       url: 'optional-deep-link'
     }
   });
-       }
+}
