@@ -126,10 +126,10 @@ export const setupPushNotifications = async (userId: string) => {
     
   } catch (error) {
     console.error('❌ [PUSH SETUP] Failed to setup push notifications:', error);
-    console.error('Error details:', {
+  /*  console.error('Error details:', {
       name: error?.name,
       message: error?.message,
       userId: userId
-    });
+    });*/
   }
 };
