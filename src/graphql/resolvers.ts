@@ -37,7 +37,7 @@ const emailConfig: EmailServiceConfig = {
   appName: 'VendorCity',
   baseUrl: 'https://vendorcity.net'
 };
-const trackingNumber = await generateTrackingNumber(supplierId);
+const trackingNumber = await generateTrackingNumber("supplierId");
 
 const passwordResetService = new PasswordResetService(emailConfig);
 
