@@ -14,15 +14,15 @@ export function NotificationManager() {
 
   useEffect(() => {
     const setupPush = async () => {
-      // Use npm package import instead of CDN
       try {
         const PusherPushNotifications = await import('@pusher/push-notifications-web');
-        const module = PusherPushNotifications.default || PusherPushNotifications;
+        // ✅ FIX: Rename 'module' to 'pusherModule' or any other name
+        const pusherModule = PusherPushNotifications.default || PusherPushNotifications;
         
         console.log('✅ Pusher Beams module loaded');
         
         if ('serviceWorker' in navigator && 'PushManager' in window) {
-          await registerAndSubscribe(module);
+          await registerAndSubscribe(pusherModule);
         }
       } catch (error) {
         console.error('Failed to load Pusher Beams:', error);
@@ -106,7 +106,6 @@ export function NotificationManager() {
           const interests = await beamsClient.getDeviceInterests();
           console.log('🎯 Device interests:', interests);
           
-          // Test if user-specific notification works
           console.log('✅ Ready to receive user-specific notifications!');
         } else {
           await beamsClient.addDeviceInterest('all-users');
