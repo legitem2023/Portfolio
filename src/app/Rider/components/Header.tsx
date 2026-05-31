@@ -17,6 +17,7 @@ import {
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
+import * as PusherPushNotifications from '@pusher/push-notifications-web';
 
 interface Notification {
   id: string;
@@ -318,6 +319,47 @@ export default function Header({ user }: HeaderProps) {
     dispatch(setActiveIndex(10));
   };
 
+  const clearPushNotifications = async (userId: string) => {
+    try {
+      console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
+      
+      const beamsClient = new PusherPushNotifications.Client({
+        instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+      });
+      
+      await beamsClient.start();
+      console.log('✅ [LOGOUT] Beams client started');
+      
+      // Get current interests before removal
+      const currentInterests = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Current interests before removal:', currentInterests);
+      
+      // Remove user-specific interest
+      if (currentInterests.includes(`user-${userId}`)) {
+        await beamsClient.removeDeviceInterest(`user-${userId}`);
+        console.log(`✅ [LOGOUT] Removed user-${userId} interest`);
+      }
+      
+      // Remove all-users interest if exists
+      if (currentInterests.includes('all-users')) {
+        await beamsClient.removeDeviceInterest('all-users');
+        console.log('✅ [LOGOUT] Removed all-users interest');
+      }
+      
+      // Verify removal
+      const interestsAfter = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
+      
+      // Stop the client
+      await beamsClient.stop();
+      console.log('✅ [LOGOUT] Push notifications cleared successfully');
+      
+    } catch (error) {
+      console.error('❌ [LOGOUT] Failed to clear push notifications:', error);
+      // Don't block logout if push notification cleanup fails
+    }
+  };
+
   const handleLogout = async () => {
     const confirmLogout = window.confirm('Are you sure you want to logout?');
     if (!confirmLogout) {
@@ -328,6 +370,11 @@ export default function Header({ user }: HeaderProps) {
     setIsLoggingOut(true);
     
     try {
+      // Clear Beams push notification interests before logout
+      if (typeof window !== 'undefined' && user?.userId) {
+        await clearPushNotifications(user.userId);
+      }
+      
       await signOut({
         redirect: true,
         callbackUrl: '/Login',
@@ -868,4 +915,4 @@ export default function Header({ user }: HeaderProps) {
       {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
-            }
+    }
