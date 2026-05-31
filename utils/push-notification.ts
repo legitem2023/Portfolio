@@ -64,6 +64,7 @@ export async function sendPushNotification({
   }
 }
 
+
 export const setupPushNotifications = async (userId: string) => {
   try {
     console.log('🔵 [PUSH SETUP] Starting setup for userId:', userId);
@@ -95,11 +96,11 @@ export const setupPushNotifications = async (userId: string) => {
     const beams = new PusherPushNotifications.Client({
       instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
     });
-    console.log(process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID);
+    
     console.log('🚀 [PUSH SETUP] Starting Beams...');
     await beams.start();
     
-    // ✅ FIX: Get the token from your backend first
+    // ✅ FIX: Get the token from your backend
     console.log('🔑 [PUSH SETUP] Getting auth token...');
     const authResponse = await fetch('/api/push/beams-auth', {
       method: 'POST',
@@ -115,11 +116,18 @@ export const setupPushNotifications = async (userId: string) => {
     
     console.log('✅ [PUSH SETUP] Token received');
     
-    // ✅ FIX: Use token directly, NOT a config object
-    await beams.setUserId(userId, token);
+    // ✅ CRITICAL FIX: Use the tokenProvider object format
+    await beams.setUserId(userId, {
+      tokenProvider: {
+        fetchToken: async () => {
+          return token;
+        }
+      }
+    });
+    
     console.log('✅ [PUSH SETUP] User authenticated');
     
-    // Subscribe to user-specific interest only (remove all-users for testing)
+    // Subscribe to user-specific interest
     await beams.addDeviceInterest(`user-${userId}`);
     console.log(`✅ [PUSH SETUP] Subscribed to user-${userId}`);
     
