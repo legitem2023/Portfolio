@@ -37,6 +37,7 @@ const emailConfig: EmailServiceConfig = {
   appName: 'VendorCity',
   baseUrl: 'https://vendorcity.net'
 };
+const trackingNumber = await generateTrackingNumber(supplierId);
 
 const passwordResetService = new PasswordResetService(emailConfig);
 
@@ -7690,7 +7691,7 @@ await prisma.notification.create({
     };
   }
     },
-    acceptByRider: async (_:any, { itemId, riderId, supplierId, userId }:any) => {
+    acceptByRider: async (_:any, { parentItemId, itemId, riderId, supplierId, userId }:any) => {
   try {  
     // Check if rider has more than 3 active deliveries (PROCESSING or SHIPPED)
     const activeDeliveriesCount = await prisma.orderItem.count({
@@ -7716,7 +7717,7 @@ await prisma.notification.create({
       }
     });
     
-    const trackingNumber = await generateTrackingNumber(supplierId);
+    
     const updatedOrder = await prisma.orderItem.updateMany({
         where: { 
           id: itemId
@@ -7731,7 +7732,7 @@ await prisma.notification.create({
     await prisma.payment.updateMany({
         where:{
           supplierId,
-          orderId: itemId
+          orderId: parentItemId
         },
         data:{
           riderId
