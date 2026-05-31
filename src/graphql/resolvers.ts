@@ -7706,6 +7706,9 @@ await prisma.notification.create({
     });
 
     if (activeDeliveriesCount > 3) {
+     throw new Error(`Count:${ activeDeliveriesCount }`);
+     throw new Error(`Rider ID:${riderId}`);
+    
       return {
         statusText: "You should complete the active delivery first"
       };
