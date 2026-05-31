@@ -21,8 +21,8 @@ export default function ClientLayout({
       <LoadEruda />
       <div className="BackGroundImage"></div>
       <PWAInitializer />
-      <NotificationManager/>
       <ServiceWorkerRegister/>
+      <NotificationManager/>  
       <SessionProvider>
         <ReduxWrapper>
           <ToastContainer 
