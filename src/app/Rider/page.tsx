@@ -19,7 +19,7 @@ import ActiveDeliveriesTab from './components/ActiveDeliveriesTab';
 import PerformanceTab from './components/PerformanceTab';
 import { Bell } from "lucide-react";
 import dynamic from 'next/dynamic';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '../components/hooks/useAuth';
 import RiderPaymentHistory from './components/RiderPaymentHistory';
 import PMTab from './components/PMTab';
 import UserProfile from './components/UserProfile';
