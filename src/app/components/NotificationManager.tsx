@@ -37,9 +37,7 @@ export function NotificationManager() {
         console.log('Step 4: Starting Beams...');
         await beamsClient.start();
         
-        // 🔥 THIS IS THE ONLY LINE THAT CHANGED 🔥
-        // Instead of session?.user?.id, get userId from your decrypted data
-        // You need to fetch the decrypted user data first
+        // Get the user ID from your API
         const userResponse = await fetch('/api/protected');
         const userData = await userResponse.json();
         const userId = userData?.user?.userId;
@@ -48,9 +46,19 @@ export function NotificationManager() {
         
         if (userId) {
           console.log('📝 Setting Beams user ID to:', userId);
-          await beamsClient.setUserId(userId, {
-            url: '/api/push/beams-auth',
+          // ✅ CORRECT: Get auth token from your backend
+          const authResponse = await fetch('/api/push/beams-auth', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId }),
           });
+          
+          const { token } = await authResponse.json();
+          
+          // Pass the token to setUserId
+          await beamsClient.setUserId(userId, token);
           console.log('✅ Beams user ID set successfully');
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
