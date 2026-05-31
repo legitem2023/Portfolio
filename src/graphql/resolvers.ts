@@ -7719,15 +7719,14 @@ await prisma.notification.create({
     const trackingNumber = await generateTrackingNumber(supplierId);
     const updatedOrder = await prisma.orderItem.updateMany({
         where: { 
-          orderId: itemId,
-          supplierId: supplierId
+          id: itemId
         },
-        data:{
+        data: {
           status: 'PROCESSING',
           riderId: riderId,
           trackingNumber: trackingNumber
         }
-    });
+      });
 
     await prisma.payment.updateMany({
         where:{
