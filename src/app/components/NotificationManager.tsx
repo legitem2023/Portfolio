@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import * as PusherPushNotifications from '@pusher/push-notifications-web';
+import { decryptToken } from '../../../utils/decryptToken'; // Adjust path as needed
 
 export function NotificationManager() {
   const [permission, setPermission] = useState('default');
@@ -35,12 +36,27 @@ export function NotificationManager() {
         console.log('Step 4: Starting Beams...');
         await beamsClient.start();
         
-        // Get the user ID from your API
-        const userResponse = await fetch('/api/protected');
-        const userData = await userResponse.json();
-        const userId = userData?.user?.userId;
+        // Get encrypted user data from API
+        const response = await fetch('/api/protected', {
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
         
-        console.log('🔑 Current user ID:', userId);
+        const data = await response.json();
+        const encryptedToken = data?.user;
+        const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
+        
+        let userId = null;
+        
+        if (encryptedToken) {
+          // Decrypt the token to get user payload
+          const payload = await decryptToken(encryptedToken, secret);
+          userId = payload?.userId;
+          console.log('🔑 Decrypted user ID:', userId);
+        }
         
         if (userId) {
           console.log('📝 Setting Beams user ID to:', userId);
@@ -55,19 +71,15 @@ export function NotificationManager() {
           const { token } = await authResponse.json();
           await beamsClient.setUserId(userId, token);
           console.log('✅ Beams user ID set successfully');
+          
+          await beamsClient.addDeviceInterest('all-users');
+          await beamsClient.addDeviceInterest(`user-${userId}`);
+          console.log(`✅ Subscribed to all-users and user-${userId}`);
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
+          await beamsClient.addDeviceInterest('all-users');
+          console.log('✅ Subscribed to all-users interest');
         }
-        
-        console.log('Step 5: Adding device interest...');
-        await beamsClient.addDeviceInterest('all-users');
-        
-        if (userId) {
-          await beamsClient.addDeviceInterest(`user-${userId}`);
-          console.log(`✅ Subscribed to user-${userId}`);
-        }
-        
-        console.log('✅ Subscribed to all-users interest');
       }
     } catch (error) {
       console.error('❌ Push setup error:', error);
