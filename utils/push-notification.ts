@@ -97,27 +97,10 @@ export const setupPushNotifications = async (userId: string) => {
     // ✅ FIX: Use tokenProvider object with fetchToken method
     console.log('🔑 [PUSH SETUP] Setting up token provider...');
     
-    await beams.setUserId(userId, {
-      tokenProvider: {
-        fetchToken: async () => {
-          console.log('🔄 [PUSH SETUP] fetchToken called - getting fresh token...');
-          const authResponse = await fetch('/api/push/beams-auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId }),
-          });
-          
-          const { token } = await authResponse.json();
-          
-          if (!token) {
-            throw new Error('No token received from auth endpoint');
-          }
-          
-          console.log('✅ [PUSH SETUP] Token provided, length:', token.length);
-          return token;
-        }
-      }
-    });
+    // Alternative syntax for older SDK version
+   await beams.setUserId(userId, {
+     token: token  // Some versions expect token directly in an object
+   });
     
     console.log('✅ [PUSH SETUP] User authenticated with token provider');
     
