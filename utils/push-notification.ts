@@ -118,12 +118,18 @@ export const setupPushNotifications = async (userId: string) => {
     
     // ✅ CRITICAL FIX: Use the tokenProvider object format
     await beams.setUserId(userId, {
-      tokenProvider: {
-        fetchToken: async () => {
-          return token;
-        }
-      }
-    });
+  tokenProvider: {
+    fetchToken: async () => {
+      const response = await fetch('/api/push/beams-auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId }),
+      });
+      const { token } = await response.json();
+      return token;
+    }
+  }
+});
     
     console.log('✅ [PUSH SETUP] User authenticated');
     
