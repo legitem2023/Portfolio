@@ -16,6 +16,7 @@ import {
 } from '../../components/graphql/mutation';
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
+import * as PusherPushNotifications from '@pusher/push-notifications-web';
 
 interface Notification {
   id: string;
@@ -293,6 +294,47 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     dispatch(setActiveIndex(10));
   };
 
+  const clearPushNotifications = async (userId: string) => {
+    try {
+      console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
+      
+      const beamsClient = new PusherPushNotifications.Client({
+        instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+      });
+      
+      await beamsClient.start();
+      console.log('✅ [LOGOUT] Beams client started');
+      
+      // Get current interests before removal
+      const currentInterests = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Current interests before removal:', currentInterests);
+      
+      // Remove user-specific interest
+      if (currentInterests.includes(`user-${userId}`)) {
+        await beamsClient.removeDeviceInterest(`user-${userId}`);
+        console.log(`✅ [LOGOUT] Removed user-${userId} interest`);
+      }
+      
+      // Remove all-users interest if exists
+      if (currentInterests.includes('all-users')) {
+        await beamsClient.removeDeviceInterest('all-users');
+        console.log('✅ [LOGOUT] Removed all-users interest');
+      }
+      
+      // Verify removal
+      const interestsAfter = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
+      
+      // Stop the client
+      await beamsClient.stop();
+      console.log('✅ [LOGOUT] Push notifications cleared successfully');
+      
+    } catch (error) {
+      console.error('❌ [LOGOUT] Failed to clear push notifications:', error);
+      // Don't block logout if push notification cleanup fails
+    }
+  };
+
   const handleLogout = async () => {
     const confirmLogout = window.confirm('Are you sure you want to logout?');
     if (!confirmLogout) {
@@ -303,6 +345,11 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     setIsLoggingOut(true);
     
     try {
+      // Clear Beams push notification interests before logout
+      if (typeof window !== 'undefined' && user?.userId) {
+        await clearPushNotifications(user.userId);
+      }
+      
       await signOut({
         redirect: true,
         callbackUrl: '/Login',
@@ -530,7 +577,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.PAYMENT_CONFIRMATION:
       case NotificationType.PAYMENT_RECEIVED:
       case NotificationType.PAYMENT_FAILED:
-        dispatch(setActiveIndex(4)); // Orders page
+        dispatch(setActiveIndex(4));
         router.push('/Management?index=4');
         break;
       case NotificationType.SUPPORT:
@@ -544,11 +591,10 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
         break;
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
-        dispatch(setActiveIndex(10)); // Profile page
+        dispatch(setActiveIndex(10));
         router.push('/Management?index=10');
         break;
       case NotificationType.SYSTEM_ALERT:
-        // Handle system alerts - could show a modal or redirect to system status page
         console.log('System alert:', notification.message);
         break;
       default:
@@ -864,4 +910,4 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       </div>
     </nav>
   );
-          }
+    }
