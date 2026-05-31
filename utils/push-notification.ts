@@ -64,7 +64,6 @@ export async function sendPushNotification({
   }
 }
 
-
 export const setupPushNotifications = async (userId: string) => {
   try {
     console.log('🔵 [PUSH SETUP] Starting setup for userId:', userId);
@@ -100,7 +99,7 @@ export const setupPushNotifications = async (userId: string) => {
     console.log('🚀 [PUSH SETUP] Starting Beams...');
     await beams.start();
     
-    // ✅ FIX: Get the token from your backend
+    // ✅ Get token from backend
     console.log('🔑 [PUSH SETUP] Getting auth token...');
     const authResponse = await fetch('/api/push/beams-auth', {
       method: 'POST',
@@ -108,32 +107,49 @@ export const setupPushNotifications = async (userId: string) => {
       body: JSON.stringify({ userId }),
     });
     
-    const { token } = await authResponse.json();
+    const data = await authResponse.json();
+    console.log('📦 [PUSH SETUP] Auth response:', { hasToken: !!data.token });
     
-    if (!token) {
+    if (!data.token) {
       throw new Error('No token received from auth endpoint');
     }
     
-    console.log('✅ [PUSH SETUP] Token received');
+    console.log('✅ [PUSH SETUP] Token received, length:', data.token.length);
     
-    // ✅ CRITICAL FIX: Use the tokenProvider object format
-    await beams.setUserId(userId, {
-  tokenProvider: {
-    fetchToken: async () => {
-      const response = await fetch('/api/push/beams-auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+    // ✅ Try both methods - Method 1: Direct token (older SDK)
+    try {
+      console.log('🔄 [PUSH SETUP] Trying direct token method...');
+      await beams.setUserId(userId, data.token);
+      console.log('✅ [PUSH SETUP] Direct token method succeeded');
+    } catch (directError) {
+      console.log('⚠️ [PUSH SETUP] Direct token failed, trying tokenProvider method...');
+      
+      // Method 2: TokenProvider (newer SDK)
+      await beams.setUserId(userId, {
+        tokenProvider: {
+          fetchToken: async () => {
+            console.log('🔄 [PUSH SETUP] TokenProvider fetchToken called');
+            const response = await fetch('/api/push/beams-auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId }),
+            });
+            const { token } = await response.json();
+            console.log('✅ [PUSH SETUP] TokenProvider got token, length:', token?.length);
+            return token;
+          }
+        }
       });
-      const { token } = await response.json();
-      return token;
+      console.log('✅ [PUSH SETUP] TokenProvider method succeeded');
     }
-  }
-});
     
     console.log('✅ [PUSH SETUP] User authenticated');
     
+    // Wait a moment for authentication to fully complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     // Subscribe to user-specific interest
+    console.log(`📡 [PUSH SETUP] Subscribing to user-${userId}...`);
     await beams.addDeviceInterest(`user-${userId}`);
     console.log(`✅ [PUSH SETUP] Subscribed to user-${userId}`);
     
@@ -143,6 +159,12 @@ export const setupPushNotifications = async (userId: string) => {
     console.log('🎉 [PUSH SETUP] SUCCESS! Push notifications ready');
     
   } catch (error) {
-    console.error('❌ [PUSH SETUP] Failed:', error);
+    console.error('❌ [PUSH SETUP] Failed at step:', error);
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
   }
 };
