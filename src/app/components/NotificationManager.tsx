@@ -102,8 +102,7 @@ export function NotificationManager() {
         registration.showNotification('Debug Test', {
           body: 'If you see this, service worker is working!',
           icon: '/icon.png',
-          badge: '/badge.png',
-          vibrate: [200, 100, 200]
+          badge: '/badge.png'
         });
         
       } else {
