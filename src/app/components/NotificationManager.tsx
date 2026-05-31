@@ -38,7 +38,7 @@ export function NotificationManager() {
     try {
       // Get existing service worker registration instead of registering a new one
       const registration = await navigator.serviceWorker.ready;
-      console.log('✅ Service Worker already registered and ready');
+      console.log('✅ Service Worker already registered and ready',registration);
       
       // Request permission
       const result = await Notification.requestPermission();
