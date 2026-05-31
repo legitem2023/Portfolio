@@ -94,7 +94,7 @@ export function NotificationManager() {
             return;
           }
           
-          console.log('🔐 Token received, length:', authData.token.length);
+          console.log('🔐 Token received, length:', authData.token);
           
           // This should now work with the npm package
           await beamsClient.setUserId(userId, authData.token);
