@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import * as PusherPushNotifications from '@pusher/push-notifications-web';
-import { useSession } from 'next-auth/react'; // Add this
+import { useSession } from 'next-auth/react';
 
 export function NotificationManager() {
-  const { data: session } = useSession(); // Add this
+  const { data: session } = useSession();
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
@@ -14,7 +14,7 @@ export function NotificationManager() {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       registerAndSubscribe();
     }
-  }, [session]); // Add session to dependencies
+  }, [session]);
 
   const registerAndSubscribe = async () => {
     try {
@@ -37,13 +37,18 @@ export function NotificationManager() {
         console.log('Step 4: Starting Beams...');
         await beamsClient.start();
         
-        // LOG THE USER ID FROM SESSION
-        console.log('🔑 Current session user ID:', session?.user?.id);
+        // 🔥 THIS IS THE ONLY LINE THAT CHANGED 🔥
+        // Instead of session?.user?.id, get userId from your decrypted data
+        // You need to fetch the decrypted user data first
+        const userResponse = await fetch('/api/protected');
+        const userData = await userResponse.json();
+        const userId = userData?.user?.userId;
         
-        if (session?.user?.id) {
-          // Set the user ID in Beams
-          console.log('📝 Setting Beams user ID to:', session.user.id);
-          await beamsClient.setUserId(session.user.id, {
+        console.log('🔑 Current user ID:', userId);
+        
+        if (userId) {
+          console.log('📝 Setting Beams user ID to:', userId);
+          await beamsClient.setUserId(userId, {
             url: '/api/push/beams-auth',
           });
           console.log('✅ Beams user ID set successfully');
@@ -54,9 +59,9 @@ export function NotificationManager() {
         console.log('Step 5: Adding device interest...');
         await beamsClient.addDeviceInterest('all-users');
         
-        if (session?.user?.id) {
-          await beamsClient.addDeviceInterest(`user-${session.user.id}`);
-          console.log(`✅ Subscribed to user-${session.user.id}`);
+        if (userId) {
+          await beamsClient.addDeviceInterest(`user-${userId}`);
+          console.log(`✅ Subscribed to user-${userId}`);
         }
         
         console.log('✅ Subscribed to all-users interest');
