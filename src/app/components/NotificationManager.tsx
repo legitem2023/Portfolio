@@ -3,13 +3,22 @@
 import { useEffect, useState } from 'react';
 import { decryptToken } from '../../../utils/decryptToken';
 
+// Declare the Pusher Beams SDK on window object
+declare global {
+  interface Window {
+    PusherPushNotifications: any;
+  }
+}
+
 export function NotificationManager() {
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
     const setupPush = async () => {
+      // Load SDK from CDN instead of npm package
       if (!document.querySelector('#pusher-beams-sdk')) {
         const script = document.createElement('script');
+        script.id = 'pusher-beams-sdk';
         script.src = 'https://js.pusher.com/beams/1.0/push-notifications-cdn.js';
         script.async = true;
         
@@ -21,8 +30,12 @@ export function NotificationManager() {
           }
         };
         
+        script.onerror = () => {
+          console.error('❌ Failed to load Pusher Beams SDK');
+        };
+        
         document.head.appendChild(script);
-      } else {
+      } else if (window.PusherPushNotifications) {
         await registerAndSubscribe();
       }
     };
@@ -51,6 +64,7 @@ export function NotificationManager() {
         console.log('Step 4: Starting Beams...');
         await beamsClient.start();
         
+        // Get device ID to confirm it's working
         const deviceId = await beamsClient.getDeviceId();
         console.log('📱 Device ID:', deviceId);
         
@@ -78,7 +92,6 @@ export function NotificationManager() {
         if (userId) {
           console.log('📝 Setting Beams user ID to:', userId);
           
-          // Get auth token from your backend
           const authResponse = await fetch('/api/push/beams-auth', {
             method: 'POST',
             headers: {
@@ -95,7 +108,6 @@ export function NotificationManager() {
             return;
           }
           
-          // Set user ID with token
           await beamsClient.setUserId(userId, authData.token);
           console.log('✅ Beams user ID set successfully');
           
@@ -103,24 +115,11 @@ export function NotificationManager() {
           const verifiedUserId = await beamsClient.getUserId();
           console.log('👤 Verified Beams user ID:', verifiedUserId);
           
-          if (verifiedUserId !== userId) {
-            console.error('❌ User ID verification failed!');
-            return;
-          }
-          
-          // Subscribe to interests
           await beamsClient.addDeviceInterest('all-users');
           await beamsClient.addDeviceInterest(`user-${userId}`);
           
-          // Verify interests were added
           const interests = await beamsClient.getDeviceInterests();
           console.log('🎯 Device interests:', interests);
-          
-          if (interests.includes(`user-${userId}`)) {
-            console.log(`✅ Successfully subscribed to user-${userId}`);
-          } else {
-            console.error(`❌ Failed to subscribe to user-${userId}`);
-          }
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
           await beamsClient.addDeviceInterest('all-users');
