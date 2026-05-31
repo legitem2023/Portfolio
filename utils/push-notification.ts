@@ -77,8 +77,9 @@ export const setupPushNotifications = async (userId: string) => {
       return;
     }
     
+    console.log('✅ [PUSH SETUP] Running in browser');
+    
     // Request notification permission first
-    console.log('🔔 [PUSH SETUP] Requesting notification permission...');
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       console.log('❌ [PUSH SETUP] Notification permission denied');
@@ -86,14 +87,14 @@ export const setupPushNotifications = async (userId: string) => {
     }
     console.log('✅ [PUSH SETUP] Notification permission granted');
     
-    console.log('📝 [PUSH SETUP] Initializing Beams client');
-    const beamsClient = PusherPushNotifications.init({
+    console.log('📝 [PUSH SETUP] Creating Beams client');
+    // ✅ CORRECT: Use Client constructor, NOT .init()
+    const beams = new PusherPushNotifications.Client({
       instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
-      serviceWorkerPath: '/service-worker.js' // Make sure this exists
     });
     
     console.log('🚀 [PUSH SETUP] Starting Beams...');
-    await beamsClient.start();
+    await beams.start();
     
     // Get token from your backend
     console.log('🔑 [PUSH SETUP] Getting auth token...');
@@ -109,17 +110,17 @@ export const setupPushNotifications = async (userId: string) => {
       throw new Error('No token received from auth endpoint');
     }
     
-    console.log('✅ [PUSH SETUP] Token received');
+    console.log('✅ [PUSH SETUP] Token received, length:', token.length);
     
-    // Set user ID with token
-    await beamsClient.setUserId(userId, token);
+    // ✅ Try direct token first (most common)
+    await beams.setUserId(userId, token);
     console.log('✅ [PUSH SETUP] User authenticated');
     
-    // Subscribe to interests
-    await beamsClient.addDeviceInterest(`user-${userId}`);
+    // Subscribe to user-specific interest
+    await beams.addDeviceInterest(`user-${userId}`);
     console.log(`✅ [PUSH SETUP] Subscribed to user-${userId}`);
     
-    const interests = await beamsClient.getDeviceInterests();
+    const interests = await beams.getDeviceInterests();
     console.log('🎯 [PUSH SETUP] Interests:', interests);
     
     console.log('🎉 [PUSH SETUP] SUCCESS! Push notifications ready');
@@ -127,11 +128,7 @@ export const setupPushNotifications = async (userId: string) => {
   } catch (error) {
     console.error('❌ [PUSH SETUP] Failed:', error);
     if (error instanceof Error) {
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      });
+      console.error('Error details:', error.message);
     }
   }
 };
