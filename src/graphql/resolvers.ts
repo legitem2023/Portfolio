@@ -7702,6 +7702,9 @@ await prisma.notification.create({
     },
     acceptByRider: async (_:any, { parentItemId, itemId, riderId, supplierId, userId }:any) => {
   try {  
+    if(!trackingNumber){
+      await init();
+    }
     // Check if rider has more than 3 active deliveries (PROCESSING or SHIPPED)
     const activeDeliveriesCount = await prisma.orderItem.count({
       where: {
