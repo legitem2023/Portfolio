@@ -1583,7 +1583,7 @@ input UpdateItemInput {
     updateRole(userId: ID, Level: Role): Result
     updateOrderStatus(itemId: ID, riderId: ID, supplierId: ID, userId: ID, status: String, title: String, message: String): Result
     rejectByRider(itemId: ID, riderId: ID): Result
-    acceptByRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
+    acceptByRider(parentItemId:ID, itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
 
     assignNewRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
 
