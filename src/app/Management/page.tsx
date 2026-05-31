@@ -26,7 +26,7 @@ import { Product, category, NewProduct, NewCategory } from '../../../types';
 import UsersTab from './components/UsersTab';
 import PMTab from './components/PMTab';
 import SizeManager from './components/SizeManager';
-import { useAuth } from './hooks/useAuth';
+import { useAuth } from '../components/hooks/useAuth';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
