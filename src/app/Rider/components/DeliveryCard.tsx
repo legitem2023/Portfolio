@@ -65,23 +65,23 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const grandTotal = (subtotal + shipping + VAT);
 
   const handleAccept = async () => {
+    try {
     if (!user) {
       console.error('User not authenticated');
       return;
     }
+  const supplierItems = delivery.supplierItems || [];
+  const riderId = user.userId;
+  const userId = delivery.customerId;
+   for (const item of supplierItems) {
+        const itemId = item.id;
+        const supplierId = item.supplierId;
+        if (!itemId) {
+          console.warn('Skipping item with missing ID');
+          continue;
+        }
 
-    const itemId = delivery.orderParentId;
-    const supplierId = delivery.supplierItems?.[0]?.supplierId;
-    const riderId = user.userId;
-    const userId = delivery.customerId;
-    
-    if (!itemId || !supplierId) {
-      console.error('Missing itemId or supplierId', { itemId, supplierId });
-      return;
-    }
-
-    try {
-      const { data } = await acceptDelivery({
+  const { data } = await acceptDelivery({
         variables: {
           itemId: itemId,
           riderId: riderId,
@@ -97,6 +97,25 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
         showToast(data?.acceptByRider?.statusText,"warning");
         refetch();
       }
+    }
+
+      
+     /* const { data } = await acceptDelivery({
+        variables: {
+          itemId: itemId,
+          riderId: riderId,
+          supplierId: supplierId,
+          userId: userId,
+        }
+      });
+
+      if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
+        onAccept(delivery.id);
+        refetch();
+      } else {
+        showToast(data?.acceptByRider?.statusText,"warning");
+        refetch();
+      }*/
     } catch (error) {
       console.error('Error accepting delivery:', error);
     }
