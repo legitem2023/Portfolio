@@ -12,27 +12,6 @@ export default function LogoutButton() {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [animationState, setAnimationState] = useState<'idle' | 'loading' | 'success'>('idle')
-  const [beamsClient, setBeamsClient] = useState<any>(null);
-
-  // Initialize Beams client on component mount
-  useEffect(() => {
-    const initBeams = async () => {
-      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications) {
-        try {
-          const PusherPushNotifications = (window as any).PusherPushNotifications;
-          const client = new PusherPushNotifications.Client({
-            instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
-          });
-          await client.start();
-          setBeamsClient(client);
-        } catch (error) {
-          console.error('Failed to initialize Beams client:', error);
-        }
-      }
-    };
-    
-    initBeams();
-  }, []);
 
   const handleLogout = async () => {
     const confirmLogout = confirm('Are you sure you want to logout?')
@@ -47,31 +26,28 @@ export default function LogoutButton() {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      // ✅ Clear all Beams state before logout (removes user authentication)
-      if (beamsClient) {
+      // ✅ Clear Beams state - remove user authentication
+      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications) {
         try {
-          await beamsClient.clearAllState();
-          console.log('✅ Beams client state cleared - user notifications stopped');
+          const PusherPushNotifications = (window as any).PusherPushNotifications;
+          const beamsClient = new PusherPushNotifications.Client({
+            instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+          });
+          await beamsClient.start();
+          
+          // Stop the client - this removes the user association
+          await beamsClient.stop();
+          console.log('✅ Beams client stopped - user notifications disabled');
         } catch (beamsError) {
-          console.error('Failed to clear Beams state:', beamsError);
+          console.error('Failed to stop Beams client:', beamsError);
         }
       }
       
-      // Also try to get from window global if client not available
-      if (!beamsClient && (window as any).PusherPushNotifications) {
-        const PusherPushNotifications = (window as any).PusherPushNotifications;
-        const tempClient = new PusherPushNotifications.Client({
-          instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
-        });
-        await tempClient.start();
-        await tempClient.clearAllState();
-        console.log('✅ Beams state cleared via temp client');
-      }
-      
+      // Sign out from NextAuth
       await signOut({
-        redirect: true,
-        callbackUrl: '/Login',
+        redirect: false, // Don't auto-redirect yet
       });
+      
       setAnimationState('success');
       
       // Brief success state before redirect
