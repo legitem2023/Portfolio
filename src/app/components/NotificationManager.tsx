@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import * as PusherPushNotifications from '@pusher/push-notifications-web';
-import { useSession } from 'next-auth/react';
 
 export function NotificationManager() {
-  const { data: session } = useSession();
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
@@ -14,7 +12,7 @@ export function NotificationManager() {
     if ('serviceWorker' in navigator && 'PushManager' in window) {
       registerAndSubscribe();
     }
-  }, [session]);
+  }, []);
 
   const registerAndSubscribe = async () => {
     try {
@@ -46,7 +44,6 @@ export function NotificationManager() {
         
         if (userId) {
           console.log('📝 Setting Beams user ID to:', userId);
-          // ✅ CORRECT: Get auth token from your backend
           const authResponse = await fetch('/api/push/beams-auth', {
             method: 'POST',
             headers: {
@@ -56,8 +53,6 @@ export function NotificationManager() {
           });
           
           const { token } = await authResponse.json();
-          
-          // Pass the token to setUserId
           await beamsClient.setUserId(userId, token);
           console.log('✅ Beams user ID set successfully');
         } else {
