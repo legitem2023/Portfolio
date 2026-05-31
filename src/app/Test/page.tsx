@@ -9,7 +9,7 @@ export default function TestPushButton() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userId:ActiveDetails.userId,
+        userId:ActiveDetails?.userId || "",
         title: 'Test Notification',
         body: 'This is a test!',
         interest: 'all-users'
