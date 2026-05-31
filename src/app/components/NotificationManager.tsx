@@ -38,7 +38,9 @@ export function NotificationManager() {
         
         console.log('Step 5: Adding device interest...');
         await beamsClient.addDeviceInterest('all-users');
-        console.log('✅ Subscribed to all-users interest!');
+        
+        // JUST THIS ONE LINE ADDED - shows subscriber confirmed
+        console.log('✅ Subscribed to all-users interest - You are now a subscriber!');
       }
     } catch (error) {
       console.error('❌ Push setup error:', error);
