@@ -7,9 +7,11 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice'
 import { persistor } from '../../../Redux/store'
 import { ChevronRight, LogOut, Loader2, CheckCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import { useAuth } from './hooks/useAuth'; // Import to get current user
 
 export default function LogoutButton() {
   const router = useRouter()
+  const { user } = useAuth(); // Get current user
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [animationState, setAnimationState] = useState<'idle' | 'loading' | 'success'>('idle')
 
@@ -26,8 +28,8 @@ export default function LogoutButton() {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      // ✅ Clear Beams state - remove user authentication
-      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications) {
+      // ✅ Remove Beams interests before logout
+      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications && user?.userId) {
         try {
           const PusherPushNotifications = (window as any).PusherPushNotifications;
           const beamsClient = new PusherPushNotifications.Client({
@@ -35,17 +37,23 @@ export default function LogoutButton() {
           });
           await beamsClient.start();
           
-          // Stop the client - this removes the user association
+          // ✅ Remove the personal interest for this user
+          await beamsClient.removeDeviceInterest(`user-${user.userId}`);
+          await beamsClient.removeDeviceInterest('all-users'); // Optional: remove from broadcast too
+          
+          console.log(`✅ Removed interests for user: ${user.userId}`);
+          
+          // Now stop the client
           await beamsClient.stop();
           console.log('✅ Beams client stopped - user notifications disabled');
         } catch (beamsError) {
-          console.error('Failed to stop Beams client:', beamsError);
+          console.error('Failed to remove Beams interests:', beamsError);
         }
       }
       
       // Sign out from NextAuth
       await signOut({
-        redirect: false, // Don't auto-redirect yet
+        redirect: false,
       });
       
       setAnimationState('success');
@@ -67,16 +75,12 @@ export default function LogoutButton() {
       disabled={isLoggingOut}
       onClick={handleLogout}
     >
-      {/* Fixed background color - no overlay that changes background */}
-      
-      {/* Subtle loading indicator instead of overlay */}
       {animationState === 'loading' && (
         <div className="absolute inset-0">
           <div className="absolute top-0 left-0 h-0.5 bg-blue-500 animate-[loadingBar_1s_ease-in-out_infinite]" />
         </div>
       )}
       
-      {/* Animated Icon */}
       <div className="relative z-10">
         {animationState === 'idle' && (
           <LogOut className="mr-3 text-gray-400 w-5 h-5 transition-all duration-300" />
