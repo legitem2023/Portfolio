@@ -28,7 +28,7 @@ export default function LogoutButton() {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      // ✅ Remove Beams interests before logout
+      // ✅ Clear Beams interests and device state before logout
       if (typeof window !== 'undefined' && (window as any).PusherPushNotifications && user?.userId) {
         try {
           const PusherPushNotifications = (window as any).PusherPushNotifications;
@@ -37,17 +37,30 @@ export default function LogoutButton() {
           });
           await beamsClient.start();
           
-          // ✅ Remove the personal interest for this user
-          await beamsClient.removeDeviceInterest(`user-${user.userId}`);
-          await beamsClient.removeDeviceInterest('all-users'); // Optional: remove from broadcast too
+          // Get current interests before removing
+          const currentInterests = await beamsClient.getDeviceInterests();
+          console.log('🎯 Current interests before removal:', currentInterests);
           
-          console.log(`✅ Removed interests for user: ${user.userId}`);
+          // ✅ Remove ALL interests (not just user-specific)
+          await beamsClient.clearDeviceInterests();
           
-          // Now stop the client
+          // Or remove specific ones:
+          // await beamsClient.removeDeviceInterest(`user-${user.userId}`);
+          // await beamsClient.removeDeviceInterest('all-users');
+          
+          // ✅ Verify interests are removed
+          const interestsAfter = await beamsClient.getDeviceInterests();
+          console.log('🎯 Interests after removal:', interestsAfter);
+          
+          // ✅ Clear all device state (including userId association)
+          await beamsClient.clearAllState();
+          
+          console.log(`✅ Cleared all Beams data for user: ${user.userId}`);
+          
+          // Stop the client
           await beamsClient.stop();
-          console.log('✅ Beams client stopped - user notifications disabled');
         } catch (beamsError) {
-          console.error('Failed to remove Beams interests:', beamsError);
+          console.error('Failed to clear Beams data:', beamsError);
         }
       }
       
