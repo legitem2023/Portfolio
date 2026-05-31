@@ -71,6 +71,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       return;
     }
   const supplierItems = delivery.supplierItems || [];
+  const originalOrderId = delivery.originalOrderId;
   const riderId = user.userId;
   const userId = delivery.customerId;
    for (const item of supplierItems) {
@@ -83,6 +84,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
 
   const { data } = await acceptDelivery({
         variables: {
+          parentItemId:originalOrderId,
           itemId: itemId,
           riderId: riderId,
           supplierId: supplierId,
