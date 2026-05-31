@@ -67,7 +67,6 @@ export async function sendPushNotification({
 
 
 
-
 export const setupPushNotifications = async (userId: string) => {
   try {
     console.log('🔵 [PUSH SETUP] Starting setup for userId:', userId);
@@ -88,7 +87,6 @@ export const setupPushNotifications = async (userId: string) => {
     console.log('✅ [PUSH SETUP] Notification permission granted');
     
     console.log('📝 [PUSH SETUP] Creating Beams client');
-    // ✅ CORRECT: Use Client constructor, NOT .init()
     const beams = new PusherPushNotifications.Client({
       instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
     });
@@ -96,27 +94,38 @@ export const setupPushNotifications = async (userId: string) => {
     console.log('🚀 [PUSH SETUP] Starting Beams...');
     await beams.start();
     
-    // Get token from your backend
-    console.log('🔑 [PUSH SETUP] Getting auth token...');
-    const authResponse = await fetch('/api/push/beams-auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
+    // ✅ FIX: Use tokenProvider object with fetchToken method
+    console.log('🔑 [PUSH SETUP] Setting up token provider...');
+    
+    await beams.setUserId(userId, {
+      tokenProvider: {
+        fetchToken: async () => {
+          console.log('🔄 [PUSH SETUP] fetchToken called - getting fresh token...');
+          const authResponse = await fetch('/api/push/beams-auth', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId }),
+          });
+          
+          const { token } = await authResponse.json();
+          
+          if (!token) {
+            throw new Error('No token received from auth endpoint');
+          }
+          
+          console.log('✅ [PUSH SETUP] Token provided, length:', token.length);
+          return token;
+        }
+      }
     });
     
-    const { token } = await authResponse.json();
+    console.log('✅ [PUSH SETUP] User authenticated with token provider');
     
-    if (!token) {
-      throw new Error('No token received from auth endpoint');
-    }
-    
-    console.log('✅ [PUSH SETUP] Token received, length:', token.length);
-    
-    // ✅ Try direct token first (most common)
-    await beams.setUserId(userId, token);
-    console.log('✅ [PUSH SETUP] User authenticated');
+    // Wait a moment for authentication to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Subscribe to user-specific interest
+    console.log(`📡 [PUSH SETUP] Subscribing to user-${userId}...`);
     await beams.addDeviceInterest(`user-${userId}`);
     console.log(`✅ [PUSH SETUP] Subscribed to user-${userId}`);
     
