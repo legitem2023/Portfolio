@@ -19,7 +19,7 @@ export default function TestPushButton() {
     console.log('Response:', data);
     alert(data.success ? '✅ Notification sent!' : '❌ Error: ' + data.error);
   };
-
+console.log(ActiveDetails?.userId || "");
   return (
     <button 
       onClick={sendPush}
