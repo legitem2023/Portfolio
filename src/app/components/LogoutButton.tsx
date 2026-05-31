@@ -1,6 +1,6 @@
 // components/LogoutButton.tsx
 'use client';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDispatch } from "react-redux"
 import { setActiveIndex } from '../../../Redux/activeIndexSlice'
@@ -12,6 +12,27 @@ export default function LogoutButton() {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [animationState, setAnimationState] = useState<'idle' | 'loading' | 'success'>('idle')
+  const [beamsClient, setBeamsClient] = useState<any>(null);
+
+  // Initialize Beams client on component mount
+  useEffect(() => {
+    const initBeams = async () => {
+      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications) {
+        try {
+          const PusherPushNotifications = (window as any).PusherPushNotifications;
+          const client = new PusherPushNotifications.Client({
+            instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+          });
+          await client.start();
+          setBeamsClient(client);
+        } catch (error) {
+          console.error('Failed to initialize Beams client:', error);
+        }
+      }
+    };
+    
+    initBeams();
+  }, []);
 
   const handleLogout = async () => {
     const confirmLogout = confirm('Are you sure you want to logout?')
@@ -22,10 +43,31 @@ export default function LogoutButton() {
     setIsLoggingOut(true);
     setAnimationState('loading');
     
-    // Simulate a short delay to show the loading animation
+    // Show loading animation
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
+      // ✅ Clear all Beams state before logout (removes user authentication)
+      if (beamsClient) {
+        try {
+          await beamsClient.clearAllState();
+          console.log('✅ Beams client state cleared - user notifications stopped');
+        } catch (beamsError) {
+          console.error('Failed to clear Beams state:', beamsError);
+        }
+      }
+      
+      // Also try to get from window global if client not available
+      if (!beamsClient && (window as any).PusherPushNotifications) {
+        const PusherPushNotifications = (window as any).PusherPushNotifications;
+        const tempClient = new PusherPushNotifications.Client({
+          instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+        });
+        await tempClient.start();
+        await tempClient.clearAllState();
+        console.log('✅ Beams state cleared via temp client');
+      }
+      
       await signOut({
         redirect: true,
         callbackUrl: '/Login',
