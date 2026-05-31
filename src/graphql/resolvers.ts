@@ -1455,7 +1455,7 @@ const orders = await prisma.order.findMany({
   }
 
  if (filter) {
-   // itemWhere.finished = false
+    itemWhere.finished = false
  }
 
     
@@ -2383,7 +2383,7 @@ const orders = await prisma.order.findMany({
   }
 
   if (filter) {
-   // itemWhere.remitted = false
+    itemWhere.remitted = false
   }
 
   try {
