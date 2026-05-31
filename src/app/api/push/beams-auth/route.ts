@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
     const decrypted = await decryptToken(serverToken, secret);
     const userId = decrypted.userId;
     
+    console.log('🔑 Generating token for userId:', userId);
+    
     if (!userId) {
       return NextResponse.json({ error: 'Invalid user' }, { status: 401 });
     }
@@ -28,10 +30,13 @@ export async function POST(req: NextRequest) {
       secretKey: process.env.PUSHER_BEAMS_SECRET_KEY!,
     });
     
-    // ✅ Only generate token for the userId (no interests here)
+    // Generate token for this user
     const beamsToken = beamsClient.generateToken(userId);
     
-    return NextResponse.json(beamsToken);
+    // ✅ Return the token correctly (generateToken returns { token: string })
+    console.log('✅ Token generated:', beamsToken);
+    
+    return NextResponse.json({ token: beamsToken.token });
   } catch (error) {
     console.error('Beams auth error:', error);
     return NextResponse.json({ error: 'Internal error' }, { status: 500 });
