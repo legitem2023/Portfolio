@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import * as PusherPushNotifications from '@pusher/push-notifications-web';
-import { decryptToken } from '../../../utils/decryptToken'; // Adjust path as needed
+import { decryptToken } from '../../../utils/decryptToken';
 
 export function NotificationManager() {
   const [permission, setPermission] = useState('default');
@@ -27,18 +26,18 @@ export function NotificationManager() {
       console.log('Permission result:', result);
       
       if (result === 'granted') {
+        // Dynamically import the SDK
+        const PusherPushNotifications = await import('@pusher/push-notifications-web');
+        const beamsClient = PusherPushNotifications.default || PusherPushNotifications;
+        
         console.log('Step 3: Initializing Beams...');
-        const beamsClient = new PusherPushNotifications.Client({
+        const client = new beamsClient.Client({
           instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
           serviceWorkerRegistration: registration,
         });
         
         console.log('Step 4: Starting Beams...');
-        await beamsClient.start();
-        
-        // DEBUG: Get device ID
-        const deviceId = await beamsClient.getDeviceId();
-        console.log('📱 Device ID:', deviceId);
+        await client.start();
         
         // Get encrypted user data from API
         const response = await fetch('/api/protected', {
@@ -64,6 +63,8 @@ export function NotificationManager() {
         
         if (userId) {
           console.log('📝 Setting Beams user ID to:', userId);
+          
+          // Get auth token from your backend
           const authResponse = await fetch('/api/push/beams-auth', {
             method: 'POST',
             headers: {
@@ -73,40 +74,42 @@ export function NotificationManager() {
           });
           
           const { token } = await authResponse.json();
-          await beamsClient.setUserId(userId, token);
-          console.log('✅ Beams user ID set successfully');
           
-          // DEBUG: Verify user ID was set
-          const currentUserId = await beamsClient.getUserId();
-          console.log('👤 Current Beams user ID:', currentUserId);
+          // For version 1.1.0, setUserId might be called differently
+          if (client.setUserId) {
+            await client.setUserId(userId, token);
+            console.log('✅ Beams user ID set successfully');
+          } else if (client.authenticate) {
+            // Alternative method for older versions
+            await client.authenticate(userId, token);
+            console.log('✅ Beams authenticated successfully');
+          }
           
-          await beamsClient.addDeviceInterest('all-users');
-          await beamsClient.addDeviceInterest(`user-${userId}`);
-          console.log(`✅ Subscribed to all-users and user-${userId}`);
+          // Add interests
+          if (client.addDeviceInterest) {
+            await client.addDeviceInterest('all-users');
+            await client.addDeviceInterest(`user-${userId}`);
+            console.log(`✅ Subscribed to all-users and user-${userId}`);
+          }
           
-          // DEBUG: Get all interests to verify subscription
-          const interests = await beamsClient.getDeviceInterests();
-          console.log('🎯 Device interests after subscription:', interests);
+          // Get device ID if available
+          if (client.getDeviceId) {
+            const deviceId = await client.getDeviceId();
+            console.log('📱 Device ID:', deviceId);
+          }
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
-          await beamsClient.addDeviceInterest('all-users');
-          console.log('✅ Subscribed to all-users interest');
-          
-          // DEBUG: Get all interests
-          const interests = await beamsClient.getDeviceInterests();
-          console.log('🎯 Device interests (anonymous):', interests);
+          if (client.addDeviceInterest) {
+            await client.addDeviceInterest('all-users');
+            console.log('✅ Subscribed to all-users interest');
+          }
         }
         
-        // DEBUG: Test a direct notification from client
-        console.log('🧪 Testing notification visibility...');
-        registration.showNotification('Debug Test', {
-          body: 'If you see this, service worker is working!',
+        // Test notification
+        registration.showNotification('Setup Complete', {
+          body: 'Push notifications are ready!',
           icon: '/icon.png',
-          badge: '/badge.png'
         });
-        
-      } else {
-        console.log('❌ Notification permission denied. Current status:', result);
       }
     } catch (error) {
       console.error('❌ Push setup error:', error);
