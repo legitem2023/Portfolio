@@ -54,12 +54,14 @@ export const REJECT_BY_RIDER_MUTATION = gql`
 
 export const ACCEPT_BY_RIDER = gql`
   mutation AcceptByRider(
+    $parentItemId: ID!
     $itemId: ID!
     $riderId: ID!
     $supplierId: ID!
     $userId: ID!
   ) {
     acceptByRider(
+      parentItemId: $parentItemId
       itemId: $itemId
       riderId: $riderId
       supplierId: $supplierId
