@@ -122,8 +122,8 @@ export function NotificationManager() {
           }
           
           // Add interests after successful authentication
-          await beamsClient.addDeviceInterest('all-users');
-          await beamsClient.addDeviceInterest(`user-${userId}`);
+         // await beamsClient.addDeviceInterest('all-users');
+         // await beamsClient.addDeviceInterest(`user-${userId}`);
           
           const interests = await beamsClient.getDeviceInterests();
           console.log('🎯 Device interests:', interests);
