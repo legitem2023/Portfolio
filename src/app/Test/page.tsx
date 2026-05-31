@@ -11,8 +11,7 @@ export default function TestPushButton() {
       body: JSON.stringify({
         userId:ActiveDetails?.userId || "",
         title: 'Test Notification',
-        body: 'This is a test!',
-        interest: 'all-users'
+        body: 'This is a test!'
       })
     });
     
