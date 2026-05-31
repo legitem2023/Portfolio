@@ -7,19 +7,61 @@ import { setActiveIndex } from '../../../Redux/activeIndexSlice'
 import { persistor } from '../../../Redux/store'
 import { ChevronRight, LogOut, Loader2, CheckCircle } from 'lucide-react';
 import { signOut } from 'next-auth/react';
-import { useAuth } from './hooks/useAuth'; // Import to get current user
+import { useAuth } from './hooks/useAuth';
+import * as PusherPushNotifications from '@pusher/push-notifications-web';
 
 export default function LogoutButton() {
   const router = useRouter()
-  const { user } = useAuth(); // Get current user
+  const { user } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [animationState, setAnimationState] = useState<'idle' | 'loading' | 'success'>('idle')
 
+  const clearPushNotifications = async (userId: string) => {
+    try {
+      console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
+      
+      const beamsClient = new PusherPushNotifications.Client({
+        instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
+      });
+      
+      await beamsClient.start();
+      
+      // Get current interests before removal (for debugging)
+      const currentInterests = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Current interests:', currentInterests);
+      
+      // Method 1: Remove specific interests
+      if (currentInterests.includes(`user-${userId}`)) {
+        await beamsClient.removeDeviceInterest(`user-${userId}`);
+        console.log(`✅ [LOGOUT] Removed user-${userId} interest`);
+      }
+      
+      if (currentInterests.includes('all-users')) {
+        await beamsClient.removeDeviceInterest('all-users');
+        console.log('✅ [LOGOUT] Removed all-users interest');
+      }
+      
+      // Method 2: Or clear ALL interests (uncomment if you prefer)
+      // await beamsClient.clearDeviceInterests();
+      
+      // Verify removal
+      const interestsAfter = await beamsClient.getDeviceInterests();
+      console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
+      
+      // Stop the client (optional but good practice)
+      await beamsClient.stop();
+      
+      console.log('✅ [LOGOUT] Push notifications cleared successfully');
+      
+    } catch (error) {
+      console.error('❌ [LOGOUT] Failed to clear push notifications:', error);
+      // Don't block logout if push notification cleanup fails
+    }
+  };
+
   const handleLogout = async () => {
     const confirmLogout = confirm('Are you sure you want to logout?')
-    if (!confirmLogout) {
-      return
-    }
+    if (!confirmLogout) return;
     
     setIsLoggingOut(true);
     setAnimationState('loading');
@@ -28,46 +70,16 @@ export default function LogoutButton() {
     await new Promise(resolve => setTimeout(resolve, 800));
     
     try {
-      // ✅ Clear Beams interests and device state before logout
-      if (typeof window !== 'undefined' && (window as any).PusherPushNotifications && user?.userId) {
-        try {
-          const PusherPushNotifications = (window as any).PusherPushNotifications;
-          const beamsClient = new PusherPushNotifications.Client({
-            instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
-          });
-          await beamsClient.start();
-          
-          // Get current interests before removing
-          const currentInterests = await beamsClient.getDeviceInterests();
-          console.log('🎯 Current interests before removal:', currentInterests);
-          
-          // ✅ Remove ALL interests (not just user-specific)
-          await beamsClient.clearDeviceInterests();
-          
-          // Or remove specific ones:
-          // await beamsClient.removeDeviceInterest(`user-${user.userId}`);
-          // await beamsClient.removeDeviceInterest('all-users');
-          
-          // ✅ Verify interests are removed
-          const interestsAfter = await beamsClient.getDeviceInterests();
-          console.log('🎯 Interests after removal:', interestsAfter);
-          
-          // ✅ Clear all device state (including userId association)
-          await beamsClient.clearAllState();
-          
-          console.log(`✅ Cleared all Beams data for user: ${user.userId}`);
-          
-          // Stop the client
-          await beamsClient.stop();
-        } catch (beamsError) {
-          console.error('Failed to clear Beams data:', beamsError);
-        }
+      // Clear Beams data if user exists and we're in browser
+      if (typeof window !== 'undefined' && user?.userId) {
+        await clearPushNotifications(user.userId);
       }
       
       // Sign out from NextAuth
-      await signOut({
-        redirect: false,
-      });
+      await signOut({ redirect: false });
+      
+      // Clear Redux persist store
+      await persistor.purge();
       
       setAnimationState('success');
       
@@ -75,6 +87,7 @@ export default function LogoutButton() {
       setTimeout(() => {
         router.push('/Login');
       }, 300);
+      
     } catch (error) {
       console.error('Logout failed:', error);
       setAnimationState('idle');
