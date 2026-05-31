@@ -95,7 +95,7 @@ export const setupPushNotifications = async (userId: string) => {
     const beams = new PusherPushNotifications.Client({
       instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
     });
-    
+    console.log(process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID);
     console.log('🚀 [PUSH SETUP] Starting Beams...');
     await beams.start();
     
