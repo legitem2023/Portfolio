@@ -11,57 +11,28 @@ declare global {
 
 export function NotificationManager() {
   const [permission, setPermission] = useState('default');
-  const [sdkReady, setSdkReady] = useState(false);
 
-  // Load CDN script once
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    // Check if already loaded
-    if (window.PusherPushNotifications) {
-      setSdkReady(true);
-      return;
-    }
-    
-    // Check if script already exists
-    if (document.querySelector('#pusher-beams-sdk')) {
-      const checkInterval = setInterval(() => {
-        if (window.PusherPushNotifications) {
-          setSdkReady(true);
-          clearInterval(checkInterval);
+    // Load CDN script
+    if (!document.querySelector('#pusher-beams-sdk')) {
+      const script = document.createElement('script');
+      script.id = 'pusher-beams-sdk';
+      script.src = 'https://js.pusher.com/beams/1.0/push-notifications-cdn.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('✅ Pusher Beams CDN loaded');
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          registerAndSubscribe();
         }
-      }, 100);
-      return () => clearInterval(checkInterval);
-    }
-    
-    // Load the CDN script
-    const script = document.createElement('script');
-    script.id = 'pusher-beams-sdk';
-    script.src = 'https://js.pusher.com/beams/1.0/push-notifications-cdn.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('✅ Pusher Beams CDN loaded');
-      setSdkReady(true);
-    };
-    script.onerror = () => {
-      console.error('❌ Failed to load Pusher Beams CDN');
-    };
-    document.head.appendChild(script);
-    
-    return () => {
-      // Cleanup
-      const existingScript = document.querySelector('#pusher-beams-sdk');
-      if (existingScript) {
-        existingScript.remove();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (sdkReady && 'serviceWorker' in navigator && 'PushManager' in window) {
+      };
+      script.onerror = () => {
+        console.error('❌ Failed to load Pusher Beams CDN');
+      };
+      document.head.appendChild(script);
+    } else if (window.PusherPushNotifications) {
       registerAndSubscribe();
     }
-  }, [sdkReady]);
+  }, []);
 
   const registerAndSubscribe = async () => {
     try {
@@ -87,7 +58,6 @@ export function NotificationManager() {
         const deviceId = await beamsClient.getDeviceId();
         console.log('📱 Device ID:', deviceId);
         
-        // Get encrypted user data from API
         const response = await fetch('/api/protected', {
           credentials: 'include',
           headers: {
@@ -121,21 +91,43 @@ export function NotificationManager() {
           
           const authData = await authResponse.json();
           
-          // For CDN version, the token might be in authData.token or authData itself
-          const token = authData.token || authData;
-          console.log('🔐 Token received, type:', typeof token);
+          // CDN version expects the token to be passed differently
+          // Try both formats
+          let token = authData.token || authData;
+          console.log('🔐 Token type:', typeof token);
           
-          // CDN version uses this method
-          await beamsClient.setUserId(userId, token);
-          console.log('✅ Beams user ID set successfully');
+          // METHOD 1: Try setUserId with token as second parameter
+          try {
+            await beamsClient.setUserId(userId, token);
+            console.log('✅ setUserId worked with (userId, token)');
+          } catch (error1) {
+            console.log('Method 1 failed, trying Method 2...');
+            
+            // METHOD 2: Try setUserId with token in an object
+            try {
+              await beamsClient.setUserId(userId, { authToken: token });
+              console.log('✅ setUserId worked with (userId, { authToken: token })');
+            } catch (error2) {
+              console.log('Method 2 failed, trying Method 3...');
+              
+              // METHOD 3: Try authenticate method (older versions)
+              try {
+                await beamsClient.authenticate(userId, token);
+                console.log('✅ authenticate worked');
+              } catch (error3) {
+                console.error('❌ All methods failed');
+                console.error('Error details:', error3);
+              }
+            }
+          }
           
+          // Add interests after successful authentication
           await beamsClient.addDeviceInterest('all-users');
           await beamsClient.addDeviceInterest(`user-${userId}`);
           
           const interests = await beamsClient.getDeviceInterests();
           console.log('🎯 Device interests:', interests);
           
-          console.log('✅✅✅ Push notifications fully working!');
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
           await beamsClient.addDeviceInterest('all-users');
