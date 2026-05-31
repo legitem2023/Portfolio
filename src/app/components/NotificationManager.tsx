@@ -7,7 +7,6 @@ export function NotificationManager() {
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
-    // DEBUG: Check if env var is loaded
     console.log('Beams Instance ID:', process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID);
     
     if ('serviceWorker' in navigator && 'PushManager' in window) {
@@ -39,8 +38,9 @@ export function NotificationManager() {
         console.log('Step 5: Adding device interest...');
         await beamsClient.addDeviceInterest('all-users');
         
-        // JUST THIS ONE LINE ADDED - shows subscriber confirmed
-        console.log('✅ Subscribed to all-users interest - You are now a subscriber!');
+        // ADD THIS - Get the device/subscriber ID
+        const deviceId = await beamsClient.getDeviceId();
+        console.log('✅ Subscriber ID:', deviceId);
       }
     } catch (error) {
       console.error('❌ Push setup error:', error);
