@@ -7673,6 +7673,15 @@ await prisma.notification.create({
     message: 'A rider has been assigned to your order and will handle the delivery.'
   }
 });
+
+          await sendPushNotification({
+             userId: userId,
+             type: NotificationType.ORDER_UPDATED,
+             title: "Rider Assigned to Your Order",
+             message: 'A rider has been assigned to your order and will handle the delivery.',
+             link: `/?index=10`
+          });
+    
    
       return {
         statusText: "Successfully Assigned!"
@@ -7751,7 +7760,16 @@ await prisma.notification.create({
           message: 'Rider accepted your order'
         }
       });
-      
+
+     await sendPushNotification({
+             userId: userId,
+             type: NotificationType.ORDER_UPDATED,
+             title: "Rider Accepted",
+             message: 'Rider accepted your order',
+             link: `/?index=10`
+          });
+
+    
       return {
         statusText: "Successfully Accepted!"
       }
