@@ -9661,7 +9661,7 @@ for (const supplierId of uniqueSupplierIds) {
              type: NotificationType.ORDER_CREATED,
              title: "New Order Received",
              message: message,
-             link: `${response.id}`,
+             link: `/?index=10`,
              orderId: response.orderNumber,
              orderNumber: response.orderNumber
           });
