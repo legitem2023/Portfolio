@@ -22,7 +22,7 @@ export default function ClientLayout({
       <div className="BackGroundImage"></div>
       <PWAInitializer />
       <ServiceWorkerRegister/>
-      <NotificationManager/>  
+      {/*<NotificationManager/>  */}
       <SessionProvider>
         <ReduxWrapper>
           <ToastContainer 
