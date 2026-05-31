@@ -13,7 +13,7 @@ export function NotificationManager() {
   const [permission, setPermission] = useState('default');
 
   useEffect(() => {
-    // Load CDN script
+    // Load CDN script if not present
     if (!document.querySelector('#pusher-beams-sdk')) {
       const script = document.createElement('script');
       script.id = 'pusher-beams-sdk';
@@ -22,7 +22,7 @@ export function NotificationManager() {
       script.onload = () => {
         console.log('✅ Pusher Beams CDN loaded');
         if ('serviceWorker' in navigator && 'PushManager' in window) {
-          registerAndSubscribe();
+          initializeBeams();
         }
       };
       script.onerror = () => {
@@ -30,34 +30,34 @@ export function NotificationManager() {
       };
       document.head.appendChild(script);
     } else if (window.PusherPushNotifications) {
-      registerAndSubscribe();
+      initializeBeams();
     }
   }, []);
 
-  const registerAndSubscribe = async () => {
+  const initializeBeams = async () => {
     try {
-      console.log('Step 1: Registering service worker...');
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('✅ Service Worker registered');
+      // Get existing service worker registration instead of registering a new one
+      const registration = await navigator.serviceWorker.ready;
+      console.log('✅ Service Worker already registered and ready');
       
-      console.log('Step 2: Requesting permission...');
+      // Request permission
       const result = await Notification.requestPermission();
       setPermission(result);
       console.log('Permission result:', result);
       
       if (result === 'granted' && window.PusherPushNotifications) {
-        console.log('Step 3: Initializing Beams...');
+        // Initialize Beams with existing service worker
         const beamsClient = new window.PusherPushNotifications.Client({
           instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
           serviceWorkerRegistration: registration,
         });
         
-        console.log('Step 4: Starting Beams...');
         await beamsClient.start();
         
         const deviceId = await beamsClient.getDeviceId();
         console.log('📱 Device ID:', deviceId);
         
+        // Get user info
         const response = await fetch('/api/protected', {
           credentials: 'include',
           headers: {
@@ -79,55 +79,7 @@ export function NotificationManager() {
         }
         
         if (userId) {
-          console.log('📝 Setting Beams user ID to:', userId);
-          
-          const authResponse = await fetch('/api/push/beams-auth', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId }),
-          });
-          
-          const authData = await authResponse.json();
-          
-          // CDN version expects the token to be passed differently
-          // Try both formats
-          let token = authData.token || authData;
-          console.log('🔐 Token type:', typeof token);
-          
-          // METHOD 1: Try setUserId with token as second parameter
-          try {
-            await beamsClient.setUserId(userId, token);
-            console.log('✅ setUserId worked with (userId, token)');
-          } catch (error1) {
-            console.log('Method 1 failed, trying Method 2...');
-            
-            // METHOD 2: Try setUserId with token in an object
-            try {
-              await beamsClient.setUserId(userId, { authToken: token });
-              console.log('✅ setUserId worked with (userId, { authToken: token })');
-            } catch (error2) {
-              console.log('Method 2 failed, trying Method 3...');
-              
-              // METHOD 3: Try authenticate method (older versions)
-              try {
-                await beamsClient.authenticate(userId, token);
-                console.log('✅ authenticate worked');
-              } catch (error3) {
-                console.error('❌ All methods failed');
-                console.error('Error details:', error3);
-              }
-            }
-          }
-          
-          // Add interests after successful authentication
-         // await beamsClient.addDeviceInterest('all-users');
-         // await beamsClient.addDeviceInterest(`user-${userId}`);
-          
-          const interests = await beamsClient.getDeviceInterests();
-          console.log('🎯 Device interests:', interests);
-          
+          await setupUserBeams(beamsClient, userId);
         } else {
           console.log('⚠️ No user logged in - push will be anonymous');
           await beamsClient.addDeviceInterest('all-users');
@@ -136,6 +88,57 @@ export function NotificationManager() {
       }
     } catch (error) {
       console.error('❌ Push setup error:', error);
+    }
+  };
+
+  const setupUserBeams = async (beamsClient: any, userId: string) => {
+    try {
+      console.log('📝 Setting Beams user ID to:', userId);
+      
+      const authResponse = await fetch('/api/push/beams-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+      
+      const authData = await authResponse.json();
+      let token = authData.token || authData;
+      console.log('🔐 Token obtained');
+      
+      // Try different authentication methods
+      try {
+        await beamsClient.setUserId(userId, token);
+        console.log('✅ setUserId worked with (userId, token)');
+      } catch (error1) {
+        console.log('Method 1 failed, trying Method 2...');
+        
+        try {
+          await beamsClient.setUserId(userId, { authToken: token });
+          console.log('✅ setUserId worked with (userId, { authToken: token })');
+        } catch (error2) {
+          console.log('Method 2 failed, trying Method 3...');
+          
+          try {
+            await beamsClient.authenticate(userId, token);
+            console.log('✅ authenticate worked');
+          } catch (error3) {
+            console.error('❌ All authentication methods failed', error3);
+            throw error3;
+          }
+        }
+      }
+      
+      // Optionally add user-specific interests
+      // await beamsClient.addDeviceInterest('all-users');
+      // await beamsClient.addDeviceInterest(`user-${userId}`);
+      
+      const interests = await beamsClient.getDeviceInterests();
+      console.log('🎯 Device interests:', interests);
+      
+    } catch (error) {
+      console.error('❌ Failed to setup user Beams:', error);
     }
   };
 
