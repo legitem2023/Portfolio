@@ -7700,6 +7700,125 @@ await prisma.notification.create({
     };
   }
     },
+    acceptOrder: async (_: any, { AcceptParameter }: { AcceptParameter: Array<{ parentItemId: string, itemId: string, riderId: string, supplierId: string, userId: string }> }) => {
+  try {
+    // Get riderId and userId from first item (they should be same for all)
+    const riderId = AcceptParameter[0]?.riderId;
+    const userId = AcceptParameter[0]?.userId;
+    
+    if (!riderId || !userId) {
+      return {
+        statusText: "Missing riderId or userId",
+        token: null,
+        role: null
+      };
+    }
+    
+    // Group items by supplier
+    const itemsBySupplier = AcceptParameter.reduce((group, item) => {
+      if (!group[item.supplierId]) {
+        group[item.supplierId] = [];
+      }
+      group[item.supplierId].push(item);
+      return group;
+    }, {} as Record<string, Array<{ parentItemId: string, itemId: string, supplierId: string, userId: string, riderId: string }>>);
+    
+    // Generate tracking numbers for each supplier
+    const trackingNumbers: Record<string, string> = {};
+    for (const supplierId of Object.keys(itemsBySupplier)) {
+      trackingNumbers[supplierId] = await generateTrackingNumber(supplierId);
+    }
+    
+    // Check if rider has more than 3 active deliveries
+    const activeDeliveriesCount = await prisma.orderItem.count({
+      where: {
+        riderId: riderId,
+        status: {
+          in: ['PROCESSING', 'SHIPPED']
+        }
+      }
+    });
+
+    if (activeDeliveriesCount > 3) {
+      return {
+        statusText: "You should complete the active delivery first",
+        token: null,
+        role: null
+      };
+    }
+    
+    // Update all items for each supplier
+    for (const [supplierId, supplierItems] of Object.entries(itemsBySupplier)) {
+      const trackingNumber = trackingNumbers[supplierId];
+      const itemIds = supplierItems.map(item => item.itemId);
+      
+      await prisma.orderItem.updateMany({
+        where: { 
+          id: { in: itemIds }
+        },
+        data: {
+          status: 'PROCESSING',
+          riderId: riderId,
+          trackingNumber: trackingNumber
+        }
+      });
+      
+      // Update payments for this supplier
+      const parentItemIds = [...new Set(supplierItems.map(item => item.parentItemId))];
+      await prisma.payment.updateMany({
+        where: {
+          supplierId,
+          orderId: { in: parentItemIds }
+        },
+        data: {
+          riderId
+        }
+      });
+      
+      // Send notification to supplier
+      await prisma.notification.create({
+        data: { 
+          type: NotificationType.ORDER_UPDATED,
+          userId: supplierId,
+          title: 'Rider Accepted',
+          message: `Rider accepted the order. Tracking #: ${trackingNumber}`
+        }
+      });
+    }
+    
+    // Send single notification to user
+    await prisma.notification.create({
+      data: { 
+        type: NotificationType.ORDER_UPDATED,
+        userId: userId,
+        title: 'Rider Accepted',
+        message: `Rider accepted ${AcceptParameter.length} item(s)`,
+        additionalData: JSON.stringify({ trackingNumbers })
+      }
+    });
+
+    await sendPushNotification({
+      userId: userId,
+      type: NotificationType.ORDER_UPDATED,
+      title: "Rider Accepted",
+      message: `Rider accepted ${AcceptParameter.length} item(s)`,
+      link: `/?index=10`
+    });
+    
+    return {
+      statusText: "Successfully Accepted!",
+      token: null,
+      role: null
+    }
+  } catch (error) {
+    console.error('Error accepting order:', error);
+    return {
+      statusText: 'Failed to accept order',
+      token: null,
+      role: null
+    };
+  }
+},
     acceptByRider: async (_:any, { parentItemId, itemId, riderId, supplierId, userId }:any) => {
   try {  
     if(!trackingNumber){
