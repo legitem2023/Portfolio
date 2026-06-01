@@ -52,6 +52,17 @@ export const REJECT_BY_RIDER_MUTATION = gql`
   }
 `;
 
+export const ACCEPT_ORDER_MUTATION = gql`
+  mutation AcceptOrder($AcceptParameter: [AcceptParameter!]!) {
+    acceptOrder(AcceptParameter: $AcceptParameter) {
+      token
+      statusText
+      role
+    }
+  }
+`;
+
+
 export const ACCEPT_BY_RIDER = gql`
   mutation AcceptByRider(
     $parentItemId: ID!
