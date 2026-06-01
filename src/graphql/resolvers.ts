@@ -7448,6 +7448,122 @@ updateUserAddressInstruction: async (_: any, { id, addressInstruction }: any) =>
     };
   }
 },
+updateOrderStat: async (_: any, { UpdateStatusInput }: any) => {
+  try {
+    // Validate input array
+    if (!UpdateStatusInput || !Array.isArray(UpdateStatusInput) || UpdateStatusInput.length === 0) {
+      throw new Error('UpdateStatusInput array is required');
+    }
+
+    const results = [];
+    let allSuccessful = true;
+
+    // Process each item in the array
+    for (const updateItem of UpdateStatusInput) {
+      const { itemId, riderId, supplierId, userId, status, title, message } = updateItem;
+
+      // Validate required fields for each item
+      if (!itemId || !status) {
+        console.warn(`Skipping item ${itemId}: itemId and status are required`);
+        allSuccessful = false;
+        continue;
+      }
+
+      try {
+        // Update the order item
+        const updatedItem = await prisma.orderItem.update({
+          where: { id: itemId },
+          data: {
+            status: status
+          }
+        });
+
+        // Handle DELIVERED status
+        if (status === 'DELIVERED') {
+          await prisma.payment.updateMany({
+            where: {
+              orderId: updatedItem?.orderId
+            },
+            data: {
+              userId: riderId,
+              status: 'COMPLETED'
+            }
+          });
+        }
+
+        // Create notification for supplier
+        if (supplierId) {
+          await prisma.notification.create({
+            data: {
+              type: NotificationType.ORDER_DELIVERED,
+              userId: supplierId,
+              title: title || `Order ${status}`,
+              message: message || `Your order has been ${status.toLowerCase()}`
+            }
+          });
+        }
+
+        // Create notification for user
+        if (userId) {
+          await prisma.notification.create({
+            data: {
+              type: NotificationType.ORDER_DELIVERED,
+              userId: userId,
+              title: title || `Order ${status}`,
+              message: message || `Your order has been ${status.toLowerCase()}`
+            }
+          });
+        }
+
+        results.push({ itemId, success: true, status });
+        
+      } catch (itemError) {
+        console.error(`Error processing item ${itemId}:`, itemError);
+        allSuccessful = false;
+        results.push({ itemId, success: false, error: itemError.message });
+      }
+    }
+
+    // Return appropriate response based on overall success
+    if (!allSuccessful) {
+      return {
+        statusText: "Partial update completed with some failures",
+        token: "",
+        role: ""
+      };
+    }
+
+    // Check if all items have DELIVERED status
+    const allDelivered = UpdateStatusInput.every(item => item.status === 'DELIVERED');
+    if (allDelivered) {
+      return {
+        statusText: "All parcels successfully delivered!",
+        token: "",
+        role: ""
+      };
+    }
+
+    const allCancelled = UpdateStatusInput.every(item => item.status === 'CANCELLED');
+    if (allCancelled) {
+      return {
+        statusText: "All deliveries cancelled!",
+        token: "",
+        role: ""
+      };
+    }
+
+    return {
+      statusText: "All parcels successfully updated!",
+      token: "",
+      role: ""
+    };
+
+  } catch (error: any) {
+    console.error('Error in updateOrderStat:', error);
+    throw new Error(`Failed to update order status: ${error.message}`);
+  }
+},
+    
     updateOrderStatus: async (_: any, { itemId,riderId,supplierId,userId,status,title,message }: any) => {
       try {
     // Validate inputs
