@@ -51,7 +51,6 @@ export default function LuxuryLogin() {
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [popupWindow, setPopupWindow] = useState<Window | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -75,39 +74,7 @@ export default function LuxuryLogin() {
     };
 
     checkSession();
-
-    // Listen for messages from the popup window
-    const handleMessage = async (event: MessageEvent) => {
-      if (event.data?.type === 'GOOGLE_SIGNIN_SUCCESS') {
-        console.log('Google sign-in success message received');
-        
-        // Close the popup if still open
-        if (popupWindow && !popupWindow.closed) {
-          popupWindow.close();
-        }
-        
-        // Refresh the session
-        setIsGoogleLoading(true);
-        try {
-          const session = await getSession();
-          if (session?.serverToken) {
-            await decryptUserToken(session.serverToken);
-          } else {
-            setError('Session established but no token found');
-          }
-        } catch (err) {
-          console.error('Error getting session after Google login:', err);
-          setError('Failed to complete Google sign-in');
-        } finally {
-          setIsGoogleLoading(false);
-          setPopupWindow(null);
-        }
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [popupWindow]);
+  }, []);
 
   const decryptUserToken = async (serverToken: string) => {
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
@@ -200,42 +167,41 @@ export default function LuxuryLogin() {
     }
   };
 
-  // Open Google sign-in in a popup window
-  const handleGoogleSignIn = async () => {
+  // Google Sign In - Opens in a popup window
+  const handleGoogleSignIn = () => {
     setShowGoogleModal(false);
     setIsGoogleLoading(true);
     setError(null);
     
-    // Calculate popup dimensions and position
+    // Calculate popup position (centered)
     const width = 500;
     const height = 600;
     const left = window.screenX + (window.outerWidth - width) / 2;
     const top = window.screenY + (window.outerHeight - height) / 2;
     
-    // Open popup window
+    // Open Google sign-in in a popup
     const popup = window.open(
       '/api/auth/signin/google',
       'GoogleSignIn',
       `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
     );
     
-    setPopupWindow(popup);
-    
-    // Check if popup was blocked
-    if (!popup || popup.closed) {
+    if (!popup) {
       setError('Popup was blocked. Please allow popups for this site.');
       setIsGoogleLoading(false);
       return;
     }
     
-    // Monitor popup close (user cancelled)
-    const checkPopupClosed = setInterval(() => {
+    // Check if popup closes (user cancelled or completed)
+    const checkPopupClosed = setInterval(async () => {
       if (popup.closed) {
         clearInterval(checkPopupClosed);
-        if (!userData) {
-          setIsGoogleLoading(false);
-          setPopupWindow(null);
+        // After popup closes, check if user is logged in
+        const session = await getSession();
+        if (session?.serverToken) {
+          await decryptUserToken(session.serverToken);
         }
+        setIsGoogleLoading(false);
       }
     }, 500);
   };
@@ -466,11 +432,13 @@ export default function LuxuryLogin() {
       {/* Google Login Slide Up Modal */}
       {showGoogleModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
+          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setShowGoogleModal(false)}
           />
           
+          {/* Slide up panel */}
           <div 
             className="relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl overflow-hidden"
             style={{ 
@@ -478,10 +446,12 @@ export default function LuxuryLogin() {
               maxHeight: '85vh'
             }}
           >
+            {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
             
+            {/* Header with Google Logo */}
             <div className="text-center pt-2 pb-4">
               <div className="flex justify-center mb-4">
                 <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
@@ -494,18 +464,20 @@ export default function LuxuryLogin() {
                 </div>
               </div>
               <h3 className="text-2xl font-bold text-gray-800">Sign in with Google</h3>
-              <p className="text-sm text-gray-500 mt-1">A popup window will open</p>
+              <p className="text-sm text-gray-500 mt-1">A popup window will open for you to select your account</p>
             </div>
             
+            {/* Info Box */}
             <div className="mx-6 mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
               <div className="flex items-center gap-2 text-sm text-blue-700">
                 <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Select your Google account from the popup</span>
+                <span>Select your Google account from the popup window</span>
               </div>
             </div>
             
+            {/* Continue Button */}
             <div className="px-6 pb-3">
               <button
                 onClick={handleGoogleSignIn}
@@ -521,6 +493,7 @@ export default function LuxuryLogin() {
               </button>
             </div>
             
+            {/* Cancel button */}
             <div className="p-6 pt-4">
               <button
                 onClick={() => setShowGoogleModal(false)}
@@ -547,4 +520,4 @@ export default function LuxuryLogin() {
       `}</style>
     </>
   );
-          }
+}
