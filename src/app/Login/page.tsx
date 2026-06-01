@@ -1,7 +1,6 @@
 // pages/login.tsx
 "use client";
-
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -38,19 +37,6 @@ interface SignInResponse {
   url?: string | null;
 }
 
-interface GoogleAccount {
-  email: string;
-  name: string;
-  picture: string;
-  id: string;
-}
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
 export default function LuxuryLogin() {
   const { user } = useAuth();
   const router = useRouter();
@@ -66,8 +52,9 @@ export default function LuxuryLogin() {
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [googleAccounts, setGoogleAccounts] = useState<GoogleAccount[]>([]);
-  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
+  const [showAccountPicker, setShowAccountPicker] = useState(true);
+  const [showGoogleIframe, setShowGoogleIframe] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Check session after login
   useEffect(() => {
@@ -93,104 +80,7 @@ export default function LuxuryLogin() {
     };
 
     checkSession();
-    
-    // Load Google Accounts API
-    loadGoogleAccountsAPI();
   }, []);
-
-  const loadGoogleAccountsAPI = () => {
-    // Load Google Identity Services script
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-  };
-
-  const fetchGoogleAccounts = async () => {
-    setIsLoadingAccounts(true);
-    
-    try {
-      // Try to get accounts from Google Identity Services
-      if (window.google && window.google.accounts) {
-        // This callback will be called when accounts are retrieved
-        const callback = (response: any) => {
-          if (response && response.accounts) {
-            const accounts = response.accounts.map((acc: any) => ({
-              email: acc.email,
-              name: acc.name,
-              picture: acc.picture,
-              id: acc.id
-            }));
-            setGoogleAccounts(accounts);
-          }
-          setIsLoadingAccounts(false);
-        };
-        
-        // Request accounts from Google
-        window.google.accounts.id.disableAutoSelect();
-        
-        // Try to get stored accounts
-        // Note: This is an approximation - actual Google accounts are managed by the browser
-        // For production, you'd use Google One Tap or OAuth with prompt=none
-        const accountsFromStorage = getStoredGoogleAccounts();
-        if (accountsFromStorage.length > 0) {
-          setGoogleAccounts(accountsFromStorage);
-          setIsLoadingAccounts(false);
-        } else {
-          // If no accounts found, show empty state or try to get via OAuth
-          setIsLoadingAccounts(false);
-        }
-      } else {
-        // Fallback: try to get from localStorage (where Google might store them)
-        const accountsFromStorage = getStoredGoogleAccounts();
-        setGoogleAccounts(accountsFromStorage);
-        setIsLoadingAccounts(false);
-      }
-    } catch (error) {
-      console.error('Error fetching Google accounts:', error);
-      setIsLoadingAccounts(false);
-    }
-  };
-
-  // Helper to get stored Google accounts from various possible storage locations
-  const getStoredGoogleAccounts = (): GoogleAccount[] => {
-    const accounts: GoogleAccount[] = [];
-    
-    try {
-      // Check localStorage for Google accounts
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.includes('google') || key.includes('g_user') || key.includes('accounts'))) {
-          try {
-            const value = JSON.parse(localStorage.getItem(key) || '');
-            if (value && value.email && value.name) {
-              accounts.push({
-                email: value.email,
-                name: value.name,
-                picture: value.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(value.name)}&background=4285F4&color=fff`,
-                id: value.id || value.email
-              });
-            }
-          } catch (e) {
-            // Not JSON, skip
-          }
-        }
-      }
-    } catch (e) {
-      console.error('Error reading from localStorage:', e);
-    }
-    
-    // Return unique accounts by email
-    return accounts.filter((acc, index, self) => 
-      index === self.findIndex((a) => a.email === acc.email)
-    );
-  };
-
-  const handleGoogleModalOpen = async () => {
-    setShowGoogleModal(true);
-    await fetchGoogleAccounts();
-  };
 
   const decryptUserToken = async (serverToken: string) => {
     // Decrypt the token
@@ -305,6 +195,8 @@ export default function LuxuryLogin() {
 
   const handleGoogleSignIn = async (accountEmail?: string) => {
     setShowGoogleModal(false);
+    setShowAccountPicker(true);
+    setShowGoogleIframe(false);
     setIsGoogleLoading(true);
     setError(null);
     
@@ -380,6 +272,41 @@ export default function LuxuryLogin() {
       router.push('/');
     }
   };
+
+  // Handle iframe message events (for Google OAuth callback)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Check if the message is from Google OAuth
+      if (event.origin.includes('google') || event.data?.type === 'google-login') {
+        console.log('Received message from Google iframe:', event.data);
+        // Handle successful login from iframe
+        if (event.data?.success) {
+          setShowGoogleModal(false);
+          setShowAccountPicker(true);
+          setShowGoogleIframe(false);
+          // Trigger the actual sign-in
+          handleGoogleSignIn();
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Demo saved accounts - in production, these would come from your backend/localStorage
+  const savedAccounts = [
+    {
+      email: "john.doe@gmail.com",
+      name: "John Doe",
+      picture: "https://ui-avatars.com/api/?name=John+Doe&background=4285F4&color=fff"
+    },
+    {
+      email: "jane.smith@gmail.com",
+      name: "Jane Smith",
+      picture: "https://ui-avatars.com/api/?name=Jane+Smith&background=EA4335&color=fff"
+    },
+  ];
 
   // Get role badge color
   const getRoleBadgeColor = (role: string) => {
@@ -572,7 +499,11 @@ export default function LuxuryLogin() {
             <div className="grid gap-3">
               <button
                 type="button"
-                onClick={handleGoogleModalOpen}
+                onClick={() => {
+                  setShowGoogleModal(true);
+                  setShowAccountPicker(true);
+                  setShowGoogleIframe(false);
+                }}
                 disabled={isLoading || !!userData || isGoogleLoading}
                 className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
                   isLoading || !!userData || isGoogleLoading
@@ -615,115 +546,154 @@ export default function LuxuryLogin() {
           {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
-            onClick={() => setShowGoogleModal(false)}
+            onClick={() => {
+              setShowGoogleModal(false);
+              setShowAccountPicker(true);
+              setShowGoogleIframe(false);
+            }}
           />
           
           {/* Slide up panel */}
           <div 
             className="relative w-full max-w-md bg-white rounded-t-2xl shadow-2xl animate-slide-up overflow-hidden"
-            style={{ animation: 'slideUp 0.3s ease-out' }}
+            style={{ animation: 'slideUp 0.3s ease-out', maxHeight: '90vh' }}
           >
             {/* Drag indicator */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
             </div>
             
-            {/* Header */}
-            <div className="text-center pt-2 pb-4 border-b border-gray-100">
-              <div className="flex justify-center mb-3">
-                <svg className="w-10 h-10" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800">Choose an account</h3>
-              <p className="text-sm text-gray-500 mt-1">Continue with Google</p>
-            </div>
-            
-            {/* Account List - Shows actual Google accounts from browser */}
-            <div className="py-3 max-h-96 overflow-y-auto">
-              {isLoadingAccounts ? (
-                <div className="flex justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                </div>
-              ) : googleAccounts.length > 0 ? (
-                googleAccounts.map((account, index) => (
-                  <button
-                    key={account.id || index}
-                    onClick={() => handleGoogleSignIn(account.email)}
-                    className="w-full flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <img 
-                      src={account.picture} 
-                      alt={account.name}
-                      className="w-12 h-12 rounded-full"
-                      onError={(e) => {
-                        // Fallback to avatar if image fails to load
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(account.name)}&background=4285F4&color=fff`;
-                      }}
-                    />
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-gray-800">{account.name}</div>
-                      <div className="text-sm text-gray-500">{account.email}</div>
-                    </div>
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                ))
-              ) : (
-                <div className="text-center py-8 px-4">
-                  <div className="text-gray-400 mb-2">
-                    <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+            {/* Conditional rendering: Account Picker OR Google Iframe */}
+            {showAccountPicker && !showGoogleIframe && (
+              <>
+                {/* Header */}
+                <div className="text-center pt-2 pb-4 border-b border-gray-100">
+                  <div className="flex justify-center mb-3">
+                    <svg className="w-10 h-10" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                      />
                     </svg>
                   </div>
-                  <p className="text-gray-500">No saved accounts found</p>
-                  <p className="text-sm text-gray-400 mt-1">Sign in with a new account below</p>
+                  <h3 className="text-xl font-semibold text-gray-800">Choose an account</h3>
+                  <p className="text-sm text-gray-500 mt-1">Continue with Google</p>
                 </div>
-              )}
-            </div>
-            
-            {/* Add another account button - Opens Google's account picker */}
-            <div className="border-t border-gray-100 p-3">
-              <button
-                onClick={() => {
-                  setShowGoogleModal(false);
-                  // This will trigger Google's native account picker
-                  handleGoogleSignIn();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-blue-600 font-medium hover:bg-blue-50 transition-colors duration-150"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Use another account
-              </button>
-            </div>
-            
-            {/* Cancel button */}
-            <div className="border-t border-gray-100 p-3">
-              <button
-                onClick={() => setShowGoogleModal(false)}
-                className="w-full py-3 px-4 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors duration-150"
-              >
-                Cancel
-              </button>
-            </div>
+                
+                {/* Account List */}
+                <div className="py-3 max-h-96 overflow-y-auto">
+                  {savedAccounts.map((account, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleGoogleSignIn(account.email)}
+                      className="w-full flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <img 
+                        src={account.picture} 
+                        alt={account.name}
+                        className="w-12 h-12 rounded-full"
+                      />
+                      <div className="flex-1 text-left">
+                        <div className="font-medium text-gray-800">{account.name}</div>
+                        <div className="text-sm text-gray-500">{account.email}</div>
+                      </div>
+                      <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Use another account button - Opens iframe instead of new tab */}
+                <div className="border-t border-gray-100 p-3">
+                  <button
+                    onClick={() => {
+                      setShowAccountPicker(false);
+                      setShowGoogleIframe(true);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-blue-600 font-medium hover:bg-blue-50 transition-colors duration-150"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Use another account
+                  </button>
+                </div>
+                
+                {/* Cancel button */}
+                <div className="border-t border-gray-100 p-3">
+                  <button
+                    onClick={() => {
+                      setShowGoogleModal(false);
+                      setShowAccountPicker(true);
+                      setShowGoogleIframe(false);
+                    }}
+                    className="w-full py-3 px-4 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Google Sign-In Iframe */}
+            {showGoogleIframe && (
+              <>
+                {/* Header with back button */}
+                <div className="flex items-center p-4 border-b border-gray-100">
+                  <button
+                    onClick={() => {
+                      setShowAccountPicker(true);
+                      setShowGoogleIframe(false);
+                    }}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <h3 className="flex-1 text-center text-lg font-semibold text-gray-800">Sign in with Google</h3>
+                  <div className="w-6"></div> {/* Spacer for alignment */}
+                </div>
+                
+                {/* Google OAuth Iframe */}
+                <div className="h-[500px] w-full">
+                  <iframe
+                    ref={iframeRef}
+                    src="/api/auth/signin/google" // NextAuth Google sign-in endpoint
+                    className="w-full h-full border-0"
+                    title="Google Sign In"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-storage-access-by-user-activation"
+                  />
+                </div>
+                
+                {/* Cancel button */}
+                <div className="border-t border-gray-100 p-3">
+                  <button
+                    onClick={() => {
+                      setShowGoogleModal(false);
+                      setShowAccountPicker(true);
+                      setShowGoogleIframe(false);
+                    }}
+                    className="w-full py-3 px-4 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -744,4 +714,4 @@ export default function LuxuryLogin() {
       `}</style>
     </>
   );
-                }
+              }
