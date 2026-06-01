@@ -12,7 +12,6 @@ import { decryptToken } from '../../../utils/decryptToken';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
 
-// Your user interface from decrypted token
 interface UserData {
   userId: string;
   role: 'ADMINISTRATOR' | 'MANAGER' | 'RIDER' | 'USER';
@@ -37,12 +36,6 @@ interface SignInResponse {
   url?: string | null;
 }
 
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
 export default function LuxuryLogin() {
   const { user } = useAuth();
   const router = useRouter();
@@ -59,7 +52,6 @@ export default function LuxuryLogin() {
   const [sessionChecked, setSessionChecked] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
 
-  // Check session after login
   useEffect(() => {
     const checkSession = async () => {
       if (typeof window === 'undefined') return;
@@ -82,21 +74,7 @@ export default function LuxuryLogin() {
     };
 
     checkSession();
-    
-    // Load Google Identity Services
-    loadGoogleScript();
   }, []);
-
-  const loadGoogleScript = () => {
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      console.log('Google Identity Services loaded');
-    };
-    document.head.appendChild(script);
-  };
 
   const decryptUserToken = async (serverToken: string) => {
     const secret = process.env.NEXT_PUBLIC_JWT_SECRET || "QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz";
@@ -107,10 +85,6 @@ export default function LuxuryLogin() {
       }
       
       const decrypted = await decryptToken(serverToken, secret);
-      
-      if (!decrypted || typeof decrypted !== 'object') {
-        throw new Error('Invalid decrypted data');
-      }
       
       const userDataValid: UserData = {
         userId: decrypted.userId || '',
@@ -165,8 +139,6 @@ export default function LuxuryLogin() {
         setError(result.error);
         setIsLoading(false);
       } else if (result?.status === 200) {
-        console.log('✅ Login successful');
-        
         setTimeout(async () => {
           try {
             const session = await getSession();
@@ -185,7 +157,6 @@ export default function LuxuryLogin() {
           }
         }, 1000);
       } else {
-        console.error('Login failed');
         setError('Login failed: Unexpected response from server');
         setIsLoading(false);
       }
@@ -196,41 +167,21 @@ export default function LuxuryLogin() {
     }
   };
 
+  // This triggers Google OAuth - redirects to Google's account picker
   const handleGoogleSignIn = async () => {
     setShowGoogleModal(false);
     setIsGoogleLoading(true);
     setError(null);
     
     try {
-      const result = await signIn('google', {
-        redirect: false,
-        callbackUrl: '/Login'
+      // This will redirect to Google's OAuth page where user selects account
+      await signIn('google', { 
+        callbackUrl: '/Login',
+        redirect: true 
       });
-      
-      if (result?.error) {
-        setError('Google sign-in failed. Please try again.');
-        console.error('Google sign-in error:', result.error);
-        setIsGoogleLoading(false);
-      } else if (result?.ok && result?.url) {
-        setTimeout(async () => {
-          try {
-            const session = await getSession();
-            if (session?.serverToken) {
-              await decryptUserToken(session.serverToken);
-            } else {
-              setError('Session established but no token found');
-              setIsGoogleLoading(false);
-            }
-          } catch (sessionError) {
-            console.error('Session error:', sessionError);
-            setError('Failed to establish session');
-            setIsGoogleLoading(false);
-          }
-        }, 1000);
-      }
     } catch (err: any) {
       console.error('Google sign-in failed:', err);
-      setError(err.message || 'Google sign-in failed. Please try again.');
+      setError(err.message || 'Google sign-in failed.');
       setIsGoogleLoading(false);
     }
   };
@@ -256,71 +207,6 @@ export default function LuxuryLogin() {
         break;
     }
   };
-
-  // Initialize Google One Tap when modal opens
-  const initializeGoogleOneTap = () => {
-    if (typeof window !== 'undefined' && window.google?.accounts) {
-      window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
-        callback: async (response: any) => {
-          // Handle Google credential response
-          console.log('Google One Tap response:', response);
-          if (response.credential) {
-            // Send credential to your backend or use NextAuth
-            const result = await signIn('google', {
-              credential: response.credential,
-              redirect: false,
-              callbackUrl: '/Login'
-            });
-            
-            if (result?.ok) {
-              setTimeout(async () => {
-                const session = await getSession();
-                if (session?.serverToken) {
-                  await decryptUserToken(session.serverToken);
-                }
-              }, 1000);
-            }
-          }
-        },
-        auto_select: false,
-        cancel_on_tap_outside: false,
-      });
-      
-      // Render the One Tap prompt inside a div
-      window.google.accounts.id.prompt((notification: any) => {
-        if (notification.isNotDisplayed()) {
-          console.log('One Tap not displayed:', notification.getNotDisplayedReason());
-        }
-      });
-    }
-  };
-
-  // Render Google Sign-In button in modal
-  const renderGoogleButton = () => {
-    if (typeof window !== 'undefined' && window.google?.accounts) {
-      window.google.accounts.id.renderButton(
-        document.getElementById('google-signin-button'),
-        { 
-          theme: 'outline',
-          size: 'large',
-          width: '100%',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'center'
-        }
-      );
-    }
-  };
-
-  useEffect(() => {
-    if (showGoogleModal) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        renderGoogleButton();
-      }, 100);
-    }
-  }, [showGoogleModal]);
 
   const getRedirectPath = (role: string) => {
     switch(role) {
@@ -348,7 +234,6 @@ export default function LuxuryLogin() {
         <Header/>
         <div className="flex items-center justify-center py-6 sm:py-8 md:py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl w-full space-y-8 bg-white p-10 rounded-xl shadow-2xl border border-indigo-100">
-            {/* Logo and Header */}
             <div>
               <div className="flex justify-center">
                 <div className="bg-gradient-to-r from-violet-500 to-indigo-600 p-3 rounded-lg">
@@ -365,21 +250,18 @@ export default function LuxuryLogin() {
               </p>
             </div>
 
-            {/* Error Display */}
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
             
-            {/* Success Message */}
             {userData && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
                 ✅ Login successful! Redirecting to {getRedirectPath(userData.role)}...
               </div>
             )}
             
-            {/* Login Form */}
             <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
               <div className="rounded-md shadow-sm space-y-4">
                 <div>
@@ -486,7 +368,7 @@ export default function LuxuryLogin() {
               </div>
             </div>
 
-            {/* Google Sign In Button */}
+            {/* Google Sign In Button - Opens Slide Up Modal */}
             <div className="grid gap-3">
               <button
                 type="button"
@@ -527,46 +409,104 @@ export default function LuxuryLogin() {
         <Footer />
       </div>
 
-      {/* Google Login Slide Up Modal - Uses Google's official button */}
+      {/* Google Login Slide Up Modal - With Account Selection Options */}
       {showGoogleModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
+          {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
             onClick={() => setShowGoogleModal(false)}
           />
           
+          {/* Slide up panel */}
           <div 
-            className="relative w-full max-w-md bg-white rounded-t-2xl shadow-2xl overflow-hidden"
+            className="relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl overflow-hidden"
             style={{ 
-              animation: 'slideUp 0.3s ease-out',
-              maxHeight: '80vh'
+              animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              maxHeight: '85vh'
             }}
           >
+            {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 bg-gray-300 rounded-full"></div>
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
             
-            <div className="text-center pt-2 pb-4 border-b border-gray-100">
-              <div className="flex justify-center mb-3">
-                <svg className="w-12 h-12" viewBox="0 0 24 24">
-                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                </svg>
+            {/* Header with Google Logo */}
+            <div className="text-center pt-2 pb-4">
+              <div className="flex justify-center mb-4">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg transform -rotate-6">
+                  <svg className="w-10 h-10 text-white" viewBox="0 0 24 24">
+                    <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-800">Sign in with Google</h3>
-              <p className="text-sm text-gray-500 mt-1">Choose your Google account</p>
+              <h3 className="text-2xl font-bold text-gray-800">Choose an account</h3>
+              <p className="text-sm text-gray-500 mt-1">to continue to VendorCity</p>
             </div>
             
-            <div className="p-6 flex justify-center">
-              <div id="google-signin-button"></div>
+            {/* Sign in button - this will redirect to Google's account picker */}
+            <div className="px-6 pb-3">
+              <button
+                onClick={handleGoogleSignIn}
+                className="w-full flex items-center gap-4 py-4 px-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24">
+                    <path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">Sign in with Google</div>
+                  <div className="text-sm text-gray-500">Choose your Google account</div>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
             
-            <div className="border-t border-gray-100 p-4">
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-100"></div>
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="px-3 bg-white text-gray-400">or</span>
+              </div>
+            </div>
+            
+            {/* Add account option */}
+            <div className="px-6 pb-3">
+              <button
+                onClick={handleGoogleSignIn}
+                className="w-full flex items-center gap-4 py-4 px-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-200 group"
+              >
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-gray-800">Add another account</div>
+                  <div className="text-sm text-gray-500">Sign in with a different Google account</div>
+                </div>
+                <svg className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Cancel button */}
+            <div className="p-6 pt-4">
               <button
                 onClick={() => setShowGoogleModal(false)}
-                className="w-full py-3 px-4 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors duration-150"
+                className="w-full py-3 rounded-xl text-gray-500 font-medium hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </button>
@@ -579,16 +519,14 @@ export default function LuxuryLogin() {
         @keyframes slideUp {
           from {
             transform: translateY(100%);
+            opacity: 0;
           }
           to {
             transform: translateY(0);
+            opacity: 1;
           }
-        }
-        
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out;
         }
       `}</style>
     </>
   );
-                }
+}
