@@ -49,7 +49,7 @@ const nextConfig = {
       },
       // Service worker headers - CRITICAL for push notifications
       {
-        source: '/sw.js',
+        source: '/service-worker.js',
         headers: [
           {
             key: 'Content-Type',
