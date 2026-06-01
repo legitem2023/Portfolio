@@ -106,7 +106,7 @@ const handleAccept = async () => {
 
     if (data?.acceptOrder?.statusText === 'Successfully Accepted!') {
       onAccept(delivery.id);
-      showToast(data?.acceptOrder?.statusText, "success");
+      //showToast(data?.acceptOrder?.statusText, "success");
     } else {
       showToast(data?.acceptOrder?.statusText || 'Failed to accept order', "warning");
     }
