@@ -43,6 +43,27 @@ export const UPDATE_ORDER_STATUS = gql`
   }
 `;
 
+export const UPDATE_ORDER_STAT_MUTATION = gql`
+  mutation UpdateOrderStat($UpdateStatusInput: [UpdateStatusParameter!]!) {
+    updateOrderStat(UpdateStatusInput: $UpdateStatusInput) {
+      token
+      statusText
+      role
+    }
+  }
+`;
+
+// Usage
+const handleUpdateStatus = async (orderUpdates) => {
+  const { data } = await updateOrderStat({
+    variables: {
+      UpdateStatusInput: orderUpdates  // Note: Matches schema exactly
+    }
+  });
+  
+  return data;
+};
+
 
 export const REJECT_BY_RIDER_MUTATION = gql`
   mutation RejectByRider($itemId: ID!, $riderId: ID!) {
