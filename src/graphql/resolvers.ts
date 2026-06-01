@@ -7520,7 +7520,7 @@ updateOrderStat: async (_: any, { UpdateStatusInput }: any) => {
       } catch (itemError) {
         console.error(`Error processing item ${itemId}:`, itemError);
         allSuccessful = false;
-        results.push({ itemId, success: false, error: itemError.message });
+       // results.push({ itemId, success: false, error: itemError.message });
       }
     }
 
