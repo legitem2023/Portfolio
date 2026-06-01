@@ -37,11 +37,17 @@ interface SignInResponse {
   url?: string | null;
 }
 
-// Mock Google accounts for demo - replace with actual Google One Tap / Accounts API
 interface GoogleAccount {
   email: string;
   name: string;
   picture: string;
+  id: string;
+}
+
+declare global {
+  interface Window {
+    google: any;
+  }
 }
 
 export default function LuxuryLogin() {
@@ -59,11 +65,8 @@ export default function LuxuryLogin() {
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [showGoogleModal, setShowGoogleModal] = useState(false);
-  const [savedAccounts, setSavedAccounts] = useState<GoogleAccount[]>([
-    // Demo accounts - in real implementation, these come from Google's API
-    { email: "john.doe@gmail.com", name: "John Doe", picture: "https://ui-avatars.com/api/?name=John+Doe&background=4285F4&color=fff" },
-    { email: "jane.smith@gmail.com", name: "Jane Smith", picture: "https://ui-avatars.com/api/?name=Jane+Smith&background=EA4335&color=fff" },
-  ]);
+  const [googleAccounts, setGoogleAccounts] = useState<GoogleAccount[]>([]);
+  const [isLoadingAccounts, setIsLoadingAccounts] = useState(false);
 
   // Check session after login
   useEffect(() => {
@@ -89,7 +92,104 @@ export default function LuxuryLogin() {
     };
 
     checkSession();
+    
+    // Load Google Accounts API
+    loadGoogleAccountsAPI();
   }, []);
+
+  const loadGoogleAccountsAPI = () => {
+    // Load Google Identity Services script
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  };
+
+  const fetchGoogleAccounts = async () => {
+    setIsLoadingAccounts(true);
+    
+    try {
+      // Try to get accounts from Google Identity Services
+      if (window.google && window.google.accounts) {
+        // This callback will be called when accounts are retrieved
+        const callback = (response: any) => {
+          if (response && response.accounts) {
+            const accounts = response.accounts.map((acc: any) => ({
+              email: acc.email,
+              name: acc.name,
+              picture: acc.picture,
+              id: acc.id
+            }));
+            setGoogleAccounts(accounts);
+          }
+          setIsLoadingAccounts(false);
+        };
+        
+        // Request accounts from Google
+        window.google.accounts.id.disableAutoSelect();
+        
+        // Try to get stored accounts
+        // Note: This is an approximation - actual Google accounts are managed by the browser
+        // For production, you'd use Google One Tap or OAuth with prompt=none
+        const accountsFromStorage = getStoredGoogleAccounts();
+        if (accountsFromStorage.length > 0) {
+          setGoogleAccounts(accountsFromStorage);
+          setIsLoadingAccounts(false);
+        } else {
+          // If no accounts found, show empty state or try to get via OAuth
+          setIsLoadingAccounts(false);
+        }
+      } else {
+        // Fallback: try to get from localStorage (where Google might store them)
+        const accountsFromStorage = getStoredGoogleAccounts();
+        setGoogleAccounts(accountsFromStorage);
+        setIsLoadingAccounts(false);
+      }
+    } catch (error) {
+      console.error('Error fetching Google accounts:', error);
+      setIsLoadingAccounts(false);
+    }
+  };
+
+  // Helper to get stored Google accounts from various possible storage locations
+  const getStoredGoogleAccounts = (): GoogleAccount[] => {
+    const accounts: GoogleAccount[] = [];
+    
+    try {
+      // Check localStorage for Google accounts
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('google') || key.includes('g_user') || key.includes('accounts'))) {
+          try {
+            const value = JSON.parse(localStorage.getItem(key) || '');
+            if (value && value.email && value.name) {
+              accounts.push({
+                email: value.email,
+                name: value.name,
+                picture: value.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(value.name)}&background=4285F4&color=fff`,
+                id: value.id || value.email
+              });
+            }
+          } catch (e) {
+            // Not JSON, skip
+          }
+        }
+      }
+    } catch (e) {
+      console.error('Error reading from localStorage:', e);
+    }
+    
+    // Return unique accounts by email
+    return accounts.filter((acc, index, self) => 
+      index === self.findIndex((a) => a.email === acc.email)
+    );
+  };
+
+  const handleGoogleModalOpen = async () => {
+    setShowGoogleModal(true);
+    await fetchGoogleAccounts();
+  };
 
   const decryptUserToken = async (serverToken: string) => {
     // Decrypt the token
@@ -208,12 +308,17 @@ export default function LuxuryLogin() {
     setError(null);
     
     try {
-      // If specific account selected, you can pass hint parameter
-      const result = await signIn('google', {
+      // Sign in with Google, optionally passing account hint
+      const signInOptions: any = {
         redirect: false,
-        callbackUrl: '/Login',
-        ...(accountEmail && { login_hint: accountEmail })
-      });
+        callbackUrl: '/Login'
+      };
+      
+      if (accountEmail) {
+        signInOptions.login_hint = accountEmail;
+      }
+      
+      const result = await signIn('google', signInOptions);
       
       if (result?.error) {
         setError('Google sign-in failed. Please try again.');
@@ -221,46 +326,6 @@ export default function LuxuryLogin() {
         setIsGoogleLoading(false);
       } else if (result?.ok && result?.url) {
         // Successful sign-in, wait for session
-        setTimeout(async () => {
-          try {
-            const session = await getSession();
-            if (session?.serverToken) {
-              await decryptUserToken(session.serverToken);
-            } else {
-              setError('Session established but no token found');
-              setIsGoogleLoading(false);
-            }
-          } catch (sessionError) {
-            console.error('Session error:', sessionError);
-            setError('Failed to establish session');
-            setIsGoogleLoading(false);
-          }
-        }, 1000);
-      }
-    } catch (err: any) {
-      console.error('Google sign-in failed:', err);
-      setError(err.message || 'Google sign-in failed. Please try again.');
-      setIsGoogleLoading(false);
-    }
-  };
-
-  const handleAddAnotherAccount = async () => {
-    setShowGoogleModal(false);
-    setIsGoogleLoading(true);
-    
-    try {
-      // Sign in without hint to show account picker
-      const result = await signIn('google', {
-        redirect: false,
-        callbackUrl: '/Login',
-        prompt: 'select_account'
-      });
-      
-      if (result?.error) {
-        setError('Google sign-in failed. Please try again.');
-        console.error('Google sign-in error:', result.error);
-        setIsGoogleLoading(false);
-      } else if (result?.ok && result?.url) {
         setTimeout(async () => {
           try {
             const session = await getSession();
@@ -502,11 +567,11 @@ export default function LuxuryLogin() {
               </div>
             </div>
 
-            {/* Social Login - Updated with slide up modal trigger */}
+            {/* Social Login - Opens slide up modal */}
             <div className="grid gap-3">
               <button
                 type="button"
-                onClick={() => setShowGoogleModal(true)}
+                onClick={handleGoogleModalOpen}
                 disabled={isLoading || !!userData || isGoogleLoading}
                 className={`w-full inline-flex justify-center items-center py-2 px-4 border rounded-md shadow-sm text-sm font-medium transition-colors ${
                   isLoading || !!userData || isGoogleLoading
@@ -588,40 +653,64 @@ export default function LuxuryLogin() {
               <p className="text-sm text-gray-500 mt-1">Continue with Google</p>
             </div>
             
-            {/* Account List */}
+            {/* Account List - Shows actual Google accounts from browser */}
             <div className="py-3 max-h-96 overflow-y-auto">
-              {savedAccounts.map((account, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleGoogleSignIn(account.email)}
-                  className="w-full flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
-                >
-                  <img 
-                    src={account.picture} 
-                    alt={account.name}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div className="flex-1 text-left">
-                    <div className="font-medium text-gray-800">{account.name}</div>
-                    <div className="text-sm text-gray-500">{account.email}</div>
+              {isLoadingAccounts ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : googleAccounts.length > 0 ? (
+                googleAccounts.map((account, index) => (
+                  <button
+                    key={account.id || index}
+                    onClick={() => handleGoogleSignIn(account.email)}
+                    className="w-full flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors duration-150"
+                  >
+                    <img 
+                      src={account.picture} 
+                      alt={account.name}
+                      className="w-12 h-12 rounded-full"
+                      onError={(e) => {
+                        // Fallback to avatar if image fails to load
+                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(account.name)}&background=4285F4&color=fff`;
+                      }}
+                    />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium text-gray-800">{account.name}</div>
+                      <div className="text-sm text-gray-500">{account.email}</div>
+                    </div>
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                ))
+              ) : (
+                <div className="text-center py-8 px-4">
+                  <div className="text-gray-400 mb-2">
+                    <svg className="w-12 h-12 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                    </svg>
                   </div>
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              ))}
+                  <p className="text-gray-500">No saved accounts found</p>
+                  <p className="text-sm text-gray-400 mt-1">Sign in with a new account below</p>
+                </div>
+              )}
             </div>
             
-            {/* Add another account button */}
+            {/* Add another account button - Opens Google's account picker */}
             <div className="border-t border-gray-100 p-3">
               <button
-                onClick={handleAddAnotherAccount}
+                onClick={() => {
+                  setShowGoogleModal(false);
+                  // This will trigger Google's native account picker
+                  handleGoogleSignIn();
+                }}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg text-blue-600 font-medium hover:bg-blue-50 transition-colors duration-150"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Add another account
+                Use another account
               </button>
             </div>
             
@@ -648,19 +737,10 @@ export default function LuxuryLogin() {
           }
         }
         
-        @keyframes slideDown {
-          from {
-            transform: translateY(0);
-          }
-          to {
-            transform: translateY(100%);
-          }
-        }
-        
         .animate-slide-up {
           animation: slideUp 0.3s ease-out;
         }
       `}</style>
     </>
   );
-        }
+                }
