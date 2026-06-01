@@ -1532,10 +1532,21 @@ input AcceptParameter {
   userId: ID
 }
 
-  
+input UpdateStatusParameter {
+   itemId: ID 
+   riderId: ID
+   supplierId: ID 
+   userId: ID 
+   status: String
+   title: String
+   message: String
+}
+
+
   # ================= Mutations =================
   type Mutation {
-
+    updateOrderStat(UpdateStatusInput:[UpdateStatusParameter]): Result
+   
   # FoodCategories CRUD mutations
     createFoodCategory(input: CreateFoodCategoryInput!): FoodCategories
     updateFoodCategory(input: UpdateFoodCategoryInput!): FoodCategories
