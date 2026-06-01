@@ -241,7 +241,7 @@ export default function DeliveryMap({
 
       return new Promise<{ lat: number; lng: number }>((resolve, reject) => {
         const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address }, (results, status) => {
+        geocoder.geocode({ address }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
           if (status === 'OK' && results && results[0]) {
             const location = {
               lat: results[0].geometry.location.lat(),
@@ -383,7 +383,7 @@ export default function DeliveryMap({
           destination: { lat: targetLocation.lat, lng: targetLocation.lng },
           travelMode: window.google.maps.TravelMode.DRIVING,
         },
-        (result, status) => {
+        (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
           if (status === 'OK' && result) {
             directionsRenderer.setDirections(result);
             const route = result.routes[0];
@@ -591,7 +591,7 @@ export default function DeliveryMap({
           destination: { lat: targetLocation.lat, lng: targetLocation.lng },
           travelMode: window.google.maps.TravelMode.DRIVING,
         },
-        (result, status) => {
+        (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
           if (status === 'OK' && result && directionsRendererRef.current) {
             directionsRendererRef.current.setDirections(result);
             const route = result.routes[0];
@@ -847,4 +847,4 @@ export default function DeliveryMap({
       </div>
     </div>
   );
-        }
+          }
