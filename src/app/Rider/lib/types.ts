@@ -53,16 +53,6 @@ export const UPDATE_ORDER_STAT_MUTATION = gql`
   }
 `;
 
-// Usage
-const handleUpdateStatus = async (orderUpdates) => {
-  const { data } = await updateOrderStat({
-    variables: {
-      UpdateStatusInput: orderUpdates  // Note: Matches schema exactly
-    }
-  });
-  
-  return data;
-};
 
 
 export const REJECT_BY_RIDER_MUTATION = gql`
