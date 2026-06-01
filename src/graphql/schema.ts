@@ -1524,6 +1524,14 @@ input UpdateItemInput {
   accountId: ID
 }
 
+input AcceptParameter {
+  parentItemId:ID
+  itemId: ID
+  riderId: ID
+  supplierId: ID
+  userId: ID
+}
+
   
   # ================= Mutations =================
   type Mutation {
@@ -1584,7 +1592,7 @@ input UpdateItemInput {
     updateOrderStatus(itemId: ID, riderId: ID, supplierId: ID, userId: ID, status: String, title: String, message: String): Result
     rejectByRider(itemId: ID, riderId: ID): Result
     acceptByRider(parentItemId:ID, itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
-
+    acceptOrder(AcceptParameter:[AcceptParameter]): Result
     assignNewRider(itemId: ID, riderId: ID, supplierId: ID, userId: ID): Result
 
     createNotification(input: CreateNotificationInput): Notification
