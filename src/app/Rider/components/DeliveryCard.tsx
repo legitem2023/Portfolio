@@ -15,7 +15,7 @@ import {
 import { Delivery } from '../lib/types';
 import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
-import { ACCEPT_BY_RIDER, REJECT_BY_RIDER_MUTATION } from '../lib/types';
+import { ACCEPT_BY_RIDER, ACCEPT_ORDER_MUTATION, REJECT_BY_RIDER_MUTATION } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
 import { useState } from 'react';
 import { showToast } from '../../../../utils/toastify';
@@ -32,7 +32,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const { user } = useAuth();
   const [showItems, setShowItems] = useState(false);
   
-  const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_BY_RIDER);
+  const [acceptDelivery, { loading: acceptLoading, error: acceptError }] = useMutation(ACCEPT_ORDER_MUTATION);
   const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
 
   // VAT rate from environment (default 0.12 if not set)
@@ -64,64 +64,60 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const VAT = (VAT_RATE * subtotal);
   const grandTotal = (subtotal + shipping + VAT);
 
-  const handleAccept = async () => {
-    try {
+const handleAccept = async () => {
+  try {
     if (!user) {
       console.error('User not authenticated');
       return;
     }
-  const supplierItems = delivery.supplierItems || [];
-  const originalOrderId = delivery.originalOrderId;
-  const riderId = user.userId;
-  const userId = delivery.customerId;
-   for (const item of supplierItems) {
-        const itemId = item.id;
-        const supplierId = item.supplierId;
-        if (!itemId) {
-          console.warn('Skipping item with missing ID');
-          continue;
-        }
 
-  const { data } = await acceptDelivery({
-        variables: {
-          parentItemId:originalOrderId,
-          itemId: itemId,
-          riderId: riderId,
-          supplierId: supplierId,
-          userId: userId,
-        }
-      });
-
-      if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
-        onAccept(delivery.id);
-        refetch();
-      } else {
-        showToast(data?.acceptByRider?.statusText,"warning");
-        refetch();
-      }
-    }
-
+    const supplierItems = delivery.supplierItems || [];
+    const originalOrderId = delivery.originalOrderId;
+    const riderId = user.userId;
+    const userId = delivery.customerId;
+    
+    // Prepare all items in a single array
+    const acceptParameters = [];
+    
+    for (const item of supplierItems) {
+      const itemId = item.id;
+      const supplierId = item.supplierId;
       
-     /* const { data } = await acceptDelivery({
-        variables: {
-          itemId: itemId,
-          riderId: riderId,
-          supplierId: supplierId,
-          userId: userId,
-        }
-      });
+      if (!itemId) {
+        console.warn('Skipping item with missing ID');
+        continue;
+      }
 
-      if (data?.acceptByRider?.statusText === 'Successfully Accepted!') {
-        onAccept(delivery.id);
-        refetch();
-      } else {
-        showToast(data?.acceptByRider?.statusText,"warning");
-        refetch();
-      }*/
-    } catch (error) {
-      console.error('Error accepting delivery:', error);
+      acceptParameters.push({
+        parentItemId: originalOrderId,
+        itemId: itemId,
+        riderId: riderId,
+        supplierId: supplierId,
+        userId: userId,
+      });
     }
-  };
+
+    // Single GraphQL mutation call for all items
+    const { data } = await acceptDelivery({
+      variables: {
+        AcceptParameter: acceptParameters
+      }
+    });
+
+    if (data?.acceptOrder?.statusText === 'Successfully Accepted!') {
+      onAccept(delivery.id);
+      showToast(data?.acceptOrder?.statusText, "success");
+    } else {
+      showToast(data?.acceptOrder?.statusText || 'Failed to accept order', "warning");
+    }
+    
+    refetch();
+
+  } catch (error) {
+    console.error('Error accepting delivery:', error);
+    showToast('Failed to accept order', "error");
+  }
+};
 
   const handleReject = async () => {
     if (!user) {
