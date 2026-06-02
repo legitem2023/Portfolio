@@ -198,31 +198,14 @@ export default function PrivacyPolicy() {
                 If you have questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <ul className="list-none space-y-2 text-gray-700">
-                <li>📧 <strong>Email:</strong> privacy@vendorcity.com</li>
+                <li>📧 <strong>Email:</strong> https://vendorcity2026@gmail.com</li>
                 <li>📞 <strong>Phone:</strong> 1-800-VENDORCITY</li>
-                <li>📍 <strong>Address:</strong> 123 Delivery Lane, Suite 100, San Francisco, CA 94105</li>
-                <li>🐦 <strong>Social Media:</strong> @VendorCity on Instagram, Facebook, Twitter, and TikTok</li>
+                <li>📍 <strong>Address:</strong> 18 Ipil St. Buenmar, Brgy Sta Ana Taytay, Rizal</li>
+                <li>🐦 <strong>Social Media:</strong> @VendorCity on Instagram Facebook</li>
               </ul>
             </section>
 
-            {/* Social Media Links Footer */}
-            <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-              <p className="text-gray-600 mb-4">Follow us for updates and privacy notices:</p>
-              <div className="flex justify-center space-x-6">
-                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
-                  📷 Instagram
-                </a>
-                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
-                  👍 Facebook
-                </a>
-                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
-                  🐦 Twitter
-                </a>
-                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
-                  🎵 TikTok
-                </a>
-              </div>
-            </div>
+            
           </div>
         </div>
         
