@@ -12,11 +12,11 @@ export default function PrivacyPolicy() {
         <meta name="description" content="Read VendorCity's privacy policy to understand how we collect, use, and protect your personal information when using our delivery platform." />
       </Head>
       
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-orange-50">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50">
         <Header />
         
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-12 md:py-16 px-4">
+        <section className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-12 md:py-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <h1 className="text-3xl sm:text-4xl font-bold mb-4">Privacy Policy</h1>
             <p className="text-lg opacity-90 max-w-2xl mx-auto">
@@ -138,7 +138,7 @@ export default function PrivacyPolicy() {
                 <li><strong>Cookie Preferences:</strong> Manage cookie settings in your browser</li>
               </ul>
               <p className="text-gray-700 leading-relaxed mt-3">
-                To exercise these rights, contact us at <span className="text-orange-600">privacy@vendorcity.com</span>
+                To exercise these rights, contact us at <span className="text-indigo-600">privacy@vendorcity.com</span>
               </p>
             </section>
 
@@ -209,20 +209,16 @@ export default function PrivacyPolicy() {
             <div className="mt-8 pt-6 border-t border-gray-200 text-center">
               <p className="text-gray-600 mb-4">Follow us for updates and privacy notices:</p>
               <div className="flex justify-center space-x-6">
-                <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-                  <span className="sr-only">Instagram</span>
+                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
                   📷 Instagram
                 </a>
-                <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-                  <span className="sr-only">Facebook</span>
+                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
                   👍 Facebook
                 </a>
-                <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-                  <span className="sr-only">Twitter</span>
+                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
                   🐦 Twitter
                 </a>
-                <a href="#" className="text-gray-600 hover:text-orange-600 transition-colors">
-                  <span className="sr-only">TikTok</span>
+                <a href="#" className="text-gray-600 hover:text-indigo-600 transition-colors">
                   🎵 TikTok
                 </a>
               </div>
@@ -234,4 +230,4 @@ export default function PrivacyPolicy() {
       </div>
     </>
   );
-                  }
+              }
