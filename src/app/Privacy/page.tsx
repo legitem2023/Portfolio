@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Introduction</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Welcome to VendorCity ("we," "our," or "us"). Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our delivery platform, website, and mobile application (collectively, the "Service").
+                Welcome to VendorCity (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our delivery platform, website, and mobile application (collectively, the &quot;Service&quot;).
               </p>
               <p className="text-gray-700 leading-relaxed">
                 By using VendorCity, you consent to the data practices described in this policy. If you do not agree with any part of this policy, please do not use our Service.
@@ -169,7 +169,7 @@ export default function PrivacyPolicy() {
 
             {/* Children's Privacy */}
             <section className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Children's Privacy</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">9. Children{"'"}s Privacy</h2>
               <p className="text-gray-700 leading-relaxed">
                 VendorCity is not intended for users under the age of 18. We do not knowingly collect personal information from children. If you believe a child has provided us with personal information, please contact us immediately.
               </p>
@@ -187,7 +187,7 @@ export default function PrivacyPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">11. Updates to This Privacy Policy</h2>
               <p className="text-gray-700 leading-relaxed">
-                We may update this Privacy Policy from time to time. We will notify you of material changes by posting the new policy on this page and updating the "Last Updated" date. We encourage you to review this policy periodically.
+                We may update this Privacy Policy from time to time. We will notify you of material changes by posting the new policy on this page and updating the &quot;Last Updated&quot; date. We encourage you to review this policy periodically.
               </p>
             </section>
 
@@ -230,4 +230,4 @@ export default function PrivacyPolicy() {
       </div>
     </>
   );
-              }
+}
