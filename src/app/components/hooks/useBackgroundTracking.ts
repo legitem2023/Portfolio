@@ -1,52 +1,59 @@
-// hooks/useBackgroundTracking.js
+// src/app/components/hooks/useBackgroundTracking.ts
 import { useEffect, useRef } from 'react';
-import { registerPlugin } from '@capacitor/core';
+import { Plugins } from '@capacitor/core';
 
-// Register the plugin (works in Capacitor environment only)
-const BackgroundGeolocation = registerPlugin('BackgroundGeolocation');
+// Correct way to import the plugin
+import { BackgroundGeolocation as BgGeo } from '@capgo/background-geolocation';
 
-export function useBackgroundTracking(enabled = true) {
-  const watcherIdRef = useRef(null);
+// Or use Capacitor's plugin registration
+const BackgroundGeolocation = (Plugins as any).BackgroundGeolocation || BgGeo;
+
+export function useBackgroundTracking(enabled: boolean = true) {
+  const watcherIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
 
     const startTracking = async () => {
       try {
+        // Check if we're in Capacitor environment
+        if (typeof window === 'undefined' || !(window as any).Capacitor) {
+          console.log('Not in Capacitor environment, skipping background tracking');
+          return;
+        }
+
         // Start background watcher
         const id = await BackgroundGeolocation.addWatcher(
           {
-            // ⚠️ CRITICAL: Without backgroundMessage, tracking stops when app is backgrounded[citation:2][citation:10]
             backgroundMessage: "Tracking your location while you navigate",
             backgroundTitle: "VendorCity",
             requestPermissions: true,
             stale: false,
-            distanceFilter: 10,        // Update every 10 meters
+            distanceFilter: 10,
           },
-          (location, error) => {
+          (location: any, error: any) => {
             if (error) {
               console.error('Location error:', error);
               return;
             }
             
             if (location) {
-              // Send to your server or store locally
               console.log('Background location:', {
                 lat: location.latitude,
                 lng: location.longitude,
                 timestamp: location.time
               });
               
-              // Example: POST to your API
-              fetch('https://your-api.com/track', {
+              // Send to your API
+              fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/rider/location`, {
                 method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   latitude: location.latitude,
                   longitude: location.longitude,
                   accuracy: location.accuracy,
                   timestamp: location.time
                 }),
-                headers: { 'Content-Type': 'application/json' }
               }).catch(console.error);
             }
           }
@@ -60,10 +67,10 @@ export function useBackgroundTracking(enabled = true) {
 
     startTracking();
 
-    // Cleanup: remove watcher when component unmounts
     return () => {
       if (watcherIdRef.current) {
-        BackgroundGeolocation.removeWatcher({ id: watcherIdRef.current });
+        BackgroundGeolocation.removeWatcher({ id: watcherIdRef.current })
+          .catch(console.error);
       }
     };
   }, [enabled]);
