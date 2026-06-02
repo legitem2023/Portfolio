@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     }
 
     // FIX: Ensure deep_link is absolute URL
-    const baseUrl = 'https://portfolio-xi-eight-92.vercel.app';
+    const baseUrl = 'https://vendorcity.net';
     let deepLink = url || baseUrl;
     if (deepLink.startsWith('/')) {
       deepLink = `${baseUrl}${deepLink}`;
