@@ -132,15 +132,15 @@ export default function FAQ() {
   return (
     <>
       <Head>
-        <title>FAQ - VendorCity | Delivery Service Questions Answered</title>
+        <title>FAQ - VendorCity | Frequently Asked Questions</title>
         <meta name="description" content="Find answers to common questions about VendorCity delivery platform. Learn about ordering, delivery times, payments, and how to become a vendor partner." />
       </Head>
       
-      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-red-50">
+      <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-violet-50">
         <Header />
         
         {/* Hero Section */}
-        <section className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-12 md:py-16 px-4">
+        <section className="bg-gradient-to-r from-indigo-600 to-purple-700 text-white py-12 md:py-16 px-4">
           <div className="container mx-auto max-w-4xl text-center">
             <h1 className="text-3xl sm:text-4xl font-bold mb-4">Frequently Asked Questions</h1>
             <p className="text-lg opacity-90 max-w-2xl mx-auto">
@@ -169,7 +169,7 @@ export default function FAQ() {
                       >
                         <span className="font-semibold text-gray-900 pr-4">{item.question}</span>
                         <svg
-                          className={`w-5 h-5 text-orange-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                          className={`w-5 h-5 text-indigo-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -198,12 +198,12 @@ export default function FAQ() {
               Can&apos;t find the answer you&apos;re looking for? Our support team is here to help!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="/contact" className="bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-700 transition-colors inline-block">
-                Contact Support
-              </a>
-              <a href="/waitlist" className="border border-orange-600 text-orange-600 px-8 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-colors inline-block">
+              <button className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+                Contact Us
+              </button>
+              <button className="border border-indigo-600 text-indigo-600 px-8 py-3 rounded-lg font-semibold hover:bg-indigo-50 transition-colors">
                 Join Waitlist
-              </a>
+              </button>
             </div>
           </div>
         </section>
@@ -212,4 +212,4 @@ export default function FAQ() {
       </div>
     </>
   );
-}
+        }
