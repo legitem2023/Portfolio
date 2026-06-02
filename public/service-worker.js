@@ -12,7 +12,7 @@ self.addEventListener('push', function(event) {
     const options = {
       body: data.body || 'You have a new notification',
       icon: data.icon || '/icon-192.png',
-      badge: 'https://portfolio-xi-eight-92.vercel.app/Badge_2.webp',
+      badge: 'https://portfolio-xi-eight-92.vercel.app/Badge_3.webp',
       vibrate: [200, 100, 200],
       data: {
         url: data.url || '/',
