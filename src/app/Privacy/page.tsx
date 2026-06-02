@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Introduction</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Welcome to VendorCity (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our delivery platform, website, and mobile application (collectively, the &quot;Service&quot;).
+                Welcome to VendorCity. Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our delivery platform, website, and mobile application (collectively, the &quot;Service&quot;).
               </p>
               <p className="text-gray-700 leading-relaxed">
                 By using VendorCity, you consent to the data practices described in this policy. If you do not agree with any part of this policy, please do not use our Service.
