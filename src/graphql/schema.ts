@@ -1542,6 +1542,12 @@ input UpdateStatusParameter {
    message: String
 }
 
+input RejectParam {
+  itemId: ID
+  riderId: ID
+}
+
+
 
   # ================= Mutations =================
   type Mutation {
