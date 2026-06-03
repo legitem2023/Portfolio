@@ -1552,7 +1552,7 @@ input RejectParam {
   # ================= Mutations =================
   type Mutation {
     updateOrderStat(UpdateStatusInput:[UpdateStatusParameter]): Result
-   
+    rejectOrder(RejectParamInput:RejectParam): Result
   # FoodCategories CRUD mutations
     createFoodCategory(input: CreateFoodCategoryInput!): FoodCategories
     updateFoodCategory(input: UpdateFoodCategoryInput!): FoodCategories
