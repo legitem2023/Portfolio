@@ -89,116 +89,116 @@ const ModernSortDropdown: React.FC<{
   );
 };
 
-// Modern Category Filter Component
-const ModernCategoryFilter: React.FC<{
-  categories: category[];
-  value: string;
-  onChange: (value: string) => void;
-}> = ({ categories, value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  
-  const selectedCategory = categories.find(cat => cat.id === value);
-  
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Category chips for quick selection
-  const CategoryChips = () => (
-    <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-gray-100">
-      <button
-        onClick={() => onChange('')}
-        className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200
-                   ${value === '' 
-                     ? 'bg-purple-600 text-white shadow-sm' 
-                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-      >
-        All
-      </button>
-      {categories.slice(0, 6).map((category) => (
-        <button
-          key={category.id}
-          onClick={() => onChange(category.id)}
-          className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 whitespace-nowrap
-                     ${value === category.id 
-                       ? 'bg-purple-600 text-white shadow-sm' 
-                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-        >
-          {category.name}
-        </button>
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      {/* Mobile: Dropdown button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden w-full px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm 
-                   hover:border-purple-300 hover:shadow-md transition-all duration-200
-                   flex items-center justify-between gap-2 text-sm font-medium text-gray-700"
-      >
-        <div className="flex items-center gap-2">
-          <Filter size={16} className="text-gray-400" />
-          <span>{selectedCategory ? selectedCategory.name : 'All Categories'}</span>
-        </div>
-        <ChevronDown 
-          size={16} 
-          className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-        />
-      </button>
-
-      {/* Desktop: Category chips */}
-      <div className="hidden lg:block">
-        <CategoryChips />
-      </div>
-
-      {/* Mobile dropdown menu */}
-      {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 
-                      rounded-lg shadow-lg z-50 overflow-hidden lg:hidden">
-          <div className="max-h-80 overflow-y-auto">
-            <button
-              onClick={() => {
-                onChange('');
-                setIsOpen(false);
-              }}
-              className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150
-                         flex items-center justify-between hover:bg-purple-50
-                         ${value === '' ? 'bg-purple-50 text-purple-600' : 'text-gray-700'}`}
-            >
-              <span>All Categories</span>
-              {value === '' && <Check size={16} className="text-purple-600" />}
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => {
-                  onChange(category.id);
-                  setIsOpen(false);
-                }}
-                className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150
-                           flex items-center justify-between hover:bg-purple-50
-                           ${value === category.id ? 'bg-purple-50 text-purple-600' : 'text-gray-700'}`}
-              >
-                <span>{category.name}</span>
-                {value === category.id && <Check size={16} className="text-purple-600" />}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+// Modern Category Filter Component - TEMPORARILY COMMENTED OUT
+// const ModernCategoryFilter: React.FC<{
+//   categories: category[];
+//   value: string;
+//   onChange: (value: string) => void;
+// }> = ({ categories, value, onChange }) => {
+//   const [isOpen, setIsOpen] = useState(false);
+//   const dropdownRef = useRef<HTMLDivElement>(null);
+//   
+//   const selectedCategory = categories.find(cat => cat.id === value);
+//   
+//   useEffect(() => {
+//     const handleClickOutside = (event: MouseEvent) => {
+//       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+//         setIsOpen(false);
+//       }
+//     };
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => document.removeEventListener('mousedown', handleClickOutside);
+//   }, []);
+//
+//   // Category chips for quick selection
+//   const CategoryChips = () => (
+//     <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b border-gray-100">
+//       <button
+//         onClick={() => onChange('')}
+//         className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200
+//                    ${value === '' 
+//                      ? 'bg-purple-600 text-white shadow-sm' 
+//                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+//       >
+//         All
+//       </button>
+//       {categories.slice(0, 6).map((category) => (
+//         <button
+//           key={category.id}
+//           onClick={() => onChange(category.id)}
+//           className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 whitespace-nowrap
+//                      ${value === category.id 
+//                        ? 'bg-purple-600 text-white shadow-sm' 
+//                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+//         >
+//           {category.name}
+//         </button>
+//       ))}
+//     </div>
+//   );
+//
+//   return (
+//     <div className="relative" ref={dropdownRef}>
+//       {/* Mobile: Dropdown button */}
+//       <button
+//         onClick={() => setIsOpen(!isOpen)}
+//         className="lg:hidden w-full px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm 
+//                    hover:border-purple-300 hover:shadow-md transition-all duration-200
+//                    flex items-center justify-between gap-2 text-sm font-medium text-gray-700"
+//       >
+//         <div className="flex items-center gap-2">
+//           <Filter size={16} className="text-gray-400" />
+//           <span>{selectedCategory ? selectedCategory.name : 'All Categories'}</span>
+//         </div>
+//         <ChevronDown 
+//           size={16} 
+//           className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+//         />
+//       </button>
+//
+//       {/* Desktop: Category chips */}
+//       <div className="hidden lg:block">
+//         <CategoryChips />
+//       </div>
+//
+//       {/* Mobile dropdown menu */}
+//       {isOpen && (
+//         <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 
+//                       rounded-lg shadow-lg z-50 overflow-hidden lg:hidden">
+//           <div className="max-h-80 overflow-y-auto">
+//             <button
+//               onClick={() => {
+//                 onChange('');
+//                 setIsOpen(false);
+//               }}
+//               className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150
+//                          flex items-center justify-between hover:bg-purple-50
+//                          ${value === '' ? 'bg-purple-50 text-purple-600' : 'text-gray-700'}`}
+//             >
+//               <span>All Categories</span>
+//               {value === '' && <Check size={16} className="text-purple-600" />}
+//             </button>
+//             {categories.map((category) => (
+//               <button
+//                 key={category.id}
+//                 onClick={() => {
+//                   onChange(category.id);
+//                   setIsOpen(false);
+//                 }}
+//                 className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150
+//                            flex items-center justify-between hover:bg-purple-50
+//                            ${value === category.id ? 'bg-purple-50 text-purple-600' : 'text-gray-700'}`}
+//               >
+//                 <span>{category.name}</span>
+//                 {value === category.id && <Check size={16} className="text-purple-600" />}
+//               </button>
+//             ))}
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
 
 // Active Filters Component
 const ActiveFilters: React.FC<{
@@ -582,11 +582,12 @@ const ProductsTab: React.FC = () => {
         {/* Modern Filters Section */}
         <div className="mb-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            <ModernCategoryFilter
+            {/* ModernCategoryFilter - TEMPORARILY COMMENTED OUT */}
+            {/* <ModernCategoryFilter
               categories={categories}
               value={categoryFilter}
               onChange={handleCategoryChange}
-            />
+            /> */}
             <ModernSortDropdown
               value={sortBy}
               onChange={handleSortChange}
