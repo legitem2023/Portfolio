@@ -157,9 +157,9 @@ const ModernCategoryFilter: React.FC<{
       </button>
 
       {/* Desktop: Category chips */}
-      {/*<div className="hidden lg:block">
+      <div className="hidden lg:block">
         <CategoryChips />
-      </div>*/}
+      </div>
 
       {/* Mobile dropdown menu */}
       {isOpen && (
@@ -231,14 +231,14 @@ const ActiveFilters: React.FC<{
         </span>
       )}
       
-      {/*categoryFilter && selectedCategory && (
+      {categoryFilter && selectedCategory && (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs">
           <span>Category: {selectedCategory.name}</span>
           <button onClick={onClearCategory} className="hover:bg-purple-100 rounded-full p-0.5">
             <X size={12} />
           </button>
         </span>
-      )*/}
+      )}
       
       {sortBy !== 'Sort by: Newest' && (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs">
