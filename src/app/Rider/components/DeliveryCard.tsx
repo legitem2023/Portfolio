@@ -17,8 +17,9 @@ import { formatPeso } from '../lib/utils';
 import { useMutation } from '@apollo/client';
 import { ACCEPT_BY_RIDER, ACCEPT_ORDER_MUTATION, REJECT_BY_RIDER_MUTATION } from '../lib/types';
 import { useAuth } from '../hooks/useAuth';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { showToast } from '../../../../utils/toastify';
+import Image from 'next/image';
 
 interface DeliveryCardProps {
   delivery: Delivery;
@@ -36,90 +37,89 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
   const [rejectDelivery, { loading: rejectLoading, error: rejectError }] = useMutation(REJECT_BY_RIDER_MUTATION);
 
   // VAT rate from environment (default 0.12 if not set)
-  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
 
-  // Calculate total payout as sum of individualShipping for all items
-  const calculatePayout = () => {
+  // Calculate total payout as sum of individualShipping for all items - MEMOIZED
+  const calculatePayout = useCallback(() => {
     if (!delivery.supplierItems) return 0;
     return delivery.supplierItems.reduce((sum, item) => {
       return sum + (item.individualShipping || 0);
     }, 0);
-  };
+  }, [delivery.supplierItems]);
   
-  const payout = calculatePayout();
+  const payout = useMemo(() => calculatePayout(), [calculatePayout]);
 
-  // Calculate subtotal as sum of item price × quantity
-  const calculateSubtotal = () => {
+  // Calculate subtotal as sum of item price × quantity - MEMOIZED
+  const calculateSubtotal = useCallback(() => {
     if (!delivery.supplierItems) return 0;
     return delivery.supplierItems.reduce((sum, item) => {
       const price = item.price || 0;
       const qty = item.quantity || 0;
       return sum + (price * qty);
     }, 0);
-  };
+  }, [delivery.supplierItems]);
   
-  const subtotal = calculateSubtotal();
+  const subtotal = useMemo(() => calculateSubtotal(), [calculateSubtotal]);
   const shipping = payout; // same as payout
 
-  const VAT = (VAT_RATE * subtotal);
-  const grandTotal = (subtotal + shipping + VAT);
+  const VAT = useMemo(() => VAT_RATE * subtotal, [VAT_RATE, subtotal]);
+  const grandTotal = useMemo(() => subtotal + shipping + VAT, [subtotal, shipping, VAT]);
 
-const handleAccept = async () => {
-  try {
-    if (!user) {
-      console.error('User not authenticated');
-      return;
-    }
+  const handleAccept = useCallback(async () => {
+    try {
+      if (!user) {
+        console.error('User not authenticated');
+        return;
+      }
 
-    const supplierItems = delivery.supplierItems || [];
-    const originalOrderId = delivery.originalOrderId;
-    const riderId = user.userId;
-    const userId = delivery.customerId;
-    
-    // Prepare all items in a single array
-    const acceptParameters = [];
-    
-    for (const item of supplierItems) {
-      const itemId = item.id;
-      const supplierId = item.supplierId;
+      const supplierItems = delivery.supplierItems || [];
+      const originalOrderId = delivery.originalOrderId;
+      const riderId = user.userId;
+      const userId = delivery.customerId;
       
-      if (!itemId) {
-        console.warn('Skipping item with missing ID');
-        continue;
+      // Prepare all items in a single array
+      const acceptParameters = [];
+      
+      for (const item of supplierItems) {
+        const itemId = item.id;
+        const supplierId = item.supplierId;
+        
+        if (!itemId) {
+          console.warn('Skipping item with missing ID');
+          continue;
+        }
+
+        acceptParameters.push({
+          parentItemId: originalOrderId,
+          itemId: itemId,
+          riderId: riderId,
+          supplierId: supplierId,
+          userId: userId,
+        });
       }
 
-      acceptParameters.push({
-        parentItemId: originalOrderId,
-        itemId: itemId,
-        riderId: riderId,
-        supplierId: supplierId,
-        userId: userId,
+      // Single GraphQL mutation call for all items
+      const { data } = await acceptDelivery({
+        variables: {
+          AcceptParameter: acceptParameters
+        }
       });
-    }
 
-    // Single GraphQL mutation call for all items
-    const { data } = await acceptDelivery({
-      variables: {
-        AcceptParameter: acceptParameters
+      if (data?.acceptOrder?.statusText === 'Successfully Accepted!') {
+        onAccept(delivery.id);
+      } else {
+        showToast(data?.acceptOrder?.statusText || 'Failed to accept order', "warning");
       }
-    });
+      
+      refetch();
 
-    if (data?.acceptOrder?.statusText === 'Successfully Accepted!') {
-      onAccept(delivery.id);
-      //showToast(data?.acceptOrder?.statusText, "success");
-    } else {
-      showToast(data?.acceptOrder?.statusText || 'Failed to accept order', "warning");
+    } catch (error) {
+      console.error('Error accepting delivery:', error);
+      showToast('Failed to accept order', "error");
     }
-    
-    refetch();
+  }, [user, delivery, acceptDelivery, onAccept, refetch]);
 
-  } catch (error) {
-    console.error('Error accepting delivery:', error);
-    showToast('Failed to accept order', "error");
-  }
-};
-
-  const handleReject = async () => {
+  const handleReject = useCallback(async () => {
     if (!user) {
       console.error('User not authenticated');
       return;
@@ -148,8 +148,6 @@ const handleAccept = async () => {
           continue;
         }
 
-        console.log(`Processing rejection for item: ${itemId}`);
-        
         const { data } = await rejectDelivery({
           variables: {
             itemId: itemId,
@@ -158,8 +156,6 @@ const handleAccept = async () => {
         });
 
         if (data?.rejectByRider?.statusText) {
-          console.log(`Rejection status for item ${itemId}:`, data.rejectByRider.statusText);
-          
           if (data.rejectByRider.statusText.includes('Error') || 
               data.rejectByRider.statusText.includes('Failed')) {
             console.error(`Failed to reject item ${itemId}`);
@@ -174,14 +170,17 @@ const handleAccept = async () => {
       console.error('Error rejecting delivery:', error);
       showToast(`Failed to reject delivery: ${error.message}`,'error')
     }
-  };
+  }, [user, delivery, rejectDelivery, onReject, refetch]);
 
   const isLoading = acceptLoading || rejectLoading;
   
-  console.log(delivery.orderData.payments, "<---");
-  
-  // Get payments array
+  // Get payments array - FIXED optional chaining
   const payments = delivery.orderData?.payments || [];
+  
+  // Calculate total shipping for supplier - MEMOIZED
+  const totalSupplierShipping = useMemo(() => {
+    return delivery.supplierItems?.reduce((sum, item) => sum + (item.individualShipping || 0), 0) || 0;
+  }, [delivery.supplierItems]);
   
   return (
     <div className="bg-white rounded-xl shadow-lg border border-indigo-200 overflow-hidden">
@@ -233,32 +232,27 @@ const handleAccept = async () => {
             </div>
           </div>
           
-
-
           {/* Payout Section */}
           <div className="bg-green-50 p-3 rounded-xl space-y-1">
-
-{/* Payments Section */}
-{payments.length > 0 && (
-  <div className="p-0 rounded-xl space-y-2">
-    <div className="flex items-center gap-2">
-      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-      <span className="font-semibold text-green-700 text-sm">Payments</span>
-    </div>
-    {payments.slice(0, 1).map((payment, index) => (
-      <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium text-gray-700">Method:</span>
-          <span className="text-sm font-semibold text-green-600 capitalize">
-            {payment.method || 'N/A'}
-          </span>
-        </div>   
-      </div>
-    ))}
-  </div>
-)}
-
-
+            {/* Payments Section */}
+            {payments.length > 0 && (
+              <div className="p-0 rounded-xl space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="font-semibold text-green-700 text-sm">Payments</span>
+                </div>
+                {payments.slice(0, 1).map((payment, index) => (
+                  <div key={index} className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-700">Method:</span>
+                      <span className="text-sm font-semibold text-green-600 capitalize">
+                        {payment.method || 'N/A'}
+                      </span>
+                    </div>   
+                  </div>
+                ))}
+              </div>
+            )}
             
             <div className="text-xl font-bold text-green-600">{formatPeso(payout)}</div>
             <p className="text-gray-500 text-xs">Total shipping payout</p>
@@ -272,7 +266,7 @@ const handleAccept = async () => {
                 <span className="font-medium">{formatPeso(shipping)}</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-gray-600">VAT({VAT_RATE * 100})%:</span>
+                <span className="text-gray-600">VAT({(VAT_RATE * 100).toFixed(0)})%:</span>
                 <span className="font-medium">{formatPeso(VAT)}</span>
               </div>
               <div className="flex justify-between text-sm font-bold mt-1">
@@ -288,6 +282,8 @@ const handleAccept = async () => {
           <button
             onClick={() => setShowItems(!showItems)}
             className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-100 transition-colors"
+            aria-expanded={showItems}
+            aria-label={showItems ? "Hide items" : "Show items"}
           >
             <h4 className="font-semibold text-sm flex items-center gap-2">
               <Package size={16} />
@@ -312,9 +308,11 @@ const handleAccept = async () => {
                   <div className="flex gap-3">
                     {item.product[0]?.images && item.product[0].images.length > 0 && (
                       <div className="relative w-16 h-16 flex-shrink-0">
-                        <img 
+                        <Image 
                           src={item.product[0].images[0]} 
                           alt={item.product[0].name}
+                          width={64}
+                          height={64}
                           className="w-full h-full object-cover rounded-lg border border-gray-200"
                         />
                         {item.product[0].images.length > 1 && (
@@ -358,7 +356,7 @@ const handleAccept = async () => {
                 <span className="text-sm font-medium text-gray-600">Total shipping payout for this supplier</span>
                 <div>
                   <span className="text-xl font-bold text-orange-600 break-words">
-                    {formatPeso(delivery.supplierItems?.reduce((sum, item) => sum + (item.individualShipping || 0), 0) || 0)}
+                    {formatPeso(totalSupplierShipping)}
                   </span>
                   <span className="text-xs text-gray-500 ml-2">
                     ({delivery.supplierItems?.length} {delivery.supplierItems?.length === 1 ? 'item' : 'items'})
@@ -447,6 +445,7 @@ const handleAccept = async () => {
             onClick={handleReject}
             disabled={isLoading}
             className="bg-white border border-red-300 text-red-600 px-4 py-4 rounded-xl font-semibold hover:bg-red-50 transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+            aria-label="Reject delivery"
           >
             <X size={20} />
             <span>{rejectLoading ? 'Rejecting...' : 'Reject'}</span>
@@ -455,6 +454,7 @@ const handleAccept = async () => {
             onClick={handleAccept}
             disabled={isLoading}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-4 rounded-xl font-semibold transition flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            aria-label="Accept delivery"
           >
             <ThumbsUp size={20} />
             <span>{acceptLoading ? 'Accepting...' : 'Accept'}</span>
@@ -463,4 +463,4 @@ const handleAccept = async () => {
       </div>
     </div>
   );
-}
+                }
