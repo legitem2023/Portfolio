@@ -157,9 +157,9 @@ const ModernCategoryFilter: React.FC<{
       </button>
 
       {/* Desktop: Category chips */}
-      <div className="hidden lg:block">
+      {/*<div className="hidden lg:block">
         <CategoryChips />
-      </div>
+      </div>*/}
 
       {/* Mobile dropdown menu */}
       {isOpen && (
