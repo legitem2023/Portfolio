@@ -4,16 +4,18 @@ import { addToCart } from '../../../Redux/cartSlice';
 import QuickViewModal from './QuickViewModal';
 import Image from 'next/image';
 import { showToast } from '../../../utils/toastify';
-import { Product,category } from '../../../types';
+import { Product, category } from '../../../types';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Pagination, Autoplay } from 'swiper/modules';
+import { Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import { useAuth } from './hooks/useAuth';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 import { useGetReviewById } from './hooks/useGetReviewById';
+
 interface ProductThumbnailsProps {
   products: Product[];
-  categories:category[];
+  categories: category[];
 }
 
 interface SelectedVariant {
@@ -48,7 +50,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   const [selectedVariant, setSelectedVariant] = useState<SelectedVariant | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState<Record<string, string>>({});
-  //console.log(categories);
+  
   // Refs for cleanup
   const quickViewTimeoutRef = useRef<NodeJS.Timeout>();
   const swiperInstancesRef = useRef<Map<string, any>>(new Map());
@@ -166,35 +168,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
 
   const handleAddToCart = useCallback((product: Product, variant?: Product['variants'][0]) => {
     try {
-    /*  const selectedVariantToUse = variant || (product.variants && product.variants[0]);
-      
-      const finalPrice = selectedVariantToUse?.price || product.price;
-      
-      const cartItem = {
-        id: product.id,
-        name: product.name,
-        price: finalPrice,
-        onSale: product.onSale,
-        isNew: product.isNew,
-        isFeatured: product.isFeatured,
-        originalPrice: product.originalPrice,
-        rating: product.rating,
-        reviewCount: product.reviewCount,
-        image: selectedVariantToUse?.images?.[0] || product.image,
-        colors: product.colors,
-        description: product.description,
-        productCode: product.productCode,
-        category: product.category,
-        sku: selectedVariantToUse?.sku,
-        variants: product.variants,
-        userId: 'current-user-id',
-        quantity: 1,
-        color: selectedVariantToUse?.color,
-        size: selectedVariantToUse?.size,
-      };
-      
-      // dispatch(addToCart(cartItem));
-      showToast('Added to Cart', 'success');*/
+      // Your add to cart logic here
+      showToast('Added to Cart', 'success');
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add to cart', 'error');
@@ -232,14 +207,30 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
     return '/NoImage.webp';
   }, []);
 
+  // Pause autoplay on hover
+  const handleMouseEnter = useCallback((productId: string) => {
+    const swiper = swiperInstancesRef.current.get(productId);
+    if (swiper && swiper.autoplay) {
+      swiper.autoplay.stop();
+    }
+  }, []);
+
+  // Resume autoplay on mouse leave
+  const handleMouseLeave = useCallback((productId: string) => {
+    const swiper = swiperInstancesRef.current.get(productId);
+    if (swiper && swiper.autoplay) {
+      swiper.autoplay.start();
+    }
+  }, []);
+
   if (userloading) return null;
 
   const userId = user?.userId;
-  //console.log(categories, typeof categories);
+
   return (
     <>
       <div className="w-full max-w-7xl grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-3 lg:gap-4">
-        {memoizedProducts.map((product:any) => {
+        {memoizedProducts.map((product: any) => {
           const uniqueColors = getUniqueColors(product.variants || []);
           const currentVariant = getCurrentVariant(product, selectedColor[product.id]);
           const allVariantsWithImages = getAllVariantsWithImages(product);
@@ -291,15 +282,30 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
               )}
               
               {/* Product Image */}
-              <div className="relative overflow-hidden bg-gray-100 flex-grow">
+              <div 
+                className="relative overflow-hidden bg-gray-100 flex-grow"
+                onMouseEnter={() => handleMouseEnter(product.id)}
+                onMouseLeave={() => handleMouseLeave(product.id)}
+              >
                 <div className="aspect-square w-full">
                   {allVariantsWithImages.length > 0 ? (
                     <Swiper
                       onSwiper={(swiper) => {
                         swiperInstancesRef.current.set(product.id, swiper);
                       }}
-                      spaceBetween={10}
+                      spaceBetween={0}
                       slidesPerView={1}
+                      effect="fade"
+                      fadeEffect={{
+                        crossFade: true
+                      }}
+                      autoplay={{
+                        delay: 3000,
+                        disableOnInteraction: false,
+                        pauseOnMouseEnter: true,
+                      }}
+                      speed={1000}
+                      loop={allVariantsWithImages.length > 1}
                       pagination={{
                         clickable: true,
                         dynamicBullets: true,
@@ -307,8 +313,12 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                           return `<span class="${className} !w-1.5 !h-1.5 !bg-white !opacity-70" data-index="${index}"></span>`;
                         }
                       }}
-                      modules={[Pagination]}
+                      modules={[Pagination, Autoplay, EffectFade]}
                       className="h-full w-full"
+                      style={{
+                        '--swiper-pagination-bullet-inactive-color': '#ffffff',
+                        '--swiper-pagination-bullet-inactive-opacity': '0.5',
+                      } as React.CSSProperties}
                     >
                       {allVariantsWithImages.map(({ image, variant, key }) => (
                         <SwiperSlide key={key}>
@@ -322,12 +332,8 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                               quality={100}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              priority={false}
                             />
-                            {/*variant?.color && (
-                              <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white text-[8px] xs:text-[10px] px-1.5 py-0.5 rounded">
-                                {variant.color}
-                              </div>
-                            )*/}
                           </div>
                         </SwiperSlide>
                       ))}
@@ -382,15 +388,26 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
                     {[1, 2, 3, 4, 5].map((star) => {
                       const starValue = displayRating;
                       const isFullStar = star <= Math.floor(starValue);
+                      const isHalfStar = !isFullStar && starValue > star - 0.5 && starValue < star;
                       
                       return (
                         <svg
                           key={star}
-                          className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${isFullStar ? 'text-amber-400' : 'text-gray-300'}`}
-                          fill="currentColor"
+                          className={`w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-4 sm:h-4 ${isFullStar || isHalfStar ? 'text-amber-400' : 'text-gray-300'}`}
+                          fill={isHalfStar ? "none" : "currentColor"}
                           viewBox="0 0 20 20"
                         >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          {isHalfStar ? (
+                            <>
+                              <path 
+                                d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" 
+                                fill="currentColor"
+                              />
+                              <rect x="0" y="0" width="10" height="20" fill="white" />
+                            </>
+                          ) : (
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          )}
                         </svg>
                       );
                     })}
