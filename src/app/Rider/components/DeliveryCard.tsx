@@ -174,7 +174,7 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
 
   const isLoading = acceptLoading || rejectLoading;
   
-  // Get payments array - FIXED optional chaining
+  // Get payments array
   const payments = delivery.orderData?.payments || [];
   
   // Calculate total shipping for supplier - MEMOIZED
@@ -463,4 +463,4 @@ export default function DeliveryCard({ delivery, isMobile, onAccept, onReject, r
       </div>
     </div>
   );
-                }
+}
