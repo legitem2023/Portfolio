@@ -234,6 +234,7 @@ export default function DeliveryMap({
       throw new Error(`Could not geocode: ${address}`);
     };
 
+    // FIXED: Removed type annotations to fix build error
     const geocodeWithGoogle = async (address: string) => {
       if (geocodeCache.has(address)) {
         return geocodeCache.get(address)!;
@@ -241,7 +242,8 @@ export default function DeliveryMap({
 
       return new Promise<{ lat: number; lng: number }>((resolve, reject) => {
         const geocoder = new window.google.maps.Geocoder();
-        geocoder.geocode({ address }, (results: google.maps.GeocoderResult[] | null, status: google.maps.GeocoderStatus) => {
+        // REMOVED THE TYPE ANNOTATIONS ON results AND status - THIS FIXES THE BUILD ERROR
+        geocoder.geocode({ address }, (results, status) => {
           if (status === 'OK' && results && results[0]) {
             const location = {
               lat: results[0].geometry.location.lat(),
@@ -383,7 +385,7 @@ export default function DeliveryMap({
           destination: { lat: targetLocation.lat, lng: targetLocation.lng },
           travelMode: window.google.maps.TravelMode.DRIVING,
         },
-        (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
+        (result, status) => {
           if (status === 'OK' && result) {
             directionsRenderer.setDirections(result);
             const route = result.routes[0];
@@ -591,7 +593,7 @@ export default function DeliveryMap({
           destination: { lat: targetLocation.lat, lng: targetLocation.lng },
           travelMode: window.google.maps.TravelMode.DRIVING,
         },
-        (result: google.maps.DirectionsResult | null, status: google.maps.DirectionsStatus) => {
+        (result, status) => {
           if (status === 'OK' && result && directionsRendererRef.current) {
             directionsRendererRef.current.setDirections(result);
             const route = result.routes[0];
