@@ -322,7 +322,7 @@ const PostInput: React.FC<PostInputProps> = ({
         )}
         
         <div className="add-to-post">
-          <span className="add-to-post-label">Add to your post</span>
+          {/*<span className="add-to-post-label">Add to your post</span>*/}
           <div className="add-to-post-options">
             <button 
               className="post-option-btn" 
