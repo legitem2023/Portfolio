@@ -402,7 +402,6 @@ const PostInput: React.FC<PostInputProps> = ({
       <style jsx>{`
         .post-input-container {
           width: 100%;
-          max-width: 680px;
           margin-bottom: 0.5rem;
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
