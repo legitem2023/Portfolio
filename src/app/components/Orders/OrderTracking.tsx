@@ -842,7 +842,7 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
   const rider = group.rider || group.items.find(item => item.rider)?.rider;
-  
+  console.log(group,group.rider,"<-riderses");
   const deliveryAddress = group.address ? {
     lat: parseFloat(group.address.lat),
     lng: parseFloat(group.address.lng),
