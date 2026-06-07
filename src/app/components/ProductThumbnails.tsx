@@ -169,7 +169,7 @@ const ProductThumbnails: React.FC<ProductThumbnailsProps> = ({ products, categor
   const handleAddToCart = useCallback((product: Product, variant?: Product['variants'][0]) => {
     try {
       // Your add to cart logic here
-      showToast('Added to Cart', 'success');
+    //  showToast('Added to Cart', 'success');
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add to cart', 'error');
