@@ -82,6 +82,7 @@ const ACTIVE_ORDER_LIST = gql`
             phone
             email
             plateNo
+            avatar
           }
           supplier {
             id
@@ -191,6 +192,7 @@ interface Order {
       phone: string;
       email?: string;
       plateNo: string;
+      avatar: string;
     }>;
     supplier: {
       id: string;
@@ -1055,8 +1057,18 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                      <User size={16} className="text-white" />
-                    </div>
+  {rider[0].avatar === "" ? (
+    <User size={16} className="text-white" />
+  ) : (
+    <Image 
+      src={rider[0].avatar} 
+      alt="avatar"
+      width={32}
+      height={32}
+      className="rounded-full"
+    />
+  )}
+</div>
                     <div>
                       <p className="text-sm font-semibold text-gray-900">
                         {rider[0].firstName} {rider[0].lastName}
