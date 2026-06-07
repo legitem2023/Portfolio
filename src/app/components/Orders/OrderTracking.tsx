@@ -136,7 +136,7 @@ const CREATE_RETURN_MUTATION = gql`
   }
 `;
 
-// Types
+// Types - FIXED: rider is an array
 interface Order {
   id: string;
   orderNumber: string;
@@ -184,14 +184,14 @@ interface Order {
       images: string[];
       id?: string;
     }>;
-    rider?: {
+    rider?: Array<{  // FIXED: Changed from object to array
       id: string;
       firstName: string;
       lastName: string;
       phone: string;
       email?: string;
       plateNo: string;
-    };
+    }>;
     supplier: {
       id: string;
       firstName: string;
@@ -228,7 +228,14 @@ interface SupplierGroup {
   address: Order['address'];
   user: Order['user'];
   payments: Order['payments'];
-  rider?: Order['items'][0]['rider'];
+  rider?: Array<{  // FIXED: Changed from object to array
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email?: string;
+    plateNo: string;
+  }>;
   riderId?: string;
 }
 
@@ -844,7 +851,6 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
   const rider = group.rider || group.items.find(item => item.rider)?.rider;
- // console.log(group,group.rider,"<-riderses");
   const deliveryAddress = group.address ? {
     lat: parseFloat(group.address.lat),
     lng: parseFloat(group.address.lng),
@@ -875,10 +881,10 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
                   })
                 : 'Date not available'}
             </div>
-            {rider && displayStatus === 'SHIPPED' && (
+            {rider && rider[0] && displayStatus === 'SHIPPED' && (
               <div className="text-xs text-purple-600 mt-1 flex items-center gap-1">
                 <User size={10} />
-                Rider: {rider.firstName} {rider.lastName}
+                Rider: {rider[0].firstName} {rider[0].lastName}
               </div>
             )}
           </div>
@@ -940,7 +946,7 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
               className="py-2 px-3 text-center text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
             >
               <MapPin size={14} />
-              Track {rider ? rider.firstName : 'Rider'}
+              Track {rider && rider[0] ? rider[0].firstName : 'Rider'}
             </button>
           )}
         </div>
@@ -983,7 +989,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
-  const rider:any = group.rider || group.items.find(item => item.rider)?.rider;
+  const rider = group.rider || group.items.find(item => item.rider)?.rider;
   const isDelivered = displayStatus === 'DELIVERED';
   const isShipped = displayStatus === 'SHIPPED';
 
@@ -992,7 +998,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
     lng: parseFloat(group.address.lng),
     address: `${group.address.street}, ${group.address.city}, ${group.address.state} ${group.address.zipCode}, ${group.address.country}`
   } : null;
-   console.log(rider,"riders");
+  
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black bg-opacity-50" />
@@ -1038,55 +1044,66 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
             </div>
           </div>
 
-          {/* Rider Information Section */}
-          {riderId && isShipped && (
+          {/* Rider Information Section - Using array access */}
+          {riderId && isShipped && rider && rider[0] && (
             <div className="mb-4">
               <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
                 <MapPin size={16} className="text-purple-600" />
                 Delivery Rider Information
               </h3>
               <div className="bg-purple-50 rounded-lg p-3">
-                {rider ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                        <User size={16} className="text-white" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {rider[0].firstName} {rider[0].lastName}
-                        </p>
-                        <p className="text-xs text-gray-600">Rider</p>
-                      </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                      <User size={16} className="text-white" />
                     </div>
-                    <div className="space-y-1">
-                      {rider[0].phone && (
-                        <p className="text-xs text-gray-700 flex items-center gap-1">
-                          <Phone size={12} className="text-purple-600" />
-                          <span className="font-medium">Phone:</span> {rider[0].phone}
-                        </p>
-                      )}
-                      {rider[0].email && (
-                        <p className="text-xs text-gray-700">
-                          <MailOpen size={12} className="text-purple-600" />
-                          <span className="font-medium">Email:</span> {rider[0].email}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-700">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {rider[0].firstName} {rider[0].lastName}
+                      </p>
+                      <p className="text-xs text-gray-600">Rider</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    {rider[0].phone && (
+                      <p className="text-xs text-gray-700 flex items-center gap-1">
+                        <Phone size={12} className="text-purple-600" />
+                        <span className="font-medium">Phone:</span> {rider[0].phone}
+                      </p>
+                    )}
+                    {rider[0].email && (
+                      <p className="text-xs text-gray-700 flex items-center gap-1">
+                        <MailOpen size={12} className="text-purple-600" />
+                        <span className="font-medium">Email:</span> {rider[0].email}
+                      </p>
+                    )}
+                    {rider[0].plateNo && (
+                      <p className="text-xs text-gray-700 flex items-center gap-1">
                         <HandPlatter size={12} className="text-purple-600" />
                         <span className="font-medium">Plate no:</span> {rider[0].plateNo}
                       </p>
-                    </div>
+                    )}
                   </div>
-                ) : (
-                  <div>
-                    <p className="text-sm text-gray-700 flex items-center gap-2">
-                      <User size={14} className="text-purple-600" />
-                      Rider assigned
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Rider ID: {riderId.slice(-8)}</p>
-                  </div>
-                )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fallback when riderId exists but rider data is not available */}
+          {riderId && isShipped && (!rider || !rider[0]) && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <MapPin size={16} className="text-purple-600" />
+                Delivery Rider Information
+              </h3>
+              <div className="bg-purple-50 rounded-lg p-3">
+                <div>
+                  <p className="text-sm text-gray-700 flex items-center gap-2">
+                    <User size={14} className="text-purple-600" />
+                    Rider assigned
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Rider ID: {riderId.slice(-8)}</p>
+                </div>
               </div>
             </div>
           )}
@@ -1210,7 +1227,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                   className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <MapPin size={16} />
-                  Track {rider ? rider.firstName : 'Rider'}
+                  Track {rider && rider[0] ? rider[0].firstName : 'Rider'}
                 </button>
                 <button className="flex-1 border border-purple-600 text-purple-600 py-2.5 rounded-lg font-medium text-sm hover:bg-purple-50 transition-colors">
                   Contact Supplier
@@ -1228,7 +1245,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
   );
 }
 
-// Rider Tracking Modal Component
+// Rider Tracking Modal Component - FIXED with array access
 function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose }: { 
   riderId: string;
   rider?: Order['items'][0]['rider'];
@@ -1238,6 +1255,9 @@ function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose 
 }) {
   const { getCurrentUserLocation } = useRealtimeLocation(riderId);
   const riderLocation = getCurrentUserLocation();
+  
+  // Handle rider as array (most common) or single object
+  const riderData = rider ? (Array.isArray(rider) ? rider[0] : rider) : null;
   
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
@@ -1261,12 +1281,12 @@ function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose 
               </div>
               <div>
                 <p className="font-medium text-gray-900">
-                  {rider ? `${rider[0].firstName} ${rider[0].lastName}` : `Rider #${riderId.slice(-8)}`}
+                  {riderData ? `${riderData.firstName} ${riderData.lastName}` : `Rider #${riderId.slice(-8)}`}
                 </p>
-                {rider?.phone && (
+                {riderData?.phone && (
                   <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
                     <Phone size={12} className="text-purple-600" />
-                    {rider[0].phone}
+                    {riderData.phone}
                   </p>
                 )}
                 <p className="text-xs text-gray-500">On Delivery</p>
@@ -1314,10 +1334,10 @@ function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose 
               </div>
             </div>
 
-            {rider?.phone && (
+            {riderData?.phone && (
               <div className="mt-4 pt-3 border-t border-gray-200">
                 <button
-                  onClick={() => window.location.href = `tel:${rider.phone}`}
+                  onClick={() => window.location.href = `tel:${riderData.phone}`}
                   className="w-full bg-green-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <Phone size={16} />
@@ -1475,4 +1495,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-        }
+      }
