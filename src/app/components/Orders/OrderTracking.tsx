@@ -80,15 +80,6 @@ const ACTIVE_ORDER_LIST = gql`
             firstName
             lastName
             phone
-            addresses {
-              street
-              city
-              state
-              zipCode
-              country
-              lat
-              lng
-            }
           }
           supplier {
             id
