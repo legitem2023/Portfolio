@@ -1689,6 +1689,7 @@ const orders = await prisma.order.findMany({
             individualDistance: true,
             rejectedBy: true,
             product:true,
+            rider:true,
             supplier: {  
               select: {
                 id: true,
@@ -1770,6 +1771,9 @@ const orders = await prisma.order.findMany({
       computedShipping:order.computedShipping,
       computedDistance:order.computedDistance,
       proofOfDelivery: order.proofOfDelivery,
+      rider: order.items.map(item => ({
+        rider: item.rider ? [item.rider] : [], // Wrap in array to match [User] type
+      })),
       items: order.items.map(item => ({
         id: item.id,
         status: item.status,
