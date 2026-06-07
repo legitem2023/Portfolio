@@ -81,6 +81,7 @@ const ACTIVE_ORDER_LIST = gql`
             lastName
             phone
             email
+            plateNo
           }
           supplier {
             id
@@ -189,6 +190,7 @@ interface Order {
       lastName: string;
       phone: string;
       email?: string;
+      plateNo: string;
     };
     supplier: {
       id: string;
@@ -1052,25 +1054,25 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-gray-900">
-                          {rider.firstName} {rider.lastName}
+                          {rider[0].firstName} {rider[0].lastName}
                         </p>
                         <p className="text-xs text-gray-600">Rider</p>
                       </div>
                     </div>
                     <div className="space-y-1">
-                      {rider.phone && (
+                      {rider[0].phone && (
                         <p className="text-xs text-gray-700 flex items-center gap-1">
                           <Phone size={12} className="text-purple-600" />
-                          <span className="font-medium">Phone:</span> {rider.phone}
+                          <span className="font-medium">Phone:</span> {rider[0].phone}
                         </p>
                       )}
-                      {rider.email && (
+                      {rider[0].email && (
                         <p className="text-xs text-gray-700">
-                          <span className="font-medium">Email:</span> {rider.email}
+                          <span className="font-medium">Email:</span> {rider[0].email}
                         </p>
                       )}
                       <p className="text-xs text-gray-700">
-                        <span className="font-medium">Rider ID:</span> {riderId.slice(-8)}
+                        <span className="font-medium">Rider ID:</span> {rider[0].plateNo}
                       </p>
                     </div>
                   </div>
