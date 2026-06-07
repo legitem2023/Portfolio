@@ -75,6 +75,21 @@ const ACTIVE_ORDER_LIST = gql`
             images
             id
           }
+          rider {
+            id
+            firstName
+            lastName
+            phone
+            addresses {
+              street
+              city
+              state
+              zipCode
+              country
+              lat
+              lng
+            }
+          }
           supplier {
             id
             firstName
