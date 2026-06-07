@@ -983,7 +983,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
-  const rider = group.rider || group.items.find(item => item.rider)?.rider;
+  const rider:any = group.rider || group.items.find(item => item.rider)?.rider;
   const isDelivered = displayStatus === 'DELIVERED';
   const isShipped = displayStatus === 'SHIPPED';
 
