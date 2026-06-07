@@ -1786,7 +1786,8 @@ const orders = await prisma.order.findMany({
         price: item.price,
         variantInfo: item.variantInfo,
         product: [item.product], // Wrap in array to match [Product] type
-        supplier: item.supplier ? [item.supplier] : [] // Wrap in array to match [User] type
+        supplier: item.supplier ? [item.supplier] : [], // Wrap in array to match [User] type
+        rider: item.rider ? [item.rider]:[]
       }))
     }));
 
