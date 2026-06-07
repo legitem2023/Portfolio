@@ -842,7 +842,7 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
   const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
   const rider = group.rider || group.items.find(item => item.rider)?.rider;
-  console.log(group,group.rider,"<-riderses");
+ // console.log(group,group.rider,"<-riderses");
   const deliveryAddress = group.address ? {
     lat: parseFloat(group.address.lat),
     lng: parseFloat(group.address.lng),
@@ -990,7 +990,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
     lng: parseFloat(group.address.lng),
     address: `${group.address.street}, ${group.address.city}, ${group.address.state} ${group.address.zipCode}, ${group.address.country}`
   } : null;
-
+   console.log(rider,"riders");
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black bg-opacity-50" />
