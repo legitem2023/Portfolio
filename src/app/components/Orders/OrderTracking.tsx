@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
-import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
+import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Loader2, Phone, User } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
 import dynamic from 'next/dynamic';
@@ -80,6 +80,7 @@ const ACTIVE_ORDER_LIST = gql`
             firstName
             lastName
             phone
+            email
           }
           supplier {
             id
@@ -182,6 +183,13 @@ interface Order {
       images: string[];
       id?: string;
     }>;
+    rider?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      email?: string;
+    };
     supplier: {
       id: string;
       firstName: string;
@@ -218,6 +226,8 @@ interface SupplierGroup {
   address: Order['address'];
   user: Order['user'];
   payments: Order['payments'];
+  rider?: Order['items'][0]['rider'];
+  riderId?: string;
 }
 
 const ORDER_STAGES = [
@@ -280,13 +290,21 @@ const groupOrderBySupplier = (order: Order): SupplierGroup[] => {
         createdAt: order.createdAt,
         address: order.address,
         user: order.user,
-        payments: order.payments
+        payments: order.payments,
+        rider: item.rider,
+        riderId: item.riderId
       });
     }
     
     const group = supplierMap.get(supplierId)!;
     group.items.push(item);
     group.subtotal += (item.price || 0) * (item.quantity || 0);
+    
+    // Update rider info if available
+    if (item.rider && !group.rider) {
+      group.rider = item.rider;
+      group.riderId = item.riderId;
+    }
   });
   
   return Array.from(supplierMap.values());
@@ -305,11 +323,18 @@ export default function OrderTracking({ userId }: { userId: string }) {
     order: null,
     items: []
   });
-  const [showRiderTracking, setShowRiderTracking] = useState<{ show: boolean; riderId: string; orderId: string; deliveryAddress: { lat: number; lng: number; address: string } | null }>({
+  const [showRiderTracking, setShowRiderTracking] = useState<{ 
+    show: boolean; 
+    riderId: string; 
+    orderId: string; 
+    deliveryAddress: { lat: number; lng: number; address: string } | null;
+    rider?: Order['items'][0]['rider'];
+  }>({
     show: false,
     riderId: '',
     orderId: '',
-    deliveryAddress: null
+    deliveryAddress: null,
+    rider: undefined
   });
   
   // Loading states for buttons
@@ -355,8 +380,8 @@ export default function OrderTracking({ userId }: { userId: string }) {
     setShowReturnModal({ show: true, order, items });
   };
 
-  const handleTrackOrder = (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }) => {
-    setShowRiderTracking({ show: true, riderId, orderId, deliveryAddress });
+  const handleTrackOrder = (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }, rider?: Order['items'][0]['rider']) => {
+    setShowRiderTracking({ show: true, riderId, orderId, deliveryAddress, rider });
   };
 
   const handleSubmitReturn = async (returnData: { reason: string; description: string; items: Array<{ itemId: string; quantity: number; reason: string; condition: string }> }) => {
@@ -498,9 +523,10 @@ export default function OrderTracking({ userId }: { userId: string }) {
         {showRiderTracking.show && showRiderTracking.deliveryAddress && (
           <RiderTrackingModal
             riderId={showRiderTracking.riderId}
+            rider={showRiderTracking.rider}
             orderId={showRiderTracking.orderId}
             deliveryAddress={showRiderTracking.deliveryAddress}
-            onClose={() => setShowRiderTracking({ show: false, riderId: '', orderId: '', deliveryAddress: null })}
+            onClose={() => setShowRiderTracking({ show: false, riderId: '', orderId: '', deliveryAddress: null, rider: undefined })}
           />
         )}
       </div>
@@ -639,7 +665,7 @@ function CreateReturnModal({ order, items, userId, onClose, onSubmit, isLoading 
             </label>
             <div className="space-y-3">
               {items.map((item) => {
-                const productInfo = item.product[0] || { name: 'Unknown Product', sku: 'N/A', images: [] };
+                const productInfo = getProductInfo(item.product);
                 return (
                   <div key={item.id} className="border rounded-lg p-3">
                     <div className="flex items-start gap-3">
@@ -780,13 +806,14 @@ function TabButton({ label, status, isActive, onClick, isLoading }: {
 
 const getProductInfo = (productArray: Array<{ name: string; sku: string; images?: string[]; id?: string }> | undefined) => {
   if (!productArray || productArray.length === 0) {
-    return { name: 'Product Unavailable', sku: 'N/A', id: '' };
+    return { name: 'Product Unavailable', sku: 'N/A', id: '', images: [] };
   }
   const firstProduct = productArray[0];
   return {
     name: firstProduct.name || 'Product Unavailable',
     sku: firstProduct.sku || 'N/A',
-    id: firstProduct.id || ''
+    id: firstProduct.id || '',
+    images: firstProduct.images || []
   };
 };
 
@@ -794,7 +821,7 @@ const getProductInfo = (productArray: Array<{ name: string; sku: string; images?
 function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: { 
   group: SupplierGroup; 
   onSelect: () => void;
-  onTrackOrder: (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }) => void;
+  onTrackOrder: (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }, rider?: Order['items'][0]['rider']) => void;
   onReturnRequest: () => void;
 }) {
   const itemStatuses = group.items.map(item => item.status);
@@ -813,7 +840,8 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
   const itemCount = group.items.length;
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
-  const riderId = group.items.find(item => item.riderId)?.riderId;
+  const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
+  const rider = group.rider || group.items.find(item => item.rider)?.rider;
   
   const deliveryAddress = group.address ? {
     lat: parseFloat(group.address.lat),
@@ -845,6 +873,12 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
                   })
                 : 'Date not available'}
             </div>
+            {rider && displayStatus === 'SHIPPED' && (
+              <div className="text-xs text-purple-600 mt-1 flex items-center gap-1">
+                <User size={10} />
+                Rider: {rider.firstName} {rider.lastName}
+              </div>
+            )}
           </div>
           <div className="text-right">
             <div className="text-lg font-bold text-purple-700">
@@ -900,11 +934,11 @@ function SupplierOrderCard({ group, onSelect, onTrackOrder, onReturnRequest }: {
           )}
           {riderId && displayStatus === 'SHIPPED' && deliveryAddress && (
             <button
-              onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress)}
+              onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress, rider)}
               className="py-2 px-3 text-center text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
             >
               <MapPin size={14} />
-              Track
+              Track {rider ? rider.firstName : 'Rider'}
             </button>
           )}
         </div>
@@ -918,10 +952,10 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
   group: SupplierGroup; 
   onClose: () => void;
   onWriteReview: (productId: string, productName: string) => void;
-  onTrackOrder: (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }) => void;
+  onTrackOrder: (riderId: string, orderId: string, deliveryAddress: { lat: number; lng: number; address: string }, rider?: Order['items'][0]['rider']) => void;
   onReturnRequest: () => void;
 }) {
-  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT);
+  const VAT_RATE = Number(process.env.NEXT_PUBLIC_VAT) || 0.12;
   
   const shipping = group.items.reduce((total, item) => {
     const shippingAmount = typeof item.individualShipping === 'number' 
@@ -946,7 +980,8 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
   const stage = ORDER_STAGES.find(s => s.key === displayStatus);
   const hasTrackingNumber = group.items.some(item => item.trackingNumber && item.trackingNumber.trim() !== '');
   const trackingNumber = group.items.find(item => item.trackingNumber && item.trackingNumber.trim() !== '')?.trackingNumber;
-  const riderId = group.items.find(item => item.riderId)?.riderId;
+  const riderId = group.riderId || group.items.find(item => item.riderId)?.riderId;
+  const rider = group.rider || group.items.find(item => item.rider)?.rider;
   const isDelivered = displayStatus === 'DELIVERED';
   const isShipped = displayStatus === 'SHIPPED';
 
@@ -1001,6 +1036,57 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
             </div>
           </div>
 
+          {/* Rider Information Section */}
+          {riderId && isShipped && (
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                <MapPin size={16} className="text-purple-600" />
+                Delivery Rider Information
+              </h3>
+              <div className="bg-purple-50 rounded-lg p-3">
+                {rider ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                        <User size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {rider.firstName} {rider.lastName}
+                        </p>
+                        <p className="text-xs text-gray-600">Rider</p>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      {rider.phone && (
+                        <p className="text-xs text-gray-700 flex items-center gap-1">
+                          <Phone size={12} className="text-purple-600" />
+                          <span className="font-medium">Phone:</span> {rider.phone}
+                        </p>
+                      )}
+                      {rider.email && (
+                        <p className="text-xs text-gray-700">
+                          <span className="font-medium">Email:</span> {rider.email}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-700">
+                        <span className="font-medium">Rider ID:</span> {riderId.slice(-8)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <User size={14} className="text-purple-600" />
+                      Rider assigned
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Rider ID: {riderId.slice(-8)}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="mb-4">
             <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
             <div className="space-y-3">
@@ -1029,11 +1115,6 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                       {item.trackingNumber && (
                         <div className="text-xs text-blue-600 mt-1">
                           Tracking: {item.trackingNumber}
-                        </div>
-                      )}
-                      {item.riderId && (
-                        <div className="text-xs text-purple-600 mt-1">
-                          Rider ID: {item.riderId.slice(-8)}
                         </div>
                       )}
                       {isDelivered && productInfo.id && (
@@ -1121,11 +1202,11 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
             ) : riderId && isShipped && deliveryAddress ? (
               <>
                 <button
-                  onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress)}
+                  onClick={() => onTrackOrder(riderId, group.orderId, deliveryAddress, rider)}
                   className="flex-1 bg-purple-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
                 >
                   <MapPin size={16} />
-                  Track Rider
+                  Track {rider ? rider.firstName : 'Rider'}
                 </button>
                 <button className="flex-1 border border-purple-600 text-purple-600 py-2.5 rounded-lg font-medium text-sm hover:bg-purple-50 transition-colors">
                   Contact Supplier
@@ -1144,15 +1225,16 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
 }
 
 // Rider Tracking Modal Component
-function RiderTrackingModal({ riderId, orderId, deliveryAddress, onClose }: { 
-  riderId: string; 
+function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose }: { 
+  riderId: string;
+  rider?: Order['items'][0]['rider'];
   orderId: string;
   deliveryAddress: { lat: number; lng: number; address: string };
   onClose: () => void;
 }) {
   const { getCurrentUserLocation } = useRealtimeLocation(riderId);
   const riderLocation = getCurrentUserLocation();
-  console.log(riderLocation);
+  
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div className="absolute inset-0 bg-black bg-opacity-50" />
@@ -1171,10 +1253,18 @@ function RiderTrackingModal({ riderId, orderId, deliveryAddress, onClose }: {
           <div className="mb-4 p-3 bg-purple-50 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold">R</span>
+                <User size={20} className="text-white" />
               </div>
               <div>
-                <p className="font-medium text-gray-900">Rider #{riderId.slice(-8)}</p>
+                <p className="font-medium text-gray-900">
+                  {rider ? `${rider.firstName} ${rider.lastName}` : `Rider #${riderId.slice(-8)}`}
+                </p>
+                {rider?.phone && (
+                  <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
+                    <Phone size={12} className="text-purple-600" />
+                    {rider.phone}
+                  </p>
+                )}
                 <p className="text-xs text-gray-500">On Delivery</p>
               </div>
             </div>
@@ -1219,6 +1309,18 @@ function RiderTrackingModal({ riderId, orderId, deliveryAddress, onClose }: {
                 <p className="text-xs text-gray-500">{deliveryAddress.address}</p>
               </div>
             </div>
+
+            {rider?.phone && (
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                <button
+                  onClick={() => window.location.href = `tel:${rider.phone}`}
+                  className="w-full bg-green-600 text-white py-2 rounded-lg font-medium text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Phone size={16} />
+                  Contact Rider
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1369,4 +1471,4 @@ function EmptyState({ status }: { status: string }) {
       <p className="text-gray-500">No {statusLabel.toLowerCase()} orders found</p>
     </div>
   );
-}
+        }
