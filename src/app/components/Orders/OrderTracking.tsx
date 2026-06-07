@@ -1068,11 +1068,13 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                       )}
                       {rider[0].email && (
                         <p className="text-xs text-gray-700">
+                          <Phone size={12} className="text-purple-600" />
                           <span className="font-medium">Email:</span> {rider[0].email}
                         </p>
                       )}
                       <p className="text-xs text-gray-700">
-                        <span className="font-medium">Rider ID:</span> {rider[0].plateNo}
+                        <Phone size={12} className="text-purple-600" />
+                        <span className="font-medium">Plate no:</span> {rider[0].plateNo}
                       </p>
                     </div>
                   </div>
@@ -1259,12 +1261,12 @@ function RiderTrackingModal({ riderId, rider, orderId, deliveryAddress, onClose 
               </div>
               <div>
                 <p className="font-medium text-gray-900">
-                  {rider ? `${rider.firstName} ${rider.lastName}` : `Rider #${riderId.slice(-8)}`}
+                  {rider ? `${rider[0].firstName} ${rider[0].lastName}` : `Rider #${riderId.slice(-8)}`}
                 </p>
                 {rider?.phone && (
                   <p className="text-xs text-gray-600 flex items-center gap-1 mt-1">
                     <Phone size={12} className="text-purple-600" />
-                    {rider.phone}
+                    {rider[0].phone}
                   </p>
                 )}
                 <p className="text-xs text-gray-500">On Delivery</p>
