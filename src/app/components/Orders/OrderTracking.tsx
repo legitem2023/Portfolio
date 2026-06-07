@@ -3,7 +3,7 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
-import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Loader2, Phone, User, MailOpen, HandPlatter } from "lucide-react";
+import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Loader2, Phone, User, MailOpen, HandPlatter, RectangleEllipsis } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
 import dynamic from 'next/dynamic';
@@ -1079,7 +1079,7 @@ function SupplierOrderModal({ group, onClose, onWriteReview, onTrackOrder, onRet
                     )}
                     {rider[0].plateNo && (
                       <p className="text-xs text-gray-700 flex items-center gap-1">
-                        <HandPlatter size={12} className="text-purple-600" />
+                        <RectangleEllipsis size={12} className="text-purple-600" />
                         <span className="font-medium">Plate no:</span> {rider[0].plateNo}
                       </p>
                     )}
