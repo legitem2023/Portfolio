@@ -138,6 +138,7 @@ export function useBackgroundTracking({
           try {
             await updateLocation(userId, item.latitude, item.longitude, status);
             success = true;
+            console.log(`✅ LOCATION UPDATE (from queue): User ${userId} at [${item.latitude}, ${item.longitude}] - Status: ${status}`);
             console.log(`Queue item sent successfully (attempt ${attempt + 1})`);
             break;
           } catch (error: any) {
@@ -147,6 +148,7 @@ export function useBackgroundTracking({
             if (error?.message?.includes('not found') || error?.status === 404) {
               try {
                 await addLocation(userId, item.latitude, item.longitude, status);
+                console.log(`➕ LOCATION ADD (from queue): User ${userId} at [${item.latitude}, ${item.longitude}] - Status: ${status}`);
                 success = true;
                 break;
               } catch (addError) {
@@ -216,6 +218,7 @@ export function useBackgroundTracking({
     
     try {
       await updateLocation(userId, latitude, longitude, status);
+      console.log(`🟢 LOCATION UPDATE: User ${userId} at [${latitude}, ${longitude}] - Status: ${status} - Time: ${new Date().toISOString()}`);
       if (isMountedRef.current) {
         setLastLocation({ lat: latitude, lng: longitude, time: Date.now() });
       }
@@ -225,6 +228,7 @@ export function useBackgroundTracking({
       if (error?.message?.includes('not found') || error?.status === 404) {
         try {
           await addLocation(userId, latitude, longitude, status);
+          console.log(`🔵 LOCATION ADD: User ${userId} at [${latitude}, ${longitude}] - Status: ${status} - Time: ${new Date().toISOString()}`);
           if (isMountedRef.current) {
             setLastLocation({ lat: latitude, lng: longitude, time: Date.now() });
           }
@@ -257,6 +261,7 @@ export function useBackgroundTracking({
       );
       
       if (distance < distanceFilter) {
+        console.log(`⚠️ Location update skipped - movement insufficient: ${distance.toFixed(2)}m < ${distanceFilter}m threshold`);
         return; // Not enough movement, skip update
       }
     }
@@ -615,4 +620,4 @@ export function useBackgroundTracking({
     startTracking, // Manual start
     stopTracking,  // Manual stop
   };
-        }
+      }
