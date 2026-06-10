@@ -7,7 +7,7 @@ import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Lo
 import { CreateReviewForm } from './CreateReviewForm';
 import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
 import dynamic from 'next/dynamic';
-
+import Image from 'next/image';
 // Dynamically import Leaflet map to avoid SSR issues
 const RiderTrackingMap = dynamic(() => import('./RiderTrackingMap'), {
   ssr: false,
