@@ -1,4 +1,5 @@
 // src/app/components/hooks/useBackgroundTracking.ts
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useRealtimeLocation } from './useRealtimeLocation';
 
