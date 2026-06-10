@@ -237,6 +237,7 @@ interface SupplierGroup {
     phone: string;
     email?: string;
     plateNo: string;
+    avatar: string;
   }>;
   riderId?: string;
 }
