@@ -10,7 +10,6 @@ import Header from './components/Header';
 import TopNav from './components/TopNav';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../Redux/activeIndexSlice';
-import { useRealtimeLocation } from '../components/hooks/useRealtimeLocation';
 
 import NavigationTabs from './components/NavigationTabs';
 import NewDeliveriesTab from './components/NewDeliveriesTab';
@@ -47,7 +46,6 @@ const VALID_TABS = ["newDeliveries", "deliveries", "map", "history", "message", 
 export default function RiderDashboard() {
   const router = useRouter();
   const dispatch = useDispatch();
-  const { addLocation, updateLocation, getLocation, connectionStatus } = useRealtimeLocation();
   const { user, loading: authLoading } = useAuth();
   const activeIndex:number = useSelector((state: any) => state.activeIndex.value);
 
@@ -87,11 +85,6 @@ export default function RiderDashboard() {
     }
   }, [activeTab]);
 
-  // Refs for tracking optimization
-  const watchIdRef = useRef<number | null>(null);
-  const lastSendTimeRef = useRef(0);
-  const isFirstLocationRef = useRef(true);
-
   // GraphQL query for orders
   const { data } = useQuery<OrderListResponse>(ORDER_LIST_QUERY, {
     variables: {
@@ -107,143 +100,6 @@ export default function RiderDashboard() {
     pollInterval: 15000,
     fetchPolicy: 'network-only'
   });
-  
-  // Function to send location with rate limiting
-  const sendCurrentLocation = async (position: GeolocationPosition) => {
-    if (!user?.userId) {
-      console.log("❌ No user ID available, skipping location tracking");
-      return;
-    }
-    
-    if (!isOnline) {
-      console.log("📍 Tracking paused (offline mode)");
-      return;
-    }
-
-    // Rate limiting: Minimum 3 seconds between sends for better tracking
-    const now = Date.now();
-    if (now - lastSendTimeRef.current < 3000) {
-      return;
-    }
-
-    const { latitude, longitude, accuracy } = position.coords;
-    console.log(`📍 Got location: Lat ${latitude}, Lng ${longitude}, Accuracy: ${accuracy}m`);
-    
-    try {
-      // Check if location already exists for this user
-      const existingLocation = getLocation(user.userId);
-      
-      if (!existingLocation || isFirstLocationRef.current) {
-        // First time - ADD location
-        await addLocation(
-          user.userId,
-          latitude,
-          longitude,
-          'available'
-        );
-        console.log("✅ Location added for first time");
-        isFirstLocationRef.current = false;
-      } else {
-        // Already exists - UPDATE location
-        await updateLocation(
-          user.userId,
-          latitude,
-          longitude,
-          'available'
-        );
-        console.log("🔄 Location updated");
-      }
-      
-      lastSendTimeRef.current = now;
-    } catch (error) {
-      console.error("❌ Error sending location:", error);
-    }
-  };
-
-  // Start location tracking using watchPosition
-  useEffect(() => {
-    // Clean up previous watch if exists
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-    }
-
-    if (isOnline && user?.userId && navigator.geolocation) {
-      // Reset first location flag when starting new tracking session
-      isFirstLocationRef.current = true;
-      
-      // Get initial location immediately
-      navigator.geolocation.getCurrentPosition(
-        sendCurrentLocation,
-        (error) => console.error("Error getting initial location:", error),
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-      
-      // Use watchPosition for continuous tracking
-      watchIdRef.current = navigator.geolocation.watchPosition(
-        sendCurrentLocation,
-        (error: GeolocationPositionError) => {
-          console.error("❌ Error getting current location:", {
-            code: error.code,
-            message: error.message,
-          });
-          
-          switch(error.code) {
-            case 1:
-              console.log("⚠️ User denied geolocation permission");
-              break;
-            case 2:
-              console.log("⚠️ Position unavailable (check GPS)");
-              break;
-            case 3:
-              console.log("⚠️ Location request timed out");
-              break;
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-      
-      console.log("📍 Location watch started for user:", user.userId);
-    } else {
-      if (watchIdRef.current !== null) {
-        console.log("🔴 Location tracking stopped - Offline mode or no user");
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-    }
-
-    return () => {
-      if (watchIdRef.current !== null) {
-        console.log("🛑 Cleaning up location tracking");
-        navigator.geolocation.clearWatch(watchIdRef.current);
-        watchIdRef.current = null;
-      }
-    };
-  }, [isOnline, user?.userId]);
-
-  // Also track location when tab becomes visible again
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        console.log("👁️ Tab became visible - checking location");
-        if (isOnline && user?.userId && navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(
-            sendCurrentLocation,
-            (error: GeolocationPositionError) => console.error("Error getting location:", error),
-            { enableHighAccuracy: true, timeout: 5000 }
-          );
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isOnline, user?.userId]);
 
   // Log when online status changes
   useEffect(() => {
@@ -386,10 +242,7 @@ export default function RiderDashboard() {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <div className={`w-3 h-3 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"}`}></div>
-                <span className="font-medium">{isOnline ? "Live GPS Tracking Active" : "Tracking Paused"}</span>
-                {connectionStatus && (
-                  <span className="text-xs text-gray-500">({connectionStatus})</span>
-                )}
+                <span className="font-medium">{isOnline ? "Online" : "Offline"}</span>
               </div>
               <div className="text-sm text-gray-600 flex items-center gap-2">
                 <Bell size={16} />
