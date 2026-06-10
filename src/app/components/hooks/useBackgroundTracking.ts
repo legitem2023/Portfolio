@@ -1,16 +1,33 @@
 // src/app/components/hooks/useBackgroundTracking.ts
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { BackgroundGeolocation } from '@capacitor-community/background-geolocation';
 import { useRealtimeLocation } from './useRealtimeLocation';
+
+// Dynamic import for Capacitor plugin
+let BackgroundGeolocation: any = null;
+let isCapacitor = false;
+
+// Only load Capacitor plugin on client side and in Capacitor environment
+if (typeof window !== 'undefined' && (window as any).Capacitor) {
+  isCapacitor = true;
+  try {
+    // Dynamic require to avoid build issues on Vercel
+    const plugin = require('@capacitor-community/background-geolocation');
+    BackgroundGeolocation = plugin.BackgroundGeolocation;
+    console.log('BackgroundGeolocation plugin loaded successfully');
+  } catch (error) {
+    console.error('Failed to load BackgroundGeolocation plugin:', error);
+    isCapacitor = false;
+  }
+}
 
 interface TrackingConfig {
   enabled: boolean;
   userId: string | null;
   status: 'available' | 'busy' | 'inactive' | 'offline';
-  distanceFilter?: number; // meters between updates
-  interval?: number; // milliseconds between updates
+  distanceFilter?: number;
+  interval?: number;
   fastestInterval?: number;
-  accuracy?: number; // desired accuracy in meters
+  accuracy?: number;
   batteryOptimized?: boolean;
   syncOnNetworkChange?: boolean;
   retryCount?: number;
@@ -44,7 +61,6 @@ export function useBackgroundTracking({
   const watcherIdRef = useRef<string | null>(null);
   const locationQueueRef = useRef<LocationQueueItem[]>([]);
   const isSyncingRef = useRef<boolean>(false);
-  const networkListenerRef = useRef<any>(null);
   const retryTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
   const { updateLocation, addLocation, connectionStatus } = useRealtimeLocation(userId || undefined);
@@ -77,7 +93,6 @@ export function useBackgroundTracking({
             console.error(`Failed to send queued location (attempt ${attempts}/${retryCount}):`, error);
             
             if (attempts >= (item.retries || retryCount)) {
-              // Add back to queue with incremented retries
               locationQueueRef.current.push({
                 ...item,
                 retries: (item.retries || 0) + 1
@@ -102,7 +117,6 @@ export function useBackgroundTracking({
       retries: 0,
     });
     
-    // Limit queue size to prevent memory issues
     if (locationQueueRef.current.length > 100) {
       locationQueueRef.current = locationQueueRef.current.slice(-100);
     }
@@ -114,19 +128,16 @@ export function useBackgroundTracking({
   const sendLocation = useCallback(async (latitude: number, longitude: number) => {
     if (!userId) return false;
     
-    // Check if online
     if (!navigator.onLine) {
       queueLocation(latitude, longitude);
       return false;
     }
     
     try {
-      // Try to update first
       await updateLocation(userId, latitude, longitude, status);
       setLastLocation({ lat: latitude, lng: longitude, time: Date.now() });
       return true;
     } catch (error: any) {
-      // If user doesn't exist, add new
       if (error?.message?.includes('not found') || error?.status === 404) {
         try {
           await addLocation(userId, latitude, longitude, status);
@@ -145,31 +156,8 @@ export function useBackgroundTracking({
     }
   }, [userId, status, updateLocation, addLocation, queueLocation]);
 
-  // Battery-optimized location handler
-  const handleLocationUpdate = useCallback(async (location: any) => {
-    if (!location?.latitude || !location?.longitude) return;
-    
-    // Skip if location hasn't changed enough (for battery saving)
-    if (batteryOptimized && lastLocation) {
-      const distance = calculateDistance(
-        lastLocation.lat,
-        lastLocation.lng,
-        location.latitude,
-        location.longitude
-      );
-      
-      if (distance < distanceFilter) {
-        return; // Skip this update
-      }
-    }
-    
-    // Send location
-    await sendLocation(location.latitude, location.longitude);
-  }, [batteryOptimized, lastLocation, distanceFilter, sendLocation]);
-
-  // Calculate distance between two coordinates (Haversine formula)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3;
     const φ1 = lat1 * Math.PI / 180;
     const φ2 = lat2 * Math.PI / 180;
     const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -183,39 +171,40 @@ export function useBackgroundTracking({
     return R * c;
   };
 
-  // Setup network listener
-  const setupNetworkListener = useCallback(() => {
-    if (!syncOnNetworkChange) return;
+  const handleLocationUpdate = useCallback(async (location: any) => {
+    if (!location?.latitude || !location?.longitude) return;
     
-    const handleOnline = () => {
-      console.log('Network online, processing queued locations');
-      processQueue();
-    };
+    if (batteryOptimized && lastLocation) {
+      const distance = calculateDistance(
+        lastLocation.lat,
+        lastLocation.lng,
+        location.latitude,
+        location.longitude
+      );
+      
+      if (distance < distanceFilter) {
+        return;
+      }
+    }
     
-    window.addEventListener('online', handleOnline);
-    return () => window.removeEventListener('online', handleOnline);
-  }, [syncOnNetworkChange, processQueue]);
+    await sendLocation(location.latitude, location.longitude);
+  }, [batteryOptimized, lastLocation, distanceFilter, sendLocation]);
 
-  // Start background tracking
+  // Start background tracking (only in Capacitor environment)
   const startTracking = useCallback(async () => {
-    if (!userId || !enabled) return;
+    if (!userId || !enabled || !isCapacitor || !BackgroundGeolocation) {
+      console.log('Background tracking not available in this environment');
+      return;
+    }
     
     try {
       setTrackingError(null);
       
-      // Check Capacitor environment
-      if (typeof window === 'undefined' || !(window as any).Capacitor) {
-        console.log('Not in Capacitor environment');
-        return;
-      }
-      
-      // Request permissions
       const permStatus = await BackgroundGeolocation.requestPermissions();
       if (permStatus.location !== 'granted') {
         throw new Error('Location permission not granted');
       }
       
-      // Configure with advanced options
       await BackgroundGeolocation.configure({
         desiredAccuracy: accuracy,
         distanceFilter: batteryOptimized ? distanceFilter : 0,
@@ -236,34 +225,25 @@ export function useBackgroundTracking({
         notificationIconColor: '#84cc16',
         notificationLargeIcon: 'ic_launcher',
         notificationSmallIcon: 'ic_stat_icon',
-        // Advanced options
         stopOnStillActivity: batteryOptimized,
-        url: undefined, // Don't send directly, we handle it
-        syncUrl: undefined,
-        syncThreshold: 100,
-        httpHeaders: {},
         maxLocations: 1000,
         autoSync: true,
         syncInterval: 15,
       });
       
-      // Add watcher
       const watcherId = await BackgroundGeolocation.watchPosition(
         handleLocationUpdate,
-        (error) => {
+        (error: any) => {
           console.error('Watch position error:', error);
           setTrackingError(error.message || 'Location tracking error');
         }
       );
       
       watcherIdRef.current = watcherId;
-      
-      // Start the service
       await BackgroundGeolocation.start();
       setIsTracking(true);
       console.log('Background tracking started successfully');
       
-      // Process any queued locations
       await processQueue();
       
     } catch (error: any) {
@@ -273,8 +253,9 @@ export function useBackgroundTracking({
     }
   }, [userId, enabled, accuracy, batteryOptimized, distanceFilter, interval, fastestInterval, status, handleLocationUpdate, processQueue]);
 
-  // Stop background tracking
   const stopTracking = useCallback(async () => {
+    if (!isCapacitor || !BackgroundGeolocation) return;
+    
     try {
       if (watcherIdRef.current) {
         await BackgroundGeolocation.removeWatcher({ id: watcherIdRef.current });
@@ -285,11 +266,9 @@ export function useBackgroundTracking({
       setIsTracking(false);
       console.log('Background tracking stopped');
       
-      // Clear all retry timeouts
       retryTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
       retryTimeoutsRef.current = [];
       
-      // Final queue flush attempt
       if (locationQueueRef.current.length > 0) {
         console.log(`Flushing ${locationQueueRef.current.length} queued locations before stop`);
         await processQueue();
@@ -300,7 +279,6 @@ export function useBackgroundTracking({
     }
   }, [processQueue]);
 
-  // Get current tracking status
   const getTrackingStatus = useCallback(() => ({
     isTracking,
     hasError: !!trackingError,
@@ -308,27 +286,24 @@ export function useBackgroundTracking({
     queueSize: locationQueueRef.current.length,
     lastLocation,
     connectionStatus,
+    isCapacitor,
   }), [isTracking, trackingError, lastLocation, connectionStatus]);
 
-  // Manual sync queue
   const syncNow = useCallback(async () => {
     if (locationQueueRef.current.length === 0) return;
     console.log('Manual sync requested');
     await processQueue();
   }, [processQueue]);
 
-  // Clear queue
   const clearQueue = useCallback(() => {
     locationQueueRef.current = [];
     console.log('Location queue cleared');
   }, []);
 
-  // Update rider status
   const updateRiderStatus = useCallback(async (newStatus: typeof status) => {
     if (!userId) return;
     
-    // Update notification text based on status
-    if (isTracking) {
+    if (isTracking && isCapacitor && BackgroundGeolocation) {
       await BackgroundGeolocation.configure({
         notificationText: newStatus === 'busy' 
           ? 'Actively tracking your delivery route' 
@@ -336,13 +311,11 @@ export function useBackgroundTracking({
       });
     }
     
-    // Send status update with last known location
     if (lastLocation) {
       await sendLocation(lastLocation.lat, lastLocation.lng);
     }
   }, [userId, isTracking, lastLocation, sendLocation]);
 
-  // Start/stop based on enabled prop
   useEffect(() => {
     if (enabled && userId && !isTracking) {
       startTracking();
@@ -357,13 +330,18 @@ export function useBackgroundTracking({
     };
   }, [enabled, userId, startTracking, stopTracking, isTracking]);
 
-  // Setup network listener
   useEffect(() => {
-    const cleanup = setupNetworkListener();
-    return cleanup;
-  }, [setupNetworkListener]);
+    if (!syncOnNetworkChange) return;
+    
+    const handleOnline = () => {
+      console.log('Network online, processing queued locations');
+      processQueue();
+    };
+    
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
+  }, [syncOnNetworkChange, processQueue]);
 
-  // Periodic queue processing (every 30 seconds if online)
   useEffect(() => {
     if (!syncOnNetworkChange) return;
     
@@ -376,30 +354,16 @@ export function useBackgroundTracking({
     return () => clearInterval(intervalId);
   }, [syncOnNetworkChange, processQueue]);
 
-  // Log tracking stats periodically
-  useEffect(() => {
-    if (!isTracking) return;
-    
-    const statsInterval = setInterval(() => {
-      console.log('Tracking stats:', {
-        queueSize: locationQueueRef.current.length,
-        lastLocation: lastLocation ? new Date(lastLocation.time).toISOString() : null,
-        connectionStatus,
-      });
-    }, 60000); // Every minute
-    
-    return () => clearInterval(statsInterval);
-  }, [isTracking, lastLocation, connectionStatus]);
-
   return {
     isTracking,
     trackingError,
     lastLocation,
     queueSize: locationQueueRef.current.length,
     connectionStatus,
+    isCapacitor,
     syncNow,
     clearQueue,
     updateRiderStatus,
     getTrackingStatus,
   };
-        }
+      }
