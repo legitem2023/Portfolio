@@ -18,6 +18,7 @@ import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
 import * as PusherPushNotifications from '@pusher/push-notifications-web';
+import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking'; // Import the hook
 
 interface Notification {
   id: string;
@@ -64,6 +65,14 @@ export default function Header({ user }: HeaderProps) {
   const bellRef = useRef<HTMLDivElement>(null);
   const notificationPopupRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+
+  // Initialize background tracking for rider
+  // Only enable if user is a rider and has userId
+  const isRider = user?.role === 'rider';
+  const shouldTrack = isRider && !!userId;
+  
+  // Call the background tracking hook
+  useBackgroundTracking(shouldTrack, userId || null, 'available');
 
   useEffect(() => {
     setMounted(true);
@@ -915,4 +924,4 @@ export default function Header({ user }: HeaderProps) {
       {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
-    }
+               }
