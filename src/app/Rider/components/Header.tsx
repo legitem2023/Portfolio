@@ -72,8 +72,11 @@ export default function Header({ user }: HeaderProps) {
   const shouldTrack = isRider && !!userId;
   
   // Call the background tracking hook
-  useBackgroundTracking(shouldTrack, userId || null, 'available');
-
+  useBackgroundTracking({
+  enabled: shouldTrack,
+  userId: userId || null,
+  status: 'available'
+});
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
