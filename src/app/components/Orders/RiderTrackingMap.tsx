@@ -17,11 +17,11 @@ interface RiderTrackingMapProps {
   deliveryLocation: { lat: number; lng: number; address: string };
 }
 
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_API_KEY = '';//process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 export default function RiderTrackingMap({ riderLocation, deliveryLocation }: RiderTrackingMapProps) {
   const [useGoogleMaps, setUseGoogleMaps] = useState<boolean | null>(null);
-  
+  console.log("Riders Loc.",riderLocation);
   // Check if Google Maps API is available
   useEffect(() => {
     const hasGoogleMapsApi = typeof window !== 'undefined' && !!GOOGLE_MAPS_API_KEY;
