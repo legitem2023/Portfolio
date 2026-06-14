@@ -769,7 +769,7 @@ const RiderAssignment: React.FC<RiderAssignmentProps> = ({
     try {
       const result = await assignNewRider({
         variables: {
-          itemId: orderId, // Using orderId as itemId based on your mutation structure
+          itemId: orderId,
           riderId: selectedRiderId,
           supplierId: supplierId,
           userId: userId,
@@ -862,18 +862,24 @@ export default function OrderListComponent({
 }: OrderListComponentProps) {
   const dispatch = useDispatch();
   
-  // Get active tab from Redux instead of localStorage
+  // Get active tab directly from Redux - this is the single source of truth
   const reduxOrderStatus = useSelector((state: any) => state.orderStatus?.value);
   
-  // State for active tab - use Redux or fallback to initialStatus
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(() => {
-    // If Redux has a value, use it
-    if (reduxOrderStatus && reduxOrderStatus !== 'PENDING') {
-      return reduxOrderStatus as OrderStatus | 'ALL';
+  // Derive activeTab from Redux - if Redux has a status (not PENDING), use it, otherwise show ALL
+  const activeTab = reduxOrderStatus && reduxOrderStatus !== 'PENDING' 
+    ? reduxOrderStatus as OrderStatus 
+    : 'ALL';
+  
+  // Function to change tab - dispatches to Redux
+  const setActiveTab = (tab: OrderStatus | 'ALL') => {
+    if (tab !== 'ALL') {
+      dispatch(setReduxOrderStatus(tab as ReduxOrderStatusType));
+    } else {
+      // When 'ALL' is selected, set Redux to PENDING (or null, depending on your preference)
+      // PENDING acts as the default/fallback state
+      dispatch(setReduxOrderStatus('PENDING'));
     }
-    // Otherwise use initialStatus or 'ALL'
-    return initialStatus || 'ALL';
-  });
+  };
   
   // State for pagination
   const [pagination, setPagination] = useState({
@@ -886,13 +892,6 @@ export default function OrderListComponent({
   
   // Ref for print container
   const printContainerRef = useRef<HTMLDivElement>(null);
-
-  // Update Redux when activeTab changes (for non-ALL statuses)
-  useEffect(() => {
-    if (activeTab !== 'ALL') {
-      dispatch(setReduxOrderStatus(activeTab as ReduxOrderStatusType));
-    }
-  }, [activeTab, dispatch]);
 
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
@@ -1462,7 +1461,7 @@ export default function OrderListComponent({
                       </div>
                     </div>
 
-                    {/* Proof of Delivery Section - Collapsible and filtered by tracking number */}
+                    {/* Proof of Delivery Section */}
                     <ProofOfDeliverySection 
                       proofOfDeliveries={order.proofOfDelivery}
                       trackingNumber={trackingNumber}
@@ -1713,4 +1712,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-        }
+      }
