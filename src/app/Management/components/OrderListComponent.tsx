@@ -1357,7 +1357,7 @@ export default function OrderListComponent({
             return (
               <button
                 key={status}
-                onClick={() => setActiveTab(status as OrderStatus | 'ALL')}
+                onClick={() => setActiveTab(status as OrderStatus | 'PENDING')}
                 className={`
                   group inline-flex items-center gap-2 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors duration-200
                   ${activeTab === status
