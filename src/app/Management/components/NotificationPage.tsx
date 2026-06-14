@@ -9,6 +9,7 @@ import {
 import { NotificationType } from '../../../../types/notification';
 import { useDispatch } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
+import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../../../Redux/orderStatusSlice';
 import { useRouter, usePathname } from 'next/navigation';
 interface Notification {
   id: string;
@@ -55,16 +56,25 @@ export default function NotificationPage({ UserId }: { UserId: string }) {
     switch (notification.type) {
       case NotificationType.NEW_MESSAGE:
         dispatch(setActiveIndex(12));
-       // dispatch(setSelectedUser(notification.link || ""));
-        //router.push('/Messaging');
         break;
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
       case NotificationType.SHIPMENT:
-        dispatch(setActiveIndex(4));
-        router.push('/Management?index=4');
-        break;
+      if (notification.type === NotificationType.ORDER_CREATED) {
+        dispatch(setReduxOrderStatus("PENDING"));
+      } else if (notification.type === NotificationType.ORDER_UPDATED) {
+        dispatch(setReduxOrderStatus("PROCESSING"));
+      } else if (notification.type === NotificationType.ORDER_DELIVERED) {
+        dispatch(setReduxOrderStatus("DELIVERED"));
+      } else if (notification.type === NotificationType.SHIPMENT) {
+        dispatch(setReduxOrderStatus("SHIPPED"));
+      }
+      
+      dispatch(setActiveIndex(4));
+      router.push('/Management?index=4');
+      break;
+
       case NotificationType.RETURN_REQUEST_CREATED:
       case NotificationType.RETURN_STATUS_UPDATED:
       case NotificationType.RETURN_APPROVED:
