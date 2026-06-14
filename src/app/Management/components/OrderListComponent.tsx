@@ -867,11 +867,11 @@ export default function OrderListComponent({
   // Derive activeTab from Redux - if Redux has a status (not PENDING), use it, otherwise show ALL
   const activeTab = reduxOrderStatus && reduxOrderStatus !== 'PENDING' 
     ? reduxOrderStatus as OrderStatus 
-    : 'ALL';
+    : 'PENDING';
   
   // Function to change tab - dispatches to Redux
-  const setActiveTab = (tab: OrderStatus | 'ALL') => {
-    if (tab !== 'ALL') {
+  const setActiveTab = (tab: OrderStatus | 'PENDING') => {
+    if (tab !== 'PENDING') {
       dispatch(setReduxOrderStatus(tab as ReduxOrderStatusType));
     } else {
       // When 'ALL' is selected, set Redux to PENDING (or null, depending on your preference)
@@ -896,7 +896,7 @@ export default function OrderListComponent({
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: activeTab === 'ALL' ? undefined : activeTab,
+        status: activeTab === 'PENDING' ? undefined : activeTab,
         supplierId: initialSupplierId
       },
       pagination
@@ -1376,7 +1376,7 @@ export default function OrderListComponent({
                     }
                   `} 
                 />
-                {status === 'ALL' ? 'All' : status.charAt(0) + status.slice(1).toLowerCase()}
+                {status === 'PENDING' ? 'PENDING' : status.charAt(0) + status.slice(1).toLowerCase()}
               </button>
             );
           })}
