@@ -1,7 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
 import Image from 'next/image';
