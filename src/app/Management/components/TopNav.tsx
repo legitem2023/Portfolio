@@ -545,77 +545,76 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     }
   }, []);
 
-  const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.isRead) {
-      await markAsRead(notification.id);
-    }
-    console.log(notification.type);
-    switch (notification.type) {
-      case NotificationType.NEW_MESSAGE:
-        dispatch(setActiveIndex(12));
-        dispatch(setSelectedUser(notification.link || ""));
-        router.push('/Messaging');
-        break;
-      case NotificationType.ORDER_CREATED:
-      case NotificationType.ORDER_UPDATED:
-      case NotificationType.ORDER_DELIVERED:
-      case NotificationType.SHIPMENT:
-        if(NotificationType.ORDER_CREATED){
-          localStorage.setItem('orderListActiveTab','PENDING');
-        }else if(NotificationType.ORDER_UPDATED){
-          localStorage.setItem('orderListActiveTab','PROCESSING');
-        }else if(NotificationType.ORDER_DELIVERED){
-          localStorage.setItem('orderListActiveTab','DELIVERED');
-        }else if(NotificationType.SHIPMENT){
-          localStorage.setItem('orderListActiveTab','SHIPPED');
-        }
-        
-        
-        dispatch(setActiveIndex(4));
-        router.push('/Management?index=4');
-        break;
-      case NotificationType.RETURN_REQUEST_CREATED:
-      case NotificationType.RETURN_STATUS_UPDATED:
-      case NotificationType.RETURN_APPROVED:
-      case NotificationType.RETURN_REJECTED:
-      case NotificationType.RETURN_SHIPPED:
-      case NotificationType.RETURN_RECEIVED:
-      case NotificationType.REFUND_PROCESSED:
-      case NotificationType.RETURN_COMPLETED:
-        dispatch(setActiveIndex(14));
-        router.push('/Management?index=14');
-        break;
-      case NotificationType.PAYMENT_CONFIRMATION:
-      case NotificationType.PAYMENT_RECEIVED:
-      case NotificationType.PAYMENT_FAILED:
-        dispatch(setActiveIndex(4));
-        router.push('/Management?index=4');
-        break;
-      case NotificationType.SUPPORT:
-        router.push('/Support');
-        break;
-      case NotificationType.PROMOTIONAL:
-      case NotificationType.SOCIAL:
-        if (notification.link) {
-          router.push(notification.link);
-        }
-        break;
-      case NotificationType.ACCOUNT_VERIFIED:
-      case NotificationType.PASSWORD_CHANGED:
-        dispatch(setActiveIndex(10));
-        router.push('/Management?index=10');
-        break;
-      case NotificationType.SYSTEM_ALERT:
-        console.log('System alert:', notification.message);
-        break;
-      default:
-        if (notification.link) {
-          router.push(notification.link);
-        }
-        break;
-    }
-    setIsBellPopupOpen(false);
-  };
+const handleNotificationClick = async (notification: Notification) => {
+  if (!notification.isRead) {
+    await markAsRead(notification.id);
+  }
+  console.log(notification.type);
+  switch (notification.type) {
+    case NotificationType.NEW_MESSAGE:
+      dispatch(setActiveIndex(12));
+      dispatch(setSelectedUser(notification.link || ""));
+      router.push('/Messaging');
+      break;
+    case NotificationType.ORDER_CREATED:
+    case NotificationType.ORDER_UPDATED:
+    case NotificationType.ORDER_DELIVERED:
+    case NotificationType.SHIPMENT:
+      if (notification.type === NotificationType.ORDER_CREATED) {
+        localStorage.setItem('orderListActiveTab', 'PENDING');
+      } else if (notification.type === NotificationType.ORDER_UPDATED) {
+        localStorage.setItem('orderListActiveTab', 'PROCESSING');
+      } else if (notification.type === NotificationType.ORDER_DELIVERED) {
+        localStorage.setItem('orderListActiveTab', 'DELIVERED');
+      } else if (notification.type === NotificationType.SHIPMENT) {
+        localStorage.setItem('orderListActiveTab', 'SHIPPED');
+      }
+      
+      dispatch(setActiveIndex(4));
+      router.push('/Management?index=4');
+      break;
+    case NotificationType.RETURN_REQUEST_CREATED:
+    case NotificationType.RETURN_STATUS_UPDATED:
+    case NotificationType.RETURN_APPROVED:
+    case NotificationType.RETURN_REJECTED:
+    case NotificationType.RETURN_SHIPPED:
+    case NotificationType.RETURN_RECEIVED:
+    case NotificationType.REFUND_PROCESSED:
+    case NotificationType.RETURN_COMPLETED:
+      dispatch(setActiveIndex(14));
+      router.push('/Management?index=14');
+      break;
+    case NotificationType.PAYMENT_CONFIRMATION:
+    case NotificationType.PAYMENT_RECEIVED:
+    case NotificationType.PAYMENT_FAILED:
+      dispatch(setActiveIndex(4));
+      router.push('/Management?index=4');
+      break;
+    case NotificationType.SUPPORT:
+      router.push('/Support');
+      break;
+    case NotificationType.PROMOTIONAL:
+    case NotificationType.SOCIAL:
+      if (notification.link) {
+        router.push(notification.link);
+      }
+      break;
+    case NotificationType.ACCOUNT_VERIFIED:
+    case NotificationType.PASSWORD_CHANGED:
+      dispatch(setActiveIndex(10));
+      router.push('/Management?index=10');
+      break;
+    case NotificationType.SYSTEM_ALERT:
+      console.log('System alert:', notification.message);
+      break;
+    default:
+      if (notification.link) {
+        router.push(notification.link);
+      }
+      break;
+  }
+  setIsBellPopupOpen(false);
+};
 
   return (
     <nav className="bg-zinc-800 shadow-md sticky top-0 z-50">
