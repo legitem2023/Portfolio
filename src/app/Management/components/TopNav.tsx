@@ -560,6 +560,17 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
       case NotificationType.SHIPMENT:
+        if(NotificationType.ORDER_CREATED){
+          localStorage.setItem('orderListActiveTab','PENDING');
+        }else if(NotificationType.ORDER_UPDATED){
+          localStorage.setItem('orderListActiveTab','PROCESSING');
+        }else if(NotificationType.ORDER_DELIVERED){
+          localStorage.setItem('orderListActiveTab','DELIVERED');
+        }else if(NotificationType.SHIPMENT){
+          localStorage.setItem('orderListActiveTab','SHIPPED');
+        }
+        
+        
         dispatch(setActiveIndex(4));
         router.push('/Management?index=4');
         break;
