@@ -549,7 +549,7 @@ export default function TopNav({ onMenuClick, user }: TopNavProps) {
     if (!notification.isRead) {
       await markAsRead(notification.id);
     }
-    
+    console.log(notification.type);
     switch (notification.type) {
       case NotificationType.NEW_MESSAGE:
         dispatch(setActiveIndex(12));
