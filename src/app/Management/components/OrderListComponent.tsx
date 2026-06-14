@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery, gql, useMutation } from '@apollo/client';
 import { useUsers } from '../../components/hooks/useUsers';
+import { useDispatch, useSelector } from 'react-redux';
+import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../../../Redux/orderStatusSlice';
 
 import { 
   Package, 
@@ -858,32 +860,25 @@ export default function OrderListComponent({
   initialStatus,
   isMobile = false
 }: OrderListComponentProps) {
-  // State for status filter with localStorage persistence
+  const dispatch = useDispatch();
+  
+  // Get active tab from Redux instead of localStorage
+  const reduxOrderStatus = useSelector((state: any) => state.orderStatus?.value);
+  
+  // State for active tab - use Redux or fallback to initialStatus
   const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(() => {
-    // Check if we're in browser environment
-    if (typeof window !== 'undefined') {
-      const savedTab = localStorage.getItem('orderListActiveTab');
-      if (savedTab && (savedTab === 'ALL' || ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].includes(savedTab))) {
-        return savedTab as OrderStatus | 'ALL';
-      }
+    // If Redux has a value, use it
+    if (reduxOrderStatus && reduxOrderStatus !== 'PENDING') {
+      return reduxOrderStatus as OrderStatus | 'ALL';
     }
+    // Otherwise use initialStatus or 'ALL'
     return initialStatus || 'ALL';
   });
   
-  // State for pagination with localStorage persistence
-  const [pagination, setPagination] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedPage = localStorage.getItem('orderListPage');
-      const savedPageSize = localStorage.getItem('orderListPageSize');
-      return {
-        page: savedPage ? parseInt(savedPage) : 1,
-        pageSize: savedPageSize ? parseInt(savedPageSize) : 10
-      };
-    }
-    return {
-      page: 1,
-      pageSize: 10
-    };
+  // State for pagination
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10
   });
   
   // State to trigger refetch after rider assignment
@@ -892,20 +887,12 @@ export default function OrderListComponent({
   // Ref for print container
   const printContainerRef = useRef<HTMLDivElement>(null);
 
-  // Save active tab to localStorage whenever it changes
+  // Update Redux when activeTab changes (for non-ALL statuses)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('orderListActiveTab', activeTab);
+    if (activeTab !== 'ALL') {
+      dispatch(setReduxOrderStatus(activeTab as ReduxOrderStatusType));
     }
-  }, [activeTab]);
-
-  // Save pagination to localStorage whenever it changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('orderListPage', pagination.page.toString());
-      localStorage.setItem('orderListPageSize', pagination.pageSize.toString());
-    }
-  }, [pagination]);
+  }, [activeTab, dispatch]);
 
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
@@ -1311,18 +1298,6 @@ export default function OrderListComponent({
     }
   };
 
-  // Reset saved preferences function (optional - can be used for debugging)
-  const resetSavedPreferences = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('orderListActiveTab');
-      localStorage.removeItem('orderListPage');
-      localStorage.removeItem('orderListPageSize');
-      setActiveTab(initialStatus || 'ALL');
-      setPagination({ page: 1, pageSize: 10 });
-      window.location.reload(); // Reload to reset everything
-    }
-  };
-
   if (error) {
     return (
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -1376,20 +1351,10 @@ export default function OrderListComponent({
         }
       `}</style>
       
-      {/* Optional: Hidden reset button for debugging - remove in production */}
-      {process.env.NODE_ENV === 'development' && (
-        <button 
-          onClick={resetSavedPreferences}
-          className="text-xs text-gray-400 hover:text-gray-600 mb-2 underline"
-        >
-          Reset Saved Preferences
-        </button>
-      )}
-      
       {/* Status Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-          {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
+          {['ALL', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
             const Icon = statusIcons[status as keyof typeof statusIcons] || ShoppingBag;
             return (
               <button
@@ -1748,4 +1713,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-                                 }
+        }
