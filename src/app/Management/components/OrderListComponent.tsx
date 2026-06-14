@@ -896,7 +896,7 @@ export default function OrderListComponent({
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
     variables: {
       filter: {
-        status: activeTab === 'PENDING' ? undefined : activeTab,
+        status: activeTab === 'PENDING' ? 'PENDING' : activeTab,
         supplierId: initialSupplierId
       },
       pagination
