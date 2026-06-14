@@ -291,7 +291,6 @@ const statusColors = {
 
 // Status icons mapping for tabs
 const statusIcons = {
-  ALL: ShoppingBag,
   PENDING: Clock,
   PROCESSING: Loader2,
   SHIPPED: Package,
@@ -1353,7 +1352,7 @@ export default function OrderListComponent({
       {/* Status Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-          {['ALL', 'PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
+          {['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => {
             const Icon = statusIcons[status as keyof typeof statusIcons] || ShoppingBag;
             return (
               <button
