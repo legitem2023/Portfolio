@@ -433,6 +433,9 @@ export default function ProductForm({
                         (item: any) => item.id === itemId
                       );
                       setSelectedItem(itemId);
+                      //trial
+                      setNewProduct({...newProduct, name: selectedItemObj?.name});
+                      
                       setNewProduct({
                         ...newProduct, 
                         color: selectedItemObj?.name || itemId
