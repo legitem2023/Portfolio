@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
-import { useQuery, gql } from '@apollo/client';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery, gql, useMutation } from '@apollo/client';
 import { useUsers } from '../../components/hooks/useUsers';
 
 import { 
@@ -27,7 +27,9 @@ import {
   ChevronUp,
   Camera,
   Signature,
-  UserCheck
+  UserCheck,
+  Search,
+  X
 } from "lucide-react";
 
 // GraphQL Query
@@ -127,6 +129,25 @@ const ORDER_LIST_QUERY = gql`
         pageSize
         totalPages
       }
+    }
+  }
+`;
+
+// Assign Rider Mutation
+const ASSIGN_NEW_RIDER = gql`
+  mutation AssignNewRider(
+    $itemId: ID!
+    $riderId: ID!
+    $supplierId: ID!
+    $userId: ID!
+  ) {
+    assignNewRider(
+      itemId: $itemId
+      riderId: $riderId
+      supplierId: $supplierId
+      userId: $userId
+    ) {
+      statusText
     }
   }
 `;
@@ -373,6 +394,148 @@ const calculateOrderTotals = (supplierTotals: SupplierTotal[]): OrderTotals => {
   };
 };
 
+// Searchable Dropdown Component
+interface SearchableDropdownProps {
+  riders: any;
+  selectedRiderId: string | null;
+  onSelect: (riderId: string, riderName: string) => void;
+  placeholder?: string;
+  isLoading?: boolean;
+  disabled?: boolean;
+}
+
+const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
+  riders,
+  selectedRiderId,
+  onSelect,
+  placeholder = "Select a rider...",
+  isLoading = false,
+  disabled = false
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Filter riders based on search term
+  const filteredRiders = useMemo(() => {
+    if (!searchTerm.trim()) return riders;
+    const term = searchTerm.toLowerCase();
+    return riders.filter((rider:any) => 
+      rider.firstName.toLowerCase().includes(term) ||
+      (rider.lastName && rider.lastName.toLowerCase().includes(term)) ||
+      (rider.email && rider.email.toLowerCase().includes(term)) ||
+      (rider.phone && rider.phone.includes(term))
+    );
+  }, [riders, searchTerm]);
+
+  // Get selected rider name
+  const selectedRider = useMemo(() => {
+    if (!selectedRiderId) return null;
+    return riders.find((r:any) => r.id === selectedRiderId);
+  }, [riders, selectedRiderId]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+        setSearchTerm('');
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelect = (rider: User) => {
+    onSelect(rider.id, `${rider.firstName} ${rider.lastName || ''}`);
+    setIsOpen(false);
+    setSearchTerm('');
+  };
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        disabled={disabled || isLoading}
+        className={`
+          w-full px-3 py-2 text-left text-sm rounded-lg border 
+          focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500
+          transition-colors duration-200
+          ${disabled 
+            ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' 
+            : 'bg-white border-gray-300 hover:border-orange-300 cursor-pointer'
+          }
+        `}
+      >
+        <div className="flex items-center justify-between">
+          <span className={selectedRider ? 'text-gray-900' : 'text-gray-400'}>
+            {isLoading ? 'Loading riders...' : (selectedRider ? `${selectedRider.firstName} ${selectedRider.lastName || ''}` : placeholder)}
+          </span>
+          {!disabled && !isLoading && (
+            <ChevronDown size={16} className={`text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          )}
+        </div>
+      </button>
+
+      {isOpen && !disabled && !isLoading && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+          {/* Search Input */}
+          <div className="p-2 border-b border-gray-100">
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by name, email, or phone..."
+                className="w-full pl-8 pr-8 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+                autoFocus
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Riders List */}
+          <div className="max-h-60 overflow-y-auto">
+            {filteredRiders.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                No riders found
+              </div>
+            ) : (
+              filteredRiders.map((rider:any) => (
+                <button
+                  key={rider.id}
+                  onClick={() => handleSelect(rider)}
+                  className={`
+                    w-full px-3 py-2 text-left text-sm hover:bg-orange-50 transition-colors duration-150
+                    ${selectedRiderId === rider.id ? 'bg-orange-100 text-orange-700' : 'text-gray-700'}
+                  `}
+                >
+                  <div className="font-medium">{rider.firstName} {rider.lastName || ''}</div>
+                  {rider.email && (
+                    <div className="text-xs text-gray-500">{rider.email}</div>
+                  )}
+                  {rider.phone && (
+                    <div className="text-xs text-gray-400">{rider.phone}</div>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Shimmer loading component
 const OrderCardShimmer = () => {
   return (
@@ -569,22 +732,180 @@ const ProofOfDeliverySection = ({
   );
 };
 
+// Rider Assignment Component for each order
+interface RiderAssignmentProps {
+  orderId: string;
+  userId: string;
+  supplierId: string;
+  currentRiderId?: string;
+  currentRiderName?: string;
+  onAssignSuccess: () => void;
+  disabled?: boolean;
+}
+
+const RiderAssignment: React.FC<RiderAssignmentProps> = ({
+  orderId,
+  userId,
+  supplierId,
+  currentRiderId,
+  currentRiderName,
+  onAssignSuccess,
+  disabled = false
+}) => {
+  const { users: riders, loading: ridersLoading } = useUsers();
+  const [selectedRiderId, setSelectedRiderId] = useState<string | null>(currentRiderId || null);
+  const [assignNewRider, { loading: assigning }] = useMutation(ASSIGN_NEW_RIDER);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleAssignRider = async () => {
+    if (!selectedRiderId) {
+      setMessage({ type: 'error', text: 'Please select a rider' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    try {
+      const result = await assignNewRider({
+        variables: {
+          itemId: orderId, // Using orderId as itemId based on your mutation structure
+          riderId: selectedRiderId,
+          supplierId: supplierId,
+          userId: userId,
+        },
+      });
+
+      if (result.data?.assignNewRider?.statusText) {
+        setMessage({ type: 'success', text: `Rider assigned successfully! ${result.data.assignNewRider.statusText}` });
+        setTimeout(() => setMessage(null), 3000);
+        onAssignSuccess();
+      }
+    } catch (error) {
+      console.error('Error assigning rider:', error);
+      setMessage({ type: 'error', text: 'Failed to assign rider. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handleSelectRider = (riderId: string, riderName: string) => {
+    setSelectedRiderId(riderId);
+    setMessage(null);
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200">
+      <div className="flex items-center gap-2 mb-3">
+        <Bike size={18} className="text-orange-600" />
+        <h4 className="font-semibold text-sm text-gray-800">Assign Rider</h4>
+      </div>
+      
+      <div className="space-y-3">
+        <SearchableDropdown
+          riders={riders || []}
+          selectedRiderId={selectedRiderId}
+          onSelect={handleSelectRider}
+          placeholder="Search and select a rider..."
+          isLoading={ridersLoading}
+          disabled={disabled || assigning}
+        />
+
+        {message && (
+          <div className={`text-sm px-3 py-2 rounded-lg ${
+            message.type === 'success' 
+              ? 'bg-green-50 text-green-700 border border-green-200' 
+              : 'bg-red-50 text-red-700 border border-red-200'
+          }`}>
+            {message.text}
+          </div>
+        )}
+
+        <button
+          onClick={handleAssignRider}
+          disabled={!selectedRiderId || assigning || disabled}
+          className={`
+            w-full px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+            flex items-center justify-center gap-2
+            ${!selectedRiderId || assigning || disabled
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              : 'bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700'
+            }
+          `}
+        >
+          {assigning ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Assigning...
+            </>
+          ) : (
+            <>
+              <UserCheck size={16} />
+              {currentRiderId ? 'Reassign Rider' : 'Assign Rider'}
+            </>
+          )}
+        </button>
+
+        {currentRiderName && !selectedRiderId && (
+          <p className="text-xs text-gray-500 text-center">
+            Currently assigned to: <span className="font-medium">{currentRiderName}</span>
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function OrderListComponent({ 
   initialSupplierId,
   initialStatus,
   isMobile = false
 }: OrderListComponentProps) {
-  // State for status filter (sent to GraphQL)
-  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(initialStatus || 'ALL');
-  
-  // State for pagination
-  const [pagination, setPagination] = useState({
-    page: 1,
-    pageSize: 10
+  // State for status filter with localStorage persistence
+  const [activeTab, setActiveTab] = useState<OrderStatus | 'ALL'>(() => {
+    // Check if we're in browser environment
+    if (typeof window !== 'undefined') {
+      const savedTab = localStorage.getItem('orderListActiveTab');
+      if (savedTab && (savedTab === 'ALL' || ['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'].includes(savedTab))) {
+        return savedTab as OrderStatus | 'ALL';
+      }
+    }
+    return initialStatus || 'ALL';
   });
-  const { users:listOfRiders, loading:listOfRidersloading, error:listOfRidersError, refetch:listOfRidersRefetch , isEmpty:listOfRidersEmpty } = useUsers();
+  
+  // State for pagination with localStorage persistence
+  const [pagination, setPagination] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedPage = localStorage.getItem('orderListPage');
+      const savedPageSize = localStorage.getItem('orderListPageSize');
+      return {
+        page: savedPage ? parseInt(savedPage) : 1,
+        pageSize: savedPageSize ? parseInt(savedPageSize) : 10
+      };
+    }
+    return {
+      page: 1,
+      pageSize: 10
+    };
+  });
+  
+  // State to trigger refetch after rider assignment
+  const [refreshKey, setRefreshKey] = useState(0);
+  
   // Ref for print container
   const printContainerRef = useRef<HTMLDivElement>(null);
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orderListActiveTab', activeTab);
+    }
+  }, [activeTab]);
+
+  // Save pagination to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('orderListPage', pagination.page.toString());
+      localStorage.setItem('orderListPageSize', pagination.pageSize.toString());
+    }
+  }, [pagination]);
 
   // Fetch orders
   const { loading, error, data, refetch } = useQuery(ORDER_LIST_QUERY, {
@@ -602,6 +923,7 @@ export default function OrderListComponent({
   const orderData = data?.orderlist as OrderListResponse | undefined;
   const allOrders: Order[] = orderData?.orders || [];
   console.log(allOrders);
+  
   // Filter orders with items
   const ordersWithItems = useMemo(() => {
     return allOrders.filter((order: Order) => order.items.length > 0);
@@ -611,6 +933,7 @@ export default function OrderListComponent({
 
   const handleRefresh = () => {
     refetch();
+    setRefreshKey(prev => prev + 1);
   };
 
   // Handle page change
@@ -633,6 +956,18 @@ export default function OrderListComponent({
       }
     });
     return Array.from(ridersMap.values());
+  };
+
+  // Get supplier ID from order items
+  const getSupplierId = (items: OrderItem[]): string => {
+    const firstItem = items[0];
+    const supplier = getUserFromItem(firstItem?.supplier);
+    return firstItem?.supplierId || supplier?.id || '';
+  };
+
+  // Get user ID from order
+  const getUserId = (order: Order): string => {
+    return order.user?.id || '';
   };
 
   // Generate HTML for printing
@@ -976,6 +1311,18 @@ export default function OrderListComponent({
     }
   };
 
+  // Reset saved preferences function (optional - can be used for debugging)
+  const resetSavedPreferences = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('orderListActiveTab');
+      localStorage.removeItem('orderListPage');
+      localStorage.removeItem('orderListPageSize');
+      setActiveTab(initialStatus || 'ALL');
+      setPagination({ page: 1, pageSize: 10 });
+      window.location.reload(); // Reload to reset everything
+    }
+  };
+
   if (error) {
     return (
       <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -997,7 +1344,7 @@ export default function OrderListComponent({
   const hasNoData = !loading && ordersWithItems.length === 0;
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+    <div className="container">
       <style jsx global>{`
         @keyframes shimmer {
           0% {
@@ -1028,24 +1375,17 @@ export default function OrderListComponent({
           animation: shimmer 1.8s infinite;
         }
       `}</style>
-
-      <div className="flex justify-between items-center mb-4 sm:mb-6 lg:mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 flex items-center gap-2">
-            <Bell size={isMobile ? 20 : 24} className="text-orange-500" />
-            <span>Orders</span>
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage and track all orders</p>
-        </div>
+      
+      {/* Optional: Hidden reset button for debugging - remove in production */}
+      {process.env.NODE_ENV === 'development' && (
         <button 
-          onClick={handleRefresh}
-          className="p-2 text-gray-600 hover:text-gray-900 transition-colors rounded-full hover:bg-gray-100"
-          title="Refresh"
+          onClick={resetSavedPreferences}
+          className="text-xs text-gray-400 hover:text-gray-600 mb-2 underline"
         >
-          <RefreshCw size={18} />
+          Reset Saved Preferences
         </button>
-      </div>
-
+      )}
+      
       {/* Status Tabs */}
       <div className="mb-6 border-b border-gray-200">
         <nav className="flex -mb-px space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide" aria-label="Tabs">
@@ -1106,6 +1446,9 @@ export default function OrderListComponent({
               const orderTotals = calculateOrderTotals(supplierTotals);
               const orderRiders = getOrderRiders(order.items);
               const trackingNumber = order.items[0]?.trackingNumber;
+              const currentRider = orderRiders[0];
+              const supplierId = getSupplierId(order.items);
+              const userId = getUserId(order);
               
               return (
                 <div key={order.id} className="bg-white rounded-lg shadow border border-indigo-200 overflow-hidden">
@@ -1212,7 +1555,7 @@ export default function OrderListComponent({
                       <div className="bg-orange-50 p-3 lg:p-4 rounded-lg mb-4 lg:mb-6">
                         <div className="flex items-center gap-2 mb-3">
                           <Bike size={isMobile ? 16 : 18} className="text-orange-600" />
-                          <h4 className="font-semibold text-sm lg:text-base text-orange-700">Rider</h4>
+                          <h4 className="font-semibold text-sm lg:text-base text-orange-700">Current Rider</h4>
                         </div>
                         <div className="space-y-3">
                           {orderRiders.map((rider) => (
@@ -1220,7 +1563,7 @@ export default function OrderListComponent({
                               <p className="text-sm font-medium text-gray-800">
                                 {rider.firstName} {rider.lastName || ''}
                               </p>
-                              <p className="text-sm font-medium text-gray-800">
+                              <p className="text-sm text-gray-600">
                                 {rider.phone}
                               </p>
                               {rider.addresses && rider.addresses.length > 0 && (
@@ -1237,7 +1580,17 @@ export default function OrderListComponent({
                       </div>
                     )}
 
-                    <div className="border-t border-gray-200 pt-3 sm:pt-4">
+                    {/* Rider Assignment Component */}
+                    <RiderAssignment
+                      orderId={order.id}
+                      userId={userId}
+                      supplierId={supplierId}
+                      currentRiderId={currentRider?.id}
+                      currentRiderName={currentRider ? `${currentRider.firstName} ${currentRider.lastName || ''}` : undefined}
+                      onAssignSuccess={handleRefresh}
+                    />
+
+                    <div className="border-t border-gray-200 pt-3 sm:pt-4 mt-3 sm:mt-4">
                       <h4 className="font-medium text-gray-700 text-sm sm:text-base mb-2 sm:mb-3 flex items-center gap-2">
                         <Package size={isMobile ? 16 : 18} className="text-blue-500" />
                         Items ({order.items.length})
@@ -1395,4 +1748,4 @@ export default function OrderListComponent({
       <div ref={printContainerRef} style={{ display: 'none' }}></div>
     </div>
   );
-}
+                                 }
