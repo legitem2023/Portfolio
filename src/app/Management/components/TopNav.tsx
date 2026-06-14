@@ -4,6 +4,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveIndex } from '../../../../Redux/activeIndexSlice';
 import { setSelectedUser } from '../../../../Redux/selectedUserSlice';
+import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../../../Redux/orderStatusSlice';
+
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { LogOut, CreditCard, Building, ChevronDown, Bell, X, Clock, AlertCircle, CheckCircle, Info, ShoppingBag, MessageCircle, Trash2, Loader2, RefreshCw, XCircle, Gift, Headphones, Heart } from 'lucide-react';
@@ -561,13 +563,17 @@ const handleNotificationClick = async (notification: Notification) => {
     case NotificationType.ORDER_DELIVERED:
     case NotificationType.SHIPMENT:
       if (notification.type === NotificationType.ORDER_CREATED) {
-        localStorage.setItem('orderListActiveTab', 'PENDING');
+        dispatch(setReduxOrderStatus("PENDING"));
+        //localStorage.setItem('orderListActiveTab', 'PENDING');
       } else if (notification.type === NotificationType.ORDER_UPDATED) {
-        localStorage.setItem('orderListActiveTab', 'PROCESSING');
+        dispatch(setReduxOrderStatus("PROCESSING"));
+        //localStorage.setItem('orderListActiveTab', 'PROCESSING');
       } else if (notification.type === NotificationType.ORDER_DELIVERED) {
-        localStorage.setItem('orderListActiveTab', 'DELIVERED');
+        dispatch(setReduxOrderStatus("DELIVERED"));
+        //localStorage.setItem('orderListActiveTab', 'DELIVERED');
       } else if (notification.type === NotificationType.SHIPMENT) {
-        localStorage.setItem('orderListActiveTab', 'SHIPPED');
+        dispatch(setReduxOrderStatus("SHIPPED"));
+        //localStorage.setItem('orderListActiveTab', 'SHIPPED');
       }
       
       dispatch(setActiveIndex(4));
