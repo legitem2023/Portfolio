@@ -7,6 +7,7 @@ import cartReducer from './cartSlice'; // Import your cart reducer
 import activePostIdReducer from './activePostIdSlice';
 import searchReducer from './searchSlice';
 import selectedUserReducer from './selectedUserSlice'; // Import your selectedUser reducer
+import orderStatusReducer from './orderStatusSlice'; // Import your orderStatus reducer
 
 // Persist configuration for activeIndex
 const activeIndexPersistConfig = {
@@ -31,11 +32,18 @@ const selectedUserPersistConfig = {
   storage
 };
 
+// Persist configuration for orderStatus
+const orderStatusPersistConfig = {
+  key: 'orderStatus',
+  storage
+};
+
 // Create persisted reducers
 const persistedActiveIndexReducer = persistReducer(activeIndexPersistConfig, activeIndexReducer);
 const persistedCartReducer = persistReducer(cartPersistConfig, cartReducer);
 const persistedPostIdReducer = persistReducer(activePostPersistConfig, activePostIdReducer);
 const persistedSelectedUserReducer = persistReducer(selectedUserPersistConfig, selectedUserReducer);
+const persistedOrderStatusReducer = persistReducer(orderStatusPersistConfig, orderStatusReducer);
 
 // Configure store
 export const store = configureStore({
@@ -45,6 +53,7 @@ export const store = configureStore({
     activePostId: persistedPostIdReducer,
     search: searchReducer,
     selectedUser: persistedSelectedUserReducer, // Add the selectedUser reducer
+    orderStatus: persistedOrderStatusReducer, // Add the orderStatus reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
