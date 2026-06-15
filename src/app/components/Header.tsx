@@ -665,6 +665,18 @@ const Header: React.FC = () => {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
+      
+      if (notification.type === NotificationType.ORDER_CREATED) {
+        dispatch(setReduxOrderStatus("PENDING"));
+      } else if (notification.type === NotificationType.ORDER_UPDATED) {
+        dispatch(setReduxOrderStatus("PROCESSING"));
+      } else if (notification.type === NotificationType.ORDER_DELIVERED) {
+        dispatch(setReduxOrderStatus("DELIVERED"));
+      } else if (notification.type === NotificationType.SHIPMENT) {
+        dispatch(setReduxOrderStatus("SHIPPED"));  
+      } else if (notification.type === NotificationType.CANCELED) {
+        dispatch(setReduxOrderStatus("SHIPPED"));  
+      }
         dispatch(setActiveIndex(10));
         router.push(`?index=${10}`);
         break;
