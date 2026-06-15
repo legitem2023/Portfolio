@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { setActiveIndex, restorePreviousIndex } from '../../../Redux/activeIndexSlice';
+import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../../Redux/orderStatusSlice';
+
 import { decryptToken } from '../../../utils/decryptToken';
 import { showNotification } from '../../../utils/notifications';
 import { useQuery, useMutation } from '@apollo/client';
