@@ -4,7 +4,7 @@ import { useQuery, useMutation } from '@apollo/client';
 import { gql } from '@apollo/client';
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../Redux/orderStatusSlice';
+import { setOrderStatus as setReduxOrderStatus, OrderStatus as ReduxOrderStatusType } from '../../../../Redux/orderStatusSlice';
 import { QrCode, Star, MapPin, X, RotateCcw, Package, ChevronDown, ChevronUp, Loader2, Phone, User, MailOpen, HandPlatter, RectangleEllipsis } from "lucide-react";
 import { CreateReviewForm } from './CreateReviewForm';
 import { useRealtimeLocation } from '../hooks/useRealtimeLocation';
