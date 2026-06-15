@@ -665,7 +665,7 @@ const Header: React.FC = () => {
       case NotificationType.ORDER_CREATED:
       case NotificationType.ORDER_UPDATED:
       case NotificationType.ORDER_DELIVERED:
-      
+      case NotificationType.SHIPMENT:
       if (notification.type === NotificationType.ORDER_CREATED) {
         dispatch(setReduxOrderStatus("PENDING"));
       } else if (notification.type === NotificationType.ORDER_UPDATED) {
@@ -674,16 +674,10 @@ const Header: React.FC = () => {
         dispatch(setReduxOrderStatus("DELIVERED"));
       } else if (notification.type === NotificationType.SHIPMENT) {
         dispatch(setReduxOrderStatus("SHIPPED"));  
-      } else if (notification.type === NotificationType.CANCELED) {
-        dispatch(setReduxOrderStatus("SHIPPED"));  
       }
-        dispatch(setActiveIndex(10));
-        router.push(`?index=${10}`);
-        break;
-      case NotificationType.SHIPMENT:
-        dispatch(setActiveIndex(10));
-        router.push(`?index=${10}`);
-        break;
+      dispatch(setActiveIndex(10));
+      router.push(`?index=${10}`);
+      break;
       case NotificationType.RETURN_REQUEST_CREATED:
       case NotificationType.RETURN_STATUS_UPDATED:
       case NotificationType.RETURN_APPROVED:
