@@ -9053,7 +9053,89 @@ deleteProduct: async (_: any, { id }: any) => {
         };
       }
     },
-loginWithGoogle: async (_: any, args: any) => {
+  loginWithGoogle: async (_: any, args: any) => {
+  const { idToken } = args.input;
+
+  // Verify Google token and get user info
+  const googleRes = await fetch(
+    `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${idToken}`
+  );
+  const googleUser = await googleRes.json();
+  
+  if (!googleUser || !googleUser.sub) {
+    throw new Error('Invalid Google token');
+  }
+
+  // Extract user data from Google response
+  const email = googleUser.email;
+  const firstName = googleUser.given_name || '';
+  const lastName = googleUser.family_name || '';
+  const avatarUrl = googleUser.picture || '';
+
+  if (!email) {
+    throw new Error('Email not provided by Google');
+  }
+
+  // Find or create user
+  let user = await prisma.user.findUnique({
+    where: { email: email },
+    include: {
+      addresses: true
+    }
+  });
+
+  if (!user) {
+    // Create new user
+    const adminEmails = ["vendorcity2026@gmail.com", "vendorCity2026@gmail.com"];
+    const role = adminEmails.includes(email) ? "ADMINISTRATOR" : "USER";
+    
+    user = await prisma.user.create({
+      data: {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: '',
+        password: '', // Empty password for OAuth users
+        role: role,
+        avatar: avatarUrl
+      },
+      include: {
+        addresses: true
+      }
+    });
+  } else {
+    // Update avatar if needed (optional)
+    if (avatarUrl && user.avatar !== avatarUrl) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { avatar: avatarUrl }
+      });
+      user.avatar = avatarUrl;
+    }
+  }
+
+  // Generate JWT token
+  const secret = new TextEncoder().encode('QeTh7m3zP0sVrYkLmXw93BtN6uFhLpAz');
+  const token = await new EncryptJWT({
+    userId: user.id,
+    phone: user.phone,
+    email: user.email,
+    name: user.firstName,
+    role: user.role,
+    image: user.avatar,
+    addresses: user.addresses
+  })
+    .setProtectedHeader({ alg: 'dir', enc: 'A256GCM' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .encrypt(secret);
+
+  return {
+    statusText: 'success',
+    token
+  };
+},
+/*loginWithGoogle: async (_: any, args: any) => {
   const { idToken } = args.input;
 
   // Verify Google token and get user info
@@ -9137,7 +9219,7 @@ loginWithGoogle: async (_: any, args: any) => {
     statusText: 'success',
     token
   };
-},
+},*/
     loginWithFacebook: async (_: any, args: any) => {
       const { idToken } = args.input;
 
