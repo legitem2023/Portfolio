@@ -9086,6 +9086,12 @@ loginWithGoogle: async (_: any, args: any) => {
 
   if (!user) {
     // Create new user
+    let role;
+    if(email === "vendorcity2026@gmail.com" || email === "vendorCity2026@gmail.com"){
+      role = "ADMINISTRATOR";
+    }else {
+      role = "USER";
+    }
     user = await prisma.user.create({
       data: {
         firstName: firstName,
@@ -9093,7 +9099,7 @@ loginWithGoogle: async (_: any, args: any) => {
         email: email,
         phone: '',
         password: '', // Empty password for OAuth users
-        role: 'USER',
+        role: role,
         avatar: avatarUrl
       },
       include: {
