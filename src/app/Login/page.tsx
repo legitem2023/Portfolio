@@ -52,6 +52,7 @@ export default function LuxuryLogin() {
   const [error, setError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [isSessionExpired, setIsSessionExpired] = useState(false);
+  const [tokenError, setTokenError] = useState<string | null>(null);
 
   // Check session after login
   useEffect(() => {
@@ -145,13 +146,17 @@ export default function LuxuryLogin() {
     };
   }, []);
 
-  // 🆕 Handle session expired state
+  // 🆕 Handle session expired state - STAY ON PAGE, NO REDIRECT
   useEffect(() => {
     if (isSessionExpired) {
-      // Optionally redirect to login with expired message
-      router.push('/Login?expired=true');
+      // Clear any invalid token data
+      localStorage.removeItem('userData');
+      sessionStorage.removeItem('userData');
+      setUserData(null);
+      // Show error but stay on page
+      setTokenError('Your session token is invalid or corrupted. Please sign in again.');
     }
-  }, [isSessionExpired, router]);
+  }, [isSessionExpired]);
 
   const decryptUserToken = async (serverToken: string) => {
     // Decrypt the token
@@ -160,7 +165,7 @@ export default function LuxuryLogin() {
     try {
       // Check if decryptToken is available
       if (typeof decryptToken !== 'function') {
-        throw new Error('decryptToken function not found');
+        throw new Error('decryptToken function not available');
       }
       
       // Await the decryptToken function since it returns a Promise
@@ -168,7 +173,7 @@ export default function LuxuryLogin() {
       
       // Validate the decrypted data matches UserData interface
       if (!decrypted || typeof decrypted !== 'object') {
-        throw new Error('Invalid decrypted data');
+        throw new Error('Invalid decrypted data structure');
       }
       
       // Ensure required fields exist
@@ -186,6 +191,7 @@ export default function LuxuryLogin() {
       // Store in localStorage for persistence
       localStorage.setItem('userData', JSON.stringify(userDataValid));
       setError(null);
+      setTokenError(null);
       setSessionChecked(true);
       setIsSessionExpired(false);
       
@@ -194,10 +200,34 @@ export default function LuxuryLogin() {
       
     } catch (error: any) {
       console.error('❌ Failed to decrypt token:', error);
-      setError(error.message || 'Failed to decrypt token');
+      
+      // 🆕 Handle token errors without redirecting
+      let errorMessage = 'Token validation failed. ';
+      if (error.message?.includes('corrupted') || error.message?.includes('invalid')) {
+        errorMessage += 'The authentication token appears to be corrupted or invalid.';
+      } else if (error.message?.includes('expired')) {
+        errorMessage += 'Your session has expired.';
+      } else {
+        errorMessage += 'Please try signing in again.';
+      }
+      
+      setTokenError(errorMessage);
+      setError(errorMessage);
       setSessionChecked(true);
-      // Still proceed but with default role
-      redirectBasedOnRole("USER");    
+      
+      // 🆕 Clear any corrupted token data
+      localStorage.removeItem('userData');
+      sessionStorage.removeItem('userData');
+      
+      // 🆕 Sign out to clear corrupted session
+      try {
+        await signOut({ redirect: false });
+      } catch (signOutError) {
+        console.error('Error signing out after token failure:', signOutError);
+      }
+      
+      // 🆕 DO NOT REDIRECT - Stay on login page
+      // Don't call redirectBasedOnRole - stay on page
     }
   };
 
@@ -219,6 +249,7 @@ export default function LuxuryLogin() {
     
     setIsLoading(true);
     setError(null);
+    setTokenError(null);
     
     try {
       const result = await signIn('credentials', {
@@ -270,6 +301,7 @@ export default function LuxuryLogin() {
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     setError(null);
+    setTokenError(null);
     
     try {
       const result = await signIn('google', {
@@ -311,10 +343,11 @@ export default function LuxuryLogin() {
     try {
       await signOut({ redirect: false });
       setUserData(null);
+      setTokenError(null);
       localStorage.removeItem('userData');
       sessionStorage.removeItem('userData');
       setError('You have been logged out.');
-      router.push('/Login');
+      // Stay on login page, don't redirect
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -411,40 +444,60 @@ export default function LuxuryLogin() {
               </p>
             </div>
 
-            {/* 🆕 Session Expired Warning */}
-            {isSessionExpired && (
+            {/* 🆕 Token Error Display - Stays on page */}
+            {tokenError && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg animate-pulse">
+                ⚠️ {tokenError}
+                <button 
+                  onClick={() => {
+                    setTokenError(null);
+                    setError(null);
+                  }}
+                  className="ml-2 text-sm underline hover:no-underline font-medium"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* 🆕 Session Expired Warning - Stays on page */}
+            {isSessionExpired && !tokenError && (
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg animate-pulse">
                 ⚠️ Your session has expired. Please sign in again.
+                <button 
+                  onClick={() => {
+                    setIsSessionExpired(false);
+                    setError(null);
+                  }}
+                  className="ml-2 text-sm underline hover:no-underline"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
 
             {/* Error Display */}
-            {error && (
-              <div className={`${isSessionExpired ? 'bg-yellow-50 border-yellow-200 text-yellow-700' : 'bg-red-50 border-red-200 text-red-700'} border px-4 py-3 rounded-lg`}>
+            {error && !tokenError && !isSessionExpired && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {error}
-                {isSessionExpired && (
-                  <button 
-                    onClick={() => {
-                      setError(null);
-                      setIsSessionExpired(false);
-                    }}
-                    className="ml-2 text-sm underline hover:no-underline"
-                  >
-                    Dismiss
-                  </button>
-                )}
+                <button 
+                  onClick={() => setError(null)}
+                  className="ml-2 text-sm underline hover:no-underline"
+                >
+                  Dismiss
+                </button>
               </div>
             )}
             
             {/* Success Message when logged in */}
-            {userData && !isSessionExpired && (
+            {userData && !isSessionExpired && !tokenError && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
                 ✅ Login successful! Redirecting to {getRedirectPath(userData.role)}...
               </div>
             )}
             
             {/* 🆕 Logged in user info with logout button */}
-            {userData && !isSessionExpired && (
+            {userData && !isSessionExpired && !tokenError && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -464,8 +517,8 @@ export default function LuxuryLogin() {
               </div>
             )}
             
-            {/* Login Form - Only show if not logged in */}
-            {!userData || isSessionExpired ? (
+            {/* Login Form - Always show unless user is logged in with valid token */}
+            {(!userData || isSessionExpired || tokenError) ? (
               <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                 <div className="rounded-md shadow-sm space-y-4">
                   {/* Email Input */}
@@ -580,7 +633,7 @@ export default function LuxuryLogin() {
             )}
 
             {/* Divider - Only show if not logged in */}
-            {!userData || isSessionExpired ? (
+            {(!userData || isSessionExpired || tokenError) && (
               <>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
@@ -627,7 +680,7 @@ export default function LuxuryLogin() {
                   </button>
                 </div>
               </>
-            ) : null}
+            )}
           </div>
         </div>
         
@@ -635,4 +688,4 @@ export default function LuxuryLogin() {
       </div>
     </>
   );
-}
+    }
