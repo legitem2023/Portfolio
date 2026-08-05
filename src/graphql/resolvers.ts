@@ -9401,7 +9401,7 @@ deleteProduct: async (_: any, { id }: any) => {
         };
       }
     },
-updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _context: any) => {
+/*updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _context: any) => {
   try {
     // Check if variant exists
     const existingVariant = await prisma.productVariant.findUnique({
@@ -9429,7 +9429,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
 
     // Check if product exists when productId is being updated
 //    if (input.productId && input.productId !== existingVariant.productId) {
-     /* const productExists = await prisma.product.findUnique({
+      const productExists = await prisma.product.findUnique({
         where: { id: input.productId }
       });
 
@@ -9437,7 +9437,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         return {
           statusText: 'Product not found'
         };
-      }*/
+      }
 const productExists = await prisma.product.findUnique({
   where: { id: input.productId }
 });
@@ -9464,6 +9464,107 @@ const updateParentCheck = await prisma.product.update({
   data: updateParent       // Fixed: added missing comma after where block
 });
   //  }
+
+    // Check for duplicate SKU (excluding current variant)
+    if (input.sku && input.sku !== existingVariant.sku) {
+      const existingSKU = await prisma.productVariant.findUnique({
+        where: { sku: input.sku }
+      });
+
+      if (existingSKU) {
+        return {
+          statusText: 'SKU must be unique'
+        };
+      }
+    }
+
+    // Prepare update data (only include fields that are provided)
+    const updateData: any = {};
+    
+    if (input.name !== undefined) updateData.name = input.name;
+    if (input.productId !== undefined) updateData.productId = input.productId;
+    if (input.sku !== undefined) updateData.sku = input.sku;
+    if (input.color !== undefined) updateData.color = input.color;
+    if (input.size !== undefined) updateData.size = input.size;
+    if (input.price !== undefined) updateData.price = input.price;
+    if (input.salePrice !== undefined) updateData.salePrice = input.salePrice;
+    if (input.stock !== undefined) updateData.stock = input.stock;
+    if (input.description !== undefined) updateData.description = input.description;
+
+    // Update the variant
+    const variant = await prisma.productVariant.update({
+      where: { id: id },
+      data: updateData
+    });
+
+    return {
+      statusText: 'Variant updated successfully'
+    };
+
+  } catch (error) {
+    console.error('Error updating product variant:', error);
+    return {
+      statusText: 'Variant update failed!'
+    };
+  }
+},*/
+    updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _context: any) => {
+  try {
+    // Check if variant exists
+    const existingVariant = await prisma.productVariant.findUnique({
+      where: { id: id }
+    });
+
+    if (!existingVariant) {
+      return {
+        statusText: 'Variant not found'
+      };
+    }
+
+    // Validate required fields if they're being updated
+    if (input.name !== undefined && !input.name) {
+      return {
+        statusText: 'Name cannot be empty'
+      };
+    }
+
+    if (input.stock !== undefined && input.stock < 0) {
+      return {
+        statusText: 'Stock cannot be negative'
+      };
+    }
+
+    // Check if product exists when productId is being updated
+    if (input.productId && input.productId !== existingVariant.productId) {
+      const productExists = await prisma.product.findUnique({
+        where: { id: input.productId }
+      });
+
+      if (!productExists) {
+        return {
+          statusText: 'Product not found'
+        };
+      }
+
+      // Update the parent product if needed
+      const updateParent: any = {};
+      if (input.name !== undefined) updateParent.name = input.name;
+      if (input.color !== undefined) updateParent.color = input.color;
+      if (input.size !== undefined) updateParent.size = input.size;
+      if (input.price !== undefined) updateParent.price = input.price;
+      if (input.salePrice !== undefined) updateParent.salePrice = input.salePrice;
+      if (input.stock !== undefined) updateParent.stock = input.stock;
+      if (input.description !== undefined) updateParent.description = input.description;
+
+      if (Object.keys(updateParent).length > 0) {
+        await prisma.product.update({
+          where: {
+            id: productExists.id
+          },
+          data: updateParent
+        });
+      }
+    }
 
     // Check for duplicate SKU (excluding current variant)
     if (input.sku && input.sku !== existingVariant.sku) {
