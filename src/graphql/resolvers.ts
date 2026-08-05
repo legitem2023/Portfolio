@@ -9559,7 +9559,7 @@ const updateParentCheck = await prisma.product.update({
       if (Object.keys(updateParent).length > 0) {
         await prisma.product.update({
           where: {
-            id: existingVariant.productId
+            id: existingVariant.productId ?? undefined
           },
           data: updateParent
         });
