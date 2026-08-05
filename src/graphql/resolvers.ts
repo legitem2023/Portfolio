@@ -9537,7 +9537,7 @@ const updateParentCheck = await prisma.product.update({
     // Check if product exists when productId is being updated
     if (input.productId && input.productId !== existingVariant.productId) {
       const productExists = await prisma.product.findUnique({
-        where: { id: existingVariant.productId }
+        where: { id: input.productId }
       });
 
       if (!productExists) {
@@ -9559,7 +9559,7 @@ const updateParentCheck = await prisma.product.update({
       if (Object.keys(updateParent).length > 0) {
         await prisma.product.update({
           where: {
-            id: productExists.id
+            id: existingVariant.productId
           },
           data: updateParent
         });
