@@ -9428,7 +9428,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
     }
 
     // Check if product exists when productId is being updated
-    if (input.productId && input.productId !== existingVariant.productId) {
+//    if (input.productId && input.productId !== existingVariant.productId) {
      /* const productExists = await prisma.product.findUnique({
         where: { id: input.productId }
       });
@@ -9463,7 +9463,7 @@ const updateParentCheck = await prisma.product.update({
   },
   data: updateParent       // Fixed: added missing comma after where block
 });
-    }
+  //  }
 
     // Check for duplicate SKU (excluding current variant)
     if (input.sku && input.sku !== existingVariant.sku) {
