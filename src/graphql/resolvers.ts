@@ -9549,8 +9549,8 @@ const updateParentCheck = await prisma.product.update({
       // Update the parent product if needed
       const updateParent: any = {};
       if (input.name !== undefined) updateParent.name = input.name;
-      if (input.color !== undefined) updateParent.color = input.color;
-      if (input.size !== undefined) updateParent.size = input.size;
+     // if (input.color !== undefined) updateParent.color = input.color;
+    //  if (input.size !== undefined) updateParent.size = input.size;
       if (input.price !== undefined) updateParent.price = input.price;
       if (input.salePrice !== undefined) updateParent.salePrice = input.salePrice;
       if (input.stock !== undefined) updateParent.stock = input.stock;
