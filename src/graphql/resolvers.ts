@@ -9429,7 +9429,7 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
 
     // Check if product exists when productId is being updated
     if (input.productId && input.productId !== existingVariant.productId) {
-      const productExists = await prisma.product.findUnique({
+     /* const productExists = await prisma.product.findUnique({
         where: { id: input.productId }
       });
 
@@ -9437,7 +9437,32 @@ updateVariant: async (_parent: any, { id, input }: { id: string, input: any }, _
         return {
           statusText: 'Product not found'
         };
-      }
+      }*/
+const productExists = await prisma.product.findUnique({
+  where: { id: input.productId }
+});
+
+if (!productExists) {
+  return {
+          statusText: 'Product not found'
+  };
+}
+
+const updateParent = {};
+if (input.name !== undefined) updateParent.name = input.name;
+if (input.color !== undefined) updateParent.color = input.color;
+if (input.size !== undefined) updateParent.size = input.size;
+if (input.price !== undefined) updateParent.price = input.price;
+if (input.salePrice !== undefined) updateParent.salePrice = input.salePrice;
+if (input.stock !== undefined) updateParent.stock = input.stock;
+if (input.description !== undefined) updateParent.description = input.description;
+
+const updateParentCheck = await prisma.product.update({
+  where: {
+    id: productExists.id  // Fixed: was "ud", should be "id"
+  },
+  data: updateParent       // Fixed: added missing comma after where block
+});
     }
 
     // Check for duplicate SKU (excluding current variant)
