@@ -9448,7 +9448,7 @@ if (!productExists) {
   };
 }
 
-const updateParent = {};
+const updateParent:any = {};
 if (input.name !== undefined) updateParent.name = input.name;
 if (input.color !== undefined) updateParent.color = input.color;
 if (input.size !== undefined) updateParent.size = input.size;
