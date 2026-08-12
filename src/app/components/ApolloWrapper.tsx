@@ -16,7 +16,7 @@ function makeClient() {
   });
 
   const httpLink = new HttpLink({
-    uri: process.env.NEXT_PUBLIC_SERVER_LINK,
+    uri: '/api/graphql',
     credentials: 'include',
   });
 
