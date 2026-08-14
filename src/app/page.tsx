@@ -2,7 +2,7 @@
 import React from 'react';
 import DeluxeNavTabs from './components/DeluxeNavTabs';
 import ParticleBackground from './components/ParticleBackground';
-
+import InstallPWAButton from './components/InstallPWAButton';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import Image from 'next/image';
@@ -18,6 +18,7 @@ import {
 const EcommercePage: React.FC = () => {
   return (
     <div className="bg-violet-50 min-h-screen p-0">
+      <InstallPWAButton/>
       <Header/>
       <DeluxeNavTabs />
       {/* Footer */}
