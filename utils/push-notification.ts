@@ -26,7 +26,7 @@ export async function sendPushNotification({
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
                     (process.env.NODE_ENV === 'development' 
                       ? 'http://localhost:3000' 
-                      : 'https://portfolio-xi-eight-92.vercel.app');
+                      : 'https://vendorcity.net');
     const url = `${baseUrl}/api/push/send`;
 
     const response = await fetch(url, {
