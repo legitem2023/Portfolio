@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         notification: {
           title: title,
           body: body,
-          icon: 'https://portfolio-xi-eight-92.vercel.app/VendorCity.webp',
+          icon: 'https://vendorcity.net/VendorCity.webp',
           deep_link: deepLink,
         },
       },
