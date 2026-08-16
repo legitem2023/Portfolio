@@ -135,8 +135,11 @@ export default function RiderDashboard() {
     return null;
   }
 
-  // Transform GraphQL data to delivery format
-  const newDeliveries = data?.neworder?.orders.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+  // ✅ FIXED: Transform GraphQL data to delivery format with null checks
+  const newDeliveries = data?.neworder?.orders
+    ?.filter((order: any) => order !== null && order !== undefined)
+    ?.flatMap(mapOrdersToDeliveriesBySupplier) || [];
+  
   const newDeliveriesCount = newDeliveries.length;
 
   // Handle accepting a delivery
