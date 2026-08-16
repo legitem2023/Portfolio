@@ -17,7 +17,8 @@ import {
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
-import * as PusherPushNotifications from '@pusher/push-notifications-web';
+// ✅ FIXED: Use default import
+import PusherPushNotifications from '@pusher/push-notifications-web';
 import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking'; // Import the hook
 
 interface Notification {
@@ -347,11 +348,12 @@ export default function Header({ user }: HeaderProps) {
     dispatch(setActiveIndex(10));
   };
 
-  // ✅ FIXED: Removed .Client from PusherPushNotifications constructor
+  // ✅ FIXED: Correct Pusher Beams client initialization
   const clearPushNotifications = async (userId: string) => {
     try {
       console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
       
+      // ✅ Now this works with default import
       const beamsClient = new PusherPushNotifications({
         instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
       });
