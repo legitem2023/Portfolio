@@ -17,9 +17,9 @@ import {
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
-// ✅ FIXED: Use default import
-import PusherPushNotifications from '@pusher/push-notifications-web';
-import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking'; // Import the hook
+// ✅ FIXED: Use named import for Client
+import { Client } from '@pusher/push-notifications-web';
+import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking';
 
 interface Notification {
   id: string;
@@ -171,7 +171,7 @@ export default function Header({ user }: HeaderProps) {
     };
   }, []);
 
-  // ✅ FIXED: Extract notifications with null filtering
+  // Extract notifications with null filtering
   const extractNotifications = useCallback((data: any): Notification[] => {
     try {
       if (!data?.notifications?.edges) return [];
@@ -260,7 +260,7 @@ export default function Header({ user }: HeaderProps) {
     });
   }, [shownNotificationIds, router]);
 
-  // ✅ FIXED: Handle new notifications with null checks
+  // Handle new notifications with null checks
   const handleNewNotifications = useCallback((data: any) => {
     const latestNotifications = extractNotifications(data);
     
@@ -278,7 +278,7 @@ export default function Header({ user }: HeaderProps) {
     });
   }, [extractNotifications, shownNotificationIds, triggerPushNotification]);
 
-  // ✅ FIXED: Removed onCompleted and onError from useQuery
+  // Removed onCompleted and onError from useQuery
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
@@ -294,14 +294,14 @@ export default function Header({ user }: HeaderProps) {
     pollInterval: userId ? 10000 : 0,
   });
 
-  // ✅ Handle new notifications when data changes
+  // Handle new notifications when data changes
   useEffect(() => {
     if (notificationsData && userId) {
       handleNewNotifications(notificationsData);
     }
   }, [notificationsData, userId, handleNewNotifications]);
 
-  // ✅ Handle errors separately
+  // Handle errors separately
   useEffect(() => {
     if (notificationsError) {
       console.error('Notification query error:', notificationsError);
@@ -348,13 +348,13 @@ export default function Header({ user }: HeaderProps) {
     dispatch(setActiveIndex(10));
   };
 
-  // ✅ FIXED: Correct Pusher Beams client initialization
+  // ✅ FIXED: Use Client from the named import
   const clearPushNotifications = async (userId: string) => {
     try {
       console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
       
-      // ✅ Now this works with default import
-      const beamsClient = new PusherPushNotifications({
+      // ✅ Use Client constructor
+      const beamsClient = new Client({
         instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
       });
       
