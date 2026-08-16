@@ -321,6 +321,7 @@ const ProductsTab: React.FC = () => {
   const { data, loading, error, fetchMore, refetch, networkStatus } = useQuery(GETPRODUCTS, {
     variables: queryVariables,
     notifyOnNetworkStatusChange: true,
+    fetchPolicy: 'cache-and-network',
   });
 
   // Check if we're currently refetching due to variable changes
