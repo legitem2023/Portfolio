@@ -18,8 +18,8 @@ import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
 import { Client } from '@pusher/push-notifications-web';
-// ❌ TEMPORARILY COMMENTED OUT - Remove this line
-// import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking';
+// ❌ TEMPORARILY COMMENTED OUT - Remove this line 
+import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking';
 
 interface Notification {
   id: string;
@@ -68,7 +68,7 @@ export default function Header({ user }: HeaderProps) {
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   // ❌ TEMPORARILY COMMENTED OUT - Remove this block
-  /*
+  
   // Initialize background tracking for rider
   // Only enable if user is a rider and has userId
   const isRider = user?.role === 'rider';
@@ -80,7 +80,7 @@ export default function Header({ user }: HeaderProps) {
     userId: userId || null,
     status: 'available'
   });
-  */
+  
 
   useEffect(() => {
     setMounted(true);
