@@ -26,6 +26,16 @@ export const useRealtimeLocation = (currentUserId?: string): UseRealtimeLocation
   const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
   const pusherClientRef = useRef<Pusher | null>(null);
   const privateChannelRef = useRef<any>(null);
+  const adminChannelRef = useRef<any>(null);
+  const isMountedRef = useRef<boolean>(true);
+
+  // ✅ Set mounted flag
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Function to ADD a new location - userId passed as parameter
   const addLocation = useCallback(async (
@@ -103,6 +113,7 @@ export const useRealtimeLocation = (currentUserId?: string): UseRealtimeLocation
     }
   }, []);
 
+  // ✅ FIXED: Safe Pusher subscription with proper cleanup
   useEffect(() => {
     const pusherKey = process.env.NEXT_PUBLIC_PUSHER_KEY;
     const pusherCluster = process.env.NEXT_PUBLIC_PUSHER_CLUSTER;
@@ -112,69 +123,138 @@ export const useRealtimeLocation = (currentUserId?: string): UseRealtimeLocation
       return;
     }
 
-    const pusherClient = new Pusher(pusherKey, {
-      cluster: pusherCluster,
-      forceTLS: true,
-      authEndpoint: '/api/pusher/auth',
-    });
-    pusherClientRef.current = pusherClient;
+    let pusherClient: Pusher | null = null;
+    let privateChannel: any = null;
+    let adminChannel: any = null;
 
-    pusherClient.connection.bind('state_change', (states: any) => {
-      setConnectionStatus(states.current);
-    });
-
-    // Subscribe to private channel for the current user
-    if (currentUserId) {
-      const privateChannel = pusherClient.subscribe(`private-user-${currentUserId}`);
-      privateChannelRef.current = privateChannel;
-      
-      privateChannel.bind('user-location-update', (data: any) => {
-        const locationData: LocationData = {
-          userID: data.userID,
-          latitude: data.latitude,
-          longitude: data.longitude,
-          status: data.status || 'available',
-          timestamp: data.lastUpdated || data.timestamp || new Date().toISOString(),
-          lastUpdated: data.lastUpdated
-        };
-        
-        setLocations(prev => {
-          const newMap = new Map(prev);
-          newMap.set(data.userID, locationData);
-          return newMap;
-        });
+    try {
+      pusherClient = new Pusher(pusherKey, {
+        cluster: pusherCluster,
+        forceTLS: true,
+        authEndpoint: '/api/pusher/auth',
       });
+      pusherClientRef.current = pusherClient;
+
+      // Handle connection state
+      pusherClient.connection.bind('state_change', (states: any) => {
+        if (isMountedRef.current) {
+          setConnectionStatus(states.current);
+        }
+      });
+
+      // ✅ Subscribe to private channel for the current user
+      if (currentUserId) {
+        try {
+          privateChannel = pusherClient.subscribe(`private-user-${currentUserId}`);
+          privateChannelRef.current = privateChannel;
+          
+          privateChannel.bind('user-location-update', (data: any) => {
+            if (!isMountedRef.current) return;
+            
+            const locationData: LocationData = {
+              userID: data.userID,
+              latitude: data.latitude,
+              longitude: data.longitude,
+              status: data.status || 'available',
+              timestamp: data.lastUpdated || data.timestamp || new Date().toISOString(),
+              lastUpdated: data.lastUpdated
+            };
+            
+            setLocations(prev => {
+              const newMap = new Map(prev);
+              newMap.set(data.userID, locationData);
+              return newMap;
+            });
+          });
+          
+          console.log(`✅ Subscribed to private-user-${currentUserId}`);
+        } catch (error) {
+          console.error('Failed to subscribe to private channel:', error);
+        }
+      }
+
+      // ✅ Subscribe to admin channel for overall updates
+      try {
+        adminChannel = pusherClient.subscribe('admin-locations');
+        adminChannelRef.current = adminChannel;
+        
+        adminChannel.bind('user-location-update', (data: any) => {
+          if (!isMountedRef.current) return;
+          
+          const locationData: LocationData = {
+            userID: data.userID,
+            latitude: data.latitude,
+            longitude: data.longitude,
+            status: data.status || 'available',
+            timestamp: data.lastUpdated || data.timestamp || new Date().toISOString(),
+            lastUpdated: data.lastUpdated
+          };
+          
+          setLocations(prev => {
+            const newMap = new Map(prev);
+            newMap.set(data.userID, locationData);
+            return newMap;
+          });
+        });
+        
+        console.log('✅ Subscribed to admin-locations');
+      } catch (error) {
+        console.error('Failed to subscribe to admin channel:', error);
+      }
+
+    } catch (error) {
+      console.error('Failed to initialize Pusher:', error);
     }
 
-    // Subscribe to admin channel for overall updates
-    const adminChannel = pusherClient.subscribe('admin-locations');
-    
-    adminChannel.bind('user-location-update', (data: any) => {
-      const locationData: LocationData = {
-        userID: data.userID,
-        latitude: data.latitude,
-        longitude: data.longitude,
-        status: data.status || 'available',
-        timestamp: data.lastUpdated || data.timestamp || new Date().toISOString(),
-        lastUpdated: data.lastUpdated
-      };
-      
-      setLocations(prev => {
-        const newMap = new Map(prev);
-        newMap.set(data.userID, locationData);
-        return newMap;
-      });
-    });
-
+    // ✅ SAFE CLEANUP - This fixes the "Cannot read properties of null" error!
     return () => {
+      isMountedRef.current = false;
+
+      // ✅ Clean up private channel
       if (privateChannelRef.current) {
-        privateChannelRef.current.unbind_all();
-        privateChannelRef.current.unsubscribe();
+        try {
+          privateChannelRef.current.unbind_all();
+          console.log('✅ Unbound all private channel events');
+        } catch (error) {
+          console.debug('Private channel unbind error (can ignore):', error);
+        }
+        
+        try {
+          privateChannelRef.current.unsubscribe();
+          console.log('✅ Unsubscribed from private channel');
+        } catch (error) {
+          console.debug('Private channel unsubscribe error (can ignore):', error);
+        }
+        privateChannelRef.current = null;
       }
-      adminChannel.unbind_all();
-      adminChannel.unsubscribe();
+
+      // ✅ Clean up admin channel
+      if (adminChannelRef.current) {
+        try {
+          adminChannelRef.current.unbind_all();
+          console.log('✅ Unbound all admin channel events');
+        } catch (error) {
+          console.debug('Admin channel unbind error (can ignore):', error);
+        }
+        
+        try {
+          adminChannelRef.current.unsubscribe();
+          console.log('✅ Unsubscribed from admin channel');
+        } catch (error) {
+          console.debug('Admin channel unsubscribe error (can ignore):', error);
+        }
+        adminChannelRef.current = null;
+      }
+
+      // ✅ Disconnect Pusher client
       if (pusherClientRef.current) {
-        pusherClientRef.current.disconnect();
+        try {
+          pusherClientRef.current.disconnect();
+          console.log('✅ Pusher client disconnected');
+        } catch (error) {
+          console.debug('Pusher disconnect error (can ignore):', error);
+        }
+        pusherClientRef.current = null;
       }
     };
   }, [currentUserId]);
