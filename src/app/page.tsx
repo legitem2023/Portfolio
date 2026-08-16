@@ -1,4 +1,5 @@
 // pages/index.tsx (or wherever you want to use the component)
+'use client'
 import React from 'react';
 import DeluxeNavTabs from './components/DeluxeNavTabs';
 import ParticleBackground from './components/ParticleBackground';
