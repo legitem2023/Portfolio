@@ -77,6 +77,7 @@ export default function Header({ user }: HeaderProps) {
   userId: userId || null,
   status: 'available'
 });
+
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
@@ -169,6 +170,19 @@ export default function Header({ user }: HeaderProps) {
     };
   }, []);
 
+  // ✅ FIXED: Extract notifications with null filtering
+  const extractNotifications = useCallback((data: any): Notification[] => {
+    try {
+      if (!data?.notifications?.edges) return [];
+      return data.notifications.edges
+        .map((edge: any) => edge?.node)
+        .filter((node: any) => node !== null && node !== undefined);
+    } catch (error) {
+      console.error('Error extracting notifications:', error);
+      return [];
+    }
+  }, []);
+
   const triggerPushNotification = useCallback((notification: Notification) => {
     if (notification.isRead || shownNotificationIds.has(notification.id)) {
       return;
@@ -245,22 +259,17 @@ export default function Header({ user }: HeaderProps) {
     });
   }, [shownNotificationIds, router]);
 
-  const extractNotifications = useCallback((data: any): Notification[] => {
-    try {
-      if (!data?.notifications?.edges) return [];
-      return data.notifications.edges.map((edge: any) => edge.node);
-    } catch (error) {
-      console.error('Error extracting notifications:', error);
-      return [];
-    }
-  }, []);
-
+  // ✅ FIXED: Handle new notifications with null checks
   const handleNewNotifications = useCallback((data: any) => {
     const latestNotifications = extractNotifications(data);
     
+    if (!latestNotifications || latestNotifications.length === 0) return;
+    
     const newNotifications = latestNotifications.filter(
       (notification: Notification) => 
-        !notification.isRead && !shownNotificationIds.has(notification.id)
+        notification && 
+        !notification.isRead && 
+        !shownNotificationIds.has(notification.id)
     );
     
     newNotifications.forEach(notification => {
@@ -268,6 +277,7 @@ export default function Header({ user }: HeaderProps) {
     });
   }, [extractNotifications, shownNotificationIds, triggerPushNotification]);
 
+  // ✅ FIXED: Removed onCompleted and onError from useQuery
   const { 
     data: notificationsData, 
     loading: notificationsLoading, 
@@ -281,15 +291,21 @@ export default function Header({ user }: HeaderProps) {
     skip: !userId,
     fetchPolicy: 'cache-and-network',
     pollInterval: userId ? 10000 : 0,
-    onError: (error) => {
-      console.error('Notification query error:', error);
-    },
-    onCompleted: (data) => {
-      if (data && userId) {
-        handleNewNotifications(data);
-      }
-    },
   });
+
+  // ✅ Handle new notifications when data changes
+  useEffect(() => {
+    if (notificationsData && userId) {
+      handleNewNotifications(notificationsData);
+    }
+  }, [notificationsData, userId, handleNewNotifications]);
+
+  // ✅ Handle errors separately
+  useEffect(() => {
+    if (notificationsError) {
+      console.error('Notification query error:', notificationsError);
+    }
+  }, [notificationsError]);
 
   const notifications = useMemo(() => 
     notificationsData ? extractNotifications(notificationsData) : [], 
@@ -331,44 +347,74 @@ export default function Header({ user }: HeaderProps) {
     dispatch(setActiveIndex(10));
   };
 
+  // ✅ FIXED: Removed .Client from PusherPushNotifications constructor
   const clearPushNotifications = async (userId: string) => {
     try {
       console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
       
-      const beamsClient = new PusherPushNotifications.Client({
+      const beamsClient = new PusherPushNotifications({
         instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
       });
       
-      await beamsClient.start();
-      console.log('✅ [LOGOUT] Beams client started');
+      // Start with error handling
+      try {
+        await beamsClient.start();
+        console.log('✅ [LOGOUT] Beams client started');
+      } catch (startError) {
+        console.error('❌ [LOGOUT] Failed to start Beams client:', startError);
+        return;
+      }
       
       // Get current interests before removal
-      const currentInterests = await beamsClient.getDeviceInterests();
-      console.log('🎯 [LOGOUT] Current interests before removal:', currentInterests);
+      let currentInterests: string[] = [];
+      try {
+        currentInterests = await beamsClient.getDeviceInterests();
+        console.log('🎯 [LOGOUT] Current interests before removal:', currentInterests);
+      } catch (error) {
+        console.error('❌ [LOGOUT] Failed to get interests:', error);
+        return;
+      }
       
       // Remove user-specific interest
       if (currentInterests.includes(`user-${userId}`)) {
-        await beamsClient.removeDeviceInterest(`user-${userId}`);
-        console.log(`✅ [LOGOUT] Removed user-${userId} interest`);
+        try {
+          await beamsClient.removeDeviceInterest(`user-${userId}`);
+          console.log(`✅ [LOGOUT] Removed user-${userId} interest`);
+        } catch (error) {
+          console.error(`❌ [LOGOUT] Failed to remove user-${userId} interest:`, error);
+        }
       }
       
       // Remove all-users interest if exists
       if (currentInterests.includes('all-users')) {
-        await beamsClient.removeDeviceInterest('all-users');
-        console.log('✅ [LOGOUT] Removed all-users interest');
+        try {
+          await beamsClient.removeDeviceInterest('all-users');
+          console.log('✅ [LOGOUT] Removed all-users interest');
+        } catch (error) {
+          console.error('❌ [LOGOUT] Failed to remove all-users interest:', error);
+        }
       }
       
       // Verify removal
-      const interestsAfter = await beamsClient.getDeviceInterests();
-      console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
+      try {
+        const interestsAfter = await beamsClient.getDeviceInterests();
+        console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
+      } catch (error) {
+        console.error('❌ [LOGOUT] Failed to verify interest removal:', error);
+      }
       
-      // Stop the client
-      await beamsClient.stop();
+      // Stop the client safely
+      try {
+        await beamsClient.stop();
+        console.log('✅ [LOGOUT] Beams client stopped');
+      } catch (stopError) {
+        console.debug('ℹ️ [LOGOUT] Stop error (can ignore):', stopError);
+      }
+      
       console.log('✅ [LOGOUT] Push notifications cleared successfully');
       
     } catch (error) {
       console.error('❌ [LOGOUT] Failed to clear push notifications:', error);
-      // Don't block logout if push notification cleanup fails
     }
   };
 
@@ -927,4 +973,4 @@ export default function Header({ user }: HeaderProps) {
       {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
-               }
+}
