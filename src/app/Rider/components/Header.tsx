@@ -17,9 +17,9 @@ import {
 import { NotificationType } from '../../../../types/notification';
 import { showNotification } from '../../../../utils/notifications';
 import { createPortal } from 'react-dom';
-// ✅ FIXED: Use named import for Client
 import { Client } from '@pusher/push-notifications-web';
-import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking';
+// ❌ TEMPORARILY COMMENTED OUT - Remove this line
+// import { useBackgroundTracking } from '../../components/hooks/useBackgroundTracking';
 
 interface Notification {
   id: string;
@@ -67,6 +67,8 @@ export default function Header({ user }: HeaderProps) {
   const notificationPopupRef = useRef<HTMLDivElement>(null);
   const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
+  // ❌ TEMPORARILY COMMENTED OUT - Remove this block
+  /*
   // Initialize background tracking for rider
   // Only enable if user is a rider and has userId
   const isRider = user?.role === 'rider';
@@ -74,10 +76,11 @@ export default function Header({ user }: HeaderProps) {
   
   // Call the background tracking hook
   useBackgroundTracking({
-  enabled: shouldTrack,
-  userId: userId || null,
-  status: 'available'
-});
+    enabled: shouldTrack,
+    userId: userId || null,
+    status: 'available'
+  });
+  */
 
   useEffect(() => {
     setMounted(true);
@@ -348,17 +351,15 @@ export default function Header({ user }: HeaderProps) {
     dispatch(setActiveIndex(10));
   };
 
-  // ✅ FIXED: Use Client from the named import
+  // ✅ Fixed: Use Client from the named import
   const clearPushNotifications = async (userId: string) => {
     try {
       console.log('🔵 [LOGOUT] Clearing push notification data for user:', userId);
       
-      // ✅ Use Client constructor
       const beamsClient = new Client({
         instanceId: process.env.NEXT_PUBLIC_BEAMS_INSTANCE_ID!,
       });
       
-      // Start with error handling
       try {
         await beamsClient.start();
         console.log('✅ [LOGOUT] Beams client started');
@@ -367,7 +368,6 @@ export default function Header({ user }: HeaderProps) {
         return;
       }
       
-      // Get current interests before removal
       let currentInterests: string[] = [];
       try {
         currentInterests = await beamsClient.getDeviceInterests();
@@ -377,7 +377,6 @@ export default function Header({ user }: HeaderProps) {
         return;
       }
       
-      // Remove user-specific interest
       if (currentInterests.includes(`user-${userId}`)) {
         try {
           await beamsClient.removeDeviceInterest(`user-${userId}`);
@@ -387,7 +386,6 @@ export default function Header({ user }: HeaderProps) {
         }
       }
       
-      // Remove all-users interest if exists
       if (currentInterests.includes('all-users')) {
         try {
           await beamsClient.removeDeviceInterest('all-users');
@@ -397,7 +395,6 @@ export default function Header({ user }: HeaderProps) {
         }
       }
       
-      // Verify removal
       try {
         const interestsAfter = await beamsClient.getDeviceInterests();
         console.log('🎯 [LOGOUT] Interests after removal:', interestsAfter);
@@ -405,7 +402,6 @@ export default function Header({ user }: HeaderProps) {
         console.error('❌ [LOGOUT] Failed to verify interest removal:', error);
       }
       
-      // Stop the client safely
       try {
         await beamsClient.stop();
         console.log('✅ [LOGOUT] Beams client stopped');
@@ -430,7 +426,6 @@ export default function Header({ user }: HeaderProps) {
     setIsLoggingOut(true);
     
     try {
-      // Clear Beams push notification interests before logout
       if (typeof window !== 'undefined' && user?.userId) {
         await clearPushNotifications(user.userId);
       }
@@ -662,7 +657,7 @@ export default function Header({ user }: HeaderProps) {
       case NotificationType.PAYMENT_CONFIRMATION:
       case NotificationType.PAYMENT_RECEIVED:
       case NotificationType.PAYMENT_FAILED:
-        dispatch(setActiveIndex(4)); // Orders page
+        dispatch(setActiveIndex(4));
         router.push('/Rider?index=4');
         break;
       case NotificationType.SUPPORT:
@@ -676,11 +671,10 @@ export default function Header({ user }: HeaderProps) {
         break;
       case NotificationType.ACCOUNT_VERIFIED:
       case NotificationType.PASSWORD_CHANGED:
-        dispatch(setActiveIndex(10)); // Profile page
+        dispatch(setActiveIndex(10));
         router.push('/Rider?index=10');
         break;
       case NotificationType.SYSTEM_ALERT:
-        // Handle system alerts
         console.log('System alert:', notification.message);
         break;
       default:
@@ -694,7 +688,6 @@ export default function Header({ user }: HeaderProps) {
 
   const NotificationPopup = () => (
     <>
-      {/* Backdrop overlay - only closes when clicking this specific element */}
       <div 
         className="notification-backdrop fixed inset-0 bg-black bg-opacity-50 z-[9998] md:hidden"
         onClick={() => setIsBellPopupOpen(false)}
@@ -716,12 +709,10 @@ export default function Header({ user }: HeaderProps) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Drag handle for mobile */}
         <div className="w-full flex justify-center py-2">
           <div className="w-12 h-1 bg-gray-300 rounded-full" />
         </div>
 
-        {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-lime-200 bg-gradient-to-r from-lime-50 to-lime-100 rounded-t-2xl flex-shrink-0">
           <div className="flex items-center space-x-2">
             <Bell className="w-5 h-5 text-lime-600" />
@@ -756,7 +747,6 @@ export default function Header({ user }: HeaderProps) {
           </div>
         </div>
 
-        {/* Notifications List */}
         <div className="flex-1 overflow-y-auto">
           {notificationsLoading ? (
             <div className="flex flex-col items-center justify-center p-8">
@@ -860,7 +850,6 @@ export default function Header({ user }: HeaderProps) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-4 border-t border-lime-200 bg-lime-50 rounded-b-2xl flex-shrink-0">
           <button
             onClick={() => {
@@ -879,12 +868,10 @@ export default function Header({ user }: HeaderProps) {
   return (
     <>
       <header className="relative bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-lime-200">
-        {/* Top Accent Line */}
         <div className="relative top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-lime-400 via-lime-500 to-lime-600"></div>
          
         <div className="w-full px-4 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between">
-            {/* Left section - Logo only */}
             <div className="relative flex-shrink-0">
               <Image 
                 src="/VendorCity_Rider.webp" 
@@ -896,9 +883,7 @@ export default function Header({ user }: HeaderProps) {
               />
             </div>
             
-            {/* Right section - Notifications and User Menu only */}
             <div className="flex items-center space-x-2 sm:space-x-3">
-              {/* Notification Bell */}
               <div className="relative" ref={bellRef}>
                 <button
                   onClick={toggleBellPopup}
@@ -920,7 +905,6 @@ export default function Header({ user }: HeaderProps) {
                 </button>
               </div>
 
-              {/* User Menu Dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={toggleDropdown}
@@ -944,7 +928,6 @@ export default function Header({ user }: HeaderProps) {
                   <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 text-white transition-transform duration-200 flex-shrink-0 ${isDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
 
-                {/* Dropdown Menu */}
                 {isDropdownOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-56 sm:w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                     <button
@@ -971,7 +954,6 @@ export default function Header({ user }: HeaderProps) {
         </div>
       </header>
 
-      {/* Notification Popup */}
       {mounted && isBellPopupOpen && userId && <NotificationPopup />}
     </>
   );
