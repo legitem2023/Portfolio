@@ -1,3 +1,4 @@
+'use client'
 import { useEffect, useState } from 'react';
 import { Icon } from '@iconify/react';
 import SVGComponent from "./SVGComponent";
@@ -8,7 +9,6 @@ const InstallPWAButton: React.FC = () => {
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [isInAppBrowser, setIsInAppBrowser] = useState<boolean>(false);
   const [isTelegram, setIsTelegram] = useState<boolean>(false);
-  const [showButton, setShowButton] = useState<boolean>(true);
   const [installState, setInstallState] = useState<'idle' | 'installing'>('idle');
   const [isAppInstalled, setIsAppInstalled] = useState<boolean>(false);
 
@@ -25,7 +25,6 @@ const InstallPWAButton: React.FC = () => {
       
       if (installed) {
         setIsAppInstalled(true);
-        setShowButton(false);
         setDebugInfo('App is installed - button hidden');
       }
       
@@ -56,10 +55,6 @@ const InstallPWAButton: React.FC = () => {
         setIsTelegram(true);
         setIsInAppBrowser(true);
         setDebugInfo('Telegram browser detected - showing external link option');
-        
-        setTimeout(() => {
-          setShowButton(true);
-        }, 100);
       } else if (inApp) {
         setIsInAppBrowser(true);
         setDebugInfo(`Detected in-app browser - showing open in browser button`);
@@ -90,7 +85,6 @@ const InstallPWAButton: React.FC = () => {
       setIsAppInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
-      setShowButton(false); // Immediately hide the button
       
       // Store installation state in localStorage to persist across page reloads
       localStorage.setItem('pwa_installed', 'true');
@@ -101,7 +95,6 @@ const InstallPWAButton: React.FC = () => {
       const wasInstalled = localStorage.getItem('pwa_installed') === 'true';
       if (wasInstalled) {
         setIsAppInstalled(true);
-        setShowButton(false);
         setDebugInfo('Previously installed - button hidden');
         return true;
       }
@@ -153,7 +146,6 @@ const InstallPWAButton: React.FC = () => {
             // User uninstalled, clear the flag
             localStorage.removeItem('pwa_installed');
             setIsAppInstalled(false);
-            setShowButton(true);
             setDebugInfo('App was uninstalled - button reappeared');
           }
         }
@@ -261,13 +253,8 @@ const InstallPWAButton: React.FC = () => {
     }
   };
 
-  const showDebugButton = process.env.NODE_ENV === 'development' && !deferredPrompt;
-
   // Don't render anything if app is installed
   if (isAppInstalled) return null;
-  
-  // Don't render if button is explicitly hidden
-  if (!showButton && !isTelegram) return null;
 
   return (
     <>
@@ -304,10 +291,14 @@ const InstallPWAButton: React.FC = () => {
         </button>
       )}
 
-      {/* Show normal install button - Only if app is not installed */}
-      {!isInAppBrowser && !isAppInstalled && (deferredPrompt || installState === 'installing') && (
+      {/* 
+        MAIN FIX: Show normal install button on initial load
+        - Always show if not in-app browser and not installed
+        - Uses deferredPrompt if available, otherwise falls back to manual install
+      */}
+      {!isInAppBrowser && !isAppInstalled && (
         <button 
-          onClick={handleInstallClick} 
+          onClick={deferredPrompt ? handleInstallClick : handleManualInstall} 
           className="install_button"
           disabled={installState === 'installing'}
           style={{ opacity: installState === 'installing' ? 0.7 : 1 }}
@@ -316,21 +307,16 @@ const InstallPWAButton: React.FC = () => {
             <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
           </span>
           <span className="text">
-            {installState === 'installing' ? 'Installing...' : 'Install App'}
+            {installState === 'installing' 
+              ? 'Installing...' 
+              : deferredPrompt 
+                ? 'Install App' 
+                : 'Install App'}
           </span> 
         </button>
       )}
 
-      {/* Show manual install as fallback */}
-      {!isInAppBrowser && !isAppInstalled && showDebugButton && (
-        <button onClick={handleManualInstall} className="install_button debug">
-          <span className="icon">
-            <SVGComponent className="w-8 h-8 text-zinc-500 hover:text-blue-500 transition" />
-          </span>
-          <span className="text">Install (Manual)</span> 
-        </button>
-      )}
-
+      {/* Debug info in development mode */}
       {process.env.NODE_ENV === 'development' && debugInfo && (
         <div style={{
           fontSize: '12px',
@@ -338,7 +324,9 @@ const InstallPWAButton: React.FC = () => {
           margin: '5px',
           padding: '5px',
           background: '#f5f5f5',
-          borderRadius: '3px'
+          borderRadius: '3px',
+          maxWidth: '300px',
+          wordBreak: 'break-word'
         }}>
           Debug: {debugInfo}
         </div>
@@ -394,10 +382,6 @@ const InstallPWAButton: React.FC = () => {
 
         .install_button.chrome:hover {
           background: linear-gradient(45deg, #5a95f5, #4bc06a);
-        }
-
-        .install_button.debug {
-          background: linear-gradient(45deg, #8b5cf6, #a78bfa);
         }
 
         .install_button:active {
